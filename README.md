@@ -2,4 +2,4 @@
 
 Django app for the Content Curation project.
 
-    // TODO: Make cool stuff
+`// TODO: Make cool stuff`
