@@ -11,3 +11,8 @@ class TopicSerializer(serializers.ModelSerializer):
     class Meta: 
         model = TopicNode
         fields = ('color1', 'color2', 'color3')
+
+class LicenseSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = ContentLicense
+        fields = ('name')

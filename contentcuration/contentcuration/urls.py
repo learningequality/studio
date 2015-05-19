@@ -27,9 +27,14 @@ class TopicViewSet(viewsets.ModelViewSet):
     queryset = TopicNode.objects.all()
     serializer_class = serializers.TopicSerializer
 
+class LicenseViewSet(viewsets.ModelViewSet):
+    queryset = ContentLicense.objects.all()
+    serializer_class = serializers.LicenseSerializer
+
 router = routers.DefaultRouter()
 router.register(r'topics', TopicViewSet)
 router.register(r'content', ContentViewSet)
+router.register(r'license', LicenseViewSet)
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
