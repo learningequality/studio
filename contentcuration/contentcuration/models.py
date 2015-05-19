@@ -1,5 +1,6 @@
 from django.db import models
-from mptt import MPTTModel, TreeForeignKey
+from mptt.models import MPTTModel, TreeForeignKey
+from django.utils.translation import ugettext as _
 
 class TopicTree(MPTTModel):
     """Base model for all channels"""
@@ -137,7 +138,7 @@ class ContentNode(Node):
         blank=True,
         verbose_name=_("downloaded on"),
         help_text=_(
-            "Should be automatically filled in when an item is downloaded ",
+            "Should be automatically filled in when an item is downloaded "
             "from its source of origin, either manually by user or "
             "automatically by script."
         ),

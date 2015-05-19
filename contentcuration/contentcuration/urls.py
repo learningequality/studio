@@ -16,6 +16,7 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from rest_framework import routers, viewsets
+from contentcuration.models import *    # TODO: Change this later?
 import serializers
 
 class ContentViewSet(viewsets.ModelViewSet):
