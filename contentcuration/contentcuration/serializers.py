@@ -7,7 +7,7 @@ class ContentSerializer(serializers.ModelSerializer):
         # TODO: content_file
         fields = (author, license_owner, license)
 
-class ContentLicenseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ContentLicense
-        fields = (name)
+class TopicSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = TopicNode
+        fields = (color1, color2, color3)

@@ -1,4 +1,4 @@
-"""contentcuration URL Configuration
+"""URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/1.8/topics/http/urls/
@@ -15,9 +15,23 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
-from rest_framework import routers, serializers, viewsets
+from rest_framework import routers, viewsets
+import serializers
+
+class ContentViewSet(viewsets.ModelViewSet):
+    queryset = ContentNode.objects.all()
+    serializer_class = serializers.ContentSerializer
+
+class TopicViewSet(viewsets.ModelViewSet):
+    queryset = TopicNode.objects.all()
+    serializer_class = serializers.TopicSerializer
+
+router = routers.DefaultRouter()
+router.register(r'topics', TopicViewSet)
+router.register(r'content', ContentViewSet)
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^api/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
