@@ -5,12 +5,14 @@ class ContentSerializer(serializers.ModelSerializer):
     class Meta: 
         model = ContentNode
         # TODO: content_file
-        fields = ('author', 'license_owner', 'license')
+        fields = ('created', 'modified', 'parent', 'name', 'published', 'sort_order',
+                  'author', 'license_owner', 'license')
 
 class TopicSerializer(serializers.ModelSerializer):
     class Meta: 
         model = TopicNode
-        fields = ('color1', 'color2', 'color3')
+        fields = ('created', 'modified', 'parent', 'name', 'published', 'sort_order',
+                  'color1', 'color2', 'color3')
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta: 
