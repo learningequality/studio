@@ -18,6 +18,7 @@ from django.contrib import admin
 from rest_framework import routers, viewsets
 from contentcuration.models import *    # TODO: Change this later?
 import serializers
+import views
 
 class ContentViewSet(viewsets.ModelViewSet):
     queryset = ContentNode.objects.all()
@@ -37,6 +38,7 @@ router.register(r'content', ContentViewSet)
 router.register(r'license', LicenseViewSet)
 
 urlpatterns = [
+    url(r'^$', views.base, name='base'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))

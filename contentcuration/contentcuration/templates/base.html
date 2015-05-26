@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+{% load staticfiles %}
+
+<html>
+    <head>
+        <!--[if lt IE 9]> 
+              <script src="{% static "js/html5shiv.js" %}"></script>
+        <![endif] -->
+
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+        <title>[Content Curation Title Here]</title>
+        
+        <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}">
+        
+        <script type="text/javascript" src="{% static 'js/fastclick.js' %}"></script>
+        <script>
+        $(function() {
+            FastClick.attach(document.body);
+        });
+        </script>
+        
+        <script type="text/javascript" src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/underscore-min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/backbone/backbone-min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+
+        <script src="{% static 'js/handlebars-v3.0.3.js' %}"></script>
+    </head>
+
+    <body>
+        Welcome to the content-curation site
+    </body>
+</html>
