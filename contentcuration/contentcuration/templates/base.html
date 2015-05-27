@@ -12,26 +12,29 @@
         
         <title>[Content Curation Title Here]</title>
         
-        <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}">
-        <link rel="stylesheet" type="text/css" href="{% static 'css/content-curation.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/frameworks/bootstrap.min.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/frameworks/content-curation.css' %}">
         
-        <script type="text/javascript" src="{% static 'js/fastclick.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/frameworks/fastclick.js' %}"></script>
         <script>
         $(function() {
             FastClick.attach(document.body);
         });
         </script>
-        
-        <script type="text/javascript" src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/underscore-min.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/backbone/backbone-min.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/frameworks/jquery-2.1.4.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/frameworks/underscore-min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/frameworks/backbone/backbone-min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/frameworks/bootstrap.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/frameworks/handlebars-v3.0.3.js' %}"></script>
 
-        <script src="{% static 'js/handlebars-v3.0.3.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/playground.js' %}"></script>
     </head>
 
     <body>
         <h1>Content Curation</h1>
         <p>Welcome to the totally real content-curation site.</p>
+        <div class="dummy-tree-container">
+            
+        </div>
     </body>
 </html>
