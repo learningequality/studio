@@ -12,21 +12,26 @@
         
         <title>[Content Curation Title Here]</title>
         
+        <!-- CSS frameworks -->
         <link rel="stylesheet" type="text/css" href="{% static 'css/frameworks/bootstrap.min.css' %}">
-        <link rel="stylesheet" type="text/css" href="{% static 'css/frameworks/content-curation.css' %}">
-        
+
+        <!-- JS frameworks -->
+        <script type="text/javascript" src="{% static 'js/frameworks/jquery-2.1.4.min.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/frameworks/fastclick.js' %}"></script>
         <script>
         $(function() {
             FastClick.attach(document.body);
         });
         </script>
-        <script type="text/javascript" src="{% static 'js/frameworks/jquery-2.1.4.min.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/frameworks/underscore-min.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/frameworks/backbone/backbone-min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/frameworks/backbone-min.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/frameworks/bootstrap.min.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/frameworks/handlebars-v3.0.3.js' %}"></script>
 
+        <!-- Our CSS -->
+        <link rel="stylesheet" type="text/css" href="{% static 'css/frameworks/content-curation.css' %}">
+
+        <!-- Our JS -->
         <script type="text/javascript" src="{% static 'js/playground.js' %}"></script>
     </head>
 
@@ -34,7 +39,9 @@
         <h1>Content Curation</h1>
         <p>Welcome to the totally real content-curation site.</p>
         <div class="dummy-tree-container">
-            
+            <button class="new-topic-top">New top level topic</button>
+            <button class="new-content-top">New top level content</button>
+            <!-- Dummy topic/content list "tree" goes here -->
         </div>
     </body>
 </html>
