@@ -27,23 +27,29 @@ var ContentModel = Backbone.Model.extend({
 });
 
 var TopicView = Backbone.View.extend({
+    tagName: "li",
+
     render: function() {
-        this.$el.html("<li>" + this.model.name + "</li>");
-        this.$el.append("<ol>");
+        $(this.el).append(this.model.name);
+        $(this.el).append("<ol class='" + this.model.name + "-ol'></ol>");
+
+        // TODO: Also add subtopics
 
         for (var child in this.children) {
             var currChild = new ContentView({model: child});
-            this.$el.append(currChild);
-            currChild.render();
+            $(this.el).children("ol." + this.model.name).append(currChild.render()[0]);
         }
 
-        this.$el.append("</ol>");
+        return $(this.el);
     }
 });
 
 var ContentView = Backbone.View.extend({
+    tagName: "li",
+
     render: function() {
-        this.$el.html("<li>" + this.model.name + "</li>");
+        $(this.el).append(this.model.name);
+        return $(this.el);
     }
 });
 
@@ -56,13 +62,20 @@ var ContentCollection = Backbone.Collection.extend({
 });
 
 var DummyTreeView = Backbone.View.extend({
-    className: "test-main-list",
-
     events: {
         "click button.new-topic-top": "newTopLevelTopic"
     },
 
+    tagName: "ol",
+    className: "dummy-tree",
+
     initialize: function() {
+        $(this.el).prepend(
+            "<button class='new-topic-top'>New top level topic</button>\n" +
+            "<button class='new-content-top'>New top level content</button>");
+
+        $(".dummy-tree-container").append($(this.el));
+
         this.topicColl = new TopicCollection();
         this.contentColl = new ContentCollection();
         
@@ -70,32 +83,34 @@ var DummyTreeView = Backbone.View.extend({
     },
     
     render: function() {
-        this.$el.append("<ol></ol>");
-
-        for (var topic in this.topicColl) {
+        this.topicColl.each(function(topic) {
             if (topic.parent == null) {
                 var currTopic = new TopicView({model: topic});
-                this.$el.append(currTopic);
-                currTopic.render();
+                $(this.el).append(currTopic.render()[0]);
             }
-        }
+        });
 
-        for (var content in this.contentColl) {
+        this.contentColl.each(function(content) {
             if (content.parent == null) {
                 var currContent = new ContentView({model: content});
-                this.$el.append(currContent);
-                currContent.render();
+                $(this.el).append(currContent.render()[0]);
             }
-        }
+        });
     },
 
     newTopLevelTopic: function() {
         var newTopic = new TopicModel();
         this.topicColl.add(newTopic);
         this.render();
+    },
+
+    newTopLevelContent: function() {
+        var newContent = new ContentModel();
+        this.contentColl.add(newContent);
+        this.render();
     }
 });
 
 $(document).ready(function() {
-    var dummyTree = new DummyTreeView({el: $(".dummy-tree-container")});
+    var dummyTree = new DummyTreeView();
 });
