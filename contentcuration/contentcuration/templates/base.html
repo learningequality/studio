@@ -10,7 +10,7 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         
-        <title>[Content Curation Title Here]</title>
+        <title>Kolibri</title>
         
         <!-- CSS frameworks -->
         <link rel="stylesheet" type="text/css" href="{% static 'css/frameworks/bootstrap.min.css' %}">
@@ -22,6 +22,10 @@
         $(function() {
             FastClick.attach(document.body);
         });
+
+        $(document).ready(function() {
+            var dummyTree = new DummyTreeView();
+        });
         </script>
         <script type="text/javascript" src="{% static 'js/frameworks/underscore-min.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/frameworks/backbone-min.js' %}"></script>
@@ -31,13 +35,18 @@
         <!-- Our CSS -->
         <link rel="stylesheet" type="text/css" href="{% static 'css/frameworks/content-curation.css' %}">
 
+        <!-- LESS Files -->
+        <link rel="stylesheet/less" type="text/css" href="{% static 'less/styles.less' %}"/>
+        <script type="text/javascript" src="{% static 'js/frameworks/less.min.js' %}"></script>
+
         <!-- Our JS -->
-        <script type="text/javascript" src="{% static 'js/playground.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/models.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/views.js' %}"></script>
     </head>
 
     <body>
-        <h1>Content Curation</h1>
-        <p>Welcome to the totally real content-curation site.</p>
+        <h1>Welcome to Kolibri</h1>
+        <p>The totally real content-curation site.</p>
         <div class="dummy-tree-container">
             <!-- Dummy topic/content list "tree" goes here -->
         </div>
