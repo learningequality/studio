@@ -32,10 +32,20 @@ class LicenseViewSet(viewsets.ModelViewSet):
     queryset = ContentLicense.objects.all()
     serializer_class = serializers.LicenseSerializer
 
+class ChannelViewSet(viewsets.ModelViewSet):
+    queryset = Channel.objects.all()
+    serializer_class = serializers.ChannelSerializer
+
+class TopicTreeViewSet(viewsets.ModelViewSet):
+    queryset = TopicTree.objects.all()
+    serializer_class = serializers.TopicTreeSerializer
+
 router = routers.DefaultRouter()
 router.register(r'topics', TopicViewSet)
 router.register(r'content', ContentViewSet)
 router.register(r'license', LicenseViewSet)
+router.register(r'channel', ChannelViewSet)
+router.register(r'topictree', TopicTreeViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),

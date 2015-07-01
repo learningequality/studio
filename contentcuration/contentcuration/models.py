@@ -2,12 +2,32 @@ from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 
+
+class Channel(models.Model):
+    name = models.CharField(
+        max_length= 100,
+        verbose_name=_("channel name"),
+    )
+    primary_topic_tree = models.ForeignKey(
+        'TopicTree',
+        help_text=_("Primary topic tree associated with this channel"),
+    )
+    description = models.TextField(
+        max_length = 300,
+        verbose_name=_("channel description"),
+        help_text=_("Description of what a channel contains"),
+    )
+    class Meta:
+        verbose_name = _("Channel")
+        verbose_name_plural = _("Channels")
+
+
 class TopicTree(MPTTModel):
     """Base model for all channels"""
 
     name = models.CharField(
         max_length=255,
-        verbose_name=_("channel name"),
+        verbose_name=_("topic tree name"),
         help_text=_("Displayed to the user"),
     )
     editors = models.ManyToManyField(
@@ -22,6 +42,11 @@ class TopicTree(MPTTModel):
             "The starting point for the tree, the title of it is the "
             "title shown in the menu"
         ),
+    )
+    is_published = models.BooleanField(
+        default=False,
+        verbose_name=_("Published"),
+        help_text=_("If published, students can access this channel"),
     )
     
     class Meta:
@@ -105,6 +130,18 @@ class TopicNode(Node):
     color3 = models.CharField(
         max_length=7
     )
+    title = models.CharField(
+        max_length=50,
+        verbose_name=_("title"),
+        default=_("Title"),
+        help_text=_("Folder title"),
+    )
+    description = models.TextField(
+        max_length=200,
+        verbose_name=_("description"),
+        default=_("Description"),
+        help_text=_("Brief description of what is contained in this folder"),
+    )
 
 
 class ContentNode(Node):
@@ -112,6 +149,12 @@ class ContentNode(Node):
     Model for content data nodes, which will be stored as leaves only
     """
 
+    title = models.CharField(
+        max_length=50,
+        verbose_name=_("title"),
+        default=_("Title"),
+        help_text=_("Title of the content item"),
+    )
     author = models.CharField(
         max_length=255,
         help_text=_("Name of the author(s) of book/movie/exercise"),
@@ -148,7 +191,7 @@ class ContentNode(Node):
         blank=True,
         null=True,
         # TODO
-        # upload_to='contents/video/thumbnails/',
+        upload_to='contents/video/thumbnails/',
         help_text=_("Upload video here"),
     )
 
@@ -163,6 +206,12 @@ class ContentNode(Node):
         'ContentLicense',
         verbose_name=_("license"),
         help_text=_("License under which the work is distributed"),
+    )
+    description = models.TextField(
+        max_length=200,
+        verbose_name=_("description"),
+        default=_("Description"),
+        help_text=_("Brief description of what this content item is"),
     )
 
 
