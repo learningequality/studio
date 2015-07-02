@@ -49,6 +49,7 @@ router.register(r'topictree', TopicTreeViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
+    url(r'^test/', views.testpage, name='test'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
