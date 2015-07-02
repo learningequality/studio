@@ -42,8 +42,10 @@ If not, use these commands:
 
 * Set up the database 
 
-	`cd contentcuration` 
+	`cd contentcuration`
+	
 	`python manage.py makemigrations`
+
 	`python manage.py migrate`
 
 * Run your server and start developing! Make sure you're in your virtual environment each time before you run the server.

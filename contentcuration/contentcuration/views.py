@@ -8,3 +8,6 @@ from contentcuration.serializers import *
 
 def base(request):
     return render(request, 'base.html')
+
+def testpage(request):
+	return render(request, 'test.html')
