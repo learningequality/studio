@@ -1,8 +1,19 @@
 /* VARIABLES */
 @title-color: #5B83AD;
-
-
-
+@edit-background-color: #D4D5D4;
+@edit-bottom-button-color: #424242;
+@edit-button-color: #E0E1E1;
+@edit-border: #B7B0C3;
+@edit-title: #A9BCCD;
+@edit-shadow: #BDBDBC;
+@edit-folder-color: #EBECED;
+@edit-folder-shadow: #8D8F90;
+@edit-checked: #B6B6B7;
+@edit-font: "Trebuchet MS", Helvetica, sans-serif;
+@edit-check: #7CC68E;
+@edit-highlighted-file: #B6B6B7;
+@edit-container-width: 354px;
+@edit-container-height: 90%;
 
 h1 {
 	color: @title-color;
@@ -21,3 +32,504 @@ body {
 
 
 /* EDIT PAGE */
+#button_bar{
+	margin-bottom: 15px;
+	a{
+		background-color: @edit-button-color;
+		font-family:  @edit-font;
+		padding: 12px;
+		font-size: 15px;
+		border: none;
+		text-decoration: none;
+		color: black;
+	}
+}
+
+#edit_container{
+	background-color: @edit-title;
+	float: left; 
+	box-shadow: -7px 12px 5px @edit-shadow;
+	margin-right: 30px;
+	width: @edit-container-width;
+	font-family: @edit-font;
+	height:  @edit-container-height;
+
+	#sidebar{
+			width: 38px;
+			height: @edit-container-height - 10%;
+			background-color: @edit-title;
+			float:left;
+			position:fixed;
+		}
+	
+	#title{
+		width: 100%;
+		font-size: 25px;
+		padding-left: 38px;
+	}
+	
+		
+
+	
+	#edit_list{
+		overflow: auto;
+		height: 72.5vh;
+		background-color: @edit-background-color; 
+		border-right: 1px solid @edit-border; 
+		border-bottom: 1px solid @edit-border; 
+		width: 100%;
+		margin-top: 0px;
+		padding-left: 4px;
+		
+		ul{
+			padding: 0px;
+			list-style-type: none;
+			position: relative;
+			
+			input[type=checkbox]{
+				vertical-align: middle;
+				display: inline-block;
+				width: 20px;  
+				height: 20px;
+				cursor: pointer;
+			}
+			
+			input[type=checkbox]:checked+label #file{
+				background-color: @edit-highlighted-file;
+				border-radius: 10px;
+			}
+			
+			label{
+				vertical-align: middle;
+				font-weight: normal;
+				margin: 0;
+				padding: 0;
+			}
+		}
+
+		#folder{
+			background-color: @edit-folder-color;
+			box-shadow: -3px 3px 3px @edit-folder-shadow;
+			padding: 2px 10px 5px 10px;
+			font-size: 17px;
+			list-style-type: none;
+			width:@edit-container-width - 70px;
+			margin-left: 25px;
+			draggable: true;
+			margin-top: 10px;
+			margin-bottom: 10px;
+			
+			#button{
+			float:right;
+			padding-right: 5px;
+			}
+			
+			img{
+				width: 20px;
+				height: 20px;
+			}
+
+			#description{
+				font-style: italic;
+				font-size: 15px;
+				overflow: hidden;
+				width: 100%;
+				height: 40px;
+			}
+		}
+
+		#file{
+			font-size: 17px;
+			list-style-type: none;
+			padding: 10px 5px 10px 15px;
+			width:@edit-container-width - 75px;
+			margin-left: 20px;
+			draggable: true;
+			margin-top: 10px;
+			
+			#button{
+				float:right;
+				padding-right: 5px;
+			}
+			
+			img {
+				width: 16px;
+				width: 16px;
+				margin-left: 10px;
+			}
+		}
+	}
+	
+		#bottom_button{
+			margin-left: 37px;
+			width:@edit-container-width - 64px;
+		
+			button{
+				background-color: @edit-bottom-button-color;
+				color: #F1EEEE;
+				width:(@edit-container-width - 68px)/2;
+				padding: 10px 5px 10px 5px;
+				box-shadow: -2px 2px 2px @edit-folder-shadow;
+				margin-bottom: 5px; margin-top: 5px;
+				font-size: 15px;
+				border: none;
+				
+				img{
+					width: 20px;
+					height: 20px;
+					margin-right: 5px;
+					display: inline-block;
+				}
+			}
+		}
+	}
+
+
+/* CLIPBOARD */
+#clipboard{
+	border: 1px solid black;
+	float: right;
+	width: 330px;
+	padding:10px;
+	height: @edit-container-height;
+	background-color: lightgray;
+	
+	h3{
+		display:inline-block;
+		font-size: 40px;
+	}
+	
+	a{
+		text-decoration:none;
+		color:black;
+	}
+	
+	button{
+		float:top;
+		background-color: @edit-button-color;
+		font-family:  @edit-font;
+		padding: 12px;
+		margin-bottom: 15px;
+		font-size: 15px;
+		border: none;
+		color:black;
+		text-decoration:none;
+		display: inline-block;
+		float:right;
+	}
+	
+	#clipboard_overview{
+		display:none;
+	}
+
+	#clipboard_overview:target {
+		display:block;
+		
+		ul{
+			border: 1px solid black;
+			background-color: white;
+			overflow:auto;
+			width: 100%;
+			height: 100%;
+			list-style:none;
+			
+			li{
+				draggable: true;
+			}
+		}
+	}
+
+	#addcontent{
+		display:none;
+	}
+
+	#addcontent:target {
+		display:block;
+		
+		ul{
+			border: 1px solid black;
+			background-color: white;
+			overflow:auto;
+			width: 100%;
+			height: @edit-container-height;
+			margin-top: 15px;
+		}
+		
+		#add_content_to_clipboard{
+			visibility:hidden;
+		}
+		
+		span{
+			display:block;
+			width:100%;
+			border: 2px dashed black;
+			padding:10px;
+			margin-top: 10px;
+			text-align:center;
+		}
+	}
+	
+			#back{
+			text-style: strong;
+			float:right;
+		}
+		
+		nav{
+			margin-top: 15px;
+		}
+	
+	#add_step_1{
+		display:none;
+	}
+
+	#add_step_1:target {
+		display:block;
+		
+		h4{
+			display:inline;
+		}
+
+		
+		#source_content{
+			background-color:white;
+			margin: 10px 5px 10px 0px;
+			border: 1px solid black;
+			width:100%;
+			height: @edit-container-height;
+			padding:15px;
+			
+			#add_content_area{
+				margin: 10px;
+				width:95%;
+				height:200px;
+				vertical-align:middle;
+				border: 1px dashed gray;
+				text-align:center;
+				font-weight:strong;
+				padding:15px;
+			}
+			
+			button{
+					padding:2px;
+					font-size: 13px;
+			}
+		}
+	}
+	
+	#add_step_2{
+		display:none;
+	}
+
+	#add_step_2:target {
+		display:block;
+		
+		h4{
+			display:inline;
+		}
+
+		
+		#choose_content{
+			background-color:white;
+			margin: 10px 5px 10px 0px;
+			border: 1px solid black;
+			width:100%;
+			height: @edit-container-height;
+			padding:10px;
+			
+			
+			
+			ul{
+				list-style: none;
+				overflow:auto;
+				height:87%;
+				padding: 2px;
+				list-style-type: none;
+				
+				li{
+					padding-bottom: 5px;
+				}
+			}
+			
+			#channel_content_area{
+				width:49%;
+				height:80%;
+				border: 1px solid black;
+				float:left;
+				
+				h5{
+					border-bottom: 1px solid black;
+					width: 100%;
+					text-align:center;
+					padding:bottom: 10px;
+					
+					span{
+						float:left;
+						padding-left:10px;
+					}
+				}
+			}
+			
+			#selected_content_area{
+				width:49%;
+				height:80%;
+				border: 1px solid black;
+				float:left;
+				margin-left:5px;
+				
+				h5{
+					padding:5px;
+					padding-top: 0px;
+				}
+			}
+			
+			button{
+				padding:2px;
+				font-size: 13px;
+				margin-top: 20px;
+				float:bottom;
+			}
+		}
+	}
+	
+	#add_step_3{
+		display:none;
+	}
+
+	#add_step_3:target {
+		display:block;
+		
+		h4{
+			display:inline;
+		}
+
+		#meta_content{
+			background-color:white;
+			margin: 10px 5px 10px 0px;
+			border: 1px solid black;
+			width:100%;
+			height: @edit-container-height;
+			padding:10px;
+			
+			ul{
+				list-style: none;
+				overflow:auto;
+				height:100%;
+				padding: 2px;
+				list-style-type: none;
+			
+				li{
+					padding-bottom: 5px;
+				}
+			}
+			
+			#meta_list{
+				width:40%;
+				height:80%;
+				border: 1px solid black;
+				float:left;
+				margin-left:5px;
+			}
+			
+			#meta_form{
+				width:56%;
+				height:80%;
+				float:left;
+				margin-left:5px;
+				padding:2px;
+				
+				input{
+					width:100%;
+				}
+				
+				textarea{
+					width:100%;
+				}
+			}
+			
+			button{
+				margin-top:20px;
+				padding:2px;
+				font-size: 13px;
+			}
+			
+			#finish{
+				float:left;
+			}
+		}
+	}
+}
+
+
+
+/* PREVIEW PAGE */
+#preview{
+	h1{
+		font-family: @edit-font;
+		font-size: 28px;
+	}
+
+	#preview_container{
+		background-color: @edit-title;
+		float: left; 
+		height:  @edit-container-height;
+		box-shadow: -7px 12px 5px @edit-shadow;
+		margin-right: 30px;
+		width: @edit-container-width;
+		font-family: @edit-font;
+
+		h2{
+			width: 100%;
+			font-size: 25px;
+			padding-left: 20px;
+		}
+		ul{
+			overflow: auto;
+			height: 72.5vh;
+			background-color: @edit-background-color; 
+			border-right: 1px solid @edit-border; 
+			border-bottom: 1px solid @edit-border; 
+			width: 100%;
+			margin-top: 0px;
+			padding-left: 2px;
+
+			#folder{
+				background-color: @edit-folder-color;
+				box-shadow: -3px 3px 3px @edit-folder-shadow;
+				padding: 2px 10px 5px 10px;
+				font-size: 17px;
+				list-style-type: none;
+				width:@edit-container-width - 38px;
+				margin-left: 15px;margin-top: 10px;
+
+				#description{
+					font-style: italic;
+					font-size: 15px;
+					overflow: hidden;
+					width: 100%;
+					height: 40px;
+				}
+			}
+
+			#file{
+				list-style-type: none;
+				font-size: 15px;
+				list-style-type: none;
+				padding: 2px 5px 2px 10px;
+				width:@edit-container-width - 44px;
+				margin-left: 20px;
+				draggable: true;
+				margin-top: 5px;
+			
+				#button{
+					float:right;
+					padding-right: 5px;
+				}
+				img {
+					width: 16px;
+					width: 16px;
+					margin-left: 5px;
+				}
+			}
+		}
+	}
+}

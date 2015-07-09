@@ -10,4 +10,10 @@ def base(request):
     return render(request, 'base.html')
 
 def testpage(request):
-	return render(request, 'test.html')
+     return render(request, 'test.html')
+
+def edit(request):
+     return render(request, 'edit_page.html')
+
+def preview(request):
+     return render(request, 'preview_page.html')
