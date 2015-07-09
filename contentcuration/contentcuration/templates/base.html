@@ -40,7 +40,9 @@
 
         <!-- LESS Files -->
         <link rel="stylesheet/less" type="text/css" href="{% static 'less/styles.less' %}"/>
+        <link rel="stylesheet/less" type="text/css" href="{% static 'less/global-variables.less' %}"/>
         <script type="text/javascript" src="{% static 'js/frameworks/less.min.js' %}"></script>
+
 
         <!-- Our JS -->
         <script type="text/javascript" src="{% static 'js/models.js' %}"></script>
@@ -48,6 +50,39 @@
     </head>
 
     <body>
+
+        <div class="navbar nav" id="top-navigation">
+            <div id="logo-container">
+                <img src="{% static 'img/logo.png' %}">
+                <span>Kolibri</span>
+            </div>
+            <div class="dropdown">
+                <button id="dLabel" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="{% static 'img/logo.png' %}"><span id="channel-dropdown">Channel Name</span><span class="caret"></span></button>
+                <ul class="dropdown-menu" aria-labelledby="dLabel">
+                  <li><img src="{% static 'img/logo.png' %}">Sample Item</li>
+                  <li><img src="{% static 'img/logo.png' %}">Sample Item2</li>
+                </ul>
+            </div>
+            <div id="search-logout-container">
+                <div class="search">
+                    <input type="text" placeholder="Search for content in your channels..." aria-describedby="basic-addon2">
+                    <div id="basic-addon2">Q</div>
+                </div>
+                <img id="logout" src="{% static 'img/power-button.png' %}">
+            </div>
+        </div>
+
+        <nav class="navbar navbar-default" id="secondary-nav">
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li><img src="{% static 'img/edit-tab.png' %}">Edit</li>
+                    <li><img src="{% static 'img/preview-tab.png' %}">Preview</li>
+                    <li><img src="{% static 'img/trash-tab.png' %}">Trash</li>
+                    <li id="publish"><img src="">Publish</li>
+                </ul>
+            </div>
+        </nav>
+
         <h1>Welcome to Kolibri</h1>
         <p>The totally real content-curation site.</p>
         <div class="dummy-tree-container">
