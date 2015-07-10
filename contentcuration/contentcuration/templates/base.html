@@ -6,6 +6,7 @@
         <!--[if lt IE 9]> 
             <script src="{% static "js/html5shiv.js" %}"></script>
         <![endif] -->
+		<link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
 
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,6 +27,7 @@
         $(document).ready(function() {
             var dummyTree = new DummyTreeView();
         });
+		
         </script>
         <script type="text/javascript" src="{% static 'js/frameworks/underscore-min.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/frameworks/backbone-min.js' %}"></script>
@@ -75,19 +77,15 @@
         <nav class="navbar navbar-default" id="secondary-nav">
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
-                    <li><img src="{% static 'img/edit-tab.png' %}">Edit</li>
-                    <li><img src="{% static 'img/preview-tab.png' %}">Preview</li>
-                    <li><img src="{% static 'img/trash-tab.png' %}">Trash</li>
-                    <li id="publish"><img src="">Publish</li>
+                    <a href="/edit"><li><img src="{% static 'img/edit-tab.png' %}">Edit</li></a>
+                    <a href="/preview"><li><img src="{% static 'img/preview-tab.png' %}">Preview</li></a>
+                    <a href="/trash"><li><img src="{% static 'img/trash-tab.png' %}">Trash</li></a>
+                    <a href="#" id="publish"><li><img src="">Publish</li></a>
                 </ul>
             </div>
         </nav>
-
-        <h1>Welcome to Kolibri</h1>
-        <p>The totally real content-curation site.</p>
-        <div class="dummy-tree-container">
-            <!-- Dummy topic/content list "tree" goes here -->
-        </div>
-        <a href="{% url 'test' %}">Page for rendering your handlebars templates</a>
+		
+		{% block content %}{% endblock content %}
+		
     </body>
 </html>
