@@ -17,3 +17,6 @@ def edit(request):
 
 def preview(request):
      return render(request, 'preview_page.html')
+
+def trash(request):
+     return render(request, 'trash_page.html')
