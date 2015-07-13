@@ -121,6 +121,13 @@ body {
 }
 
 @subnav-bg-color: #dbdddc;
+.nav-img {
+	img {
+		height: 25px;
+		width: auto;
+		margin: 0px 7px;
+	}
+}
 #secondary-nav {
 	background: @subnav-bg-color;
 	border: none;
@@ -135,15 +142,13 @@ body {
 		padding: 13px;
 		color: #474747;
 		border-right: 2px solid #464646;
-		img {
-			height: 25px;
-			width: auto;
-			margin: 0px 7px;
-		}
+		.nav-img;
 	}
 	#publish {
 		float: right;
 		position: relative;
+		border-left: 2px solid #464646;
+		.nav-img;
 	}
 }
 
