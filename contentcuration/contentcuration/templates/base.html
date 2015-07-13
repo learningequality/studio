@@ -6,6 +6,7 @@
         <!--[if lt IE 9]> 
             <script src="{% static "js/html5shiv.js" %}"></script>
         <![endif] -->
+		<link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
 
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,6 +27,7 @@
         $(document).ready(function() {
             var dummyTree = new DummyTreeView();
         });
+		
         </script>
         <script type="text/javascript" src="{% static 'js/frameworks/underscore-min.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/frameworks/backbone-min.js' %}"></script>
@@ -84,12 +86,8 @@
                 </ul>
             </div>
         </nav>
-
-        <h1>Welcome to Kolibri</h1>
-        <p>The totally real content-curation site.</p>
-        <div class="dummy-tree-container">
-            <!-- Dummy topic/content list "tree" goes here -->
-        </div>
-        <a href="{% url 'test' %}">Page for rendering your handlebars templates</a>
+		
+		{% block content %}{% endblock content %}
+		
     </body>
 </html>
