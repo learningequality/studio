@@ -60,4 +60,4 @@ target/
 # virtualenv
 venv
 
-*.Thumbs.db
+Thumbs.db
