@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+{% load staticfiles %}
+
+<div id="pdf" class="container pull-right">
+	<div class="pull-left details">
+		<h3>Author</h3>
+		<p>Jessica Aceret</p>
+		<h3>Date Added</h3>
+		<p>6/22/205 12:42:10pm</p>
+		<h3>License</h3>
+		<p>Creative Commons (CC)</p>
+		<h3>Tags</h3>
+		<ul class="list-inline">
+			<script type="text/javascript">
+				var tags = ["Tag 1","Tag 2", "Tag 3"];
+				for (var i = 0, len=tags.length; i < len; i++) {
+					document.write("<li><h6 class=\"tag\">" + tags[i] + "</h6></li>");
+				}
+			</script>
+		</ul>
+		<h3>Description</h3>
+		<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+	</div>
+	<div class="pull-left viewer">
+		<h6>Directory > Path > ... <a href="#video" class="btn">View Video</a>&nbsp;&nbsp;&nbsp;<a href="#audio" class="btn">View Audio</a> <a href="#" class="pull-right">X</a></h6>
+		<h2>Content.pdf<a class="btn pull-right" id="show">Hide details</a><a class="btn pull-right" id="show">View Fullscreen</a></h2>
+		<div class="preview_window">
+			<embed class="pull-right" src="http://fzs.sve-mo.ba/sites/default/files/dokumenti-vijesti/sample.pdf"/>
+		</div>
+	</div>
+</div>
+
+<div id="video" class="container pull-right">
+	<div class="container viewer">
+		<h6>Directory > Path > ... <a href="#pdf" class="btn">View PDF</a>&nbsp;&nbsp;&nbsp;<a href="#audio" class="btn">View Audio</a> <a href="#" class="pull-right">X</a></h6>
+		<h2>Content.mp4<a class="btn pull-right" id="show">Hide details</a></h2>
+		<video controls>
+			<source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4">
+			Your browser does not support this video.
+		</video>
+		<table>
+		<tr>
+		<td>
+			<h2>Author</h2>
+			<p>Jessica Aceret</p>
+		</td>
+		<td>
+			<h2>Date Added</h2>
+			<p>6/22/205 12:42:10pm</p>
+		</td>
+		<td>
+			<h2>License</h2>
+			<p>Creative Commons (CC)</p>
+		</td>
+		</tr>
+		</table>
+		<h3>Tags</h3>
+		<ul class="list-inline">
+			<script type="text/javascript">
+				var tags = ["Tag 1","Tag 2", "Tag 3"];
+				for (var i = 0, len=tags.length; i < len; i++) {
+					document.write("<li><h6 class=\"tag\">" + tags[i] + "</h6></li>");
+				}
+			</script>
+		</ul>
+		<h3 class="description">Description</h3>
+		<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+	</div>
+</div>
+
+<div id="audio" class="container pull-right">
+	<div class="container viewer">
+		<h6>Directory > Path > ... <a href="#pdf" class="btn">View PDF</a>&nbsp;&nbsp;&nbsp;<a href="#video" class="btn">View Video</a><a href="#" class="pull-right">X</a></h6>
+		<h2>Content.mp3<a class="btn pull-right" id="show">Hide details</a></h2>
+		<audio controls>
+			<source src="http://www.mfiles.co.uk/mp3-downloads/scott-joplin-peacherine-rag.mp3" type="audio/mp3">
+			Your browser does not support this audio clip.
+		</audio>
+		<table>
+		<tr>
+		<td>
+			<h2>Author</h2>
+			<p>Jessica Aceret</p>
+		</td>
+		<td>
+			<h2>Date Added</h2>
+			<p>6/22/205 12:42:10pm</p>
+		</td>
+		<td>
+			<h2>License</h2>
+			<p>Creative Commons (CC)</p>
+		</td>
+		</tr>
+		</table>
+		<h3>Tags</h3>
+		<ul class="list-inline">
+			<script type="text/javascript">
+				var tags = ["Tag 1","Tag 2", "Tag 3"];
+				for (var i = 0, len=tags.length; i < len; i++) {
+					document.write("<li><h6 class=\"tag\">" + tags[i] + "</h6></li>");
+				}
+			</script>
+		</ul>
+		<h3 class="description">Description</h3>
+		<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+	</div>
+</div>

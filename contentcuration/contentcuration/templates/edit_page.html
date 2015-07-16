@@ -3,130 +3,53 @@
 
 {% load staticfiles %}
 {% block content %}
-<div id="edit">
-<div id="button_bar">
-	<a id="move_button" href="#move" class="button">Move</a>
-	<a id="copy_button" href="#copy" class="button">Copy</a>
-	<a id="delete_button" href="#delete" class="button">Delete</a>
-	<a href="#clipboard_overview"class="button">Clipboard</a>
-</div>
+<div id="edit" class="container-fluid">
+<nav id="button_bar" class="col-m-4">
+	<a href="#move" class="btn btn-default"><img src="" alt="move"/>Move</a>
+	<a href="#copy" class="btn btn-default"><img src="" alt="copy"/>Copy</a>
+	<a href="#delete" class="btn btn-default"><img src="" alt="delete"/>Delete</a>
+	<a href="#clipboard_overview"class="btn btn-default"><img src="" alt="clipboard"/>Clipboard</a>
+</nav>
 
-<div id="edit_container">
-	<canvas class="sidebar"></canvas>
-	<h2 class="title">Khan Academy</h2>
-	<div id="edit_list">
-		<ul>
+<div id="content_container" class="container pull-left">
+	<canvas class="pull-left"> </canvas>
+	<h2>Khan Academy</h2>
+	<div class="content-list">
+		<ul class="list-unstyled">
+		<!-- Todo: Move this to js file -->
 			<script type="text/javascript">
 				var folders = ["Math","Science"];
+				var files = ["Intro to this class", "Intro video"];
 				var description = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
-				for (var i = 0; i < folders.length; i++) {
-					document.write("<li><input type=\"checkbox\" id=\""+ folders[i] + "_KA_" + i + "\"/>"
-									+ "<label class = \"folder\" for = \""+ folders[i] + "_KA_" + i + "\">" 
-									+ "<h3>" + folders[i] + "<div id=\"button\"><a href=\"#\">"
-									+ "<a href=\"#\"><img src=\"{% static 'img/edit.png' %}\" alt=\"edit\"/></a>"
-									+ "</div></h3><p id=\"description\">" + description + "</p>"
+				for (var i = 0, len=folders.length; i < len; i++) {
+					document.write("<li><input type=\"checkbox\" class=\"checkbox\" id=\""+ folders[i] + "_Math_" + i + "\"/>"
+									+ "<label class = \"folder\" for = \""+ folders[i] + "_Math_" + i + "\">" 
+									+ "<h3>" + folders[i] + "<a href=\"#clipboard_edit_folder\" class=\"pull-right\"><img src=\"{% static 'img/edit.png' %}\" alt=\"edit\"/></a>"
+									+ "</h3><p class=\"description\">" + description + "</p>"
 									+ "</label><li>");
 				}
-			</script>
-		</ul>
-		<ul>
-			<script type="text/javascript">
-				var files = ["Intro to this class", "Intro video"];
-				for (var i = 0; i < files.length; i++) {
+				for (var i = 0, len=files.length; i < len; i++) {
 					document.write("<li><input type=\"checkbox\" id=\""+ files[i] + "_KA_" + i + "\"/>"
 									+ "<label for = \""+ files[i] + "_KA_" + i + "\">" 
-									+ "<h4 class=\"file\">" + files[i] + "<div id=\"button\"><a href=\"#\">"
-									+ "<a href=\"#\"><img src=\"{% static 'img/preview.png' %}\" alt=\"preview\"/></a>"
-									+ "<a href=\"#\"><img src=\"{% static 'img/edit.png' %}\" alt=\"edit\"/></a>"
-									+ "</div></h4></label></li>");
+									+ "<h4 class=\"file\">" + files[i]
+									+ "<a href=\"#pdf\" class=\"pull-right\"><img src=\"{% static 'img/preview.png' %}\" alt=\"preview\"/></a>"
+									+ "<a href=\"#clipboard_edit_content\" class=\"pull-right\"><img src=\"{% static 'img/edit.png' %}\" alt=\"edit\"/></a>"
+									+ "</h4></label></li>");
 				}
 			</script>
 		</ul>
-		<form id="bottom_button">
-			<button id="add_folder" type="submit"><img src="{% static 'src/add.png' %}" alt="edit"/>New Folder</button>
-			<button id="add_content" type="submit"><img src="{% static 'src/add.png' %}" alt="edit"/>Add Content</button>
-		</form>
+		<nav>
+			<a href="#clipboard_new_folder" class="btn btn-default pull-left"><img src="{% static 'src/add.png' %}" alt="edit"/>New Folder</a>
+			<a href="#clipboard_new_content" class="btn btn-default pull-left"><img src="{% static 'src/add.png' %}" alt="edit"/>New Content</a>
+		</nav>
 	</div>
 </div>
 
-<div id="edit_container">
-	<canvas class="sidebar"></canvas>
-	<h2 class="title">Math</h2>
-	<div id="edit_list">
-		<ul>
-			<script type="text/javascript">
-				var folders = ["Algebra", "Trigonometry", "Geometry", "Addition and Subtraction"];
-				var description = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
-				for (var i = 0; i < folders.length; i++) {
-					document.write("<li><input type=\"checkbox\" id=\""+ folders[i] + "_KA_" + i + "\"/>"
-									+ "<label class = \"folder\" for = \""+ folders[i] + "_KA_" + i + "\">" 
-									+ "<h3>" + folders[i] + "<div id=\"button\"><a href=\"#\">"
-									+ "<a href=\"#\"><img src=\"{% static 'img/edit.png' %}\" alt=\"edit\"/></a>"
-									+ "</div></h3><p id=\"description\">" + description + "</p>"
-									+ "</label><li>");
-				}
-			</script>
-		</ul>
-		<ul>
-			<script type="text/javascript">
-				var files = ["Content item", "Content item"];
-				for (var i = 0; i < files.length; i++) {
-					document.write("<li><input type=\"checkbox\" id=\""+ files[i] + "_Math_" + i + "\"/>"
-									+ "<label for = \""+ files[i] + "_Math_" + i + "\">" 
-									+ "<h4 class=\"file\">" + files[i] + "<div id=\"button\"><a href=\"#\">"
-									+ "<a href=\"#\"><img src=\"{% static 'img/preview.png' %}\" alt=\"preview\"/></a>"
-									+ "<a href=\"#\"><img src=\"{% static 'img/edit.png' %}\" alt=\"edit\"/></a>"
-									+ "</div></h4></label></li>");
-				}
-			</script>
-		</ul>
-		<form id="bottom_button">
-			<button id="add_folder" type="submit"><img src="{% static 'src/add.png' %}" alt="edit"/>New Folder</button>
-			<button id="add_content" type="submit"><img src="{% static 'src/add.png' %}" alt="edit"/>Add Content</button>
-		</form>
-	</div>
-</div>
-
-<div id="edit_container">
-	<canvas class="sidebar"></canvas>
-	<h2 class="title">Geometry</h2>
-	<div id="edit_list">
-		<ul>
-			<script type="text/javascript">
-				var folders = ["Geology"];
-				var description = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
-				for (var i = 0; i < folders.length; i++) {
-					document.write("<li><input type=\"checkbox\" id=\""+ folders[i] + "_Math_" + i + "\"/></td>"
-									+ "<td><label class = \"folder\" for = \""+ folders[i] + "_Math_" + i + "\">" 
-									+ "<h3>" + folders[i] + "<div id=\"button\"><a href=\"#\">"
-									+ "<a href=\"#\"><img src=\"{% static 'img/edit.png' %}\" alt=\"edit\"/></a>"
-									+ "</div></h3><p id=\"description\">" + description + "</p>"
-									+ "</label><li>");
-				}
-			</script>
-		</ul>
-		<ul>
-			<script type="text/javascript">
-				var files = ["Content item", "Content item", "Content item", "Content item", "Content item", "Content item", "Content item", "Content item", "Content item", "Content item"];
-				for (var i = 0; i < files.length; i++) {
-					document.write("<li><input type=\"checkbox\" id=\""+ files[i] + "_Geo_" + i + "\"/>"
-									+ "<label for = \""+ files[i] + "_Geo_" + i + "\">" 
-									+ "<h4 class=\"file\">" + files[i] + "<div id=\"button\"><a href=\"#\">"
-									+ "<a href=\"#\"><img src=\"{% static 'img/preview.png' %}\" alt=\"preview\"/></a>"
-									+ "<a href=\"#\"><img src=\"{% static 'img/edit.png' %}\" alt=\"edit\"/></a>"
-									+ "</div></h4></label></li>");
-				}
-			</script>
-		</ul>
-		<form id="bottom_button">
-			<button id="add_folder" type="submit"><img src="{% static 'img/add.png' %}" alt="edit"/>New Folder</button>
-			<button id="add_content" type="submit"><img src="{% static 'img/add.png' %}" alt="edit"/>Add Content</button>
-		</form>
-	</div>
-</div>
-
-</div>
-
+<div id="edit_clipboard" class="container pull-right">
 	{% include "clipboard.html" %}
-
+</div>
+<div id="previewer" class="container pull-right">
+	{% include "previewer.html" %}
+</div>
+</div>
 {% endblock content %}
