@@ -40,6 +40,9 @@ If not, use these commands:
 
 	`pip install -r requirements.txt` Installs python dependencies within your virtual environment
 
+* [install node](http://nodejs.org/download/) if you don't have it already.
+	Install the dependencies listed in packages.json: `npm install`
+
 * Set up the database 
 
 	`cd contentcuration`
