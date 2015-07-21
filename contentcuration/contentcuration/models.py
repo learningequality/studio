@@ -4,40 +4,51 @@ from django.utils.translation import ugettext as _
 
 
 class Channel(models.Model):
+    """ Permissions come from association with organizations """
     name = models.CharField(
         max_length= 100,
         verbose_name=_("channel name"),
-    )
-    primary_topic_tree = models.ForeignKey(
-        'TopicTree',
-        help_text=_("Primary topic tree associated with this channel"),
     )
     description = models.TextField(
         max_length = 300,
         verbose_name=_("channel description"),
         help_text=_("Description of what a channel contains"),
     )
-    class Meta:
-        verbose_name = _("Channel")
-        verbose_name_plural = _("Channels")
-
-
-class TopicTree(MPTTModel):
-    """Base model for all channels"""
-
-    name = models.CharField(
-        max_length=255,
-        verbose_name=_("topic tree name"),
-        help_text=_("Displayed to the user"),
+    author = models.CharField(
+        max_length=100,
+        verbose_name=_("channel author"),
+        help_text=_("Channel author can be a person or an organization"),
     )
     editors = models.ManyToManyField(
         'auth.User',
         verbose_name=_("editors"),
         help_text=_("Users with edit rights"),
     )
+
+    class Meta:
+        verbose_name = _("Channel")
+        verbose_name_plural = _("Channels")
+
+
+class TopicTree(models.Model):
+    """Base model for all channels"""
+    
+
+    name = models.CharField(
+        max_length=255,
+        verbose_name=_("topic tree name"),
+        help_text=_("Displayed to the user"),
+    )
+    channel = models.ForeignKey(
+        'Channel',
+        verbose_name=_("channel"),
+        null=True,
+        help_text=_("For different versions of the tree in the same channel (trash, edit, workspace)"),
+    )
     root_node = models.ForeignKey(
         'Node',
         verbose_name=_("root node"),
+        null=True,
         help_text=_(
             "The starting point for the tree, the title of it is the "
             "title shown in the menu"
@@ -214,6 +225,21 @@ class ContentNode(Node):
         help_text=_("Brief description of what this content item is"),
     )
 
+class ContentLicense(models.Model):
+    name = models.CharField(
+        max_length=255,
+        default=(""),
+        verbose_name=_("name"),
+        help_text=_("Name of license, e.g. 'Creative Commons Share-Alike 2.0'"),
+    )
+    exists = models.BooleanField(
+        default=False,
+        verbose_name=_("license exists"),
+        help_text=_("Tells whether or not a content item is licensed to share"),
+    )
+
+
+
 
 # If we decide to subclass Content:
 
@@ -256,10 +282,3 @@ class ContentNode(Node):
 #     Model for Exercise data
 #     """
 
-
-class ContentLicense(models.Model):
-    name = models.CharField(
-        max_length=255,
-        verbose_name=_("name"),
-        help_text=_("Name of license, e.g. 'Creative Commons Share-Alike 2.0'")
-    )

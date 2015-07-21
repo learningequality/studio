@@ -17,14 +17,19 @@ class TopicSerializer(serializers.ModelSerializer):
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta: 
         model = ContentLicense
-        fields = ('name')
+        fields = ('name',)
 
 class ChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
-        fields = ('name', 'description', 'primary_topic_tree')
+        fields = ('name', 'description', 'editors')
 
 class TopicTreeSerializer(serializers.ModelSerializer):
     class Meta:
         model = TopicTree
-        fields = ('name', 'editors')
+        fields = ('name',)
+
+class NodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Node
+        fields = ('name', 'published', 'deleted')
