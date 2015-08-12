@@ -55,7 +55,7 @@ class Command(RunserverCommand):
         self.stdout.write('>>> Starting browserify')
 
         self.browserify_process = subprocess.Popen(
-            ['node ../build.js --watch --debug'],
+            'node ../build.js --watch --debug',
             shell=True,
             stdin=subprocess.PIPE,
             stdout=self.stdout,
@@ -70,5 +70,9 @@ class Command(RunserverCommand):
         self.browserify_process.wait()
 
         if self.browserify_process.returncode != 0 and not self.cleanup_closing:
-            self.stdout.write('>>> browserify exited unexpectedly')
-            os._exit(1)
+            self.stdout.write(
+                """
+                ****************************************************************************
+                Browserify exited unexpectedly - Javascript code will not be properly built.
+                ****************************************************************************
+                """)
