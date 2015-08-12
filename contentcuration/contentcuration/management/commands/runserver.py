@@ -32,7 +32,7 @@ class Command(RunserverCommand):
         # We're subclassing runserver, which spawns threads for its
         # autoreloader with RUN_MAIN set to true, we have to check for
         # this to avoid running browserify twice.
-        if not os.getenv('RUN_MAIN', False):
+        if not os.getenv('RUN_MAIN', False) and not getattr(self, "browserify_process"):
 
             browserify_thread = Thread(target=self.start_browserify)
             browserify_thread.daemon = True
@@ -47,12 +47,12 @@ class Command(RunserverCommand):
             return
 
         self.cleanup_closing = True
-        self.stdout.write('>>> Closing browserify process')
+        self.stdout.write('Closing browserify process')
 
         self.browserify_process.terminate()
 
     def start_browserify(self):
-        self.stdout.write('>>> Starting browserify')
+        self.stdout.write('Starting browserify')
 
         self.browserify_process = subprocess.Popen(
             'node ../build.js --watch --debug',
@@ -62,9 +62,9 @@ class Command(RunserverCommand):
             stderr=self.stderr)
 
         if self.browserify_process.poll() is not None:
-            raise CommandError('browserify failed to start')
+            raise CommandError('Browserify failed to start')
 
-        self.stdout.write('>>> browserify process on pid {0}'
+        self.stdout.write('Browserify process on pid {0}'
                           .format(self.browserify_process.pid))
 
         self.browserify_process.wait()
