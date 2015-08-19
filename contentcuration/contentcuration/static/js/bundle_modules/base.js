@@ -7,7 +7,6 @@ require("bootstrap/less/bootstrap.less");
 require("bootstrap/dist/js/npm.js");
 require("bootstrap/dist/css/bootstrap.css");
 require("../../less/styles.less");
-require("../../less/global-variables.less");
 
 $(function() {
     attachfastclick(document.body);

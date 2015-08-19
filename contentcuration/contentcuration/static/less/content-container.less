@@ -1,0 +1,62 @@
+@import "global-variables.less";
+
+.content-container{
+	*{padding:0;margin:0;}
+	::-webkit-scrollbar { display: none; }
+	background-color: @container-background-color; 
+	height:  @container-height;
+	min-height: @container-min-height; 
+	margin-bottom: 30px;
+	display:inline-block;
+	
+	canvas{
+		position:absolute;
+		height:@container-height;
+		min-height: @container-min-height; 
+	}
+	h2{
+		width: 100%;
+		font-size: 25px;
+		padding-top:10px;
+		height:50px;
+	}
+	.content-list{
+		overflow-y: auto;
+		overflow-x:hidden;
+		width:100%;
+		ul{
+			label{
+				vertical-align: middle;
+				font-weight: normal;
+				cursor:pointer;
+				padding:0;
+			}
+			.folder{
+				background-color: @folder-color;
+				box-shadow: -3px 3px 3px @folder-shadow;
+				font-size: 18px;
+				height: @folder-height;
+				margin-left: 20px;margin-top: 10px;
+				*{padding-right:5px}
+				h3{height: @folder-height - 65px;}
+				p{
+					font-style: italic;
+					font-size:14px;
+					height:65px;
+				}
+			}
+			.file{
+				font-size: 18px;
+				margin-left: 20px;
+				margin-top: 10px;
+				border-radius: 10px;
+				background-color:transparent;
+				h4{padding:10px;}
+				
+			}
+			input[type="radio"]:checked+.file, .file:hover{
+				background-color: @highlighted-file;
+			}
+		}
+	}
+}
