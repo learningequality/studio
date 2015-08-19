@@ -1,0 +1,13 @@
+<table id="details">
+	<tr>
+		<td id="top-left">
+			<h5>Author</h5>
+			<p>{{#if file.author}}{{file.author}}{{else}}No authors found.{{/if}}</p>
+		</td>
+		<td><h5>Tags</h5><p>{{#if tag.length}}{{#each tag}}{{tag.name}}{{/each}}{{else}}No tags found.{{/if}}</p></td>
+	</tr>
+	<tr>
+		<td><h5>License</h5><p>{{#if file.license.name}}{{file.license.name}}{{else}}No license found.{{/if}}</p></td>
+		<td id="bottom-right"><h5>Description</h5><p>{{#if file.description}}{{file.description}}{{else}}No description found.{{/if}}</p></td>
+	</tr>
+</table>

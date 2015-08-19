@@ -1,0 +1,49 @@
+<div id="clipboard" class="pull-right">
+	<div class="clipboard_header">
+		<h3 class="text-center">
+			<img src="/static/img/add_folder.png" alt="add" class="pull-left"/>
+			Adding Content to Topic
+			<a class="back pull-right btn-link toggle_clipboard">X</a>
+		</h3>
+		<table>
+			<tr>
+				<td class="text-center">1<h6>Source</h6></td>
+				<td class="text-center"><canvas></canvas></td>
+				<td class="text-center"><h4 class="text-center">2</h4><h6>Choose Content</h6></td>
+				<td class="text-center"><canvas></canvas></td>
+				<td class="text-center">3<h6>Metadata</h6></td>
+			</tr>
+		</table>
+	</div>
+	<div class="clipboard_content">
+		<label>2. Adding content from My Computer</label>
+		<div id = "add_content_area" class = "container text-center">
+			<h5>Drag and drop <br/> from your computer</h5>
+			<p>or</p>
+			<input type='file'/>
+		</div>
+		<div id = "selected_content_area" class="container list_content">
+			<h5>Files or folders to be added:</h5>
+			<ul>
+				{{#each topic}}
+				
+					<!-- Todo:Remove this -->
+					<li class="folder">
+						<img src="/static/img/folder.png" alt="folder"/>{{title}}<span class="pull-right close_file">X</span>
+					</li>
+				
+				{{/each}}
+				{{#each topic}}
+				
+					<!-- Todo:Remove this -->
+					<li class="file">
+						{{title}}<span class="pull-right close_file">X</span>
+					</li>
+					
+				{{/each}}
+			</ul>
+		</div>
+		<a class="btn pull-left btn-link clipboard_previous">Previous</a>
+		<a class="btn pull-right btn-link clipboard_next">Next</a>
+	</div>
+</div>

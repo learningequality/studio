@@ -1,0 +1,96 @@
+@import "global-variables.less";
+@import "content-container.less";
+
+/* EDIT PAGE */
+@edit-bottom-button-color: #424242;
+@edit-button-color: #E0E1E1;
+@edit-container-color: #A9BCCD;
+
+#edit{
+	img{margin-right:10px;color:blue;}
+	a{text-decoration:none;color:black;}
+
+	#button_bar{
+		margin-bottom: 15px;
+		a{
+			background-color: @edit-button-color;
+			font-size: 15px;
+			padding:10px;
+			vertical-align:middle;
+			img{width:24px;height:24px;}
+		}
+	}
+	
+	#edit_container_area{
+		overflow: auto; 
+	}
+	
+	.content-container{
+		border-right: 1px solid @highlighted-file; 
+		border-bottom: 1px solid @highlighted-file; 
+		position:relative;
+		padding:0;
+		box-shadow: -7px 7px 5px @container-shadow;
+		margin-right:30px;
+		width: @container-width;
+
+		canvas{
+			width: @sidebar-width;
+			background-color: @edit-container-color;
+		}
+		
+		h2{
+			padding-left: @sidebar-width;padding-top:10px;
+			background-color: @edit-container-color;
+		}
+		nav{
+			z-index:100;
+			margin-left:@sidebar-width;
+			padding-bottom:10px;
+			width: @container-width - @sidebar-width;
+			background-color: @container-background-color;
+			a{
+				background-color: @edit-bottom-button-color;
+				padding:5px;
+				width:50%;
+				color:white;
+			}
+		}
+		.default-item{
+			font-style:italic;
+			margin-left: 30px;
+			margin-left: @sidebar-width;
+			font-size: 20px;
+		}
+		.content-list{
+			padding-left: 4px;
+			margin-top:40px;
+			height:80%;
+			ul{
+				position: relative;
+				img{display:none;margin-right:10px;}
+				input[type=checkbox]{
+					display:inline-block;
+					width:22px;
+					height:22px;
+					vertical-align:middle;
+				}
+				
+				input[type=checkbox]:checked+label, label:hover{
+					img{display:inline-block;}
+				}
+				.folder{
+					width:@container-width - @sidebar-width - 30px;
+				}
+				
+				.file{
+					width:@container-width - @sidebar-width - 40px;
+					img{width: 20px; height:20px;}
+				}
+				input[type=checkbox]:checked + .file, .file:hover{background-color: @highlighted-file;}
+			}
+			
+		}
+		
+	}
+}
