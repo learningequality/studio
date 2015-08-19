@@ -12,47 +12,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         
         <title>Kolibri</title>
-        
-        <!-- CSS frameworks -->
-        <link rel="stylesheet" type="text/css" href="{% static 'css/frameworks/bootstrap.min.css' %}">
+        <script type="text/javascript" src="{% static 'js/bundles/common.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/bundles/base.js' %}"></script>
 
-        <!-- JS frameworks -->
-        <script type="text/javascript" src="{% static 'js/frameworks/jquery-2.1.4.min.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/frameworks/fastclick.js' %}"></script>
-        <script>
-        $(function() {
-            FastClick.attach(document.body);
-        });
-
-        $(document).ready(function() {
-            var dummyTree = new DummyTreeView();
-        });
-		
-        </script>
-        <script type="text/javascript" src="{% static 'js/frameworks/underscore-min.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/frameworks/backbone-min.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/frameworks/bootstrap.min.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/frameworks/handlebars-v3.0.3.js' %}"></script>
-
-        <!-- Handlebars Templates -->
-
-
-        <!-- Our CSS -->
-        <link rel="stylesheet" type="text/css" href="{% static 'css/frameworks/content-curation.css' %}">
-
-        <!-- LESS Files -->
-        <link rel="stylesheet/less" type="text/css" href="{% static 'less/styles.less' %}"/>
-        <link rel="stylesheet/less" type="text/css" href="{% static 'less/global-variables.less' %}"/>
-        <script type="text/javascript" src="{% static 'js/frameworks/less.min.js' %}"></script>
-
-
-        <!-- Our JS -->
-        <script type="text/javascript" src="{% static 'js/models.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/views.js' %}"></script>
     </head>
 
     <body>
-
+        <!-- Navigation bar -->
         <div class="navbar nav" id="top-navigation">
             <div id="logo-container">
                 <img src="{% static 'img/logo.png' %}">
@@ -77,15 +43,19 @@
         <nav class="navbar navbar-default" id="secondary-nav">
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
-                    <a href="/edit"><li><img src="{% static 'img/edit-tab.png' %}">Edit</li></a>
-                    <a href="/preview"><li><img src="{% static 'img/preview-tab.png' %}">Preview</li></a>
-                    <a href="/trash"><li><img src="{% static 'img/trash-tab.png' %}">Trash</li></a>
-                    <a href="#" id="publish"><li><img src="">Publish</li></a>
+                    <li><img src="{% static 'img/edit-tab.png' %}">Edit</li>
+                    <li><img src="{% static 'img/preview-tab.png' %}">Preview</li>
+                    <li><img src="{% static 'img/trash-tab.png' %}">Trash</li>
+                </ul>
+                <ul class="nav navbar-nav" id="publish">
+                    <li><img src="{% static 'img/publish-tab.png' %}">Publish</li>
                 </ul>
             </div>
         </nav>
 		
+        <!-- Site content gets injected here -->
 		{% block content %}{% endblock content %}
 		
+
     </body>
 </html>

@@ -1,0 +1,39 @@
+{
+  "name": "content-curation",
+  "version": "0.0.1",
+  "description": "Application for curating topic trees of arbitrary content for use in the Kolibri Learning Management System",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fle-internal/content-curation.git"
+  },
+  "keywords": [
+    "education",
+    "content",
+    "learning",
+    "edtech"
+  ],
+  "author": "Learning Equality",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fle-internal/content-curation/issues"
+  },
+  "homepage": "https://github.com/fle-internal/content-curation#readme",
+  "dependencies": {
+    "backbone": "^1.2.1",
+    "bootstrap": "^3.3.5",
+    "browserify": "^10.2.6",
+    "factor-bundle": "^2.4.1",
+    "fastclick": "^1.0.6",
+    "handlebars": "^1.3.0",
+    "hbsfy": "^2.2.1",
+    "jquery": "^2.1.4",
+    "minifyify": "^7.0.3",
+    "node-lessify": "0.0.10",
+    "underscore": "^1.8.3",
+    "watchify": "^3.2.3"
+  }
+}

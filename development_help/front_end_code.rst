@@ -9,6 +9,51 @@ Inline Javascript (i.e. Javascript directly in the Django templates inside `<scr
 
 For templating on the front end, we use `Handlebars.js <http://handlebarsjs.com/>`_ to render templates with a restricted set of statements and access to all variables passed into the template context.
 
+Modularity
+----------
+
+In order to maintain modular code and be explicit about our dependencies, we use `Browserify <http://http://browserify.org/>`_ to build Javascript code into bundles for use on the client side.
+
+To specify a bundle to be imported into the page, you need to create a 'bundle module' - this will be automatically detected by our Javascript build script, and be built into a bundle that can then be included as a script tag in a Django template.
+
+'Bundle modules' are specified inside the static/js directory of a Django app - e.g. 'bundle modules' in contentcuration are under ``contentcuration/contentcuration/static/js/bundle_modules``. Here is a simple example of a bundle_module::
+
+    var attachfastclick = require("fastclick");
+    var $ = require("jquery");
+    global.$ = $;
+    global.jQuery = $;
+
+    require("bootstrap/less/bootstrap.less");
+    require("../../less/styles.less");
+    require("bootstrap/dist/js/npm.js");
+
+    $(function() {
+        attachfastclick(document.body);
+    });
+
+This is the 'base' bundle module (a file called base.js in the above directory) - all it specifies is a set of top level objects that need to be exposed to be run within the context of the Django template (because we need Django template context variables to be passed into the Javascript) - here are the relevant ``<script>`` tags from the template::
+
+    <script type="text/javascript" src="{% static 'js/bundles/base.js' %}"></script>
+
+Here, we ``require`` the learn bundle (all bundles can be referenced by their name in this way), and are then able to access the objects defined in its ``module.exports``.
+
+It is worth noting that we are also using the same build system for LESS dependencies, so LESS files that are required for styling within a particular bundle_module (or any module) can be required in the same way as a Javascript module.
+
+For more information about using Browserify to handle dependencies, please refer to the `Browserify Handbook <https://github.com/substack/browserify-handbook>`_.
+
+Building Frontend Code
+----------------------
+
+The build script uses `node.js <https://nodejs.org/>`_ - to run the build server for production simply run ``node build.js``.
+
+Alternatively, for development, running ``node build.js`` with the ``--watch`` flag will automatically run the build process in watch mode, recompiling Javascript as it changes, on the fly.
+
+The compilation process has the following flags::
+
+    --watch         Run in watch mode - automatically recompile Javascript when modules imported into bundles are changed (N.B. this will not detect new bundles being created.)
+    --debug         Compile in debug mode - do not minify source code, and create source maps for easier client side debugging.
+    --staticfiles   Saves built files directly to the static files dir, rather than into the original app directories - useful if collectstatic has already been run.
+
 Implementing with Backbone
 --------------------------
 

@@ -59,3 +59,12 @@ target/
 
 # virtualenv
 venv
+.venv
+
+Thumbs.db
+
+# Ignore built javascript files
+/contentcuration/*/static/js/bundles
+
+# Ignore node_modules
+/node_modules

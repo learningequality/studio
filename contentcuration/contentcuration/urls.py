@@ -40,12 +40,17 @@ class TopicTreeViewSet(viewsets.ModelViewSet):
     queryset = TopicTree.objects.all()
     serializer_class = serializers.TopicTreeSerializer
 
+class NodeViewSet(viewsets.ModelViewSet):
+    queryset = Node.objects.all()
+    serializer_class = serializers.NodeSerializer
+
 router = routers.DefaultRouter()
 router.register(r'topics', TopicViewSet)
 router.register(r'content', ContentViewSet)
 router.register(r'license', LicenseViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'topictree', TopicTreeViewSet)
+router.register(r'node', NodeViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
