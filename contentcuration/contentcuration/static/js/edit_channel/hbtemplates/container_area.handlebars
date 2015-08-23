@@ -1,0 +1,13 @@
+<div id={{#if edit}}"edit"{{else}}"preview"{{/if}} class="container-fluid">
+	{{#if edit}}
+	<nav id="button_bar" class="col-m-4">
+		<a class="btn btn-default copy"><span class="glyphicon glyphicon-duplicate" aria-hidden="true"></span>Copy</a>
+		<a class="btn btn-default delete"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Delete</a>
+	</nav>
+	{{else}}
+		<h1>This is how your class will appear to learners.</h1>
+	{{/if}}
+	<div id="container-wrapper">
+		<div id="container_area" class="container-fluid row"></div>
+	</div>
+</div>

@@ -24,8 +24,6 @@
 	#previewer-filler{display:none;}
 	h2,h3{font-size: 20px;}
 	h3{padding-top:20px;padding-bottom:5px;margin-bottom:10px;}
-	#pdf:target{h3{border-bottom:1px solid gray;}};
-	
 	.toggle_details, .fullscreen, .toggle_previewer{
 		border:none;
 		background-color:#424242;
@@ -35,7 +33,6 @@
 		margin-left: 10px;
 		cursor:pointer;
 	}
-	
 	.tag{
 		background-color:#D6D3D3;
 		border:1px solid black;
@@ -45,51 +42,36 @@
 		font-size:15px;
 		cursor:pointer;
 	}
-	
 	.details{
 		width:100%;
 		padding:10px;
-		table{
+		.pdf{h3{border-bottom:1px solid gray;}};
+		.row-fluid{
 			margin-top: 20px; 
 			border-bottom: 1px solid gray;
-			td{
+			div{
 				width:30%;
 				border-right: 1px solid gray;
 				padding:10px;padding-top:20px;
+				display:inline-block;
 			}
-			td:last-child{border-right:none;}
+			div:last-child{border-right:none;}
 		}
-		
 		.description{
 			border-top:1px solid gray;
 			margin-top:20px;
 		}
 		p{padding:5px;}
 	}
-	
 	#preview_window{
 		margin-top: 20px;
-		
-		embed, video, audio{
-			width:100%;
-		}
-		
+		embed, video, audio{width:100%;}
 		embed{
 			border:1px solid gray;
-			height:85%;
+			min-height:70vh;
 		}
-		
-		video{
-			border:1px solid gray;
-		}
-		
-		audio{
-			margin-top:10%;
-		}
+		video{border:1px solid gray;}
+		audio{margin-top:10%;}
 	}
-	
-	#trash_preview_add_on{
-		padding-bottom: 10px;
-		
-	}
+	#trash_preview_add_on{padding-bottom: 10px;}
 }

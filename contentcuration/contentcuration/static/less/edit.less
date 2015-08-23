@@ -7,8 +7,7 @@
 @edit-container-color: #A9BCCD;
 
 #edit{
-	img{margin-right:10px;color:blue;}
-	a{text-decoration:none;color:black;}
+	glyphicon, img{margin-right:10px;}
 
 	#button_bar{
 		margin-bottom: 15px;
@@ -17,22 +16,15 @@
 			font-size: 15px;
 			padding:10px;
 			vertical-align:middle;
-			img{width:24px;height:24px;}
+			glyphicon{width:24px;height:24px;}
 		}
-	}
-	
-	#edit_container_area{
-		overflow: auto; 
 	}
 	
 	.content-container{
 		border-right: 1px solid @highlighted-file; 
 		border-bottom: 1px solid @highlighted-file; 
-		position:relative;
-		padding:0;
 		box-shadow: -7px 7px 5px @container-shadow;
 		margin-right:30px;
-		width: @container-width;
 
 		canvas{
 			width: @sidebar-width;
@@ -40,7 +32,8 @@
 		}
 		
 		h2{
-			padding-left: @sidebar-width;padding-top:10px;
+			padding-left: @sidebar-width;
+			padding-top:10px;
 			background-color: @edit-container-color;
 		}
 		nav{
@@ -56,41 +49,24 @@
 				color:white;
 			}
 		}
-		.default-item{
-			font-style:italic;
-			margin-left: 30px;
-			margin-left: @sidebar-width;
-			font-size: 20px;
-		}
 		.content-list{
 			padding-left: 4px;
 			margin-top:40px;
-			height:80%;
 			ul{
-				position: relative;
-				img{display:none;margin-right:10px;}
+				glyphicon{width: 24px; height:24px;}
 				input[type=checkbox]{
 					display:inline-block;
-					width:22px;
-					height:22px;
+					width:24px;
+					height:24px;
 					vertical-align:middle;
 				}
-				
 				input[type=checkbox]:checked+label, label:hover{
-					img{display:inline-block;}
+					span{display:inline-block;}
 				}
-				.folder{
-					width:@container-width - @sidebar-width - 30px;
+				.folder, .file{
+					width:@container-width - @sidebar-width - 30px;	
 				}
-				
-				.file{
-					width:@container-width - @sidebar-width - 40px;
-					img{width: 20px; height:20px;}
-				}
-				input[type=checkbox]:checked + .file, .file:hover{background-color: @highlighted-file;}
 			}
-			
 		}
-		
 	}
 }

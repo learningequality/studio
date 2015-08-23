@@ -26,7 +26,8 @@ var BaseView = Backbone.View.extend({
 		var EditViews = require("edit_channel/tree_edit/views");
 		new EditViews.TreeEditView({
 			el: $("#main-content-area"),
-			model: this.model
+			model: this.model,
+			edit: true
 		});
 	},
 	
@@ -34,7 +35,8 @@ var BaseView = Backbone.View.extend({
 		var PreviewViews = require("edit_channel/tree_preview/views");
 		new PreviewViews.TreePreviewView({
 			el: $("#main-content-area"),
-			model: this.model
+			model: this.model,
+			edit: false
 		});
 	},
 

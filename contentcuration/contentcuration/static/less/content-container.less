@@ -1,5 +1,8 @@
 @import "global-variables.less";
 
+#container-wrapper{overflow:auto;}
+a{text-decoration:none;color:black;}
+
 .content-container{
 	*{padding:0;margin:0;}
 	::-webkit-scrollbar { display: none; }
@@ -8,6 +11,9 @@
 	min-height: @container-min-height; 
 	margin-bottom: 30px;
 	display:inline-block;
+	padding:0;
+	width: @container-width;
+	position:relative;
 	
 	canvas{
 		position:absolute;
@@ -20,11 +26,21 @@
 		padding-top:10px;
 		height:50px;
 	}
+	.default-item{
+		font-style:italic;
+		margin-left: 30px;
+		margin-left: @sidebar-width;
+		font-size: 20px;
+	}
 	.content-list{
 		overflow-y: auto;
 		overflow-x:hidden;
 		width:100%;
+		height:90%;
+		input[type="radio"]{display:none;}
 		ul{
+			position: relative;
+			span{display:none;}
 			label{
 				vertical-align: middle;
 				font-weight: normal;
@@ -37,12 +53,16 @@
 				font-size: 18px;
 				height: @folder-height;
 				margin-left: 20px;margin-top: 10px;
-				*{padding-right:5px}
-				h3{height: @folder-height - 65px;}
+				*{padding-right:10px}
+				h3{
+					height: @folder-height - 65px;
+					padding-left: 10px;
+				}
 				p{
 					font-style: italic;
 					font-size:14px;
 					height:65px;
+					padding-left:10px;
 				}
 			}
 			.file{
@@ -52,9 +72,10 @@
 				border-radius: 10px;
 				background-color:transparent;
 				h4{padding:10px;}
-				
 			}
-			input[type="radio"]:checked+.file, .file:hover{
+			input[type=checkbox]:checked + .file,
+			input[type="radio"]:checked+.file,
+			.file:hover{
 				background-color: @highlighted-file;
 			}
 		}

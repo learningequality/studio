@@ -3,52 +3,22 @@ var _ = require("underscore");
 require("clipboard.less");
 
 var PreviewerViews = require("edit_channel/previewer/views");
-var previousView;
+var list_item_template = require("./hbtemplates/clipboard_list_item.handlebars");
+var prevTemplate;
+var list_index;
 
-/* Todo: make all views ClipboardView.extend */
-
-/* Loaded when user clicks "Add Folder" button */
-var ClipboardAddFolderView = Backbone.View.extend({
-	template: require("./hbtemplates/clipboard_add_folder.handlebars"),
-	initialize: function() {
-            _.bindAll(this, 'toggle_clipboard', 'add_folder');
-            //this.listenTo(this.model, "change:number_of_hexagons", this.render);
-            this.render();
-        },
-        render: function() {
-            this.$el.html(this.template(this.model));
-        },
-		
-		events: {
-			'click .toggle_clipboard':'toggle_clipboard',
-			'click .clipboard_add_folder':'add_folder'
-		},
-		add_folder: function(event){
-			if($("#folder_name").val().trim() == "")
-				$("#name_err").css("display", "inline");
-			else{
-				console.log("Adding Folder...");
-				//RELOAD TREE 
-				$("#clipboard").hide();
-			}
-		},
-		
-		toggle_clipboard: function(event){
-			$("#clipboard").hide();
-		}
-});
-
-/* Loaded when user clicks edit icon on folder*/
+/* Loaded when user clicks edit icon on folder or "Add Folder" button */
 var ClipboardEditFolderView = Backbone.View.extend({
 	template: require("./hbtemplates/clipboard_edit_folder.handlebars"),
-	initialize: function() {
+	initialize: function(options) {
+		this.edit = options.edit;
             _.bindAll(this, 'update_folder', 'toggle_clipboard');
             //this.listenTo(this.model, "change:number_of_hexagons", this.render);
             this.render();
         },
         render: function() {
-		console.log(this.model);
-            this.$el.html(this.template({folder: this.model.toJSON()}));
+			this.$el.html(this.template({folder: ((this.edit)? this.model.attributes : null), edit: this.edit}));
+			//instead of null, add topic tree to add to
         },
 		
 		events: {
@@ -60,7 +30,6 @@ var ClipboardEditFolderView = Backbone.View.extend({
 			if($("#folder_name").val().trim() == "")
 				$("#name_err").css("display", "inline");
 			else{
-				console.log("Updating Folder...");
 				//RELOAD TREE 
 				$("#clipboard").hide();
 			}
@@ -79,7 +48,7 @@ var ClipboardEditFileView = Backbone.View.extend({
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template({file: this.model.toJSON()}));
+		this.$el.html(this.template({file: this.model.attributes}));
 	},
 	
 	events: {
@@ -94,7 +63,6 @@ var ClipboardEditFileView = Backbone.View.extend({
 		if($("#content_name").val().trim() == "")
 				$("#name_err").css("display", "inline");
 		else{
-			console.log("Updating File...");
 			//RELOAD TREE 
 			$("#clipboard").hide();
 		}
@@ -103,221 +71,125 @@ var ClipboardEditFileView = Backbone.View.extend({
 
 /* Loaded when user clicks "Add Content" button */
 var ClipboardAddContentView = Backbone.View.extend({
-	template: require("./hbtemplates/clipboard_step_1.handlebars"),
+	template: require("./hbtemplates/clipboard_header.handlebars"),
 	initialize: function() {
-            _.bindAll(this, 'toggle_clipboard','computer_choose_content', 'channel_choose_content');
-            //this.listenTo(this.model, "change:number_of_hexagons", this.render);
-			previousView = this;
-            this.render();
-        },
-        render: function() {
-            this.$el.html(this.template(this.model));
-        },
-		
-		events: {
-			'click .toggle_clipboard':'toggle_clipboard',
-			'click .computer_choose_content':'computer_choose_content',
-			'click .channel_choose_content':'channel_choose_content'
-		},
-		toggle_clipboard: function(event){
-			$("#clipboard").hide();
-		},
-		computer_choose_content: function(event){
-			console.log("Selecting from computer...");
-			previousView = this;
-			new ClipboardAddFromComputerView({
-				el: $("#clipboard-area"),
-				//model: topicNodeCollection
-			});
-		},
-		channel_choose_content:  function(event){
-			console.log("Selecting from channel...");
-			previousView = this;
-			var view = new ClipboardAddFromChannelView({
-				el: $("#clipboard-area"),
-				//model: topicNodeCollection
-			});
-		}
-});
+		_.bindAll(this, 'toggle_clipboard','computer_choose_content', 'channel_choose_content', 'choose_file', 'back_to_1', 'to_step_3','previous','preview_file','open_folder', 'close_file', 'open_folder_path', 'add_folder_to_list','add_tag','toggle_folder', 'clipboard_finish','choose_channel','add_file_to_list');
+		//this.listenTo(this.model, "change:number_of_hexagons", this.render);
+		this.render();
+	},
+	render: function() {
+		this.$el.html(this.template(this.model));
+		var choose_template = require("./hbtemplates/clipboard_step_1.handlebars");
+		$("#clipboard_content").append(choose_template(this.model));
+	},
+	
+	events: {
+		'click .toggle_clipboard':'toggle_clipboard',
+		'click .computer_choose_content':'computer_choose_content',
+		'click .channel_choose_content':'channel_choose_content',
+		'click .clipboard_previous':'previous',
+		'click .clipboard_2_previous':'back_to_1',
+		'click .choose_file':'choose_file',
+		'change select':'choose_channel',
+		'click .file_plus':'add_file_to_list',
+		'click .clipboard_next':'to_step_3',
+		'click .close_file':'close_file',
+		'click .preview_file': 'preview_file',
+		'click .folder': 'open_folder',
+		'click .folder_plus': 'add_folder_to_list',
+		'click .folder_path': 'open_folder_path',
+		'click .plus':'add_tag',
+		'click .toggle_folder':'toggle_folder',
+		'click .clipboard_finish':'clipboard_finish'
+	},
+	
+	/* Functions shared across steps*/
+	toggle_clipboard: function(event){
+		$("#clipboard").hide();
+	},
+	open_folder: function(event){
+		console.log("Opening folder...");
+	},
+	close_file: function(event){
+		event.target.parentNode.remove();
+	},
+	preview_file: function(event){
+		var previewHelper = require("edit_channel/utils/loadPreview");
+		//previewHelper.loadPreview(event.target...[file]);
+	},
+	
+	/* Step 1: choose content from computer or channel */
+	computer_choose_content: function(event){
+		prevTemplate = require("./hbtemplates/clipboard_step_2_computer.handlebars");
+		$("#clipboard_content").empty();
+		$("#clipboard_content").append(prevTemplate(this.model));			
+	},
+	channel_choose_content:  function(event){
+		prevTemplate = require("./hbtemplates/clipboard_step_2_channel.handlebars");
+		$("#clipboard_content").empty();
+		$("#clipboard_content").append(prevTemplate(this.model));
+	},
+	
+	/* Step 2: select files to be added */
+	back_to_1: function(event){
+		var add_template = require("./hbtemplates/clipboard_step_1.handlebars");
+		$("#clipboard_content").empty();
+		$("#clipboard_content").append(add_template(this.model));
+	},
+	add_folder_to_list: function(event){
+		console.log("Adding folder to list...");
+		var listHelper = require("edit_channel/utils/loadList");
+		//list_index = listHelper.appendList(file, list_item_template, "#selected_content_area ul", list_index);
+	},
+	add_file_to_list: function(event){
+		console.log("Adding file to list...");
+		var listHelper = require("edit_channel/utils/loadList");
+		//list_index = listHelper.appendList(file, list_item_template, "#selected_content_area ul", list_index);
+	},
+	choose_file: function(event){
+		var input = $(document.createElement('input'));
+		input.trigger('click'); // opening dialog
+		var listHelper = require("edit_channel/utils/loadList");
+		/*
+		if file selected 
+			list_index = listHelper.appendList(file, list_item_template, "#files_content_area ul", list_index);
+		else list_index = listHelper.appendList(file, list_item_template, "#files_content_area ul", list_index);
+		*/
+	},
+	choose_channel: function(event){
+		var listHelper = require("edit_channel/utils/loadList");
+		//listHelper.loadList(this.model.topicnodes, this.model.contentnodes, list_item_template, list_item_template, "#files_content_area ul");
+	},
+	to_step_3: function(event){
+		var meta_template = require("./hbtemplates/clipboard_step_3.handlebars");
+		$("#clipboard_content").empty();
+		$("#clipboard_content").append(meta_template(this.model));
+		var listHelper = require("edit_channel/utils/loadList");
+		//listHelper.loadList(this.model.topicnodes, this.model.contentnodes, list_item_template, list_item_template, "#metalist ul");
+	},
 
-/* Loaded when user chooses to select "Choose from Computer" button */
-var ClipboardAddFromComputerView = Backbone.View.extend({
-	template: require("./hbtemplates/clipboard_step_2_computer.handlebars"),
-	initialize: function() {
-            _.bindAll(this, 'toggle_clipboard', 'to_step_3','previous','preview_file','open_folder', 'close_file');
-            //this.listenTo(this.model, "change:number_of_hexagons", this.render);
-            this.render();
-        },
-        render: function() {
-            this.$el.html(this.template());
-			$("#clipboard").css("margin-right", "0px");
-        },
-		
-		events: {
-			'click .toggle_clipboard':'toggle_clipboard',
-			'click .clipboard_previous':'previous',
-			'click .clipboard_next':'to_step_3',
-			'click .folder': 'open_folder',
-			'click .close_file':'close_file',
-			'click .preview_file': 'preview_file'
-		},
-		toggle_clipboard: function(event){
-			console.log("Toggling Clipboard...");
-			$("#clipboard").hide();
-		},
-		to_step_3: function(event){
-			console.log("Going to step 3...");
-			previousView = this;
-			var view = new ClipboardMetaView({
-				el: $("#clipboard-area"),
-				//model: topicNodeCollection
-			});
-		},
-		previous: function(event){
-			console.log("Going back...");
-			var view = new ClipboardAddContentView({
-				el: $("#clipboard-area"),
-				//model: topicNodeCollection
-			});
-		},
-		open_folder: function(event){
-			console.log("Opening folder...");
-		},
-		add_folder_to_list: function(event){
-			console.log("Adding folder to list...");
-		},
-		preview_file: function(event){
-			console.log("Previewing file...");
-			var view = new PreviewerViews.PreviewerView({
-				el: $("#previewer-area"),
-				//model: topicNodeCollection
-			});
-			
-		},
-		close_file: function(event){
-			console.log("Closing file...");
-			event.target.parentNode.remove();
-		}
-});
-
-/* Loaded when user chooses to select "Choose from Channel" button */
-var ClipboardAddFromChannelView = Backbone.View.extend({
-	template: require("./hbtemplates/clipboard_step_2_channel.handlebars"),
-	initialize: function() {
-            _.bindAll(this, 'toggle_clipboard', 'to_step_3','previous', 'open_folder_path', 'preview_file','open_folder', 'add_folder_to_list','close_file');
-            //this.listenTo(this.model, "change:number_of_hexagons", this.render);
-            this.render();
-        },
-        render: function() {
-            this.$el.html(this.template(this.model));
-			$("#clipboard").css("margin-right", "0px");
-			//Todo: load dropdown with current channels
-        },
-		
-		events: {
-			'click .toggle_clipboard':'toggle_clipboard',
-			'click .clipboard_previous':'previous',
-			'click .clipboard_next':'to_step_3',
-			'click .folder': 'open_folder',
-			'click .folder_plus': 'add_folder_to_list',
-			'click .folder_path': 'open_folder_path',
-			'click .preview_file': 'preview_file',
-			'click .close_file':'close_file'
-		},
-		toggle_clipboard: function(event){
-			console.log("Toggling Clipboard...");
-			$("#clipboard").hide();
-		},
-		to_step_3: function(event){
-			console.log("Going to step 3...");
-			previousView = this;
-			var view = new ClipboardMetaView({
-				el: $("#clipboard-area"),
-				//model: topicNodeCollection
-			});
-		},
-		previous: function(event){
-			console.log("Going back...");
-			var view = new ClipboardAddContentView({
-				el: $("#clipboard-area"),
-				//model: topicNodeCollection
-			});
-		},
-		open_folder: function(event){
-			console.log("Opening folder...");
-		},
-		add_folder_to_list: function(event){
-			console.log("Adding folder to list...");
-		},
-		open_folder_path: function(event){
-			console.log("Opening folder path...");
-		},
-		preview_file: function(event){
-			console.log("Previewing file...");
-			var view = new PreviewerViews.PreviewerView({
-				el: $("#previewer-area"),
-				//model: topicNodeCollection
-			});
-		},
-		close_file: function(event){
-			console.log("Closing file...");
-			event.target.parentNode.remove();
-		}
-});
-
-/* Loaded on last step of adding content */
-var ClipboardMetaView = Backbone.View.extend({
-	template: require("./hbtemplates/clipboard_step_3.handlebars"),
-	initialize: function() {
-            _.bindAll(this, 'toggle_clipboard','previous','open_folder', 'close_file','add_tag','toggle_folder', 'clipboard_finish');
-			console.log("Called initialize in view.js");
-            //this.listenTo(this.model, "change:number_of_hexagons", this.render);
-            this.render();
-        },
-        render: function() {
-			console.log("Rendering ClipboardView...");
-            this.$el.html(this.template(this.model));
-			$("#clipboard").css("margin-right", "0px");
-        },
-		
-		events: {
-			'click .toggle_clipboard':'toggle_clipboard',
-			'click .clipboard_previous':'previous',
-			'click .open_folder': 'open_folder',
-			'click .close_file':'close_file',
-			'click .plus':'add_tag',
-			'click .toggle_folder':'toggle_folder',
-			'click .clipboard_finish':'clipboard_finish'
-		},
-		toggle_clipboard: function(event){
-			console.log("Toggling Clipboard...");
-		},
-		previous: function(event){
-			console.log("Going back...");
-		},
-		open_folder: function(event){
-			console.log("Opening folder...");
-		},
-		close_file: function(event){
-			console.log("Closing file...");
-			event.target.parentNode.remove();
-		},
-		add_tag: function(event){
-			console.log("Adding tag...");
-		},
-		toggle_folder: function(event){
-			console.log("Toggling folder...");
-		},
-		clipboard_finish: function(event){
-			console.log("Finishing...");
-			$("#clipboard").hide();
-			$("#item_1_2").show();
-		}
+	/* Step 3: review metadata */
+	previous: function(event){
+		$("#clipboard_content").empty();
+		$("#clipboard_content").append(prevTemplate(this.model));
+	},
+	open_folder_path: function(event){
+		console.log("Opening folder path...");
+	},
+	add_tag: function(event){
+		console.log("Adding tag...");
+	},
+	toggle_folder: function(event){
+		console.log("Toggling folder...");
+	},
+	clipboard_finish: function(event){
+		console.log("Finishing...");
+		$("#clipboard").hide();
+	}
 });
 
 /*Todo: export only one ClipboardView once views are an extension of it*/
 module.exports = {
-	ClipboardAddFolderView:ClipboardAddFolderView,
 	ClipboardEditFolderView:ClipboardEditFolderView,
 	ClipboardEditFileView:ClipboardEditFileView,
 	ClipboardAddContentView:ClipboardAddContentView

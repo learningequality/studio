@@ -1,42 +1,16 @@
-<div id="clipboard" class="pull-right">
-	<div class="clipboard_header">
-		<h3 class="text-center">
-			<img src="/static/img/add_folder.png" alt="add" class="pull-left"/>
-			Adding Content to Topic
-			<a class="back pull-right btn-link toggle_clipboard">X</a>
-		</h3>
-		<table>
-			<tr>
-				<td class="text-center">1<h6>Source</h6></td>
-				<td class="text-center"><canvas></canvas></td>
-				<td class="text-center">2<h6>Choose Content</h6></td>
-				<td class="text-center"><canvas></canvas></td>
-				<td class="text-center"><h4>3</h4><h6>Metadata</h6></td>
-			</tr>
-		</table>
+<label>3. Review metadata</label>
+<br/>
+<div id="meta-wrapper">
+	<div id = "metalist" class="container pull-left list_content">
+		<ul></ul>
 	</div>
-	<div class="clipboard_content">
-		<label>3. Review metadata</label>
-		<br/>
-		<div id = "metalist" class="container pull-left list_content">
-			<ul>
-				<li class="file">Intro video<span class="pull-right close_file">X</span></li>
-				{{#each topic}}
-					<li><span class="pull-left toggle_folder">></span>{{title}}<span class="pull-right open_folder">></span></li>
-				{{/each}}
-				{{#each topic}}
-					<li class="file">{{title}}<span class="pull-right close_file">X</span></li>
-				{{/each}}
-			</ul>
-		</div>
-		<form id="metaform" class="container pull-left">
-			<label>Name</label><input type="text" id="name"/>
-			<label>Author</label><input type="text" id="author"/>
-			<label>License</label><input type="text" id="license"/>
-			<label>Tags</label><input type="text" class="metatags"/> <p class="plus">+</p>
-			<label>Description</label><textarea rows="4" id="description"></textarea>
-		</form>
-		<a class="btn pull-left btn-link clipboard_previous">Previous</a>
-		<a class="btn pull-right btn-link clipboard_finish">Finish</a>
-	</div>
+	<form id="metaform" class="container pull-left">
+		<label>Name</label><input type="text" id="name"/>
+		<label>Author</label><input type="text" id="author"/>
+		<label>License</label><input type="text" id="license"/>
+		<label>Tags</label><input type="text" class="metatags"/> <p class="plus">+</p>
+		<label>Description</label><textarea rows="4" id="description"></textarea>
+	</form>
 </div>
+<a class="btn pull-left btn-link clipboard_previous">Previous</a>
+<a class="btn pull-right btn-link clipboard_finish">Finish</a>

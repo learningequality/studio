@@ -6,12 +6,6 @@
 {% block content %}
 	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
 	<script type="text/javascript" src="{% static 'js/edit_channel/views.js' %}"></script>
-	<script type="text/javascript">
-       $(function() {
-       //     window.channel_router = new ChannelEditRouter({default_channel: "{{ channel }}"})
-       //     Backbone.history.start({pushState: true, root: ""});
-       });
-	</script>
 	
 	<div id="channel-edit-container"></div>
 {% endblock content %}

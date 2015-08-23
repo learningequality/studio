@@ -1,70 +1,16 @@
-<div id="clipboard" class="pull-right">
-	<div class="clipboard_header">
-		<h3 class="text-center">
-			<img src="/static/img/add_folder.png" alt="add" class="pull-left"/>
-			Adding Content to Topic
-			<a class="back pull-right btn-link toggle_clipboard">X</a>
-		</h3>
-		<table>
-			<tr>
-				<td class="text-center">1<h6>Source</h6></td>
-				<td class="text-center"><canvas></canvas></td>
-				<td class="text-center"><h4 class="text-center">2</h4><h6>Choose Content</h6></td>
-				<td class="text-center"><canvas></canvas></td>
-				<td class="text-center">3<h6>Metadata</h6></td>
-			</tr>
-		</table>
-	</div>
-	<div class="clipboard_content">
-		<label>2. Adding content from a channel</label>
-			<select>
-			{{#each topic}}
-				<option>{{title}}</option>
-			{{/each}}
-		</select>
-		<div id = "files_content_area" class="container list_content">
-			<h5>Path: <div class="path"></div></h5>
-			<ul>
-				{{#each topic}}
-					
-					<!-- Todo: Remove this -->
-					<li>
-						<span class="pull-left folder_plus">+</span>{{title}}<span class="pull-right folder_path">></span>
-					</li>
-					
-				{{/each}}
-				{{#each topic}}
-				
-					<!-- Todo: Remove this -->
-					<li>
-						<span class="pull-left preview_file">Preview</span>{{title}}
-					</li>
-					
-				{{/each}}
-			</ul>
-		</div>
-		<div id = "selected_content_area" class="container list_content">
-			<h5>Files or folders to be added:</h5>
-			<ul>
-				{{#each topic}}
-				
-					<!-- Todo:Remove this -->
-					<li class="folder">
-						<img src="/static/img/folder.png" alt="folder"/>{{title}}<span class="pull-right close_file">X</span>
-					</li>
-				
-				{{/each}}
-				{{#each topic}}
-				
-					<!-- Todo:Remove this -->
-					<li class="file">
-						{{title}}<span class="pull-right close_file">X</span>
-					</li>
-					
-				{{/each}}
-			</ul>
-		</div>
-		<a href="#clipboard_new_content" class="btn pull-left btn-link clipboard_previous">Previous</a>
-		<a href="#clipboard_metadata" class="btn pull-right btn-link clipboard_next">Next</a>
-	</div>
+<label>2. Adding content from a channel</label>
+<select>
+	{{#each topic}}
+		<option>{{title}}</option>
+	{{/each}}
+</select>
+<h5>Path: <div class="path"></div></h5>
+<div id = "files_content_area" class="container list_content">
+	<ul></ul>
 </div>
+<h5>Files or folders to be added:</h5>
+<div id = "selected_content_area" class="container list_content">
+	<ul></ul>
+</div>
+<a class="btn pull-left btn-link clipboard_2_previous">Previous</a>
+<a class="btn pull-right btn-link clipboard_next">Next</a>

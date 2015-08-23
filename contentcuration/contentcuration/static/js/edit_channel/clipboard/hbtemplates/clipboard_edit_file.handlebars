@@ -1,12 +1,12 @@
 <div id="clipboard" class="pull-right">
 	<div class="clipboard_header">
 		<h3 class="text-center">
-			<img src="/static/img/edit.png" alt="edit" class="pull-left"/>
+			<span class="pull-left glyphicon glyphicon-folder-open" aria-hidden="true"></span>
 			Editing Content
-			<a class="back pull-right btn-link toggle_clipboard">X</a>
+			<a class="pull-right btn-link toggle_clipboard"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a>
 		</h3>
 	</div>
-	<div class="clipboard_content">
+	<div id="clipboard_content">
 		<label for="content_name">Name</label>
 		<h6 class="error" id="name_err">Please input a valid name</h6>
 		<input type="text" id="content_name" value="{{file.title}}"/>
@@ -15,7 +15,7 @@
 		<label for="content_tags">Tags</label><input type="text" class="content_tags"/><p class="plus">+</p>
 		<label for="file_description">Description (X Characters max) </label><textarea id="file_description">{{file.description}}</textarea>
 		<div class="text-center"> 
-			<a href="#" class="btn btn-link clipboard_update_file">Update</a>
+			<a class="btn btn-link clipboard_update_file">Update</a>
 		</div>
 	</div>
 </div>

@@ -16,15 +16,15 @@
 	width:@clipboard-width;
 	right:0em;
 	top: 7em;
+	overflow-x:hidden;
+	overflow-y:auto;
 	a{text-decoration:none;}
-	.back{
-		text-style: strong;
-		background-color: @clipboard-button-color;
-		padding:5px;
-		color:white;
-		font-size:16px;
-		cursor:pointer;
+
+	h3{
+		width:100%;
+		font-size:23px;
 	}
+	
 	.clipboard_header{
 		background-color:@clipboard-border-color;
 		padding:15px;
@@ -35,40 +35,33 @@
 			height:32px;
 			color:@clipboard-button-color;
 		}
-	}
-	h3{
-		width:100%;
-		font-size:23px;
-	}
-	td{
-		font-size:15px;
-		padding:10px;
-		width:10%;
-	
-		h4{
-			background-color:white;
-			border:1px solid gray;
-			width:27px;
-			padding: 3px;
-			margin-bottom:5px;margin-left:20px;
-			border-radius:100px;
+		a{
+			font-size:15px;
+			color:black;
 		}
-		canvas{
-			background-color:black;
-			width:100%;
-			height:2px;
+		.toggle_clipboard{
+			text-style: strong;
+			background-color: @clipboard-button-color;
+			padding:5px;
+			color:white;
+			font-size:16px;
+			cursor:pointer;
 		}
-	}
-	.clipboard_content{
+	}	
+	#clipboard_content{
 		width:100%;
-		height:90%;
 		padding:0px 15px;
-		overflow:auto;
+		overflow-y:auto;
+		margin:10px;
 		.error{
 			color:#C0171B;
 			font-style:italic;
 			display:none;
 			font-size:15px;
+		}
+		select{
+			margin-left:10px;
+			width:200px;
 		}
 		label{
 			font-weight:normal;
@@ -105,8 +98,9 @@
 			padding:5px;
 		}
 		textarea{
+			resize:none;
 			width:100%;
-			height:75px;
+			height:150px;
 		}
 		#add_content_area{
 			width:100%;
@@ -116,27 +110,22 @@
 			border: 3px dashed gray;
 			font-weight:strong;
 			padding:10px;
-			
-			*{
-				margin-top:10px;
-			}
-			input[type="file"]{
-				margin-left:30%;
-			}
+			*{ margin-top:10px;}
+		}
+		h5{
+			padding:5px;
+			font-size:15px;
+			margin-bottom:0;
 		}
 		.list_content{
 			width:100%;
 			padding:20px 20px 20px 20px;
-			h5{
-				padding:5px;
-				font-size:15px;
-			}
+			overflow:auto;
+			border: 1px solid @clipboard-border-color;
+			background-color:white;
+			
 			ul{
 				width:100%;
-				height:100%;
-				overflow:auto;
-				border: 1px solid @clipboard-border-color;
-				background-color:white;
 				li{
 					cursor:pointer;
 					height:35px;
@@ -161,7 +150,7 @@
 						padding:5px;
 						height:100%;
 					}
-					img{
+					glyphicon{
 						padding:5px;
 						height:100%;
 					}
@@ -169,21 +158,18 @@
 			}
 		}
 		#files_content_area,#selected_content_area{
-			height:25%;
+			height:20vh;
+			
 		}
-		
 		#selected_content_area{
 			margin-bottom: 20px;
 		}
-		
+		#meta-wrapper{
+			height:60vh;
+		}
 		#metalist,#metaform{
-			height:60%;
+			height:100%;
 			width:50%;
-			margin-bottom:0px;
-			
-			.metatags{
-				width:100% - 500px;
-			}
 		}
 	}
 }

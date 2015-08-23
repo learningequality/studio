@@ -1,11 +1,18 @@
 <div class="details">
-	<table>
-		<tr>
-			<td><h2>Author</h2><p>{{#if author}}{{author}}{{else}}No authors found.{{/if}}</p></td>
-			<td><h2>Date Added</h2><p>{{#if published_on}}{{published_on}}{{else}}No date found.{{/if}}</p></td>
-			<td><h2>License</h2><p>{{#if license.name}}{{license.name}}{{else}}No license found.{{/if}}</p></td>
-		</tr>
-	</table>
+	<div class="row-fluid">
+		<div>
+			<h2>Author</h2>
+			<p>{{#if author}}{{author}}{{else}}No authors found.{{/if}}</p>
+		</div>
+		<div>
+			<h2>Date Added</h2>
+			<p>{{#if published_on}}{{published_on}}{{else}}No date found.{{/if}}</p>
+		</div>
+		<div>
+			<h2>License</h2>
+			<p>{{#if license.name}}{{license.name}}{{else}}No license found.{{/if}}</p>
+		</div>
+	</div>
 	<h3>Tags</h3>
 	<ul class="list-inline">
 		{{#if tag.length}}{{#each tag}}{{title}}{{/each}}{{else}}No tags found.{{/if}}

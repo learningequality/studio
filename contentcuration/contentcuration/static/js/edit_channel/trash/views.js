@@ -13,7 +13,11 @@ var TrashView = Backbone.View.extend({
 	},
 	render: function() {
 		this.$el.html(this.template(this.model));
-		loadFiles(this.model.topicnodes, this.model.contentnodes);
+		var listHelper = require("edit_channel/utils/loadList");
+		var folder_template = require("./hbtemplates/trash_collapsed.handlebars");
+		var file_template = require("./hbtemplates/trash_collapsed.handlebars");
+		var index = listHelper.loadList(this.model.topicnodes, this.model.contentnodes, folder_template, file_template, ".trash_list_container ul");
+		if(index == 0) $("#trash_list").append("<h5 class=\"default-item\">No content found.</h5>");
 	},
 	
 	events: {
@@ -25,12 +29,10 @@ var TrashView = Backbone.View.extend({
 		'change #trash [type=checkbox]' : 'check_item'
 	},
 	delete_selected: function(event){
-		if(confirm("Are you sure you want to delete the selected files?"))
-		{
+		if(confirm("Are you sure you want to delete the selected files?")){
 			console.log("Deleting Selected... ");
 			var selected = $('#trash_list').find('input:checked + label');
 			for(var i = 0; i < selected.length; i++){
-				console.log($("#"+selected[i].parentNode.id).data("data").attributes);
 				selected[i].parentNode.remove();
 			}
 		}
@@ -39,10 +41,11 @@ var TrashView = Backbone.View.extend({
 		console.log("Restoring Selected... ");
 		var selected = $('#trash_list').find('input:checked + label');
 		for(var i = 0; i < selected.length; i++){
-			console.log($("#"+selected[i].parentNode.id).data("data").attributes);
 			selected[i].parentNode.remove();
 		}
 	},
+	
+	/* Todo: Fix this so that it doesn't trigger change event (problem with event.target) */
 	select_all: function(event){
 		var selected = $('#trash_list').find('input[type=checkbox]');
 		for(var i = 0; i < selected.length; i++){
@@ -57,59 +60,45 @@ var TrashView = Backbone.View.extend({
 			$(el).data("collapsed", false);
 			var details_template = require("./hbtemplates/trash_expanded.handlebars");
 			$(el+" label").append(details_template({file: $(el).data("data").attributes}));
-			$(el+" label a").html("v");
-			var p = $(el + " #bottom-right p").text();
-			if(p.trim().length > 100)
-			{
-				$(el + " #bottom-right p").text(p.substring(0, 87));
-				$(el + " #bottom-right p").append("<a title=\""+ p + "\">... read more</a>");
-			}
+			$(el+" h4 span").attr("class", "tog glyphicon glyphicon-chevron-down");
+			var textHelper = require("edit_channel/utils/trimText");
+			$(el + " #bottom-right p").html(textHelper.trimText($(el + " #bottom-right p").text(), "... read more", 100, true));
 
 			if($(el+" input[type=checkbox]").prop("checked") == false){
 				$(el + " .detail-bar").css("height", $(el).height());
 				$(el + " .detail-bar").css("display", "inline");
+				$(el + " .prev").css("color", "white");
 			}
-			else
+			else{
 				$(el + " .sidebar").css("height", $(el).height());
+				$(el + " .prev").css("color", "black");
+			}
 		}
 		else{
 			$(el).data("collapsed", true);
-			$(el+" label a").html(">");
-			$(el+" table").remove();
+			$(el+" h4 span").attr("class", "tog glyphicon glyphicon-chevron-right");
+			$(el+" .details").remove();
 			$(el + " .detail-bar").css("display", "none");
-			$(el + " table").slideToggle(500);
+			$(el + " .prev").css("color", "black");
+			$(el + " .details").slideToggle(500);
 			$(el + " .sidebar").css("height", $(el).height());
 		}
 	},
 	preview_list_item: function(event){
 		event.preventDefault();
-		var data = $("#"+event.target.parentNode.parentNode.id).data("data");
-		var topic_list = [];
-		var add = data;
-		for(var i = 0; i < 3; i++)
-		{
-			if(add.attributes.parent)
-			{
-				add = add.attributes.parent;
-				topic_list.unshift(add);
-			}
-		}
-		var PreviewerViews = require("edit_channel/previewer/views");
-		var view = new PreviewerViews.PreviewerView({
-				el: $("#previewer-area"),
-				model: {file: data.attributes, parent: topic_list}
-			});
+		var previewHelper = require("edit_channel/utils/loadPreview");
+		previewHelper.loadPreview($("#"+event.target.parentNode.parentNode.id).data("data"));
 		var addon_template = require("./hbtemplates/trash_preview_add_on.handlebars");
 		$("#previewer").append(addon_template());
 	},
 	check_item: function(event){
-		console.log(event.target);
 		var el = "#" + event.target.parentNode.id;
 		if(event.target.checked){
 			$(el + " .sidebar").css("height", $(el).height());
 			$(el + " .sidebar").css("display", "inline-block");
 			$(el + " .detail-bar").css("display", "none");
 			$(el).css("background-color", "#E1F0DE");
+			$(el + " .prev").css("color", "black");
 		}
 		else {
 			$(el + " .sidebar").css("display", "none");
@@ -117,38 +106,11 @@ var TrashView = Backbone.View.extend({
 			if(!$(el).data("collapsed")){
 				$(el + " .detail-bar").css("height", $(el).height());
 				$(el + " .detail-bar").css("display", "inline");
+				$(el + " .prev").css("color", "white");
 			}
 		}
 	}
 });
-
-function loadFiles(topic_nodes, content_nodes){	
-	var list_index = 0;
-	
-	//Retreive all topic nodes that are a child of parent
-	topic_nodes.forEach(function(entry)
-	{
-		var folder_template = require("./hbtemplates/trash_collapsed.handlebars");
-		$(".trash_list_container ul").append(folder_template({index: list_index, file: entry.attributes}));
-		$("#item_"+list_index).data("data",entry);
-		$("#item_"+list_index).data("collapsed", true);
-		list_index ++;
-	});
-	
-	//Retreive all content nodes that are a child of parent
-	content_nodes.forEach(function(entry)
-	{
-		var file_template = require("./hbtemplates/trash_collapsed.handlebars");
-		$(".trash_list_container ul").append(file_template({index: list_index, file: entry.attributes}));
-		$("#item_"+list_index).data("data", entry);
-		$("#item_"+list_index).data("collapsed", true);
-		list_index ++;
-	});
-
-	//Default text to display if no items are in trash
-	if(list_index ==0)
-		$("#trash_list").append("<h5 class=\"default-item\">No content found.</h5>");
-}
 
 module.exports = {
 	TrashView: TrashView
