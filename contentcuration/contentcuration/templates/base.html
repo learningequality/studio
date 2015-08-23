@@ -3,7 +3,7 @@
 
 <html>
     <head>
-        <!--[if lt IE 9]> 
+         <!--[if lt IE 9]> 
             <script src="{% static "js/html5shiv.js" %}"></script>
         <![endif] -->
 		<link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
@@ -14,7 +14,6 @@
         <title>Kolibri</title>
         <script type="text/javascript" src="{% static 'js/bundles/common.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/bundles/base.js' %}"></script>
-
     </head>
 
     <body>
@@ -39,23 +38,8 @@
                 <img id="logout" src="{% static 'img/power-button.png' %}">
             </div>
         </div>
-
-        <nav class="navbar navbar-default" id="secondary-nav">
-            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav">
-                    <li><img src="{% static 'img/edit-tab.png' %}">Edit</li>
-                    <li><img src="{% static 'img/preview-tab.png' %}">Preview</li>
-                    <li><img src="{% static 'img/trash-tab.png' %}">Trash</li>
-                </ul>
-                <ul class="nav navbar-nav" id="publish">
-                    <li><img src="{% static 'img/publish-tab.png' %}">Publish</li>
-                </ul>
-            </div>
-        </nav>
-		
+        
         <!-- Site content gets injected here -->
 		{% block content %}{% endblock content %}
-		
-
     </body>
 </html>

@@ -13,10 +13,4 @@ def testpage(request):
      return render(request, 'test.html')
 
 def edit(request):
-     return render(request, 'edit_page.html')
-
-def preview(request):
-     return render(request, 'preview_page.html')
-
-def trash(request):
-     return render(request, 'trash_page.html')
+     return render(request, 'channel_edit.html')

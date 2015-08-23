@@ -1,0 +1,77 @@
+@import "global-variables.less";
+
+@previewer-border-color: #A4AAB0;
+@previewer-window-color:#E9EAEA;
+@previewer-window-width:40vw;
+@previewer-min-width: 500px;
+#previewer{
+	width:@previewer-window-width;
+	min-width: @previewer-min-width;
+	border: 2px solid @previewer-border-color;
+	background-color:@previewer-window-color;
+	overflow-y:auto;
+	overflow-x:hidden;
+	margin:-20px 0px 0px -10px;
+	height:100vh;
+	min-height: @container-min-height;
+	position:absolute;
+	z-index:100;
+	right:0em;
+	top: 8.5em;
+	box-shadow: -7px 10px 5px @container-shadow;
+	padding-right:15px;
+	
+	#previewer-filler{display:none;}
+	h2,h3{font-size: 20px;}
+	h3{padding-top:20px;padding-bottom:5px;margin-bottom:10px;}
+	.toggle_details, .fullscreen, .toggle_previewer{
+		border:none;
+		background-color:#424242;
+		color:white;
+		border-radius:20px;
+		padding:5px 10px;
+		margin-left: 10px;
+		cursor:pointer;
+	}
+	.tag{
+		background-color:#D6D3D3;
+		border:1px solid black;
+		margin: 5px;
+		text-align:center;
+		padding:5px;
+		font-size:15px;
+		cursor:pointer;
+	}
+	.details{
+		width:100%;
+		padding:10px;
+		.pdf{h3{border-bottom:1px solid gray;}};
+		.row-fluid{
+			margin-top: 20px; 
+			border-bottom: 1px solid gray;
+			div{
+				width:30%;
+				border-right: 1px solid gray;
+				padding:10px;padding-top:20px;
+				display:inline-block;
+			}
+			div:last-child{border-right:none;}
+		}
+		.description{
+			border-top:1px solid gray;
+			margin-top:20px;
+		}
+		p{padding:5px;}
+	}
+	#preview_window{
+		margin-top: 20px;
+		embed, video, audio{width:100%;}
+		embed{
+			border:1px solid gray;
+			min-height:70vh;
+		}
+		video{border:1px solid gray;}
+		audio{margin-top:10%;}
+	}
+	#trash_preview_add_on{padding-bottom: 10px;}
+}

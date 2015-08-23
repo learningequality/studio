@@ -58,7 +58,5 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^edit/', views.edit, name='edit'),
-	url(r'preview/', views.preview, name='preview'),
-	url(r'trash/', views.trash, name='trash')
+    url(r'^channel_edit/', views.edit, name='edit')
 ]
