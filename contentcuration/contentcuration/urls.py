@@ -20,29 +20,36 @@ from contentcuration.models import *    # TODO: Change this later?
 import serializers
 import views
 
+
 class ContentViewSet(viewsets.ModelViewSet):
     queryset = ContentNode.objects.all()
     serializer_class = serializers.ContentSerializer
+
 
 class TopicViewSet(viewsets.ModelViewSet):
     queryset = TopicNode.objects.all()
     serializer_class = serializers.TopicSerializer
 
+
 class LicenseViewSet(viewsets.ModelViewSet):
     queryset = ContentLicense.objects.all()
     serializer_class = serializers.LicenseSerializer
+
 
 class ChannelViewSet(viewsets.ModelViewSet):
     queryset = Channel.objects.all()
     serializer_class = serializers.ChannelSerializer
 
+
 class TopicTreeViewSet(viewsets.ModelViewSet):
     queryset = TopicTree.objects.all()
     serializer_class = serializers.TopicTreeSerializer
 
+
 class NodeViewSet(viewsets.ModelViewSet):
     queryset = Node.objects.all()
     serializer_class = serializers.NodeSerializer
+
 
 router = routers.DefaultRouter()
 router.register(r'topics', TopicViewSet)
@@ -59,6 +66,7 @@ urlpatterns = [
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^edit/', views.edit, name='edit'),
-	url(r'preview/', views.preview, name='preview'),
-	url(r'trash/', views.trash, name='trash')
+    url(r'preview/', views.preview, name='preview'),
+    url(r'trash/', views.trash, name='trash'),
+    url(r'exercises/', views.exercises, name='exercise')
 ]
