@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'contentcuration',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_js_reverse',
 )
 
 MIDDLEWARE_CLASSES = (
