@@ -280,7 +280,7 @@ class ContentLicense(models.Model):
 #     """
 
 
-class Exercise(Model):
+class Exercise(models.Model):
 
     title = models.CharField(
         max_length=50,
@@ -297,7 +297,9 @@ class Exercise(Model):
     )
 
 
-class AssessmentItem(Model):
+class AssessmentItem(models.Model):
 
-    item_data = models.TextField()  # A serialized JSON blob
-    exercise = models.ForeignKey('Exercise')
+    type = models.CharField(max_length=50)
+    question = models.TextField()
+    answers = models.TextField()
+    exercise = models.ForeignKey('Exercise', related_name="all_assessment_items")

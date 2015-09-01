@@ -51,6 +51,16 @@ class NodeViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.NodeSerializer
 
 
+class ExerciseViewSet(viewsets.ModelViewSet):
+    queryset = Exercise.objects.all()
+    serializer_class = serializers.ExerciseSerializer
+
+
+class AssessmentItemViewSet(viewsets.ModelViewSet):
+    queryset = AssessmentItem.objects.all()
+    serializer_class = serializers.AssessmentItemSerializer
+
+
 router = routers.DefaultRouter()
 router.register(r'topics', TopicViewSet)
 router.register(r'content', ContentViewSet)
@@ -58,6 +68,8 @@ router.register(r'license', LicenseViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'topictree', TopicTreeViewSet)
 router.register(r'node', NodeViewSet)
+router.register(r'exercise', ExerciseViewSet)
+router.register(r'assessmentitem', AssessmentItemViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),

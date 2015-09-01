@@ -33,3 +33,15 @@ class NodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
         fields = ('name', 'published', 'deleted')
+
+
+class ExerciseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exercise
+        fields = ('title', 'description', 'all_assessment_items', 'id')
+
+
+class AssessmentItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssessmentItem
+        fields = ('question', 'type', 'answers', 'id')
