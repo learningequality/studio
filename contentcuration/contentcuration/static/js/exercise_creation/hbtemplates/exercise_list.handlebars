@@ -1,0 +1,12 @@
+<div class="panel panel-info">
+	<div class="panel-heading">
+		<h3 class="panel-title">Exercises</h3>
+	</div>
+	<div class="panel-body">
+		<div class="list-group">
+			{{#each exercise_list }}
+			  <a href="{{url "exercise" id }}" class="list-group-item">{{ title }}</a>
+		  	{{/each}}
+		</div>
+	</div>
+</div>
