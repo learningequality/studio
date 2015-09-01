@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+{% extends "base.html" %}
+
+{% load staticfiles %}
+{% load i18n %}
+
+{% block head %} {{ block.super }}
+<script type="text/javascript" src="{% static 'js/bundles/exercise.js' %}"></script>
+{% endblock head %}
+{% block nav %}{% endblock nav %}
+
+{% block content %}
+
+<script>
+	var exercise = JSON.parse("{{ blob|escapejs }}");
+</script>
+
+
+<div class="container">
+	<div id="exercise"></div>
+</div>
+
+{% endblock content %}

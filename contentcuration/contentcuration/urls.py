@@ -80,7 +80,8 @@ urlpatterns = [
     url(r'^edit/', views.edit, name='edit'),
     url(r'preview/', views.preview, name='preview'),
     url(r'trash/', views.trash, name='trash'),
-    url(r'exercises/', views.exercises, name='exercise')
+    url(r'exercises/$', views.exercise_list, name='exercise_list'),
+    url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),
 ]
 
 

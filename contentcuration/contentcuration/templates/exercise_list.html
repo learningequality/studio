@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+{% extends "base.html" %}
+
+{% load staticfiles %}
+{% load i18n %}
+
+{% block head %} {{ block.super }}
+<script type="text/javascript" src="{% static 'js/bundles/exercise.js' %}"></script>
+{% endblock head %}
+{% block nav %}{% endblock nav %}
+
+{% block content %}
+
+<script>
+	var exercises = JSON.parse("{{ blob|escapejs }}");
+</script>
+
+
+<div class="container">
+
+	<div class="row">
+		<div class="col-sm-12">
+			<div id="exercise_list"></div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+			<nav class="exercise_page">
+			  <ul class="pagination">
+			  	
+			    <li>
+			      <a {% if exercises.has_previous %}href="?page={{ exercises.previous_page_number }" aria-label="{% trans "Previous" %}"{% else %}class="disabled"{% endif %}>
+			        <span aria-hidden="true">&laquo;</span>
+			      </a>
+			    </li>
+
+			    {% for number in exercises.paginator.page_range %}
+				    <li><a href="?page={{ number }}" {% if number == exercises.number %}class="active" aria-label="{% trans "current" %}"{% endif %}>{{ number }}</a></li>
+				{% endfor %}
+			    
+			    <li>
+			      <a {% if exercises.has_next %}href="?page={{ exercises.next_page_number }}" aria-label="{% trans "Next" %}"{% else %}class="disabled"{% endif %}>
+			        <span aria-hidden="true">&raquo;</span>
+			      </a>
+			    </li>
+			  </ul>
+			</nav>
+		</div>
+</div>
+
+{% endblock content %}
