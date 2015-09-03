@@ -1,11 +1,10 @@
 <!DOCTYPE HTML>
 {% extends "base.html" %}
-
 {% load staticfiles %}
-
 {% block content %}
-	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
 	<script type="text/javascript" src="{% static 'js/edit_channel/views.js' %}"></script>
-	
+	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
 	<div id="channel-edit-container"></div>
+	<!--div id ="topic_nodes" data="{{ topicnodes|safe }}"></div>
+	<div id ="content_nodes" data="{{ contentnodes|safe }}"></div>	-->
 {% endblock content %}

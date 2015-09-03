@@ -3,7 +3,16 @@
 	<input type="checkbox" id="file_{{index}}"></input>
 	<label  for="file_{{index}}">
 		<span class="detail-bar pull-right"></span>
-		<span class="pull-right prev glyphicon glyphicon-search" aria-hidden="true"></span>
-		<h4>{{file.title}} &nbsp; <span class="tog glyphicon glyphicon-chevron-right" aria-hidden="true"></span></h4>
+		<h4>
+			{{#if folder}}<span class="tog_folder glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+			{{else}}
+				<span class="prev glyphicon glyphicon-search" aria-hidden="true"></span>
+				<span class="tog_file glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+			{{/if}}
+			<span class="glyphicon glyphicon-{{file_icon}}" aria-hidden="true"></span>
+			{{file.title}}
+		</h4>
 	</label>
 </li>
+
+{{#if folder}}<ul id="item_{{index}}_sub" class="list-unstyled subdirectory"></ul>{{/if}}

@@ -1,72 +1,67 @@
 @import "global-variables.less";
 @import "content-container.less";
 
-/* EDIT PAGE */
-@edit-bottom-button-color: #424242;
-@edit-button-color: #E0E1E1;
-@edit-container-color: #A9BCCD;
-
 #edit{
-	glyphicon, img{margin-right:10px;}
-
+	@edit-new-button-color: #A684C8;
+	@edit-button-color: #3E5E9F;
+	@edit-container-color: #CCCCCC;
+	
+	/*background-image: url("../static/img/chalkboard.jpg");*/
 	#button_bar{
 		margin-bottom: 15px;
 		a{
 			background-color: @edit-button-color;
-			font-size: 15px;
-			padding:10px;
+			color: white;
+			border: 3px solid white;
+			width: 130px;
+			font-size: 16px;
+			padding:5px;
+			margin-right: 15px;
 			vertical-align:middle;
-			glyphicon{width:24px;height:24px;}
 		}
 	}
 	
 	.content-container{
-		border-right: 1px solid @highlighted-file; 
-		border-bottom: 1px solid @highlighted-file; 
-		box-shadow: -7px 7px 5px @container-shadow;
-		margin-right:30px;
-
-		canvas{
-			width: @sidebar-width;
-			background-color: @edit-container-color;
-		}
-		
-		h2{
-			padding-left: @sidebar-width;
-			padding-top:10px;
-			background-color: @edit-container-color;
-		}
-		nav{
-			z-index:100;
-			margin-left:@sidebar-width;
-			padding-bottom:10px;
-			width: @container-width - @sidebar-width;
-			background-color: @container-background-color;
-			a{
-				background-color: @edit-bottom-button-color;
-				padding:5px;
-				width:50%;
-				color:white;
-			}
-		}
+		canvas{background-color: @edit-container-color;}
 		.content-list{
-			padding-left: 4px;
-			margin-top:40px;
+			padding-left: @sidebar-width / 4;
 			ul{
-				glyphicon{width: 24px; height:24px;}
+				.options{display:none;}
 				input[type=checkbox]{
 					display:inline-block;
 					width:24px;
 					height:24px;
 					vertical-align:middle;
+					margin-right:2px;
+				}
+				.folder_options{
+					height:@folder-height;
+					width:40px;
 				}
 				input[type=checkbox]:checked+label, label:hover{
-					span{display:inline-block;}
+					.options{
+						display:inline-block;
+						.glyphicon{font-size: 25px;}
+					}
 				}
-				.folder, .file{
-					width:@container-width - @sidebar-width - 30px;	
+				.content_options{
+					margin-left: @sidebar-width;
+					width:100%;
+					height: 50px;
+					button{
+						.glyphicon{font-size:17px;}
+						background-color: @edit-new-button-color;
+						padding:5px;
+						width:(@container-width - 80px)/ 2;
+						color:black;
+						border:3px solid white;
+						border-radius: 0px;
+						margin-right:10px;
+						font-size: 14px;
+						span{margin-right:10px;display:inline-block;}
+					}
 				}
 			}
 		}
-	}
+	}	
 }

@@ -1,80 +1,108 @@
 @import "global-variables.less";
 
-#container-wrapper{overflow:auto;}
-a{text-decoration:none;color:black;}
+#container-wrapper{
+	overflow:hidden; overflow-x:auto;
+}
 
 .content-container{
 	*{padding:0;margin:0;}
 	::-webkit-scrollbar { display: none; }
-	background-color: @container-background-color; 
 	height:  @container-height;
+	background-color:transparent;
 	min-height: @container-min-height; 
-	margin-bottom: 30px;
 	display:inline-block;
-	padding:0;
-	width: @container-width;
+	width: @container-width + 30px;
 	position:relative;
-	
+	margin-left:0;
+	margin-right: -5px;
+	padding:0;
 	canvas{
 		position:absolute;
-		height:@container-height;
-		min-height: @container-min-height; 
+		height:@container-height - @title-size / 2;
+		min-height: @container-min-height - @title-size / 2; 
+		border: 5px solid @container-border-color;
+		border-right: none;
+		width: @sidebar-width;
+		box-shadow: -3px 3px 3px black;
+		z-index:100;
 	}
-	h2{
-		width: 100%;
-		font-size: 25px;
-		padding-top:10px;
-		height:50px;
+	.title-bar{
+		position:relative;
+		z-index:100;
+		margin-left:@container-width / 4;
+		width: @container-width / 2;
+		font-size: @title-size;
+		color:@container-border-color;
+		background-color:@body-background;
+		margin-bottom: -@title-size/2 - 10px;
+		padding-bottom: 10px;
 	}
-	.default-item{
-		font-style:italic;
-		margin-left: 30px;
-		margin-left: @sidebar-width;
-		font-size: 20px;
+	.container-interior{
+		position:absolute;
+		height:@container-height - @title-size / 2;
+		min-height: @container-min-height - @title-size / 2; 
+		width:@container-width;
+		border: 5px solid white;
+		box-shadow: -3px 3px 3px black;
+		background-color:@body-background;
 	}
 	.content-list{
+		width:@container-width + 30px;
 		overflow-y: auto;
 		overflow-x:hidden;
-		width:100%;
-		height:90%;
+		margin-top: 16px;
+		padding-top:5px;
+		margin-left:none;
 		input[type="radio"]{display:none;}
 		ul{
 			position: relative;
+			z-index:150;
 			span{display:none;}
+			.default-item{
+				font-style:italic;
+				margin-left: 40px;
+				font-size: 18px;
+				color:@container-border-color;
+			}
 			label{
 				vertical-align: middle;
 				font-weight: normal;
 				cursor:pointer;
 				padding:0;
+				*{padding-right:10px}
+				margin-bottom: 10px;
+				margin-left:10px;
+				width:@container-width - @sidebar-width - 30px;
+				border:0.5px solid black;
+				box-shadow: 3px 3px 3px @folder-shadow;
+				background-color: @folder-color;
+				.filler, .minimize{font-weight:bold;font-style:italic;}
 			}
 			.folder{
-				background-color: @folder-color;
-				box-shadow: -3px 3px 3px @folder-shadow;
-				font-size: 18px;
 				height: @folder-height;
-				margin-left: 20px;margin-top: 10px;
-				*{padding-right:10px}
 				h3{
-					height: @folder-height - 65px;
+					font-size: 17px;
+					font-weight:bold;
 					padding-left: 10px;
+					padding-bottom:10px;
 				}
+				.glyphicon{display:inline;}
 				p{
-					font-style: italic;
 					font-size:14px;
-					height:65px;
 					padding-left:10px;
+					width:@container-width - @sidebar-width - 30px;
+					a{text-decoration:none; color:black;}
 				}
 			}
 			.file{
-				font-size: 18px;
-				margin-left: 20px;
-				margin-top: 10px;
 				border-radius: 10px;
-				background-color:transparent;
-				h4{padding:10px;}
+				h4{
+					font-size: 17px;
+					padding:10px;
+				}
+				.glyphicon{display:inline;}
 			}
 			input[type=checkbox]:checked + .file,
-			input[type="radio"]:checked+.file,
 			.file:hover{
 				background-color: @highlighted-file;
 			}

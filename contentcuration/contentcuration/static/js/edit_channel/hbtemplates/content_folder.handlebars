@@ -3,14 +3,14 @@
 	{{else}}<input type="radio" name="{{index}}" id="{{index}}_{{list_index}}"/>{{/if}}
 	<label class="folder" for="{{index}}_{{list_index}}" title="{{folder.title}}">
 		{{#if edit}}
-			<span class="pull-right">
-				<span class="edit_folder_button glyphicon glyphicon-pencil" aria-hidden="true"></span>
-				<span class="open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>
-			</span>
-		{{else}}
-			<span class="pull-left"></span>
+			<div class="folder_options pull-right">
+				<div class="options">
+					<span class="edit_folder_button glyphicon glyphicon-pencil" aria-hidden="true"></span>
+					<span class="open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>
+				</div>
+			</div>
 		{{/if}}
-		<h3>{{folder.title}}</h3>
-		<p class="description"> {{folder.description}}</p>
+		<h3>{{#if folder}}{{folder.title}}{{else}}Folder Name{{/if}}</h3>
+		<p class="description">{{#if folder}}{{folder.description}}{{else}}Description of the folder{{/if}}</p>
 	</label>
 </li>

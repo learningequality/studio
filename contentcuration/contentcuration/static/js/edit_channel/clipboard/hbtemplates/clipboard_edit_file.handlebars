@@ -1,21 +1,21 @@
 <div id="clipboard" class="pull-right">
 	<div class="clipboard_header">
-		<h3 class="text-center">
+		<h3>
 			<span class="pull-left glyphicon glyphicon-folder-open" aria-hidden="true"></span>
 			Editing Content
-			<a class="pull-right btn-link toggle_clipboard"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a>
+			<span class="toggle_clipboard pull-right glyphicon glyphicon-remove" aria-hidden="true"></span>
 		</h3>
 	</div>
 	<div id="clipboard_content">
-		<label for="content_name">Name</label>
 		<h6 class="error" id="name_err">Please input a valid name</h6>
-		<input type="text" id="content_name" value="{{file.title}}"/>
-		<label for="content_author">Author</label><input type="text" id="content_author" value="{{file.author}}"/>
-		<label for="content_license">License</label><input type="text" id="content_license" value="{{file.license.name}}"/>
-		<label for="content_tags">Tags</label><input type="text" class="content_tags"/><p class="plus">+</p>
-		<label for="file_description">Description (X Characters max) </label><textarea id="file_description">{{file.description}}</textarea>
+		<input type="text" id="content_name" value="{{file.title}}" placeholder="Name"/>
+		<input type="text" id="content_author" value="{{file.author}}" placeholder="Author"/>
+		<input type="text" id="content_license" value="{{file.license.name}}" placeholder="License"/>
+		<label for="content_tags">Tags</label><input type="text" class="content_tags" placeholder="Tags (press 'Enter' to add tag)"/>
+		<textarea id="file_description" placeholder="Description" maxlength="{{limit}}">{{file.description}}</textarea>
+		<div class="char_counter" align="right"><span class="counter">{{limit}}</span> Chars Left</div>
 		<div class="text-center"> 
-			<a class="btn btn-link clipboard_update_file">Update</a>
+			<a class="btn btn-link clipboard_update_file pull-right">Update</a>
 		</div>
 	</div>
 </div>

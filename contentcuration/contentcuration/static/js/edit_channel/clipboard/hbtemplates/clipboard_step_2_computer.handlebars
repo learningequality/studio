@@ -1,12 +1,20 @@
-<label>2. Adding content from My Computer</label>
+<h4>2. Adding content from My Computer</h4>
 <div id = "add_content_area" class = "container text-center">
 	<h5>Drag and drop <br/> from your computer</h5>
 	<p>or</p>
-	<a class="choose_file btn btn-link">Choose File...</a>
+	<div class="choose_file btn btn-link">Choose File...</div>
+	<div class="hiddenfile">
+	  <input name="upload" type="file" id="fileinput"/>
+	</div>
 </div>
 <h5>Files or folders to be added:</h5>
-<div id = "selected_content_area" class="container list_content">
+
+<div id = "selected_content_area" class="list_content">
+	<div id="list_background"></div>
 	<ul></ul>
 </div>
-<a class="btn pull-left btn-link clipboard_2_previous">Previous</a>
-<a class="btn pull-right btn-link clipboard_next">Next</a>
+<br/>
+<nav>
+	<a class="btn pull-left btn-link clipboard_2_previous">Previous</a>
+	<a class="btn pull-right btn-link clipboard_next">Next</a>
+</nav>

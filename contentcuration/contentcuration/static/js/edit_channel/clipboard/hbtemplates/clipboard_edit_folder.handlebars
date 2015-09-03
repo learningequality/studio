@@ -1,16 +1,16 @@
 <div id="clipboard" class="pull-right">
 	<div class="clipboard_header">
-		<h3 class="text-center">
+		<h3>
 			<span class="pull-left glyphicon glyphicon-folder-open" aria-hidden="true"></span>
 			{{#if edit}}Editing Folder{{else}}Adding Folder{{/if}}
-			<a class="pull-right btn-link toggle_clipboard"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a>
+			<span class="toggle_clipboard pull-right glyphicon glyphicon-remove" aria-hidden="true"></span>
 		</h3>
 	</div>
 	<div id="clipboard_content"> 
-		<label for="folder_name">Folder Name</label>
 		<h6 class="error" id="name_err">Please input a valid name</h6>
-		<input type="text" id="folder_name" value="{{folder.title}}"/>
-		<label for="folder_description">Description (X Characters max) </label><textarea id="folder_description">{{folder.description}}</textarea>
+		<input type="text" id="folder_name" value="{{folder.title}}" placeholder="Name"/>
+		<textarea id="folder_description" placeholder="Description" maxlength="{{limit}}">{{folder.description}}</textarea>
+		<div class="char_counter" align="right"><span class="counter">{{limit}}</span> Chars Left</div>
 		<div class="text-center"> 
 			<a class="btn btn-link clipboard_update_folder">{{#if edit}}Update{{else}}Add{{/if}}</a>
 		</div>

@@ -1,15 +1,9 @@
 var Backbone = require("backbone");
 var _= require("underscore");
 
-window.ChannelEditDataModel = Backbone.Model.extend({
-	urlRoot: '/channel_edit',
-	initialize: function() {
-		//_.bindAll(this);
-	}
-});
-
 /* TODO: CHANGE TO ChannelEditDataModel.EXTEND */
 var TopicNodeModel = Backbone.Model.extend({
+	urlRoot: '/api/topics/',
 	defaults: {
         color1:"",
 		color2:"",
@@ -20,6 +14,7 @@ var TopicNodeModel = Backbone.Model.extend({
 });
 
 var TopicTreeModel = Backbone.Model.extend({
+	urlRoot: '/api/topictree/',
 	defaults: {
 		name: "Untitled Tree",
 		is_published: false
@@ -27,6 +22,7 @@ var TopicTreeModel = Backbone.Model.extend({
 });
 
 var ContentNodeModel = Backbone.Model.extend({
+	urlRoot: '/api/content/',
 	defaults: {
 		title: "Untitled Content",
 		author: "Anonymous",
@@ -36,6 +32,7 @@ var ContentNodeModel = Backbone.Model.extend({
 });
 
 var ChannelModel = Backbone.Model.extend({
+	urlRoot: '/api/channel/',
 	defaults: {
 		title: "Untitled Content",
 		author: "Anonymous",
@@ -45,10 +42,12 @@ var ChannelModel = Backbone.Model.extend({
 });
 
 var TopicNodeCollection = Backbone.Collection.extend({
+	urlRoot: '/api/topics/',
 	model: TopicNodeModel
 });
 
 var ContentNodeCollection = Backbone.Collection.extend({
+	urlRoot: '/api/content/',
 	model: ContentNodeModel
 });
 
@@ -58,6 +57,5 @@ module.exports = {
 	ChannelModel: ChannelModel,
 	TopicTreeModel:TopicTreeModel,
 	ContentNodeModel: ContentNodeModel,
-	ChannelEditDataModel:ChannelEditDataModel,
 	ContentNodeCollection: ContentNodeCollection
 }

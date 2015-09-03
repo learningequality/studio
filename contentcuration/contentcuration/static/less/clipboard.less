@@ -1,53 +1,50 @@
 @import "global-variables.less";
 
-@clipboard-border-color:#88C1B2;
-@clipboard-background-color:#ACBAB6;
-@clipboard-width:600px;
-@clipboard-button-color: #424242;
-/* CLIPBOARD */
 #clipboard{
+	@clipboard-border-color: #8DA9DB;
+	@clipboard-background-color:#E8E8E8;
+	@clipboard-width:600px;
+	@clipboard-button-color: #4F4F4F;
+	@clipboard-sidebar-color: #CCCCCC;
+	@clipboard-sidebar-width: 40px;
+	@clipboard-list-height: 60vh;
+	@clipboard-list-item-height: 40px;
+	@clipboard-min-height: 600px;
+	
 	background-color:@clipboard-background-color;
-	display:inline-block;
+	display:none;
 	position:absolute;
-	z-index:100;
-	height:100vh;
-	min-height: @container-min-height;
-	margin-right: -@clipboard-width;
+	z-index:20000;
+	height:85vh;
+	min-height: @clipboard-min-height;
 	width:@clipboard-width;
 	right:0em;
 	top: 7em;
 	overflow-x:hidden;
 	overflow-y:auto;
-	a{text-decoration:none;}
-
-	h3{
-		width:100%;
-		font-size:23px;
+	.btn-link{
+		background-color: @clipboard-button-color;
+		padding:5px 20px;
+		color:white;
+		text-decoration:none;
 	}
-	
 	.clipboard_header{
-		background-color:@clipboard-border-color;
+		/*background-color:@clipboard-border-color;*/
 		padding:15px;
-		border-bottom: 4px solid white;
+		border-bottom: 3px solid black;
 		width:100%;
-		img{
-			width:32px;
-			height:32px;
-			color:@clipboard-button-color;
+		h3{
+			width:100%;
+			font-size:20px;
+			.pull-left{margin-right: 20px;}
 		}
-		a{
-			font-size:15px;
-			color:black;
-		}
-		.toggle_clipboard{
-			text-style: strong;
-			background-color: @clipboard-button-color;
-			padding:5px;
-			color:white;
-			font-size:16px;
-			cursor:pointer;
-		}
-	}	
+		.toggle_clipboard{cursor:pointer;}
+	}
+	.clipboard_navigation{
+		background-color:white;
+		font-size: 15px;
+		a{border: 1px solid black;}
+	}
 	#clipboard_content{
 		width:100%;
 		padding:0px 15px;
@@ -59,49 +56,37 @@
 			display:none;
 			font-size:15px;
 		}
+		.hiddenfile {
+		 width: 0px;
+		 height: 0px;
+		 overflow: hidden;
+		}
+		.char_counter{
+			font-weight:bold;
+			font-size: 14px;
+		}
 		select{
 			margin-left:10px;
 			width:200px;
 		}
-		label{
+		.select_option{
+			padding-top: 20px;
+			margin-left:30px;
+		}
+		input[type=text], textarea{
 			font-weight:normal;
-			font-size:18px;
+			font-size:14px;
 			margin-top:20px;
-		}
-		input[type=text]{
 			width:100%;
-			height:25px;
-		}
-		.content_tags{width:440px;}
-		.btn-link{
-			background-color: @clipboard-button-color;
-			padding:5px 20px;
-			color:white;
-			margin:20px;
-		}
-		p{margin-left:20px;}
-		.plus{
-			display:inline-block;
-			margin: 5px;
-			padding:0px 5px;
-			border-radius:100px;
-			background-color:@clipboard-border-color;
-			border:1px solid gray;
-			font-weight:bold;
-			font-size:16px;
-			text-align:center;
-			color:white;
-			cursor:pointer;
-		}
-		input[type="text"],textarea{
-			border-color:@clipboard-border-color;
+			border: 3px solid @clipboard-border-color;
 			padding:5px;
 		}
+		input[type=text]{height:25px;}
 		textarea{
 			resize:none;
-			width:100%;
 			height:150px;
 		}
+		.content_tags{width:440px;}
 		#add_content_area{
 			width:100%;
 			padding: 10px 20px;
@@ -117,59 +102,106 @@
 			font-size:15px;
 			margin-bottom:0;
 		}
+		.subdirectory{display:none;}
+		
 		.list_content{
 			width:100%;
-			padding:20px 20px 20px 20px;
 			overflow:auto;
-			border: 1px solid @clipboard-border-color;
-			background-color:white;
+			height:@clipboard-list-height;
+			#list_background{
+				width: @clipboard-width - 65px;
+				position:absolute;
+				border: 3px solid @clipboard-border-color;
+				background-color:white;
+				height:inherit;
+			}
 			
 			ul{
-				width:100%;
+				position:relative;
 				li{
-					cursor:pointer;
-					height:35px;
-					font-size:16px;
-					border:1px solid @clipboard-border-color;
-					.pull-right{
-						padding-right:10px;
-						color:@clipboard-border-color;
+					margin:0;padding:0;
+					width:100%;
+					height:@clipboard-list-item-height;
+					label{
+						width:@clipboard-width - @clipboard-sidebar-width - 65px;
+						vertical-align:middle;
 						cursor:pointer;
-					}
-					.pull-left{
-						background-color: @clipboard-border-color;
-						color:white;
 						height:100%;
-						padding: 0px 10px;
-						margin-right:10px;
-						font-weight:bold;
-						cursor:pointer;
-					}
-					.preview_file{
-						background-color: #D3D3D3;
-						padding:5px;
-						height:100%;
-					}
-					glyphicon{
-						padding:5px;
-						height:100%;
+						font-size:16px;
+						border:1px solid @clipboard-border-color;
+						.pull-right{
+							padding-right:10px;
+							color:@clipboard-border-color;
+							cursor:pointer;
+						}
+						.pull-left{
+							background-color: @clipboard-border-color;
+							color:white;
+							height:100%;
+							padding: 0px 10px;
+							margin-right:10px;
+							font-weight:bold;
+							cursor:pointer;
+						}
+						.preview_file{
+							background-color: #D3D3D3;
+							padding:5px;
+							height:100%;
+						}
+						.glyphicon{
+							padding:5px;
+							height:100%;
+						}
 					}
 				}
 			}
 		}
 		#files_content_area,#selected_content_area{
 			height:20vh;
-			
+		}
+		#list{
+			height:@clipboard-list-height;
+			margin-right:20px;
+			.pull-right{visibility:hidden;}
+			input[type=checkbox]{
+				display:inline-block;
+				width:20px;
+				height:20px;
+				cursor: pointer;
+				margin-left:10px;
+				position:relative;
+				z-index:5;
+				vertical-align:middle;
+			}
+			label{
+				margin-left:5px;
+			}
+			li input[type=checkbox]:checked + label, li:hover{
+				.pull-right{visibility:visible;}
+			}
+			canvas{
+				position:absolute;
+				background-color:@clipboard-sidebar-color;
+				width: @clipboard-sidebar-width;
+				height:@clipboard-list-height;
+				border: 3px solid @clipboard-border-color;
+				border-right:none;
+			}
 		}
 		#selected_content_area{
 			margin-bottom: 20px;
 		}
 		#meta-wrapper{
-			height:60vh;
+			height:@clipboard-list-height;
+			margin-bottom: 20px;
 		}
-		#metalist,#metaform{
-			height:100%;
+		#metalist,#metaform-wrapper{
 			width:50%;
+			display:inline-block;
+			#list_background{
+				width: @clipboard-width / 2 - 65px;
+			}
+			textarea{height:20vh;}
 		}
 	}
 }

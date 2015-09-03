@@ -1,17 +1,19 @@
 <div id="trash" class="container-fluid">
-	<h1>Trash</h1>
-	<h3>Content you've removed from your course. 
-		Choose to restore folders and content to 
-		your clipboard or permanently delete.</h3>
+	<h3>Trash contains content you've removed from your course. Choose to restore them or delete them permanently.</h3>
+	<nav id="button_bar" class="col-m-2">
+		<a id="restore-selected-button" class="btn btn-default delete">Restore</a>
+		<a id="delete-selected-button" class="btn btn-default copy">Delete</a>
+	</nav>
 	<div id="trash_content_area">
 		<canvas class="pull-left"></canvas>
-		<ul class="list-inline navbar">
-			<li><input type="checkbox" id="select_all"/><label for="select_all">Select all</label></li>
-			<li id="delete-selected-button" class="btn-default pull-right"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Delete Selected</li>
-			<li id="restore-selected-button" class="btn-default pull-right"><span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>Restore Selected</li>
-		</ul>
+		<h1>Trash</h1>
+		<div class="select_all_span">
+			<span class="sidebar pull-left"></span>
+			<input type="checkbox" id="select_all"/><label for="select_all">Select all</label>
+		</div>
 		<div class="trash_list_container">
-			<ul class="list-unstyled"></ul>
+			<ul class="list-unstyled">
+			</ul>
 		</div>
 	</div>
 </div>

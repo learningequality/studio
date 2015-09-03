@@ -55,8 +55,7 @@ router.register(r'node', NodeViewSet)
 urlpatterns = [
     url(r'^$', views.base, name='base'),
     url(r'^test/', views.testpage, name='test'),
-    url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^channel_edit/', views.edit, name='edit')
+    url(r'^channel_edit/$', views.edit, name='edit')
 ]

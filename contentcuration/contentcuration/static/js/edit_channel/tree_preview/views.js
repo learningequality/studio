@@ -1,6 +1,10 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
-var LoadHelper = require("edit_channel/utils/loadTree");
+var LoadHelper = require("edit_channel/utils/LoadHelper");
+var DOMHelper = require("edit_channel/utils/DOMHelper");
+var TextHelper = require("edit_channel/utils/TextHelper");
+var PreviewerViews = require("edit_channel/previewer/views");
+
 require("preview.less");
 var container_number; // Better to find other way to identify unique container
 
@@ -8,7 +12,7 @@ var TreePreviewView = Backbone.View.extend({
 	template: require("./../hbtemplates/container_area.handlebars"),
 
 	initialize: function(options) {
-		_.bindAll(this, 'openFolder', 'previewFile');
+		_.bindAll(this, 'open_folder', 'preview_file','expand_folder','minimize_folder');
 		//this.listenTo(this.model, "change:number_of_topics", this.render);
 		this.edit = options.edit;
 		this.render();
@@ -16,21 +20,33 @@ var TreePreviewView = Backbone.View.extend({
 	render: function() {
 		this.$el.html(this.template({edit: this.edit}));
 		container_number = 0;
-		container_number = LoadHelper.loadTree(null, this.model.topic.get("root_node"), this.model.topicnodes, 
-												this.model.contentnodes, container_number, this.edit); 
+		container_number = LoadHelper.loadContainer(null, this.model.topic.get("root_node"), this.model.topicnodes, 
+												this.model.contentnodes, container_number, this.edit, true, 0); 
 	},
 	events: {
-		'click .folder': 'openFolder',
-		'click .file': 'previewFile'
+		'click .folder': 'open_folder',
+		'click .file': 'preview_file',
+		'click .filler': 'expand_folder',
+		'click .minimize':'minimize_folder'
 	},
-	openFolder: function(event){
-		var el = event.target.parentNode.parentNode;
-		container_number = LoadHelper.loadTree(el, $("#"+el.id).data("data"), this.model.topicnodes, 
-												this.model.contentnodes, container_number,this.edit);
+	expand_folder: function(event){
+		TextHelper.manageFolder(event, true);
 	},
-	previewFile: function(event){
-		var previewHelper = require("edit_channel/utils/loadPreview");
-		previewHelper.loadPreview($("#"+event.target.parentNode.parentNode.id).data("data"));
+	minimize_folder: function(event){
+		TextHelper.manageFolder(event, false);
+	},
+	open_folder: function(event){
+		var el = DOMHelper.getParentOfTag(event.target, "label");
+		container_number = LoadHelper.loadContainer(el, $("#"+el.parentNode.id).data("data"), this.model.topicnodes, 
+												this.model.contentnodes, container_number, this.edit, false);
+	},
+	preview_file: function(event){
+		var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
+		var view = new PreviewerViews.PreviewerView({
+			el: $("#previewer-area"),
+			model: file.data("data").attributes,
+			file: file
+		});
 	}
 });
 

@@ -1,15 +1,18 @@
-<nav class="navbar navbar-default" id="secondary-nav">
-	<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-		<ul class="nav navbar-nav">
-			<li id="channel-edit-button"><img src="/static/img/edit-tab.png">Edit</li>
-			<li id="channel-preview-button"><img src="/static/img/preview-tab.png">Preview</li>
-			<li id="channel-trash-button"><img src="/static/img/trash-tab.png">Trash</li>
-		</ul>
-		<ul class="nav navbar-nav" id="publish">
-			<li id="channel-publish-button"><img src="/static/img/publish-tab.png">Publish</li>
-		</ul>
-	</div>
+<nav class="navbar navbar-default collapse navbar-collapse" id="secondary-nav">
+	<ul class="nav navbar-nav">
+		<li id="channel-edit-button" class="text-center pull-left">Edit</li>
+		<li id="channel-preview-button" class="text-center pull-left">Preview</li>
+		<li id="channel-trash-button" class="text-center pull-left">Trash</li>
+	</ul>
+	<ul class="nav navbar-nav" id="publish">
+		<li id="channel-publish-button" class="text-center pull-right">Publish</li>
+	</ul>
 </nav>
+<button class="btn btn-primary" type="button" id="clipboard-toggler">
+	<span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
+	Clipboard
+	<span class="badge"></span>
+</button>
 
 <div id="main-content-area" class="container-fluid"></div>
 <div id="previewer-area" class="container pull-right"></div>
