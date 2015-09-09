@@ -299,7 +299,7 @@ class Exercise(models.Model):
 
 class AssessmentItem(models.Model):
 
-    type = models.CharField(max_length=50)
-    question = models.TextField()
-    answers = models.TextField()
+    type = models.CharField(max_length=50, default="multiplechoice")
+    question = models.TextField(blank=True)
+    answers = models.TextField(default="[]")
     exercise = models.ForeignKey('Exercise', related_name="all_assessment_items")
