@@ -9,8 +9,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise
-from contentcuration.serializers import ExerciseSerializer
+from contentcuration.models import Exercise, AssessmentItem
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer
 
 
 def base(request):
@@ -63,7 +63,12 @@ def exercise(request, exercise_id):
 
     serializer = ExerciseSerializer(exercise)
 
-    return render(request, 'exercise_edit.html', {"blob": JSONRenderer().render(serializer.data)})
+    assessment_items = AssessmentItem.objects.filter(exercise=exercise)
+
+    assessment_serialize = AssessmentItemSerializer(assessment_items, many=True)
+
+    return render(request, 'exercise_edit.html', {"exercise": JSONRenderer().render(serializer.data), "assessment_items": JSONRenderer().render(assessment_serialize.data)})
+
 
 @login_required
 def file_upload(request):
