@@ -1,6 +1,15 @@
 var Handlebars = require("hbsfy/runtime");
-var showdown  = require('showdown');
-var sanitizer = require("sanitizer");
+var marked = require("marked");
+marked.setOptions({
+  renderer: new marked.Renderer(),
+  gfm: true,
+  tables: false,
+  breaks: true,
+  pedantic: false,
+  sanitize: false,
+  smartLists: false,
+  smartypants: false
+});
 
 // A little bit of magic to let us use Django JS Reverse directly from inside a Handlebars template
 // Simply pass any arguments that you might otherwise use in order
@@ -22,9 +31,19 @@ Handlebars.registerHelper('url', function(url_name) {
 
 // A little bit of magic to let us render markdown into a Handlebars template
 Handlebars.registerHelper('markdown', function(markdown) {
-    var converter = new showdown.Converter();
-    var html = converter.makeHtml(markdown);
-    // We should be santizing on the server side as well, but let's be safe and sanitize the HTML.
-    html = sanitizer.sanitize(html);
-    return html;
+
+    if (markdown) {
+        markdown = markdown.replace(/\n(\n)/g, "$1<br />");
+        return marked(markdown);
+    } else {
+        return "";
+    }
+});
+
+// Replace newline characters with \n
+Handlebars.registerHelper('parse_newlines', function(text) {
+  if (text) {
+    text = text.replace(/\n/g, "\\n");
+  }
+  return text;
 });
