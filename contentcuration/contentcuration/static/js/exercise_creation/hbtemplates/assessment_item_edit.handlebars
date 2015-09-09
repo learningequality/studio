@@ -2,26 +2,19 @@
 <span class="badge">{{ number }}</span>
 <div class="panel-heading" role="tab" id="headingOne">
 	<div class="row">
-		<div class="col-sm-10">
-		  <h4 class="panel-title question">
+		<div class="col-sm-9">
+		  <div class="question">
 			  {{{ markdown model.question }}}
-		  </h4>
+		  </div>
 	    </div>
-	    <div class="col-sm-2">
-	    	    <button class="btn btn-success pull-right" role="button" data-toggle="collapse" data-parent="#accordion" href="#{{ model.id }}" aria-expanded="false" aria-controls="{{ model.id }}">
-		      <span class="glyphicon glyphicon-pencil"> Edit</span>
-		    </button>
+	    <div class="col-sm-3">
+	    <div class="toolbar pull-right"></div>
 		</div>
 	</div>
 </div>
 <div id="{{ model.id }}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
   <div class="panel-body">
-  	<button class="btn btn-success save" value="{{ model.id }}">
-  	  Save
-  	</button>
-  	<button class="btn btn-danger cancel" value="{{ model.id }}">
-  	  Cancel
-  	</button>
+  	<div class="answers">
+  	</div>
   </div>
-
 </div>

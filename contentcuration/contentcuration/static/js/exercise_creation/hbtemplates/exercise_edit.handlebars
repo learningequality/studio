@@ -5,14 +5,13 @@
 				<input type="text" class="form-control" id="title" placeholder="Title" value="{{title}}">
 			</div>
 			<div class="col-sm-2">
-				<button class="btn btn-info"><span class="glyphicon glyphicon-download-alt"></span></button>
-				<button class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></button>
-				<button class="btn btn-success"><span class="glyphicon glyphicon-floppy-save"></span></button>
+				<button class="btn btn-info download"><span class="glyphicon glyphicon-download-alt"></span></button>
+				<button class="btn btn-success save"><span class="glyphicon glyphicon-floppy-save"></span></button>
 			</div>
 		</div>
 	</div>
 	<div class="panel-body">
-		<textarea class="form-control" rows="3">{{ description }}</textarea>
+		<textarea class="form-control" id="description" rows="3">{{ description }}</textarea>
 
 		<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
 		</div>

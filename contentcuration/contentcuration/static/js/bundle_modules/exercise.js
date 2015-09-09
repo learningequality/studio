@@ -14,8 +14,10 @@ $(function() {
 		});
 	} else if (window.exercise) {
 		var model = new ExerciseModels.ExerciseModel(exercise);
+		var collection = new ExerciseModels.AssessmentItemCollection(assessment_items);
 		var exercise_view = new ExerciseViews.ExerciseView({
 			model: model,
+			collection: collection,
 			el: "#exercise"
 		});
 	}
