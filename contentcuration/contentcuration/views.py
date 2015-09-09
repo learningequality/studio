@@ -1,9 +1,10 @@
 import json
 from rest_framework import status
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core import paginator
+from django.core.files.storage import get_storage_class
 from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -63,3 +64,14 @@ def exercise(request, exercise_id):
     serializer = ExerciseSerializer(exercise)
 
     return render(request, 'exercise_edit.html', {"blob": JSONRenderer().render(serializer.data)})
+
+@login_required
+def file_upload(request):
+    if request.method == 'POST':
+        storage_class = get_storage_class()()
+        file_object = request.FILES.values()[0]
+        filename = storage_class.save(None, file_object)
+        return HttpResponse(json.dumps({
+            "success": True,
+            "filename": filename,
+        }))

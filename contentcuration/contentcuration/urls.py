@@ -83,9 +83,16 @@ urlpatterns = [
     url(r'trash/', views.trash, name='trash'),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),
+    url(r'^file_upload/', views.file_upload, name="file_upload"),
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
     url(r'^accounts/', include('django.contrib.auth.urls')),
 ]
 
 
 urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]
+
+if settings.DEBUG:
+    # static files (images, css, javascript, etc.)
+    urlpatterns += [
+        url(r'^media/(?P<path>.*)$', 'django.views.static.serve', {
+        'document_root': settings.MEDIA_ROOT})]
