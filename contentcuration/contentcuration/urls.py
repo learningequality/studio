@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from rest_framework import routers, viewsets
 from contentcuration.models import *    # TODO: Change this later?
 import serializers
@@ -82,6 +83,8 @@ urlpatterns = [
     url(r'trash/', views.trash, name='trash'),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),
+    url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
+    url(r'^accounts/', include('django.contrib.auth.urls')),
 ]
 
 
