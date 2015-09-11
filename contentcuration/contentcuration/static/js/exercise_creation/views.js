@@ -121,6 +121,15 @@ var EditorView = Backbone.View.extend({
     render: function() {
         if (this.editing) {
             if (!this.setting_model) {
+                /*
+                * (rtibbles)
+                * The view rerenders on model change. But, the save method below modifies the exact attribute that it is listening to.
+                * If we don't stop the rerender, we needlessly reparse the markdown to HTML into the editor.
+                * This led to some weird behaviour (due to race conditions) during manual testing, so I stopped it.
+                *
+                * The only other alternative would be to do the set in the save method with {silent: true} as an option,
+                * but other behaviour relies on listening to the model's change events.
+                */
                 this.render_editor();
             }
         } else {
@@ -165,6 +174,14 @@ var EditorView = Backbone.View.extend({
     },
 
     save: function(delta, source) {
+        /*
+        * This method can be triggered by a change event firing on the QuillJS
+        * instance that we are using. As such, it supplies arguments delta and source.
+        * Delta describes the change in the Editor instance, while source defines whether
+        * those changes were user initiated or made via the API.
+        * Doing this check prevents us from continually rerendering when a non-user source
+        * modifies the contents of the editor (i.e. our own code).
+        */
         if (typeof source !== "undefined" && source !== "user") {
             return;
         }
@@ -201,7 +218,7 @@ var EditorView = Backbone.View.extend({
                             }
                             break;
                         case "image":
-                            if (value && insert == 1) {
+                            if (value && insert === 1) {
                                 insert = "![](" + value + ")";
                             }
                             break;
@@ -214,11 +231,27 @@ var EditorView = Backbone.View.extend({
     }
 });
 
-
+/**
+ * Replace local 'media' urls with 'web+local://'.
+ * @param {string} Markdown containing image URLs.
+ * Should take a string of markdown like:
+ * "something![foo](/media/bar/baz)otherthings"
+ * and turn it into:
+ * "something![foo](web+local://bar/baz)otherthings"
+ */
 var set_image_urls_for_export = function(text) {
-    return text.replace(/\!\[[^\]]*\]\((\/media\/)[^\)]*\)/g, "$`web+local://$'");
+    return text.replace(/(\!\[[^\]]*\]\()(\/media\/)([^\)]*\))/g, "$1web+local://$3");
 };
 
+
+/**
+ * Return all image URLs from Markdown.
+ * @param {string} Markdown containing image URLs.
+ * Should take a string of markdown like:
+ * "something![foo](/media/bar/baz.png)otherthings something![foo](/media/bar/foo.jpg)otherthings"
+ * and return:
+ * ["/media/bar/baz.png", "/media/bar/foo.jpg"]
+ */
 var return_image_urls_for_export = function(text) {
     var match, output = [];
     var Re = /\!\[[^\]]*\]\((\/media\/[^\)]*)\)/g;
@@ -228,6 +261,14 @@ var return_image_urls_for_export = function(text) {
     return output;
 };
 
+/**
+ * Return all image URLs from an assessment item.
+ * @param {object} Backbone Model.
+ * Should take a model with a "question" attribute that is a string of Markdown,
+ * and an "answers" attribute that is a Backbone Collection, with each 
+ * model having an "answer" attribute that is also a string of markdown
+ * and return all the image URLs embedded inside all the Markdown texts.
+ */
 var return_all_assessment_item_image_urls = function(model) {
     var output = return_image_urls_for_export(model.get("question"));
     var output = model.get("answers").reduce(function(memo, model) {
@@ -241,11 +282,13 @@ var return_all_assessment_item_image_urls = function(model) {
             path: item
         }
     });
-    console.log(output);
     return output;
 }
 
-
+/**
+ * Return JSON object in Perseus format.
+ * @param {object} Backbone Model - AssessmentItem.
+ */
 var convert_assessment_item_to_perseus = function(model) {
     var multiplechoice_template = require("./hbtemplates/assessment_item_multiple.handlebars");
     var freeresponse_template = require("./hbtemplates/assessment_item_free.handlebars");
@@ -329,7 +372,7 @@ var ExerciseView = Backbone.View.extend({
                     zip.file(item.name, data, {binary: true});
                     downloads += 1;
                     console.log(downloads);
-                    if (downloads == all_image_urls.length) {
+                    if (downloads === all_image_urls.length) {
                         var blob = zip.generate({type:"blob"});
 
                         fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".exercise");
@@ -529,7 +572,7 @@ var AssessmentItemView = Backbone.View.extend({
 
         this.$el.html(this.template({model: this.model.attributes, number: this.number}));
         this.set_toolbar_closed();
-        if (this.model.get("type") == "multiplechoice") {
+        if (this.model.get("type") === "multiplechoice") {
             if (!this.answer_editor) {
                 this.answer_editor = new AssessmentItemAnswerListView({collection: this.model.get("answers")});
             }

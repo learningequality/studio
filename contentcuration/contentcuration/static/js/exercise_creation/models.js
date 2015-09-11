@@ -6,8 +6,8 @@ var ExerciseModel = Backbone.Model.extend({
 		title: "Exercise"
 	},
 
-	url: function() {
-		return window.Urls["exercise-list"]() + this.get("id");
+	urlRoot: function() {
+		return window.Urls["exercise-list"]();
 	}
 });
 
@@ -31,13 +31,13 @@ var AssessmentItemModel = Backbone.Model.extend({
 	},
 
 	initialize: function () {
-		if (typeof this.get("answers") !=="object") {
+		if (typeof this.get("answers") !== "object") {
 			this.set("answers", new Backbone.Collection(JSON.parse(this.get("answers"))), {silent: true});
 		}
 	},
 
 	parse: function(response) {
-	    if (response!==undefined) {
+	    if (response !== undefined) {
 	    	if (response.answers) {
 	    		response.answers = new Backbone.Collection(JSON.parse(response.answers));
 	    	}
