@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'contentcuration',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_js_reverse',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -110,3 +111,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+DEFAULT_FILE_STORAGE = 'django_hashedfilenamestorage.storage.HashedFilenameFileSystemStorage'
+
+LOGIN_REDIRECT_URL = '/exercises/'

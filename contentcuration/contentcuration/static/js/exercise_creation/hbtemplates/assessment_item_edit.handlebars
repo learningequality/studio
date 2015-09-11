@@ -1,0 +1,20 @@
+<div class="panel panel-default">
+<span class="badge">{{ number }}</span>
+<div class="panel-heading" role="tab" id="headingOne">
+	<div class="row">
+		<div class="col-sm-9">
+		  <div class="question">
+			  {{{ markdown model.question }}}
+		  </div>
+	    </div>
+	    <div class="col-sm-3">
+	    <div class="toolbar pull-right"></div>
+		</div>
+	</div>
+</div>
+<div id="{{ model.id }}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+  <div class="panel-body">
+  	<div class="answers">
+  	</div>
+  </div>
+</div>
