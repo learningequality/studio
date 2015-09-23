@@ -453,11 +453,14 @@ var ExerciseView = Backbone.View.extend({
 
 var AssessmentItemAnswerView = Backbone.View.extend({
 
-    initialize: function() {
+    initialize: function(options) {
         this.render();
+        this.open = options.open || false;
     },
 
     template: require("./hbtemplates/assessment_item_answer.handlebars"),
+    closed_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_closed.handlebars"),
+    open_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_open.handlebars"),
 
     events: {
         "click .edit": "toggle_editor",
@@ -472,14 +475,34 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         } else {
             this.$(".answer").append(this.editor_view.el);
         }
+        this.set_editor();
     },
 
     toggle_editor: function() {
-        this.editor_view.toggle_editor();
+        this.open = !this.open;
+        this.set_editor();
+    },
+
+    set_editor: function() {
+        if (this.open) {
+            this.set_toolbar_open();
+            this.editor_view.activate_editor();
+        } else {
+            this.set_toolbar_closed();
+            this.editor_view.deactivate_editor();
+        }
     },
 
     toggle_correct: function() {
         this.model.set("correct", this.$(".correct").prop("checked"));
+    },
+
+    set_toolbar_open: function() {
+        this.$(".answer-toolbar").html(this.open_toolbar_template());
+    },
+
+    set_toolbar_closed: function() {
+        this.$(".answer-toolbar").html(this.closed_toolbar_template());
     },
 
     delete: function() {
