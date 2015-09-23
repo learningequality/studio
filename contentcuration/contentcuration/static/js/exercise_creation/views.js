@@ -325,12 +325,14 @@ var slugify = function(text) {
         .replace(/-+$/, '');            // Trim - from end of text
     }
 
+var exerciseSaveDispatcher = _.clone(Backbone.Events);
 
 var ExerciseView = Backbone.View.extend({
     
     initialize: function() {
-        _.bindAll(this, "add_all_assessment_items", "render");
+        _.bindAll(this, "add_all_assessment_items", "render", "save");
         this.listenTo(this.collection, "remove", this.render);
+        this.listenTo(exerciseSaveDispatcher, "save", this.save);
         this.render();
     },
 
@@ -475,21 +477,24 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         } else {
             this.$(".answer").append(this.editor_view.el);
         }
-        this.set_editor();
+        this.set_editor(false);
     },
 
     toggle_editor: function() {
         this.open = !this.open;
-        this.set_editor();
+        this.set_editor(true);
     },
 
-    set_editor: function() {
+    set_editor: function(save) {
         if (this.open) {
             this.set_toolbar_open();
             this.editor_view.activate_editor();
         } else {
             this.set_toolbar_closed();
             this.editor_view.deactivate_editor();
+            if (save) {
+                exerciseSaveDispatcher.trigger("save");
+            }
         }
     },
 
@@ -507,6 +512,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
 
     delete: function() {
         this.model.destroy();
+        exerciseSaveDispatcher.trigger("save");
         this.remove();
     }
 
@@ -574,6 +580,8 @@ var AssessmentItemView = Backbone.View.extend({
 
     delete: function() {
         this.model.destroy();
+        exerciseSaveDispatcher.trigger("save");
+        this.remove();
     },
 
     cancel: function() {
@@ -618,6 +626,7 @@ var AssessmentItemView = Backbone.View.extend({
 
     set_toolbar_closed: function() {
         this.$(".toolbar").html(this.closed_toolbar_template({model: this.model.attributes}));
+        exerciseSaveDispatcher.trigger("save");
     }
 });
 
