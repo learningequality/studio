@@ -542,7 +542,7 @@ var AssessmentItemAnswerListView = Backbone.View.extend({
     },
 
     add_answer: function() {
-        this.collection.add({answer: "Lorem ipsum", correct: false});
+        this.collection.add({answer: "", correct: false});
     },
 
     add_answer_view: function(model) {

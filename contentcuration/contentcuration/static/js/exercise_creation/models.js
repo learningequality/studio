@@ -3,7 +3,7 @@ var _ = require("underscore");
 
 var ExerciseModel = Backbone.Model.extend({
 	defaults: {
-		title: "Exercise"
+		title: ""
 	},
 
 	urlRoot: function() {
@@ -26,7 +26,7 @@ var AssessmentItemModel = Backbone.Model.extend({
 	},
 
 	defaults: {
-		question: "Question Text",
+		question: "",
 		answers: "[]"
 	},
 
