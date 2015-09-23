@@ -157,6 +157,7 @@ var EditorView = Backbone.View.extend({
         this.render_editor();
         this.editor.on("text-change", _.debounce(this.save, 500));
         this.editing = true;
+        this.editor.focus();
     },
 
     deactivate_editor: function() {
@@ -456,8 +457,9 @@ var ExerciseView = Backbone.View.extend({
 var AssessmentItemAnswerView = Backbone.View.extend({
 
     initialize: function(options) {
-        this.render();
+        _.bindAll(this, "render", "set_editor");
         this.open = options.open || false;
+        this.render();
     },
 
     template: require("./hbtemplates/assessment_item_answer.handlebars"),
@@ -477,7 +479,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         } else {
             this.$(".answer").append(this.editor_view.el);
         }
-        this.set_editor(false);
+        _.defer(this.set_editor);
     },
 
     toggle_editor: function() {
@@ -526,7 +528,7 @@ var AssessmentItemAnswerListView = Backbone.View.extend({
     initialize: function() {
         _.bindAll(this, "render");
         this.render();
-        this.listenTo(this.collection, "add", this.render);
+        this.listenTo(this.collection, "add", this.add_answer_view);
         this.listenTo(this.collection, "remove", this.render);
     },
 
@@ -545,8 +547,9 @@ var AssessmentItemAnswerListView = Backbone.View.extend({
         this.collection.add({answer: "", correct: false});
     },
 
-    add_answer_view: function(model) {
-        var view = new AssessmentItemAnswerView({model: model});
+    add_answer_view: function(model, open) {
+        open = open ? true : false;
+        var view = new AssessmentItemAnswerView({model: model, open: open});
         this.$(".list-group").append(view.el);
     }
 
@@ -556,7 +559,7 @@ var AssessmentItemAnswerListView = Backbone.View.extend({
 var AssessmentItemView = Backbone.View.extend({
     
     initialize: function(options) {
-        _.bindAll(this, "set_toolbar_open", "set_toolbar_closed");
+        _.bindAll(this, "set_toolbar_open", "set_toolbar_closed", "save");
         this.number = options.number;
         this.undo = true;
         this.redo = true;
@@ -582,6 +585,11 @@ var AssessmentItemView = Backbone.View.extend({
         this.model.destroy();
         exerciseSaveDispatcher.trigger("save");
         this.remove();
+    },
+
+    save: function() {
+        exerciseSaveDispatcher.trigger("save");
+        this.set_toolbar_closed();
     },
 
     cancel: function() {
@@ -617,7 +625,7 @@ var AssessmentItemView = Backbone.View.extend({
         this.$(".collapse").on("show.bs.collapse", this.editor_view.activate_editor);
         this.$(".collapse").on("hidden.bs.collapse", this.editor_view.save_and_close);
         this.$(".collapse").on("show.bs.collapse", this.set_toolbar_open);
-        this.$(".collapse").on("hidden.bs.collapse", this.set_toolbar_closed);
+        this.$(".collapse").on("hidden.bs.collapse", this.save);
     },
 
     set_toolbar_open: function() {
@@ -626,7 +634,6 @@ var AssessmentItemView = Backbone.View.extend({
 
     set_toolbar_closed: function() {
         this.$(".toolbar").html(this.closed_toolbar_template({model: this.model.attributes}));
-        exerciseSaveDispatcher.trigger("save");
     }
 });
 
