@@ -559,14 +559,13 @@ var AssessmentItemAnswerListView = Backbone.View.extend({
 var AssessmentItemView = Backbone.View.extend({
     
     initialize: function(options) {
-        _.bindAll(this, "set_toolbar_open", "set_toolbar_closed", "save");
+        _.bindAll(this, "set_toolbar_open", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_undo_redo");
         this.number = options.number;
-        this.undo = true;
-        this.redo = true;
         this.undo_manager = new UndoManager({
             track: true,
             register: [this.model, this.model.get("answers")]
         });
+        this.toggle_undo_redo();
         this.render();
     },
 
@@ -604,6 +603,16 @@ var AssessmentItemView = Backbone.View.extend({
         this.undo_manager.redo();
     },
 
+    toggle_undo_redo: function() {
+        var undo = this.undo;
+        var redo = this.redo;
+        this.undo = this.undo_manager.isAvailable("undo");
+        this.redo = this.undo_manager.isAvailable("redo");
+        if (undo !== this.undo || redo !== this.redo) {
+            this.set_toolbar_open();
+        }
+    },
+
     render: function() {
         // Clean up any previous event listeners just to be tidy.
         this.$(".collapse").off("show.bs.collapse");
@@ -626,6 +635,18 @@ var AssessmentItemView = Backbone.View.extend({
         this.$(".collapse").on("hidden.bs.collapse", this.editor_view.save_and_close);
         this.$(".collapse").on("show.bs.collapse", this.set_toolbar_open);
         this.$(".collapse").on("hidden.bs.collapse", this.save);
+        this.$(".collapse").on("show.bs.collapse", this.set_undo_redo_listener);
+        this.$(".collapse").on("hidden.bs.collapse", this.unset_undo_redo_listener);
+    },
+
+    set_undo_redo_listener: function() {
+        this.listenTo(this.undo_manager.stack, "add", this.toggle_undo_redo);
+        this.listenTo(this.undo_manager, "all", this.toggle_undo_redo);
+    },
+
+    unset_undo_redo_listener: function() {
+        this.stopListening(this.undo_manager.stack);
+        this.stopListening(this.undo_manager);
     },
 
     set_toolbar_open: function() {
