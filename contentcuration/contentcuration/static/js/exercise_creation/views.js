@@ -152,7 +152,15 @@ var EditorView = Backbone.View.extend({
             modules: {
                 'toolbar': { container: this.$('#toolbar')[0] }
             },
-            theme: 'snow'
+            theme: 'snow',
+            styles: {
+                'body': {
+                  'background-color': "white",
+                  'border': '1px #66afe9 solid',
+                  'border-radius': "4px",
+                  "box-shadow": "inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6)"
+                }
+            }
         });
         this.render_editor();
         this.editor.on("text-change", _.debounce(this.save, 500));
