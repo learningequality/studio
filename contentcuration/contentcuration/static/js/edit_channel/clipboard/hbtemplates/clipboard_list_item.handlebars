@@ -1,0 +1,13 @@
+<li id="item_{{index}}">
+	{{#if selected}}
+		{{#if folder}}<span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+		{{else}}<span class="pull-right glyphicon glyphicon-file"></span>{{/if}}
+		{{title}}<span class="pull-right glyphicon glyphicon-remove" aria-hidden="true"></span>
+	{{else}}
+		{{#if meta}} <span class="pull-left toggle_folder glyphicon glyphicon-menu-right"></span>
+		{{else}}<span class="pull-left folder_plus glyphicon glyphicon-plus"></span>{{/if}}
+		{{#unless folder}}<span class="pull-left preview_file">Preview</span>{{/unless}}
+		{{title}}
+		{{#if folder}}<span class="pull-right folder_path glyphicon glyphicon-menu-right"></span>{{/if}}
+	{{/if}}
+</li>

@@ -1,0 +1,16 @@
+<label>2. Adding content from a channel</label>
+<select>
+	{{#each topic}}
+		<option>{{title}}</option>
+	{{/each}}
+</select>
+<h5>Path: <div class="path"></div></h5>
+<div id = "files_content_area" class="container list_content">
+	<ul></ul>
+</div>
+<h5>Files or folders to be added:</h5>
+<div id = "selected_content_area" class="container list_content">
+	<ul></ul>
+</div>
+<a class="btn pull-left btn-link clipboard_2_previous">Previous</a>
+<a class="btn pull-right btn-link clipboard_next">Next</a>

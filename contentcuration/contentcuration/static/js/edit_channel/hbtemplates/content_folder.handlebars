@@ -1,0 +1,16 @@
+<li id="item_{{index}}_{{list_index}}" data-val="{{index}}">
+	{{#if edit}}<input type="checkbox" id="{{index}}_{{list_index}}"/>
+	{{else}}<input type="radio" name="{{index}}" id="{{index}}_{{list_index}}"/>{{/if}}
+	<label class="folder" for="{{index}}_{{list_index}}" title="{{folder.title}}">
+		{{#if edit}}
+			<span class="pull-right">
+				<span class="edit_folder_button glyphicon glyphicon-pencil" aria-hidden="true"></span>
+				<span class="open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>
+			</span>
+		{{else}}
+			<span class="pull-left"></span>
+		{{/if}}
+		<h3>{{folder.title}}</h3>
+		<p class="description"> {{folder.description}}</p>
+	</label>
+</li>

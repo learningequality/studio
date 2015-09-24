@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block content %}
+	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/edit_channel/views.js' %}"></script>
+	
+	<div id="channel-edit-container"></div>
+{% endblock content %}

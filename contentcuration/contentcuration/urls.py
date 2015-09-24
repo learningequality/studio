@@ -87,15 +87,12 @@ urlpatterns = [
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^edit/', views.edit, name='edit'),
-    url(r'preview/', views.preview, name='preview'),
-    url(r'trash/', views.trash, name='trash'),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),
     url(r'^file_upload/', views.file_upload, name="file_upload"),
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
     url(r'^accounts/', include('django.contrib.auth.urls')),
-
+    url(r'^channel_edit/', views.edit, name='edit')
 ]
 
 
