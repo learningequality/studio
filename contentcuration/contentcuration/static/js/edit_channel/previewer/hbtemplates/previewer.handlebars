@@ -1,0 +1,13 @@
+<div id = "previewer" class="container-fluid pull-left viewer">
+	<h6>
+		{{#each parent}}{{attributes.title}} &gt;{{/each}}
+		<a class="btn pull-right toggle_previewer"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a>
+		<a class="btn pull-right toggle_details">Show Details</a>
+	</h6>
+	<h2>{{file.title}}</h2>
+	For Testing Purposes: 
+	<a class="pdf_sample">View PDF</a>
+	<a class="audio_sample">View Audio</a>
+	<a class="video_sample">View Video</a>
+	<div id="preview_window" class="container-fluid"></div>
+</div>
