@@ -26,7 +26,7 @@ var AssessmentItemModel = Backbone.Model.extend({
 	},
 
 	defaults: {
-		question: "Question Text",
+		question: "",
 		answers: "[]"
 	},
 

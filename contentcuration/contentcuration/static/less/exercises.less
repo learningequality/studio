@@ -9,3 +9,8 @@ div#dropzone {
 li.list-group-item.header-item {
 	background-color: #d9edf7;
 }
+
+.editable:empty:not(:focus):before{
+    content:attr(data-ph);
+    color: #BBBBBB;
+}

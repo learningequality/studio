@@ -18,7 +18,7 @@ var ExerciseListView = Backbone.View.extend({
 
     initialize: function() {
         this.render();
-        this.listenTo(this.collection, "add", this.render);
+        this.listenTo(this.collection, "sync", this.render);
         this.listenTo(this.collection, "remove", this.render);
     },
 
@@ -152,11 +152,20 @@ var EditorView = Backbone.View.extend({
             modules: {
                 'toolbar': { container: this.$('#toolbar')[0] }
             },
-            theme: 'snow'
+            theme: 'snow',
+            styles: {
+                'body': {
+                  'background-color': "white",
+                  'border': '1px #66afe9 solid',
+                  'border-radius': "4px",
+                  "box-shadow": "inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6)"
+                }
+            }
         });
         this.render_editor();
         this.editor.on("text-change", _.debounce(this.save, 500));
         this.editing = true;
+        this.editor.focus();
     },
 
     deactivate_editor: function() {
@@ -325,12 +334,14 @@ var slugify = function(text) {
         .replace(/-+$/, '');            // Trim - from end of text
     }
 
+var exerciseSaveDispatcher = _.clone(Backbone.Events);
 
 var ExerciseView = Backbone.View.extend({
     
     initialize: function() {
-        _.bindAll(this, "add_all_assessment_items", "render");
+        _.bindAll(this, "add_all_assessment_items", "render", "save");
         this.listenTo(this.collection, "remove", this.render);
+        this.listenTo(exerciseSaveDispatcher, "save", this.save);
         this.render();
     },
 
@@ -453,11 +464,15 @@ var ExerciseView = Backbone.View.extend({
 
 var AssessmentItemAnswerView = Backbone.View.extend({
 
-    initialize: function() {
+    initialize: function(options) {
+        _.bindAll(this, "render", "set_editor");
+        this.open = options.open || false;
         this.render();
     },
 
     template: require("./hbtemplates/assessment_item_answer.handlebars"),
+    closed_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_closed.handlebars"),
+    open_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_open.handlebars"),
 
     events: {
         "click .edit": "toggle_editor",
@@ -472,18 +487,42 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         } else {
             this.$(".answer").append(this.editor_view.el);
         }
+        _.defer(this.set_editor);
     },
 
     toggle_editor: function() {
-        this.editor_view.toggle_editor();
+        this.open = !this.open;
+        this.set_editor(true);
+    },
+
+    set_editor: function(save) {
+        if (this.open) {
+            this.set_toolbar_open();
+            this.editor_view.activate_editor();
+        } else {
+            this.set_toolbar_closed();
+            this.editor_view.deactivate_editor();
+            if (save) {
+                exerciseSaveDispatcher.trigger("save");
+            }
+        }
     },
 
     toggle_correct: function() {
         this.model.set("correct", this.$(".correct").prop("checked"));
     },
 
+    set_toolbar_open: function() {
+        this.$(".answer-toolbar").html(this.open_toolbar_template());
+    },
+
+    set_toolbar_closed: function() {
+        this.$(".answer-toolbar").html(this.closed_toolbar_template());
+    },
+
     delete: function() {
         this.model.destroy();
+        exerciseSaveDispatcher.trigger("save");
         this.remove();
     }
 
@@ -497,7 +536,7 @@ var AssessmentItemAnswerListView = Backbone.View.extend({
     initialize: function() {
         _.bindAll(this, "render");
         this.render();
-        this.listenTo(this.collection, "add", this.render);
+        this.listenTo(this.collection, "add", this.add_answer_view);
         this.listenTo(this.collection, "remove", this.render);
     },
 
@@ -513,11 +552,12 @@ var AssessmentItemAnswerListView = Backbone.View.extend({
     },
 
     add_answer: function() {
-        this.collection.add({answer: "Lorem ipsum", correct: false});
+        this.collection.add({answer: "", correct: false});
     },
 
-    add_answer_view: function(model) {
-        var view = new AssessmentItemAnswerView({model: model});
+    add_answer_view: function(model, open) {
+        open = open ? true : false;
+        var view = new AssessmentItemAnswerView({model: model, open: open});
         this.$(".list-group").append(view.el);
     }
 
@@ -527,14 +567,13 @@ var AssessmentItemAnswerListView = Backbone.View.extend({
 var AssessmentItemView = Backbone.View.extend({
     
     initialize: function(options) {
-        _.bindAll(this, "set_toolbar_open", "set_toolbar_closed");
+        _.bindAll(this, "set_toolbar_open", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_undo_redo");
         this.number = options.number;
-        this.undo = true;
-        this.redo = true;
         this.undo_manager = new UndoManager({
             track: true,
             register: [this.model, this.model.get("answers")]
         });
+        this.toggle_undo_redo();
         this.render();
     },
 
@@ -551,6 +590,13 @@ var AssessmentItemView = Backbone.View.extend({
 
     delete: function() {
         this.model.destroy();
+        exerciseSaveDispatcher.trigger("save");
+        this.remove();
+    },
+
+    save: function() {
+        exerciseSaveDispatcher.trigger("save");
+        this.set_toolbar_closed();
     },
 
     cancel: function() {
@@ -563,6 +609,16 @@ var AssessmentItemView = Backbone.View.extend({
 
     redo: function() {
         this.undo_manager.redo();
+    },
+
+    toggle_undo_redo: function() {
+        var undo = this.undo;
+        var redo = this.redo;
+        this.undo = this.undo_manager.isAvailable("undo");
+        this.redo = this.undo_manager.isAvailable("redo");
+        if (undo !== this.undo || redo !== this.redo) {
+            this.set_toolbar_open();
+        }
     },
 
     render: function() {
@@ -586,7 +642,19 @@ var AssessmentItemView = Backbone.View.extend({
         this.$(".collapse").on("show.bs.collapse", this.editor_view.activate_editor);
         this.$(".collapse").on("hidden.bs.collapse", this.editor_view.save_and_close);
         this.$(".collapse").on("show.bs.collapse", this.set_toolbar_open);
-        this.$(".collapse").on("hidden.bs.collapse", this.set_toolbar_closed);
+        this.$(".collapse").on("hidden.bs.collapse", this.save);
+        this.$(".collapse").on("show.bs.collapse", this.set_undo_redo_listener);
+        this.$(".collapse").on("hidden.bs.collapse", this.unset_undo_redo_listener);
+    },
+
+    set_undo_redo_listener: function() {
+        this.listenTo(this.undo_manager.stack, "add", this.toggle_undo_redo);
+        this.listenTo(this.undo_manager, "all", this.toggle_undo_redo);
+    },
+
+    unset_undo_redo_listener: function() {
+        this.stopListening(this.undo_manager.stack);
+        this.stopListening(this.undo_manager);
     },
 
     set_toolbar_open: function() {
