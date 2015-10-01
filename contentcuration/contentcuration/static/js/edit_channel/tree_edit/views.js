@@ -82,9 +82,10 @@ var TreeEditView = Backbone.View.extend({
 		var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
 		var view = new PreviewerViews.PreviewerView({
 			el: $("#previewer-area"),
-			model:  file.data("data").attributes,
+			model:  file.data("data"),
 			file: file
 		});
+		
 	},
 	
 	add_content: function(event){
@@ -93,7 +94,7 @@ var TreeEditView = Backbone.View.extend({
 		newContent(file_template, event.target);
 		new ClipboardViews.ClipboardAddContentView({
 			el: $("#clipboard-area"),
-			//model: this.model //INSERT ROOT NODE TO ADD TO RIGHT TREE
+			model: $("#" + DOMHelper.getParentOfClass(event.target, "content-container").id).data("channel")
 		});
 		
 		$("#clipboard").slideDown();

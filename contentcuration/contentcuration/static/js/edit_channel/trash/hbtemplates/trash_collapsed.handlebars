@@ -1,8 +1,8 @@
 <li id="item_{{index}}">
 	<span class="sidebar pull-left"></span>
 	<input type="checkbox" id="file_{{index}}"></input>
-	<label  for="file_{{index}}">
-		<span class="detail-bar pull-right"></span>
+	<label  for="file_{{index}}" class="trash_item">
+		{{#unless folder}}<span class="detail-bar pull-right"></span>{{/unless}}
 		<h4>
 			{{#if folder}}<span class="tog_folder glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
 			{{else}}
@@ -12,6 +12,30 @@
 			<span class="glyphicon glyphicon-{{file_icon}}" aria-hidden="true"></span>
 			{{file.title}}
 		</h4>
+		{{#unless folder}}
+			<div class="details container">
+				<div class="row-fluid">
+					<div id="top-left">
+						<h5>Author</h5>
+						<p>{{#if file.author}}{{file.author}}{{else}}No authors found.{{/if}}</p>
+					</div>
+					<div id="top-right">
+						<h5>Tags</h5>
+						<p>{{#if tag.length}}{{#each tag}}{{tag.name}}{{/each}}{{else}}No tags found.{{/if}}</p>
+					</div>
+				</div>
+				<div class="row-fluid">
+					<div id="bottom-left">
+						<h5>License</h5>
+						<p>{{#if file.license.name}}{{file.license.name}}{{else}}No license found.{{/if}}</p>
+					</div>
+					<div id="bottom-right">
+						<h5>Description</h5>
+						<p>{{#if file.description}}{{file.description}}{{else}}No description found.{{/if}}</p>
+					</div>
+				</div>
+			</div>
+		{{/unless}}
 	</label>
 </li>
 

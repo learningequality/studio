@@ -1,10 +1,11 @@
 <li id="item_{{index}}">
-	{{#if options.list}}
-		<input type="checkbox" id="file_{{index}}"></input>
-	{{/if}}
-	<label {{#if options.list}} for="file_{{index}}"{{/if}}>
+	<input type={{#if options.list}}"checkbox"{{else}}"radio"{{/if}} id="file_{{index}}" name="clipboard_list_files"></input>
+	<label for="file_{{index}}" class="clipboard_item">
 		{{#if folder}}<span class="pull-left tog_folder glyphicon glyphicon-menu-down"></span>
 		{{else}}<span class="pull-left preview_file glyphicon glyphicon-search"></span>{{/if}}
+		
+		<span class="glyphicon glyphicon-{{file_icon}}"></span>
+		
 		{{#if options.list}}
 			{{file.title}}
 			<span class="pull-right delete_content glyphicon glyphicon-trash" aria-hidden="true"></span>
@@ -12,7 +13,7 @@
 		{{else}}
 			{{#if options.selected}}
 				{{file.title}}
-				<span class="pull-right glyphicon glyphicon-remove" aria-hidden="true"></span>
+				<span class="pull-right glyphicon glyphicon-remove remove_item" aria-hidden="true"></span>
 			{{else}}
 				<span class="pull-left folder_plus glyphicon glyphicon-plus"></span>
 				{{file.title}}

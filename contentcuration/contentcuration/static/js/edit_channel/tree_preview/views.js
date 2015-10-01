@@ -44,7 +44,7 @@ var TreePreviewView = Backbone.View.extend({
 		var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
 		var view = new PreviewerViews.PreviewerView({
 			el: $("#previewer-area"),
-			model: file.data("data").attributes,
+			model: file.data("data"),
 			file: file
 		});
 	}

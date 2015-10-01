@@ -38,7 +38,7 @@
 			font-size:20px;
 			.pull-left{margin-right: 20px;}
 		}
-		.toggle_clipboard{cursor:pointer;}
+		.toggle_clipboard, .collapse_clipboard{cursor:pointer;}
 	}
 	.clipboard_navigation{
 		background-color:white;
@@ -123,7 +123,7 @@
 					width:100%;
 					height:@clipboard-list-item-height;
 					label{
-						width:@clipboard-width - @clipboard-sidebar-width - 65px;
+						width:@clipboard-width - 65px;
 						vertical-align:middle;
 						cursor:pointer;
 						height:100%;
@@ -174,7 +174,8 @@
 				vertical-align:middle;
 			}
 			label{
-				margin-left:5px;
+				margin-left: 5px;
+				width: @clipboard-width - @clipboard-sidebar-width - 65px; 
 			}
 			li input[type=checkbox]:checked + label, li:hover{
 				.pull-right{visibility:visible;}
@@ -195,6 +196,7 @@
 			height:@clipboard-list-height;
 			margin-bottom: 20px;
 		}
+		
 		#metalist,#metaform-wrapper{
 			width:50%;
 			display:inline-block;
@@ -202,6 +204,9 @@
 				width: @clipboard-width / 2 - 65px;
 			}
 			textarea{height:20vh;}
+			.clipboard_item{
+				width: @clipboard-width / 2 - 65px;
+			}
 		}
 	}
 }

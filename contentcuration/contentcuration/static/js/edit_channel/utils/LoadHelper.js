@@ -49,19 +49,20 @@ function loadContainer(folder, topic_node, topic_nodes, content_nodes, container
 	/* Create unique id for next container */
 	container_number++;
 	var containerid = "#container_" + container_number;
-	/* Create container and add animations */
 	//$("#container_"+(container_number-1)).css('z-index', '100');
 	
 	//handle titles that are too long
 	var title = topic_node.attributes.title;
+	$(containerid).data("channel", topic_node);
+	if(edit) handleDrop(containerid);
 
 	$("#container_area").append(channel_template({title: title, index: container_number, topic: topic_node.attributes, edit: edit}));
 	$("#container_area").css("width", $("#container_" + container_number).innerWidth() * (container_number + 1));
-	$(containerid).css('margin-left', -$(containerid).outerWidth());
+	$(containerid).css({'margin-left': -$(containerid).outerWidth(),
+						'z-index': 1000 - container_number});
 	$(containerid + " .container-interior").css('margin-top', (-$(containerid + " .title-bar").height() + 22) + "px");
 	$(containerid + " canvas").css('margin-top', (-$(containerid + " .title-bar").height() + 22) + "px");
 	$(containerid + " .content-list").height(($(containerid + " canvas").height() - $(containerid + " .title-bar").height() + 6) + "px");
-	$(containerid).css('z-index', 1000 - container_number);
 	$(containerid).animate({
 		marginLeft: parseInt($(containerid).css('marginLeft'),10) == 0?
 			$(containerid).outerWidth() : 0
@@ -77,6 +78,7 @@ function loadContainer(folder, topic_node, topic_nodes, content_nodes, container
 			$(containerid + " ul").append(folder_template({index: container_number, list_index: list_index, folder: entry.attributes, edit: edit}));
 			var itemid = "#item_"+container_number+"_"+list_index;
 			$(itemid).data("data",entry);
+			if(edit) handleDrag(itemid);
 			$(itemid + " h3").html(textHelper.trimText($(itemid + " h3").text(), "...", 22, false));
 			$(itemid + " p").html(textHelper.trimText($(itemid + " p").text(), "... read more", 120, true));
 			list_index ++;
@@ -89,6 +91,7 @@ function loadContainer(folder, topic_node, topic_nodes, content_nodes, container
 			var itemid = "#item_"+container_number+"_"+list_index;
 			$(itemid).data("data", entry);
 			$(itemid + " h4").html(textHelper.trimText($(itemid + " h4").text(), "...", 25, false));
+			if(edit) handleDrag(itemid);
 			list_index ++;
 		}
 	});
@@ -174,6 +177,85 @@ $.fn.onOffsetChanged = function (trigger, millis) {
     return o;
 };
 
+function handleDrag(itemid){
+	$(itemid).attr("draggable", "true");
+	$(itemid).on("dragstart", function(e){
+		e.originalEvent.dataTransfer.setData("data", $("#"+e.target.id).data("data"));
+		e.target.style.opacity = '0.4';
+		
+		/* Todo: Go through all checked items to move*/
+		if($(itemid + " input[checkbox]").checked){
+		console.log("CHECKED");
+		}
+		
+		//console.log(e);
+	});
+	$(itemid).on("dragend", function(e){
+		//e.target.remove();
+	});
+}
+
+function handleDrop(containerid){
+	$(containerid).on('dragover', function(e){
+	//	e.preventDefault();
+		console.log(" DRAGGED");
+	});
+	$(containerid).on('dragenter', function(e){
+		console.log(" ENTERED");
+		e.preventDefault();
+		e.stopPropagation();
+	});
+	$(containerid).on('drop', function(e){
+		//e.preventDefault();
+		console.log("DROPPED");
+		var data = e.originalEvent.dataTransfer.getData("data");
+		console.log(data);
+		
+		 if (e.stopPropagation) {
+			e.stopPropagation(); // stops the browser from redirecting.
+		  }
+		
+		
+		//console.log(e.originalEvent.target.id + " DROPPED");
+		//var data = ev.data;
+		/*
+		if(e.originalEvent.dataTransfer){
+			if(e.originalEvent.dataTransfer.files.length) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				upload(e.originalEvent.dataTransfer.files);
+			}   
+		}
+		*/
+	});
+}
+
+/*
+
+function handleDragStart(e) {
+  e.target.style.opacity = '0.4';  // this / e.target is the source node.
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault(); // Necessary. Allows us to drop.
+  }
+
+  e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+
+  return false;
+}
+
+function handleDragEnter(e) {
+  // this / e.target is the current hover target.
+  this.classList.add('over');
+}
+
+function handleDragLeave(e) {
+  this.classList.remove('over');  // this / e.target is previous target element.
+}
+*/
 module.exports = {
 	loadContainer: loadContainer,
 	loadList: loadList,

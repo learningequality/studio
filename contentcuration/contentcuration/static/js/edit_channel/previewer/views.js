@@ -13,11 +13,13 @@ var PreviewerView = Backbone.View.extend({
     render: function() {
         this.$el.html(this.template(this.model));
 		$(".file").css("border", "1px solid black");
-		$(this.file.selector + " label").css("border", "3px solid #3E5E9F");
+		$(".trash_item").css("border", "1px solid #CCCCCC");
+		$(".clipboard_item").css("border", "1px solid #8DA9DB");
+		$(this.file.selector + " label").css("border", "4px solid #8098D2");
+		
 		
 		var content_view;
-		var file_type = ""; //getExtension(this.file.data("data").attributes.content_file.[filename]);
-
+		var file_type = "";//getExtension(this.model.attributes.content_file.name);
 		switch(file_type){
 			case "pdf":
 				content_view =  require("./hbtemplates/previewer_pdf.handlebars");
@@ -28,11 +30,20 @@ var PreviewerView = Backbone.View.extend({
 			case 'mp4':
 				content_view =  require("./hbtemplates/previewer_audio.handlebars");
 				break;
-			default: //video by default
+			case 'mp4':
+			case 'webm':
+			case 'ogv':
+			case 'ogg':
+			case 'avi':
+			case 'mov':
+			case 'wmv':
 				content_view =  require("./hbtemplates/previewer_video.handlebars");
+				break;
+			default:
+				content_view =  require("./hbtemplates/previewer_filler.handlebars");
 		}
-		$("#preview_window").append(content_view(this.model));
-		var parent_data = this.file.data("data");
+		$("#preview_window").append(content_view({file: this.model}));
+		var parent_data = this.model;
 		while(parent_data.attributes.parent){
 			parent_data = parent_data.attributes.parent;
 			$(".breadcrumb").prepend("<li>" + parent_data.attributes.title + "</li>");

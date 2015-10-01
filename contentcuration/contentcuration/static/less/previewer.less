@@ -16,7 +16,7 @@
 	height:100vh;
 	min-height: 600px;
 	position:absolute;
-	z-index:10000;
+	z-index:50000;
 	right:0em;
 	top: 8.5em;
 	box-shadow: -7px 10px 5px black;
@@ -74,13 +74,26 @@
 	}
 	#preview_window{
 		margin-top: 20px;
-		embed, video, audio{width:100%;}
-		embed{
+		iframe, video, audio{width:100%;}
+		iframe{
 			border:1px solid gray;
 			min-height:70vh;
 		}
 		video{border:1px solid gray;}
 		audio{margin-top:10%;}
+		.filler{
+			width: 100%;
+			height: 70vh;
+			background-color:white;
+			h3{
+				maring-top: 30%;
+				text-align: center;
+				font-size: 20px;
+				font-style:italic;
+			}
+			border: 1px solid black;
+			margin-bottom: 30px;
+		}
 	}
 	#trash_preview_add_on{padding-bottom: 10px;}
 }

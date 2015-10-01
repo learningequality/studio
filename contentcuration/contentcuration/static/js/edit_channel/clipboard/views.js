@@ -145,7 +145,7 @@ var ClipboardEditFileView = Backbone.View.extend({
 var ClipboardAddContentView = Backbone.View.extend({
 	template: require("./hbtemplates/clipboard_header.handlebars"),
 	initialize: function() {
-		_.bindAll(this, 'toggle_clipboard','computer_choose_content', 'channel_choose_content', 'choose_file', 'back_to_1', 'to_step_3','previous','preview_file','open_folder', 'close_file', 'open_folder_path', 'add_folder_to_list','add_tag','toggle_folder', 'clipboard_finish','choose_channel','add_file_to_list', 'update_count');
+		_.bindAll(this, 'toggle_clipboard','computer_choose_content', 'channel_choose_content', 'choose_file', 'back_to_1', 'to_step_3','previous','preview_file','open_folder', 'close_file', 'open_folder_path', 'add_folder_to_list','add_tag','toggle_folder', 'clipboard_finish','choose_channel','add_file_to_list', 'update_count','remove_item');
 		//this.listenTo(this.model, "change:number_of_hexagons", this.render);
 		this.render();
 	},
@@ -154,6 +154,8 @@ var ClipboardAddContentView = Backbone.View.extend({
 		var choose_template = require("./hbtemplates/clipboard_step_1.handlebars");
 		$("#clipboard_content").append(choose_template(this.model));
 		$("#source_nav").css("border-bottom", "5px solid #8DA9DB");
+		$("#choose_nav").prop("disabled", true);
+		$("#meta_nav").prop("disabled", true);
 	},
 	
 	events: {
@@ -161,11 +163,14 @@ var ClipboardAddContentView = Backbone.View.extend({
 		'click .computer_choose_content':'computer_choose_content',
 		'click .channel_choose_content':'channel_choose_content',
 		'click .clipboard_previous':'previous',
+		'click #choose_nav':'previous',
 		'click .clipboard_2_previous':'back_to_1',
+		'click #source_nav':'back_to_1',
 		'click .choose_file':'choose_file',
 		'change select':'choose_channel',
 		'click .file_plus':'add_file_to_list',
 		'click .clipboard_next':'to_step_3',
+		'click #meta_nav': 'to_step_3',
 		'click .close_file':'close_file',
 		'click .preview_file': 'preview_file',
 		'click .folder': 'open_folder',
@@ -176,7 +181,11 @@ var ClipboardAddContentView = Backbone.View.extend({
 		'click .clipboard_finish':'clipboard_finish',
 		'keyup textarea': 'update_count',
 		'keydown textarea': 'update_count',
-		'paste textarea': 'update_count'
+		'paste textarea': 'update_count',
+		'click .remove_item':'remove_item'
+	},
+	remove_item: function(event){
+		DOMHelper.getParentOfTag(event.target, "li").remove();
 	},
 	update_count: function(event){
 		updateCount();
@@ -192,14 +201,12 @@ var ClipboardAddContentView = Backbone.View.extend({
 		event.target.parentNode.remove();
 	},
 	preview_file: function(event){
-		/*
 		var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
 		var view = new PreviewerViews.PreviewerView({
 			el: $("#previewer-area"),
-			model:  file.data("data").attributes,
+			model:  file.data("data"),
 			file: file
 		});
-		*/
 	},
 	
 	/* Step 1: choose content from computer or channel */
@@ -221,6 +228,7 @@ var ClipboardAddContentView = Backbone.View.extend({
 		var add_template = require("./hbtemplates/clipboard_step_1.handlebars");
 		$("#clipboard_content").empty();
 		$("#clipboard_content").append(add_template(this.model));
+
 		switchTab($("#choose_nav"), $("#source_nav"));	
 	},
 	add_folder_to_list: function(event){
@@ -238,18 +246,21 @@ var ClipboardAddContentView = Backbone.View.extend({
 	choose_file: function(event){
 		$("#fileinput").trigger("click");
 		 $('#fileinput').change(function(evt) {
-			alert($(this).val());
+			var selected = $(this).context.files;
+			for(var i = 0; i < selected.length; i++)
+				temp_list_items.push({data: {attributes: {content_file: selected[i], retrieved_on: new Date(), title: selected[i].name, parent: this.model}}});
+			loadListItems(temp_list_items, "#selected_content_area ul", null, {selected: true, list: false, meta: false});			
 		});
 	},
 	choose_channel: function(event){
-		//listHelper.loadList(this.model.topicnodes, this.model.contentnodes, list_item_template, list_item_template, "#files_content_area ul");
+		loadListItems(temp_list_items, "#selected_content_area ul", this.model, {selected: true, list: false, meta: true});	
 	},
 	to_step_3: function(event){
 		var meta_template = require("./hbtemplates/clipboard_step_3.handlebars");
 		$("#clipboard_content").empty();
 		$("#clipboard_content").append(meta_template({content: this.model, limit: CHAR_LIMIT}));
-		switchTab($("#choose_nav"), $("#meta_nav"));			
-		//listHelper.loadList(this.model.topicnodes, this.model.contentnodes, list_item_template, list_item_template, "#metalist ul");
+		switchTab($("#choose_nav"), $("#meta_nav"));
+		loadListItems(temp_list_items, "#metalist ul", this.model, {selected: true, list: false, meta: true});	
 	},
 
 	/* Step 3: review metadata */
@@ -259,7 +270,7 @@ var ClipboardAddContentView = Backbone.View.extend({
 		switchTab($("#meta_nav"), $("#choose_nav"));
 	},
 	open_folder_path: function(event){
-		console.log("Opening folder path...");
+		
 	},
 	add_tag: function(event){
 		console.log("Adding tag...");
@@ -295,8 +306,9 @@ function updateCount(){
 }
 
 function switchTab(oldTab, newTab){
+	$(".clipboard_navigation a").css("border-bottom", "1px solid black");	
 	newTab.css("border-bottom", "5px solid #8DA9DB");
-	oldTab.css("border-bottom", "1px solid black");	
+	newTab.prop("disabled", false);
 }
 
 function addItems(list){
@@ -312,12 +324,14 @@ function loadListItems(list, listid, model, options){
 											options: options}));
 		$(listid + " #item_"+list_index).data("data",list[i].data);
 		$(listid + " #item_"+list_index).data("collapsed", true);
-		index = LoadHelper.loadList(list[i].data, model, list_item_template, list_item_template, 
+		if(model){
+			index = LoadHelper.loadList(list[i].data, model, list_item_template, list_item_template, 
 									listid + " #item_" + index + "_sub", 30, {selected: true, 
 									list: true, meta: false}, index + 1, 1);
+		}
 	}
-	if(index == 0)
-		$(listid).append("<li><label><h4><em>No items found.</em></h4></label></li>");
+	if(model && index == 0)
+		$(listid).append("<li><label style=\"margin-left:40px;padding-left:10px;\"><h4><em>No items found.</em></h4></label></li>");
 }
 
 /*Todo: export only one ClipboardView once views are an extension of it*/
