@@ -1,9 +1,12 @@
 <!DOCTYPE HTML>
 {% load staticfiles %}
+{% load i18n %}
 
 <html>
     <head>
-         <!--[if lt IE 9]> 
+
+        {% block head %}
+        <!--[if lt IE 9]> 
             <script src="{% static "js/html5shiv.js" %}"></script>
         <![endif] -->
 		<link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
@@ -12,11 +15,16 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         
         <title>Kolibri</title>
+        <!-- TODO work out why debug is not working here and use the static version -->
+        <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
         <script type="text/javascript" src="{% static 'js/bundles/common.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/bundles/base.js' %}"></script>
+        {% endblock head %}
+
     </head>
 
     <body>
+        {% block nav %}
         <!-- Navigation bar -->
         <div class="navbar nav" id="top-navigation">
             <div id="logo-container">
@@ -38,7 +46,9 @@
                 <img id="logout" src="{% static 'img/power-button.png' %}">
             </div>
         </div>
-        
+
+        {% endblock nav %}
+		
         <!-- Site content gets injected here -->
 		{% block content %}{% endblock content %}
     </body>

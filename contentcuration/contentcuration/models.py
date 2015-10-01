@@ -239,15 +239,13 @@ class ContentLicense(models.Model):
     )
 
 
-
-
 # If we decide to subclass Content:
-
+#
 # class ContentVideo(Content):
 #     """
 #     Model for video data
 #     """
-
+#
 #     video_file = models.FileField(
 #         blank=True,
 #         null=True,
@@ -255,19 +253,18 @@ class ContentLicense(models.Model):
 #         verbose_name=_("video file"),
 #         help_text=_("Upload video here"),
 #     )
-
+#
 #     thumbnail = models.ImageField(
 #         null=True,
 #         upload_to='contents/video/thumbnails/',
 #         help_text=_("Automatically created when new video is uploaded")
 #     )
-
-
+#
+#
 # class ContentPDF(Content):
 #     """
 #     Model for video data
 #     """
-    
 #     pdf_file = models.FileField(
 #         blank=True,
 #         null=True,
@@ -275,10 +272,34 @@ class ContentLicense(models.Model):
 #         verbose_name=_("video file"),
 #         help_text=_("Upload video here"),
 #     )
-
-
+#
+#
 # class Exercise(Content):
 #     """
 #     Model for Exercise data
 #     """
 
+
+class Exercise(models.Model):
+
+    title = models.CharField(
+        max_length=50,
+        verbose_name=_("title"),
+        default=_("Title"),
+        help_text=_("Title of the content item"),
+    )
+
+    description = models.TextField(
+        max_length=200,
+        verbose_name=_("description"),
+        default=_("Description"),
+        help_text=_("Brief description of what this content item is"),
+    )
+
+
+class AssessmentItem(models.Model):
+
+    type = models.CharField(max_length=50, default="multiplechoice")
+    question = models.TextField(blank=True)
+    answers = models.TextField(default="[]")
+    exercise = models.ForeignKey('Exercise', related_name="all_assessment_items")

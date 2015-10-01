@@ -15,17 +15,18 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2'
+SECRET_KEY = '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2' # TODO(aron): generate secret key, secretly!
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this is OK.
 
 
 # Application definition
@@ -39,6 +40,7 @@ INSTALLED_APPS = (
     'contentcuration',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_js_reverse',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -110,3 +112,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+DEFAULT_FILE_STORAGE = 'django_hashedfilenamestorage.storage.HashedFilenameFileSystemStorage'
+
+LOGIN_REDIRECT_URL = '/exercises/'

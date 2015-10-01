@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+{% extends "base.html" %}
+
+{% load staticfiles %}
+{% load i18n %}
+
+{% block nav %}{% endblock nav %}
+
+{% block content %}
+
+<div class="container">
+<p>{% trans "Logged out" %}</p>
+
+{# Assumes you setup the password_reset view in your URLconf #}
+<p><a href="{% url 'login' %}">{% trans "Click here to log back in again." %}</a></p>
+
+</div>
+
+{% endblock %}
