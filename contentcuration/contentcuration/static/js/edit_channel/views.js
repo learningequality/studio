@@ -8,7 +8,7 @@ var TrashViews = require("edit_channel/trash/views");
 */
 var clipboardContent = [];
 
-var BaseView = Backbone.View.extend({
+window.BaseView = Backbone.View.extend({
 	template: require("./hbtemplates/channel_edit.handlebars"),
 	url: '/api',
 	initialize: function() {

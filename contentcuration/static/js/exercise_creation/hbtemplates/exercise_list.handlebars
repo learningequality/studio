@@ -1,0 +1,20 @@
+<div class="panel panel-info">
+	<div class="panel-heading">
+		<h3 class="panel-title">Exercises</h3>
+	</div>
+	<div class="panel-body">
+		<div class="list-group">
+			{{#each exercise_list }}
+			  <a href="{{url "exercise" id }}" class="list-group-item">
+			  	<h3 class="list-group-item-heading">
+			  	{{ title }}
+			  	<button class="btn btn-danger delete pull-right" value="{{ id }}"><span class="glyphicon glyphicon-trash"></span></button>
+			  	</h3>
+		  	</a>
+		  	{{/each}}
+		</div>
+	</div>
+	<div class="panel-footer">
+		<button class="btn btn-success create">Add Exercise</button>
+	</div>
+</div>

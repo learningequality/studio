@@ -11,7 +11,7 @@ var PreviewerViews = require("edit_channel/previewer/views");
 
 var container_number; //Used to create unique identifier for directories
 
-var TreeEditView = Backbone.View.extend({
+window.TreeEditView = Backbone.View.extend({
 	template: require("./../hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_folder', 'preview_node', 'add_content','edit_file','add_folder',

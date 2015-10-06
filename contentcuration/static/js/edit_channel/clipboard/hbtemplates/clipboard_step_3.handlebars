@@ -1,0 +1,23 @@
+<h4>3. Review metadata</h4>
+<br/>
+<div id="meta-wrapper">
+	<div id = "metalist" class="list_content pull-left">
+		<div id="list_background"></div>
+		<ul></ul>
+	</div>
+	<div id="metaform-wrapper" class="pull-left">
+		<form id="metaform">
+			<input type="text" id="name" placeholder="Name"/>
+			<input type="text" id="author" placeholder = "Author"/>
+			<input type="text" id="license" placeholder = "License"/>
+			<input type="text" class="metatags" placeholder = "Tags (press 'Enter' to add tag)"/>
+			<textarea id="description" placeholder="Description" maxlength="{{limit}}"></textarea>
+			<div class="char_counter" align="right"><span class="counter">{{limit}}</span> Chars Left</div>
+		</form>
+	</div>
+</div>
+<br/>
+<nav>
+	<a class="btn pull-left btn-link clipboard_previous">Previous</a>
+	<a class="btn pull-right btn-link clipboard_finish">Finish</a>
+</nav>

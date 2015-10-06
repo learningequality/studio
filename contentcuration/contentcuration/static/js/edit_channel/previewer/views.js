@@ -2,7 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 require("previewer.less");
 
-var PreviewerView = Backbone.View.extend({
+window.PreviewerView = Backbone.View.extend({
 	template: require("./hbtemplates/previewer.handlebars"),
 	initialize: function(options) {
         _.bindAll(this, 'toggle_preview', 'open_pdf', 'open_audio', 'open_video', 'toggle_details', 'load_description', 'load_details');

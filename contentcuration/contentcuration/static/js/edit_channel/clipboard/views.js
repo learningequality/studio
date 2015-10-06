@@ -15,7 +15,7 @@ var clipboard_list_items = [];
 var temp_list_items = [];
 
 /* Loaded when user clicks clipboard button below navigation bar */
-var ClipboardListView = Backbone.View.extend({
+window.ClipboardListView = Backbone.View.extend({
 	template: require("./hbtemplates/clipboard_list.handlebars"),
 	initialize: function() {
             _.bindAll(this, 'add_content', 'collapse_clipboard','delete_content','toggle_folder');
@@ -60,16 +60,18 @@ var ClipboardListView = Backbone.View.extend({
 			if($(el).data("collapsed")){
 				$(el + "_sub").slideDown();
 				$(el).data("collapsed", false);
+				$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-up");
 			}
 			else{
 				$(el + "_sub").slideUp();
 				$(el).data("collapsed", true);
+				$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-down");
 			}
 		}
 });
 
 /* Loaded when user clicks edit icon on folder or "Add Folder" button */
-var ClipboardEditFolderView = Backbone.View.extend({
+window.ClipboardEditFolderView = Backbone.View.extend({
 	template: require("./hbtemplates/clipboard_edit_folder.handlebars"),
 	initialize: function(options) {
 		this.edit = options.edit;
@@ -105,7 +107,7 @@ var ClipboardEditFolderView = Backbone.View.extend({
 });
 
 /* Loaded when user clicks edit icon on file*/
-var ClipboardEditFileView = Backbone.View.extend({
+window.ClipboardEditFileView = Backbone.View.extend({
 	template: require("./hbtemplates/clipboard_edit_file.handlebars"),
 	initialize: function() {
 		_.bindAll(this, 'toggle_clipboard', 'update_file', 'update_count');
@@ -142,7 +144,7 @@ var ClipboardEditFileView = Backbone.View.extend({
 });
 
 /* Loaded when user clicks "Add Content" button */
-var ClipboardAddContentView = Backbone.View.extend({
+window.ClipboardAddContentView = Backbone.View.extend({
 	template: require("./hbtemplates/clipboard_header.handlebars"),
 	initialize: function() {
 		_.bindAll(this, 'toggle_clipboard','computer_choose_content', 'channel_choose_content', 'choose_file', 'back_to_1', 'to_step_3','previous','preview_file','open_folder', 'close_file', 'open_folder_path', 'add_folder_to_list','add_tag','toggle_folder', 'clipboard_finish','choose_channel','add_file_to_list', 'update_count','remove_item');

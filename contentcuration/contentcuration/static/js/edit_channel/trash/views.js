@@ -7,7 +7,7 @@ var DOMHelper = require("edit_channel/utils/DOMHelper");
 var PreviewerViews = require("edit_channel/previewer/views");
 
 /* Todo: figure out how to display archived files after deleted */
-var TrashView = Backbone.View.extend({
+window.TrashView = Backbone.View.extend({
 	template: require("./hbtemplates/trash.handlebars"),
 	initialize: function() {
 		_.bindAll(this, 'delete_selected', 'restore_selected','select_all','toggle_file_item','preview_list_item','check_item','toggle_folder_item');
@@ -38,6 +38,7 @@ var TrashView = Backbone.View.extend({
 			console.log("Deleting Selected... ");
 			var selected = $('.trash_list_container').find('input:checked + label');
 			for(var i = 0; i < selected.length; i++){
+				$("#" + selected[i].parentNode.id + " sub").remove();
 				selected[i].parentNode.remove();
 			}
 		}
@@ -84,7 +85,7 @@ var TrashView = Backbone.View.extend({
 		var el = "#" + DOMHelper.getParentOfTag(event.target, "li").id;
 		if($(el).data("collapsed")){
 			$(el).data("collapsed", false);
-			$(el + " .details").slideDown();
+			$(el + " .trash_details").slideDown();
 			$(el+" .glyphicon-chevron-right").attr("class", "tog_file glyphicon glyphicon-chevron-down");
 			$(el).css("height", "300px");
 			var textHelper = require("edit_channel/utils/TextHelper");
@@ -101,7 +102,7 @@ var TrashView = Backbone.View.extend({
 		else{
 			$(el).data("collapsed", true);
 			$(el+" .glyphicon-chevron-down").attr("class", "tog_file glyphicon glyphicon-chevron-right");
-			$(el + " .details").slideUp();
+			$(el + " .trash_details").slideUp();
 			$(el + " .detail-bar").css("display", "none");
 			$(el).css("height", "50px");
 			$(el + " .sidebar").css("height", $(el).height());

@@ -1,9 +1,11 @@
+@import "../../../../node_modules/bootstrap/less/bootstrap.less";
+
 @import "global-variables.less";
 
 /* GLOBAL STYLES */ 
 *{margin:0;padding:0;}
 body {
-	font-family: "Open Sans", "Glyphicons Halflings", Verdana, sans-serif;
+	font-family: "Open Sans", Verdana, sans-serif;
 }
 
 /* NAVIGATION BAR */
@@ -72,7 +74,6 @@ body {
 				padding: 8px;
 				font-size: 14px;
 				color: @dropdown-text-color;
-				cursor: pointer;
 
 				img {
 					.channel-img;
@@ -124,8 +125,14 @@ body {
 	} 
 }
 
-@subnav-bg-color: #FBF9FF;
-
+@subnav-bg-color: #EAEAEA;
+.nav-img {
+	img {
+		height: 25px;
+		width: auto;
+		margin: 0px 7px;
+	}
+}
 #secondary-nav {
 	background: @subnav-bg-color;
 	border: none;
@@ -149,6 +156,7 @@ body {
 		border-left: 2px solid #464646;
 		background-color: #89C0B1;
 	}
+
 }
 
 #clipboard-toggler{
@@ -163,13 +171,19 @@ body {
 	color:black;
 	font-size: 15px;
 	font-weight:bold;
-	background-color: #EAEAEA;
+	background-color: @subnav-bg-color;
 	.badge{
 		background-color: #3E5E9F;
 		color:white;
 	}
 }
 
+a {
+	text-decoration:none;
+	cursor:pointer;
+	color:black;
+}
+
 #main-content-area{
-	padding-top: 30px;
+	margin-top: 20px;
 }

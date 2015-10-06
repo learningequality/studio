@@ -8,7 +8,7 @@ var PreviewerViews = require("edit_channel/previewer/views");
 require("preview.less");
 var container_number; // Better to find other way to identify unique container
 
-var TreePreviewView = Backbone.View.extend({
+window.TreePreviewView = Backbone.View.extend({
 	template: require("./../hbtemplates/container_area.handlebars"),
 
 	initialize: function(options) {

@@ -1,5 +1,10 @@
 /* GLOBAL VARIABLES */
-@icon-font-path: "bootstrap/fonts/";
+@icon-font-path: "/static/fonts/";
+
+@font-face {
+	font-family: "Open Sans";
+	src: url("@{icon-font-path}OpenSans-Regular.ttf") format("truetype");
+}
 
 @container-shadow: #BDBDBC;
 @folder-color: white;
@@ -13,11 +18,6 @@
 @title-size: 22px;
 @container-border-color: white;
 
-@font {
-	font-family: "Open Sans";
-	src: url("../fonts/OpenSans-Regular.ttf") format("truetype");
-}
-
 @body-background: #292A2B;
 
 /* GLOBAL STYLES */
@@ -28,8 +28,3 @@ body {
 	background: @body-background;
 }
 
-a {
-	text-decoration:none;
-	cursor:pointer;
-	color:black;
-}

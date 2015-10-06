@@ -9,7 +9,7 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem
+from contentcuration.models import Exercise, AssessmentItem, Channel, TopicNode, ContentNode
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer
 
 
@@ -22,7 +22,13 @@ def testpage(request):
 
 
 def edit(request):
-    return render(request, 'channel_edit.html')
+    channel_list = Channel.objects.all() # Todo: only allow access to certain channels?
+    topic_list = TopicNode.objects.all()
+    content_list = ContentNode.objects.all()
+    #channel_serializer = ChannelSerializer(channel_list)
+    #topic_serializer = TopicSerializer(topic_list)
+    #content_serializer = ContentSerializer(content_list)
+    return render(request, 'channel_edit.html', {"channels" : channel_list, "topics" : topic_list, "content" : content_list})
 
 
 @login_required

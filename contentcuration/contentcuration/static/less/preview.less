@@ -11,5 +11,10 @@
 	.content-container{
 		canvas{background-color: @preview-container-color;}
 	}
-	.content-list{padding-left: 40px;}
+	.content-list{
+		padding-left: 40px;
+		label{
+			width:@container-width - @sidebar-width - 28px;
+		}
+	}
 }
