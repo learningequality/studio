@@ -1,0 +1,19 @@
+<li id = "item_{{index}}" class="channel_container">
+	<div class="profile pull-left">
+		<img id="channel_pic" alt="No picture found."></img>
+		<a class="delete_channel btn btn-default">
+			<span class="glyphicon glyphicon-trash"></span> 
+			Delete Channel
+		</a>
+	</div>
+	<div class="open_channel pull-right">
+		<span class="glyphicon glyphicon-chevron-right"></span>
+	</div>
+	<h2 id="channel_name" value="{{channel.title}}">
+		{{channel.title}}
+		<span class="edit_channel glyphicon glyphicon-pencil"></span>
+	</h2>
+	<p id="channel_description" value="{{channel.description}}">
+		{{channel.description}}
+	</p>
+</li>

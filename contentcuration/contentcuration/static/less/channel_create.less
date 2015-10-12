@@ -1,0 +1,82 @@
+@import "global-variables.less";
+
+@channel-container-width: 800px;
+@channel-container-height: 200px;
+@channel-editor-height: 300px;
+@channel-container-min-width: 300px;
+@channel-profile-width: 150px;
+@channel-container-bg-color: #F2F2F3;
+@channel-editor-bg-color: white;
+
+#channel-manage-container{
+	padding:0;
+	#manage-channel-nav{
+		background-color: @topnav-bg-color;
+		width:100%;
+		padding: 5px 50px;
+		color: white;
+		margin-bottom: 20px;
+	}
+
+	.new_channel{
+		margin-left: 100px;
+		margin-right:20px;
+		border-radius: 100px;
+		font-size: 20px;
+	}
+	.new_channel + label{
+		font-size: 20px;
+		color:white;
+	}
+	
+	.glyphicon{
+		font-size: 20px;
+		margin-left: 5px;
+		cursor: pointer;
+	}
+
+	#channel_list{
+		margin-top: 20px;
+		width:100%;
+		li{
+			border: 2px solid gray;
+			width: @channel-container-width;
+			min-width: @channel-container-min-width;
+			margin: 10px 0px 10px 100px;
+			padding:20px;
+			.channel_toggle{
+				text-decoration:none;
+				font-size: 20px;
+			}
+			.profile{
+				height:100%;
+				width: @channel-profile-width;
+				padding:20px;
+				margin-right:10px;
+				img{
+					width:100px;
+					height:100px;
+				}
+			}
+		}
+		
+		.channel_container{
+			background-color: @channel-container-bg-color;
+			height: @channel-container-height;
+		}
+		
+		.channel_editor{
+			background-color: @channel-editor-bg-color;
+			height:@channel-editor-height;
+			input[type=text], textarea{
+				height:25px;
+				font-size: 18px;
+				width: @channel-container-width - @channel-profile-width - 90px;
+			}
+			textarea{
+				resize: none;
+				height: @channel-editor-height / 1.5;
+			}
+		}
+	}
+}

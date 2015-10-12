@@ -32,7 +32,8 @@ window.ClipboardListView = Backbone.View.extend({
 			'click .clipboard_add_content': 'add_content',
 			'click .collapse_clipboard':'collapse_clipboard',
 			'click .delete_content': 'delete_content',
-			'click .tog_folder': 'toggle_folder'
+			'click .tog_folder': 'toggle_folder',
+			'click .preview_file': 'preview_file'
 		},
 		collapse_clipboard: function(event){
 			$("#clipboard").slideUp();
@@ -60,14 +61,17 @@ window.ClipboardListView = Backbone.View.extend({
 			if($(el).data("collapsed")){
 				$(el + "_sub").slideDown();
 				$(el).data("collapsed", false);
-				$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-up");
+				$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-down");
 			}
 			else{
 				$(el + "_sub").slideUp();
 				$(el).data("collapsed", true);
-				$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-down");
+				$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-up");
 			}
-		}
+		},
+		preview_file: function(event){
+		
+}
 });
 
 /* Loaded when user clicks edit icon on folder or "Add Folder" button */
@@ -296,7 +300,6 @@ function closeClipboard(){
 }
 
 function updateCount(){
-	console.log($("#clipboard textarea").val());
 	var char_length = CHAR_LIMIT - $("#clipboard textarea").val().length;
 	$(".counter").html(char_length);
 	if(char_length  == 1) $(".char_counter").html($(".char_counter").html().replace("Chars", "Char"));

@@ -65,10 +65,11 @@
 				color:@container-border-color;
 			}
 			label{
+				h3, h4, p{color : black;}
 				vertical-align: middle;
-				font-weight: normal;
 				cursor:pointer;
 				padding:0;
+				padding-top: 5px;
 				*{padding-right:10px}
 				margin-bottom: 10px;
 				margin-left:10px;
@@ -76,21 +77,25 @@
 				box-shadow: 3px 3px 3px @folder-shadow;
 				background-color: @folder-color;
 				.filler, .minimize{font-weight:bold;font-style:italic;}
+				.glyphicon{
+					display:inline;
+					font-size:15px;
+				}
 			}
 			.folder{
 				height: @folder-height;
 				h3{
 					font-size: 17px;
-					font-weight:bold;
 					padding-left: 10px;
 					padding-bottom:10px;
+					font-weight: bold;
 				}
-				.glyphicon{display:inline;}
 				p{
 					font-size:14px;
 					padding-left:10px;
 					width:@container-width - @sidebar-width - 30px;
 					a{text-decoration:none; color:black;}
+					font-weight: normal;
 				}
 			}
 			.file{

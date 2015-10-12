@@ -21,7 +21,7 @@ def testpage(request):
     return render(request, 'test.html')
 
 
-def edit(request):
+def channel_edit(request):
     channel_list = Channel.objects.all() # Todo: only allow access to certain channels?
     topic_list = TopicNode.objects.all()
     content_list = ContentNode.objects.all()
@@ -30,6 +30,8 @@ def edit(request):
     #content_serializer = ContentSerializer(content_list)
     return render(request, 'channel_edit.html', {"channels" : channel_list, "topics" : topic_list, "content" : content_list})
 
+def channel_create(request):
+    return render(request, 'channel_create.html')
 
 @login_required
 def exercise_list(request):

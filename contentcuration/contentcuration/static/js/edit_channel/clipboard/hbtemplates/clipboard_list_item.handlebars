@@ -1,7 +1,7 @@
 <li id="item_{{index}}">
 	<input type={{#if options.list}}"checkbox"{{else}}"radio"{{/if}} id="file_{{index}}" name="clipboard_list_files"></input>
 	<label for="file_{{index}}" class="clipboard_item">
-		{{#if folder}}<div class="pull-left tog_folder"><span class="glyphicon glyphicon-menu-down"></span></div>
+		{{#if folder}}<div class="pull-left tog_folder"><span class="glyphicon glyphicon-menu-up"></span></div>
 		{{else}}<div class="pull-left preview_file" ><span class="glyphicon glyphicon-search"></span>{{/if}}</div>
 		
 		<span class="glyphicon glyphicon-{{file_icon}}"></span>
