@@ -41,7 +41,7 @@ window.EditView = Backbone.View.extend({
 		$("#channel-dropdown").html(this.channel.title);
 		$("#channel_select").empty();
 		this.model.channels.forEach(function(entry){
-				$("#channel_select").append("<li>" + entry.attributes.title + "</li>");
+			$("#channel_select").append("<li>" + entry.attributes.title + "</li>");
 		});
 		
 		var EditViews = require("edit_channel/tree_edit/views");

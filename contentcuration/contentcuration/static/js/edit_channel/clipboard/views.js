@@ -70,7 +70,13 @@ window.ClipboardListView = Backbone.View.extend({
 		}
 	},
 	preview_file: function(event){
-	
+		event.preventDefault();
+		//var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
+		var view = new PreviewerViews.PreviewerView({
+			el: $("#previewer-area"),
+			//model: file.data("data"),
+			//file: file
+		});
 	}
 });
 

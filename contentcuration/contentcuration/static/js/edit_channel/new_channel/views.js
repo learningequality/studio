@@ -1,20 +1,13 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 require("channel_create.less");
-var Dropzone = require("dropzone");
+require("dropzone/dist/dropzone.css");
 
 var list_index;
 var current_channel;
 var new_channel_template = require("./hbtemplates/channel_editor.handlebars");
 var channel_template = require("./hbtemplates/channel_container.handlebars");
 var TextHelper = require("edit_channel/utils/TextHelper");
-
-Dropzone.options.pictureUpload = {
-	paramName: "file", // The name that will be used to transfer the file
-	maxFilesize: 2, // MB
-	accept: function(file, done) {
-	}
-};
 
 window.ManageChannelsView  = Backbone.View.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
