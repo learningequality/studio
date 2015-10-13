@@ -4,11 +4,14 @@ var Models = require("edit_channel/models");
 $(function() {
 
 	/* Todo: remove once data structures implemented */
-	var channelModel = new Models.ChannelModel({name: 'Khan Academy', description: 'Default value for testing purposes'});
+	var channelModel = new Models.ChannelModel({title: 'Khan Academy', description: 'Default value for testing purposes'});
 	var rootTopicNode = new Models.TopicNodeModel({title:'Khan Academy', description:'This is a sample description'});
 	var topicTree = new Models.TopicTreeModel({name: "Untitled Tree", is_published: false, root_node: rootTopicNode, channel: channelModel});
 	var dummyDescription = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua";
-
+	
+	var channelModel2 = new Models.ChannelModel({title: 'Learning Equality', description: 'Description of learning equality'});
+	var channelModel3 = new Models.ChannelModel({title: 'This is a very long name for a channel title', description: dummyDescription + dummyDescription + dummyDescription + dummyDescription + dummyDescription});
+	var channelCollection = new Models.ChannelCollection([channelModel, channelModel2, channelModel3]);
 	//Content Container 1
 	var topicNode1 = new Models.TopicNodeModel({parent: rootTopicNode, title:'This is a very long title name for a file', description: dummyDescription + dummyDescription + dummyDescription + dummyDescription + dummyDescription + dummyDescription + dummyDescription + dummyDescription + dummyDescription +dummyDescription + dummyDescription + dummyDescription});
 	var topicNode2 = new Models.TopicNodeModel({parent: rootTopicNode, title:'Science', description: "Shorter description"});
@@ -32,18 +35,8 @@ $(function() {
 	var topicNodeCollection = new Models.TopicNodeCollection([rootTopicNode, topicNode1, topicNode2, topicNode3, topicNode4, topicNode5, topicNode6, topicNode7, topicNode8, topicNode9]);
 	var contentNodeCollection = new Models.ContentNodeCollection([contentNode1, contentNode2, contentNode3, contentNode4, contentNode5]);
 	
-	/*Todo: when data connected -
-	var topicnodes = new Models.TopicNodeCollection().fetch();
-	var contentnodes = new Models.ContentNodeCollection().fetch().then(function(){
-		var view = new Views.BaseView({
-			url: '/api',
-			el: $("#channel-edit-container"),
-			model: {topicnodes: topicnodes, contentnodes: contentnodes, topic: rootTopicNode}
-		});
-	});	
-	*/
 	var view = new Views.BaseView({
-		el: $("#channel-edit-container"),
-		model: {topicnodes: topicNodeCollection, contentnodes: contentNodeCollection, topic: topicTree}
+		el: $("#channel-container"),
+		model: {topicnodes: topicNodeCollection, contentnodes: contentNodeCollection, topic: topicTree, channels: channelCollection}
 	});
 });

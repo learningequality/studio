@@ -18,60 +18,60 @@ var temp_list_items = [];
 window.ClipboardListView = Backbone.View.extend({
 	template: require("./hbtemplates/clipboard_list.handlebars"),
 	initialize: function() {
-            _.bindAll(this, 'add_content', 'collapse_clipboard','delete_content','toggle_folder');
-            //this.listenTo(clipboard_list_items, "change:clipboard_list_items.length", this.render);
-            this.render();
-			$("#clipboard").slideDown();
-        },
-        render: function() {
-			this.$el.html(this.template());
-			loadListItems(clipboard_list_items, ".list_content ul", this.model, {selected: true, list: true, meta: false});
-        },
-		
-		events: {
-			'click .clipboard_add_content': 'add_content',
-			'click .collapse_clipboard':'collapse_clipboard',
-			'click .delete_content': 'delete_content',
-			'click .tog_folder': 'toggle_folder',
-			'click .preview_file': 'preview_file'
-		},
-		collapse_clipboard: function(event){
-			$("#clipboard").slideUp();
-		},
-		add_content: function(event){
-			new ClipboardAddContentView({
-				el: $("#clipboard-area")
-			});
-		},
-		delete_content:function(event){
-			if(confirm("Are you sure you want to delete this file?")){
-				var el = DOMHelper.getParentOfTag(event.target, "li");
-				var i = clipboard_list_items.indexOf($("#" + el.id).data("data"));
-				console.log($("#" + el.id).data("data"));
-				console.log(clipboard_list_items[0]);
-				if(i != -1) console.log(clipboard_list_items[i]);
-				//clipboard_list_items.remove(i);
-				el.remove();
-				
-			}
-		},
-		toggle_folder: function(event){
-			event.preventDefault();
-			var el = "#" + DOMHelper.getParentOfTag(event.target, "li").id;
-			if($(el).data("collapsed")){
-				$(el + "_sub").slideDown();
-				$(el).data("collapsed", false);
-				$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-down");
-			}
-			else{
-				$(el + "_sub").slideUp();
-				$(el).data("collapsed", true);
-				$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-up");
-			}
-		},
-		preview_file: function(event){
-		
-}
+		_.bindAll(this, 'add_content', 'collapse_clipboard','delete_content','toggle_folder');
+		//this.listenTo(clipboard_list_items, "change:clipboard_list_items.length", this.render);
+		this.render();
+		$("#clipboard").slideDown();
+	},
+	render: function() {
+		this.$el.html(this.template());
+		loadListItems(clipboard_list_items, ".list_content ul", this.model, {selected: true, list: true, meta: false});
+	},
+	
+	events: {
+		'click .clipboard_add_content': 'add_content',
+		'click .collapse_clipboard':'collapse_clipboard',
+		'click .delete_content': 'delete_content',
+		'click .tog_folder': 'toggle_folder',
+		'click .preview_file': 'preview_file'
+	},
+	collapse_clipboard: function(event){
+		$("#clipboard").slideUp();
+	},
+	add_content: function(event){
+		new ClipboardAddContentView({
+			el: $("#clipboard-area")
+		});
+	},
+	delete_content:function(event){
+		if(confirm("Are you sure you want to delete this file?")){
+			var el = DOMHelper.getParentOfTag(event.target, "li");
+			var i = clipboard_list_items.indexOf($("#" + el.id).data("data"));
+			console.log($("#" + el.id).data("data"));
+			console.log(clipboard_list_items[0]);
+			if(i != -1) console.log(clipboard_list_items[i]);
+			//clipboard_list_items.remove(i);
+			el.remove();
+			
+		}
+	},
+	toggle_folder: function(event){
+		event.preventDefault();
+		var el = "#" + DOMHelper.getParentOfTag(event.target, "li").id;
+		if($(el).data("collapsed")){
+			$(el + "_sub").slideDown();
+			$(el).data("collapsed", false);
+			$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-down");
+		}
+		else{
+			$(el + "_sub").slideUp();
+			$(el).data("collapsed", true);
+			$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-up");
+		}
+	},
+	preview_file: function(event){
+	
+	}
 });
 
 /* Loaded when user clicks edit icon on folder or "Add Folder" button */
@@ -79,35 +79,35 @@ window.ClipboardEditFolderView = Backbone.View.extend({
 	template: require("./hbtemplates/clipboard_edit_folder.handlebars"),
 	initialize: function(options) {
 		this.edit = options.edit;
-            _.bindAll(this, 'update_folder', 'toggle_clipboard','update_count');
-            //this.listenTo(this.model, "change:number_of_hexagons", this.render);
-            this.render();
-        },
-        render: function() {
-			this.$el.html(this.template({folder: ((this.edit)? this.model.attributes : null), edit: this.edit, 
-								limit: ((this.edit)? CHAR_LIMIT - this.model.attributes.description.length : CHAR_LIMIT)}));
-        },
-		events: {
-			'click .clipboard_update_folder': 'update_folder',
-			'click .toggle_clipboard':'toggle_clipboard',
-			'keyup textarea': 'update_count',
-			'keydown textarea': 'update_count',
-			'paste textarea': 'update_count'
-		},
-		update_folder: function(event){
-			if($("#folder_name").val().trim() == "")
-				$("#name_err").css("display", "inline");
-			else{
-				//RELOAD TREE 
-				closeClipboard();
-			}
-		},
-		toggle_clipboard: function(event){
+		_.bindAll(this, 'update_folder', 'toggle_clipboard','update_count');
+		//this.listenTo(this.model, "change:number_of_hexagons", this.render);
+		this.render();
+	},
+	render: function() {
+		this.$el.html(this.template({folder: ((this.edit)? this.model.attributes : null), edit: this.edit, 
+							limit: ((this.edit)? CHAR_LIMIT - this.model.attributes.description.length : CHAR_LIMIT)}));
+	},
+	events: {
+		'click .clipboard_update_folder': 'update_folder',
+		'click .toggle_clipboard':'toggle_clipboard',
+		'keyup textarea': 'update_count',
+		'keydown textarea': 'update_count',
+		'paste textarea': 'update_count'
+	},
+	update_folder: function(event){
+		if($("#folder_name").val().trim() == "")
+			$("#name_err").css("display", "inline");
+		else{
+			//RELOAD TREE 
 			closeClipboard();
-		},
-		update_count: function(event){
-			updateCount();
 		}
+	},
+	toggle_clipboard: function(event){
+		closeClipboard();
+	},
+	update_count: function(event){
+		updateCount(CHAR_LIMIT);
+	}
 });
 
 /* Loaded when user clicks edit icon on file*/
@@ -131,7 +131,7 @@ window.ClipboardEditFileView = Backbone.View.extend({
 	},
 	
 	toggle_clipboard: function(event){
-		closeNew();
+		//closeNew();
 		$("#clipboard").hide();
 	},
 	update_file: function(event){
@@ -143,7 +143,7 @@ window.ClipboardEditFileView = Backbone.View.extend({
 		}
 	},
 	update_count: function(event){
-		updateCount();
+		updateCount(CHAR_LIMIT);
 	}
 });
 
@@ -194,7 +194,7 @@ window.ClipboardAddContentView = Backbone.View.extend({
 		DOMHelper.getParentOfTag(event.target, "li").remove();
 	},
 	update_count: function(event){
-		updateCount();
+		updateCount(CHAR_LIMIT);
 	},
 	/* Functions shared across steps*/
 	toggle_clipboard: function(event){
@@ -299,8 +299,8 @@ function closeClipboard(){
 	$("#clipboard").hide();
 }
 
-function updateCount(){
-	var char_length = CHAR_LIMIT - $("#clipboard textarea").val().length;
+function updateCount(char_limit){
+	var char_length = char_limit - $("#clipboard textarea").val().length;
 	$(".counter").html(char_length);
 	if(char_length  == 1) $(".char_counter").html($(".char_counter").html().replace("Chars", "Char"));
 	else if(char_length  == 2 || char_length  == 0)
@@ -345,5 +345,6 @@ module.exports = {
 	ClipboardEditFolderView:ClipboardEditFolderView,
 	ClipboardEditFileView:ClipboardEditFileView,
 	ClipboardAddContentView:ClipboardAddContentView,
-	addItems:addItems
+	addItems:addItems,
+	updateCount: updateCount
 }

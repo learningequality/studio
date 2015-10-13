@@ -30,9 +30,6 @@ def channel_edit(request):
     #content_serializer = ContentSerializer(content_list)
     return render(request, 'channel_edit.html', {"channels" : channel_list, "topics" : topic_list, "content" : content_list})
 
-def channel_create(request):
-    return render(request, 'channel_create.html')
-
 @login_required
 def exercise_list(request):
 

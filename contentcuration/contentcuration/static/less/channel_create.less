@@ -8,7 +8,7 @@
 @channel-container-bg-color: #F2F2F3;
 @channel-editor-bg-color: white;
 
-#channel-manage-container{
+#channel-container{
 	padding:0;
 	#manage-channel-nav{
 		background-color: @topnav-bg-color;
@@ -19,10 +19,9 @@
 	}
 
 	.new_channel{
-		margin-left: 100px;
+		padding-left: 100px;
 		margin-right:20px;
-		border-radius: 100px;
-		font-size: 20px;
+		color:white;
 	}
 	.new_channel + label{
 		font-size: 20px;
@@ -33,6 +32,15 @@
 		font-size: 20px;
 		margin-left: 5px;
 		cursor: pointer;
+	}
+	.edit_channel{
+		display:none;
+	}
+	
+	.open_channel{
+		.glyphicon{
+			font-size:20px;
+		}
 	}
 
 	#channel_list{
@@ -51,12 +59,17 @@
 			.profile{
 				height:100%;
 				width: @channel-profile-width;
-				padding:20px;
 				margin-right:10px;
 				img{
 					width:100px;
 					height:100px;
+					margin-bottom: 5px;
 				}
+			}
+		}
+		li:hover{
+			.edit_channel{
+				display:inline-block;
 			}
 		}
 		

@@ -41,6 +41,11 @@ window.ChannelModel = Backbone.Model.extend({
     }
 });
 
+window.ChannelCollection = Backbone.Collection.extend({
+	urlRoot: '/api/channel/',
+	model: ChannelModel
+});
+
 window.TopicNodeCollection = Backbone.Collection.extend({
 	urlRoot: '/api/topics/',
 	model: TopicNodeModel
@@ -51,11 +56,18 @@ window.ContentNodeCollection = Backbone.Collection.extend({
 	model: ContentNodeModel
 });
 
+window.TopicTreeModelCollection = Backbone.Collection.extend({
+	urlRoot: '/api/content/',
+	model: TopicTreeModel
+});
+
 module.exports = {
 	TopicNodeModel: TopicNodeModel,
 	TopicNodeCollection: TopicNodeCollection,
-	ChannelModel: ChannelModel,
 	TopicTreeModel:TopicTreeModel,
+	TopicTreeModelCollection: TopicTreeModelCollection,
 	ContentNodeModel: ContentNodeModel,
-	ContentNodeCollection: ContentNodeCollection
+	ContentNodeCollection: ContentNodeCollection,
+	ChannelModel: ChannelModel,
+	ChannelCollection: ChannelCollection
 }

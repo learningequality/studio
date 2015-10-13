@@ -1,7 +1,10 @@
 <li class="channel_editor" id="new_item_{{index}}">
-	<div class="profile pull-left">
-		<img class="new_channel_pic" alt="Drag picture here"></img>
-		<a class="new_channel_pic btn btn-default">Upload</a>
+	<div class="profile pull-left text-center">
+		<form action="/file-upload" class="dropzone" id="picture-upload">
+		  <div class="fallback">
+			<img class="new_channel_pic" alt="Drag picture here"></img>
+		  </div>
+		</form>
 		<a class="delete_channel btn btn-default">
 			<span class="glyphicon glyphicon-trash"></span> 
 			Delete Channel
