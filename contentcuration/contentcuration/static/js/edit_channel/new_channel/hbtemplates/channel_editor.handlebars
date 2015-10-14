@@ -13,7 +13,7 @@
 	<span class="channel_toggle pull-right glyphicon glyphicon-remove"></span>
 	<input type=text id="new_channel_name" placeholder="Channel Name" value = "{{channel.title}}"></input>
 	<textarea id="new_channel_description" placeholder="Channel Description" value = "{{channel.description}}">{{channel.description}}</textarea>
-	<a class="save_channel btn btn-default">
+	<a class="save_channel btn btn-default"><span class="channel_toggle glyphicon glyphicon-ok"></span>
 		{{#if edit}}Update Channel{{else}}Create Channel{{/if}}
 	</a>
 </li>

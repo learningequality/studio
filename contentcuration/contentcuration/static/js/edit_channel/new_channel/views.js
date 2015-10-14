@@ -66,7 +66,7 @@ window.ManageChannelsView  = Backbone.View.extend({
 	toggle_channel: function(event){
 		if(current_channel){
 			var index = event.target.parentNode.id.split("_")[2];
-			$("#"+event.target.parentNode.id).after(channel_template({index: index, channel: {title: current_channel.attributes.title, description: current_channel.attributes.description}}));
+			$("#"+event.target.parentNode.id).after(channel_template({index: index, channel: {title: current_channel.title, description: current_channel.description}}));
 			$("#item_"+index).data("data",current_channel);
 			current_channel = $("#item_"+index).data("data");
 		}
@@ -82,13 +82,14 @@ window.ManageChannelsView  = Backbone.View.extend({
 			el: $("#channel-container"),
 			model: this.model,
 			edit: true,
-			channel: $("#" + event.target.parentNode.parentNode.id).data("data").attributes
+			channel: $("#" + event.target.parentNode.parentNode.id).data("data")
 		});
 	},
 	save_channel: function(event){
 		var index = event.target.parentNode.id.split("_")[2];
 		var title = $("#new_channel_name").val().trim();
 		var channel = {title: (title == "")? "[Untitled Channel]" : title, description: $("#new_channel_description").val()};
+		console.log(channel);
 		$("#"+event.target.parentNode.id).after(channel_template({index: index, channel: channel}));
 		$("#item_"+index).data("data",channel);
 		$("#"+event.target.parentNode.id).remove();
@@ -111,8 +112,8 @@ function loadChannels(model){
 	model.channels.forEach(function(entry){
 		//if(entry.attributes... See if user has access to channel)
 		$("#channel_list").append(channel_template({index: list_index, channel: entry.toJSON()}));
-		$("#item_"+list_index).data("data",entry);
-
+		$("#item_"+list_index).data("data",entry.attributes);
+		console.log(entry.attributes);
 		$("#item_"+list_index + " #channel_name").html(TextHelper.trimText(entry.attributes.title, "...", 35, false));
 		$("#item_"+list_index + " #channel_description").html(TextHelper.trimText(entry.attributes.description, "... read more", 300, true));
 		list_index++;
@@ -125,7 +126,7 @@ function setEditing(isEditing){
 		$(".new_channel").prop("disabled", true);
 		$(".edit_channel").css("cursor", "not-allowed");
 		$(".new_channel").css("cursor", "not-allowed");
-		$(".new_channel_pic").dropzone({ url: "/channel_create" });
+		//$(".new_channel_pic").dropzone({ url: "/channel_create" });
 		
 	} else{
 		$(".edit_channel").prop("disabled", false);

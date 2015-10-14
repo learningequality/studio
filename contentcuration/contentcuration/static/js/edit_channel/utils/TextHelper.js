@@ -12,7 +12,7 @@ function manageFolder(event, expanding){
 	var el = "#" + DOMHelper.getParentOfTag(event.target, "li").id + " label";
 	
 	if(expanding)
-		$(el + " p").html($(el + " p a").prop("title") + "<br/><a title=\"" + $(el + " p a").prop("title") +"\" class=\"minimize\">See Less</a>");
+		$(el + " p").html($(el + " p a").prop("title") + "&nbsp;<a title=\"" + $(el + " p a").prop("title") +"\" class=\"minimize\">See Less</a>");
 	else
 		$(el + " p").html(trimText($(el + " p a").prop("title") , "... read more", 120, true));
 	$(el).animate({height: $(el + " p").height() + 35});
