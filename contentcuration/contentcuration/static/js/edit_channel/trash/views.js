@@ -10,7 +10,7 @@ var PreviewerViews = require("edit_channel/previewer/views");
 window.TrashView = Backbone.View.extend({
 	template: require("./hbtemplates/trash.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'delete_selected', 'restore_selected','select_all', 'load_topics', 'load_content');
+		_.bindAll(this, 'delete_selected', 'restore_selected','select_all');
 		//this.listenTo(this.model, "change:number_of_hexagons", this.render);
 		this.model = options.model;
 		this.render();
