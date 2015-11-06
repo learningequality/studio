@@ -43,57 +43,59 @@
 		height:100%;
 		.glyphicon-chevron-right{
 			font-size:25pt;
-			top:45%;
+			top:30%;
 		}
 	}
 
 	#channel_list{
 		margin-top: 20px;
 		width:100%;
-		li{
-			border: 2px solid gray;
-			width: @channel-container-width;
-			min-width: @channel-container-min-width;
-			margin: 10px 0px 10px 100px;
-			padding:20px;
-			.channel_toggle{
-				text-decoration:none;
-				font-size: 20px;
-			}
-			.profile{
-				height:100%;
-				width: @channel-profile-width;
-				margin-right:15px;
-				img{
-					width:100px;
-					height:100px;
-					margin-bottom: 5px;
-				}
-			}
-		}
 		li:hover{
 			.edit_channel{
 				display:inline-block;
 			}
 		}
-		
-		.channel_container{
-			background-color: @channel-container-bg-color;
-			height: @channel-container-height;
+	}
+	.channel_container, .channel_editor{
+		background-color: @channel-container-bg-color;
+		height: @channel-container-height;
+		border: 2px solid gray;
+		width: @channel-container-width;
+		min-width: @channel-container-min-width;
+		margin: 10px 0px 10px 100px;
+		padding:20px;
+		.profile{
+			height:100%;
+			width: @channel-profile-width;
+			margin-right:15px;
+			img{
+				width:100px;
+				height:100px;
+				margin-bottom: 5px;
+			}
 		}
-		
-		.channel_editor{
-			background-color: @channel-editor-bg-color;
-			height:@channel-editor-height;
-			input[type=text], textarea{
-				height:25px;
-				font-size: 18px;
-				width: @channel-container-width - @channel-profile-width - 90px;
-			}
-			textarea{
-				resize: none;
-				height: @channel-editor-height / 1.5;
-			}
+	}
+	
+	.default-item{
+		color: white;
+		font-size: 16pt;
+		margin: 10px 0px 10px 100px;
+	}
+	.channel_editor{
+		background-color: @channel-editor-bg-color;
+		height:@channel-editor-height;
+		.channel_toggle{
+			text-decoration:none;
+			font-size: 20px;
+		}
+		input[type=text], textarea{
+			height:25px;
+			font-size: 18px;
+			width: @channel-container-width - @channel-profile-width - 90px;
+		}
+		textarea{
+			resize: none;
+			height: @channel-editor-height / 1.5;
 		}
 	}
 }

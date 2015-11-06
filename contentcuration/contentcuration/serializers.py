@@ -28,7 +28,7 @@ class ChannelSerializer(serializers.ModelSerializer):
 class TopicTreeSerializer(serializers.ModelSerializer):
     class Meta:
         model = TopicTree
-        fields = ('name',)
+        fields = ('name', 'channel', 'root_node')
 
 class NodeSerializer(serializers.ModelSerializer):
     class Meta:

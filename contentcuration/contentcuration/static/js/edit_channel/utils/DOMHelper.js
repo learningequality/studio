@@ -1,12 +1,14 @@
 function getParentOfTag(el, type){
-	while(el.nodeName != type.toUpperCase())
+	while(el && el.nodeName != type.toUpperCase()){
 		el = el.parentNode;
+	}
 	return el;
 }
 
 function getParentOfClass(el, className){
-	while(el && el.className.indexOf(className.trim()) <= -1)
+	while(el && el.className.indexOf(className.trim()) <= -1){
 		el = el.parentNode;
+	}
 	return el;
 }
 

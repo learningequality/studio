@@ -1,7 +1,7 @@
-<li id="item_{{index}}_{{list_index}}" data-val="{{index}}">
+<li id="item_{{index}}_{{list_index}}" data-val="{{index}}" class="content" {{#if edit}}draggable="true"{{/if}}>
 	{{#if edit}}<input type="checkbox" id="{{index}}_{{list_index}}"/>
 	{{else}}<input type="radio" name="{{index}}" id="{{index}}_{{list_index}}"/>{{/if}}
-	<label class="folder" for="{{index}}_{{list_index}}" title="{{folder.title}}">
+	<label class="folder {{#unless edit}}open_folder{{/unless}}" for="{{index}}_{{list_index}}" title="{{folder.title}}">
 		{{#if edit}}
 			<div class="folder_options pull-right">
 				<div class="options">
@@ -10,7 +10,7 @@
 				</div>
 			</div>
 		{{/if}}
-		<h3>{{#if folder}}{{folder.title}}{{else}}Folder Name{{/if}}</h3>
+		<h3 class = "title">{{#if folder}}{{folder.title}}{{else}}Folder Name{{/if}}</h3>
 		<p class="description">{{#if folder}}{{folder.description}}{{else}}Description of the folder{{/if}}</p>
 	</label>
 </li>

@@ -84,14 +84,16 @@ window.ClipboardListView = Backbone.View.extend({
 window.ClipboardEditFolderView = Backbone.View.extend({
 	template: require("./hbtemplates/clipboard_edit_folder.handlebars"),
 	initialize: function(options) {
+		_.bindAll(this, 'update_folder', 'toggle_clipboard','update_count', 'delete_view');
 		this.edit = options.edit;
-		_.bindAll(this, 'update_folder', 'toggle_clipboard','update_count');
+		this.folder = options.folder;
+		this.model = options.model;
 		//this.listenTo(this.model, "change:number_of_hexagons", this.render);
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template({folder: ((this.edit)? this.model.attributes : null), edit: this.edit, 
-							limit: ((this.edit)? CHAR_LIMIT - this.model.attributes.description.length : CHAR_LIMIT)}));
+		this.$el.html(this.template({folder: ((this.edit)? this.model : null), edit: this.edit, 
+							limit: ((this.edit)? CHAR_LIMIT - this.model.description.length : CHAR_LIMIT)}));
 	},
 	events: {
 		'click .clipboard_update_folder': 'update_folder',
@@ -104,16 +106,29 @@ window.ClipboardEditFolderView = Backbone.View.extend({
 		if($("#folder_name").val().trim() == "")
 			$("#name_err").css("display", "inline");
 		else{
-			//RELOAD TREE 
-			closeClipboard();
+			this.folder.update({title: $("#folder_name").val(), description: $("#folder_description").val()});
+			this.delete_view();
 		}
 	},
 	toggle_clipboard: function(event){
-		closeClipboard();
+		window.edit_page_view.set_editing(false);
+		if(this.edit){
+			this.folder.set_as_placeholder(false);
+		}
+		else{
+			this.folder.delete_view();
+		}
+		this.delete_view();
 	},
+	
 	update_count: function(event){
 		updateCount(CHAR_LIMIT);
-	}
+	},
+	delete_view: function(){
+		this.undelegateEvents();
+		this.unbind();		
+		this.remove();
+	},
 });
 
 /* Loaded when user clicks edit icon on file*/
@@ -145,6 +160,14 @@ window.ClipboardEditFileView = Backbone.View.extend({
 				$("#name_err").css("display", "inline");
 		else{
 			//RELOAD TREE 
+			if(this.edit){
+				//Handle editing mode
+			}else{
+				var template = require("./../hbtemplates/content_file.handlebars");
+				var list_index = parseInt($(this.containerid + " ul li:last-child").attr("id").split("_")[2]) + 1;
+				var index = this.containerid.split("_")[1];
+				
+			}
 			closeClipboard();
 		}
 	},
@@ -300,13 +323,13 @@ function closeClipboard(){
 	$("#edit").find(".content_options button").prop('disabled',false);
 	$("#edit").find(".edit_folder_button").css('visibility','visible');
 	$("#edit").find(".edit_file_button").css('visibility','visible');
-	$("#is_editing").val("n");
-	$("#edit").find(".newcontent").remove();
+
+	$(".newcontent").attr("class", "content");
 	$("#clipboard").hide();
 }
 
 function updateCount(char_limit){
-	var char_length = char_limit - $("#clipboard textarea").val().length;
+	var char_length = char_limit - $("#clipboard textarea").html().length;
 	$(".counter").html(char_length);
 	if(char_length  == 1) $(".char_counter").html($(".char_counter").html().replace("Chars", "Char"));
 	else if(char_length  == 2 || char_length  == 0)

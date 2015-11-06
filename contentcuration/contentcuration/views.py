@@ -9,8 +9,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, TopicNode, ContentNode
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, TopicNode, ContentNode, TopicTree
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicSerializer, ContentSerializer, TopicTreeSerializer
 
 
 def base(request):
@@ -25,10 +25,15 @@ def channel_edit(request):
     channel_list = Channel.objects.all() # Todo: only allow access to certain channels?
     topic_list = TopicNode.objects.all()
     content_list = ContentNode.objects.all()
-    #channel_serializer = ChannelSerializer(channel_list)
-    #topic_serializer = TopicSerializer(topic_list)
-    #content_serializer = ContentSerializer(content_list)
-    return render(request, 'channel_edit.html', {"channels" : channel_list, "topics" : topic_list, "content" : content_list})
+    topictree_list = TopicTree.objects.all()
+    channel_serializer = ChannelSerializer(channel_list, many=True)
+    topic_serializer = TopicSerializer(topic_list, many=True)
+    content_serializer = ContentSerializer(content_list, many=True)
+    topictree_serializer = TopicTreeSerializer(topictree_list, many = True)
+    return render(request, 'channel_edit.html', {"channels" : JSONRenderer().render(channel_serializer.data), 
+                                                   "topics" : JSONRenderer().render(topic_serializer.data),
+                                                  "content" : JSONRenderer().render(content_serializer.data),
+                                                "topictree" : JSONRenderer().render(topictree_serializer.data)})
 
 @login_required
 def exercise_list(request):

@@ -1,4 +1,4 @@
-<li class="channel_editor" id="new_item_{{index}}">
+<div class="channel_editor" id="new_{{index}}">
 	<div class="profile pull-left text-center">
 		<form action="/file-upload" class="dropzone" id="picture-upload">
 		  <div class="fallback">
@@ -11,9 +11,9 @@
 		</a>
 	</div>
 	<span class="channel_toggle pull-right glyphicon glyphicon-remove"></span>
-	<input type=text id="new_channel_name" placeholder="Channel Name" value = "{{channel.title}}"></input>
+	<input type=text id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}"></input>
 	<textarea id="new_channel_description" placeholder="Channel Description" value = "{{channel.description}}">{{channel.description}}</textarea>
-	<a class="save_channel btn btn-default"><span class="channel_toggle glyphicon glyphicon-ok"></span>
+	<a class="save_channel btn btn-default"><span class="glyphicon glyphicon-ok"></span>
 		{{#if edit}}Update Channel{{else}}Create Channel{{/if}}
 	</a>
-</li>
+</div>

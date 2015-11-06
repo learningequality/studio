@@ -15,41 +15,32 @@ window.BaseView = Backbone.View.extend({
 		/* Defaults to channel manager view */
 		$("#channel-selector").css("display", "none");
 		$("#content-search").css("display", "none");
-		
-		var ChannelManageView = require("edit_channel/new_channel/views");
-		new ChannelManageView.ManageChannelsView ({
-			el: $("#channel-container"),
-			model: this.model
-		});
 	}
 });
 
-window.EditView = Backbone.View.extend({
+
+
+var EditView = Backbone.View.extend({
 	template: require("./hbtemplates/channel_edit.handlebars"),
 	url: '/api',
 	initialize: function(options) {
 		_.bindAll(this, 'open_edit', 'open_preview', 'open_trash', 'open_publish','open_clipboard');
 		this.channel = options.channel;
-
+		this.model = options.model;
 		this.render();
 	},
 	render: function() {
 		this.$el.html(this.template(this.model));
+		/*
 		$("#clipboard-toggler").show();
 		$("#channel-selector").css("display", "inline-block");
 		$("#content-search").css("display", "inline-block");
-		$("#channel-dropdown").html(this.channel.title);
+		$("#channel-dropdown").html(this.channel.name);
 		$("#channel_select").empty();
 		this.model.channels.forEach(function(entry){
-			$("#channel_select").append("<li>" + entry.attributes.title + "</li>");
+			$("#channel_select").append("<li>" + entry.name + "</li>");
 		});
-		
-		var EditViews = require("edit_channel/tree_edit/views");
-		new EditViews.TreeEditView({
-			el: $("#main-content-area"),
-			model: this.model,
-			edit: true
-		});
+		*/
 	},
 	events: {
 		'click #channel-edit-button': 'open_edit',
@@ -61,32 +52,18 @@ window.EditView = Backbone.View.extend({
 	
 	open_edit: function(){
 		$("#clipboard-toggler").show();
-		var EditViews = require("edit_channel/tree_edit/views");
-		new EditViews.TreeEditView({
-			el: $("#main-content-area"),
-			model: this.model,
-			edit: true
-		});
+		window.channel_router.navigate(this.channel.name + "/edit", {trigger: true});
 	},
 	
 	open_preview: function(){
 		$("#clipboard-toggler").hide();
 		$("#clipboard").hide();
-		var PreviewViews = require("edit_channel/tree_preview/views");
-		new PreviewViews.TreePreviewView({
-			el: $("#main-content-area"),
-			model: this.model,
-			edit: false
-		});
+		window.channel_router.navigate(this.channel.name + "/preview", {trigger: true});
 	},
 
 	open_trash: function(){
 		$("#clipboard-toggler").show();
-		var TrashViews = require("edit_channel/trash/views");
-		new TrashViews.TrashView({
-			el: $("#main-content-area"),
-			model: this.model
-		});
+		window.channel_router.navigate(this.channel.name + "/trash", {trigger: true});
 	},
 	open_clipboard: function(){
 		var ClipboardViews = require("edit_channel/clipboard/views");
@@ -114,5 +91,6 @@ function addToClipboard(topic_nodes, content_nodes){
 
 module.exports = {
 	BaseView: BaseView,
-	EditView: EditView
+	EditView: EditView,
+	ManageChannelsView: ManageChannelsView
 }

@@ -43,7 +43,6 @@ function loadList(root_node, model, folder_template, file_template, list_id, ind
 	return list_index;
 }
 
-
 function appendList(file,template, list_id, index)
 {
 	$(list_id).append(template({index: index, file: file.attributes}));

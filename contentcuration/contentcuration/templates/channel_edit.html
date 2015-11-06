@@ -1,10 +1,30 @@
 <!DOCTYPE HTML>
 {% extends "base.html" %}
 {% load staticfiles %}
+{% load i18n %}
+
 {% block content %}
 	<script type="text/javascript" src="{% static 'js/edit_channel/views.js' %}"></script>
 	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
+
+	<script>
+		var channels = JSON.parse("{{ channels |escapejs }}");
+		var topic_nodes = JSON.parse("{{ topics|escapejs }}");
+		var content_nodes = JSON.parse("{{ content|escapejs }}");
+		var topic_trees = JSON.parse("{{ topictree|escapejs }}");
+	</script>
+	
 	<div id="channel-container"></div>
-	<!--div id ="topic_nodes" data="{{ topicnodes|safe }}"></div>
-	<div id ="content_nodes" data="{{ contentnodes|safe }}"></div>	-->
+	
+	<script type="text/javascript">		
+		var bundle = require("channel_edit");
+		bundle.$(function() {
+            window.channel_router = new bundle.ChannelEditRouter({user: "current_user", model: { channels : new ChannelCollection($.parseJSON("{{ channels |escapejs }}")), 
+				topics : new TopicNodeCollection($.parseJSON("{{ topics |escapejs }}")),
+				content : new ContentNodeCollection( $.parseJSON("{{ content |escapejs }}")),
+				topictrees : new TopicTreeModelCollection($.parseJSON("{{ topictree |escapejs }}"))}});
+			bundle.Backbone.history.start({pushState: true, root: "{% url 'channel_edit' %}"});
+        });
+    </script>
+
 {% endblock content %}

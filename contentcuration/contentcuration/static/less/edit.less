@@ -42,6 +42,7 @@
 						width: 10px;
 					}
 				}
+				
 				.folder_options{
 					height:@folder-height;
 					width:40px;
@@ -69,7 +70,33 @@
 						span{margin-right:10px;display:inline-block;}
 					}
 				}
+				
+				.newcontent{
+					input[type=checkbox]{visibility:hidden;}
+					.folder{
+						background-color: #89C0B1;
+						div{ display:none;}
+					}
+				}
 			}
 		}
 	}	
+}
+
+#preview{
+	@preview-container-color:#87A3C6;
+	@preview-selected-folder:#204E4B;
+	@preview-window-width:40vw;
+	@preview-window-color:#E9EAEA;
+	
+	h1{font-size:20px;margin-bottom:20px;color:white;}
+	.content-container{
+		canvas{background-color: @preview-container-color;}
+	}
+	.content-list{
+		padding-left: 40px;
+		label{
+			width:@container-width - @sidebar-width - 28px;
+		}
+	}
 }

@@ -1,4 +1,4 @@
-<li id = "item_{{index}}" class="channel_container">
+<li class="channel_container">
 	<div class="profile pull-left text-center">
 		<img id="channel_pic" alt="No picture found."></img>
 		<a class="delete_channel btn btn-default">
@@ -6,14 +6,14 @@
 			Delete Channel
 		</a>
 	</div>
-	<div class="open_channel pull-right">
+	<a  class="open_channel pull-right">
 		<span class="glyphicon glyphicon-chevron-right"></span>
-	</div>
+	</a>
 	<h2>
-		<span id="channel_name" value="{{channel.title}}">{{channel.title}}</span>
+		<span id="channel_name" title="{{channel.name}}">{{channel.name}}</span>
 		<span class="edit_channel glyphicon glyphicon-pencil"></span>
 	</h2>
-	<p id="channel_description" value="{{channel.description}}">
+	<p id="channel_description" title="{{channel.description}}">
 		{{channel.description}}
 	</p>
 </li>

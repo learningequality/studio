@@ -9,29 +9,22 @@ var PreviewerViews = require("edit_channel/previewer/views");
 /* Todo: figure out how to display archived files after deleted */
 window.TrashView = Backbone.View.extend({
 	template: require("./hbtemplates/trash.handlebars"),
-	initialize: function() {
-		_.bindAll(this, 'delete_selected', 'restore_selected','select_all','toggle_file_item','preview_list_item','check_item','toggle_folder_item');
+	initialize: function(options) {
+		_.bindAll(this, 'delete_selected', 'restore_selected','select_all', 'load_topics', 'load_content');
 		//this.listenTo(this.model, "change:number_of_hexagons", this.render);
-		this.view_model = this.model;
+		this.model = options.model;
 		this.render();
 	},
 	render: function() {
 		this.$el.html(this.template(this.model));
-		var folder_template = require("./hbtemplates/trash_collapsed.handlebars");
-		var file_template = require("./hbtemplates/trash_collapsed.handlebars");
-		$(".trash_list_container ul").empty();
-		var index = LoadHelper.loadList(this.model.topic.root_node, this.view_model, folder_template, file_template, ".trash_list_container ul", 50, null, 0, 0);
-		if(index == 0) $("#trash_list").append("<h5 class=\"default-item\">No content found.</h5>");
+		this.load_topics(this.topic, this.$el);
+		this.load_content(this.topic, this.$el);
 	},
 	
 	events: {
 		'click #delete-selected-button': 'delete_selected',
 		'click #restore-selected-button': 'restore_selected',
-		'click #select_all': 'select_all',
-		'click .tog_file': 'toggle_file_item',
-		'click .tog_folder': 'toggle_folder_item',
-		'click .prev': 'preview_list_item',
-		'change #trash [type=checkbox]' : 'check_item'
+		'click #select_all': 'select_all'
 	},
 	delete_selected: function(event){
 		if(confirm("Are you sure you want to delete the selected files?")){
@@ -65,6 +58,32 @@ window.TrashView = Backbone.View.extend({
 			selected[i].checked = event.target.checked;
 			checkItem("#" + selected[i].parentNode.id, event.target.checked);
 		}
+	}
+});
+
+window.TrashListItemView = Backbone.View.extend({
+	template: require("./hbtemplates/trash_collapsed.handlebars"),
+	initialize: function(options) {
+		_.bindAll(this,'check_item','toggle_folder_item','toggle_file_item','preview_list_item');
+		//this.listenTo(this.model, "change:number_of_hexagons", this.render);
+		this.view_model = this.model;
+		this.isFolder = options.isFolder;
+		this.render();
+	},
+	render: function() {
+		this.$el.html(this.template(this.model));
+		var folder_template = require("./hbtemplates/trash_collapsed.handlebars");
+		var file_template = require("./hbtemplates/trash_collapsed.handlebars");
+		$(".trash_list_container ul").empty();
+		//var index = LoadHelper.loadList(this.model.topic.root_node, this.view_model, folder_template, file_template, ".trash_list_container ul", 50, null, 0, 0);
+		if(index == 0) $("#trash_list").append("<h5 class=\"default-item\">No content found.</h5>");
+	},
+	
+	events: {
+		'click .tog_folder': 'toggle_folder_item',
+		'change #trash [type=checkbox]' : 'check_item',
+		'click .tog_file': 'toggle_file_item',
+		'click .prev': 'preview_list_item',
 	},
 	toggle_folder_item: function(event){
 		event.preventDefault();
@@ -79,6 +98,10 @@ window.TrashView = Backbone.View.extend({
 			$(el).data("collapsed", true);
 			$(el+" .glyphicon-chevron-down").attr("class", "tog_folder glyphicon glyphicon-chevron-right");
 		}
+	},
+	check_item: function(event){
+		if(event.target.parentNode.nodeName != "DIV")
+			checkItem("#" + event.target.parentNode.id, event.target.checked);
 	},
 	toggle_file_item: function(event){
 		event.preventDefault();
@@ -118,10 +141,6 @@ window.TrashView = Backbone.View.extend({
 		});
 		var addon_template = require("./hbtemplates/trash_preview_add_on.handlebars");
 		$("#previewer").append(addon_template());
-	},
-	check_item: function(event){
-		if(event.target.parentNode.nodeName != "DIV")
-			checkItem("#" + event.target.parentNode.id, event.target.checked);
 	}
 });
 
