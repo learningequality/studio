@@ -26,7 +26,6 @@ var EditView = Backbone.View.extend({
 	initialize: function(options) {
 		_.bindAll(this, 'open_edit', 'open_preview', 'open_trash', 'open_publish','open_clipboard');
 		this.channel = options.channel;
-		this.model = options.model;
 		this.render();
 	},
 	render: function() {
@@ -69,7 +68,6 @@ var EditView = Backbone.View.extend({
 		var ClipboardViews = require("edit_channel/clipboard/views");
 		new ClipboardViews.ClipboardListView({
 			el: $("#clipboard-area"),
-			model: this.model
 		});
 	},
 
@@ -79,7 +77,6 @@ var EditView = Backbone.View.extend({
 			console.log("Publishing Channel");
 			new BaseView({
 				el: $("#channel-container"),
-				model: this.model
 			});
 		}
 	}

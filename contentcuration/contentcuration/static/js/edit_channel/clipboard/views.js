@@ -25,7 +25,7 @@ window.ClipboardListView = Backbone.View.extend({
 	},
 	render: function() {
 		this.$el.html(this.template());
-		loadListItems(clipboard_list_items, ".list_content ul", this.model, {selected: true, list: true, meta: false});
+		//loadListItems(clipboard_list_items, ".list_content ul", this.model, {selected: true, list: true, meta: false});
 	},
 	
 	events: {
@@ -87,8 +87,7 @@ window.ClipboardEditFolderView = Backbone.View.extend({
 		_.bindAll(this, 'update_folder', 'toggle_clipboard','update_count', 'delete_view');
 		this.edit = options.edit;
 		this.folder = options.folder;
-		this.model = options.model;
-		//this.listenTo(this.model, "change:number_of_hexagons", this.render);
+
 		this.render();
 	},
 	render: function() {
@@ -116,6 +115,7 @@ window.ClipboardEditFolderView = Backbone.View.extend({
 			this.folder.set_as_placeholder(false);
 		}
 		else{
+			this.folder.delete_model();
 			this.folder.delete_view();
 		}
 		this.delete_view();

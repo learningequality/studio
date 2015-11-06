@@ -10,7 +10,8 @@ var current_tree;
 ChannelEditRouter  = Backbone.Router.extend({
     initialize: function(options) {
         _.bindAll(this, "navigate_channel_home", "navigate_channel", "edit_page", "preview_page", 
-							"trash_page", "save", "delete","generate_folder", "generate_file", "create");
+							"trash_page", "save_channel", "delete_channel","generate_folder", "generate_file", "create",
+							"save_folder", "save_file",'delete_topic');
 		this.user = options.user;
 		this.model = options.model;
 		
@@ -37,10 +38,13 @@ ChannelEditRouter  = Backbone.Router.extend({
     },
 		
 	navigate_channel : function() {
+		this.topicCollection = new Models.TopicNodeCollection();
+		this.topicCollection.fetch();
+		this.contentCollection = new Models.ContentNodeCollection();
+		this.contentCollection.fetch();
 		var EditViews = require("edit_channel/views");
 		new EditViews.EditView({
 			el: $("#channel-container"),
-			model : this.model,
 			edit: true,
 			channel: current_tree.attributes
 		});
@@ -51,7 +55,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 		var EditViews = require("edit_channel/tree_edit/views");
 		window.edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
-			model: this.model,
 			edit: true,
 			channel: current_tree.attributes
 		});
@@ -60,7 +63,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 		var EditViews = require("edit_channel/tree_edit/views");
 		window.edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
-			model: this.model,
 			edit: false,
 			channel: current_tree.attributes
 		});
@@ -71,14 +73,13 @@ ChannelEditRouter  = Backbone.Router.extend({
 		var TrashViews = require("edit_channel/trash/views");
 		new TrashViews.TrashView({
 			el: $("#main-content-area"),
-			model: this.model,
 			channel: current_tree.attributes
 		});
 		
 	},
 	set_channel: function (channel){		
-		current_tree = this.model.topictrees;
-		current_tree.fetch({channel : channel.id});
+		current_tree = new Models.TopicTreeModelCollection(window.topic_trees);
+		current_tree.fetch({data: $.param({channel : channel.id})});
 		if(current_tree.models.length == 0){
 			current_tree = new Models.TopicTreeModel(channel);
 		}else{
@@ -89,12 +90,15 @@ ChannelEditRouter  = Backbone.Router.extend({
 	},
 	
 	generate_folder: function(folder){
-		return new Models.TopicNodeModel(folder);
+		var folder_data = new Models.TopicNodeModel(folder);
+		this.topicCollection.create(folder_data);
+		console.log("collection", this.topicCollection);
+		return folder_data;
 	}, 
 	generate_file: function(file){
 		return  new Models.ContentNodeModel(file);
 	}, 
-	save: function (channel, curr_channel){
+	save_channel: function (channel, curr_channel){
 		if(!curr_channel){
 			var channel_data = new Models.ChannelModel(channel);
 			this.channelCollection.create(channel_data);
@@ -109,14 +113,27 @@ ChannelEditRouter  = Backbone.Router.extend({
 	create: function(){
 		this.channelCollection.create();
 	},
+	save_folder : function(root, curr_folder){
+		console.log("currfolder" , curr_folder);
+		console.log("root" , root);
+		//curr_folder.insert_at(root, 'first-child', true);
+	/*
+		curr_folder.save();
+		this.topicCollection.save();
+		console.log("current folder", curr_folder);
+		*/
+	},
+	save_file : function(){
+	},
 	
-	delete: function (channel){
+	delete_channel: function (channel){
 		var model = this.channelCollection.get(channel.get("id"));
-		
-		console.log("DELETING model", model);
-		console.log("collection", this.channelCollection);
 		model.destroy();
-		console.log("collection", this.channelCollection);
+		return false;
+	},
+	delete_topic: function (topic){
+		var model = this.topicCollection.get(topic.get("id"));
+		model.destroy();
 		return false;
 	}
 });

@@ -26,7 +26,7 @@ window.TreeEditView = Backbone.View.extend({
 	},
 	render: function() {
 		this.$el.html(this.template({edit: this.edit}));
-		this.add_container(this.root.attributes);
+		this.add_container(this.root);
 	},
 	
 	events: {
@@ -68,7 +68,7 @@ window.TreeEditView = Backbone.View.extend({
 	},
 	
 	add_container: function(topic){
-		var container_view = new ContainerView({topic: topic, edit: this.edit, model: this.model});
+		var container_view = new ContainerView({topic: topic, edit: this.edit});
 		$("#container_area").append(container_view.el);
 		containers.push(container_view);
 	}
@@ -77,10 +77,9 @@ window.TreeEditView = Backbone.View.extend({
 window.ContainerView = Backbone.View.extend({
 	template: require("./../hbtemplates/content_container.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'add_content','add_folder', 'load_topics', 'load_content','insert_folder','insert_content');
+		_.bindAll(this, 'add_content','add_folder', 'load_topics', 'load_content');
 		this.edit = options.edit;
 		this.topic = options.topic;
-		this.model = options.model;
 
 		this.render();		
 		/* Set starting point of container to animate */
@@ -95,7 +94,7 @@ window.ContainerView = Backbone.View.extend({
 		//this.$el.find(".content-list").height((this.$el.find("canvas").height() - this.$el.find(".title-bar").height() + 6) + "px");
 	},
 	render: function() {
-		this.$el.html(this.template({title: this.topic.title, topic: this.topic, edit: this.edit}));
+		this.$el.html(this.template({title: this.topic.attributes.title, topic: this.topic.attributes, edit: this.edit}));
 		this.load_topics(this.topic, this.$el, this.edit, this);
 		this.load_content(this.topic, this.$el, this.edit, this);
 	},
@@ -107,44 +106,33 @@ window.ContainerView = Backbone.View.extend({
 	add_content: function(event){
 		event.preventDefault();
 		var file_view = new FileView({file: window.channel_router.generate_file({title: "New Content Item"}), edit: this.edit, container: this});
-		file_view.set_as_placeholder(true);
 		this.$el.find("ul").append(file_view.el);
 		new ClipboardViews.ClipboardAddContentView({
 			el: $("#clipboard-area"),
 			model: this.file
 		});
 		$("#clipboard").slideDown();
-		window.edit_page_view.set_editing(true);
+		file_view.set_as_placeholder(true);
 	},
 	
 	add_folder: function(event){
 		event.preventDefault();
-		var folder_view = new FolderView({topic: window.channel_router.generate_folder({title: "New Folder"}), edit: this.edit, container: this});
-		folder_view.set_as_placeholder(true);
+		var folder_view = new FolderView({topic: window.channel_router.generate_folder({title: "New Folder", root: this.topic}), edit: this.edit, root: this.topic});
 		this.$el.find("ul").append(folder_view.el);
+		$("#clipboard-area").append("<div id=\"clipboard-edit-folder-area\"></div>");
 		var view = new ClipboardViews.ClipboardEditFolderView({
 			el: $("#clipboard-area"),
-			model: this.topic,
 			edit: false,
 			folder: folder_view
 		});
 		
 		$("#clipboard").slideDown();
-		window.edit_page_view.set_editing(true);
+		folder_view.set_as_placeholder(true);
 	},
 	
 	load_topics: function(topic, el, edit, container){
-		var index = 0;
-		console.log(topic);
-		//this.model.topics.at(topic);
 		/*
-		this.model.topics.forEach(function(entry){
-			if(JSON.stringify(entry.attributes) == JSON.stringify(topic))
-				return index;
-			index++;
-		});
-		
-		this.model.topics.forEach(function (entry){
+		window.topic_nodes.forEach(function (entry){
 			if(entry.attributes.parent == index){
 				var folder_view = new FolderView({topic: entry.attributes, edit: edit, container: container});
 				el.find("ul").append(folder_view.el);
@@ -153,39 +141,28 @@ window.ContainerView = Backbone.View.extend({
 		*/
 	}, 
 	load_content : function(el, edit){
-		this.model.content.forEach(function (entry){
+		/*window.content_nodes.forEach(function (entry){
 			if(entry.attributes.parent == this.topic){
-				var file_view = new FileView({file: entry.attributes, edit: edit, container: container});
+				var file_view = new FileView({file: entry.attributes, edit: edit, root: this.topic});
 				el.find("ul").append(file_view.el);
 			}
 		});
-	},
-	insert_folder: function(folder){
-	
-	//SAVE HERE
-		window.channel_router.generate_folder(folder);
-		this.render();
-	},
-	insert_content: function(content){
-	
-	//SAVE HERE
-		window.channel_router.generate_file(content);
-		this.render();
+		*/
 	}
 });
 
 window.FolderView = Backbone.View.extend({
 	template: require("./../hbtemplates/content_folder.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'edit_folder','open_folder','expand_folder','minimize_folder', 'set_as_placeholder' , 'delete_view','update');
+		_.bindAll(this, 'edit_folder','open_folder','expand_folder','minimize_folder', 'set_as_placeholder' , 'delete_view','update','delete_model');
 		//this.listenTo(this.model, "change:newtopicnodes or contentnodes", this.render);
 		this.edit = options.edit;
-		this.container = options.container;
+		this.root = options.root;
 		this.topic = options.topic;
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template({folder: this.topic, edit: this.edit}));
+		this.$el.html(this.template({folder: this.topic.attributes, edit: this.edit}));
 		this.$el.find("h3").html(TextHelper.trimText(this.$el.find("h3").html(), "...", 22, false));
 		this.$el.find("p").html(TextHelper.trimText(this.$el.find("p").html(), "... read more", 120, true));
 		if(this.edit) handleDrag(this.$el);
@@ -224,7 +201,6 @@ window.FolderView = Backbone.View.extend({
 		$("#clipboard-area").append("<div id=\"clipboard-edit-folder-area\"></div>");
 		var view = new ClipboardViews.ClipboardEditFolderView({
 			el: $("#clipboard-edit-folder-area"),
-			model: this.topic,
 			edit: true,
 			folder: this
 		});
@@ -237,14 +213,13 @@ window.FolderView = Backbone.View.extend({
 		this.remove();
 	},
 	update: function(folder){
-		this.topic.title = folder.title;
-		this.topic.description = folder.description;
-		//SWITCH TO BELOW ONCE CONNECTS TO DB
-		//this.topic.set('description', folder.description);
-		//this.topic.set('description', folder.description);
 		this.set_as_placeholder(false);
-		
+		this.topic.set(folder);
+		window.channel_router.save_folder(this.root, this.topic);
 		this.render();
+	},
+	delete_model: function(){
+		
 	}
 });
 
@@ -259,8 +234,8 @@ window.FileView = Backbone.View.extend({
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template({file: this.file, edit: this.edit}));
-		this.$el.find("h4").html(TextHelper.trimText(el.find("h4").text(), "...", 25, false));
+		this.$el.html(this.template({file: this.file.attributes, edit: this.edit}));
+		this.$el.find("h4").html(TextHelper.trimText(this.$el.find("h4").text(), "...", 25, false));
 		if(this.edit) handleDrag(this.$el);
 	},
 	
@@ -288,9 +263,14 @@ window.FileView = Backbone.View.extend({
 		
 	},
 	set_as_placeholder: function(isPlaceholder){
-		if(isPlaceholder)
+		if(isPlaceholder){
 			this.$el.attr("class","newcontent");
-		else this.$el.attr("class","content");
+			window.edit_page_view.set_editing(true);
+		}
+		else {
+			this.$el.attr("class","content");
+			window.edit_page_view.set_editing(false);
+		}
 	},
 	delete_view: function(){
 		this.undelegateEvents();

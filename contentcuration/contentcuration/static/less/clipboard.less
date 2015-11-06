@@ -12,7 +12,7 @@
 	@clipboard-min-height: 600px;
 	
 	background-color:@clipboard-background-color;
-	display:none;
+	display:block;
 	position:absolute;
 	z-index:20000;
 	height:85vh;
@@ -39,6 +39,9 @@
 			.pull-left{margin-right: 20px;}
 		}
 		.toggle_clipboard, .collapse_clipboard{cursor:pointer;}
+	}
+	input[type=radio]{
+		display:none;
 	}
 	.clipboard_navigation{
 		background-color:white;

@@ -87,7 +87,7 @@ window.ChannelView = Backbone.View.extend({
 	},
 	delete_channel: function(event){
 		if(confirm("Are you sure you want to delete this channel?")){
-			window.channel_router.delete(this.channel);
+			window.channel_router.delete_channel(this.channel);
 			if($("#channel_list li").length == 1)
 				$(".default-item").css("visibility", "visible");
 			this.delete_view();
@@ -146,7 +146,7 @@ window.ChannelEditorView = Backbone.View.extend({
 
 		var channel = {name: title, description: description};
 		
-		window.channel_router.save(channel, this.channel);
+		window.channel_router.save_channel(channel, this.channel);
 		
 	},
 	delete_channel: function(event){

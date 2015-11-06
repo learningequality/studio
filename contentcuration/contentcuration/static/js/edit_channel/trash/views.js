@@ -12,7 +12,6 @@ window.TrashView = Backbone.View.extend({
 	initialize: function(options) {
 		_.bindAll(this, 'delete_selected', 'restore_selected','select_all');
 		//this.listenTo(this.model, "change:number_of_hexagons", this.render);
-		this.model = options.model;
 		this.render();
 	},
 	render: function() {

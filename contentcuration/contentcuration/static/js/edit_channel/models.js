@@ -1,9 +1,8 @@
 var Backbone = require("backbone");
 var _= require("underscore");
 
-/* TODO: CHANGE TO ChannelEditDataModel.EXTEND */
 window.TopicNodeModel = Backbone.Model.extend({
-	urlRoot: '/api/topics/',
+	urlRoot:'api/topics/',
 	defaults: {
         color1:"",
 		color2:"",
@@ -13,16 +12,36 @@ window.TopicNodeModel = Backbone.Model.extend({
     }
 });
 
+window.TopicNodeCollection = Backbone.Collection.extend({
+	model: TopicNodeModel,
+	save: function() {
+        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
+	},
+	url:'api/topics/'
+});
+
 window.TopicTreeModel = Backbone.Model.extend({
-	urlRoot: '/api/topictree/',
+	urlRoot: function() {
+		return window.Urls["topictree-list"]();
+	},
 	defaults: {
 		name: "Untitled Tree",
 		is_published: false
 	}
 });
 
+window.TopicTreeModelCollection = Backbone.Collection.extend({
+	model: TopicTreeModel,
+	save: function() {
+        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
+	},
+	url: function() {
+		return window.Urls["topictree-list"]();
+	}
+});
+
 window.ContentNodeModel = Backbone.Model.extend({
-	urlRoot: '/api/content/',
+	urlRoot: 'api/content/',
 	defaults: {
 		title: "Untitled Content",
 		author: "Anonymous",
@@ -31,11 +50,16 @@ window.ContentNodeModel = Backbone.Model.extend({
     }
 });
 
+window.ContentNodeCollection = Backbone.Collection.extend({
+	model: ContentNodeModel,
+	save: function() {
+        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
+	},
+	url: 'api/content/'
+});
+
 window.ChannelModel = Backbone.Model.extend({
-	//urlRoot: '/api/channel/',
 	urlRoot: function() {
-		console.log("channel model");
-		console.log( window.Urls["channel-list"]());
 		return window.Urls["channel-list"]();
 	},
 	defaults: {
@@ -52,55 +76,14 @@ window.ChannelCollection = Backbone.Collection.extend({
 	model: ChannelModel,
 
 	save: function() {
-		console.log("saving under channel collection");
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	},
 	url: function() {
-		console.log("channel collection");
 		return window.Urls["channel-list"]();
 	}
-	/*
-	fetch: function(options) {
-      var collection = this;
-      // Remove references to callbacks so that calls further down
-      // don't trigger them again!
-      var onsuccess = options.success; if (options.success) delete options.success;
-      var onerror = options.error; if (options.error) delete options.error;
-      $.ajax({
-        url: '/api/channel',
-        type: 'GET',
-        dataType: 'json',
-        success: function(object, status) {
-          collection.refresh(collection.parse(object));
-          if (onsuccess) onsuccess(collection, object);
-        },
-        error: function(xhr, status, error) {
-          if (onerror) onerror(collection, xhr.responseText);
-        }
-	});
-}*/
 });
 
-window.TopicNodeCollection = Backbone.Collection.extend({
-	model: TopicNodeModel,
-	url: function() {
-		return window.Urls["topic-list"]();
-	}
-});
 
-window.ContentNodeCollection = Backbone.Collection.extend({
-	model: ContentNodeModel,
-	url: function() {
-		return window.Urls["content-list"]();
-	}
-});
-
-window.TopicTreeModelCollection = Backbone.Collection.extend({
-	model: TopicTreeModel,
-	url: function() {
-		return window.Urls["topictree-list"]();
-	}
-});
 
 module.exports = {
 	TopicNodeModel: TopicNodeModel,
