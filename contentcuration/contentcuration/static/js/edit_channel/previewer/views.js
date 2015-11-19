@@ -5,17 +5,17 @@ require("previewer.less");
 window.PreviewerView = Backbone.View.extend({
 	template: require("./hbtemplates/previewer.handlebars"),
 	initialize: function(options) {
-        _.bindAll(this, 'toggle_preview', 'open_pdf', 'open_audio', 'open_video', 'toggle_details', 'load_description', 'load_details');
+        _.bindAll(this, 'toggle_preview', 'open_pdf', 'open_audio', 'open_video', 'toggle_details', 'load_description', 'load_details', 'delete_view');
         //this.listenTo(this.model, "change:number_of_hexagons", this.render);
 		this.file = options.file;
         this.render();
     },
     render: function() {
         this.$el.html(this.template(this.model));
-		$(".file").css("border", "1px solid black");
-		$(".trash_item").css("border", "1px solid #CCCCCC");
-		$(".clipboard_item").css("border", "1px solid #8DA9DB");
-		$(this.file.selector + " label").css("border", "4px solid #8098D2");
+		//$(".file").css("border", "1px solid black");
+		//$(".trash_item").css("border", "1px solid #CCCCCC");
+		//$(".clipboard_item").css("border", "1px solid #8DA9DB");
+		//$(this.file.selector + " label").css("border", "4px solid #8098D2");
 		
 		
 		var content_view;
@@ -68,8 +68,7 @@ window.PreviewerView = Backbone.View.extend({
 	},
 
 	toggle_preview: function(event){
-		$(".file").css("border", "1px solid black");
-		$("#previewer").hide();
+		this.delete_view();
 	},
 	toggle_details: function(event){
 		if($(".toggle_details").hasClass("glyphicon-menu-down")){
@@ -114,6 +113,11 @@ window.PreviewerView = Backbone.View.extend({
 		var content_view =  require("./hbtemplates/previewer_video.handlebars");
 		$("#preview_window").empty();
 		$("#preview_window").append(content_view(this.model));
+	},
+	delete_view: function(){
+		this.undelegateEvents();
+		this.unbind();		
+		this.remove();
 	}
 	
 });

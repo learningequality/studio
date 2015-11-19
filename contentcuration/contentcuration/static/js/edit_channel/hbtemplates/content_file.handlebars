@@ -1,4 +1,4 @@
-<li id="item_{{index}}_{{list_index}}" class="content" {{#if edit}}draggable="true"{{/if}}>
+<li class="content">
 	{{#if edit}}<input type="checkbox" id="{{index}}_{{list_index}}"/>
 	{{else}}<input type="radio" name="selected" id="{{index}}_{{list_index}}"/>{{/if}}
 	<label class="file {{#unless edit}}preview_button{{/unless}}" for="{{index}}_{{list_index}}" title="{{file.title}}">	

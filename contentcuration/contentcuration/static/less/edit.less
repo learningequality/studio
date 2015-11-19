@@ -5,6 +5,7 @@
 	@edit-new-button-color: #A684C8;
 	@edit-button-color: #3E5E9F;
 	@edit-container-color: #CCCCCC;
+	@edit-placeholder-color: #89C0B1;
 	
 	/*background-image: url("../static/img/chalkboard.jpg");*/
 	#button_bar{
@@ -73,8 +74,8 @@
 				
 				.newcontent{
 					input[type=checkbox]{visibility:hidden;}
-					.folder{
-						background-color: #89C0B1;
+					label{
+						background-color: @edit-placeholder-color;
 						div{ display:none;}
 					}
 				}

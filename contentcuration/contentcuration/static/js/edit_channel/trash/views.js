@@ -30,7 +30,7 @@ window.TrashView = Backbone.View.extend({
 			console.log("Deleting Selected... ");
 			var selected = $('.trash_list_container').find('input:checked + label');
 			for(var i = 0; i < selected.length; i++){
-				$("#" + selected[i].parentNode.id + " sub").remove();
+				$("#" + selected[i].parentNode.id + "_sub").remove();
 				selected[i].parentNode.remove();
 			}
 		}

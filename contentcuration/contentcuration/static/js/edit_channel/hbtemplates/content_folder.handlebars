@@ -1,4 +1,4 @@
-<li id="item_{{index}}_{{list_index}}" data-val="{{index}}" class="content" {{#if edit}}draggable="true"{{/if}}>
+<li class="content">
 	{{#if edit}}<input type="checkbox" id="{{index}}_{{list_index}}"/>
 	{{else}}<input type="radio" name="{{index}}" id="{{index}}_{{list_index}}"/>{{/if}}
 	<label class="folder {{#unless edit}}open_folder{{/unless}}" for="{{index}}_{{list_index}}" title="{{folder.title}}">

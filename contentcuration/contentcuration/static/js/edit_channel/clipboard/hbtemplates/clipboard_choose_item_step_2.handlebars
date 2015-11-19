@@ -1,0 +1,11 @@
+<li id="item_{{index}}">
+	<input type="radio" id="file_{{index}}" name="clipboard_list_files"></input>
+	<label for="file_{{index}}" class="clipboard_item">
+		<span class="pull-left {{#if folder}}folder_plus{{else}}file_plus{{/if}} glyphicon glyphicon-plus"></span>
+		{{#unless folder}}<div class="pull-left preview_file" ><span class="glyphicon glyphicon-search"></span></div>{{/unless}}
+		<span class="glyphicon glyphicon-{{file_icon}}"></span>
+		{{file.title}}
+		{{#if folder}}<div class="pull-right tog_folder"><span class="glyphicon glyphicon-menu-up"></span></div>{{/if}}
+	</label>
+</li>
+{{#if folder}}<ul id="item_{{index}}_sub" class="list-unstyled subdirectory"></ul>{{/if}}
