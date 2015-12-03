@@ -92,7 +92,8 @@ urlpatterns = [
     url(r'^file_upload/', views.file_upload, name="file_upload"),
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
     url(r'^accounts/', include('django.contrib.auth.urls')),
-    url(r'^channels/', views.channel_edit, name='channel_edit'),
+    url(r'^channels/$', views.channel_list, name='channels'),
+    url(r'channels/(?P<channel_id>\w+)', views.channel, name='channel'),
 ]
 
 

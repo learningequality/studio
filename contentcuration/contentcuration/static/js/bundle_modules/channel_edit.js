@@ -20,6 +20,17 @@ $(function() {
 	}*/
 });
 
+/*
+window.onbeforeunload = function() {
+    sessionStorage.setItem("channel", JSON.stringify(window.current_channel));
+}
+
+window.onload = function() {
+ 	//window.current_channel = JSON.parse(sessionStorage.getItem("channel"));
+ 	//console.log("channel here", window.current_channel);
+ 	
+}*/
+
 module.exports = {
 	$: $,
 	ChannelEditRouter: ChannelEditRouter,

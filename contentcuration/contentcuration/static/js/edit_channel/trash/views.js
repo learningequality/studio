@@ -1,8 +1,9 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 require("trash.less");
+var BaseViews = require("./../views");
 var view_model;
-var LoadHelper = require("edit_channel/utils/LoadHelper");
+
 var DOMHelper = require("edit_channel/utils/DOMHelper");
 var PreviewerViews = require("edit_channel/previewer/views");
 
@@ -60,7 +61,7 @@ window.TrashView = Backbone.View.extend({
 	}
 });
 
-window.TrashListItemView = Backbone.View.extend({
+window.TrashListItemView =  BaseViews.BaseListItemView.extend({
 	template: require("./hbtemplates/trash_collapsed.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this,'check_item','toggle_folder_item','toggle_file_item','preview_list_item');

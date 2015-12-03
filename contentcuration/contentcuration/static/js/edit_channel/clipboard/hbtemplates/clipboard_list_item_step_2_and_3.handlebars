@@ -1,6 +1,6 @@
 <li id="item_{{index}}">
-	<input type="radio" id="file_{{index}}" name="clipboard_list_files"></input>
-	<label for="file_{{index}}" class="clipboard_item">
+	<input type="radio" id="{{cid}}" name="clipboard_list_files"></input>
+	<label for="{{cid}}" class="clipboard_item">
 		{{#if folder}}<div class="pull-left tog_folder"><span class="glyphicon glyphicon-menu-up"></span></div>
 		{{else}}<div class="pull-left preview_file"><span class="glyphicon glyphicon-search"></span></div>{{/if}}
 		<span class="glyphicon glyphicon-{{file_icon}}"></span>		
@@ -8,4 +8,4 @@
 		<span class="pull-right glyphicon glyphicon-remove remove_item" aria-hidden="true"></span>
 	</label>
 </li>
-{{#if folder}}<ul id="item_{{index}}_sub" class="list-unstyled subdirectory"></ul>{{/if}}
+{{#if folder}}<ul id="{{cid}}_sub" class="list-unstyled subdirectory"></ul>{{/if}}

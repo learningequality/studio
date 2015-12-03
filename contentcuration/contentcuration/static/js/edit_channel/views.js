@@ -1,35 +1,87 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
+var Models = require("./models");
 
 var clipboardContent = [];
 
-window.BaseView = Backbone.View.extend({
-	template: require("./hbtemplates/channel_edit.handlebars"),
-	url: '/api',
+var BaseView = Backbone.View.extend({
+	
 	initialize: function() {
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template(this.model));
 
-		/* Defaults to channel manager view */
-		$("#channel-selector").css("display", "none");
-		$("#content-search").css("display", "none");
 	}
+
+	
 });
 
 
+var BaseListItemView = Backbone.View.extend({
+	initialize: function() {
+		_.bindAll(this, 'delete_content','toggle_folder', 'preview_file', 'trimText');
+	},
+	delete_content:function(event){
+		if(confirm("Are you sure you want to delete this file?")){
+			var el = DOMHelper.getParentOfTag(event.target, "li");
+			var i = clipboard_list_items.indexOf($("#" + el.id).data("data"));
+			console.log($("#" + el.id).data("data"));
+			console.log(clipboard_list_items[0]);
+			if(i != -1) console.log(clipboard_list_items[i]);
+			//clipboard_list_items.remove(i);
+			el.remove();
+			
+		}
+	},
+	toggle_folder: function(event){
+		event.preventDefault();
+		var el = "#" + DOMHelper.getParentOfTag(event.target, "li").id;
+		if($(el).data("collapsed")){
+			$(el + "_sub").slideDown();
+			$(el).data("collapsed", false);
+			$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-down");
+		}
+		else{
+			$(el + "_sub").slideUp();
+			$(el).data("collapsed", true);
+			$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-up");
+		}
+	},
+	preview_file: function(event){
+		event.preventDefault();
+		//var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
+		var view = new PreviewerViews.PreviewerView({
+			el: $("#previewer-area"),
+			//model: file.data("data"),
+			//file: file
+		});
+	},
 
+	trimText:function(string, limit, el){
+		if(string.trim().length - 4 > limit){
+			string = string.trim().substring(0, limit - 4) + "...";
+			if(el) el.show();
+		}
+		else
+			if(el) el.hide();
+		return string;
+	}
+});
+
+/*
 var EditView = Backbone.View.extend({
 	template: require("./hbtemplates/channel_edit.handlebars"),
 	url: '/api',
 	initialize: function(options) {
 		_.bindAll(this, 'open_edit', 'open_preview', 'open_trash', 'open_publish','open_clipboard');
-		this.channel = options.channel;
+		console.log("current channel", window.current_channel);
+		this.channel = options.topictree;
 		this.render();
+		this.open_edit();
 	},
 	render: function() {
 		this.$el.html(this.template(this.model));
+		console.log("rendering edit view");
 		/*
 		$("#clipboard-toggler").show();
 		$("#channel-selector").css("display", "inline-block");
@@ -40,7 +92,7 @@ var EditView = Backbone.View.extend({
 			$("#channel_select").append("<li>" + entry.name + "</li>");
 		});
 		*/
-	},
+/*	},
 	events: {
 		'click #channel-edit-button': 'open_edit',
 		'click #channel-preview-button': 'open_preview',
@@ -81,13 +133,13 @@ var EditView = Backbone.View.extend({
 		}
 	}
 });
-
+*/
 function addToClipboard(topic_nodes, content_nodes){
 	//clipboardContent
 }
 
 module.exports = {
 	BaseView: BaseView,
-	EditView: EditView,
+	BaseListItemView: BaseListItemView,
 	ManageChannelsView: ManageChannelsView
 }

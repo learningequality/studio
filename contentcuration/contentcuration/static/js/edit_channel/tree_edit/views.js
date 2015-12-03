@@ -1,25 +1,24 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 require("content-container.less");
-var DOMHelper = require("edit_channel/utils/DOMHelper");
+var BaseViews = require("./../views");
+var Models = require("./models");
 var TextHelper = require("edit_channel/utils/TextHelper");
-var ContainerHelper = require("edit_channel/utils/ContainerHelper");
 
-var LessHelper = require("edit_channel/utils/LessHelper");
 var ClipboardViews = require("edit_channel/clipboard/views");
 var PreviewerViews = require("edit_channel/previewer/views");
 var container_count;
 var containers = [];
 
-window.TreeEditView = Backbone.View.extend({
+window.TreeEditView = BaseViews.BaseView.extend({
 	template: require("./../hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'set_editing', 'add_container','render_edit_mode');
-		//this.listenTo(this.model, "change:newtopicnodes or contentnodes", this.render);
+		_.bindAll(this, 'copy_content','delete_content' , 'set_editing', 'add_container', 'render_edit_mode');
 		this.edit = options.edit;
-		this.root = options.channel.root_node;
+		//this.root = window.current_channel.attributes.root_node;
 		if(!this.root)
 			this.root = window.channel_router.generate_folder({title: "[Untitled]"});
+		
 		this.isEditing = false;
 		container_count = 1;
 		this.render();
@@ -45,18 +44,8 @@ window.TreeEditView = Backbone.View.extend({
 			*/
 		}
 	},
-	
-	copy_content: function(event){
-		var list = $('.content-container').find('input:checked + label').parent();
-		var clipboard_list = [];
-		for(var i = 0; i< list.length; i++)
-			clipboard_list.push({data: $("#" + list[i].id).data("data"), folder: $("#" + list[i].id + " .folder").length != 0});
-		ClipboardViews.addItems(clipboard_list);
-	},
-	
-	set_editing: function (editing){
-		this.isEditing = editing;
-		if(editing){
+	render_edit_mode: function(){
+		if(this.isEditing){
 			$(".edit_folder_button").css('visibility','hidden');
 			$(".edit_file_button").css('visibility','hidden');
 			$(".content_options button").prop('disabled',true);
@@ -66,9 +55,19 @@ window.TreeEditView = Backbone.View.extend({
 			$(".content_options button").prop('disabled',false);
 		}
 	},
+	copy_content: function(event){
+		var list = $('.content-container').find('input:checked + label').parent();
+		var clipboard_list = [];
+		for(var i = 0; i< list.length; i++)
+			clipboard_list.push({data: $("#" + list[i].id).data("data"), 
+								folder: $("#" + list[i].id + " .folder").length != 0});
+
+		ClipboardViews.addItems(clipboard_list);
+	},
 	
-	render_edit_mode: function(){
-		if(this.isEditing){
+	set_editing: function (editing){
+		this.isEditing = editing;
+		if(editing){
 			$(".edit_folder_button").css('visibility','hidden');
 			$(".edit_file_button").css('visibility','hidden');
 			$(".content_options button").prop('disabled',true);
@@ -106,9 +105,13 @@ window.ContainerView = Backbone.View.extend({
 		//this.$el.find(".content-list").height((this.$el.find("canvas").height() - this.$el.find(".title-bar").height() + 6) + "px");
 	},
 	render: function() {
-		this.$el.html(this.template({title: this.topic.attributes.title, topic: this.topic.attributes, edit: this.edit}));
-		this.load_topics(this.topic, this.$el, this.edit, this);
-		this.load_content(this.topic, this.$el, this.edit, this);
+		this.$el.html(this.template({title: this.topic.attributes.title, 
+									 topic: this.topic.attributes, 
+									 edit: this.edit, 
+									 cid: this.topic.cid}));
+
+		//this.load_topics(this.topic, this.$el, this.edit, this);
+		//this.load_content(this.topic, this.$el, this.edit, this);
 		this.$el.data("container", this);
 		handleDrop(this);
 	},
@@ -117,9 +120,14 @@ window.ContainerView = Backbone.View.extend({
 		'click .add_content_button':'add_content',
 		'click .add_folder_button':'add_folder'
 	},
+	
 	add_content: function(event){
 		event.preventDefault();
-		var file_view = new FileView({file: window.channel_router.generate_file({title: "New Content Item", root: this.topic}), edit: this.edit, root: this.topic});
+		var file_view = new FileView({file: window.channel_router.generate_file({title: "New Content Item", root: this.topic}), 
+									  edit: this.edit, 
+									  root: this.topic, 
+									  container : this.topic.cid});
+
 		this.$el.find("ul .content_options").after(file_view.el);
 		$("#clipboard-area").append("<div id=\"clipboard-placeholder\"></div>");
 		window.add_content_view = new ClipboardViews.ClipboardAddContentView({
@@ -132,7 +140,10 @@ window.ContainerView = Backbone.View.extend({
 	
 	add_folder: function(event){
 		event.preventDefault();
-		var folder_view = new FolderView({topic: window.channel_router.generate_folder({title: "New Folder", root: this.topic}), edit: this.edit, root: this.topic});
+		var folder_view = new FolderView({topic: window.channel_router.generate_folder({title: "New Folder", root: this.topic}), 
+										  edit: this.edit, 
+										  root: this.topic});
+
 		this.$el.find("ul .content_options").after(folder_view.el);
 		this.content.push(folder_view);
 		$("#clipboard-area").append("<div id=\"clipboard-edit-folder-area\"></div>");
@@ -150,7 +161,10 @@ window.ContainerView = Backbone.View.extend({
 		
 		window.topic_nodes.forEach(function (entry){
 			if(entry.attributes.parent == index){
-				var folder_view = new FolderView({topic: entry.attributes, edit: edit, container: container});
+				var folder_view = new FolderView({topic: entry.attributes, 
+												  edit: edit, 
+												  container: container.cid});
+
 				el.find("ul").append(folder_view.el);
 			}
 		});
@@ -159,7 +173,10 @@ window.ContainerView = Backbone.View.extend({
 	load_content : function(el, edit){
 		window.content_nodes.forEach(function (entry){
 			if(entry.attributes.parent == this.topic){
-				var file_view = new FileView({file: entry.attributes, edit: edit, root: this.topic});
+				var file_view = new FileView({file: entry.attributes, 
+											  edit: edit, 
+											  root: this.topic});
+
 				el.find("ul").append(file_view.el);
 			}
 		});
@@ -178,10 +195,11 @@ window.ContainerView = Backbone.View.extend({
 	}
 });
 
-window.FolderView = Backbone.View.extend({
+window.FolderView = BaseViews.BaseListItemView.extend({
 	template: require("./../hbtemplates/content_folder.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'edit_folder','open_folder','expand_folder','minimize_folder', 'set_as_placeholder' , 'delete_view','update','delete_model','get_data');
+		_.bindAll(this, 'edit_folder','open_folder','expand_or_collapse_folder', 
+						'set_as_placeholder' , 'delete_view','update','delete_model','get_data');
 		//this.listenTo(this.model, "change:newtopicnodes or contentnodes", this.render);
 		this.edit = options.edit;
 		this.root = options.root;
@@ -189,9 +207,12 @@ window.FolderView = Backbone.View.extend({
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template({folder: this.topic.attributes, edit: this.edit, cid: this.cid}));
-		this.$el.find("h3").html(TextHelper.trimText(this.$el.find("h3").html(), "...", 22, false));
-		this.$el.find("p").html(TextHelper.trimText(this.$el.find("p").html(), "... read more", 120, true));
+		this.$el.html(this.template({folder: this.topic.attributes, 
+									 edit: this.edit, 
+									 cid: this.cid}));
+
+		this.$el.find("h3").html(this.trimText(this.$el.find("h3").html(), 22, null));
+		this.$el.find("p").html(this.trimText(this.$el.find("p").html(), 100, this.$(".filler")));
 		if(this.edit) handleDrag(this);
 		this.$el.data("content", this);
 		this.$el.attr("id", this.cid);
@@ -200,8 +221,7 @@ window.FolderView = Backbone.View.extend({
 	events: {
 		'click .edit_folder_button': 'edit_folder',
 		'click .open_folder':'open_folder',
-		'click .filler' : 'expand_folder',
-		'click .minimize' : 'minimize_folder'
+		'click .filler' : 'expand_or_collapse_folder',
 	},
 	set_as_placeholder: function(isPlaceholder){
 		if(isPlaceholder){
@@ -215,11 +235,19 @@ window.FolderView = Backbone.View.extend({
 			window.edit_page_view.set_editing(false);
 		}
 	},
-	expand_folder: function(event){
-		TextHelper.manageFolder(event, true);
-	},
-	minimize_folder: function(event){
-		TextHelper.manageFolder(event, false);
+	expand_or_collapse_folder: function(event){
+		event.preventDefault();
+		event.stopPropagation();
+		if(this.$(".filler").parent("label").hasClass("collapsed")){
+			this.$(".filler").parent("label").removeClass("collapsed").addClass("expanded");
+			this.$(".description").text(this.$(".filler").attr("title"));
+			this.$(".filler").text("See Less");
+		}
+		else {
+			this.$(".filler").parent("label").removeClass("expanded").addClass("collapsed");
+			this.$('.char_counter').text(this.$(".description").html(), 100, this.$(".filler"));
+			this.$(".filler").text("See More");
+		}
 	},
 	open_folder:function(event){
 		event.preventDefault();
@@ -255,7 +283,7 @@ window.FolderView = Backbone.View.extend({
 	}
 });
 
-window.FileView = Backbone.View.extend({
+window.FileView = BaseViews.BaseListItemView.extend({
 	template: require("./../hbtemplates/content_file.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'preview_node', 'edit_file', 'set_as_placeholder', 'delete_view', 'update');
@@ -265,8 +293,10 @@ window.FileView = Backbone.View.extend({
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template({file: this.file.attributes, edit: this.edit, cid: this.cid}));
-		this.$el.find("h4").html(TextHelper.trimText(this.$el.find("h4").text(), "...", 25, false));
+		this.$el.html(this.template({file: this.file.attributes, 
+									 edit: this.edit, 
+									 cid: this.cid}));
+		this.$el.find("h4").html(this.trimText(this.$el.find("h4").text(), "...", 25, false));
 		
 		this.$el.attr("id", this.cid);
 		this.$el.data("content", this);
@@ -333,8 +363,11 @@ window.FileView = Backbone.View.extend({
 function handleDrag(el){
 	el.$el.attr('draggable', 'true');
 	el.$el.on("dragstart", function(e){
-		e.originalEvent.dataTransfer.setData("data", JSON.stringify({id: $(this).attr("id"), data : $(this).wrap('<div/>').parent().html(), edit : true,
-					is_folder : $(this).find("label").hasClass("folder")}));
+		e.originalEvent.dataTransfer.setData("data", JSON.stringify({id: $(this).attr("id"), 
+														data : $(this).wrap('<div/>').parent().html(),
+														edit : true,
+														is_folder : $(this).find("label").hasClass("folder")}));
+
 		e.originalEvent.dataTransfer.effectAllowed = "move";
 		e.target.style.opacity = '0.4';
 	});

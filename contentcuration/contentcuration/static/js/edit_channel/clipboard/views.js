@@ -1,13 +1,19 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 require("clipboard.less");
+var BaseViews = require("./../views");
+var Dropzone = require("dropzone");
+var get_cookie = require("utils/get_cookie");
+var JSZip = require("jszip");
+var fileSaver = require("browser-filesaver");
+var JSZipUtils = require("jszip-utils");
 
 var PreviewerViews = require("edit_channel/previewer/views");
-var LoadHelper = require("edit_channel/utils/LoadHelper");
-var DOMHelper = require("edit_channel/utils/DOMHelper");
-var CHAR_LIMIT = 300;
+//var LoadHelper = require("edit_channel/utils/LoadHelper");
+//var DOMHelper = require("edit_channel/utils/DOMHelper");
 
-var list_item_template = require("./hbtemplates/clipboard_list_item.handlebars");
+
+
 var prevTemplate;
 var list_index;
 
@@ -15,10 +21,10 @@ var clipboard_list_items = [];
 var temp_list_items = [];
 
 /* Loaded when user clicks clipboard button below navigation bar */
-window.ClipboardListView = Backbone.View.extend({
+var ClipboardListView = Backbone.View.extend({
 	template: require("./hbtemplates/clipboard_list.handlebars"),
 	initialize: function() {
-		_.bindAll(this, 'add_content', 'collapse_clipboard','delete_content','toggle_folder');
+		_.bindAll(this, 'add_content', 'collapse_clipboard');
 		//this.listenTo(clipboard_list_items, "change:clipboard_list_items.length", this.render);
 		this.render();
 		$("#clipboard").slideDown();
@@ -31,9 +37,6 @@ window.ClipboardListView = Backbone.View.extend({
 	events: {
 		'click .clipboard_add_content': 'add_content',
 		'click .collapse_clipboard':'collapse_clipboard',
-		'click .delete_content': 'delete_content',
-		'click .tog_folder': 'toggle_folder',
-		'click .preview_file': 'preview_file'
 	},
 	collapse_clipboard: function(event){
 		$("#clipboard").slideUp();
@@ -42,8 +45,29 @@ window.ClipboardListView = Backbone.View.extend({
 		new ClipboardAddContentView({
 			el: $("#clipboard-area")
 		});
+	}
+});
+
+/* Loaded when user clicks clipboard button below navigation bar */
+var ClipboardListItemView = BaseViews.BaseListItemView.extend({
+	template: require("./hbtemplates/clipboard_list.handlebars"),
+
+	initialize: function() {
+		_.bindAll(this, 'delete_content');
+		//this.listenTo(clipboard_list_items, "change:clipboard_list_items.length", this.render);
+		this.render();
+		$("#clipboard").slideDown();
+	},
+	render: function() {
+		this.$el.html(this.template());
+		//loadListItems(clipboard_list_items, ".list_content ul", this.model, {selected: true, list: true, meta: false});
+	},
+	
+	events: {
+		'click .delete_content': 'delete_content'
 	},
 	delete_content:function(event){
+	/*
 		if(confirm("Are you sure you want to delete this file?")){
 			var el = DOMHelper.getParentOfTag(event.target, "li");
 			var i = clipboard_list_items.indexOf($("#" + el.id).data("data"));
@@ -54,34 +78,57 @@ window.ClipboardListView = Backbone.View.extend({
 			el.remove();
 			
 		}
-	},
-	toggle_folder: function(event){
-		event.preventDefault();
-		var el = "#" + DOMHelper.getParentOfTag(event.target, "li").id;
-		if($(el).data("collapsed")){
-			$(el + "_sub").slideDown();
-			$(el).data("collapsed", false);
-			$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-down");
-		}
-		else{
-			$(el + "_sub").slideUp();
-			$(el).data("collapsed", true);
-			$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-up");
-		}
-	},
-	preview_file: function(event){
-		event.preventDefault();
-		//var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
-		var view = new PreviewerViews.PreviewerView({
-			el: $("#previewer-area"),
-			//model: file.data("data"),
-			//file: file
-		});
+		*/
 	}
 });
 
+var ClipboardEditContentBaseView = Backbone.View.extend({
+	char_limit : 300,
+	initialize: function(options) {
+		_.bindAll(this, 'update_folder', 'toggle_clipboard','update_count', 'delete_view');
+		this.edit = options.edit;
+		this.model = options.model;
+	},
+	update_content: function(event){
+		if($("#folder_name").val().trim() == "")
+			$("#name_err").css("display", "inline");
+		else{
+			this.model.update({title: $("#folder_name").val(), description: $("#folder_description").val()});
+			this.delete_view();
+		}
+	},
+	toggle_clipboard: function(event){
+		window.edit_page_view.set_editing(false);
+		if(this.edit){
+			this.model.set_as_placeholder(false);
+		}
+		else{
+			this.model.delete_model();
+			this.model.delete_view();
+		}
+		this.delete_view();
+	},
+	
+	updateCount: function(){
+		var char_length = this.char_limit - this.$("#clipboard textarea").val().length; 
+		this.$('.char_counter').text(char_length + ((char_length != 1)? " chars" : " char") + ' left');
+
+		if(char_length == 0) 
+			this.$(".char_counter").css("color", "red");
+		else 
+			this.$(".char_counter").css("color", "black");
+	},
+	delete_view: function(){
+		this.undelegateEvents();
+		this.unbind();		
+		this.remove();
+	}
+
+
+});
+
 /* Loaded when user clicks edit icon on folder or "Add Folder" button */
-window.ClipboardEditFolderView = Backbone.View.extend({
+var ClipboardEditFolderView = ClipboardEditContentBaseView.extend({
 	template: require("./hbtemplates/clipboard_edit_folder.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'update_folder', 'toggle_clipboard','update_count', 'delete_view');
@@ -92,8 +139,12 @@ window.ClipboardEditFolderView = Backbone.View.extend({
 	},
 	render: function() {
 		console.log(this.folder);
-		this.$el.html(this.template({folder: (this.edit)? this.folder.topic.attributes : null, edit: this.edit, 
-							limit: ((this.edit)? CHAR_LIMIT - this.folder.topic.attributes.description.length : CHAR_LIMIT)}));
+		this.$el.html(this.template({
+							file: (this.edit)? this.folder.topic.attributes : null, 
+							edit: this.edit, 
+							is_file : false,
+							limit: ((this.edit)? this.char_limit-this.folder.topic.attributes.description.length : this.char_limit)
+						}));
 	},
 	events: {
 		'click .clipboard_update_folder': 'update_folder',
@@ -121,28 +172,23 @@ window.ClipboardEditFolderView = Backbone.View.extend({
 		}
 		this.delete_view();
 	},
-	
-	update_count: function(event){
-		updateCount(CHAR_LIMIT);
-	},
-	delete_view: function(){
-		this.undelegateEvents();
-		this.unbind();		
-		this.remove();
-	},
+	update_count : function(event){
+		this.updateCount();
+	}
 });
 
 /* Loaded when user clicks edit icon on file*/
-window.ClipboardEditFileView = Backbone.View.extend({
+var ClipboardEditFileView = ClipboardEditContentBaseView.extend({
 	template: require("./hbtemplates/clipboard_edit_file.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'toggle_clipboard', 'update_file', 'update_count', 'delete_view');
-		//this.listenTo(this.model, "change:number_of_hexagons", this.render);
 		this.file = options.file;
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template({file: this.file.attributes/*, limit: CHAR_LIMIT - this.file.attributes.description.length*/}));
+		this.$el.html(this.template({file: this.file.attributes,
+									is_file: true, 
+									limit: this.char_limit - this.file.attributes.description.length}));
 	},
 	
 	events: {
@@ -176,18 +222,13 @@ window.ClipboardEditFileView = Backbone.View.extend({
 			}
 		}
 	},
-	delete_view: function(){
-		this.undelegateEvents();
-		this.unbind();		
-		this.remove();
-	},
-	update_count: function(event){
-		updateCount(CHAR_LIMIT);
+	update_count : function(event){
+		this.updateCount();
 	}
 });
 
 /* Loaded when user clicks "Add Content" button */
-window.ClipboardAddContentView = Backbone.View.extend({
+var ClipboardAddContentView = ClipboardEditContentBaseView.extend({
 	template: require("./hbtemplates/clipboard_header.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'toggle_clipboard','to_step_1', 'to_step_2', 'to_step_3', 'previous', 'next', 'clipboard_finish','switch_tab','delete_view');
@@ -245,11 +286,6 @@ window.ClipboardAddContentView = Backbone.View.extend({
 				});
 		this.delete_view();
 	},
-	delete_view: function(){
-		this.undelegateEvents();
-		this.unbind();		
-		this.remove();
-	},
 	switch_tab: function(newTab, view){
 		$('.clipboard_navigation').find('a').attr("class", "btn btn-defult");
 		newTab.addClass("selected");
@@ -282,7 +318,7 @@ window.ClipboardAddContentView = Backbone.View.extend({
 });
 
 /* Loaded when user clicks "Add Content" button */
-window.ClipboardAddContentSourceView = ClipboardAddContentView.extend({
+var ClipboardAddContentSourceView = ClipboardAddContentView.extend({
 	template: require("./hbtemplates/clipboard_step_1.handlebars"),
 	initialize: function() {
 		_.bindAll(this, 'computer_choose_content', 'channel_choose_content');
@@ -305,14 +341,21 @@ window.ClipboardAddContentSourceView = ClipboardAddContentView.extend({
 	}
 });
 
-window.ClipboardAddContentComputerView = ClipboardAddContentView.extend({
+var ClipboardAddContentComputerView = ClipboardAddContentView.extend({
 	template: require("./hbtemplates/clipboard_step_2_computer.handlebars"),
 	initialize: function() {
-		_.bindAll(this, 'choose_file', 'preview_file','toggle_folder','remove_item');
+		_.bindAll(this, 'choose_file', 'preview_file','toggle_folder','remove_item','file_uploaded');
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template(this.model));
+		this.$el.html(this.template({url : window.location.pathname}));
+		this.dropzone = new Dropzone(this.$("#dropzone").get(0), {maxFiles: 1, 
+																  clickable: true, 
+																  url: window.Urls.file_upload(), 
+																  headers: {"X-CSRFToken": get_cookie("csrftoken")}, 
+																  uploadMultiple: true, 
+																  acceptedFiles: ["image/*", "application/pdf"]} );
+        this.dropzone.on("success", this.file_uploaded);
 	},
 	
 	events: {
@@ -321,12 +364,17 @@ window.ClipboardAddContentComputerView = ClipboardAddContentView.extend({
 		'click .tog_folder':'toggle_folder',
 		'click .remove_item':'remove_item'
 	},
+	 file_uploaded: function(file) {
+	 	console.log(file);
+        this.callback(JSON.parse(file.xhr.response).filename);
+        this.close();
+    },
 	remove_item: function(event){
-		DOMHelper.getParentOfTag(event.target, "li").remove();
+		$(event.target.selector).parent("li").remove();
 	},
 	
 	preview_file: function(event){
-		var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
+		var file = $("#"+ $(event.target.selector).parent("li").id);
 		var view = new PreviewerViews.PreviewerView({
 			el: $("#previewer-area"),
 			model:  file.data("data"),
@@ -337,9 +385,17 @@ window.ClipboardAddContentComputerView = ClipboardAddContentView.extend({
 		$("#fileinput").trigger("click");
 		 $('#fileinput').change(function(evt) {
 			var selected = $(this).context.files;
-			for(var i = 0; i < selected.length; i++)
-				temp_list_items.push({data: {attributes: {content_file: selected[i], retrieved_on: new Date(), title: selected[i].name, parent: this.model}}});
-			loadListItems(temp_list_items, "#selected_content_area ul", null, {selected: true, list: false, meta: false});			
+			for(var i = 0; i < selected.length; i++){
+				var file = window.channel_router.generate_temp_file({content_file: selected[i], 
+																 	 retrieved_on: new Date(), 
+																 	 title: selected[i].name, 
+																 	 parent: this.model});
+				temp_list_items.push(file);
+			}
+			console.log(temp_list_items);
+			loadSelectedItems();
+				
+			//loadListItems(temp_list_items, "#selected_content_area ul", null, {selected: true, list: false, meta: false});			
 		});
 	},
 	toggle_folder: function(event){
@@ -347,7 +403,7 @@ window.ClipboardAddContentComputerView = ClipboardAddContentView.extend({
 	}
 });
 
-window.ClipboardAddContentChannelView = ClipboardAddContentView.extend({
+var ClipboardAddContentChannelView = ClipboardAddContentView.extend({
 	template: require("./hbtemplates/clipboard_step_2_channel.handlebars"),
 	initialize: function() {
 		_.bindAll(this, 'add_folder_to_list','toggle_folder','choose_channel','add_file_to_list','remove_item');
@@ -366,10 +422,10 @@ window.ClipboardAddContentChannelView = ClipboardAddContentView.extend({
 		'click .remove_item':'remove_item'
 	},
 	remove_item: function(event){
-		DOMHelper.getParentOfTag(event.target, "li").remove();
+		$(event.target.selector).parent("li").remove();
 	},
 	preview_file: function(event){
-		var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
+		var file = $("#"+ $(event.target.selector).parent("li").id);
 		var view = new PreviewerViews.PreviewerView({
 			el: $("#previewer-area"),
 			model:  file.data("data"),
@@ -378,25 +434,24 @@ window.ClipboardAddContentChannelView = ClipboardAddContentView.extend({
 	},
 	add_folder_to_list: function(event){
 		console.log("Adding folder to list...");
-		//temp_list_items
 		//Todo: change clipboard_list_items
-		loadListItems(clipboard_list_items, ".list_content ul", this.model, {selected: true, list: false, meta: false});
+		//loadListItems(clipboard_list_items, ".list_content ul", this.model, {selected: true, list: false, meta: false});
 		//list_index = listHelper.appendList(file, list_item_template, "#selected_content_area ul", list_index);
 	},
 	add_file_to_list: function(event){
 		console.log("Adding file to list...");
-		loadListItems(clipboard_list_items, ".list_content ul", this.model, {selected: true, list: false, meta: false});
+		//loadListItems(clipboard_list_items, ".list_content ul", this.model, {selected: true, list: false, meta: false});
 		//list_index = listHelper.appendList(file, list_item_template, "#selected_content_area ul", list_index);
 	},
 	choose_channel: function(event){
-		loadListItems(temp_list_items, "#selected_content_area ul", this.model, {selected: true, list: false, meta: true});	
+		//loadListItems(temp_list_items, "#selected_content_area ul", this.model, {selected: true, list: false, meta: true});	
 	},
 	toggle_folder: function(event){
 		console.log("Toggling folder...");
 	}
 });
 
-window.ClipboardAddContentMetadataView = ClipboardAddContentView.extend({
+var ClipboardAddContentMetadataView = ClipboardAddContentView.extend({
 	template: require("./hbtemplates/clipboard_step_3.handlebars"),
 	initialize: function() {
 		_.bindAll(this,'preview_file','add_tag','update_count','remove_item','toggle_folder');
@@ -422,14 +477,14 @@ window.ClipboardAddContentMetadataView = ClipboardAddContentView.extend({
 		'click .remove_item':'remove_item'
 	},
 	remove_item: function(event){
-		DOMHelper.getParentOfTag(event.target, "li").remove();
+		$(event.target.selector).parent("li").remove();
 	},
 	update_count: function(event){
-		updateCount(CHAR_LIMIT);
+		this.updateCount();
 	},
 	
 	preview_file: function(event){
-		var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
+		var file = $("#"+ $(event.target.selector).parent("li").id);
 		var view = new PreviewerViews.PreviewerView({
 			el: $("#previewer-area"),
 			model:  file.data("data"),
@@ -453,22 +508,18 @@ function closeClipboard(){
 	$("#clipboard").hide();
 }
 
-function updateCount(char_limit){
-	var char_length = char_limit - $("#clipboard textarea").html().length;
-	$(".counter").html(char_length);
-	if(char_length  == 1) $(".char_counter").html($(".char_counter").html().replace("Chars", "Char"));
-	else if(char_length  == 2 || char_length  == 0)
-		$(".char_counter").html( $(".char_counter").html().replace("Char ", "Chars "));
-	if(char_length == 0)
-		$(".char_counter").css("color", "red");
-	else $(".char_counter").css("color", "black");
-}
-
 function addItems(list){
 	clipboard_list_items.push.apply(clipboard_list_items, list);
 	$(".badge").html(clipboard_list_items.length);
 }
 
+function loadSelectedItems(){
+	var list_item_template = require("./hbtemplates/clipboard_list_item_step_2_and_3.handlebars");
+	$("#selected_content_area ul").children().detach();
+	temp_list_items.forEach(function(file) {
+		$("#selected_content_area ul").append("<p>file.attributes</p>");
+	});
+}
 function loadListItems(list, listid, model, options){
 	$(listid).empty();
 	var index = 0;
@@ -478,9 +529,11 @@ function loadListItems(list, listid, model, options){
 		$(listid + " #item_"+list_index).data("data",list[i].data);
 		$(listid + " #item_"+list_index).data("collapsed", true);
 		if(model){
+			/*
 			index = LoadHelper.loadList(list[i].data, model, list_item_template, list_item_template, 
 									listid + " #item_" + index + "_sub", 30, {selected: true, 
 									list: true, meta: false}, index + 1, 1);
+*/
 		}
 	}
 	if(model && index == 0)
@@ -493,6 +546,5 @@ module.exports = {
 	ClipboardEditFolderView:ClipboardEditFolderView,
 	ClipboardEditFileView:ClipboardEditFileView,
 	ClipboardAddContentView:ClipboardAddContentView,
-	addItems:addItems,
-	updateCount: updateCount
+	addItems:addItems
 }

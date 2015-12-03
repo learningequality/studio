@@ -108,7 +108,7 @@
 				}
 			}
 			.folder{
-				height: @folder-height;
+				
 				h3{
 					font-size: 17px;
 					padding-left: 10px;
@@ -118,11 +118,23 @@
 				p{
 					font-size:14px;
 					padding-left:10px;
+					word-wrap: break-word;
 					width:@container-width - @sidebar-width - 30px;
 					a{text-decoration:none; color:black;}
 					font-weight: normal;
 				}
 			}
+			.content{
+				.collapsed{
+					height: @folder-height;
+					p{height: @folder-height - 20px;}
+				}
+				.expanded{
+					height: auto;
+					p{height: auto;}
+				}
+			}
+			
 			.file{
 				border-radius: 10px;
 				h4{
@@ -130,6 +142,7 @@
 					padding:10px;
 				}
 			}
+
 			input[type=checkbox]:checked + .file,
 			.file:hover{
 				background-color: @highlighted-file;

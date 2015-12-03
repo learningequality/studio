@@ -8,20 +8,39 @@
 	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
 
 	<script>
-		var channels = JSON.parse("{{ channels |escapejs }}");
-		var topic_nodes = JSON.parse("{{ topics|escapejs }}");
-		var content_nodes = JSON.parse("{{ content|escapejs }}");
-		var topic_trees = JSON.parse("{{ topictree|escapejs }}");
+		var topic_tree = JSON.parse("{{ topictree|escapejs }}");
 	</script>
+	<script type="text/javascript">		
+		var bundle = require("channel_edit");
+		bundle.$(function() {
+            window.channel_router = new bundle.ChannelEditRouter({user: "current_user"});
+			bundle.Backbone.history.start({pushState: true, root: "{% url 'channels' %}"});
+        });
+    </script>
 	
 	<div id="channel-container"></div>
 	
 	<script type="text/javascript">		
 		var bundle = require("channel_edit");
-		bundle.$(function() {
-            window.channel_router = new bundle.ChannelEditRouter({user: "current_user"});
-			bundle.Backbone.history.start({pushState: true, root: "{% url 'channel_edit' %}"});
-        });
     </script>
+	<nav class="navbar navbar-default collapse navbar-collapse" id="secondary-nav">
+		<ul class="nav navbar-nav">
+			<a href="edit"><li id="channel-edit-button" class="text-center pull-left">Edit</li></a>
+			<a href="preview"><li id="channel-preview-button" class="text-center pull-left">Preview</li></a>
+			<a href="trash"><li id="channel-trash-button" class="text-center pull-left">Trash</li></a>
+		</ul>
+		<ul class="nav navbar-nav" id="publish">
+			<li id="channel-publish-button" class="text-center pull-right">Publish</li>
+		</ul>
+	</nav>
+	<button class="btn btn-primary" type="button" id="clipboard-toggler">
+		<span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
+		Clipboard
+		<span class="badge"></span>
+	</button>
 
+	<div id="file-directory-area" class="container pull-left"></div>
+	<div id="main-content-area" class="container-fluid"></div>
+	<div id="previewer-area" class="container pull-right"></div>
+	<div id="clipboard-area" class="container pull-right"></div>
 {% endblock content %}
