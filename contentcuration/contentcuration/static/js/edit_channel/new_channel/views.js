@@ -5,10 +5,9 @@ var Dropzone = require("dropzone");
 require("channel_create.less");
 require("dropzone/dist/dropzone.css");
 require("quilljs/dist/quill.snow.css");
-
-var TextHelper = require("edit_channel/utils/TextHelper");
+var BaseViews = require("./../views");
 	
-window.ManageChannelsView  = Backbone.View.extend({
+var ManageChannelsView  = Backbone.View.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'new_channel', 'load_channels', 'add_channel');
@@ -54,7 +53,7 @@ window.ManageChannelsView  = Backbone.View.extend({
 	}
 });
 
-window.ChannelView = Backbone.View.extend({
+var ChannelView = BaseViews.BaseListItemView.extend({
 	template: require("./hbtemplates/channel_container.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'open_channel', 'edit_channel','delete_channel','delete_view');
@@ -100,7 +99,7 @@ window.ChannelView = Backbone.View.extend({
 	}
 });
 
-window.ChannelEditorView = Backbone.View.extend({
+var ChannelEditorView = Backbone.View.extend({
 	template: require("./hbtemplates/channel_editor.handlebars"),
 	//url: '/api',
 	initialize: function(options) {
@@ -113,9 +112,16 @@ window.ChannelEditorView = Backbone.View.extend({
 	},
 	render: function() {
 		if(this.edit)
-			this.$el.html(this.template({channel: this.channel.attributes, edit: this.edit, index: this.index}));
+			this.$el.html(this.template({
+				channel: this.channel.attributes, 
+				edit: this.edit, 
+				index: this.index
+			}));
 		else
-			this.$el.html(this.template({edit: this.edit, index: this.index}));
+			this.$el.html(this.template({
+				edit: this.edit, 
+				index: this.index
+			}));
 		/*
 		this.name_editor = new Quill("#new_channel_name");
 		this.name_editor.on('text-change', function(delta, source) {

@@ -3,22 +3,21 @@ var _ = require("underscore");
 require("content-container.less");
 var BaseViews = require("./../views");
 var Models = require("./models");
-var TextHelper = require("edit_channel/utils/TextHelper");
-
+var BaseViews = require("./../views");
 var ClipboardViews = require("edit_channel/clipboard/views");
 var PreviewerViews = require("edit_channel/previewer/views");
 var container_count;
 var containers = [];
 
-window.TreeEditView = BaseViews.BaseView.extend({
+var TreeEditView = BaseViews.BaseView.extend({
 	template: require("./../hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'copy_content','delete_content' , 'set_editing', 'add_container', 'render_edit_mode');
 		this.edit = options.edit;
 		//this.root = window.current_channel.attributes.root_node;
-		if(!this.root)
-			this.root = window.channel_router.generate_folder({title: "[Untitled]"});
-		
+		this.channel = options.channel;
+		console.log(this.channel.models[0].attributes.root_node);
+		this.root = this.channel.models[0].attributes.root_node;
 		this.isEditing = false;
 		container_count = 1;
 		this.render();
@@ -79,19 +78,23 @@ window.TreeEditView = BaseViews.BaseView.extend({
 	},
 	
 	add_container: function(topic){
-		var container_view = new ContainerView({topic: topic, edit: this.edit});
+		var container_view = new ContainerView({
+			topic: topic, 
+			edit: this.edit
+		});
 		$("#container_area").append(container_view.el);
 		containers.push(container_view);
 		this.render_edit_mode();
 	}
 });
 
-window.ContainerView = Backbone.View.extend({
+var ContainerView = BaseViews.BaseListItemView.extend({
 	template: require("./../hbtemplates/content_container.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'add_content','add_folder', 'load_topics', 'load_content', 'append_list');
 		this.edit = options.edit;
 		this.topic = options.topic;
+		console.log(this.topic.title);
 		this.content = [];
 		this.render();		
 		/* Set starting point of container to animate */
@@ -105,10 +108,12 @@ window.ContainerView = Backbone.View.extend({
 		//this.$el.find(".content-list").height((this.$el.find("canvas").height() - this.$el.find(".title-bar").height() + 6) + "px");
 	},
 	render: function() {
-		this.$el.html(this.template({title: this.topic.attributes.title, 
-									 topic: this.topic.attributes, 
-									 edit: this.edit, 
-									 cid: this.topic.cid}));
+		this.$el.html(this.template({
+			title: this.topic.title, 
+			topic: this.topic, 
+			edit: this.edit, 
+			cid: this.topic.cid
+		}));
 
 		//this.load_topics(this.topic, this.$el, this.edit, this);
 		//this.load_content(this.topic, this.$el, this.edit, this);
@@ -123,10 +128,15 @@ window.ContainerView = Backbone.View.extend({
 	
 	add_content: function(event){
 		event.preventDefault();
-		var file_view = new FileView({file: window.channel_router.generate_file({title: "New Content Item", root: this.topic}), 
-									  edit: this.edit, 
-									  root: this.topic, 
-									  container : this.topic.cid});
+		var file_view = new FileView({
+			file: window.channel_router.generate_file({
+				title: "New Content Item", 
+				root: this.topic
+			}), 
+			edit: this.edit, 
+			root: this.topic, 
+			container : this.topic.cid
+		});
 
 		this.$el.find("ul .content_options").after(file_view.el);
 		$("#clipboard-area").append("<div id=\"clipboard-placeholder\"></div>");
@@ -140,9 +150,14 @@ window.ContainerView = Backbone.View.extend({
 	
 	add_folder: function(event){
 		event.preventDefault();
-		var folder_view = new FolderView({topic: window.channel_router.generate_folder({title: "New Folder", root: this.topic}), 
-										  edit: this.edit, 
-										  root: this.topic});
+		var folder_view = new FolderView({
+			topic: window.channel_router.generate_folder({
+				title: "New Folder", 
+				root: this.topic
+			}), 
+			edit: this.edit, 
+			root: this.topic
+		});
 
 		this.$el.find("ul .content_options").after(folder_view.el);
 		this.content.push(folder_view);
@@ -161,9 +176,11 @@ window.ContainerView = Backbone.View.extend({
 		
 		window.topic_nodes.forEach(function (entry){
 			if(entry.attributes.parent == index){
-				var folder_view = new FolderView({topic: entry.attributes, 
-												  edit: edit, 
-												  container: container.cid});
+				var folder_view = new FolderView({
+					topic: entry.attributes, 
+					edit: edit, 
+					container: container.cid
+				});
 
 				el.find("ul").append(folder_view.el);
 			}
@@ -173,9 +190,11 @@ window.ContainerView = Backbone.View.extend({
 	load_content : function(el, edit){
 		window.content_nodes.forEach(function (entry){
 			if(entry.attributes.parent == this.topic){
-				var file_view = new FileView({file: entry.attributes, 
-											  edit: edit, 
-											  root: this.topic});
+				var file_view = new FileView({
+					file: entry.attributes, 
+					edit: edit, 
+					root: this.topic
+				});
 
 				el.find("ul").append(file_view.el);
 			}
@@ -195,7 +214,7 @@ window.ContainerView = Backbone.View.extend({
 	}
 });
 
-window.FolderView = BaseViews.BaseListItemView.extend({
+var FolderView = BaseViews.BaseListItemView.extend({
 	template: require("./../hbtemplates/content_folder.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_folder','open_folder','expand_or_collapse_folder', 
@@ -207,9 +226,11 @@ window.FolderView = BaseViews.BaseListItemView.extend({
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template({folder: this.topic.attributes, 
-									 edit: this.edit, 
-									 cid: this.cid}));
+		this.$el.html(this.template({
+			folder: this.topic.attributes, 
+			edit: this.edit, 
+			cid: this.cid
+		}));
 
 		this.$el.find("h3").html(this.trimText(this.$el.find("h3").html(), 22, null));
 		this.$el.find("p").html(this.trimText(this.$el.find("p").html(), 100, this.$(".filler")));
@@ -283,7 +304,7 @@ window.FolderView = BaseViews.BaseListItemView.extend({
 	}
 });
 
-window.FileView = BaseViews.BaseListItemView.extend({
+var FileView = BaseViews.BaseListItemView.extend({
 	template: require("./../hbtemplates/content_file.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'preview_node', 'edit_file', 'set_as_placeholder', 'delete_view', 'update');
@@ -293,9 +314,12 @@ window.FileView = BaseViews.BaseListItemView.extend({
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template({file: this.file.attributes, 
-									 edit: this.edit, 
-									 cid: this.cid}));
+		this.$el.html(this.template({
+			file: this.file.attributes, 
+			edit: this.edit, 
+			cid: this.cid
+		}));
+
 		this.$el.find("h4").html(this.trimText(this.$el.find("h4").text(), "...", 25, false));
 		
 		this.$el.attr("id", this.cid);
@@ -334,6 +358,7 @@ window.FileView = BaseViews.BaseListItemView.extend({
 			this.$el.attr("class","newcontent");
 			this.$el.attr('draggable', 'false');
 			window.edit_page_view.set_editing(true);
+			console.log("REACHED HERE");
 		}
 		else {
 			this.$el.attr("class","content");
@@ -363,10 +388,12 @@ window.FileView = BaseViews.BaseListItemView.extend({
 function handleDrag(el){
 	el.$el.attr('draggable', 'true');
 	el.$el.on("dragstart", function(e){
-		e.originalEvent.dataTransfer.setData("data", JSON.stringify({id: $(this).attr("id"), 
-														data : $(this).wrap('<div/>').parent().html(),
-														edit : true,
-														is_folder : $(this).find("label").hasClass("folder")}));
+		e.originalEvent.dataTransfer.setData("data", JSON.stringify({
+			id: $(this).attr("id"), 
+			data : $(this).wrap('<div/>').parent().html(),
+			edit : true,
+			is_folder : $(this).find("label").hasClass("folder")
+		}));
 
 		e.originalEvent.dataTransfer.effectAllowed = "move";
 		e.target.style.opacity = '0.4';
@@ -395,7 +422,10 @@ function handleDrop(container){
 		var transfer = JSON.parse(e.originalEvent.dataTransfer.getData("data"));
 		var data = $("#" + transfer.id).data("content");
 		$("#" + transfer.id).parent().remove();
-		$(this).data("container").append_list({data : data, is_folder: transfer.is_folder});
+		$(this).data("container").append_list({
+			data : data, 
+			is_folder: transfer.is_folder
+		});
 	});
 }
 

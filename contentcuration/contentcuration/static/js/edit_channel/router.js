@@ -36,8 +36,9 @@ ChannelEditRouter  = Backbone.Router.extend({
 		});
     },
 	
+	/*************************FIX HERE***************************************/
 	edit_page : function(){
-		console.log("topic tree edit");
+		console.log("topic tree edit", window.topic_tree);
 		var topictree = new Models.TopicTreeModelCollection(window.topic_tree);
 		var EditViews = require("edit_channel/tree_edit/views");
 		window.edit_page_view = new EditViews.TreeEditView({
@@ -104,9 +105,17 @@ ChannelEditRouter  = Backbone.Router.extend({
 			channel_data.fetch();
 			this.channelCollection.create(channel_data, {
 				success: function(){
-					var new_tree = new Models.TopicTreeModel({channel: channel_data.id, 
-															  root_node: root_node.id});
-					new_tree.save();				
+					var root_node = new Models.TopicNodeModel();
+					root_node.save({title: channel_data.attributes.name}, {
+						success: function(){
+							var new_tree = new Models.TopicTreeModel({
+								channel: channel_data.id, 
+								root_node: root_node.id,
+								title: channel_data.name
+							});
+							new_tree.save();
+						}
+					});
        			}
 			});
 		}

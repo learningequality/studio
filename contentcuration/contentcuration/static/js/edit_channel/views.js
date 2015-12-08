@@ -5,7 +5,7 @@ var Models = require("./models");
 var clipboardContent = [];
 
 var BaseView = Backbone.View.extend({
-	
+	item_view: null,
 	initialize: function() {
 		this.render();
 	},
@@ -15,15 +15,22 @@ var BaseView = Backbone.View.extend({
 
 	
 });
+/*
+//BaseListView = Backbone.View.extend({
+//	item_view: BAseListItemView
+initialize:function
+// 
+//})
 
 
+*/
 var BaseListItemView = Backbone.View.extend({
 	initialize: function() {
 		_.bindAll(this, 'delete_content','toggle_folder', 'preview_file', 'trimText');
 	},
 	delete_content:function(event){
 		if(confirm("Are you sure you want to delete this file?")){
-			var el = DOMHelper.getParentOfTag(event.target, "li");
+			var el ="#" + $(event.target).parent("li").id;
 			var i = clipboard_list_items.indexOf($("#" + el.id).data("data"));
 			console.log($("#" + el.id).data("data"));
 			console.log(clipboard_list_items[0]);
@@ -35,7 +42,7 @@ var BaseListItemView = Backbone.View.extend({
 	},
 	toggle_folder: function(event){
 		event.preventDefault();
-		var el = "#" + DOMHelper.getParentOfTag(event.target, "li").id;
+		var el =  "#" + $(event.target).parent("li").id;
 		if($(el).data("collapsed")){
 			$(el + "_sub").slideDown();
 			$(el).data("collapsed", false);
@@ -57,6 +64,43 @@ var BaseListItemView = Backbone.View.extend({
 		});
 	},
 
+	trimText:function(string, limit, el){
+		if(string.trim().length - 4 > limit){
+			string = string.trim().substring(0, limit - 4) + "...";
+			//if(el) el.show();
+		}
+		//else
+		//	if(el) el.hide();
+		return string;
+	}
+});
+
+var BaseEditor = Backbone.View.extend({
+	item_view: null,
+	initialize: function() {
+		_.bindAll(this, 'delete_content','toggle_folder', 'preview_file', 'trimText');
+	},
+	update_folder: function(event){
+		if($("#folder_name").val().trim() == "")
+			$("#name_err").css("display", "inline");
+		else{
+			this.folder.update({
+				title: $("#folder_name").val(), 
+				description: $("#folder_description").val()
+			});
+			this.delete_view();
+		}
+	},
+	updateCount: function(){
+		var char_length = this.char_limit - this.$("#clipboard textarea").val().length; 
+		console.log(char_length);
+		this.$('.char_counter').text(char_length + ((char_length != 1)? " chars" : " char") + ' left');
+
+		if(char_length == 0) 
+			this.$(".char_counter").css("color", "red");
+		else 
+			this.$(".char_counter").css("color", "black");
+	},
 	trimText:function(string, limit, el){
 		if(string.trim().length - 4 > limit){
 			string = string.trim().substring(0, limit - 4) + "...";
@@ -140,6 +184,5 @@ function addToClipboard(topic_nodes, content_nodes){
 
 module.exports = {
 	BaseView: BaseView,
-	BaseListItemView: BaseListItemView,
-	ManageChannelsView: ManageChannelsView
+	BaseListItemView: BaseListItemView
 }

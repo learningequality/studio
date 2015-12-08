@@ -9,8 +9,6 @@ var fileSaver = require("browser-filesaver");
 var JSZipUtils = require("jszip-utils");
 
 var PreviewerViews = require("edit_channel/previewer/views");
-//var LoadHelper = require("edit_channel/utils/LoadHelper");
-//var DOMHelper = require("edit_channel/utils/DOMHelper");
 
 
 
@@ -93,7 +91,10 @@ var ClipboardEditContentBaseView = Backbone.View.extend({
 		if($("#folder_name").val().trim() == "")
 			$("#name_err").css("display", "inline");
 		else{
-			this.model.update({title: $("#folder_name").val(), description: $("#folder_description").val()});
+			this.model.update({
+				title: $("#folder_name").val(), 
+				description: $("#folder_description").val()
+			});
 			this.delete_view();
 		}
 	},
@@ -143,8 +144,9 @@ var ClipboardEditFolderView = ClipboardEditContentBaseView.extend({
 							file: (this.edit)? this.folder.topic.attributes : null, 
 							edit: this.edit, 
 							is_file : false,
-							limit: ((this.edit)? this.char_limit-this.folder.topic.attributes.description.length : this.char_limit)
+							limit: this.char_limit
 						}));
+		this.updateCount();
 	},
 	events: {
 		'click .clipboard_update_folder': 'update_folder',
@@ -157,7 +159,10 @@ var ClipboardEditFolderView = ClipboardEditContentBaseView.extend({
 		if($("#folder_name").val().trim() == "")
 			$("#name_err").css("display", "inline");
 		else{
-			this.folder.update({title: $("#folder_name").val(), description: $("#folder_description").val()});
+			this.folder.update({
+				title: $("#folder_name").val(), 
+				description: $("#folder_description").val()
+			});
 			this.delete_view();
 		}
 	},
@@ -186,9 +191,12 @@ var ClipboardEditFileView = ClipboardEditContentBaseView.extend({
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template({file: this.file.attributes,
-									is_file: true, 
-									limit: this.char_limit - this.file.attributes.description.length}));
+		this.$el.html(this.template({
+			file: this.file.attributes,
+			is_file: true, 
+			limit: this.char_limit - this.file.attributes.description.length
+		}));
+		
 	},
 	
 	events: {
@@ -349,12 +357,13 @@ var ClipboardAddContentComputerView = ClipboardAddContentView.extend({
 	},
 	render: function() {
 		this.$el.html(this.template({url : window.location.pathname}));
-		this.dropzone = new Dropzone(this.$("#dropzone").get(0), {maxFiles: 1, 
-																  clickable: true, 
-																  url: window.Urls.file_upload(), 
-																  headers: {"X-CSRFToken": get_cookie("csrftoken")}, 
-																  uploadMultiple: true, 
-																  acceptedFiles: ["image/*", "application/pdf"]} );
+		this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
+			clickable: true, 
+			url: window.Urls.file_upload(), 
+			headers: {"X-CSRFToken": get_cookie("csrftoken")}, 
+			uploadMultiple: true, 
+			acceptedFiles: ["image/*", "application/pdf"]
+		});
         this.dropzone.on("success", this.file_uploaded);
 	},
 	
@@ -386,10 +395,12 @@ var ClipboardAddContentComputerView = ClipboardAddContentView.extend({
 		 $('#fileinput').change(function(evt) {
 			var selected = $(this).context.files;
 			for(var i = 0; i < selected.length; i++){
-				var file = window.channel_router.generate_temp_file({content_file: selected[i], 
-																 	 retrieved_on: new Date(), 
-																 	 title: selected[i].name, 
-																 	 parent: this.model});
+				var file = window.channel_router.generate_temp_file({
+					content_file: selected[i], 
+					retrieved_on: new Date(), 
+					title: selected[i].name, 
+					parent: this.model
+				});
 				temp_list_items.push(file);
 			}
 			console.log(temp_list_items);

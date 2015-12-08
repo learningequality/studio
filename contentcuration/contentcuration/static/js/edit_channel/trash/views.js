@@ -3,12 +3,11 @@ var _ = require("underscore");
 require("trash.less");
 var BaseViews = require("./../views");
 var view_model;
+var BaseViews = require("./../views");
 
-var DOMHelper = require("edit_channel/utils/DOMHelper");
-var PreviewerViews = require("edit_channel/previewer/views");
 
 /* Todo: figure out how to display archived files after deleted */
-window.TrashView = Backbone.View.extend({
+var TrashView = Backbone.View.extend({
 	template: require("./hbtemplates/trash.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'delete_selected', 'restore_selected','select_all');
@@ -61,7 +60,7 @@ window.TrashView = Backbone.View.extend({
 	}
 });
 
-window.TrashListItemView =  BaseViews.BaseListItemView.extend({
+var TrashListItemView =  BaseViews.BaseListItemView.extend({
 	template: require("./hbtemplates/trash_collapsed.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this,'check_item','toggle_folder_item','toggle_file_item','preview_list_item');
@@ -87,7 +86,7 @@ window.TrashListItemView =  BaseViews.BaseListItemView.extend({
 	},
 	toggle_folder_item: function(event){
 		event.preventDefault();
-		var el = "#" + DOMHelper.getParentOfTag(event.target, "li").id;
+		var el = $(event.target).parent("li").id;
 		if($(el).data("collapsed")){
 			$(el + "_sub").slideDown();
 			$(el+" .glyphicon-chevron-right").attr("class", "tog_folder glyphicon glyphicon-chevron-down");
@@ -105,14 +104,14 @@ window.TrashListItemView =  BaseViews.BaseListItemView.extend({
 	},
 	toggle_file_item: function(event){
 		event.preventDefault();
-		var el = "#" + DOMHelper.getParentOfTag(event.target, "li").id;
+		var el = $(event.target).parent("li").id;
 		if($(el).data("collapsed")){
 			$(el).data("collapsed", false);
 			$(el + " .trash_details").slideDown();
 			$(el+" .glyphicon-chevron-right").attr("class", "tog_file glyphicon glyphicon-chevron-down");
 			$(el).css("height", "300px");
-			var textHelper = require("edit_channel/utils/TextHelper");
-			$(el + " #bottom-right p").html(textHelper.trimText($(el + " #bottom-right p").text(), "...", 100, false));
+			//var textHelper = require("edit_channel/utils/TextHelper");
+			//$(el + " #bottom-right p").html(textHelper.trimText($(el + " #bottom-right p").text(), "...", 100, false));
 
 			
 			if($(el+" input[type=checkbox]").prop("checked") == false)
@@ -133,7 +132,7 @@ window.TrashListItemView =  BaseViews.BaseListItemView.extend({
 	},
 	preview_list_item: function(event){
 		event.preventDefault();
-		var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
+		//var file = $("#"+ DOMHelper.getParentOfTag(event.target, "li").id);
 		var view = new PreviewerViews.PreviewerView({
 			el: $("#previewer-area"),
 			model: file.data("data"),
