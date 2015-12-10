@@ -310,12 +310,12 @@ var convert_assessment_item_to_perseus = function(model) {
             output = multiplechoice_template({
                 question: set_image_urls_for_export(model.get("question")),
                 randomize: true,
-                multipleSelect: model.get("answers").reduce(function(memo, model) {
+                multipleSelect: (model.get("answers").reduce(function(memo, model) {
                     if (model.get("correct")) {
                         memo += 1;
                     }
                     return memo;
-                    }, 0) || 0 > 1,
+                    }, 0) || 0) > 1,
                 answer: model.get("answers").toJSON()
             });
             break;
