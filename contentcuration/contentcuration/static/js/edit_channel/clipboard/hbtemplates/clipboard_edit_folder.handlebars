@@ -2,12 +2,8 @@
 	<div class="clipboard_header">
 		<h3>
 			<span class="pull-left glyphicon glyphicon-folder-open" aria-hidden="true"></span>
-			{{#if is_file}}
-				 Editing File
-			{{else}}
-				{{#if edit}}Editing Folder
-				{{else}}Adding Folder{{/if}}
-			{{/if}}
+				{{#if edit}}Editing <b>{{file.title}}</b> {{#if file.parent}}of {{file.parent}}{{/if}}
+				{{else}}Adding Folder {{#if file.parent}}to {{file.parent}}{{/if}}{{/if}}
 
 			<span class="toggle_clipboard pull-right glyphicon glyphicon-remove" aria-hidden="true"></span>
 		</h3>

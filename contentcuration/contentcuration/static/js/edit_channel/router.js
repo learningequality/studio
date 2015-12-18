@@ -40,11 +40,12 @@ ChannelEditRouter  = Backbone.Router.extend({
 	edit_page : function(){
 		console.log("topic tree edit", window.topic_tree);
 		var topictree = new Models.TopicTreeModelCollection(window.topic_tree);
+		var root = new Models.TopicNodeModel(window.root);
 		var EditViews = require("edit_channel/tree_edit/views");
 		window.edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
 			edit: true,
-			channel: topictree
+			channel: root
 		});
 	},
 	preview_page : function(channel){

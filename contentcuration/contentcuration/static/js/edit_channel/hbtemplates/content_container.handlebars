@@ -1,5 +1,5 @@
-<div id="{{cid}}" class="container content-container pull-left">
-	<h2 class="text-center title-bar">{{title}}</h2>
+<div id="{{id}}" class="container content-container pull-left">
+	<h2 class="text-center title-bar">{{topic.title}}</h2>
 	<canvas class="pull-left"> </canvas>
 	<div class="container-interior"></div>
 	<div class="content-list">
@@ -7,9 +7,9 @@
 		<ul class="list-unstyled">
 			{{#if edit}}
 				<li class="content_options text-center">
-					<button class="btn btn-default pull-left add_folder_button" name="{{title}}">
+					<button class="btn btn-default pull-left add_folder_button" name="{{topic.title}}">
 						<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>Add Folder</button>
-					<button class="btn btn-default pull-left add_content_button" name="{{title}}">
+					<button class="btn btn-default pull-left add_content_button" name="{{topic.title}}">
 						<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>Add Content</button>
 				</li>
 			{{/if}}

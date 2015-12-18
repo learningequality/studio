@@ -194,7 +194,7 @@ var ClipboardEditFileView = ClipboardEditContentBaseView.extend({
 		this.$el.html(this.template({
 			file: this.file.attributes,
 			is_file: true, 
-			limit: this.char_limit - this.file.attributes.description.length
+			limit: this.char_limit// - this.file.attributes.description.length
 		}));
 		
 	},

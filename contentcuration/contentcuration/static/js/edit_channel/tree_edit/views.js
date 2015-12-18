@@ -2,7 +2,6 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 require("content-container.less");
 var BaseViews = require("./../views");
-var Models = require("./models");
 var BaseViews = require("./../views");
 var ClipboardViews = require("edit_channel/clipboard/views");
 var PreviewerViews = require("edit_channel/previewer/views");
@@ -16,8 +15,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.edit = options.edit;
 		//this.root = window.current_channel.attributes.root_node;
 		this.channel = options.channel;
-		console.log(this.channel.models[0].attributes.root_node);
-		this.root = this.channel.models[0].attributes.root_node;
+		console.log(this.channel);
+		this.root = this.channel;
 		this.isEditing = false;
 		container_count = 1;
 		this.render();
@@ -77,13 +76,15 @@ var TreeEditView = BaseViews.BaseView.extend({
 		}
 	},
 	
-	add_container: function(topic){
+	add_container: function(topic, index){
 		var container_view = new ContainerView({
 			topic: topic, 
-			edit: this.edit
+			edit: this.edit, 
+			count: container_count++
 		});
 		$("#container_area").append(container_view.el);
 		containers.push(container_view);
+		console.log(containers);
 		this.render_edit_mode();
 	}
 });
@@ -94,25 +95,25 @@ var ContainerView = BaseViews.BaseListItemView.extend({
 		_.bindAll(this, 'add_content','add_folder', 'load_topics', 'load_content', 'append_list');
 		this.edit = options.edit;
 		this.topic = options.topic;
-		console.log(this.topic.title);
+		this.index = options.count;
+		console.log(this.topic.attributes.title);
 		this.content = [];
 		this.render();		
 		/* Set starting point of container to animate */
 		this.$el.css({'margin-left': - this.$el.outerWidth(), 'z-index': 1000 - container_count});
 		/* Increase size of container area to accomodate for size of new container */
 		$("#container_area").css('width', $("#container_area").innerWidth() + this.$el.outerWidth());
-		
+
 		this.$el.animate({ marginLeft: parseInt(this.$el.css('marginLeft'),10) == 0 ? this.$el.outerWidth() : 0});
-	//	this.$el.find("canvas").css('margin-top', (- this.$el.find(".title-bar").height() + 22) + "px");
+		//this.$el.find("canvas").css('margin-top', (- this.$el.find(".title-bar").height() + 22) + "px");
 		//this.$el.find(".container-interior").css('margin-top', (- this.$el.find(".title-bar").height() + 22) + "px");
 		//this.$el.find(".content-list").height((this.$el.find("canvas").height() - this.$el.find(".title-bar").height() + 6) + "px");
 	},
 	render: function() {
 		this.$el.html(this.template({
-			title: this.topic.title, 
-			topic: this.topic, 
+			topic: this.topic.attributes, 
 			edit: this.edit, 
-			cid: this.topic.cid
+			id: this.topic.id
 		}));
 
 		//this.load_topics(this.topic, this.$el, this.edit, this);
@@ -135,7 +136,7 @@ var ContainerView = BaseViews.BaseListItemView.extend({
 			}), 
 			edit: this.edit, 
 			root: this.topic, 
-			container : this.topic.cid
+			container : this.topic.id
 		});
 
 		this.$el.find("ul .content_options").after(file_view.el);
