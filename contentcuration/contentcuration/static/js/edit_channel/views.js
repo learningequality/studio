@@ -12,18 +12,38 @@ var BaseView = Backbone.View.extend({
 	render: function() {
 
 	}
-
-	
 });
-/*
-//BaseListView = Backbone.View.extend({
-//	item_view: BAseListItemView
-initialize:function
-// 
-//})
+
+BaseListView = Backbone.View.extend({
+	item_view: null,
+	items: [],
+	allow_edit: false,
+	save: function(item){
+		/* TODO: Implement funtion to allow saving one item */
+	},
+	save_all: function(){
+		/* TODO: Implement function to save all items on list */
+		if(item_view == "ChannelView"){
+			/* TODO: Save all channels in list */
+			//items.forEach(entry) ...
+		} else{
+			/* TODO: Save all topics/content in list */
+		}
+	},
+
+	set_editing: function(edit_mode_on){
+		/* TODO: implement function to make certain buttons disabled/hidden 
+			if user can only edit one item at a time
+			Applies to: channel_create, tree_edit */
+		if(edit_mode_on){
+
+		}else{
+			
+		}
+	}
+});
 
 
-*/
 var BaseListItemView = Backbone.View.extend({
 	initialize: function() {
 		_.bindAll(this, 'delete_content','toggle_folder', 'preview_file', 'trimText');

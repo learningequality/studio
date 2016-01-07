@@ -45,9 +45,13 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
 			edit: true,
-			channel: root
+			root: root
 		});
 	},
+
+
+
+
 	preview_page : function(channel){
 		var topictree = new Models.TopicTreeModelCollection(window.topic_tree);
 		var EditViews = require("edit_channel/tree_edit/views");

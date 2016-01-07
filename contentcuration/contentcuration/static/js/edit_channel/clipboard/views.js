@@ -10,8 +10,6 @@ var JSZipUtils = require("jszip-utils");
 
 var PreviewerViews = require("edit_channel/previewer/views");
 
-
-
 var prevTemplate;
 var list_index;
 
