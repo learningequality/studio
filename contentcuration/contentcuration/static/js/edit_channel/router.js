@@ -40,7 +40,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 	edit_page : function(){
 		console.log("topic tree edit", window.topic_tree);
 		var topictree = new Models.TopicTreeModelCollection(window.topic_tree);
-		var root = new Models.TopicNodeModel(window.root);
+		var root = new Models.NodeModel(window.root);
 		var EditViews = require("edit_channel/tree_edit/views");
 		window.edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
@@ -55,10 +55,12 @@ ChannelEditRouter  = Backbone.Router.extend({
 	preview_page : function(channel){
 		var topictree = new Models.TopicTreeModelCollection(window.topic_tree);
 		var EditViews = require("edit_channel/tree_edit/views");
+		var root = new Models.NodeModel(window.root);
 		window.edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
 			edit: false,
-			channel: topictree
+			channel: topictree,
+			root: root
 		});
 		
 	},
@@ -89,19 +91,19 @@ ChannelEditRouter  = Backbone.Router.extend({
 	},
 	*/
 	generate_folder: function(folder){
-		var folder_data = new Models.TopicNodeModel(folder);
+		var folder_data = new Models.NodeModel(folder);
 		//this.topicCollection.create(folder_data);
 		//console.log("collection", this.topicCollection);
 		return folder_data;
 	}, 
 	generate_file: function(file){
-		var file_data = new Models.ContentNodeModel(file);
+		var file_data = new Models.NodeModel(file);
 		//this.contentCollection.create(file_data);
 		//console.log("collection", this.contentCollection);
 		return  file_data;
 	}, 
 	generate_temp_file : function (file){
-		var file_data = new Models.ContentNodeModel(file);
+		var file_data = new Models.NodeModel(file);
 		return  file_data;
 	},
 	save_channel: function (channel, curr_channel){
@@ -110,7 +112,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 			channel_data.fetch();
 			this.channelCollection.create(channel_data, {
 				success: function(){
-					var root_node = new Models.TopicNodeModel();
+					var root_node = new Models.NodeModel();
 					root_node.save({title: channel_data.attributes.name}, {
 						success: function(){
 							var new_tree = new Models.TopicTreeModel({

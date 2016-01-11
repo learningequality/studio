@@ -18,6 +18,9 @@ BaseListView = Backbone.View.extend({
 	item_view: null,
 	items: [],
 	allow_edit: false,
+	initialize: function() {
+		this.items = new Bac
+	},
 	save: function(item){
 		/* TODO: Implement funtion to allow saving one item */
 	},
@@ -32,13 +35,15 @@ BaseListView = Backbone.View.extend({
 	},
 
 	set_editing: function(edit_mode_on){
-		/* TODO: implement function to make certain buttons disabled/hidden 
-			if user can only edit one item at a time
-			Applies to: channel_create, tree_edit */
-		if(edit_mode_on){
-
+		if(this.item_view=="ChannelView"){
+			$(".edit_channel").prop("disabled", edit_mode_on);
+			$("#new_channel_button").prop("disabled", edit_mode_on);
+			$(".edit_channel").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
+			$("#new_channel_button").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
 		}else{
-			
+			$(".edit_folder_button").css('visibility', (edit_mode_on)?'hidden' : 'visible');
+			$(".edit_file_button").css('visibility',(edit_mode_on)?'hidden' : 'visible');
+			$(".content_options button").prop('disabled',edit_mode_on);
 		}
 	}
 });
@@ -96,6 +101,8 @@ var BaseListItemView = Backbone.View.extend({
 });
 
 var BaseEditor = Backbone.View.extend({
+	el : " ",
+	/*
 	item_view: null,
 	initialize: function() {
 		_.bindAll(this, 'delete_content','toggle_folder', 'preview_file', 'trimText');
@@ -111,8 +118,9 @@ var BaseEditor = Backbone.View.extend({
 			this.delete_view();
 		}
 	},
+	*/
 	updateCount: function(){
-		var char_length = this.char_limit - this.$("#clipboard textarea").val().length; 
+		var char_length = this.char_limit - this.$el.val().length; 
 		console.log(char_length);
 		this.$('.char_counter').text(char_length + ((char_length != 1)? " chars" : " char") + ' left');
 
@@ -130,6 +138,10 @@ var BaseEditor = Backbone.View.extend({
 			if(el) el.hide();
 		return string;
 	}
+});
+
+var BaseQueue = Backbone.View.extend({
+
 });
 
 /*
@@ -197,12 +209,14 @@ var EditView = Backbone.View.extend({
 		}
 	}
 });
-*/
-function addToClipboard(topic_nodes, content_nodes){
+
+function addToClipboard(){
 	//clipboardContent
 }
+*/
 
 module.exports = {
 	BaseView: BaseView,
+	BaseListView:BaseListView,
 	BaseListItemView: BaseListItemView
 }

@@ -9,8 +9,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, TopicNode, ContentNode, TopicTree
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicSerializer, ContentSerializer, TopicTreeSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, Node, TopicTree
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, NodeSerializer, TopicTreeSerializer
 
 
 def base(request):
@@ -34,8 +34,9 @@ def channel(request, channel_id):
     topictree = TopicTree.objects.get(channel = channel)
     topictree_serializer = TopicTreeSerializer(topictree)
 
-    root = TopicNode.objects.get(id = topictree.root_node.id)
-    topic_serializer = TopicSerializer(root)
+    root = Node.objects.get(id = topictree.root_node.id)
+    topic_serializer = NodeSerializer(root)
+#TODO: fetch 
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
                                                  "topictree" : JSONRenderer().render(topictree_serializer.data),
                                                  "root" : JSONRenderer().render(topic_serializer.data)})

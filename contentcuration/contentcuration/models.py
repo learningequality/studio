@@ -75,10 +75,18 @@ class Node(MPTTModel):
 
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
 
-    name = models.CharField(
+    title = models.CharField(
         max_length=50,
-        verbose_name=_("name"),
-        help_text=_("Name of node to be displayed to the user in the menu"),
+        verbose_name=_("title"),
+        default=_("Title"),
+        help_text=_("Node title"),
+    )
+
+    description = models.TextField(
+        max_length=200,
+        verbose_name=_("description"),
+        default=_("Description"),
+        help_text=_("Brief description of what is contained in this folder"),
     )
 
     published = models.BooleanField(
@@ -98,12 +106,33 @@ class Node(MPTTModel):
 
     sort_order = models.FloatField(
         max_length=50,
-        unique=True,
+        #unique=True,
         default=0,
         verbose_name=_("sort order"),
         help_text=_("Ascending, lowest number shown first"),
     )
-    
+
+    license_owner = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Organization of person who holds the essential rights"),
+    )
+
+    license = models.ForeignKey(
+        'ContentLicense',
+        null=True,
+        verbose_name=_("license"),
+        help_text=_("License under which the work is distributed"),
+    )
+
+    kind = models.CharField(
+        max_length=50,
+        verbose_name=_("kind"),
+        help_text=_("Type of node (topic, video, exercise, etc.)"),
+        default="Topic"
+    )
+
     @property
     def has_draft(self):
         return self.draft_set.all().exists()
@@ -124,106 +153,9 @@ class Node(MPTTModel):
         verbose_name = _("Topic")
         verbose_name_plural = _("Topics")
         # Do not allow two nodes with the same name on the same level
-        unique_together = ('parent', 'name')
+        unique_together = ('parent', 'title')
 
 
-class TopicNode(Node):
-    # Rename the colors when they have decided roles in the UI
-    # Length 7 because hex codes?
-    color1 = models.CharField(
-        max_length=7
-    )
-
-    color2 = models.CharField(
-        max_length=7
-    )
-
-    color3 = models.CharField(
-        max_length=7
-    )
-    title = models.CharField(
-        max_length=50,
-        verbose_name=_("title"),
-        default=_("Title"),
-        help_text=_("Folder title"),
-    )
-    description = models.TextField(
-        max_length=200,
-        verbose_name=_("description"),
-        default=_("Description"),
-        help_text=_("Brief description of what is contained in this folder"),
-    )
-
-
-class ContentNode(Node):
-    """
-    Model for content data nodes, which will be stored as leaves only
-    """
-
-    title = models.CharField(
-        max_length=50,
-        verbose_name=_("title"),
-        default=_("Title"),
-        help_text=_("Title of the content item"),
-    )
-    author = models.CharField(
-        max_length=255,
-        help_text=_("Name of the author(s) of book/movie/exercise"),
-    )
-
-    license_owner = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text=_("Organization of person who holds the essential rights"),
-    )
-
-    published_on = models.DateField(
-        null=True,
-        blank=True,
-        help_text=_(
-            "If applicable, state when this work was first published (not on "
-            "this platform, but for its original publication)."
-        ),
-    )
-
-    retrieved_on = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("downloaded on"),
-        help_text=_(
-            "Should be automatically filled in when an item is downloaded "
-            "from its source of origin, either manually by user or "
-            "automatically by script."
-        ),
-    )
-
-    content_file = models.FileField(
-        blank=True,
-        null=True,
-        # TODO
-        upload_to='contents/video/thumbnails/',
-        help_text=_("Upload video here"),
-    )
-
-    thumbnail = models.ImageField(
-        blank=True,
-        null=True,
-        upload_to='contents/video/thumbnails/',
-        help_text=_("Automatically created when new video is uploaded")
-    )
-
-    license = models.ForeignKey(
-        'ContentLicense',
-        verbose_name=_("license"),
-        help_text=_("License under which the work is distributed"),
-    )
-    description = models.TextField(
-        max_length=200,
-        verbose_name=_("description"),
-        default=_("Description"),
-        help_text=_("Brief description of what this content item is"),
-    )
 
 class ContentLicense(models.Model):
     name = models.CharField(

@@ -9,7 +9,10 @@
 </div>
 <div id="channel-list-area">
 	<ul id="channel_list" class="list-unstyled">
-		<li><h5 class="default-item">No channels found.</h5></li>
+		{{#each channel_list}}
+		    <li class="channel_container container" id={{id}}></li>
+		    {{else}} <li><h5 class="default-item">No channels found.</h5></li>
+		{{/each}}
 	</ul>
 	<h3 id="new_channel_button">
 		<span  class="glyphicon glyphicon-plus-sign"></span> 

@@ -1,19 +1,18 @@
-<div id="{{id}}" class="container content-container pull-left">
-	<h2 class="text-center title-bar">{{topic.title}}</h2>
+<h2 class="text-center title-bar">{{topic.title}}</h2>
+<div class="container-interior">
 	<canvas class="pull-left"> </canvas>
-	<div class="container-interior"></div>
-	<div class="content-list">
-		<span id="top_border" class="boundary">&nbsp;</span>
-		<ul class="list-unstyled">
-			{{#if edit}}
-				<li class="content_options text-center">
-					<button class="btn btn-default pull-left add_folder_button" name="{{topic.title}}">
-						<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>Add Folder</button>
-					<button class="btn btn-default pull-left add_content_button" name="{{topic.title}}">
-						<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>Add Content</button>
-				</li>
-			{{/if}}
-		</ul>
-		<span id="bottom_border" class="boundary">&nbsp;</span>
-	</div>
 </div>
+<ul class="content-list list-unstyled">
+	<span class="top_border boundary">&nbsp;</span>
+	{{#if mode}}
+		<li class="btn btn-default add_content_button" name="{{topic.title}}">
+			<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+			ADD
+		</li>
+	{{/if}}
+	{{#each content_list}}
+		<li class="content" id="{{#if id}}{{id}}{{else}}new{{/if}}""></li>
+	{{else}}<h5 class="default-item">No items found.</h5>
+	{{/each}}
+	<span class="bottom_border boundary">&nbsp;</span>
+</ul>

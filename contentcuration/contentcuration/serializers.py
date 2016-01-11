@@ -2,19 +2,6 @@ from contentcuration.models import *    # TODO: Change this later?
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
 
-class ContentSerializer(serializers.ModelSerializer):
-    class Meta: 
-        model = ContentNode
-        # TODO: content_file
-        fields = ('created', 'modified', 'parent', 'title', 'published', 'sort_order',
-                  'author', 'license_owner', 'license', 'id')
-
-class TopicSerializer(serializers.ModelSerializer):
-    class Meta: 
-        model = TopicNode
-        fields = ('created', 'modified', 'parent', 'title', 'description', 'sort_order',
-                  'color1', 'color2', 'color3', 'id')
-
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta: 
         model = ContentLicense
@@ -33,7 +20,8 @@ class TopicTreeSerializer(serializers.ModelSerializer):
 class NodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
-        fields = ('name', 'published', 'deleted', 'id')
+        fields = ('title', 'published', 'deleted', 'id', 'description', 'published', 
+                  'deleted', 'sort_order', 'license_owner', 'license', 'kind', 'children')
 
 
 class ExerciseSerializer(serializers.ModelSerializer):

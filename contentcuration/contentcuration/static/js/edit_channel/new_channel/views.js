@@ -12,7 +12,7 @@ var ManageChannelsView  = BaseListView.extend({
 	item_view: "ChannelView", // TODO: Use to indicate how to save items on list
 
 	initialize: function(options) {
-		_.bindAll(this, 'new_channel', 'load_channels', 'set_editing');
+		_.bindAll(this, 'new_channel', 'load_channels');
 		this.channels = options.channels;
 		this.render();
 		this.listenTo(this.channels, "sync", this.render);
@@ -20,7 +20,7 @@ var ManageChannelsView  = BaseListView.extend({
 	},
 	render: function() {
 		this.set_editing(false);
-		this.$el.html(this.template());
+		this.$el.html(this.template({channel_list: this.channels.toJSON()}));
 		this.load_channels(this.items, this);
 	},
 	events: {
@@ -29,33 +29,27 @@ var ManageChannelsView  = BaseListView.extend({
 
 	new_channel: function(event){
 		this.set_editing(true);
+
 		var new_channel = new ChannelView({
 			edit:true,
 			container: this
 		});
-		$("#channel_list").append(new_channel.el);
+		$("#channel_list").append("<li class='channel_container container' id='new'></li>")
+		$("#new").append(new_channel.el);
 	},
 
 	load_channels: function(list, container){
 		/* TODO: need to filter out channels according to user */
 		this.channels.forEach(function(entry){
 			var view = new ChannelView({
+				el : "#channel_list #" + entry.id,
 				channel: entry, 
 				edit: false,
-				container: container
+				container: container,
 			});
 			$("#channel_list").append(view.el);
 			list.push(view);
 		});
-		$(".default-item").css("visibility", (this.items.length == 0)? "visible" : "hidden");
-	},
-
-	set_editing: function(isEditing){
-		$(".edit_channel").prop("disabled", isEditing);
-		$("#new_channel_button").prop("disabled", isEditing);
-		$(".edit_channel").css("cursor", (isEditing) ? "not-allowed" : "pointer");
-		$("#new_channel_button").css("cursor", (isEditing) ? "not-allowed" : "pointer");
-		//$(".new_channel_pic").dropzone({ url: "/channel_create" });
 	}
 });
 
@@ -70,9 +64,10 @@ var ChannelView = BaseViews.BaseListItemView.extend({
 	},
 
 	render: function() {
+		console.log(this.$el);
 		this.$el.html(this.template({
 			edit: this.edit, 
-			channel: (this.channel) ? this.channel.attributes : null
+			channel: (this.channel) ? this.channel.attributes : null,
 		}));
 	},
 	events: {

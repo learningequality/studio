@@ -1,38 +1,36 @@
-<li class="channel_container container">
-	<div class="profile pull-left text-center">
-		{{#if edit}}
-			<form action="/file-upload" class="dropzone" id="picture-upload">
-			  <div class="fallback">
-				<img class="new_channel_pic" alt="Drag picture here"></img>
-			  </div>
-			</form>
-		{{else}}
-			<img id="channel_pic" alt="No picture found."></img>
-		{{/if}}
-		<a class="delete_channel btn btn-default">
-			<span class="glyphicon glyphicon-trash"></span> 
-			Delete Channel
-		</a>
-	</div>
+<div class="profile pull-left text-center">
 	{{#if edit}}
-		<span class="channel_toggle pull-right glyphicon glyphicon-remove"></span>
-			<input type=text id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}"></input>
-		<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}">{{channel.description}}</textarea>
-		<a class="save_channel btn btn-default"><span class="glyphicon glyphicon-ok"></span>
-			{{#if edit}}Update Channel{{else}}Create Channel{{/if}}
-		</a>
+		<form action="/file-upload" class="dropzone" id="picture-upload">
+		  <div class="fallback">
+			<img class="new_channel_pic" alt="Drag picture here"></img>
+		  </div>
+		</form>
 	{{else}}
-		<a  class="open_channel pull-right" href="{{channel.id}}/edit"">
-			<span class="glyphicon glyphicon-chevron-right"></span>
-		</a>
-		<h4>
-			<span id="channel_name" title="{{channel.name}}">{{channel.name}}</span>
-			<span class="edit_channel glyphicon glyphicon-pencil"></span>
-		</h4>
-		<div class="description">
-			<p id="channel_description" class="wordwrap" title="{{channel.description}}">
-				{{channel.description}}
-			</p>
-		</div>
+		<img id="channel_pic" alt="No picture found."></img>
 	{{/if}}
-</li>
+	<a class="delete_channel btn btn-default">
+		<span class="glyphicon glyphicon-trash"></span> 
+		Delete Channel
+	</a>
+</div>
+{{#if edit}}
+	<span class="channel_toggle pull-right glyphicon glyphicon-remove"></span>
+		<input type=text id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}"></input>
+	<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}">{{channel.description}}</textarea>
+	<a class="save_channel btn btn-default"><span class="glyphicon glyphicon-ok"></span>
+		{{#if edit}}Update Channel{{else}}Create Channel{{/if}}
+	</a>
+{{else}}
+	<a  class="open_channel pull-right" href="{{channel.id}}/edit"">
+		<span class="glyphicon glyphicon-chevron-right"></span>
+	</a>
+	<h4>
+		<span id="channel_name" title="{{channel.name}}">{{channel.name}}</span>
+		<span class="edit_channel glyphicon glyphicon-pencil"></span>
+	</h4>
+	<div class="description">
+		<p id="channel_description" class="wordwrap" title="{{channel.description}}">
+			{{channel.description}}
+		</p>
+	</div>
+{{/if}}

@@ -1,17 +1,33 @@
-<li class="content">
-	{{#if edit}}<input type="checkbox" id="folder_{{cid}}"/>
-	{{else}}<input type="radio" name="{{container}}" id="folder_{{cid}}"/>{{/if}}
-	<label class="folder collapsed {{#unless edit}}open_folder{{/unless}}" for="folder_{{cid}}" title="{{folder.title}}">
-		{{#if edit}}
-			<div class="folder_options pull-right">
-				<div class="options">
+<!-- PARAMETERS -->
+<!-- edit: is editing or previewing -->
+<!-- id: id of content node -->
+<!-- isfolder: content type is a folder -->
+
+{{#if edit}}<input type="checkbox" id="item_{{id}}"/>
+{{else}}<input type="radio" name="{{container}}" id="item_{{id}}"/>{{/if}}
+{{#if isfolder}}
+	<label class="folder collapsed {{#unless edit}}open_folder{{/unless}}" for="folder_{{id}}" title="{{folder.title}}">
+{{else}}
+	<label class="file" for="{{index}}_{{list_index}}" title="{{file.title}}">
+{{/if}}
+	{{#if edit}}
+		<div class="folder_options pull-right">
+			<div class="options">
+				{{#if isfolder}}
 					<span class="edit_folder_button glyphicon glyphicon-pencil" aria-hidden="true"></span>
 					<span class="open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>
-				</div>
+				{{else}}
+					<span class="glyphicon glyphicon-pencil edit_file_button" aria-hidden="true"></span>
+					<span class="glyphicon glyphicon-search preview_button" aria-hidden="true"></span>
+				{{/if}}
 			</div>
-		{{/if}}
-		<h3 class = "title">{{#if folder}}{{folder.title}}{{else}}Folder Name{{/if}}</h3>
-		<p class="description">{{#if folder}}{{folder.description}}{{else}}Description of the folder{{/if}}</p>
-		<a class="filler" title="{{folder.description}}">See More</a>
-	</label>
-</li>
+		</div>
+	{{/if}}
+
+	<h3 class = "title">{{#if node}}{{node.title}}{{else}}Item Name{{/if}}</h3>
+	
+	{{#if isfolder}}
+		<p class="description">{{#if node}}{{node.description}}{{else}}Description of the folder{{/if}}</p>
+		<a class="filler" title="{{node.description}}">See More</a>
+	{{/if}}
+</label>
