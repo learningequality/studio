@@ -1,0 +1,39 @@
+<!-- PARAMETERS -->
+<!-- edit_mode: is editing mode -->
+<!-- allow_edit: allow user to edit values on folders -->
+<!-- isfolder: content type is a folder -->
+
+{{#if edit_mode}}<input type="checkbox" id="item_{{node.id}}"/>
+{{else}}<input type="radio" name="{{container}}" id="item_{{node.id}}"/>{{/if}}
+{{#if isfolder}}
+	<label class="folder collapsed {{#unless edit_mode}}open_folder{{/unless}}" for="folder_{{node.id}}" title="{{node.attributes.title}}">
+{{else}}
+	<label class="file" for="item_{{node.id}}" title="{{node.attributes.title}}">
+{{/if}}
+
+{{#if allow_edit}}
+	<input id="textbox_{{node.id}}" type="text" class="topic_textbox" value="{{node.attributes.title}}" placeholder="Enter Topic Name"/>
+	{{#if isfolder}}
+	<textarea id="textarea_{{node.id}}" class="topic_textarea"  placeholder="Enter Description">{{node.attributes.description}}</textarea>
+	{{/if}}
+	
+	<span class="cancel_edit glyphicon glyphicon-remove pull-right" aria-hidden="true"></span>
+	<span class="submit_edit glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>
+{{else}}
+	<div class="options pull-right">
+		{{#if isfolder}}
+			<span class="edit_folder_button disable-on-edit glyphicon glyphicon-pencil" aria-hidden="true"></span>
+			<span class="open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>
+		{{else}}
+			<span class="glyphicon glyphicon-pencil disable-on-edit edit_file_button" aria-hidden="true"></span>
+			<span class="glyphicon glyphicon-search preview_button" aria-hidden="true"></span>
+		{{/if}}
+	</div>
+	<h3 class = "title">{{#if node}}{{node.attributes.title}}{{else}}Item Name{{/if}}</h3>
+
+	{{#if isfolder}}
+		<p class="description">{{#if node}}{{node.attributes.description}}{{else}}Description of the folder{{/if}}</p>
+		<a class="filler" title="{{node.attributes.description}}">See More</a>
+	{{/if}}
+{{/if}}
+</label>

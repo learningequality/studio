@@ -41,7 +41,7 @@ class TopicTreeViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.TopicTreeSerializer
 
 
-class NodeViewSet(viewsets.ModelViewSet):
+class NodeViewSet(BulkModelViewSet):
     queryset = Node.objects.all()
     serializer_class = serializers.NodeSerializer
 

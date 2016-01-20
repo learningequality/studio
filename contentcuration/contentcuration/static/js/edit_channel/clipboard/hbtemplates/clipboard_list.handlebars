@@ -1,19 +1,30 @@
 <div id="clipboard" class="pull-right">
-	<div class="clipboard_header">
-		<h3>
-			<span class="collapse_clipboard pull-left glyphicon glyphicon-menu-up" aria-hidden="true"></span>
+	{{#if collapsed}}
+		<button class="btn btn-default clipboard-toggler clipboard-button" type="button">
+			<span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
 			Clipboard
-			<a class="btn pull-right btn-link clipboard_add_content">
-				<span class="pull-left glyphicon glyphicon-plus" aria-hidden="true"></span>
-				Add Content
-			</a>
-		</h3>
-	</div>
-	<div id="clipboard_content">
-		<div id = "list" class="list_content">
-			<div id="list_background"></div>
-			<canvas></canvas>
-			<ul class="list-unstyled"></ul>
+			<span class="badge"></span>
+		</button>
+	{{else}}
+		<div id="main-clipboard">
+			<div class="clipboard_header">
+				<h4>
+					<span class="clipboard-toggler glyphicon glyphicon-menu-up" aria-hidden="true"></span>
+					Clipboard
+				</h4>
+			</div>
+			<div id="clipboard_content">
+				<div id = "list" class="list_content">
+					<div id="list_background"></div>
+					<ul class="list-unstyled">
+						{{#each content_list}}
+							<li id="clipboard_item_{{cid}}" class="clipboard_item"></li>
+						{{else}}
+							<li><em>No items found.</em></li>
+						{{/each}}
+					</ul>
+				</div>
+			</div>
 		</div>
-	</div>
+	{{/if}}
 </div>

@@ -1,0 +1,38 @@
+<div id="metadata" class="container">
+	<h3 class="header text-center">
+		<span class="glyphicon glyphicon-pencil pull-left" aria-hidden="true"></span>
+		Editing Content Details
+		<span class="glyphicon glyphicon-remove pull-right close_uploader" aria-hidden="true"></span>
+	</h3>
+	<div class="line">&nbsp</div>
+	<div class="section pull-left">
+		<ul class="list-unstyled" id="uploaded_list">
+		{{#each node_list}}
+			<li id="item_{{cid}}" class="uploaded"><li>
+		{{else}}
+			<li><h5>&nbsp;No items listed</h5></li>
+		{{/each}}
+		</ul>
+		<a class="btn bt-default" id="add_more_button">Add more to Channel</a>
+	</div>
+	
+	<div class="section pull-left input_area">
+		<form>
+			<h4>Name<label class="required">*</label></h4> <input type="text" id="input_title" class="disable-on-edit upload_input" required/>
+			<h4>Description<label class="required">*</label></h4> <textarea id="input_description" class="disable-on-edit upload_input" required/></textarea>
+			<h4>Keywords (optional)</h4> <input type="text" id="tag_box" class="upload_input" placeholder="Press 'Enter' to add tag"/>
+			<div class="container-fluid">
+				<div class="row" id="tag_area">
+				</div>
+			</div>
+		</form>
+	</div>
+
+	<div class="section pull-left">
+		<h5>Preview</h5>
+		<iframe id="preview_window"></iframe>
+		<br/>
+		<a class="btn bt-default" id="upload_save_button">Save</a>
+		<a class="btn bt-default" id="upload_save_finish_button">Save and Finish</a>
+	</div>
+</div>

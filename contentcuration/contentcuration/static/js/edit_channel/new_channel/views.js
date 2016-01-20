@@ -9,19 +9,20 @@ var BaseViews = require("./../views");
 	
 var ManageChannelsView  = BaseListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
-	item_view: "ChannelView", // TODO: Use to indicate how to save items on list
+	item_view: "channel", // TODO: Use to indicate how to save items on list
 
 	initialize: function(options) {
-		_.bindAll(this, 'new_channel', 'load_channels');
-		this.channels = options.channels;
+		_.bindAll(this, 'new_channel');
+		this.collection = options.channels;
 		this.render();
-		this.listenTo(this.channels, "sync", this.render);
-        this.listenTo(this.channels, "remove", this.render);
+		this.listenTo(this.collection, "sync", this.render);
+        this.listenTo(this.collection, "remove", this.render);
 	},
 	render: function() {
 		this.set_editing(false);
-		this.$el.html(this.template({channel_list: this.channels.toJSON()}));
-		this.load_channels(this.items, this);
+		console.log("collection", this.collection.toJSON());
+		this.$el.html(this.template({channel_list: this.collection.toJSON()}));
+		this.load_content();
 	},
 	events: {
 		'click #new_channel_button' : 'new_channel',
@@ -32,42 +33,42 @@ var ManageChannelsView  = BaseListView.extend({
 
 		var new_channel = new ChannelView({
 			edit:true,
-			container: this
+			containing_list_view: this
 		});
 		$("#channel_list").append("<li class='channel_container container' id='new'></li>")
 		$("#new").append(new_channel.el);
 	},
-
-	load_channels: function(list, container){
-		/* TODO: need to filter out channels according to user */
-		this.channels.forEach(function(entry){
+	load_content:function(){
+		var containing_list_view = this;
+		this.collection.forEach(function(entry){
 			var view = new ChannelView({
-				el : "#channel_list #" + entry.id,
-				channel: entry, 
+				el : $("#channel_list #" + entry.id),
+				model: entry, 
 				edit: false,
-				container: container,
+				containing_list_view: containing_list_view,
+				channel_list: containing_list_view.collection.toJSON()
 			});
-			$("#channel_list").append(view.el);
-			list.push(view);
+			containing_list_view.views.push(view);
 		});
 	}
 });
 
+/*
+	edit: determines whether to load channel or editor
+*/
 var ChannelView = BaseViews.BaseListItemView.extend({
 	template: require("./hbtemplates/channel_container.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'edit_channel','delete_channel','delete_view', 'toggle_channel','save_channel');
-		this.channel = options.channel;
+		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel');
 		this.edit = options.edit;
-		this.container = options.container;
+		this.containing_list_view = options.containing_list_view;
 		this.render();
 	},
 
 	render: function() {
-		console.log(this.$el);
 		this.$el.html(this.template({
 			edit: this.edit, 
-			channel: (this.channel) ? this.channel.attributes : null,
+			channel: (this.model) ? this.model.attributes : null,
 		}));
 	},
 	events: {
@@ -78,52 +79,34 @@ var ChannelView = BaseViews.BaseListItemView.extend({
 	},
 
 	edit_channel: function(event){
-		this.container.set_editing(true);
+		this.containing_list_view.set_editing(true);
 		this.edit = true;
 		this.render();
 	},
 
 	delete_channel: function(event){
 		if(confirm("Are you sure you want to delete this channel?")){
-			window.channel_router.delete_channel(this.channel);
-			if($("#channel_list li").length == 1)
-				$(".default-item").css("visibility", "visible");
-			this.delete_view();
+			this.delete(true);
 		}
 	},
-	delete_view: function(){
-		this.undelegateEvents();
-		this.unbind();		
-		this.remove();
-	},
 	toggle_channel: function(event){
-		this.container.set_editing(false);
-		if(this.channel){
+		this.containing_list_view.set_editing(false);
+		if(this.model){
 			this.edit = false;
 			this.render();
 		}else{
 			this.delete_view();
-			window.channel_manager_view.render();
 		}
 	},
 	save_channel: function(event){
-		this.container.set_editing(false);
+		this.containing_list_view.set_editing(false);
 		var title = ($("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : $("#new_channel_name").val().trim();
-		//title = (title == "")? "[Untitled Channel]" : title;
 		var description = ($("#new_channel_description").val() == "") ? " " : $("#new_channel_description").val();
-
-		var channel = {name: title, description: description};
-		
-		window.channel_router.save_channel(channel, this.channel);
-		
+		var data = {name: title, description: description};
+		this.save(data);
 	}
 });
-/*
-function save(model, collection){
-	model.save();
-	collection.save();
-}
-*/
+
 module.exports = {
 	ManageChannelsView : ManageChannelsView 
 }

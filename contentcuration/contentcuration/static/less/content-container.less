@@ -2,25 +2,22 @@
 
 @sidebar-width: 38px;
 @container-width: 360px;
+@container-height: 80vh; 
+@container-min-height:500px;
+@container-border-color: white;
+
+@folder-gap-width: 35px;
+@folder-color: white;
+@folder-height: 120px; 
+@title-size: 17px;
+@highlighted-file: #B6B6B7;
 
 #container-wrapper{
 	overflow:hidden; overflow-x:auto;
 	padding-top: 10px;
 }
+
 #edit, #preview{
-	@folder-gap-width: 35px;
-	@container-shadow: #BDBDBC;
-	@folder-color: white;
-	@folder-shadow: #8D8F90;
-	@highlighted-file: #B6B6B7;
-	
-	@container-height: 80vh; 
-
-	@container-min-height:500px;
-	@folder-height: 120px; 
-	@title-size: 22px;
-	@container-border-color: white;
-
 	::-webkit-scrollbar {
 		width: 12px;
 		margin-left:-100px;
@@ -40,16 +37,18 @@
 
 	.content-container{
 		*{padding:0;margin:0;}
+		padding:0;
+		margin:0;
 		
 		width: @container-width + @folder-gap-width;
 		display:inline-block;
-		margin-right: -4px;
+		margin-right: -5px;
 		background-color:@body-background;
 		h2{
 			color:@container-border-color;
-			font-size: @title-size;
+			font-size: @title-size * 1.5;
 			padding-bottom: 10px;
-			height: 2 * @title-size;
+			height: 3 * @title-size;
 		}
 		.container-interior{
 			position:absolute;
@@ -58,20 +57,30 @@
 			width:@container-width;
 			border: 4px solid @container-border-color;
 			canvas{
-				/*position:absolute;*/
+				
 				height:100%;
 				width: @sidebar-width;
 			}
 		}
 		.content-list{
-			width:100%;
-			height:@container-height;
+			width: @container-width + @folder-gap-width;
+			height:@container-height * 0.95;
+			min-height: @container-min-height * 0.95; 
 			overflow-y: auto;
 			overflow-x:hidden;
-			margin-left:none;
-			margin-top: 10px;
-			padding: 5px;
-			input[type="radio"]{display:none;}
+			position:relative;
+			padding:0;
+			margin:0;
+			margin-top:5px;
+			z-index:150;
+			padding-left: @sidebar-width / 4;
+
+			input[type="radio"]{
+				visibility:hidden;
+				width:@sidebar-width / 1.5;
+			}
+			
+
 			.default-item{
 				font-style:italic;
 				font-size: 18px;
@@ -80,6 +89,60 @@
 			}
 			li{
 				margin-bottom: 10px;
+				width: 100%;
+
+				label{
+					h3, h4, p{color : black;}
+					vertical-align: middle;
+					height: @folder-height;
+					width: @container-width - @sidebar-width - 20px;
+					background-color: @folder-color;
+					cursor:pointer;
+
+					padding: 5px;
+					margin-left:10px;
+					
+					.glyphicon{
+						font-size:@title-size * 1.2;
+						margin-left:10px;
+					}
+
+					.filler, .minimize{
+						font-weight:bold;
+						font-style:italic;
+						text-decoration:none;
+					}
+
+					h4{
+						font-size: @title-size;
+						padding:10px;
+						width: @container-width - @sidebar-width - 60px;
+					}
+					h3{
+						font-size: @title-size;
+						padding-left: 10px;
+						padding-bottom:10px;
+						font-weight: bold;
+						width: @container-width - @sidebar-width - 60px;
+					}
+					p{
+						font-size:14px;
+						padding-left:10px;
+						word-wrap: break-word;
+						height: @folder-height - @title-size;
+						a{text-decoration:none; color:black;}
+						font-weight: normal;
+						width: @container-width - @sidebar-width - 60px;
+					}
+				}
+
+				
+
+				input[type=checkbox]:checked + .file,
+				input[type=radio]:checked + .file,
+				.file:hover{
+					background-color: @highlighted-file;
+				}
 			}
 			*[draggable=true] {
 			  -moz-user-select:none;
@@ -124,9 +187,40 @@
 			color:black;
 			border:2px solid white;
 			font-size: 14px;
-			.glyphicon{
-				font-size:17px; 
-				margin-right:5px;
+		}
+
+		input[type=checkbox]{
+			display:inline-block;
+			width:24px;
+			height:24px;
+			vertical-align:middle;
+			margin-right:2px;
+		}
+		label{
+			.options{
+				height:@folder-height;
+				width:40px;
+				.glyphicon{
+					display:inline-block;
+				}
+				.disable-on-edit{
+					visibility:hidden;
+				}
+			}
+
+			.topic_textbox{
+				width:95%;
+				font-size: @title-size;
+			}
+			.topic_textarea{
+				width:95%;
+				resize:none;
+			}
+		}
+
+		label :hover{
+			.disable-on-edit{
+				visibility:visible;
 			}
 		}
 	}
@@ -138,14 +232,13 @@
 	
 	h1{font-size:20px;margin-bottom:20px;color:white;}
 	.content-container{
+		margin-right:-6px;
 		canvas{background-color: @preview-container-color;}
+		.glyphicon{
+			display:none;
+		}
 	}
 	.content-list{
 		padding-left: 40px;
-		
-		label{
-			/*width:@container-width - @sidebar-width - 28px;*/
-		}
-
 	}
 }

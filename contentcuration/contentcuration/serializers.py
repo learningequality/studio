@@ -21,7 +21,7 @@ class NodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
         fields = ('title', 'published', 'deleted', 'id', 'description', 'published', 
-                  'deleted', 'sort_order', 'license_owner', 'license', 'kind', 'children')
+                  'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent')
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
