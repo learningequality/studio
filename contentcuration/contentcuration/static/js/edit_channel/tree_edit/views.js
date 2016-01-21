@@ -207,7 +207,12 @@ var ContentView = BaseViews.BaseListItemView.extend({
 			edit_mode: this.edit_mode,
 			allow_edit: this.allow_edit
 		}));
-		this.containing_list_view.set_editing(this.allow_edit);
+		/*
+		if(this.$el.find("p").height() > 120){
+			console.log("this is greater", this);
+			this.$el.find(".filler").css("display", "inline");
+		}
+		this.containing_list_view.set_editing(this.allow_edit && this.edit_mode);
 		/* TODO: Dragging and Dropping */
 		//if(this.edit_mode) handleDrag(this);
 		//this.$el.data("content", this);
@@ -226,24 +231,24 @@ var ContentView = BaseViews.BaseListItemView.extend({
 		'click .filler' : 'expand_or_collapse_folder',
 		'click .cancel_edit' : 'cancel_edit',
 		'click .submit_edit' : 'submit_edit',
-		'click .preview_button': 'preview_node'
+		'click .preview_button': 'preview_node',
 	},
 
 	expand_or_collapse_folder: function(event){
-		/*
 		event.preventDefault();
 		event.stopPropagation();
 		if(this.$(".filler").parent("label").hasClass("collapsed")){
 			this.$(".filler").parent("label").removeClass("collapsed").addClass("expanded");
+			console.log("expanding");
 			this.$(".description").text(this.$(".filler").attr("title"));
 			this.$(".filler").text("See Less");
 		}
 		else {
+			console.log("collapsing");
 			this.$(".filler").parent("label").removeClass("expanded").addClass("collapsed");
 			this.$('.char_counter').text(this.$(".description").html(), 100, this.$(".filler"));
 			this.$(".filler").text("See More");
 		}
-		*/
 	},
 	open_folder:function(event){
 		event.preventDefault();
@@ -258,7 +263,7 @@ var ContentView = BaseViews.BaseListItemView.extend({
 		this.containing_list_view.add_container(this.model);
 	},
 	edit_folder: function(event){
-		this.allow_edit = true;
+		this.allow_edit = this.edit_mode;
 		//this.containing_list_view.set_editing(this.allow_edit);
 		this.render();
 		/*
@@ -276,7 +281,7 @@ var ContentView = BaseViews.BaseListItemView.extend({
 	submit_edit: function(event){
 		var title = ($("#textbox_" + this.model.id).val().trim() == "")? "Untitled" : $("#textbox_" + this.model.id).val().trim();
 		var description = ($("#textarea_" + this.model.id).val().trim() == "")? " " : $("#textarea_" + this.model.id).val().trim();
-		this.save({title:title, description:description});
+		this.save({title:title, description:description}, true);
 
 		this.allow_edit = false;
 		

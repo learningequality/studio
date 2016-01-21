@@ -35,6 +35,7 @@
 		-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
 	}
 
+
 	.content-container{
 		*{padding:0;margin:0;}
 		padding:0;
@@ -57,7 +58,6 @@
 			width:@container-width;
 			border: 4px solid @container-border-color;
 			canvas{
-				
 				height:100%;
 				width: @sidebar-width;
 			}
@@ -134,9 +134,10 @@
 						font-weight: normal;
 						width: @container-width - @sidebar-width - 60px;
 					}
+					.filler{
+						display:none;
+					}
 				}
-
-				
 
 				input[type=checkbox]:checked + .file,
 				input[type=radio]:checked + .file,
@@ -240,5 +241,8 @@
 	}
 	.content-list{
 		padding-left: 40px;
+		.glyphicon{
+			visibility:hidden;
+		}
 	}
 }

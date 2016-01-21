@@ -118,7 +118,7 @@ var BaseListItemView = BaseView.extend({
 		if(delete_view) this.delete_view();
 	},
 	
-	save: function(data){
+	save: function(data, disable_render){
 		/* TODO: Implement funtion to allow saving one item */
 		if(!this.model){
 			if(!data.title)
@@ -130,7 +130,7 @@ var BaseListItemView = BaseView.extend({
 			this.model.set(data);
 			this.model.save();
 		}
-		this.containing_list_view.render();
+		if(!disable_render) this.containing_list_view.render();
 	},
 	set_editing: function(edit_mode_on){
 		this.containing_list_view.set_editing(edit_mode_on);
@@ -140,6 +140,16 @@ var BaseListItemView = BaseView.extend({
 	},
 	dequeue: function(){
 		this.containing_list_view.dequeue(this.model);
+	},
+	
+	trimText:function(string, limit, el){
+		if(string.trim().length - 4 > limit){
+			string = string.trim().substring(0, limit - 4) + "...";
+			if(el) el.show();
+		}
+		else
+			if(el) el.hide();
+		return string;
 	}
 
 	/* TODO: use to expand height of content item
@@ -179,14 +189,6 @@ var BaseEditor = BaseView.extend({
 		else 
 			this.$(".char_counter").css("color", "black");
 	},
-	trimText:function(string, limit, el){
-		if(string.trim().length - 4 > limit){
-			string = string.trim().substring(0, limit - 4) + "...";
-			if(el) el.show();
-		}
-		else
-			if(el) el.hide();
-		return string;
-	}
+	
 });
 */
