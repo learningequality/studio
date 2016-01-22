@@ -1,8 +1,9 @@
 <div id={{#if edit}}"edit"{{else}}"preview"{{/if}} class="container-fluid">
 	{{#if edit}}
-	<nav id="button_bar" class="col-m-2">
-		<a class="btn btn-default copy_button disable-on-edit">Copy</a>
-		<a class="btn btn-default delete_button disable-on-edit">Delete</a>
+	<nav id="button_bar">
+		<a class="btn btn-default copy_button disable-on-edit">Copy Selected</a>
+		<a class="btn btn-default delete_button disable-on-edit">Delete Selected</a>
+		<a class="btn btn-default edit_button disable-on-edit">Edit Selected</a>
 	</nav>
 	{{else}}
 		<h1>Select content to preview.</h1>

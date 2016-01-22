@@ -17,7 +17,6 @@ var PreviewerView = Backbone.View.extend({
 		//$(".clipboard_item").css("border", "1px solid #8DA9DB");
 		//$(this.file.selector + " label").css("border", "4px solid #8098D2");
 		
-		
 		var content_view;
 		var file_type = "";//getExtension(this.model.attributes.content_file.name);
 		switch(file_type){
@@ -43,17 +42,20 @@ var PreviewerView = Backbone.View.extend({
 				content_view =  require("./hbtemplates/previewer_filler.handlebars");
 		}
 		$("#preview_window").append(content_view({file: this.model}));
+		/*
 		var parent_data = this.model;
 		while(parent_data.attributes.parent){
 			parent_data = parent_data.attributes.parent;
 			$(".breadcrumb").prepend("<li>" + parent_data.attributes.title + "</li>");
 		}
+		*/
 		$(".details").css("display", "none");
 		$("#previewer").css("margin-right", - $("#previewer").outerWidth());
 		$("#previewer").animate({
 			marginRight: parseInt($("#previewer").css('marginRight'),10) == 0 ?
 				$("#previewer").outerWidth() : 0
 		}); 
+		$('#preview_window').attr('src', "https://www.youtube.com/embed/jihhW_VnHPk?autoplay=1");
     },
 		
 	events: {

@@ -3,6 +3,7 @@ var _ = require("underscore");
 require("clipboard.less");
 var BaseViews = require("./../views");
 var Models = require("./../models");
+var DragHelper = require("./../tree_edit/views");
 
 var PreviewerViews = require("edit_channel/previewer/views");
 
@@ -11,7 +12,7 @@ var ClipboardListView = BaseViews.BaseListView.extend({
 	template: require("./hbtemplates/clipboard_list.handlebars"),
 	item_view:"clipboard",
 	initialize: function(options) {
-		_.bindAll(this, 'add_content', 'toggle_clipboard');
+		_.bindAll(this, 'toggle_clipboard');
 		this.collection = new Models.NodeCollection();
 		this.collapsed = true;
 		this.render();
@@ -21,11 +22,10 @@ var ClipboardListView = BaseViews.BaseListView.extend({
 			collapsed : this.collapsed,
 			content_list : this.collection.toJSON()
 		}));
-
+		this.$el.find(".badge").html(this.collection.length);
 		this.load_content();
 	},
 	events: {
-		'click .clipboard_add_content': 'add_content',
 		'click .clipboard-toggler' : 'toggle_clipboard'
 	},
 	toggle_clipboard: function(){
@@ -34,40 +34,44 @@ var ClipboardListView = BaseViews.BaseListView.extend({
 		this.render();
 		if(!this.collapsed) $("#clipboard").slideDown();
 	},
-	add_content: function(event){
-		new ClipboardAddContentView({
-			el: $("#clipboard-area"),
-		});
-	},
 	load_content:function(){
 		var containing_list_view = this;
 		this.collection.forEach(function(entry){
 			var clipboard_item_view = new ClipboardListItemView({
 				containing_list_view: containing_list_view,
-				el: containing_list_view.$el.find("#" + entry.cid),
+				el: containing_list_view.$el.find("#clipboard_item_" + entry.cid),
 				model: entry
 			});
 			containing_list_view.views.push(clipboard_item_view);
 		});
 	},
-	add_to_clipboard:function(model){
-		this.collection.add(model);
+	add_to_clipboard:function(models){
+		var collection = this.collection;
+		models.forEach(function(entry){
+			collection.add(entry);
+		});
 		this.render();
 	},
 });
 
 /* Loaded when user clicks clipboard button below navigation bar */
 var ClipboardListItemView = BaseViews.BaseListItemView.extend({
-	template: require("./hbtemplates/clipboard_list.handlebars"),
+	template: require("./hbtemplates/clipboard_list_item.handlebars"),
 
-	initialize: function() {
+	initialize: function(options) {
 		//_.bindAll(this);
 		//this.listenTo(clipboard_list_items, "change:clipboard_list_items.length", this.render);
+		this.containing_list_view = options.containing_list_view;
 		this.render();
 		$("#clipboard").slideDown();
 	},
 	render: function() {
-		this.$el.html(this.template());
+		this.$el.html(this.template({
+			node:this.model,
+			isfolder: this.model.attributes.kind.toLowerCase() == "topic",
+		}));
+		this.$el.data("data", this);
+		DragHelper.handleDrag(this);
 		//loadListItems(clipboard_list_items, ".list_content ul", this.model, {selected: true, list: true, meta: false});
 	},
 });

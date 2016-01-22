@@ -73,9 +73,11 @@ ChannelEditRouter  = Backbone.Router.extend({
 	trash_page : function(channel){
 		var topictree = new Models.TopicTreeModelCollection(window.topic_tree);
 		var TrashViews = require("edit_channel/trash/views");
+		var root = new Models.NodeModel(window.root);
 		var trash_page_view = new TrashViews.TrashView({
 			el: $("#main-content-area"),
-			channel: topictree
+			channel: topictree,
+			root: root
 		});
 		
 	},
@@ -109,8 +111,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 
 	delete_channel: function (channel){
 		var model = this.channelCollection.get(channel.get("id"));
-		//var topictreemodel = 
-		//var rootnodemodel = 
 		model.destroy();
 		/* TODO: DELETE EVERYTHING UNDER THIS CHANNEL*/
 	},

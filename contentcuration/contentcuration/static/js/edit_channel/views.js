@@ -9,7 +9,12 @@ var BaseView = Backbone.View.extend({
 		this.undelegateEvents();
 		this.unbind();		
 		this.remove();
-	}
+	},
+	set_editing: function(edit_mode_on){
+		$(".disable-on-edit").prop("disabled", edit_mode_on);
+		$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
+		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
+	},
 });
 
 BaseListView = BaseView.extend({
@@ -17,8 +22,9 @@ BaseListView = BaseView.extend({
 	collection : null,		//Collection to be used for data
 	allow_edit: false,
 	item_view: null, // Use to determine how to save, delete, update files
-	model_queue: [], //Used to keep track of which models have been edited but not saved
+	model_queue: [], // Used to keep track of temporary model data
 	save_all: function(){
+		console.log("save with",this.views);
 		this.views.forEach(function(entry){
 			entry.save();
 		});
@@ -32,18 +38,30 @@ BaseListView = BaseView.extend({
 		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
 	},
 	enqueue: function(model){
-		this.edited.push(model);
+		this.model_queue.push(model);
 	},
 	save_queued:function(){
 		this.model_queue.forEach(function(entry){
 			entry.save();
 		});
-	},
-	clear_queue: function(){
 		this.model_queue = [];
 	},
 	dequeue: function(model){
 		this.model_queue.remove(model);
+	},
+	reset: function(){
+		this.views.forEach(function(entry){
+			entry.model.unset();
+		});
+	}
+	/*
+	retrieve_selected:function(el){
+		var data_returned = [];
+		var list = el.find(":checked");
+		list.forEach(function(entry){
+			data_returned.push(entry.data("data"));
+		});
+		return data_returned;
 	},
 	/* TODO: Figure out way to abstract loading content 
 	load_content:function(){
@@ -108,18 +126,31 @@ BaseListView = BaseView.extend({
 var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
 	delete:function(delete_view){
-		if(!this.model.kind) { 
+		if(!this.model.attributes.kind) { 
 			/* TODO: destroy all nodes from channel */
-
+			this.model.destroy();
 		}else{
-
+			this.delete_recurse(this.model);
 		}
-		this.model.destroy();
+		
 		if(delete_view) this.delete_view();
 	},
+	delete_recurse: function (node){
+
+		var view = this;
+		/*
+		node.attributes.children.forEach(function(entry){
+
+			view.delete_recurse(entry);
+		});
+		*/
+		node.set({"deleted" : true}, true);
+		node.save();
+	},	
 	
 	save: function(data, disable_render){
 		/* TODO: Implement funtion to allow saving one item */
+		console.log("data saved", this.model);
 		if(!this.model){
 			if(!data.title)
 				window.channel_router.create_channel(data);
@@ -127,7 +158,6 @@ var BaseListItemView = BaseView.extend({
 				window.channel_router.create_node(data);
 		}
 		else{
-			this.model.set(data);
 			this.model.save();
 		}
 		if(!disable_render) this.containing_list_view.render();
@@ -142,6 +172,7 @@ var BaseListItemView = BaseView.extend({
 		this.containing_list_view.dequeue(this.model);
 	},
 	
+	/*
 	trimText:function(string, limit, el){
 		if(string.trim().length - 4 > limit){
 			string = string.trim().substring(0, limit - 4) + "...";

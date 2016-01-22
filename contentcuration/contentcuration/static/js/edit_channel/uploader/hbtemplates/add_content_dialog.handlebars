@@ -1,7 +1,7 @@
 <div id="uploader" class="container text-center">
 	<h3 class="header">
 		<span class="glyphicon glyphicon-plus-sign pull-left" aria-hidden="true"></span>
-		Adding to "{{folder.title}}"
+		Adding to "{{folder.attributes.title}}"
 		<span class="glyphicon glyphicon-remove pull-right close_uploader" aria-hidden="true"></span>
 	</h3>
 	<div class="line">&nbsp</div>
@@ -11,7 +11,8 @@
 	 		<h1><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></h1>
 	 		Create Topic
 	 	</div>
-	 	<div class="col-xs-4 create_option">
+	 	<div class="col-xs-4 create_option" id="upload_file">
+
 	 		<h1><span class="glyphicon glyphicon-duplicate" aria-hidden="true"></span></h1>
 	 		Upload
 	 	</div>
@@ -35,9 +36,9 @@
 
 	 <h5>Add from a channel I'm subscribed to</h4>
 	 <select>
-	 	<option>Example Option #1</option>
-	 	<option>Example Option #2</option>
+	 	<option>Khan Academy</option>
 	 </select>
 
 	 <a class="btn btn-default edit_metadata">Edit Metadata</a>
+	 	<input type='file' id="file-dialog"/>
 </div>

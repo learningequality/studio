@@ -108,6 +108,7 @@
 
 	iframe{
 		background-color: @uploader-preview-bg-color;
+		height: 60%;
 	}
 
 	.uploaded{
@@ -141,6 +142,11 @@
 	.required{
 		margin-left:5px;
 		color:red;
+		span{
+			font-style:italic;
+			font-size: 8pt;
+			display:none;
+		}
 	}
 
 	.upload_input{
@@ -150,5 +156,9 @@
 	textarea{
 		resize:none;
 		height:@uploader-list-height;
+	}
+
+	input[type=file]{
+		display:none;
 	}
 }	

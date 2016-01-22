@@ -20,7 +20,6 @@ var ManageChannelsView  = BaseListView.extend({
 	},
 	render: function() {
 		this.set_editing(false);
-		console.log("collection", this.collection.toJSON());
 		this.$el.html(this.template({channel_list: this.collection.toJSON()}));
 		this.load_content();
 	},

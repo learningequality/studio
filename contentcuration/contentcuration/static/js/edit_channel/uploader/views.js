@@ -8,33 +8,37 @@ var AddContentView = BaseViews.BaseListView.extend({
 	template: require("./hbtemplates/add_content_dialog.handlebars"),
 	item_view:"adding_content",
 	initialize: function(options) {
-		_.bindAll(this, 'add_topic','close_uploader', 'edit_metadata');	
+		_.bindAll(this, 'add_topic','close_uploader', 'edit_metadata','upload_file','add_file');	
 		this.collection = options.collection;
 		this.root = options.root;
-		this.containing_list_view = options.containing_list_view;
+		this.parent_view = options.parent_view;
 		this.render();
 	},
 	render: function() {
 		this.$el.html(this.template({
-			folder: root,
+			folder: this.root,
 			node_list: this.collection.toJSON()
 		}));
-		this.load_content(this);
+		this.load_content();
 	},
 	events: {
 		'click #create_topic':'add_topic',
 		'click .close_uploader' : 'close_uploader',
 		'click .edit_metadata' : 'edit_metadata',
+		'click #upload_file' : 'upload_file',
+		'change input:file' : 'add_file'
 	},
 
-	load_content:function(containing_list_view){
+	load_content:function(){
+		var containing_list_view = this;
 		/* TODO: Use if re-rendering previously selected items*/
 		this.collection.forEach(function(entry){
 			var node_view = new NodeListItem({
 				edit: false,
 				containing_list_view: containing_list_view,
 				el: containing_list_view.$el.find("#" + entry.cid),
-				model: entry
+				model: entry,
+				root: this.root
 			});
 			containing_list_view.views.push(node_view);
 		});
@@ -46,10 +50,11 @@ var AddContentView = BaseViews.BaseListView.extend({
 			edit: true,
 			containing_list_view: this,
 			el: this.$el.find("#new"),
-			model: topic
+			model: topic,
+			root: this.root,
 		});
-		console.log("adding", this.collection);
 		this.views.push(item_view);
+
 	},
 	close_uploader: function(){
 		this.delete_view();
@@ -57,52 +62,73 @@ var AddContentView = BaseViews.BaseListView.extend({
 	edit_metadata: function(){
 		var metadata_view = new EditMetadataView({
 			collection: this.collection,
-			containing_list_view: this.containing_list_view,
+			parent_view: this.parent_view,
 			el: this.$el,
-			root: this.root
+			root: this.root,
+			allow_add: true
 		});
 		this.undelegateEvents();
 		this.unbind();	
 	},
-
-	
+	upload_file:function(){
+		$("#file-dialog").trigger('click');
+	},
+	add_file:function(){
+		$("#upload_content_add_list").append("<div id='new'></div>");
+		var file = this.collection.add({
+			title:"Multiplying Decimals",
+			kind:"video"
+		});
+		var item_view = new NodeListItem({
+			edit: false,
+			containing_list_view: this,
+			el: this.$el.find("#new"),
+			model: file,
+			root: this.root,
+		});
+		this.views.push(item_view);
+	}
 });
 
 var EditMetadataView = BaseViews.BaseListView.extend({
 	template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
 	disable: false,
 	current_node: null,
-	unsaved_nodes: false,
 	item_view:"uploading_content",
 	initialize: function(options) {
-		_.bindAll(this, 'close_uploader', "save_node", 'check_item',
+		_.bindAll(this, 'close_uploader', "save_nodes", 'check_item',
 						'add_tag','save_and_finish','add_more','set_edited');	
-		this.containing_list_view = options.containing_list_view;
+		this.parent_view = options.parent_view;
 		this.collection = options.collection;
+		this.allow_add = options.allow_add;
 		this.root = options.root;
 		this.render();
+		this.parent_view.set_editing(true);
+		console.log("curr  coll", this.collection);
 	},
 	render: function() {
 		this.$el.html(this.template({
-			folder: root,
+			folder: this.root,
 			node_list: this.collection.toJSON(),
+			allow_add: this.allow_add
 		}));
 		this.load_content();
 	},
 	events: {
 		'click .close_uploader' : 'close_uploader',
-		'click #upload_save_button' : 'save_node',
+		'click #upload_save_button' : 'save_nodes',
 		'click #upload_save_finish_button' : 'save_and_finish',
 		'click #add_more_button' : 'add_more',
 		'click #uploader' : 'finish_editing',
 		'click :checkbox' : 'check_item',
 		'keypress #tag_box' : 'add_tag',
-		'keypress .upload_input' : 'set_edited'
+		'keyup .upload_input' : 'set_edited'
 	},
 
 	load_content:function(){
 		var containing_list_view = this;
-		var root = this.root;
+		var root = (this.allow_add)? this.root :null;
+		this.views = [];
 		this.collection.forEach(function(entry){
 			var node_view = new UploadedItem({
 				model: entry,
@@ -112,33 +138,54 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			});
 			containing_list_view.views.push(node_view);
 		});
+		console.log("curr  coll", this.collection);
 	},
 
 	close_uploader: function(){
-		if(this.model_queue.length > 0 && confirm("Unsaved Metadata Detected! Exiting now will"
+		if(this.model_queue.length == 0 || confirm("Unsaved Metadata Detected! Exiting now will"
 			+ " undo any new changes. \n\nAre you sure you want to exit?")){
+			this.parent_view.render();
+			this.parent_view.set_editing(false);
 			this.delete_view();
+		}else{
+			this.reset();
 		}
 	},
-	save_node: function(event){
+	save_nodes: function(){
 		/* TODO :fix to save multiple nodes at a time */
 		//this.current_view.save_node();
+		var collection = this.parent_view.collection;
+		this.views.forEach(function(entry){
+			collection.add(entry.model);
+			entry.set_edited(false);
+		});
+		//console.log("colle", this.parent_view.collection);
 		this.save_all();
 	},
-	save_and_finish: function(event){
-		//this.current_view.save_node();
+	save_and_finish: function(){
+		var collection = this.parent_view.collection;
+		this.views.forEach(function(entry){
+			collection.add(entry.model);
+		});
 		this.save_all();
+		this.parent_view.set_editing(false);
+		this.parent_view.render();
 		this.delete_view();
 	},
 	add_more:function(event){
-		var content_view = new AddContentView({
-			collection: this.collection,
-			containing_list_view: this.containing_list_view,
-			el: this.$el,
-			root: this.root
-		});
-		this.undelegateEvents();
-		this.unbind();	
+		if(this.model_queue.length == 0 || confirm("Unsaved Metadata Detected! Exiting now will"
+			+ " undo any new changes. \n\nAre you sure you want to exit?")){
+			var content_view = new AddContentView({
+				collection: this.collection,
+				parent_view: this.parent_view,
+				el: this.$el,
+				root: (this.allow_add)? this.root : null
+			});
+			this.undelegateEvents();
+			this.unbind();	
+		}else{
+			this.reset();
+		}
 	},
 	set_current_node:function(view){
 		/* TODO implement once allow multi file editing 
@@ -146,22 +193,42 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			this.current_node.set_edited(true);
 			to_save.push(this.current_node);
 		}*/
-		this.current_node = this.collection.get({cid: view.model.cid});
-		this.current_view = view;
+		$("#title_error").css("display", (this.current_view && $("#input_title").val().trim() == "")? "inline" : "none");
+		$("#description_error").css("display", (this.current_view && $("#input_description").val().trim() == "")? "inline" : "none");
+		if(!this.current_view || ($("#input_title").val().trim() != "" && $("#input_description").val().trim() !="")){
+			if(this.current_view){
+				if(this.allow_add)
+					this.current_view.set_node();
+				this.current_view.render();
+				this.current_view.$el.css("background-color", "transparent");
+			}
 
-		if(!this.disable){
-			$("#input_title").val(this.current_node.attributes.title);
-			$("#input_description").val(this.current_node.attributes.description);
+			this.current_node = this.collection.get({cid: view.model.cid});
+			this.current_view = view;
+
+			if(this.current_node.attributes.kind == "video"){
+				$('#preview_window').attr('src', "https://www.youtube.com/embed/jihhW_VnHPk?autoplay=1");
+			}else{
+				$('#preview_window').attr('src', "");
+			}
+
+			this.current_view.$el.css("background-color", "#E6E6E6");
+
+			if(!this.disable){
+				this.parent_view.set_editing(false);
+				$("#input_title").val(this.current_node.attributes.title);
+				$("#input_description").val(this.current_node.attributes.description);
+			}			
 		}
 	},
 	check_item: function(){
 		this.disable = $("#uploaded_list").find(":checked").length > 1;
-		this.containing_list_view.set_editing(this.disable);
+		this.parent_view.set_editing(this.disable);
 		$("#input_title").val((this.disable || !this.current_node)? " " : this.current_node.attributes.title);
 		$("#input_description").val((this.disable || !this.current_node)? " " : this.current_node.attributes.description);
 
 		if(this.disable) {
-			$(".upload_input").addClass("gray-out");
+			$(".disable-on-edit").addClass("gray-out");
 			//TODO: Clear tagging area $("#tag_area").html("");
 		}
 		else 
@@ -173,11 +240,11 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			$("#tag_area").append("<div class='col-xs-4 tag'>" + $("#tag_box").val().trim() + "</div>");
 			$("#tag_box").val("");
 		}
-		
 	},
 	set_edited:function(event){
-		this.enqueue();
+		this.current_view.enqueue();
 		this.current_view.set_edited(true);
+		this.current_view.set_node();
 	},
 	
 });
@@ -190,13 +257,12 @@ var ContentItem =  BaseViews.BaseListItemView.extend({
 		this.delete(false);
 	},
 	submit_item:function(){
-		console.log("submitting",this.containing_list_view.collection);
 		this.containing_list_view.collection.add(this.model);
-		console.log("submitting",this.containing_list_view.collection);
 	},
 	delete_item: function(){
 		this.delete(true);
-	}
+	},
+	
 });
 
 
@@ -204,11 +270,19 @@ var ContentItem =  BaseViews.BaseListItemView.extend({
 var NodeListItem = ContentItem.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
 	initialize: function(options) {
-		this.edit = options.edit;
-		this.containing_list_view = options.containing_list_view;
 		_.bindAll(this, 'submit_topic', 'edit_topic','remove_topic');
+		this.edit = options.edit;
+		this.root = options.root;
+		this.containing_list_view = options.containing_list_view;
+		
 		this.$el.attr("id", this.model.cid);
 		this.render();
+		
+		this.model.set({
+			parent: this.root.id
+		});
+		console.log("model",this.model);
+		console.log("root",this.root);
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -216,10 +290,11 @@ var NodeListItem = ContentItem.extend({
 			edit: this.edit,
 			kind: this.model.attributes.kind.toUpperCase()
 		}));
+		this.$el.find(".topic_textbox").focus();
 	},
 	events: {
 		'click .submit_topic' : 'submit_topic',
-		'keypress .content_name' : 'submit_topic',
+		'keyup .content_name' : 'submit_topic',
 		'dblclick .folder_name' : 'edit_topic',
 		'click .remove_topic' : 'remove_topic',
 	},
@@ -228,13 +303,14 @@ var NodeListItem = ContentItem.extend({
 		this.delete_view();
 	},
 	submit_topic : function(event){
+		this.model.set({
+			title: this.$el.find("input").val(),
+			kind:"topic",
+			parent: this.root.id
+		});
+		this.submit_item();
 		if(!event.keyCode || event.keyCode ==13){
-			this.model.set({
-				title: this.$el.find("input").val(),
-				kind:"topic"
-			});
 			this.edit = false;
-			this.submit_item();
 			this.render();
 		}
 	},
@@ -243,7 +319,7 @@ var NodeListItem = ContentItem.extend({
 		this.remove_item();
 		this.enqueue();
 		this.render();
-	},
+	}
 });
 
 
@@ -251,18 +327,22 @@ var UploadedItem = ContentItem.extend({
 	tags: [],
 	template: require("./hbtemplates/uploaded_list_item.handlebars"),
 	initialize: function(options) {
+		_.bindAll(this, 'remove_topic','set_current_node');	
 		this.collection = options.collection;
 		this.containing_list_view = options.containing_list_view;
 		this.root = options.root;
-		_.bindAll(this, 'remove_topic','set_current_node');	
+		
+		this.edited = false;
 		this.render();
+
 	},
 	render: function() {
 		this.$el.html(this.template({
 			topic: this.model,
 			kind: this.model.attributes.kind.toUpperCase(),
-			id: this.model.cid
+			id: this.model.cid,
 		}));
+		this.set_edited(this.edited);
 	},
 	events: {
 		'click .remove_topic' : 'remove_topic',
@@ -272,26 +352,33 @@ var UploadedItem = ContentItem.extend({
 		this.delete_item();
 	},
 	set_edited:function(edited){
-		if(edited)
-			$("#item_" + this.model.cid + " .item_name").html(this.model.attributes.title + "<b>*</b>");
-		else
-			$("#item_" + this.model.cid + " .item_name").html(this.model.attributes.title);
+		this.edited = edited;
+		$("#item_" + this.model.cid + " .item_name").html(this.model.attributes.title + ((edited) ? " <b>*</b>" : ""));
+	},
+	
+	set_current_node:function(event){
+		event.preventDefault();
+		this.containing_list_view.set_current_node(this);
 	},
 	save_node:function(){
+		this.set_edited(false);
 		this.save({
 			title: $("#input_title").val(), 
 			description: $("#input_description").val(),
-			parent: this.root.id
+			parent: (this.root.id) ? this.root.id : this.model.parent
 		});
 	},
-	set_current_node:function(event){
-		event.preventDefault();
-		$("#uploaded_list").find("li").css("background-color", "transparent");
-		this.$el.css("background-color", "#E6E6E6");
-		this.parent_view.set_current_node(this);
-	}
+	set_node:function(){
+		console.log("id", this.model);
+		this.model.set({
+			title: $("#input_title").val(), 
+			description: $("#input_description").val(),
+			parent: (this.root.id) ? this.root.id : this.model.parent
+		});
+	},
 });
 
 module.exports = {
-	AddContentView: AddContentView
+	AddContentView: AddContentView,
+	EditMetadataView:EditMetadataView
 }
