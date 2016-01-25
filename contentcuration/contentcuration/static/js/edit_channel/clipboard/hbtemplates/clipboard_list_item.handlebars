@@ -1,7 +1,7 @@
 <input type="checkbox" id="clipboard_file_{{node.cid}}" name="clipboard_list_files"></input>
 <label for="clipboard_file_{{node.cid}}" class="clipboard_item">
 	{{#if allow_edit}}
-		<input type="text" placeholder="Press 'Enter' to save" value={{node.title}}/>
+		<input type="text" placeholder="Press 'Enter' to save" value="{{node.attributes.title}}" class="clipboard_title_input"/>
 		<span class="pull-right submit_content glyphicon glyphicon-ok" aria-hidden="true"></span>
 	{{else}}
 		{{#if isfolder}}<div class="pull-left tog_folder"><span class="glyphicon glyphicon-menu-up"></span></div>{{/if}}

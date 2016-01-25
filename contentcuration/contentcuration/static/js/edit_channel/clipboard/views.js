@@ -68,10 +68,9 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 	template: require("./hbtemplates/clipboard_list_item.handlebars"),
 
 	initialize: function(options) {
-		//_.bindAll(this);
-		//this.listenTo(clipboard_list_items, "change:clipboard_list_items.length", this.render);
 		this.containing_list_view = options.containing_list_view;
 		this.allow_edit = false;
+		_.bindAll(this, 'remove_item', 'edit_item', 'submit_item');
 		this.render();
 		$("#clipboard").slideDown();
 	},
@@ -85,7 +84,11 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 		DragHelper.handleDrag(this, "move");
 	},
 	events: {
-		'click .clipboard-toggler' : 'toggle_clipboard'
+		'click .delete_content' : 'remove_item',
+		'click .edit_content' : 'edit_item',
+		'click .submit_content' : "submit_item",
+		'keydown .clipboard_title_input' : "submit_item",
+		'dblclick label' : 'edit_item'
 	},
 	edit_item: function(){
 		this.allow_edit = true;
@@ -94,6 +97,12 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 	remove_item: function(){
 		this.delete();
 	},
+	submit_item:function(event){
+		if(!event.keyCode || event.keyCode ==13){
+			this.save({title: this.$el.find(".clipboard_title_input").val()});	
+		}
+		
+	}
 });
 
 
