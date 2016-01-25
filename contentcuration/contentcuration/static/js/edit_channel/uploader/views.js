@@ -10,6 +10,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 	initialize: function(options) {
 		_.bindAll(this, 'add_topic','close_uploader', 'edit_metadata','upload_file','add_file');	
 		this.collection = options.collection;
+		this.main_collection = options.main_collection;
 		this.root = options.root;
 		this.parent_view = options.parent_view;
 		this.render();
@@ -65,20 +66,18 @@ var AddContentView = BaseViews.BaseListView.extend({
 			parent_view: this.parent_view,
 			el: this.$el,
 			root: this.root,
-			allow_add: true
+			allow_add: true,
+			main_collection : this.main_collection
 		});
 		this.undelegateEvents();
 		this.unbind();	
 	},
 	upload_file:function(){
-		$("#file-dialog").trigger('click');
+		this.$el.find("#file-dialog").trigger('click');
 	},
 	add_file:function(){
+		/* TODO: Need to implement uploading files
 		$("#upload_content_add_list").append("<div id='new'></div>");
-		var file = this.collection.add({
-			title:"Multiplying Decimals",
-			kind:"video"
-		});
 		var item_view = new NodeListItem({
 			edit: false,
 			containing_list_view: this,
@@ -87,6 +86,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 			root: this.root,
 		});
 		this.views.push(item_view);
+		*/
 	}
 });
 
@@ -102,6 +102,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		this.collection = options.collection;
 		this.allow_add = options.allow_add;
 		this.root = options.root;
+		this.main_collection = options.main_collection;
 		this.render();
 		this.parent_view.set_editing(true);
 		console.log("curr  coll", this.collection);
@@ -132,7 +133,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		this.collection.forEach(function(entry){
 			var node_view = new UploadedItem({
 				model: entry,
-				el: $("#uploaded_list #item_" + entry.cid),
+				el: containing_list_view.$el.find("#uploaded_list #item_" + entry.cid),
 				containing_list_view: containing_list_view,
 				root: root,
 			});
@@ -159,8 +160,8 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			collection.add(entry.model);
 			entry.set_edited(false);
 		});
-		//console.log("colle", this.parent_view.collection);
 		this.save_all();
+		this.main_collection.add(this.collection.toJSON());
 	},
 	save_and_finish: function(){
 		var collection = this.parent_view.collection;
@@ -168,8 +169,8 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			collection.add(entry.model);
 		});
 		this.save_all();
+		this.main_collection.add(this.collection.toJSON());
 		this.parent_view.set_editing(false);
-		this.parent_view.render();
 		this.delete_view();
 	},
 	add_more:function(event){
@@ -179,7 +180,8 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 				collection: this.collection,
 				parent_view: this.parent_view,
 				el: this.$el,
-				root: (this.allow_add)? this.root : null
+				root: (this.allow_add)? this.root : null,
+				main_collection : this.main_collection
 			});
 			this.undelegateEvents();
 			this.unbind();	
@@ -193,9 +195,9 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			this.current_node.set_edited(true);
 			to_save.push(this.current_node);
 		}*/
-		$("#title_error").css("display", (this.current_view && $("#input_title").val().trim() == "")? "inline" : "none");
-		$("#description_error").css("display", (this.current_view && $("#input_description").val().trim() == "")? "inline" : "none");
-		if(!this.current_view || ($("#input_title").val().trim() != "" && $("#input_description").val().trim() !="")){
+		this.$el.find("#title_error").css("display", (this.current_view && this.$el.find("#input_title").val().trim() == "")? "inline" : "none");
+		this.$el.find("#description_error").css("display", (this.current_view && this.$el.find("#input_description").val().trim() == "")? "inline" : "none");
+		if(!this.current_view || (this.$el.find("#input_title").val().trim() != "" && this.$el.find("#input_description").val().trim() !="")){
 			if(this.current_view){
 				if(this.allow_add)
 					this.current_view.set_node();
@@ -206,39 +208,33 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			this.current_node = this.collection.get({cid: view.model.cid});
 			this.current_view = view;
 
-			if(this.current_node.attributes.kind == "video"){
-				$('#preview_window').attr('src', "https://www.youtube.com/embed/jihhW_VnHPk?autoplay=1");
-			}else{
-				$('#preview_window').attr('src', "");
-			}
-
 			this.current_view.$el.css("background-color", "#E6E6E6");
 
 			if(!this.disable){
 				this.parent_view.set_editing(false);
-				$("#input_title").val(this.current_node.attributes.title);
-				$("#input_description").val(this.current_node.attributes.description);
+				this.$el.find("#input_title").val(this.current_node.attributes.title);
+				this.$el.find("#input_description").val(this.current_node.attributes.description);
 			}			
 		}
 	},
 	check_item: function(){
-		this.disable = $("#uploaded_list").find(":checked").length > 1;
+		this.disable = this.$el.find("#uploaded_list :checked").length > 1;
 		this.parent_view.set_editing(this.disable);
-		$("#input_title").val((this.disable || !this.current_node)? " " : this.current_node.attributes.title);
-		$("#input_description").val((this.disable || !this.current_node)? " " : this.current_node.attributes.description);
+		this.$el.find("#input_title").val((this.disable || !this.current_node)? " " : this.current_node.attributes.title);
+		this.$el.find("#input_description").val((this.disable || !this.current_node)? " " : this.current_node.attributes.description);
 
 		if(this.disable) {
-			$(".disable-on-edit").addClass("gray-out");
+			this.$el.find(".disable-on-edit").addClass("gray-out");
 			//TODO: Clear tagging area $("#tag_area").html("");
 		}
 		else 
-			$(".upload_input").removeClass("gray-out");
+			this.$el.find(".upload_input").removeClass("gray-out");
 	},
 	add_tag: function(event){
-		if((!event.keyCode || event.keyCode ==13) && $("#tag_box").val().trim() != ""){
+		if((!event.keyCode || event.keyCode ==13) && this.$el.find("#tag_box").val().trim() != ""){
 			/* TODO: FIX THIS LATER TO APPEND TAG VIEWS TO AREA*/
-			$("#tag_area").append("<div class='col-xs-4 tag'>" + $("#tag_box").val().trim() + "</div>");
-			$("#tag_box").val("");
+			this.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + this.$el.find("#tag_box").val().trim() + "</div>");
+			this.$el.find("#tag_box").val("");
 		}
 	},
 	set_edited:function(event){
@@ -281,8 +277,6 @@ var NodeListItem = ContentItem.extend({
 		this.model.set({
 			parent: this.root.id
 		});
-		console.log("model",this.model);
-		console.log("root",this.root);
 	},
 	render: function() {
 		this.$el.html(this.template({

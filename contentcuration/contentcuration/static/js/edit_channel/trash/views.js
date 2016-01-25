@@ -2,12 +2,12 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 require("trash.less");
 var BaseViews = require("./../views");
-var view_model;
 var BaseViews = require("./../views");
 
 
 /* Todo: figure out how to display archived files after deleted */
 var TrashView = Backbone.View.extend({
+	/* TODO: Move this to the clipboard 
 	template: require("./hbtemplates/trash.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'delete_selected', 'restore_selected','select_all');
@@ -141,24 +141,8 @@ var TrashListItemView =  BaseViews.BaseListItemView.extend({
 		var addon_template = require("./hbtemplates/trash_preview_add_on.handlebars");
 		$("#previewer").append(addon_template());
 	}
+	*/
 });
-
-function checkItem(el, checked){
-	if(checked){
-		$(el + " .sidebar").css("height", $(el).height());
-		$(el + " .sidebar").css("display", "inline-block");
-		$(el + " .detail-bar").css("display", "none");
-		$(el).css("background-color", "#E6E6E6");
-	}
-	else {
-		$(el + " .sidebar").css("display", "none");
-		$(el).css("background-color", "transparent");
-		if(!$(el).data("collapsed")){
-			$(el + " .detail-bar").css("height", $(el).height());
-			$(el + " .detail-bar").css("display", "inline");
-		}
-	}
-}
 
 module.exports = {
 	TrashView: TrashView

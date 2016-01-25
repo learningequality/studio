@@ -24,7 +24,6 @@ BaseListView = BaseView.extend({
 	item_view: null, // Use to determine how to save, delete, update files
 	model_queue: [], // Used to keep track of temporary model data
 	save_all: function(){
-		console.log("save with",this.views);
 		this.views.forEach(function(entry){
 			entry.save();
 		});
@@ -54,15 +53,6 @@ BaseListView = BaseView.extend({
 			entry.model.unset();
 		});
 	}
-	/*
-	retrieve_selected:function(el){
-		var data_returned = [];
-		var list = el.find(":checked");
-		list.forEach(function(entry){
-			data_returned.push(entry.data("data"));
-		});
-		return data_returned;
-	},
 	/* TODO: Figure out way to abstract loading content 
 	load_content:function(){
 	
@@ -130,73 +120,58 @@ var BaseListItemView = BaseView.extend({
 			/* TODO: destroy all nodes from channel */
 			this.model.destroy();
 		}else{
-			this.delete_recurse(this.model);
+			node.set({"deleted" : true}, true);
+			node.save();
 		}
 		
 		if(delete_view) this.delete_view();
 	},
-	delete_recurse: function (node){
 
-		var view = this;
-		/*
-		node.attributes.children.forEach(function(entry){
-
-			view.delete_recurse(entry);
-		});
-		*/
-		node.set({"deleted" : true}, true);
-		node.save();
-	},	
-	
-	save: function(data, disable_render){
+	save: function(data){
 		/* TODO: Implement funtion to allow saving one item */
 		console.log("data saved", this.model);
 		if(!this.model){
-			if(!data.title)
-				window.channel_router.create_channel(data);
-			else
-				window.channel_router.create_node(data);
+			if(!data.title){
+				var channel_data = new Models.ChannelModel(data);
+				channel_data.fetch();
+				this.containing_list_view.collection.create(channel_data, {
+					success: function(){
+						var root_node = new Models.NodeModel();
+						root_node.save({title: channel_data.attributes.name}, {
+							success: function(){
+								var new_tree = new Models.TopicTreeModel({
+									channel: channel_data.id, 
+									root_node: root_node.id,
+									title: channel_data.name
+								});
+								new_tree.save();
+							}
+						});
+		   			}
+				});
+			}
+			else{
+				var node_data = new Models.NodeModel(data);
+				node_data.fetch();
+				this.containing_list_view.collection.create(node_data);
+			}
 		}
 		else{
+			this.model.set(data);
 			this.model.save();
 		}
-		if(!disable_render) this.containing_list_view.render();
 	},
 	set_editing: function(edit_mode_on){
 		this.containing_list_view.set_editing(edit_mode_on);
 	},
+	/*Set up to be saved*/
 	enqueue: function(){
 		this.containing_list_view.enqueue(this.model);
 	},
+	/*Remove from list to be saved*/
 	dequeue: function(){
 		this.containing_list_view.dequeue(this.model);
 	},
-	
-	/*
-	trimText:function(string, limit, el){
-		if(string.trim().length - 4 > limit){
-			string = string.trim().substring(0, limit - 4) + "...";
-			if(el) el.show();
-		}
-		else
-			if(el) el.hide();
-		return string;
-	}
-
-	/* TODO: use to expand height of content item
-	toggle: function(el){
-		if($(el).data("collapsed")){
-			$(el + "_sub").slideDown();
-			$(el).data("collapsed", false);
-			$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-down");
-		}
-		else{
-			$(el + "_sub").slideUp();
-			$(el).data("collapsed", true);
-			$(el+" .tog_folder span").attr("class", "glyphicon glyphicon-menu-up");
-		}
-	},
-	*/
 });
 
 
@@ -205,21 +180,3 @@ module.exports = {
 	BaseListView:BaseListView,
 	BaseListItemView: BaseListItemView,
 }
-
-/*
-var BaseEditor = BaseView.extend({
-	el : " ",
-/*
-	updateCount: function(){
-		var char_length = this.char_limit - this.$el.val().length; 
-		console.log(char_length);
-		this.$('.char_counter').text(char_length + ((char_length != 1)? " chars" : " char") + ' left');
-
-		if(char_length == 0) 
-			this.$(".char_counter").css("color", "red");
-		else 
-			this.$(".char_counter").css("color", "black");
-	},
-	
-});
-*/

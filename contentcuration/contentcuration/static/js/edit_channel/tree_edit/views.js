@@ -4,6 +4,9 @@ require("content-container.less");
 var BaseViews = require("./../views");
 var UploaderViews = require("edit_channel/uploader/views");
 var PreviewerViews = require("edit_channel/previewer/views");
+var ClipboardView = require("edit_channel/clipboard/views");
+var DragHelper = require("edit_channel/utils/drag_drop");
+
 var Models = require("./../models");
 
 
@@ -17,9 +20,11 @@ var TreeEditView = BaseViews.BaseView.extend({
 		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content');
 		this.root = options.root;
 		this.is_edit_page = options.edit;
-		this.collection = new Models.NodeCollection();
-		this.collection.add(this.root);
+		this.collection = options.collection;
 		this.render();
+		this.clipboard_view = new ClipboardView.ClipboardList({
+	 		el: $("#clipboard-area"),
+	 	});
 	},
 	render: function() {
 		this.$el.html(this.template({edit: this.is_edit_page}));
@@ -31,7 +36,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 		'click .edit_button' : 'edit_content'
 	},	
 	add_container: function(index, topic){
-		console.log("ytigj", topic);
 		if(index < this.containers.length){
 			while(this.containers.length > index){
 				// TODO: Saving issues? 
@@ -39,13 +43,13 @@ var TreeEditView = BaseViews.BaseView.extend({
 				this.containers.splice(this.containers.length-1);
 			}
 		}
-		this.$el.find("#container_area").width(this.$el.find("#container_area").width() * 2);
+		
 		this.$el.find("#container_area").append("<li id='container_" + topic.id + "' class='container content-container "
 						+ "pull-left' name='" + (this.containers.length + 1) + "'></li>");
-		var container_view = new ContainerView({
+		this.$el.find(".content-container").css("z-index", 10000);
+		var container_view = new ContentList({
 			el: this.$el.find("#container_area #container_" + topic.id),
 			model: topic, 
-			edit: this.allow_edit, 
 			index: this.containers.length + 1,
 			edit_mode: this.is_edit_page,
 			collection: this.collection,
@@ -65,21 +69,19 @@ var TreeEditView = BaseViews.BaseView.extend({
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = new Models.NodeCollection();
 		for(var i = 0; i < list.length; i++){
-			var content = new Models.NodeModel($(list[i]).data("data").model.attributes);
+			var content = this.collection.duplicate($(list[i]).data("data").model);
 			content.fetch();
+			//content.set("children", []);
 			clipboard_list.add(content);
 		}
-		window.clipboard_view.add_to_clipboard(clipboard_list);
+		this.clipboard_view.add_to_clipboard(clipboard_list);
 	},	
 	edit_content: function(event){
 		var list = this.$el.find('input:checked').parent("li");
 		var edit_collection = new Models.NodeCollection();
 		for(var i = 0; i < list.length; i++){
-			
 			var model = $(list[i]).data("data").model;
-			console.log("data1",model);
 			model.fetch();
-			console.log("data",model);
 			edit_collection.add(model);
 		}
 		$("#main-content-area").append("<div id='dialog'></div>");
@@ -87,29 +89,31 @@ var TreeEditView = BaseViews.BaseView.extend({
 			collection: edit_collection,
 			parent_view: this,
 			el: $("#dialog"),
-			allow_add : false
+			allow_add : false,
+			main_collection: this.collection,
 		});
 	},	
 });
 
 /* Open directory view */
-var ContainerView = BaseViews.BaseListView.extend({
+var ContentList = BaseViews.BaseListView.extend({
 	item_view: "node",
 	template: require("./hbtemplates/content_container.handlebars"),
 	current_node : null,
 	initialize: function(options) {
 		_.bindAll(this, 'add_content');	
-		this.edit = options.edit; //TO USE FOR LATER
 		this.index = options.index;
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
-		this.collection = new Models.NodeCollection();
 		this.collection = options.collection.get_all_fetch(this.model.attributes.children);
-		this.collection = this.collection.get_all_fetch(this.model.attributes.children);
+
+		this.listenTo(this.collection, "sync", this.render);
+        this.listenTo(this.collection, "remove", this.render);
 		this.render();
 		/* Set up animate sliding in from left */
-		
+		this.$el.css("z-index", -1000);
 		this.$el.css('margin-left', -this.$el.find(".container-interior").outerWidth());
+		$("#container_area").width(this.$el.find(".container-interior").outerWidth() * (this.index + 2));
 		//this.$el.css('z-index', "-10");
 		
 		/* Animate sliding in from left */
@@ -130,10 +134,8 @@ var ContainerView = BaseViews.BaseListView.extend({
 
 		this.load_content();
 
-		
-		/* TODO: Dragging and Dropping */
 		this.$el.data("container", this);
-		handleDrop(this);
+		DragHelper.handleDrop(this, "move");
 	},
 
 	events: {
@@ -150,10 +152,10 @@ var ContainerView = BaseViews.BaseListView.extend({
 		this.collection.forEach(function(entry){
 			if(!entry.attributes.deleted){
 				/*TODO FIX THIS!*/
-				//entry.save({sort_order : index++});
+				entry.set({sort_order : index++});
 				
 				el.append("<li id='"+ entry.cid +"'></li>");
-				var file_view = new ContentView({
+				var file_view = new ContentItem({
 					el: el.find("#" + entry.cid),
 					model: entry, 
 					edit_mode: edit_mode,
@@ -174,13 +176,10 @@ var ContainerView = BaseViews.BaseListView.extend({
 		var add_view = new UploaderViews.AddContentView({
 			el : $("#dialog"),
 			collection: new_collection,
+			main_collection: this.collection,
 			parent_view: this,
 			root: this.model
 		});
-
-		//$("#dialog").dialog();
-		//this.content.create();
-		//this.render(false);
 	},
 
 	add_container:function(view){
@@ -207,15 +206,12 @@ var ContainerView = BaseViews.BaseListView.extend({
 		transfer.data.model.save();
 		transfer.data.containing_list_view.collection.remove(transfer.data.model);
 		this.collection.add(transfer.data.model);
-
-		transfer.data.containing_list_view.render();
-		this.render();
 	}
 });
 
 
 /*folders, files, exercises listed*/
-var ContentView = BaseViews.BaseListItemView.extend({
+var ContentItem = BaseViews.BaseListItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_folder','open_folder','expand_or_collapse_folder', 
@@ -233,8 +229,7 @@ var ContentView = BaseViews.BaseListItemView.extend({
 			allow_edit: this.allow_edit
 		}));
 		this.$el.data("data", this);
-		/* TODO: Dragging and Dropping */
-		if(this.edit_mode) handleDrag(this);
+		if(this.edit_mode) DragHelper.handleDrag(this, 'move');
 	},
 
 	events: {
@@ -303,19 +298,7 @@ var ContentView = BaseViews.BaseListItemView.extend({
 	},
 	edit_folder: function(event){
 		this.allow_edit = this.edit_mode;
-		//this.containing_list_view.set_editing(this.allow_edit);
 		this.render();
-		/*
-		event.preventDefault();
-		$("#clipboard-area").append("<div id=\"clipboard-edit-folder-area\"></div>");
-		var view = new ClipboardViews.ClipboardEditFolderView({
-			el: $("#clipboard-edit-folder-area"),
-			edit: true,
-			folder: this
-		});
-		this.set_as_placeholder(true);
-		$("#clipboard").slideDown();
-		*/
 	},
 	submit_edit: function(event){
 		var title = ($("#textbox_" + this.model.id).val().trim() == "")? "Untitled" : $("#textbox_" + this.model.id).val().trim();
@@ -338,56 +321,6 @@ var ContentView = BaseViews.BaseListItemView.extend({
 		});
 	}
 }); 
-
-/* handleDrag: adds dragging ability to a certain item
-*	Parameters:
-*		itemid: item to add dragging ability to
-*	TODO:
-* 		Handle when multiple items are checked to be moved
-*/
-function handleDrag(item){
-	item.$el.attr('draggable', 'true');
-	item.$el.on("dragstart", function(e){
-		e.originalEvent.dataTransfer.setData("data", JSON.stringify({
-			id: $(this).attr("id"), 
-			data : $(this).wrap('<div/>').parent().html(),
-			edit : true,
-		}));
-
-		e.originalEvent.dataTransfer.effectAllowed = "move";
-		e.target.style.opacity = '0.4';
-	});
-	item.$el.on("dragend", function(e){
-		e.target.style.opacity = '1';
-
-	});
-}
-
-/* handleDrag: adds dropping ability to a certain container
-*	Parameters:
-*		containerid: container to add dropping ability to
-*/
-function handleDrop(container){
-	container.$el.on('dragover', function(e){
-		if (e.preventDefault) e.preventDefault();
-		e.originalEvent.dataTransfer.dropEffect = 'move';
-		return false;
-	});
-	container.$el.on('dragenter', function(e){
-		return false;
-	});
-
-	container.$el.on('drop', function(e, container){
-		if (e.stopPropagation) e.stopPropagation();
-		var transfer = JSON.parse(e.originalEvent.dataTransfer.getData("data"));
-		var data = $("#" + transfer.id).data("data");
-		//$("#" + transfer.id).parent().remove();
-		$(this).data("container").add_to_container({
-			data : data, 
-			is_folder: transfer.is_folder
-		});
-	});
-}
 
 /* onOffsetChanged: handles when selected folder is offscreen */
 $.fn.onOffsetChanged = function (trigger, millis) {
@@ -412,5 +345,4 @@ $.fn.onOffsetChanged = function (trigger, millis) {
 
 module.exports = {
 	TreeEditView: TreeEditView,
-	handleDrag : handleDrag
 }

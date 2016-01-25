@@ -7,7 +7,7 @@ require("dropzone/dist/dropzone.css");
 require("quilljs/dist/quill.snow.css");
 var BaseViews = require("./../views");
 	
-var ManageChannelsView  = BaseListView.extend({
+var ChannelList  = BaseListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
 	item_view: "channel", // TODO: Use to indicate how to save items on list
 
@@ -30,18 +30,18 @@ var ManageChannelsView  = BaseListView.extend({
 	new_channel: function(event){
 		this.set_editing(true);
 
-		var new_channel = new ChannelView({
+		var new_channel = new ChannelListItem({
 			edit:true,
 			containing_list_view: this
 		});
-		$("#channel_list").append("<li class='channel_container container' id='new'></li>")
-		$("#new").append(new_channel.el);
+		this.$el.find("#channel_list").append("<li class='channel_container container' id='new'></li>")
+		this.$el.find("#new").append(new_channel.el);
 	},
 	load_content:function(){
 		var containing_list_view = this;
 		this.collection.forEach(function(entry){
-			var view = new ChannelView({
-				el : $("#channel_list #" + entry.id),
+			var view = new ChannelListItem({
+				el : containing_list_view.$el.find("#channel_list #" + entry.id),
 				model: entry, 
 				edit: false,
 				containing_list_view: containing_list_view,
@@ -55,7 +55,7 @@ var ManageChannelsView  = BaseListView.extend({
 /*
 	edit: determines whether to load channel or editor
 */
-var ChannelView = BaseViews.BaseListItemView.extend({
+var ChannelListItem = BaseViews.BaseListItemView.extend({
 	template: require("./hbtemplates/channel_container.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel');
@@ -99,13 +99,14 @@ var ChannelView = BaseViews.BaseListItemView.extend({
 	},
 	save_channel: function(event){
 		this.containing_list_view.set_editing(false);
-		var title = ($("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : $("#new_channel_name").val().trim();
-		var description = ($("#new_channel_description").val() == "") ? " " : $("#new_channel_description").val();
+		var title = (this.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : this.$el.find("#new_channel_name").val().trim();
+		var description = (this.$el.find("#new_channel_description").val() == "") ? " " : this.$el.find("#new_channel_description").val();
 		var data = {name: title, description: description};
+		console.log("data", data);
 		this.save(data);
 	}
 });
 
 module.exports = {
-	ManageChannelsView : ManageChannelsView 
+	ChannelList : ChannelList 
 }

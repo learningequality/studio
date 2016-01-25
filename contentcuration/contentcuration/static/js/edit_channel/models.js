@@ -15,7 +15,7 @@ var NodeModel = Backbone.Model.extend({
 	  var json = Backbone.Model.prototype.toJSON.apply(this, arguments);
 	  json.cid = this.cid;
 	  return json;
-	}
+	},
 });
 
 var NodeCollection = Backbone.Collection.extend({
@@ -60,6 +60,25 @@ var NodeCollection = Backbone.Collection.extend({
     	return sorted;
     	*/
     },
+
+    duplicate: function(model){
+		var data = {
+			created : model.attributes.created,
+			modified : model.attributes.modified,
+			title: model.attributes.title + " (Copy)",
+			description: model.attributes.description,
+			published : model.attributes.published,
+			deleted: model.attributes.deleted,
+			sort_order : model.attributes.sort_order,
+			license_owner : model.attributes.license_owner,
+			license: model.attributes.license,
+			kind: model.attributes.kind
+		};
+		var node_data = new NodeModel(data);
+		node_data.fetch();
+		this.create(node_data);
+		return node_data;
+	}
 });
 
 var TopicTreeModel = Backbone.Model.extend({
