@@ -17,7 +17,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	template: require("./hbtemplates/container_area.handlebars"),
 	root: null,
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content');
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details');
 		this.root = options.root;
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
@@ -33,7 +33,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 	events: {
 		'click .copy_button' : 'copy_content',
 		'click .delete_button' : 'delete_content',
-		'click .edit_button' : 'edit_content'
+		'click .edit_button' : 'edit_content',
+		'click #hide_details_checkbox' :'toggle_details'
 	},	
 	add_container: function(index, topic){
 		if(index < this.containers.length){
@@ -71,7 +72,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 		for(var i = 0; i < list.length; i++){
 			var content = this.collection.duplicate($(list[i]).data("data").model);
 			content.fetch();
-			//content.set("children", []);
 			clipboard_list.add(content);
 		}
 		this.clipboard_view.add_to_clipboard(clipboard_list);
@@ -93,6 +93,9 @@ var TreeEditView = BaseViews.BaseView.extend({
 			main_collection: this.collection,
 		});
 	},	
+	toggle_details:function(event){
+		this.$el.find("label").toggleClass("hidden_details");
+	}
 });
 
 /* Open directory view */
@@ -114,14 +117,10 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.$el.css("z-index", -1000);
 		this.$el.css('margin-left', -this.$el.find(".container-interior").outerWidth());
 		$("#container_area").width(this.$el.find(".container-interior").outerWidth() * (this.index + 2));
-		//this.$el.css('z-index', "-10");
 		
 		/* Animate sliding in from left */
-		//this.$el.toggle("slide", "left", 500);
 		this.$el.animate({'margin-left' : "0px"}, 500);
-		$("#container_area").find(".container-interior").css("z-index","0");
-		//this.$el.css('z-index', 0);
-		
+		$("#container_area").find(".container-interior").css("z-index","0");		
 	},
 	render: function() {
 		this.collection.sort_by_order();
@@ -133,8 +132,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		}));
 
 		this.load_content();
-
-		this.$el.data("container", this);
 		DragHelper.handleDrop(this, "move");
 	},
 
@@ -196,6 +193,7 @@ var ContentList = BaseViews.BaseListView.extend({
 
 		this.views.forEach(function(entry){
 			entry.$el.off("offset_changed");
+			entry.$el.attr("draggable", "true");
 		});
 
 		this.$el.find(".folder .glyphicon").css("display", "inline-block");
@@ -228,8 +226,16 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			edit_mode: this.edit_mode,
 			allow_edit: this.allow_edit
 		}));
-		this.$el.data("data", this);
 		if(this.edit_mode) DragHelper.handleDrag(this, 'move');
+
+		if(this.$el.find(".description").height() > 103){
+			//this.$el.find(".description").height(this.$el.find(".description").css("font-size").replace("px", "") * 3);
+			console.log(this.model.attributes.title, this.$el.find(".description").height());
+			this.$el.find(".filler").css("display", "inline");
+			//this.$el.find(".description").
+		}
+		if($("#hide_details_checkbox").attr("checked"))
+			this.$el.find("label").addClass("hidden_details");
 	},
 
 	events: {
@@ -248,14 +254,11 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		event.stopPropagation();
 		if(this.$(".filler").parent("label").hasClass("collapsed")){
 			this.$(".filler").parent("label").removeClass("collapsed").addClass("expanded");
-			console.log("expanding");
 			this.$(".description").text(this.$(".filler").attr("title"));
 			this.$(".filler").text("See Less");
 		}
 		else {
-			console.log("collapsing");
 			this.$(".filler").parent("label").removeClass("expanded").addClass("collapsed");
-			this.$('.char_counter').text(this.$(".description").html(), 100, this.$(".filler"));
 			this.$(".filler").text("See More");
 		}
 	},
@@ -263,7 +266,6 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		event.preventDefault();
 		this.containing_list_view.close_folders();
 		this.set_opened(true);
-		
 		this.containing_list_view.add_container(this);
 		
 	},
@@ -295,8 +297,12 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		this.$el.onOffsetChanged(function(){
 			 view.$el.trigger('offset_changed');
 		});
+
+		this.$el.attr("draggable", "false");
 	},
 	edit_folder: function(event){
+		this.$el.find("label").removeClass("hidden_details");
+		this.$el.find("label").addClass("editing");
 		this.allow_edit = this.edit_mode;
 		this.render();
 	},
@@ -304,13 +310,16 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		var title = ($("#textbox_" + this.model.id).val().trim() == "")? "Untitled" : $("#textbox_" + this.model.id).val().trim();
 		var description = ($("#textarea_" + this.model.id).val().trim() == "")? " " : $("#textarea_" + this.model.id).val().trim();
 		this.save({title:title, description:description}, true);
-
 		this.allow_edit = false;
 		this.render();
 	},
 	cancel_edit: function(event){
 		this.allow_edit = false;
 		this.render();
+		if($("#hide_details_checkbox").attr("checked")){
+			this.$el.find("label").removeClass("editing");
+			this.$el.find("label").addClass("hidden_details");
+		}
 	},
 	preview_node: function(event){
 		event.preventDefault();

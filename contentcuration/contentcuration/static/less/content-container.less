@@ -11,6 +11,8 @@
 @folder-height: 120px; 
 @title-size: 17px;
 @highlighted-file: #B6B6B7;
+@file-height:30px;
+@description-font-size : 14px;
 
 #container-wrapper{
 	overflow:hidden; 
@@ -36,6 +38,11 @@
 		-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
 	}
 
+	#hide_details_checkbox + label{
+		color:white;
+		font-size:15px;
+	}
+
 
 	.content-container{
 		*{padding:0;margin:0;}
@@ -52,6 +59,7 @@
 			background-color:white;
 			visibility:hidden;
 		}
+
 		
 		h2{
 			color:@container-border-color;
@@ -74,6 +82,7 @@
 				width: @sidebar-width;
 			}
 		}
+
 		.content-list{
 			width: @container-width + @folder-gap-width;
 			height:@container-height * 0.95;
@@ -106,10 +115,10 @@
 				label{
 					h3, h4, p{color : black;}
 					vertical-align: middle;
-					height: @folder-height;
 					width: @container-width - @sidebar-width - 20px;
 					background-color: @folder-color;
 					cursor:pointer;
+					overflow:hidden;
 
 					padding: 5px;
 					margin-left:10px;
@@ -137,11 +146,11 @@
 						font-weight: bold;
 						width: @container-width - @sidebar-width - 60px;
 					}
-					p{
-						font-size:14px;
+					.description{
+						font-size:@description-font-size;
+						visibility:visible;
 						padding-left:10px;
-						word-wrap: break-word;
-						height: @folder-height - @title-size;
+						word-wrap:break-word;
 						a{text-decoration:none; color:black;}
 						font-weight: normal;
 						width: @container-width - @sidebar-width - 60px;
@@ -152,7 +161,7 @@
 				}
 
 				.file{
-					height:30px;
+					height:@file-height;
 					border-radius: 25px;
 					.glyphicon{
 						display:none;
@@ -164,6 +173,35 @@
 				.file:hover{
 					background-color: @highlighted-file;
 				}
+
+				.collapsed{
+					height:@folder-height;
+					.description{
+						height: @description-font-size * 4;
+					}
+				}
+
+				.expanded{
+					height:auto;
+					.description{
+						height:auto;
+					}
+				}
+
+				.hidden_details{
+					height:@file-height;
+					.options{
+						width:65px;
+					}
+					.description{
+						visibility:hidden;
+					}
+				}
+				.editing{
+					height:@folder-height;
+				}
+
+
 			}
 			*[draggable=true] {
 			  -moz-user-select:none;
@@ -219,7 +257,7 @@
 		}
 		label{
 			.options{
-				height:@folder-height;
+				height:100%;
 				width:40px;
 				.glyphicon{
 					display:inline-block;

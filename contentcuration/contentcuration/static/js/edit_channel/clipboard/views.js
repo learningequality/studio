@@ -51,6 +51,7 @@ var ClipboardList = BaseViews.BaseListView.extend({
 		});
 	},
 	add_to_clipboard:function(models){
+		console.log("adding to clipboard");
 		var collection = this.collection;
 		models.forEach(function(entry){
 			collection.add(entry);
@@ -59,6 +60,7 @@ var ClipboardList = BaseViews.BaseListView.extend({
 
 	add_to_container: function(transfer){
 		var copy = this.collection.duplicate(transfer.data.model);
+		console.log("copy is",copy);
 		this.add_to_clipboard([copy]);
 	}
 });

@@ -32,8 +32,8 @@
 	<h3 class = "title">{{#if node}}{{node.attributes.title}}{{else}}Item Name{{/if}}</h3>
 
 	{{#if isfolder}}
-		<p class="description">{{#if node}}{{node.attributes.description}}{{else}}Description of the folder{{/if}}</p>
-		<a class="filler" title="{{node.attributes.description}}">...</a>
+		<p class="description wordwrap">{{#if node}}{{node.attributes.description}}{{else}}Description of the folder{{/if}}</p>
+		<a class="filler" title="{{node.attributes.description}}">See More</a>
 	{{/if}}
 {{/if}}
 </label>

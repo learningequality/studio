@@ -6,13 +6,15 @@
 */
 function handleDrag(item, effect){
 	item.$el.attr('draggable', 'true');
+	item.$el.data("data", item);
+	
 	item.$el.on("dragstart", function(e){
 		e.originalEvent.dataTransfer.setData("data", JSON.stringify({
 			id: $(this).attr("id"), 
 			data : $(this).wrap('<div/>').parent().html(),
 			edit : true,
 		}));
-
+console.log("draggable item", item.$el.data("data"));
 		e.originalEvent.dataTransfer.effectAllowed = effect;
 		e.target.style.opacity = '0.4';
 	});
@@ -27,6 +29,7 @@ function handleDrag(item, effect){
 *		containerid: container to add dropping ability to
 */
 function handleDrop(container, effect){
+	container.$el.data("container", container);
 	container.$el.on('dragover', function(e){
 		if (e.preventDefault) e.preventDefault();
 		e.originalEvent.dataTransfer.dropEffect = effect;
