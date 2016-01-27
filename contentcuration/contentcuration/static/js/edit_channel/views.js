@@ -120,8 +120,11 @@ var BaseListItemView = BaseView.extend({
 			/* TODO: destroy all nodes from channel */
 			this.model.destroy();
 		}else{
-			node.set({"deleted" : true}, true);
-			node.save();
+			this.model.destroy(); //TEMPORARY WAY TO DELETE
+			/* TODO: send to trash instead
+			this.model.set({"deleted" : true}, true);
+			this.model.save();
+			*/
 		}
 		
 		if(delete_view) this.delete_view();

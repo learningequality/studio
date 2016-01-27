@@ -98,7 +98,8 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 		this.render();
 	},
 	remove_item: function(){
-		this.delete();
+		if(confirm("Are you sure you want to delete " + this.model.attributes.title +"?"))
+			this.delete(true);
 	},
 	submit_item:function(event){
 		if(!event.keyCode || event.keyCode ==13){

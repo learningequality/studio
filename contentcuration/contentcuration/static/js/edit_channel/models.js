@@ -62,10 +62,24 @@ var NodeCollection = Backbone.Collection.extend({
     },
 
     duplicate: function(model){
+    	var title = model.attributes.title;
+    	var list = model.attributes.title.split(" ");
+    	if(list[list.length - 1] == "(Copy)"){ 				//model has been copied once before
+    		list[list.length - 1] = "(Copy 2)";
+    		title = list.join(" ");
+    	}else if(list.length > 2 							//model has been copied multiple times
+    			&& list[list.length-2] == "(Copy" 
+    			&& list[list.length-1].includes(")")){
+    		var copy_number = list[list.length-1].replace(")","");
+    		list[list.length-1] = ++copy_number + ")";
+			title = list.join(" ");
+    	}
+    	
+
 		var data = {
 			created : model.attributes.created,
 			modified : model.attributes.modified,
-			title: model.attributes.title + " (Copy)",
+			title: title,
 			description: model.attributes.description,
 			published : model.attributes.published,
 			deleted: model.attributes.deleted,
