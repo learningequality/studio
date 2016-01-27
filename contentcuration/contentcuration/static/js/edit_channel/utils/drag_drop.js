@@ -7,7 +7,7 @@
 function handleDrag(item, effect){
 	item.$el.attr('draggable', 'true');
 	item.$el.data("data", item);
-	
+
 	item.$el.on("dragstart", function(e){
 		e.originalEvent.dataTransfer.setData("data", JSON.stringify({
 			id: $(this).attr("id"), 
@@ -46,6 +46,7 @@ function handleDrop(container, effect){
 		if (e.stopPropagation) e.stopPropagation();
 		var transfer = JSON.parse(e.originalEvent.dataTransfer.getData("data"));
 		var data = $("#" + transfer.id).data("data");
+		console.log("dropped here", data);
 		$(this).data("container").add_to_container({
 			data : data, 
 			is_folder: transfer.is_folder
