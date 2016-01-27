@@ -200,6 +200,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	add_to_container: function(transfer){
+		console.log("transferred", transfer);
 		transfer.data.model.set({parent: this.model.id});
 		transfer.data.model.save();
 		transfer.data.containing_list_view.collection.remove(transfer.data.model);
