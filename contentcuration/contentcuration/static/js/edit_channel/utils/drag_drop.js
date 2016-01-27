@@ -34,8 +34,6 @@ function handleDrop(container, effect){
 		if (e.preventDefault) e.preventDefault();
 		e.originalEvent.dataTransfer.dropEffect = effect;
 
-		//container.$el.find(".content-list").append("DROP HERE");
-
 		return false;
 	});
 	container.$el.on('dragenter', function(e){
