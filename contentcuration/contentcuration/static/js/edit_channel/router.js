@@ -9,7 +9,7 @@ var ChannelManageView = require("edit_channel/new_channel/views");
 ChannelEditRouter  = Backbone.Router.extend({
 	nodeCollection: new Models.NodeCollection(),
     initialize: function(options) {
-        _.bindAll(this, "navigate_channel_home", "edit_page", "preview_page");
+        _.bindAll(this, "navigate_channel_home", "edit_page");
 		this.user = options.user;
 		this.model = options.model;
 		
@@ -19,7 +19,7 @@ ChannelEditRouter  = Backbone.Router.extend({
     routes: {
 		"": "navigate_channel_home",
 		":channel/edit": "edit_page", 
-		":channel/preview": "preview_page",
+		":channel/preview": "edit_page",
     },
 
 	navigate_channel_home: function() {
@@ -34,33 +34,19 @@ ChannelEditRouter  = Backbone.Router.extend({
     },
 	
 	edit_page : function(){
-		var topictree = new Models.TopicTreeModelCollection(window.topic_tree);
-		var root = new Models.NodeModel(window.root);
-		root.fetch();
-		this.nodeCollection.add(root);
-		
+		//var curr_channel = new Models.ChannelModel(window.current_channel);
+		//curr_channel.fetch();
+		var topictrees = new Models.TopicTreeModelCollection(window.topic_trees);
+		topictrees.fetch();
+		this.nodeCollection = new Models.NodeCollection();
 		this.nodeCollection.fetch();
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
-			edit: true,
-			root: root,
-			collection: this.nodeCollection
+			edit: Backbone.history.getFragment().includes("edit"),
+			collection: this.nodeCollection,
+			topictrees: topictrees
 		});
-	},
-
-	preview_page : function(channel){
-		var topictree = new Models.TopicTreeModelCollection(window.topic_tree);
-		var EditViews = require("edit_channel/tree_edit/views");
-		var root = new Models.NodeModel(window.root);
-		var preview_page_view = new EditViews.TreeEditView({
-			el: $("#main-content-area"),
-			edit: false,
-			channel: topictree,
-			root: root,
-			collection: this.nodeCollection
-		});
-		
 	},
 });
 

@@ -23,6 +23,7 @@ BaseListView = BaseView.extend({
 	allow_edit: false,
 	item_view: null, // Use to determine how to save, delete, update files
 	model_queue: [], // Used to keep track of temporary model data
+	topictrees : null,
 	save_all: function(){
 		this.views.forEach(function(entry){
 			entry.save();
@@ -115,43 +116,25 @@ BaseListView = BaseView.extend({
 
 var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
-	delete:function(delete_view){
+	delete:function(){
 		if(!this.model.attributes.kind) { 
 			/* TODO: destroy all nodes from channel */
-			this.model.destroy();
+			this.model.delete_channel();
 		}else{
-			this.model.destroy(); //TEMPORARY WAY TO DELETE
-			/* TODO: send to trash instead
-			this.model.set({"deleted" : true}, true);
-			this.model.save();
-			*/
+			if(!this.deleted_root)
+				this.deleted_root = this.containing_list_view.topictrees.get({id : window.current_channel.deleted}).get_root();
+			var previous = this.deleted_root.get("children");
+			this.model.save("parent" , this.deleted_root.id);
+			this.containing_list_view.collection.remove(this.model);
+			/*TODO: check if node name already exists in trash, then delete older version*/
 		}
-		
-		if(delete_view) this.delete_view();
 	},
 
 	save: function(data){
 		/* TODO: Implement funtion to allow saving one item */
-		console.log("data saved", this.model);
 		if(!this.model){
 			if(!data.title){
-				var channel_data = new Models.ChannelModel(data);
-				channel_data.fetch();
-				this.containing_list_view.collection.create(channel_data, {
-					success: function(){
-						var root_node = new Models.NodeModel();
-						root_node.save({title: channel_data.attributes.name}, {
-							success: function(){
-								var new_tree = new Models.TopicTreeModel({
-									channel: channel_data.id, 
-									root_node: root_node.id,
-									title: channel_data.name
-								});
-								new_tree.save();
-							}
-						});
-		   			}
-				});
+				this.containing_list_view.collection.create_channel(data);
 			}
 			else{
 				var node_data = new Models.NodeModel(data);
@@ -162,6 +145,17 @@ var BaseListItemView = BaseView.extend({
 		else{
 			this.model.set(data);
 			this.model.save();
+
+			if(!this.model.attributes.title){ //Saving a channel
+				//TODO: Save root node as well
+				var tree = new Models.TopicTreeModel({channel: this.model.id});
+				tree.fetch();
+				var root = tree.get_root();
+				root.save({
+					title: this.model.attributes.name,
+					description: this.model.attributes.description
+				})	
+			}			
 		}
 	},
 	set_editing: function(edit_mode_on){

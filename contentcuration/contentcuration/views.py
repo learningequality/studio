@@ -20,26 +20,22 @@ def base(request):
 def testpage(request):
     return render(request, 'test.html')
 
-#@login_required
+@login_required
 def channel_list(request):
     channel_list = Channel.objects.all() # Todo: only allow access to certain channels?
     channel_serializer = ChannelSerializer(channel_list, many=True)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data)})
 
-#@login_required
+@login_required
 def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id)
     channel_serializer =  ChannelSerializer(channel)
 
-    topictree = TopicTree.objects.get(channel = channel)
-    topictree_serializer = TopicTreeSerializer(topictree)
+    topictrees = TopicTree.objects.filter(channel = channel)
+    topictree_serializer = TopicTreeSerializer(topictrees, many=True)
 
-    root = Node.objects.get(id = topictree.root_node.id)
-    topic_serializer = NodeSerializer(root)
-#TODO: fetch 
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
-                                                 "topictree" : JSONRenderer().render(topictree_serializer.data),
-                                                 "root" : JSONRenderer().render(topic_serializer.data)})
+                                                 "topictrees" : JSONRenderer().render(topictree_serializer.data)})
 
 @login_required
 def exercise_list(request):

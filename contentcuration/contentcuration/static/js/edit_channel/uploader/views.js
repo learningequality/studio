@@ -105,7 +105,6 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		this.main_collection = options.main_collection;
 		this.render();
 		this.parent_view.set_editing(true);
-		console.log("curr  coll", this.collection);
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -139,7 +138,6 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			});
 			containing_list_view.views.push(node_view);
 		});
-		console.log("curr  coll", this.collection);
 	},
 
 	close_uploader: function(){

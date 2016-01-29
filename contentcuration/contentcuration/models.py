@@ -25,6 +25,11 @@ class Channel(models.Model):
         help_text=_("Users with edit rights"),
     )
 
+    published = models.ForeignKey('TopicTree', null=True, blank=True, related_name='published')
+    deleted =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='deleted')
+    clipboard =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='clipboard')
+    draft =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='draft')
+
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
@@ -32,7 +37,6 @@ class Channel(models.Model):
 
 class TopicTree(models.Model):
     """Base model for all channels"""
-    
 
     name = models.CharField(
         max_length=255,

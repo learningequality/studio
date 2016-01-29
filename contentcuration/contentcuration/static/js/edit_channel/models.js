@@ -16,6 +16,14 @@ var NodeModel = Backbone.Model.extend({
 	  json.cid = this.cid;
 	  return json;
 	},
+	parse: function(response) {
+	    return _(response).isArray()
+	         ? response[0]
+	         : response;
+	},
+	delete_node:function(){
+		/*TODO: send to deleted tree*/
+	}
 });
 
 var NodeCollection = Backbone.Collection.extend({
@@ -62,6 +70,7 @@ var NodeCollection = Backbone.Collection.extend({
     },
 
     duplicate: function(model){
+    	/* Function in case want to append (Copy #) to end of copied content
     	var title = model.attributes.title;
     	var list = model.attributes.title.split(" ");
     	if(list[list.length - 1] == "(Copy)"){ 				//model has been copied once before
@@ -74,19 +83,21 @@ var NodeCollection = Backbone.Collection.extend({
     		list[list.length-1] = ++copy_number + ")";
 			title = list.join(" ");
     	}
+    	*/
     	
 
 		var data = {
-			created : model.attributes.created,
-			modified : model.attributes.modified,
-			title: title,
-			description: model.attributes.description,
-			published : model.attributes.published,
-			deleted: model.attributes.deleted,
-			sort_order : model.attributes.sort_order,
-			license_owner : model.attributes.license_owner,
-			license: model.attributes.license,
-			kind: model.attributes.kind
+			//title: title,
+			title: model.get("title"),
+			created : model.get("created"),
+			modified : model.get("modified"),
+			description: model.get("description"),
+			published : model.get("published"),
+			deleted: model.get("deleted"),
+			sort_order : model.get("sort_order"),
+			license_owner : model.get("license_owner"),
+			license: model.get("license"),
+			kind: model.get("kind")
 		};
 		var node_data = new NodeModel(data);
 		node_data.fetch();
@@ -97,9 +108,9 @@ var NodeCollection = Backbone.Collection.extend({
 
 var TopicTreeModel = Backbone.Model.extend({
 	get_root: function(){
-		var collection = new NodeCollection();
-		collection.root_node = this.root_node;
-		console.log(this.root_node);
+		var root = new NodeModel({id: this.get("root_node")});
+		root.fetch({async:false});
+		return root;
 	},
 	urlRoot: function() {
 		return window.Urls["topictree-list"]();
@@ -107,6 +118,11 @@ var TopicTreeModel = Backbone.Model.extend({
 	defaults: {
 		name: "Untitled Tree",
 		is_published: false
+	},
+	parse: function(response) {
+	    return _(response).isArray()
+	         ? response[0]
+	         : response;
 	}
 });
 
@@ -116,7 +132,6 @@ var TopicTreeModelCollection = Backbone.Collection.extend({
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	},
 	url: function() {
-		console.log("model", this);
 		return window.Urls["topictree-list"]();
 	}
 });
@@ -126,13 +141,30 @@ var ChannelModel = Backbone.Model.extend({
 		return window.Urls["channel-list"]();
 	},
 	defaults: {
-		title: "[Untitled Content]",
 		name: " ",
 		editors: [],
 		author: "Anonymous",
 		license_owner: "No license found",
 		description:" "
     },
+    get_tree:function(tree_name){
+    	var tree = new TopicTreeModel({id : this.get(tree_name)});
+    	tree.fetch({async:false});
+    	return tree;
+    },
+
+    delete_channel:function(){
+    	/* TODO: parallelize deleting*/
+    	var container = this;
+    	$(["clipboard","deleted","draft","published"]).each(function() {
+		  	var tree = container.get_tree(this);
+	    	tree.destroy();
+	    	//TODO: Figure out how handling root nodes
+	    	//var root = tree.get_root();
+	    	//root.destroy();
+		});
+    	this.destroy();
+    }
 });
 
 var ChannelCollection = Backbone.Collection.extend({
@@ -143,7 +175,55 @@ var ChannelCollection = Backbone.Collection.extend({
 	},
 	url: function() {
 		return window.Urls["channel-list"]();
-	}
+	},
+	create_channel:function(data){
+		/*
+		var channel_data = new ChannelModel(data);
+		channel_data.fetch();
+		if(channel_data.get("description").trim() == "")
+			channel_data.set({description: "No description available."});
+		var container = this;
+		this.create(channel_data, {
+			success:function(){
+				container.create_tree(channel_data, "draft");		
+				container.create_tree(channel_data, "deleted");
+				container.create_tree(channel_data, "published");
+				container.create_tree(channel_data, "clipboard");	
+   			}
+		});
+*/
+		var channel_data = new ChannelModel(data);
+		channel_data.fetch();
+		if(channel_data.get("description").trim() == "")
+			channel_data.set({description: "No description available."});
+		var container = this;
+		this.create(channel_data, {
+			success:function(){
+				$(["clipboard","deleted","draft","published"]).each(function(){
+					container.create_tree(channel_data, this.toString());
+				});
+   			}
+		});
+    },
+    create_tree:function(channel, tree_name){
+    	var root_node = new NodeModel();
+		root_node.save({title: channel.get("name")}, {
+			success: function(){
+				var tree = new TopicTreeModel();
+				tree.save({
+					channel: channel.id, 
+					root_node: root_node.id,
+					name: channel.get("name"),
+					kind:"topic"
+				}, {
+					async:false,
+					success: function(){
+						channel.save(tree_name, tree.id);
+					}
+				});
+			}
+		});
+    }
 });
 
 

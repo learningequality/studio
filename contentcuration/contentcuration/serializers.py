@@ -10,7 +10,7 @@ class LicenseSerializer(serializers.ModelSerializer):
 class ChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
-        fields = ('name', 'description', 'editors', 'id')
+        fields = ('name', 'description', 'editors', 'id', 'draft', 'clipboard', 'deleted', 'published')
 
 class TopicTreeSerializer(serializers.ModelSerializer):
     class Meta:

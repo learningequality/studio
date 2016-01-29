@@ -7,8 +7,8 @@
 	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
 
 	<script>
-		var topic_tree = JSON.parse("{{ topictree|escapejs }}");
-		var root = JSON.parse("{{ root|escapejs }}");
+		var current_channel = JSON.parse("{{ channel|escapejs}}");
+		var topic_trees = JSON.parse("{{ topictrees|escapejs }}");
 	</script>
 	<script type="text/javascript">		
 		var bundle = require("channel_edit");

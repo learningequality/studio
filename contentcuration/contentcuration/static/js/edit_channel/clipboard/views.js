@@ -11,10 +11,13 @@ var PreviewerViews = require("edit_channel/previewer/views");
 var ClipboardList = BaseViews.BaseListView.extend({
 	template: require("./hbtemplates/clipboard_list.handlebars"),
 	item_view:"clipboard",
+	root : null,
 	initialize: function(options) {
 		_.bindAll(this, 'toggle_clipboard');
-		this.collection = new Models.NodeCollection();
 		this.collapsed = true;
+		this.topictrees = options.topictrees;
+		this.root = this.topictrees.get({id : window.current_channel.clipboard}).get_root();
+		this.collection = options.collection.get_all_fetch(this.root.get("children"));
 		this.listenTo(this.collection, "sync", this.render);
         this.listenTo(this.collection, "remove", this.render);
 		this.render();
@@ -52,16 +55,15 @@ var ClipboardList = BaseViews.BaseListView.extend({
 		});
 	},
 	add_to_clipboard:function(models){
-		console.log("adding to clipboard");
-		var collection = this.collection;
+		var container = this;
 		models.forEach(function(entry){
-			collection.add(entry);
+			entry.save("parent", container.root.id);
+			container.collection.add(entry);
 		});
 	},
 
 	add_to_container: function(transfer){
 		var copy = this.collection.duplicate(transfer.data.model);
-		console.log("copy is",copy);
 		this.add_to_clipboard([copy]);
 	}
 });
@@ -80,7 +82,7 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 	render: function() {
 		this.$el.html(this.template({
 			node:this.model,
-			isfolder: this.model.attributes.kind.toLowerCase() == "topic",
+			isfolder: this.model.get("kind").toLowerCase() == "topic",
 			allow_edit: this.allow_edit
 		}));
 		this.$el.data("data", this);
@@ -98,7 +100,7 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 		this.render();
 	},
 	remove_item: function(){
-		if(confirm("Are you sure you want to delete " + this.model.attributes.title +"?"))
+		if(confirm("Are you sure you want to delete " + this.model.get("title") +"?"))
 			this.delete(true);
 	},
 	submit_item:function(event){

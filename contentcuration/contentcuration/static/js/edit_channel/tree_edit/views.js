@@ -15,15 +15,19 @@ var TreeEditView = BaseViews.BaseView.extend({
 	containers:[],
 	content: [],
 	template: require("./hbtemplates/container_area.handlebars"),
-	root: null,
+	topictrees: null,
 	initialize: function(options) {
 		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details');
-		this.root = options.root;
+		this.topictrees = options.topictrees;
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
+		this.root = this.topictrees.get({id : window.current_channel.draft}).get_root();
+
 		this.render();
 		this.clipboard_view = new ClipboardView.ClipboardList({
 	 		el: $("#clipboard-area"),
+	 		topictrees: this.topictrees,
+	 		collection: this.collection
 	 	});
 	},
 	render: function() {
@@ -54,7 +58,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 			index: this.containers.length + 1,
 			edit_mode: this.is_edit_page,
 			collection: this.collection,
-			containing_list_view : this
+			containing_list_view : this,
+			topictrees : this.topictrees
 		});
 		this.containers.push(container_view);
 	},
@@ -62,7 +67,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 		if(confirm("Are you sure you want to delete the selected files?")){
 			var list = this.$el.find('input:checked').parent("li");
 			for(var i = 0; i < list.length; i++){
-				$(list[i]).data("data").delete(true);
+				$(list[i]).data("data").delete();
 			}
 		}
 	},
@@ -109,10 +114,11 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
 		this.collection = options.collection.get_all_fetch(this.model.attributes.children);
+		this.topictrees = options.topictrees
 
+		this.render();
 		this.listenTo(this.collection, "sync", this.render);
         this.listenTo(this.collection, "remove", this.render);
-		this.render();
 		/* Set up animate sliding in from left */
 		this.$el.css("z-index", -1000);
 		this.$el.css('margin-left', -this.$el.find(".container-interior").outerWidth());
@@ -132,6 +138,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		}));
 
 		this.load_content();
+		this.$el.data("data", this);
 		DragHelper.handleDrop(this, "move");
 	},
 
