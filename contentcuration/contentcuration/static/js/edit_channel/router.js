@@ -9,7 +9,7 @@ var ChannelManageView = require("edit_channel/new_channel/views");
 ChannelEditRouter  = Backbone.Router.extend({
 	nodeCollection: new Models.NodeCollection(),
     initialize: function(options) {
-        _.bindAll(this, "navigate_channel_home", "edit_page");
+        _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page");
 		this.user = options.user;
 		this.model = options.model;
 		
@@ -19,7 +19,7 @@ ChannelEditRouter  = Backbone.Router.extend({
     routes: {
 		"": "navigate_channel_home",
 		":channel/edit": "edit_page", 
-		":channel/preview": "edit_page",
+		":channel/preview": "preview_page",
     },
 
 	navigate_channel_home: function() {
@@ -34,8 +34,13 @@ ChannelEditRouter  = Backbone.Router.extend({
     },
 	
 	edit_page : function(){
-		//var curr_channel = new Models.ChannelModel(window.current_channel);
-		//curr_channel.fetch();
+		this.open_channel(true);
+	},
+	preview_page : function(){
+		this.open_channel(false);
+	},
+
+	open_channel: function(edit_mode_on){
 		var topictrees = new Models.TopicTreeModelCollection(window.topic_trees);
 		topictrees.fetch();
 		this.nodeCollection = new Models.NodeCollection();
@@ -47,7 +52,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 			collection: this.nodeCollection,
 			topictrees: topictrees
 		});
-	},
+	}
 });
 
 module.exports = ChannelEditRouter;

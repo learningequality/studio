@@ -6,7 +6,7 @@
 */
 function handleDrag(item, effect){
 	item.$el.attr('draggable', 'true');
-	item.$el.data("data", item);
+	
 
 	item.$el.on("dragstart", function(e){
 		e.originalEvent.dataTransfer.setData("data", JSON.stringify({

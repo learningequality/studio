@@ -15,9 +15,11 @@
 @description-font-size : 14px;
 
 #container-wrapper{
-	overflow:hidden; 
+	overflow:hidden;
 	overflow-x:auto;
+	position:absolute;
 	padding-top: 10px;
+	width:90vw;
 }
 
 #edit, #preview{
@@ -25,7 +27,6 @@
 		width: 12px;
 		margin-left:-100px;
 		position: absolute;
-		display:none; /*remove this to add scrollbar back in*/
 	}
 	 
 	::-webkit-scrollbar-track {
@@ -43,8 +44,10 @@
 		font-size:15px;
 	}
 
-
 	.content-container{
+		::-webkit-scrollbar {
+			display:none;
+		}
 		*{padding:0;margin:0;}
 		padding:0;
 		margin:0;

@@ -18,18 +18,15 @@ $(function() {
 			topictree_collection : topictree_collection
 		});
 	}*/
+	$("#channel-publish-button").on("click", publish_nodes);
 });
 
-/*
-window.onbeforeunload = function() {
-    sessionStorage.setItem("channel", JSON.stringify(window.current_channel));
+function publish_nodes(){
+	$("#main-content-area").find(".to_publish").each(function(){
+		console.log("Publishing...");
+		/*TODO: call .publish method of items (.data("data"))*/
+	});
 }
-
-window.onload = function() {
- 	//window.current_channel = JSON.parse(sessionStorage.getItem("channel"));
- 	//console.log("channel here", window.current_channel);
- 	
-}*/
 
 module.exports = {
 	$: $,

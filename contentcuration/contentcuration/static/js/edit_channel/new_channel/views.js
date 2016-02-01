@@ -15,8 +15,8 @@ var ChannelList  = BaseListView.extend({
 		_.bindAll(this, 'new_channel');
 		this.collection = options.channels;
 		this.render();
-		this.listenTo(this.collection, "sync", this.render);
         this.listenTo(this.collection, "remove", this.render);
+        this.listenTo(this.collection, "sync", this.render);
 	},
 	render: function() {
 		this.set_editing(false);
@@ -59,6 +59,7 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 	template: require("./hbtemplates/channel_container.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel');
+		this.listenTo(this.model, "sync", this.render);
 		this.edit = options.edit;
 		this.containing_list_view = options.containing_list_view;
 		this.render();
@@ -84,7 +85,8 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 	},
 
 	delete_channel: function(event){
-		if(confirm("Are you sure you want to delete this channel?")){
+		if(confirm("WARNING: All content under this channel will be permanently deleted."
+					+ "\nAre you sure you want to delete this channel?")){
 			this.delete(true);
 		}
 	},
@@ -102,8 +104,16 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 		var title = (this.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : this.$el.find("#new_channel_name").val().trim();
 		var description = (this.$el.find("#new_channel_description").val() == "") ? " " : this.$el.find("#new_channel_description").val();
 		var data = {name: title, description: description};
-		console.log("data", data);
-		this.save(data);
+		var container = this;
+		var cssfunc = function(){
+			console.log("called this");
+			container.$el.css("opacity", "0.4");
+			container.$el.prop("disabled", true);
+		}
+		$.when(container.save(data), cssfunc()).then(function(){
+			//container.render();
+			console.log("ended");
+		});
 	}
 });
 

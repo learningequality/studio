@@ -24,15 +24,14 @@ var ClipboardList = BaseViews.BaseListView.extend({
 		DragHelper.handleDrop(this, "move"); //TODO: Debug!
 	},
 	render: function() {
+		console.log("rendering");
 		this.$el.html(this.template({
 			collapsed : this.collapsed,
 			content_list : this.collection.toJSON()
 		}));
 		this.$el.find(".badge").html(this.collection.length);
-		this.load_content();
-
 		this.$el.data("container", this);
-		
+		this.load_content();
 	},
 	events: {
 		'click .clipboard-toggler' : 'toggle_clipboard'
@@ -48,7 +47,7 @@ var ClipboardList = BaseViews.BaseListView.extend({
 		this.collection.forEach(function(entry){
 			var clipboard_item_view = new ClipboardItem({
 				containing_list_view: containing_list_view,
-				el: containing_list_view.$el.find("#clipboard_item_" + entry.cid),
+				el: containing_list_view.$el.find("#clipboard_item_" + entry.id),
 				model: entry
 			});
 			containing_list_view.views.push(clipboard_item_view);
@@ -57,13 +56,12 @@ var ClipboardList = BaseViews.BaseListView.extend({
 	add_to_clipboard:function(models){
 		var container = this;
 		models.forEach(function(entry){
-			entry.save("parent", container.root.id);
 			container.collection.add(entry);
 		});
 	},
 
 	add_to_container: function(transfer){
-		var copy = this.collection.duplicate(transfer.data.model);
+		var copy = transfer.data.model.duplicate(this.root.id);
 		this.add_to_clipboard([copy]);
 	}
 });
@@ -77,7 +75,6 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 		this.allow_edit = false;
 		_.bindAll(this, 'remove_item', 'edit_item', 'submit_item');
 		this.render();
-		$("#clipboard").slideDown();
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -85,6 +82,7 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 			isfolder: this.model.get("kind").toLowerCase() == "topic",
 			allow_edit: this.allow_edit
 		}));
+
 		this.$el.data("data", this);
 		DragHelper.handleDrag(this, "move");
 	},

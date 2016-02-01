@@ -6,9 +6,7 @@ var UploaderViews = require("edit_channel/uploader/views");
 var PreviewerViews = require("edit_channel/previewer/views");
 var ClipboardView = require("edit_channel/clipboard/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
-
 var Models = require("./../models");
-
 
 var TreeEditView = BaseViews.BaseView.extend({
 	container_index: 0,
@@ -72,10 +70,12 @@ var TreeEditView = BaseViews.BaseView.extend({
 		}
 	},
 	copy_content: function(event){
+		var clipboard_root = this.topictrees.get({id : window.current_channel.clipboard}).get_root();
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = new Models.NodeCollection();
 		for(var i = 0; i < list.length; i++){
-			var content = this.collection.duplicate($(list[i]).data("data").model);
+			var content = $(list[i]).data("data").model.duplicate(clipboard_root.id);
+			console.log("content", content);
 			content.fetch();
 			clipboard_list.add(content);
 		}
@@ -154,23 +154,19 @@ var ContentList = BaseViews.BaseListView.extend({
 		var current_node = this.current_node;
 
 		this.collection.forEach(function(entry){
-			if(!entry.attributes.deleted){
-				/*TODO FIX THIS!*/
-				entry.set({sort_order : index++});
-				
-				el.append("<li id='"+ entry.cid +"'></li>");
-				var file_view = new ContentItem({
-					el: el.find("#" + entry.cid),
-					model: entry, 
-					edit_mode: edit_mode,
-					containing_list_view:containing_list_view,
-					allow_edit: false
-				});
-				if(current_node && entry.id == current_node){
-					file_view.set_opened(false);
-				}
-				containing_list_view.views.push(file_view);
+			/*TODO FIX THIS!*/
+			entry.set({sort_order : index++});
+			var file_view = new ContentItem({
+				el: el.find("#" + entry.id),
+				model: entry, 
+				edit_mode: edit_mode,
+				containing_list_view:containing_list_view,
+				allow_edit: false
+			});
+			if(current_node && entry.id == current_node){
+				file_view.set_opened(false);
 			}
+			containing_list_view.views.push(file_view);
 		});
 	},
 
@@ -207,9 +203,8 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	add_to_container: function(transfer){
-		console.log("transferred", transfer);
 		transfer.data.model.set({parent: this.model.id});
-		transfer.data.model.save();
+		transfer.data.save(this.model.attributes);
 		transfer.data.containing_list_view.collection.remove(transfer.data.model);
 		this.collection.add(transfer.data.model);
 	}
@@ -234,6 +229,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			edit_mode: this.edit_mode,
 			allow_edit: this.allow_edit
 		}));
+		this.$el.data("data", this);
 		if(this.edit_mode) DragHelper.handleDrag(this, 'move');
 
 		if(this.$el.find(".description").height() > 103){
@@ -244,6 +240,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		}
 		if($("#hide_details_checkbox").attr("checked"))
 			this.$el.find("label").addClass("hidden_details");
+		
 	},
 
 	events: {

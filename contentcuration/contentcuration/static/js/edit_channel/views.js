@@ -2,8 +2,6 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var Models = require("./models");
 
-var clipboardContent = [];
-
 var BaseView = Backbone.View.extend({
 	delete_view: function(){
 		this.undelegateEvents();
@@ -26,7 +24,7 @@ BaseListView = BaseView.extend({
 	topictrees : null,
 	save_all: function(){
 		this.views.forEach(function(entry){
-			entry.save();
+			entry.save(entry.model.attributes);
 		});
 		this.save_queued();
 	},
@@ -117,7 +115,7 @@ BaseListView = BaseView.extend({
 var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
 	delete:function(){
-		if(!this.model.attributes.kind) { 
+		if(!this.model.get("kind")) { 
 			/* TODO: destroy all nodes from channel */
 			this.model.delete_channel();
 		}else{
@@ -139,24 +137,41 @@ var BaseListItemView = BaseView.extend({
 			else{
 				var node_data = new Models.NodeModel(data);
 				node_data.fetch();
-				this.containing_list_view.collection.create(node_data);
+				this.containing_list_view.collection.create(node_data,{
+					success: function(){
+						console.log("CALLED THIS");
+					},
+					error: function(model, response) {
+			            console.log(model);
+			        },
+				});
 			}
 		}
 		else{
 			this.model.set(data);
-			this.model.save();
-
-			if(!this.model.attributes.title){ //Saving a channel
-				//TODO: Save root node as well
-				var tree = new Models.TopicTreeModel({channel: this.model.id});
-				tree.fetch();
-				var root = tree.get_root();
-				root.save({
-					title: this.model.attributes.name,
-					description: this.model.attributes.description
-				})	
+			console.log("data", data);
+			this.model.save({
+				success: function(){
+						console.log("CALLED THIS");
+					},
+				error: function(model, response) {
+		            
+		            console.log(model);
+		        },
+        		wait: true
+			});
+			if(!data.title){ //Saving a channel
+				this.model.update_root({
+					'title' : data.name, 
+					'description' : data.description
+				});
 			}			
 		}
+	},
+	publish:function(){
+		this.model.save("published", true);
+		
+		//Save published of all children
 	},
 	set_editing: function(edit_mode_on){
 		this.containing_list_view.set_editing(edit_mode_on);

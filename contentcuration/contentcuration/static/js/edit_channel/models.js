@@ -23,6 +23,54 @@ var NodeModel = Backbone.Model.extend({
 	},
 	delete_node:function(){
 		/*TODO: send to deleted tree*/
+	},
+
+    duplicate: function(parent_id){
+    	/* Function in case want to append (Copy #) to end of copied content*/
+    	var title = this.get("title");
+    	/*
+    	var list = this.attributes.title.split(" ");
+    	if(list[list.length - 1] == "(Copy)"){ 				//model has been copied once before
+    		list[list.length - 1] = "(Copy 2)";
+    		title = list.join(" ");
+    	}else if(list.length > 2 							//model has been copied multiple times
+    			&& list[list.length-2] == "(Copy" 
+    			&& list[list.length-1].includes(")")){
+    		var copy_number = list[list.length-1].replace(")","");
+    		list[list.length-1] = ++copy_number + ")";
+			title = list.join(" ");
+    	}else{
+    		title += " (Copy)";
+    	}
+    	*/
+
+		var data = {
+			title: title,
+			created : this.get("created"),
+			modified : this.get("modified"),
+			description: this.get("description"),
+			deleted: this.get("deleted"),
+			sort_order : this.get("sort_order"),
+			license_owner : this.get("license_owner"),
+			license: this.get("license"),
+			kind: this.get("kind"),
+			parent: parent_id
+		};
+		var node_data = new NodeModel(data);
+		node_data.save(data, {async:false,
+			success:function(){
+				console.log("id", node_data.id);
+			}});
+		//node_data.fetch();
+			console.log("node data", node_data);
+		//this.copy_children(node_data);
+		return node_data;
+	},
+	copy_children:function(node){
+		var parent_id = node.id;
+		$(node.get("children")).each(function(){
+			console.log(parent_id);
+		});
 	}
 });
 
@@ -44,12 +92,29 @@ var NodeCollection = Backbone.Collection.extend({
     		var model = this.get({id: ids[i]});
     		
     		if(!model){
-    			model = this.add({id:ids[i]});
+    			model = this.add({'id':ids[i]});
     			model.fetch({async:false});
     		}
     		to_fetch.add(model);
     	}
     	return to_fetch;
+    	/*
+    	var to_fetch = [];
+    	var to_return = new NodeCollection();
+    	var collection = this;
+    	$(ids).each(function(){
+			var model = collection.get({'id': this.valueOf()});
+			if(model){
+				to_return.add(model);
+			} else{
+				to_fetch.push({'id':this.valueOf()});
+			}
+		});
+
+		to_return = this.add(to_fetch);
+		to_return.fetch();
+		//fetched.fetch();
+*/
     },
     sort_by_order:function(){
     	this.comparator = function(node){
@@ -68,42 +133,6 @@ var NodeCollection = Backbone.Collection.extend({
     	return sorted;
     	*/
     },
-
-    duplicate: function(model){
-    	/* Function in case want to append (Copy #) to end of copied content
-    	var title = model.attributes.title;
-    	var list = model.attributes.title.split(" ");
-    	if(list[list.length - 1] == "(Copy)"){ 				//model has been copied once before
-    		list[list.length - 1] = "(Copy 2)";
-    		title = list.join(" ");
-    	}else if(list.length > 2 							//model has been copied multiple times
-    			&& list[list.length-2] == "(Copy" 
-    			&& list[list.length-1].includes(")")){
-    		var copy_number = list[list.length-1].replace(")","");
-    		list[list.length-1] = ++copy_number + ")";
-			title = list.join(" ");
-    	}
-    	*/
-    	
-
-		var data = {
-			//title: title,
-			title: model.get("title"),
-			created : model.get("created"),
-			modified : model.get("modified"),
-			description: model.get("description"),
-			published : model.get("published"),
-			deleted: model.get("deleted"),
-			sort_order : model.get("sort_order"),
-			license_owner : model.get("license_owner"),
-			license: model.get("license"),
-			kind: model.get("kind")
-		};
-		var node_data = new NodeModel(data);
-		node_data.fetch();
-		this.create(node_data);
-		return node_data;
-	}
 });
 
 var TopicTreeModel = Backbone.Model.extend({
@@ -153,11 +182,21 @@ var ChannelModel = Backbone.Model.extend({
     	return tree;
     },
 
+    update_root:function(data){
+    	var channel = this;
+    	$(["clipboard","deleted","draft"/*,"published"*/]).each(function(){
+			var node = channel.get_tree(this.toString()).get_root();
+			node.save(data);
+		});
+    },
+
     delete_channel:function(){
     	/* TODO: parallelize deleting*/
-    	var container = this;
-    	$(["clipboard","deleted","draft","published"]).each(function() {
-		  	var tree = container.get_tree(this);
+    	var channel = this;
+    	var deleted_id = this.get_tree("deleted").id;
+    	$(["clipboard","deleted","draft"/*,"published"*/]).each(function() {
+		  	var tree = channel.get_tree(this);
+		  	//channel.update_root({'parent' : deleted_id})
 	    	tree.destroy();
 	    	//TODO: Figure out how handling root nodes
 	    	//var root = tree.get_root();
@@ -176,38 +215,27 @@ var ChannelCollection = Backbone.Collection.extend({
 	url: function() {
 		return window.Urls["channel-list"]();
 	},
-	create_channel:function(data){
-		/*
+	create_channel:function(data, timer){
 		var channel_data = new ChannelModel(data);
 		channel_data.fetch();
 		if(channel_data.get("description").trim() == "")
 			channel_data.set({description: "No description available."});
 		var container = this;
+		
 		this.create(channel_data, {
+			async: false,
 			success:function(){
-				container.create_tree(channel_data, "draft");		
-				container.create_tree(channel_data, "deleted");
-				container.create_tree(channel_data, "published");
-				container.create_tree(channel_data, "clipboard");	
-   			}
-		});
-*/
-		var channel_data = new ChannelModel(data);
-		channel_data.fetch();
-		if(channel_data.get("description").trim() == "")
-			channel_data.set({description: "No description available."});
-		var container = this;
-		this.create(channel_data, {
-			success:function(){
-				$(["clipboard","deleted","draft","published"]).each(function(){
+				$(["draft","clipboard","deleted",/*,"published"*/]).each(function(){
 					container.create_tree(channel_data, this.toString());
 				});
    			}
 		});
     },
     create_tree:function(channel, tree_name){
+    	console.log(tree_name + " tree is being created...");
     	var root_node = new NodeModel();
 		root_node.save({title: channel.get("name")}, {
+			async: false,
 			success: function(){
 				var tree = new TopicTreeModel();
 				tree.save({
@@ -216,9 +244,9 @@ var ChannelCollection = Backbone.Collection.extend({
 					name: channel.get("name"),
 					kind:"topic"
 				}, {
-					async:false,
 					success: function(){
 						channel.save(tree_name, tree.id);
+						console.log(tree_name + " done.");
 					}
 				});
 			}
