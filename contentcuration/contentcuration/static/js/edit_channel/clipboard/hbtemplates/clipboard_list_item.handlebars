@@ -1,14 +1,20 @@
-<input type="checkbox" id="clipboard_file_{{node.cid}}"></input>
-<label for="clipboard_file_{{node.cid}}" class="clipboard_item">
+<input type="checkbox" id="clipboard_file_{{node.id}}"></input>
+<label for="clipboard_file_{{node.id}}" class="clipboard_item">
 	{{#if allow_edit}}
 		<input type="text" placeholder="Press 'Enter' to save" value="{{node.attributes.title}}" class="clipboard_title_input"/>
 		<span class="pull-right submit_content glyphicon glyphicon-ok" aria-hidden="true"></span>
 	{{else}}
-		{{#if isfolder}}<div class="pull-left tog_folder"><span class="glyphicon glyphicon-menu-up"></span></div>{{/if}}
-		<span class="glyphicon glyphicon-{{file_icon}}"></span>
-		{{node.attributes.title}}
+		{{#if isfolder}}<div class="pull-left tog_folder"><span id="menu_toggle_{{node.id}}" class="glyphicon glyphicon-menu-up"></span></div>{{/if}}
+		<!--<span class="glyphicon glyphicon-{{file_icon}}"></span>-->
+		<h4 class="clipboard_item_title">{{node.attributes.title}}</h4>
 		<span class="pull-right delete_content glyphicon glyphicon-trash" aria-hidden="true"></span>
 		<span class="pull-right edit_content glyphicon glyphicon-pencil" aria-hidden="true"></span>
 	{{/if}}
 </label>
-{{#if isfolder}}<ul id="clipboard_item_{{node.cid}}_sub" style="padding-left: {{indent}}" class="list-unstyled subdirectory"></ul>{{/if}}
+{{#if isfolder}}<ul id="clipboard_item_{{node.id}}_sub" style="padding-left: {{indent}}px;" class="list-unstyled subdirectory">
+	{{#each sub_list}}
+		<li id="clipboard_item_{{this}}" class="clipboard_item"></li>
+	{{else}}
+		<li><em>No items found.</em></li>
+	{{/each}}
+</ul>{{/if}}

@@ -21,6 +21,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 			node_list: this.collection.toJSON()
 		}));
 		this.load_content();
+		this.parent_view.set_editing(true);
 	},
 	events: {
 		'click #create_topic':'add_topic',
@@ -126,17 +127,17 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 	},
 
 	load_content:function(){
-		var containing_list_view = this;
+		var self = this;
 		var root = (this.allow_add)? this.root :null;
 		this.views = [];
 		this.collection.forEach(function(entry){
 			var node_view = new UploadedItem({
 				model: entry,
-				el: containing_list_view.$el.find("#uploaded_list #item_" + entry.cid),
-				containing_list_view: containing_list_view,
+				el: self.$el.find("#uploaded_list #item_" + entry.cid),
+				containing_list_view: self,
 				root: root,
 			});
-			containing_list_view.views.push(node_view);
+			self.views.push(node_view);
 		});
 	},
 
@@ -162,12 +163,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		this.main_collection.add(this.collection.toJSON());
 	},
 	save_and_finish: function(){
-		var collection = this.parent_view.collection;
-		this.views.forEach(function(entry){
-			collection.add(entry.model);
-		});
-		this.save_all();
-		this.main_collection.add(this.collection.toJSON());
+		this.save_nodes();
 		this.parent_view.set_editing(false);
 		this.delete_view();
 	},
@@ -256,7 +252,6 @@ var ContentItem =  BaseViews.BaseListItemView.extend({
 	delete_item: function(){
 		this.delete(true);
 	},
-	
 });
 
 
@@ -361,7 +356,6 @@ var UploadedItem = ContentItem.extend({
 		});
 	},
 	set_node:function(){
-		console.log("id", this.model);
 		this.model.set({
 			title: $("#input_title").val(), 
 			description: $("#input_description").val(),

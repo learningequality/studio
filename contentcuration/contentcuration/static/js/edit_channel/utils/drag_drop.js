@@ -14,7 +14,7 @@ function handleDrag(item, effect){
 			data : $(this).wrap('<div/>').parent().html(),
 			edit : true,
 		}));
-console.log("draggable item", item.$el.data("data"));
+		console.log("draggable item", item.$el.data("data"));
 		e.originalEvent.dataTransfer.effectAllowed = effect;
 		e.target.style.opacity = '0.4';
 	});

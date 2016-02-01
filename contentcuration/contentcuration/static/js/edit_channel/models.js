@@ -28,7 +28,7 @@ var NodeModel = Backbone.Model.extend({
     duplicate: function(parent_id){
     	/* Function in case want to append (Copy #) to end of copied content*/
     	var title = this.get("title");
-    	/*
+    	
     	var list = this.attributes.title.split(" ");
     	if(list[list.length - 1] == "(Copy)"){ 				//model has been copied once before
     		list[list.length - 1] = "(Copy 2)";
@@ -42,7 +42,7 @@ var NodeModel = Backbone.Model.extend({
     	}else{
     		title += " (Copy)";
     	}
-    	*/
+    	
 
 		var data = {
 			title: title,
@@ -57,19 +57,20 @@ var NodeModel = Backbone.Model.extend({
 			parent: parent_id
 		};
 		var node_data = new NodeModel(data);
-		node_data.save(data, {async:false,
-			success:function(){
-				console.log("id", node_data.id);
-			}});
-		//node_data.fetch();
-			console.log("node data", node_data);
-		//this.copy_children(node_data);
+		node_data.save(data, {async:false});
+		this.copy_children(node_data, this.get("children"));
 		return node_data;
 	},
-	copy_children:function(node){
+	copy_children:function(node, original_collection){
+		var self = this;
 		var parent_id = node.id;
-		$(node.get("children")).each(function(){
-			console.log(parent_id);
+		console.log("parent is " +parent_id);
+		console.log("getting children...", original_collection);
+		var copied_collection = new NodeCollection();
+		copied_collection.get_all_fetch(original_collection);
+		$(copied_collection.models).each(function(){
+			console.log(parent_id, this);
+			console.log("end",this.duplicate(parent_id));
 		});
 	}
 });

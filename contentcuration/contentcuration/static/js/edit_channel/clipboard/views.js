@@ -48,7 +48,8 @@ var ClipboardList = BaseViews.BaseListView.extend({
 			var clipboard_item_view = new ClipboardItem({
 				containing_list_view: containing_list_view,
 				el: containing_list_view.$el.find("#clipboard_item_" + entry.id),
-				model: entry
+				model: entry,
+				indent : 0,
 			});
 			containing_list_view.views.push(clipboard_item_view);
 		});
@@ -73,25 +74,30 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 	initialize: function(options) {
 		this.containing_list_view = options.containing_list_view;
 		this.allow_edit = false;
-		_.bindAll(this, 'remove_item', 'edit_item', 'submit_item');
+		this.indent = options.indent + 20;
+		_.bindAll(this, 'remove_item', 'edit_item', 'submit_item', 'toggle_folder');
 		this.render();
 	},
 	render: function() {
 		this.$el.html(this.template({
 			node:this.model,
 			isfolder: this.model.get("kind").toLowerCase() == "topic",
-			allow_edit: this.allow_edit
+			allow_edit: this.allow_edit,
+			sub_list: this.model.get("children"),
+			indent: this.indent,
 		}));
 
 		this.$el.data("data", this);
 		DragHelper.handleDrag(this, "move");
+		this.load_subfiles();
 	},
 	events: {
 		'click .delete_content' : 'remove_item',
 		'click .edit_content' : 'edit_item',
 		'click .submit_content' : "submit_item",
 		'keydown .clipboard_title_input' : "submit_item",
-		'dblclick label' : 'edit_item'
+		'dblclick .clipboard_item_title' : 'edit_item',
+		'click .tog_folder' : 'toggle_folder'
 	},
 	edit_item: function(){
 		this.allow_edit = true;
@@ -106,6 +112,32 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 			this.save({title: this.$el.find(".clipboard_title_input").val()});	
 		}
 		
+	},
+	toggle_folder:function(event){
+		event.stopPropagation();
+		event.preventDefault();
+		var el =  this.$el.find("#menu_toggle_" + this.model.id);
+		if(el.hasClass("glyphicon-menu-up")){
+			this.$el.find("#clipboard_item_"+this.model.id+"_sub").slideDown();
+			el.removeClass("glyphicon-menu-up").addClass("glyphicon-menu-down");
+		}else{
+			this.$el.find("#clipboard_item_"+this.model.id+"_sub").slideUp();
+			el.removeClass("glyphicon-menu-down").addClass("glyphicon-menu-up");
+		}
+	},
+	load_subfiles:function(){
+		var subfiles = new Models.NodeCollection();
+		subfiles.get_all_fetch(this.model.get("children"));
+		var self = this;
+		subfiles.forEach(function(entry){
+			console.log(self.$el.find("#clipboard_item_" + entry.id));
+			var clipboard_item_view = new ClipboardItem({
+				containing_list_view: self.containing_list_view,
+				el: self.$el.find("#clipboard_item_" + entry.id),
+				model: entry,
+				indent : self.indent,
+			});
+		});
 	}
 });
 

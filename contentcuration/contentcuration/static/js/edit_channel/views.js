@@ -44,9 +44,6 @@ BaseListView = BaseView.extend({
 		});
 		this.model_queue = [];
 	},
-	dequeue: function(model){
-		this.model_queue.remove(model);
-	},
 	reset: function(){
 		this.views.forEach(function(entry){
 			entry.model.unset();
@@ -170,7 +167,7 @@ var BaseListItemView = BaseView.extend({
 	},
 	publish:function(){
 		this.model.save("published", true);
-		
+
 		//Save published of all children
 	},
 	set_editing: function(edit_mode_on){

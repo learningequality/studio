@@ -85,21 +85,24 @@
 							font-size:16px;
 							vertical-align:middle;
 							cursor:pointer;
-							height:100%;
+							height:@clipboard-list-item-height;
 							width:@clipboard-width - 60px;
 							.glyphicon{
 								visibility:hidden;
 								margin-right:15px;
 							}
+							.clipboard_item_title{
+								overflow:hidden;
+							}
 							input[type=text]{
 								width:90%;
 							}
+							.tog_folder{
+								padding-left:10px;
+							}
 						}
-
-						width:100%;
-						height:@clipboard-list-item-height;
-						
 					}
+					
 					.subdirectory{
 						display:none;
 					}
