@@ -38,6 +38,9 @@ BaseListView = BaseView.extend({
 	enqueue: function(model){
 		this.model_queue.push(model);
 	},
+	dequeue:function(model){
+		this.model_queue.remove(model);
+	},
 	save_queued:function(){
 		this.model_queue.forEach(function(entry){
 			entry.save();
@@ -116,12 +119,14 @@ var BaseListItemView = BaseView.extend({
 			/* TODO: destroy all nodes from channel */
 			this.model.delete_channel();
 		}else{
-			if(!this.deleted_root)
-				this.deleted_root = this.containing_list_view.topictrees.get({id : window.current_channel.deleted}).get_root();
-			var previous = this.deleted_root.get("children");
-			this.model.save("parent" , this.deleted_root.id);
-			this.containing_list_view.collection.remove(this.model);
-			/*TODO: check if node name already exists in trash, then delete older version*/
+			if(this.containing_list_view.item_view != "uploading_content"){
+				console.log("trees",window.current_channel.deleted);
+				if(!this.deleted_root)
+					this.deleted_root = this.containing_list_view.topictrees.get({id : window.current_channel.deleted}).get("root_node");
+				this.model.save("parent" , this.deleted_root);
+				this.containing_list_view.collection.remove(this.model);
+				/*TODO: check if node name already exists in trash, then delete older version*/
+			}
 		}
 	},
 

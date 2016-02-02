@@ -64,12 +64,9 @@ var NodeModel = Backbone.Model.extend({
 	copy_children:function(node, original_collection){
 		var self = this;
 		var parent_id = node.id;
-		console.log("parent is " +parent_id);
-		console.log("getting children...", original_collection);
 		var copied_collection = new NodeCollection();
 		copied_collection.get_all_fetch(original_collection);
 		$(copied_collection.models).each(function(){
-			console.log(parent_id, this);
 			console.log("end",this.duplicate(parent_id));
 		});
 	}
@@ -226,7 +223,7 @@ var ChannelCollection = Backbone.Collection.extend({
 		this.create(channel_data, {
 			async: false,
 			success:function(){
-				$(["draft","clipboard","deleted",/*,"published"*/]).each(function(){
+				$(["draft","clipboard","deleted"/*,"published"*/]).each(function(){
 					container.create_tree(channel_data, this.toString());
 				});
    			}

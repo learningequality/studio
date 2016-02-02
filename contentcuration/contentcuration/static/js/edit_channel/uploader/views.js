@@ -6,7 +6,7 @@ var Models = require("./../models");
 
 var AddContentView = BaseViews.BaseListView.extend({
 	template: require("./hbtemplates/add_content_dialog.handlebars"),
-	item_view:"adding_content",
+	item_view:"uploading_content",
 	initialize: function(options) {
 		_.bindAll(this, 'add_topic','close_uploader', 'edit_metadata','upload_file','add_file');	
 		this.collection = options.collection;
@@ -38,7 +38,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 			var node_view = new NodeListItem({
 				edit: false,
 				containing_list_view: containing_list_view,
-				el: containing_list_view.$el.find("#" + entry.cid),
+				el: containing_list_view.$el.find("#content_item_" + entry.cid),
 				model: entry,
 				root: this.root
 			});
@@ -56,7 +56,6 @@ var AddContentView = BaseViews.BaseListView.extend({
 			root: this.root,
 		});
 		this.views.push(item_view);
-
 	},
 	close_uploader: function(){
 		this.delete_view();
@@ -275,7 +274,7 @@ var NodeListItem = ContentItem.extend({
 		this.$el.html(this.template({
 			topic: this.model,
 			edit: this.edit,
-			kind: this.model.attributes.kind.toUpperCase()
+			kind: this.model.get("kind").toUpperCase()
 		}));
 		this.$el.find(".topic_textbox").focus();
 	},

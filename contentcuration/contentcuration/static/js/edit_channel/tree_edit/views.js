@@ -27,6 +27,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	 		topictrees: this.topictrees,
 	 		collection: this.collection
 	 	});
+	 	console.log("channel",window.current_channel);
 	},
 	render: function() {
 		this.$el.html(this.template({edit: this.is_edit_page}));
@@ -70,12 +71,11 @@ var TreeEditView = BaseViews.BaseView.extend({
 		}
 	},
 	copy_content: function(event){
-		var clipboard_root = this.topictrees.get({id : window.current_channel.clipboard}).get_root();
+		var clipboard_root = this.topictrees.get({id : window.current_channel.clipboard}).get("root_node");
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = new Models.NodeCollection();
 		for(var i = 0; i < list.length; i++){
-			var content = $(list[i]).data("data").model.duplicate(clipboard_root.id);
-			console.log("content", content);
+			var content = $(list[i]).data("data").model.duplicate(clipboard_root);
 			content.fetch();
 			clipboard_list.add(content);
 		}
@@ -138,7 +138,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		}));
 
 		this.load_content();
-		this.$el.data("data", this);
+		this.$el.data("container", this);
 		DragHelper.handleDrop(this, "move");
 	},
 
@@ -203,6 +203,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	add_to_container: function(transfer){
+		console.log("transferring...",transfer.data);
 		transfer.data.model.save({parent: this.model.id});
 		transfer.data.containing_list_view.collection.remove(transfer.data.model);
 		this.collection.add(transfer.data.model);

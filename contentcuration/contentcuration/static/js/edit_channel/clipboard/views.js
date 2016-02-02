@@ -18,10 +18,10 @@ var ClipboardList = BaseViews.BaseListView.extend({
 		this.topictrees = options.topictrees;
 		this.root = this.topictrees.get({id : window.current_channel.clipboard}).get_root();
 		this.collection = options.collection.get_all_fetch(this.root.get("children"));
+		
 		this.listenTo(this.collection, "sync", this.render);
         this.listenTo(this.collection, "remove", this.render);
 		this.render();
-		DragHelper.handleDrop(this, "move"); //TODO: Debug!
 	},
 	render: function() {
 		console.log("rendering");
@@ -30,8 +30,10 @@ var ClipboardList = BaseViews.BaseListView.extend({
 			content_list : this.collection.toJSON()
 		}));
 		this.$el.find(".badge").html(this.collection.length);
-		this.$el.data("container", this);
+		
 		this.load_content();
+		this.$el.data("container", this);
+		DragHelper.handleDrop(this, "move"); //TODO: Debug!
 	},
 	events: {
 		'click .clipboard-toggler' : 'toggle_clipboard'
@@ -62,8 +64,10 @@ var ClipboardList = BaseViews.BaseListView.extend({
 	},
 
 	add_to_container: function(transfer){
+		console.log("adding");
 		var copy = transfer.data.model.duplicate(this.root.id);
-		this.add_to_clipboard([copy]);
+		this.collection.add(copy);
+		console.log("added");
 	}
 });
 

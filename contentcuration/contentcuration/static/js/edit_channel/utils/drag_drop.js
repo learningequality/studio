@@ -6,30 +6,34 @@
 */
 function handleDrag(item, effect){
 	item.$el.attr('draggable', 'true');
-	
 
 	item.$el.on("dragstart", function(e){
 		e.originalEvent.dataTransfer.setData("data", JSON.stringify({
-			id: $(this).attr("id"), 
+			id: item.model.id, 
 			data : $(this).wrap('<div/>').parent().html(),
-			edit : true,
 		}));
-		console.log("draggable item", item.$el.data("data"));
+		/*
 		e.originalEvent.dataTransfer.effectAllowed = effect;
 		e.target.style.opacity = '0.4';
+		console.log("data at this point", item.$el.data("data"));
+		*/
+		window.transfer_data = item.$el.data("data");
+		console.log("is", item.$el.data("data"));
+		console.log("setting...", window.transfer_data);
 	});
 	item.$el.on("dragend", function(e){
 		e.target.style.opacity = '1';
+		//item.$el.data("data", item);
 	});
 }
 
 
-/* handleDrag: adds dropping ability to a certain container
+/* handleDrop: adds dropping ability to a certain container
 *	Parameters:
-*		containerid: container to add dropping ability to
+*		container: container to add dropping ability to
 */
 function handleDrop(container, effect){
-	container.$el.data("container", container);
+	//container.$el.data("container", container);
 	container.$el.on('dragover', function(e){
 		if (e.preventDefault) e.preventDefault();
 		e.originalEvent.dataTransfer.dropEffect = effect;
@@ -42,12 +46,19 @@ function handleDrop(container, effect){
 
 	container.$el.on('drop', function(e, container){
 		if (e.stopPropagation) e.stopPropagation();
+		/*
 		var transfer = JSON.parse(e.originalEvent.dataTransfer.getData("data"));
-		var data = $("#" + transfer.id).data("data");
-		console.log("dropped here", data);
+		console.log("original event", e.originalEvent.dataTransfer);
+		var data = transfer.$el.data("data");
+		
+		console.log("setting data as", data);
 		$(this).data("container").add_to_container({
 			data : data, 
 			is_folder: transfer.is_folder
+		});
+*/
+		$(this).data("container").add_to_container({
+			data : window.transfer_data, 
 		});
 	});
 }
