@@ -23,8 +23,8 @@ BaseListView = BaseView.extend({
 	model_queue: [], // Used to keep track of temporary model data
 	topictrees : null,
 	save_all: function(){
-		this.views.forEach(function(entry){
-			entry.save(entry.model.attributes);
+		$(this.views).each(function(){
+			this.save(this.model.attributes);
 		});
 		this.save_queued();
 	},
@@ -135,7 +135,7 @@ var BaseListItemView = BaseView.extend({
 		/* TODO: Implement funtion to allow saving one item */
 		if(!this.model){
 			if(!data.title){
-				this.containing_list_view.collection.create_channel(data);
+				this.containing_list_view.collection.create_channel(data, $(".createprogress"));
 			}
 			else{
 				var node_data = new Models.NodeModel(data);

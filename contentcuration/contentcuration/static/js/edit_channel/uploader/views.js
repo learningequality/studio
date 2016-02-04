@@ -14,6 +14,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 		this.root = options.root;
 		this.parent_view = options.parent_view;
 		this.render();
+		this.counter = 0;
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -48,6 +49,9 @@ var AddContentView = BaseViews.BaseListView.extend({
 	add_topic:function(){
 		$("#upload_content_add_list").append("<div id='new'></div>");
 		var topic = this.collection.add({kind:"topic"});
+
+		topic.set("title", (this.counter > 0)? "Topic " + this.counter : "Topic");
+		this.counter++;
 		var item_view = new NodeListItem({
 			edit: true,
 			containing_list_view: this,

@@ -160,7 +160,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		var current_node = this.current_node;
 
 		this.collection.forEach(function(entry){
-			/*TODO FIX THIS!*/
 			entry.set({'sort_order' : index});
 			var file_view = new ContentItem({
 				el: el.find("#" + entry.id),
@@ -203,8 +202,9 @@ var ContentList = BaseViews.BaseListView.extend({
 		});
 
 
-		this.views.forEach(function(entry){
-			entry.set_opened(false, false);
+		$(this.views).each(function(){
+			console.log()
+			this.set_opened(false, false);
 		});
 
 		this.$el.find(".folder .glyphicon").css("display", "inline-block");
@@ -234,19 +234,20 @@ var ContentList = BaseViews.BaseListView.extend({
 			}
 		}
 
-		window.transfer_data.save({
+		var self=this;
+
+		$.when(window.transfer_data.set({
 			parent: this.model.id, 
 			title: transfer.model.get("title"),
 			sort_order: new_sort_order
-		});
-		if(transfer.containing_list_view.collection != this.collection){
-			transfer.containing_list_view.collection.remove(transfer.model);
-			this.collection.add(transfer.model);
-		}else{
-			console.log("same collection found");
-			this.render();
-		}
-			
+		})).then(function(){
+			if(transfer.containing_list_view.collection != self.collection){
+				transfer.containing_list_view.collection.remove(transfer.model);
+				self.collection.add(transfer.model);
+			}else{
+				self.render();
+			}
+		});	
 	}
 });
 

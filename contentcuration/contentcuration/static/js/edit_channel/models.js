@@ -218,17 +218,22 @@ var ChannelCollection = Backbone.Collection.extend({
 	url: function() {
 		return window.Urls["channel-list"]();
 	},
-	create_channel:function(data, timer){
+	create_channel:function(data, progress_bar){
 		var channel_data = new ChannelModel(data);
+		
 		channel_data.fetch();
 		if(channel_data.get("description").trim() == "")
 			channel_data.set({description: "No description available."});
 		var container = this;
+		var percent = 0;
 		
 		return this.create(channel_data, {
 			async: false,
 			success:function(){
 				$(["draft","clipboard","deleted"/*,"published"*/]).each(function(){
+					/*percent += 25;
+					progress_bar.width(percent + "%");*/
+
 					container.create_tree(channel_data, this.toString());
 				});
    			}

@@ -20,6 +20,12 @@
 	<a class="save_channel btn btn-default"><span class="glyphicon glyphicon-ok"></span>
 		{{#if edit}}Update Channel{{else}}Create Channel{{/if}}
 	</a>
+	<!--
+	<div class="progress">
+		  <div class="progress-bar progress-bar-striped active createprogress" aria-valuemin="0" aria-valuemax="100">
+		  </div>
+	</div>
+	-->
 {{else}}
 	<a  class="open_channel pull-right" href="{{channel.id}}/edit"">
 		<span class="glyphicon glyphicon-chevron-right"></span>
@@ -32,3 +38,4 @@
 		<p id="channel_description" class="wordwrap" title="{{channel.description}}">{{channel.description}}</p>
 	</div>
 {{/if}}
+	
