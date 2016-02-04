@@ -3,18 +3,18 @@
 	<canvas class="pull-left"> </canvas>
 </div>
 <div class="top_border boundary">&nbsp;</div>
-<ul class="content-list list-unstyled">
+<ul class="content-list sortable list-unstyled" id="container_list_{{topic.id}}">
 	{{#if edit_mode}}
-		<li>
+		<div>
 			<a class="btn btn-default add_content_button disable-on-edit" name="{{topic.attributes.title}}">
 				<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
 				ADD
 			</a>
-		</li>
+		</div>
 	{{/if}}
 	{{#each content_list}}
-		<li class="content to_publish" id="{{id}}""></li>
-	{{else}}<h5 class="default-item">No items found.</h5>
+		<li class="content draggable to_publish" id="{{id}}""></li>
+	{{else}}<li id="default_item_{{topic.id}}" class="default-item"><h5>No items found.</h5></li>
 	{{/each}}
 </ul>
 <div class="bottom_border boundary">&nbsp;</div>

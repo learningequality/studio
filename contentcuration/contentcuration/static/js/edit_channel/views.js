@@ -131,6 +131,7 @@ var BaseListItemView = BaseView.extend({
 	},
 
 	save: function(data){
+
 		/* TODO: Implement funtion to allow saving one item */
 		if(!this.model){
 			if(!data.title){
@@ -140,9 +141,6 @@ var BaseListItemView = BaseView.extend({
 				var node_data = new Models.NodeModel(data);
 				node_data.fetch();
 				this.containing_list_view.collection.create(node_data,{
-					success: function(){
-						console.log("CALLED THIS");
-					},
 					error: function(model, response) {
 			            console.log(model);
 			        },
@@ -150,17 +148,12 @@ var BaseListItemView = BaseView.extend({
 			}
 		}
 		else{
-			this.model.set(data);
-			console.log("data", data);
-			this.model.save({
-				success: function(){
-						console.log("CALLED THIS");
-					},
+			console.log("before save", this.model);
+			this.model.save(data, {
+				async:false,
 				error: function(model, response) {
-		            
-		            console.log(model);
+		            console.log("error", model);
 		        },
-        		wait: true
 			});
 			if(!data.title){ //Saving a channel
 				this.model.update_root({
@@ -169,6 +162,7 @@ var BaseListItemView = BaseView.extend({
 				});
 			}			
 		}
+		console.log("at save", this.model);
 	},
 	publish:function(){
 		this.model.save("published", true);

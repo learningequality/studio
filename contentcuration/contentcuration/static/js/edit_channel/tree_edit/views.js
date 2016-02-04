@@ -20,14 +20,12 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.root = this.topictrees.get({id : window.current_channel.draft}).get_root();
-
 		this.render();
 		this.clipboard_view = new ClipboardView.ClipboardList({
 	 		el: $("#clipboard-area"),
 	 		topictrees: this.topictrees,
 	 		collection: this.collection
 	 	});
-	 	console.log("channel",window.current_channel);
 	},
 	render: function() {
 		this.$el.html(this.template({edit: this.is_edit_page}));
@@ -43,14 +41,15 @@ var TreeEditView = BaseViews.BaseView.extend({
 		if(index < this.containers.length){
 			while(this.containers.length > index){
 				// TODO: Saving issues? 
+				DragHelper.destroy(this.containers[this.containers.length-1]);
 				this.containers[this.containers.length-1].delete_view();
 				this.containers.splice(this.containers.length-1);
 			}
 		}
 		
-		this.$el.find("#container_area").append("<li id='container_" + topic.id + "' class='container content-container "
-						+ "pull-left' name='" + (this.containers.length + 1) + "'></li>");
-		this.$el.find(".content-container").css("z-index", 10000);
+		this.$el.find("#container_area").append("<div id='container_" + topic.id + "' class='container content-container "
+						+ "' name='" + (this.containers.length + 1) + "'></div>");
+		//this.$el.find(".content-container").css("z-index", 10000);
 		var container_view = new ContentList({
 			el: this.$el.find("#container_area #container_" + topic.id),
 			model: topic, 
@@ -115,20 +114,23 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.containing_list_view = options.containing_list_view;
 		this.collection = options.collection.get_all_fetch(this.model.attributes.children);
 		this.topictrees = options.topictrees
-
+		
 		this.render();
+
 		this.listenTo(this.collection, "sync", this.render);
         this.listenTo(this.collection, "remove", this.render);
 		/* Set up animate sliding in from left */
-		this.$el.css("z-index", -1000);
+		//this.$el.css("z-index", -1000);
 		this.$el.css('margin-left', -this.$el.find(".container-interior").outerWidth());
 		$("#container_area").width(this.$el.find(".container-interior").outerWidth() * (this.index + 2));
 		
 		/* Animate sliding in from left */
 		this.$el.animate({'margin-left' : "0px"}, 500);
-		$("#container_area").find(".container-interior").css("z-index","0");		
+		//$("#container_area").find(".container-interior").css("z-index","0");		
+
 	},
 	render: function() {
+		DragHelper.destroy(this);
 		this.collection.sort_by_order();
 		this.$el.html(this.template({
 			topic: this.model, 
@@ -139,7 +141,11 @@ var ContentList = BaseViews.BaseListView.extend({
 
 		this.load_content();
 		this.$el.data("container", this);
-		DragHelper.handleDrop(this, "move");
+		this.$el.find(".default-item").data("data", {
+			containing_list_view: this, 
+			index:0
+		});
+		DragHelper.handleDrop(this);
 	},
 
 	events: {
@@ -150,7 +156,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		var containing_list_view = this;
 		var edit_mode = this.edit_mode;
 		var el = containing_list_view.$el.find(".content-list");
-		var index = 0;
+		var index = 1;
 		var current_node = this.current_node;
 
 		this.collection.forEach(function(entry){
@@ -161,7 +167,8 @@ var ContentList = BaseViews.BaseListView.extend({
 				model: entry, 
 				edit_mode: edit_mode,
 				containing_list_view:containing_list_view,
-				allow_edit: false
+				allow_edit: false,
+				index : index
 			});
 			if(current_node && entry.id == current_node){
 				file_view.set_opened(false);
@@ -188,25 +195,45 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	close_folders:function(){
+		
 		this.$el.find(".folder").css({
-			"width": "302px",
+			//"width": "302px",
 			"background-color": "white",
 			"border" : "none"
 		});
 
+
 		this.views.forEach(function(entry){
-			entry.$el.off("offset_changed");
-			entry.$el.attr("draggable", "true");
+			entry.set_opened(false, false);
 		});
 
 		this.$el.find(".folder .glyphicon").css("display", "inline-block");
 	},
 
-	add_to_container: function(transfer){
-		console.log("transferring...",transfer.data);
-		transfer.data.model.save({parent: this.model.id});
-		transfer.data.containing_list_view.collection.remove(transfer.data.model);
-		this.collection.add(transfer.data.model);
+	add_to_container: function(transfer, closestElement){
+		console.log("before", transfer);
+		console.log("closest", closestElement);
+		console.log("views", this.views);
+
+		var new_sort_order = 0;
+
+		if(closestElement.data("data")){
+			var element = closestElement.data("data");
+			
+			if(this.views.length > 0)
+			{
+				var index = element.index;
+				console.log("index is " + index);
+			}
+		}
+
+		window.transfer_data.save({
+			parent: this.model.id, 
+			title: transfer.model.get("title"),
+			sort_order: new_sort_order
+		});
+		//transfer.containing_list_view.collection.remove(transfer.model);
+		//this.collection.add(transfer.model);
 	}
 });
 
@@ -220,7 +247,9 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		this.edit_mode = options.edit_mode;
 		this.allow_edit = options.allow_edit;
 		this.containing_list_view = options.containing_list_view;
+		this.index = options.index;
 		this.render();
+		this.$el.data("data", this);
 	},
 	render:function(){
 		this.$el.html(this.template({
@@ -229,8 +258,6 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			edit_mode: this.edit_mode,
 			allow_edit: this.allow_edit
 		}));
-		this.$el.data("data", this);
-		if(this.edit_mode) DragHelper.handleDrag(this, 'move');
 
 		if(this.$el.find(".description").height() > 103){
 			//this.$el.find(".description").height(this.$el.find(".description").css("font-size").replace("px", "") * 3);
@@ -240,7 +267,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		}
 		if($("#hide_details_checkbox").attr("checked"))
 			this.$el.find("label").addClass("hidden_details");
-		
+		//if(this.edit_mode) DragHelper.handleDrag(this, 'move');
 	},
 
 	events: {
@@ -269,41 +296,50 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	},
 	open_folder:function(event){
 		event.preventDefault();
+		event.stopPropagation();
 		this.containing_list_view.close_folders();
-		this.set_opened(true);
+		this.set_opened(true, true);
 		this.containing_list_view.add_container(this);
-		
 	},
-	set_opened:function(animate){
-		if(animate)
-			this.$el.find(".folder").animate({'width' : "345px"}, 500);
-		else
-			this.$el.find(".folder").css('width',"345px");
-		this.$el.find(".folder").css({
-			'background-color': (this.edit_mode)? "#CCCCCC" : "#87A3C6",
-			'border' : "4px solid white",
-			'border-right' : 'none'
-		});
-		this.$el.find(".folder .glyphicon").css("display", "none");
-
-
-		var view = this;
-		this.$el.on("offset_changed", function(){
-			var container = view.containing_list_view.$el;
-			var interior = view.containing_list_view.$el.find(".container-interior");
-			if(interior.offset().top > view.$el.offset().top + view.$el.height())
-				container.find(".top_border").css("visibility", "visible");
-			else if(interior.offset().top + interior.height() < view.$el.offset().top)
-				container.find(".bottom_border").css("visibility", "visible");
+	set_opened:function(is_opened, animate){
+		if(is_opened){
+			this.$el.addClass("current_topic");
+			/*
+			if(animate)
+				this.$el.find(".folder").animate({'width' : "345px"}, 500);
 			else
-				container.find(".boundary").css("visibility", "hidden");
-		});
+				this.$el.find(".folder").css('width',"345px");
+			*/
+			this.$el.find(".folder").css({
+				'background-color': (this.edit_mode)? "#CCCCCC" : "#87A3C6",
+				'border' : "4px solid white",
+				'border-right' : 'none'
+			});
+			this.$el.find(".folder .glyphicon").css("display", "none");
 
-		this.$el.onOffsetChanged(function(){
-			 view.$el.trigger('offset_changed');
-		});
 
-		this.$el.attr("draggable", "false");
+			var view = this;
+			this.$el.on("offset_changed", function(){
+				var container = view.containing_list_view.$el;
+				var interior = view.containing_list_view.$el.find(".container-interior");
+				if(interior.offset().top > view.$el.offset().top + view.$el.height())
+					container.find(".top_border").css("visibility", "visible");
+				else if(interior.offset().top + interior.height() < view.$el.offset().top)
+					container.find(".bottom_border").css("visibility", "visible");
+				else
+					container.find(".boundary").css("visibility", "hidden");
+			});
+
+			this.$el.onOffsetChanged(function(){
+				 view.$el.trigger('offset_changed');
+			});
+
+			this.$el.attr("draggable", "false");
+		}else{
+			this.$el.off("offset_changed");
+			this.$el.attr("draggable", "true");
+			this.$el.removeClass("current_topic");
+		}
 	},
 	edit_folder: function(event){
 		this.$el.find("label").removeClass("hidden_details");

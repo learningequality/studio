@@ -22,6 +22,7 @@ var ClipboardList = BaseViews.BaseListView.extend({
 		this.listenTo(this.collection, "sync", this.render);
         this.listenTo(this.collection, "remove", this.render);
 		this.render();
+		DragHelper.handleDrop(this);
 	},
 	render: function() {
 		console.log("rendering");
@@ -33,7 +34,8 @@ var ClipboardList = BaseViews.BaseListView.extend({
 		
 		this.load_content();
 		this.$el.data("container", this);
-		DragHelper.handleDrop(this, "move"); //TODO: Debug!
+		this.$el.find("ul").data("list", this);
+		
 	},
 	events: {
 		'click .clipboard-toggler' : 'toggle_clipboard'
@@ -67,6 +69,7 @@ var ClipboardList = BaseViews.BaseListView.extend({
 		console.log("adding");
 		var copy = transfer.data.model.duplicate(this.root.id);
 		this.collection.add(copy);
+		this.render();
 		console.log("added");
 	}
 });

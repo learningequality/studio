@@ -57,8 +57,13 @@ var NodeModel = Backbone.Model.extend({
 			parent: parent_id
 		};
 		var node_data = new NodeModel(data);
-		node_data.save(data, {async:false});
-		this.copy_children(node_data, this.get("children"));
+		var self = this;
+		node_data.save(data, {async:false,
+			success:function(){
+				self.copy_children(node_data, self.get("children"));
+			}
+		});
+		
 		return node_data;
 	},
 	copy_children:function(node, original_collection){
@@ -220,7 +225,7 @@ var ChannelCollection = Backbone.Collection.extend({
 			channel_data.set({description: "No description available."});
 		var container = this;
 		
-		this.create(channel_data, {
+		return this.create(channel_data, {
 			async: false,
 			success:function(){
 				$(["draft","clipboard","deleted"/*,"published"*/]).each(function(){
@@ -232,19 +237,20 @@ var ChannelCollection = Backbone.Collection.extend({
     create_tree:function(channel, tree_name){
     	console.log(tree_name + " tree is being created...");
     	var root_node = new NodeModel();
-		root_node.save({title: channel.get("name")}, {
+		return root_node.save({title: channel.get("name")}, {
 			async: false,
 			success: function(){
 				var tree = new TopicTreeModel();
-				tree.save({
+				return tree.save({
 					channel: channel.id, 
 					root_node: root_node.id,
 					name: channel.get("name"),
 					kind:"topic"
 				}, {
+					async: false,
 					success: function(){
-						channel.save(tree_name, tree.id);
 						console.log(tree_name + " done.");
+						return channel.save(tree_name, tree.id);
 					}
 				});
 			}

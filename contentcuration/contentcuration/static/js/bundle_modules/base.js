@@ -1,4 +1,5 @@
 var attachfastclick = require("fastclick");
+
 var $ = require("jquery");
 var get_cookie = require("utils/get_cookie");
 global.$ = $;
@@ -7,6 +8,7 @@ require("handlebars/helpers");
 
 require("../../less/styles.less");
 require("bootstrap/dist/js/npm.js");
+require("jquery-sortable");
 
 var csrftoken = get_cookie("csrftoken") || "";
 

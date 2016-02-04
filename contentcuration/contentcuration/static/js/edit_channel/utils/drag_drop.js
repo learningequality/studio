@@ -5,21 +5,15 @@
 * 		Handle when multiple items are checked to be moved
 */
 function handleDrag(item, effect){
-	item.$el.attr('draggable', 'true');
-
 	item.$el.on("dragstart", function(e){
 		e.originalEvent.dataTransfer.setData("data", JSON.stringify({
 			id: item.model.id, 
 			data : $(this).wrap('<div/>').parent().html(),
 		}));
-		/*
 		e.originalEvent.dataTransfer.effectAllowed = effect;
 		e.target.style.opacity = '0.4';
-		console.log("data at this point", item.$el.data("data"));
-		*/
 		window.transfer_data = item.$el.data("data");
-		console.log("is", item.$el.data("data"));
-		console.log("setting...", window.transfer_data);
+		console.log("data is", window.transfer_data);
 	});
 	item.$el.on("dragend", function(e){
 		e.target.style.opacity = '1';
@@ -32,40 +26,67 @@ function handleDrag(item, effect){
 *	Parameters:
 *		container: container to add dropping ability to
 */
-function handleDrop(container, effect){
-	//container.$el.data("container", container);
-	container.$el.on('dragover', function(e){
-		if (e.preventDefault) e.preventDefault();
-		e.originalEvent.dataTransfer.dropEffect = effect;
+function handleDrop(element){
+	console.log("applying to ",$("#container_area").find(".content-list"));
+	var oldContainer;
+	var item_height = 0;
+	var target;
+	element.$el.find("ul.content-list").sortable({
+		group: 'sortable_list',
+	  	connectWith: '.content-list',
+	  	exclude: '.current_topic, .default-item',
+	  	delay:100,
+	  	revert:true,
+	  // animation on drop
+	  
+		onDrop: function  ($item, container, _super) {
+			var $clonedItem = $('<li/>').css({height: 0});
+			$item.before($clonedItem);
+			$clonedItem.animate({'height': $item.height()});
+			$item.animate($clonedItem.position(), function  () {
+				$clonedItem.detach();
+				_super($item, container);
+			});
+			if(target.data("data"))
+				target.data("data").containing_list_view.add_to_container(window.transfer_data, target);			
+		},
 
-		return false;
-	});
-	container.$el.on('dragenter', function(e){
-		return false;
-	});
+	    // set $item relative to cursor position*/
+		onDragStart: function ($item, container, _super) {
+			window.transfer_data = $item.data("data");
+			console.log("WINDOW IS NOW ", window.transfer_data);
+			
+			var offset = $item.offset(),
+			pointer = container.rootGroup.pointer;
+			adjustment = {
+				left: pointer.left - offset.left,
+				top: pointer.top - offset.top
+			};
+			item_height = $item.height();
+		    _super($item, container);
+	  	},
 
-	container.$el.on('drop', function(e, container){
-		if (e.stopPropagation) e.stopPropagation();
-		/*
-		var transfer = JSON.parse(e.originalEvent.dataTransfer.getData("data"));
-		console.log("original event", e.originalEvent.dataTransfer);
-		var data = transfer.$el.data("data");
-		
-		console.log("setting data as", data);
-		$(this).data("container").add_to_container({
-			data : data, 
-			is_folder: transfer.is_folder
-		});
-*/
-		$(this).data("container").add_to_container({
-			data : window.transfer_data, 
-		});
+		onDrag: function ($item, position) {
+			$item.css({
+				left: position.left - adjustment.left,
+				top: position.top - adjustment.top
+			});
+		},
+
+		afterMove: function (placeholder, container, $closestItemOrContainer) {
+			placeholder.height(item_height);
+			target = $closestItemOrContainer;
+	    	//console.log("near item", $closestItemOrContainer);
+	    },
 	});
 }
 
-
+function destroy(element){
+	element.$el.find("ul.content-list").sortable("destroy");
+}
 
 module.exports = {
-	handleDrag: handleDrag,
-	handleDrop : handleDrop
+	handleDrag : handleDrag,
+	handleDrop : handleDrop,
+	destroy : destroy
 }

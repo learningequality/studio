@@ -23,6 +23,8 @@
 }
 
 #edit, #preview{
+
+
 	::-webkit-scrollbar {
 		width: 12px;
 		margin-left:-100px;
@@ -51,10 +53,11 @@
 		*{padding:0;margin:0;}
 		padding:0;
 		margin:0;
+		margin-right:30px;
 		
 		width: @container-width + @folder-gap-width;
 		display:inline-block;
-		margin-right: -5px;
+	
 
 		.boundary{
 			width:100%;
@@ -80,7 +83,7 @@
 			min-height: @container-min-height; 
 			width:@container-width;
 			border: 4px solid @container-border-color;
-			background-color:@body-background;
+			
 			position:absolute;
 			z-index:-100;
 			canvas{
@@ -90,34 +93,30 @@
 		}
 
 		.content-list{
-			width: @container-width + @folder-gap-width;
 			height:@container-height * 0.95;
 			min-height: @container-min-height * 0.95; 
+			width: @container-width + @folder-gap-width;
+			
 			overflow-y: auto;
 			overflow-x:hidden;
 			padding:0;
+			padding-left: @sidebar-width / 4;
 			margin:0;
 			margin-top:5px;
-			z-index:150;
-			padding-left: @sidebar-width / 4;
-			position:absolute;
 
 			input[type="radio"]{
 				visibility:hidden;
 				width:@sidebar-width / 1.5;
-			}
-			
-
+			}			
 			.default-item{
 				font-style:italic;
 				font-size: 18px;
 				color:@container-border-color;
 				margin-left:@sidebar-width + 10px;
 			}
+
 			li{
 				margin-bottom: 10px;
-				width: 100%;
-
 				label{
 					h3, h4, p{color : black;}
 					vertical-align: middle;
@@ -125,10 +124,9 @@
 					background-color: @folder-color;
 					cursor:pointer;
 					overflow:hidden;
-
 					padding: 5px;
 					margin-left:10px;
-					
+
 					.glyphicon{
 						font-size:@title-size * 1.2;
 						margin-left:10px;
@@ -206,17 +204,15 @@
 				.editing{
 					height:@folder-height;
 				}
-
-
 			}
-			*[draggable=true] {
-			  -moz-user-select:none;
-			  -khtml-user-drag: element;
-			  cursor: move;
-			}
-
-
 		}
+	}
+
+	.placeholder{
+		width: @container-width - @sidebar-width - 20px;
+		background-color: white;
+		opacity: 0.4;
+		margin-left: @sidebar-width;
 	}
 
 }
@@ -252,6 +248,7 @@
 			color:black;
 			border:2px solid white;
 			font-size: 14px;
+			margin-bottom: 15px;
 		}
 
 		input[type=checkbox]{
