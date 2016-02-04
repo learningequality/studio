@@ -27,7 +27,6 @@ function handleDrag(item, effect){
 *		container: container to add dropping ability to
 */
 function handleDrop(element){
-	console.log("applying to ",$("#container_area").find(".content-list"));
 	var oldContainer;
 	var item_height = 0;
 	var target;

@@ -22,10 +22,10 @@ var ClipboardList = BaseViews.BaseListView.extend({
 		this.listenTo(this.collection, "sync", this.render);
         this.listenTo(this.collection, "remove", this.render);
 		this.render();
-		DragHelper.handleDrop(this);
+		
 	},
 	render: function() {
-		console.log("rendering");
+		DragHelper.destroy(this);
 		this.$el.html(this.template({
 			collapsed : this.collapsed,
 			content_list : this.collection.toJSON()
@@ -35,7 +35,7 @@ var ClipboardList = BaseViews.BaseListView.extend({
 		this.load_content();
 		this.$el.data("container", this);
 		this.$el.find("ul").data("list", this);
-		
+		DragHelper.handleDrop(this);
 	},
 	events: {
 		'click .clipboard-toggler' : 'toggle_clipboard'

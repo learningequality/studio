@@ -116,7 +116,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.topictrees = options.topictrees
 		
 		this.render();
-
+		this.save_all();
 		this.listenTo(this.collection, "sync", this.render);
         this.listenTo(this.collection, "remove", this.render);
 		/* Set up animate sliding in from left */
@@ -143,7 +143,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.$el.data("container", this);
 		this.$el.find(".default-item").data("data", {
 			containing_list_view: this, 
-			index:0
+			index:0,
 		});
 		DragHelper.handleDrop(this);
 	},
@@ -156,12 +156,12 @@ var ContentList = BaseViews.BaseListView.extend({
 		var containing_list_view = this;
 		var edit_mode = this.edit_mode;
 		var el = containing_list_view.$el.find(".content-list");
-		var index = 1;
+		var index = 0;
 		var current_node = this.current_node;
 
 		this.collection.forEach(function(entry){
 			/*TODO FIX THIS!*/
-			entry.set({sort_order : index++});
+			entry.set({'sort_order' : index});
 			var file_view = new ContentItem({
 				el: el.find("#" + entry.id),
 				model: entry, 
@@ -170,6 +170,7 @@ var ContentList = BaseViews.BaseListView.extend({
 				allow_edit: false,
 				index : index
 			});
+			index++;
 			if(current_node && entry.id == current_node){
 				file_view.set_opened(false);
 			}
@@ -195,9 +196,8 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	close_folders:function(){
-		
 		this.$el.find(".folder").css({
-			//"width": "302px",
+			"width": "302px",
 			"background-color": "white",
 			"border" : "none"
 		});
@@ -219,11 +219,18 @@ var ContentList = BaseViews.BaseListView.extend({
 
 		if(closestElement.data("data")){
 			var element = closestElement.data("data");
-			
 			if(this.views.length > 0)
 			{
-				var index = element.index;
-				console.log("index is " + index);
+				if(element.index-1 < 0){
+					new_sort_order = 0;
+				}
+				else if(element.index > this.views.length){
+					new_sort_order = this.views.length;
+				}else{
+					new_sort_order = (this.views[element.index-1].model.get("sort_order") 
+					+ this.views[element.index].model.get("sort_order")) / 2;
+				}
+				console.log("index is " + element.index, new_sort_order);
 			}
 		}
 
@@ -232,8 +239,14 @@ var ContentList = BaseViews.BaseListView.extend({
 			title: transfer.model.get("title"),
 			sort_order: new_sort_order
 		});
-		//transfer.containing_list_view.collection.remove(transfer.model);
-		//this.collection.add(transfer.model);
+		if(transfer.containing_list_view.collection != this.collection){
+			transfer.containing_list_view.collection.remove(transfer.model);
+			this.collection.add(transfer.model);
+		}else{
+			console.log("same collection found");
+			this.render();
+		}
+			
 	}
 });
 
@@ -249,7 +262,8 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		this.containing_list_view = options.containing_list_view;
 		this.index = options.index;
 		this.render();
-		this.$el.data("data", this);
+		
+		console.log(this.model.get("title") + " has index of " + this.index);
 	},
 	render:function(){
 		this.$el.html(this.template({
@@ -267,7 +281,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		}
 		if($("#hide_details_checkbox").attr("checked"))
 			this.$el.find("label").addClass("hidden_details");
-		//if(this.edit_mode) DragHelper.handleDrag(this, 'move');
+		this.$el.data("data", this);
 	},
 
 	events: {
@@ -304,12 +318,12 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	set_opened:function(is_opened, animate){
 		if(is_opened){
 			this.$el.addClass("current_topic");
-			/*
+			
 			if(animate)
 				this.$el.find(".folder").animate({'width' : "345px"}, 500);
 			else
 				this.$el.find(".folder").css('width',"345px");
-			*/
+			
 			this.$el.find(".folder").css({
 				'background-color': (this.edit_mode)? "#CCCCCC" : "#87A3C6",
 				'border' : "4px solid white",
