@@ -80,8 +80,13 @@ var NodeModel = Backbone.Model.extend({
 var NodeCollection = Backbone.Collection.extend({
 	model: NodeModel,
 	save: function() {
-        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
+		console.log("called collective save");
+		$(this.models).each(function(){
+			this.save();
+		});
+        //Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	},
+
 	url: function(){
        return window.Urls["node-list"]();
     },
@@ -97,6 +102,8 @@ var NodeCollection = Backbone.Collection.extend({
     		if(!model){
     			model = this.add({'id':ids[i]});
     			model.fetch({async:false});
+    		}else{
+    			console.log("found a match!");
     		}
     		to_fetch.add(model);
     	}

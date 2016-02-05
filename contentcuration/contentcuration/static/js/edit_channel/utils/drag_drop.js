@@ -1,35 +1,12 @@
-/* handleDrag: adds dragging ability to a certain item
-*	Parameters:
-*		itemid: item to add dragging ability to
-*	TODO:
-* 		Handle when multiple items are checked to be moved
-*/
-function handleDrag(item, effect){
-	item.$el.on("dragstart", function(e){
-		e.originalEvent.dataTransfer.setData("data", JSON.stringify({
-			id: item.model.id, 
-			data : $(this).wrap('<div/>').parent().html(),
-		}));
-		e.originalEvent.dataTransfer.effectAllowed = effect;
-		e.target.style.opacity = '0.4';
-		window.transfer_data = item.$el.data("data");
-		console.log("data is", window.transfer_data);
-	});
-	item.$el.on("dragend", function(e){
-		e.target.style.opacity = '1';
-		//item.$el.data("data", item);
-	});
-}
-
-
 /* handleDrop: adds dropping ability to a certain container
 *	Parameters:
 *		container: container to add dropping ability to
 */
-function handleDrop(element){
+function addDragDrop(element){
 	var oldContainer;
 	var item_height = 0;
 	var target;
+	var isaboveclosest;
 	element.$el.find("ul.content-list").sortable({
 		group: 'sortable_list',
 	  	connectWith: '.content-list',
@@ -39,6 +16,9 @@ function handleDrop(element){
 	  // animation on drop
 	  
 		onDrop: function  ($item, container, _super) {
+			console.log("closest item is", target.data("data"));
+			console.log("placeholder is above closest item", isaboveclosest);
+			target.data("isbelow", isaboveclosest);
 			var $clonedItem = $('<li/>').css({height: 0});
 			$item.before($clonedItem);
 			$clonedItem.animate({'height': $item.height()});
@@ -74,18 +54,18 @@ function handleDrop(element){
 
 		afterMove: function (placeholder, container, $closestItemOrContainer) {
 			placeholder.height(item_height);
+			isaboveclosest = $closestItemOrContainer.offset().top > $(placeholder).offset().top;
 			target = $closestItemOrContainer;
 	    	//console.log("near item", $closestItemOrContainer);
 	    },
 	});
 }
 
-function destroy(element){
+function removeDragDrop(element){
 	element.$el.find("ul.content-list").sortable("destroy");
 }
 
 module.exports = {
-	handleDrag : handleDrag,
-	handleDrop : handleDrop,
-	destroy : destroy
+	addDragDrop : addDragDrop,
+	removeDragDrop : removeDragDrop,
 }

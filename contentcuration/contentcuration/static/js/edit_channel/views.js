@@ -4,6 +4,8 @@ var Models = require("./models");
 
 var BaseView = Backbone.View.extend({
 	delete_view: function(){
+		if(this.collection)
+			this.collection.save();
 		this.undelegateEvents();
 		this.unbind();		
 		this.remove();
@@ -28,7 +30,6 @@ BaseListView = BaseView.extend({
 		});
 		this.save_queued();
 	},
-
 	set_editing: function(edit_mode_on){
 		this.allow_edit = !edit_mode_on;
 		$(".disable-on-edit").prop("disabled", edit_mode_on);
@@ -149,12 +150,27 @@ var BaseListItemView = BaseView.extend({
 		}
 		else{
 			console.log("before save", this.model);
-			this.model.save(data, {
-				async:false,
-				error: function(model, response) {
-		            console.log("error", model);
-		        },
-			});
+			if(this.model.isNew()){
+				console.log("found new", this.model);
+				this.model.save(data, {
+					async:false,
+					error: function(model, response) {
+			            console.log("error", model);
+			        },
+				});
+			}else{
+				if(this.model.attributes != data){
+					console.log("setting data");
+					//this.model.set(data);
+					this.model.save(data, {
+						async:false,
+						error:function(){
+							console.log("error", data);
+						}
+					});
+				}
+			}
+			
 			if(!data.title){ //Saving a channel
 				this.model.update_root({
 					'title' : data.name, 

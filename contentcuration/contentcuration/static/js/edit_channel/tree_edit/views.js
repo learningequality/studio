@@ -41,7 +41,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 		if(index < this.containers.length){
 			while(this.containers.length > index){
 				// TODO: Saving issues? 
-				DragHelper.destroy(this.containers[this.containers.length-1]);
+				DragHelper.removeDragDrop(this.containers[this.containers.length-1]);
 				this.containers[this.containers.length-1].delete_view();
 				this.containers.splice(this.containers.length-1);
 			}
@@ -56,7 +56,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			index: this.containers.length + 1,
 			edit_mode: this.is_edit_page,
 			collection: this.collection,
-			containing_list_view : this,
+			container : this,
 			topictrees : this.topictrees
 		});
 		this.containers.push(container_view);
@@ -111,14 +111,14 @@ var ContentList = BaseViews.BaseListView.extend({
 		_.bindAll(this, 'add_content');	
 		this.index = options.index;
 		this.edit_mode = options.edit_mode;
-		this.containing_list_view = options.containing_list_view;
-		this.collection = options.collection.get_all_fetch(this.model.attributes.children);
+		this.container = options.container;
+		this.collection = options.collection.get_all_fetch(this.model.get("children"));
 		this.topictrees = options.topictrees
-		
+		this.set_sort_orders();
 		this.render();
-		this.save_all();
-		this.listenTo(this.collection, "sync", this.render);
-        this.listenTo(this.collection, "remove", this.render);
+		this.listenTo(this.collection, "sync", this.prerender);
+        this.listenTo(this.collection, "remove", this.prerender);
+        this.lock = false;
 		/* Set up animate sliding in from left */
 		//this.$el.css("z-index", -1000);
 		this.$el.css('margin-left', -this.$el.find(".container-interior").outerWidth());
@@ -129,55 +129,80 @@ var ContentList = BaseViews.BaseListView.extend({
 		//$("#container_area").find(".container-interior").css("z-index","0");		
 
 	},
+	prerender:function(){
+		console.log("Change detected...");
+		this.render();
+	},
 	render: function() {
-		DragHelper.destroy(this);
-		this.collection.sort_by_order();
-		this.$el.html(this.template({
-			topic: this.model, 
-			edit_mode: this.edit_mode, 
-			index: this.index,
-			content_list: this.collection.toJSON(),
-		}));
+		if(!this.lock){
+			//this.collection.save();
+			console.log("rendering list for " + this.model.get("title") + " with collection", this.collection);
+			DragHelper.removeDragDrop(this);
+			this.collection.sort_by_order();
+			this.$el.html(this.template({
+				topic: this.model, 
+				edit_mode: this.edit_mode, 
+				index: this.index,
+				content_list: this.collection.toJSON(),
+			}));
 
-		this.load_content();
-		this.$el.data("container", this);
-		this.$el.find(".default-item").data("data", {
-			containing_list_view: this, 
-			index:0,
-		});
-		DragHelper.handleDrop(this);
+			this.load_content();
+			this.$el.data("container", this);
+			this.$el.find(".default-item").data("data", {
+				containing_list_view: this, 
+				index:0,
+			});
+			DragHelper.addDragDrop(this);
+			console.log("end rendering list");
+		}
 	},
 
 	events: {
 		'click .add_content_button':'add_content',
 	},
 
+	set_sort_orders: function(){
+		console.log("set_sort_orders");
+		this.lock = true;
+		var index = 1;
+		var self = this;
+		$(this.collection).each(function(){
+			if(self.model.get("children").indexOf(this.id) >= 0)
+				this.save({'sort_order' : index++}, {async:false, success:function(){console.log("cycle done here");}});
+		});
+		this.lock = false;
+		console.log("cycle end set_sort_orders");
+	},
+
 	load_content : function(){
-		var containing_list_view = this;
+		console.log("load_content", this.collection);
+		this.views = [];
+		var self = this;
 		var edit_mode = this.edit_mode;
-		var el = containing_list_view.$el.find(".content-list");
+		var el = this.$el.find(".content-list");
 		var index = 0;
 		var current_node = this.current_node;
 
 		this.collection.forEach(function(entry){
-			entry.set({'sort_order' : index});
 			var file_view = new ContentItem({
 				el: el.find("#" + entry.id),
 				model: entry, 
 				edit_mode: edit_mode,
-				containing_list_view:containing_list_view,
+				containing_list_view:self,
 				allow_edit: false,
 				index : index
 			});
 			index++;
 			if(current_node && entry.id == current_node){
-				file_view.set_opened(false);
+				file_view.set_opened(true, false);
 			}
-			containing_list_view.views.push(file_view);
+			self.views.push(file_view);
 		});
+		console.log("end load_content");
 	},
 
-	add_content: function(event){
+	add_content: function(event){ 
+		console.log("add_content");
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var new_collection = new Models.NodeCollection();
 		var add_view = new UploaderViews.AddContentView({
@@ -187,67 +212,87 @@ var ContentList = BaseViews.BaseListView.extend({
 			parent_view: this,
 			root: this.model
 		});
+		console.log("end add_content");
 	},
 
 	add_container:function(view){
 		this.current_node = view.model.id;
-		this.containing_list_view.add_container(this.index, view.model);
+		this.container.add_container(this.index, view.model);
 	},
 
 	close_folders:function(){
+		console.log("close_folders");
 		this.$el.find(".folder").css({
 			"width": "302px",
 			"background-color": "white",
 			"border" : "none"
 		});
-
-
 		$(this.views).each(function(){
-			console.log()
 			this.set_opened(false, false);
 		});
 
 		this.$el.find(".folder .glyphicon").css("display", "inline-block");
+		console.log("end close_folders");
 	},
 
-	add_to_container: function(transfer, closestElement){
-		console.log("before", transfer);
-		console.log("closest", closestElement);
-		console.log("views", this.views);
+	add_to_container: function(transfer, target){
+		console.log("add_to_container");
+		//console.log("before", transfer);
+		//console.log("closest", closestElement);
+		//console.log("views", this.views);
 
-		var new_sort_order = 0;
 
-		if(closestElement.data("data")){
-			var element = closestElement.data("data");
-			if(this.views.length > 0)
-			{
-				if(element.index-1 < 0){
-					new_sort_order = 0;
+		var new_sort_order = 1; 
+
+		if(target.data("data") && this.views.length > 0){ //Case 1: Remains at 1 if no items in list
+			console.log("add_to_container called inside with " + this.views.length + " views");
+			var element = target.data("data");
+			
+			if(this.views.length == 1){ //Case 2: one item in list
+				new_sort_order =  (target.data("isbelow"))? element.model.get("sort_order") / 2 : element.model.get("sort_order") + 1;
+			}else{
+				var first_index = element.index;
+				var second_index = (target.data("isbelow"))? element.index - 1 : element.index + 1;
+
+				if(first_index == 0 && target.data("isbelow")){ //Case 3: at top of list
+					console.log("add_to_container inserting at top of list");
+					new_sort_order = this.views[first_index].model.get("sort_order") / 2;
 				}
-				else if(element.index > this.views.length){
-					new_sort_order = this.views.length;
-				}else{
-					new_sort_order = (this.views[element.index-1].model.get("sort_order") 
-					+ this.views[element.index].model.get("sort_order")) / 2;
+				else if(first_index == this.views.length -1 && !target.data("isbelow")){ //Case 4: at bottom of list
+					console.log("add_to_container inserting at bottom of list");
+					new_sort_order = this.views[first_index].model.get("sort_order") + 1;
 				}
-				console.log("index is " + element.index, new_sort_order);
+				else{ //Case 5: in middle of list
+					console.log("add_to_container inserting bewteen " + this.views[first_index].model.get("title") 
+								+ "(order " + this.views[first_index].model.get("sort_order") + ") and " 
+								+ this.views[second_index].model.get("title") + "(order " 
+								+ this.views[second_index].model.get("sort_order") + ")");
+					new_sort_order = (this.views[second_index].model.get("sort_order") 
+					+ this.views[first_index].model.get("sort_order")) / 2;
+				}
+				console.log("add_to_container index is " + element.index, new_sort_order);
 			}
 		}
 
-		var self=this;
 
-		$.when(window.transfer_data.set({
+		console.log("add_to_container sort order " + new_sort_order);
+
+		var self=this;
+		window.transfer_data.save({
 			parent: this.model.id, 
 			title: transfer.model.get("title"),
 			sort_order: new_sort_order
-		})).then(function(){
-			if(transfer.containing_list_view.collection != self.collection){
-				transfer.containing_list_view.collection.remove(transfer.model);
-				self.collection.add(transfer.model);
-			}else{
-				self.render();
-			}
-		});	
+		});
+		console.log("add_to_container before", this.collection);
+		if(transfer.containing_list_view.collection != this.collection){
+			console.log("add_to_container transferring to different container");
+			transfer.containing_list_view.collection.remove(transfer.model);
+			this.collection.add(transfer.model);
+		}
+		console.log("add_to_container after", this.collection);
+		this.render();
+			
+		console.log("end add_to_container");
 	}
 });
 
@@ -264,19 +309,19 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		this.index = options.index;
 		this.render();
 		
-		console.log(this.model.get("title") + " has index of " + this.index);
+		console.log(this.model.get("title") + " index is " + this.index);
 	},
 	render:function(){
 		this.$el.html(this.template({
 			node: this.model,
-			isfolder: this.model.attributes.kind.toLowerCase() == "topic",
+			isfolder: this.model.get("kind").toLowerCase() == "topic",
 			edit_mode: this.edit_mode,
 			allow_edit: this.allow_edit
 		}));
 
 		if(this.$el.find(".description").height() > 103){
 			//this.$el.find(".description").height(this.$el.find(".description").css("font-size").replace("px", "") * 3);
-			console.log(this.model.attributes.title, this.$el.find(".description").height());
+			console.log(this.model.get("title"), this.$el.find(".description").height());
 			this.$el.find(".filler").css("display", "inline");
 			//this.$el.find(".description").
 		}
@@ -312,9 +357,11 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	open_folder:function(event){
 		event.preventDefault();
 		event.stopPropagation();
+		console.log("open_folder");
 		this.containing_list_view.close_folders();
 		this.set_opened(true, true);
 		this.containing_list_view.add_container(this);
+		console.log("end open_folder");
 	},
 	set_opened:function(is_opened, animate){
 		if(is_opened){
@@ -331,8 +378,6 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 				'border-right' : 'none'
 			});
 			this.$el.find(".folder .glyphicon").css("display", "none");
-
-
 			var view = this;
 			this.$el.on("offset_changed", function(){
 				var container = view.containing_list_view.$el;

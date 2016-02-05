@@ -33,24 +33,27 @@ var AddContentView = BaseViews.BaseListView.extend({
 	},
 
 	load_content:function(){
-		var containing_list_view = this;
+		var self = this;
 		/* TODO: Use if re-rendering previously selected items*/
 		this.collection.forEach(function(entry){
 			var node_view = new NodeListItem({
 				edit: false,
-				containing_list_view: containing_list_view,
-				el: containing_list_view.$el.find("#content_item_" + entry.cid),
+				containing_list_view: self,
+				el: self.$el.find("#content_item_" + entry.cid),
 				model: entry,
 				root: this.root
 			});
-			containing_list_view.views.push(node_view);
+			self.views.push(node_view);
 		});
 	},
 	add_topic:function(){
 		$("#upload_content_add_list").append("<div id='new'></div>");
-		var topic = this.collection.add({kind:"topic"});
-
-		topic.set("title", (this.counter > 0)? "Topic " + this.counter : "Topic");
+		var topic = new Models.NodeModel({
+			"kind":"topic", 
+			"title": (this.counter > 0)? "Topic " + this.counter : "Topic"
+		});
+		console.log("Adding", topic);
+		this.collection.add(topic);
 		this.counter++;
 		var item_view = new NodeListItem({
 			edit: true,
@@ -109,6 +112,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		this.main_collection = options.main_collection;
 		this.render();
 		this.parent_view.set_editing(true);
+
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -117,6 +121,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			allow_add: this.allow_add
 		}));
 		this.load_content();
+		console.log("COLLECTION IS NOW", this.collection);
 	},
 	events: {
 		'click .close_uploader' : 'close_uploader',
@@ -158,20 +163,23 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		/* TODO :fix to save multiple nodes at a time */
 		//this.current_view.save_node();
 		var collection = this.parent_view.collection;
-		this.views.forEach(function(entry){
-			collection.add(entry.model);
-			entry.set_edited(false);
+		$(this.views).each(function(){
+			this.save(this.model.attributes);
+			collection.add(this.model);
+			this.set_edited(false);
 		});
-		this.save_all();
-		this.main_collection.add(this.collection.toJSON());
+		collection.save();
+		this.parent_view.render();
+		//this.main_collection.add(this.collection);
 	},
 	save_and_finish: function(){
 		this.save_nodes();
 		this.parent_view.set_editing(false);
+		this.parent_view.render();
 		this.delete_view();
 	},
 	add_more:function(event){
-		if(this.model_queue.length == 0 || confirm("Unsaved Metadata Detected! Exiting now will"
+		if(this.model_queue.length == 0 || confirm("Unsaved Data Detected! Exiting now will"
 			+ " undo any new changes. \n\nAre you sure you want to exit?")){
 			var content_view = new AddContentView({
 				collection: this.collection,
@@ -318,7 +326,6 @@ var UploadedItem = ContentItem.extend({
 	template: require("./hbtemplates/uploaded_list_item.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'remove_topic','set_current_node');	
-		this.collection = options.collection;
 		this.containing_list_view = options.containing_list_view;
 		this.root = options.root;
 		
@@ -351,6 +358,7 @@ var UploadedItem = ContentItem.extend({
 		this.containing_list_view.set_current_node(this);
 	},
 	save_node:function(){
+		console.log("calling save node");
 		this.set_edited(false);
 		this.save({
 			title: $("#input_title").val(), 
