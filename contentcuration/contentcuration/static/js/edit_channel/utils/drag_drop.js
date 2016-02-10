@@ -10,14 +10,12 @@ function addDragDrop(element){
 	element.$el.find("ul.content-list").sortable({
 		group: 'sortable_list',
 	  	connectWith: '.content-list',
-	  	exclude: '.current_topic, .default-item',
+	  	exclude: '.current_topic, .default-item, #preview li',
 	  	delay:100,
 	  	revert:true,
 	  // animation on drop
 	  
 		onDrop: function  ($item, container, _super) {
-			console.log("closest item is", target.data("data"));
-			console.log("placeholder is above closest item", isaboveclosest);
 			target.data("isbelow", isaboveclosest);
 			var $clonedItem = $('<li/>').css({height: 0});
 			$item.before($clonedItem);
@@ -27,13 +25,13 @@ function addDragDrop(element){
 				_super($item, container);
 			});
 			if(target.data("data"))
-				target.data("data").containing_list_view.add_to_container(window.transfer_data, target);			
+				target.data("data").containing_list_view.drop_in_container(window.transfer_data, target);			
 		},
 
 	    // set $item relative to cursor position*/
 		onDragStart: function ($item, container, _super) {
 			window.transfer_data = $item.data("data");
-			console.log("WINDOW IS NOW ", window.transfer_data);
+			console.log("model found  WINDOW IS NOW ", window.transfer_data);
 			
 			var offset = $item.offset(),
 			pointer = container.rootGroup.pointer;
@@ -42,6 +40,10 @@ function addDragDrop(element){
 				top: pointer.top - offset.top
 			};
 			item_height = $item.height();
+		    _super($item, container);
+	  	},
+	  	onDragEnd: function ($item, container, _super) {
+			console.log("model found  drag end", window.transfer_data);
 		    _super($item, container);
 	  	},
 

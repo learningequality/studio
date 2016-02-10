@@ -4,8 +4,6 @@ var Models = require("./models");
 
 var BaseView = Backbone.View.extend({
 	delete_view: function(){
-		if(this.collection)
-			this.collection.save();
 		this.undelegateEvents();
 		this.unbind();		
 		this.remove();
@@ -22,13 +20,11 @@ BaseListView = BaseView.extend({
 	collection : null,		//Collection to be used for data
 	allow_edit: false,
 	item_view: null, // Use to determine how to save, delete, update files
-	model_queue: [], // Used to keep track of temporary model data
 	topictrees : null,
 	save_all: function(){
 		$(this.views).each(function(){
 			this.save(this.model.attributes);
 		});
-		this.save_queued();
 	},
 	set_editing: function(edit_mode_on){
 		this.allow_edit = !edit_mode_on;
@@ -36,80 +32,66 @@ BaseListView = BaseView.extend({
 		$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
 		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
 	},
-	enqueue: function(model){
-		this.model_queue.push(model);
-	},
-	dequeue:function(model){
-		this.model_queue.remove(model);
-	},
-	save_queued:function(){
-		this.model_queue.forEach(function(entry){
-			entry.save();
-		});
-		this.model_queue = [];
-	},
+
 	reset: function(){
 		this.views.forEach(function(entry){
 			entry.model.unset();
-		});
-	}
-	/* TODO: Figure out way to abstract loading content 
-	load_content:function(){
-	
-		var containing_list_view = this;
-		switch(this.item_view){
-			case "channel":
-				var ChannelViews = require("./new_channel/views");
-			break;
+		}); 
+	},
+	drop_in_container:function(transfer, target){
+		/*Calculate new sort order*/
+		var new_sort_order = 1; 
+		if(target.data("data") && this.views.length > 0){ //Case 1: Remains at 1 if no items in list
+			console.log("add_to_container called inside with " + this.views.length + " views");
+			var element = target.data("data");
 			
-			case "clipboard":
-				this.collection.forEach(function(entry){
-					var clipboard_item_view = new ClipboardListItemView({
-						containing_list_view: containing_list_view,
-						el: containing_list_view.$el.find("#" + entry.cid),
-						model: entry
-					});
-					containing_list_view.views.push(clipboard_item_view);
-				});
-			break;
-			case "adding_content":
-				this.collection.forEach(function(entry){
-					var node_view = new NodeListItem({
-						edit: false,
-						containing_list_view: containing_list_view,
-						el: containing_list_view.$el.find("#" + entry.cid),
-						model: entry
-					});
-					containing_list_view.views.push(node_view);
-				});
-			break;
-			case "uploading_content":
-				this.collection.forEach(function(entry){
-					var node_view = new UploadedItem({
-						model: entry,
-						el: $("#uploaded_list #item_" + entry.cid),
-						containing_list_view: containing_list_view,
-						root: root,
-					});
-					containing_list_view.views.push(node_view);
-				});
-			break;
-			case "node":
-				this.collection.forEach(function(entry){
-					el.append("<li id='"+ entry.cid +"'></li>");
-					var file_view = new ContentView({
-						el: el.find(".content-list #" + entry.cid),
-						model: entry, 
-						edit_mode: edit_mode,
-						containing_list_view:containing_list_view,
-						allow_edit: false
-					});
-					containing_list_view.views.push(file_view);
-				});
-			break;
-			
+			if(this.views.length == 1){ //Case 2: one item in list
+				new_sort_order =  (target.data("isbelow"))? element.model.get("sort_order") / 2 : element.model.get("sort_order") + 1;
+			}else{
+				var first_index = element.index;
+				var second_index = (target.data("isbelow"))? element.index - 1 : element.index + 1;
+
+				if(second_index <= 0 && target.data("isbelow")){ //Case 3: at top of list
+					console.log("add_to_container inserting at top of list");
+					new_sort_order = this.views[first_index].model.get("sort_order") / 2;
+				}
+				else if(second_index >= this.views.length -1){ //Case 4: at bottom of list
+					console.log("add_to_container inserting at bottom of list");
+					new_sort_order = this.views[first_index].model.get("sort_order") + 1;
+				}
+				else{ //Case 5: in middle of list
+					console.log("add_to_container inserting bewteen " + this.views[first_index].model.get("title") 
+								+ "(order " + this.views[first_index].model.get("sort_order") + ") and " 
+								+ this.views[second_index].model.get("title") + "(order " 
+								+ this.views[second_index].model.get("sort_order") + ")");
+					new_sort_order = (this.views[second_index].model.get("sort_order") 
+					+ this.views[first_index].model.get("sort_order")) / 2;
+				}
+			}
 		}
-	}*/
+
+		/*Set model's parent*/
+		var self=this;
+		transfer.model.set({
+			sort_order: new_sort_order,
+		});
+		if(this.model.id != transfer.model.get("parent")){
+			this.model.get("children").push(transfer.model.id);
+			transfer.model.set({
+				parent: this.model.id
+			});
+			transfer.model.save({
+				async:false,
+				success:function(){
+					transfer.containing_list_view.render();
+				}
+			});
+			
+		}else
+			transfer.model.save({async:false});
+		console.log("add_to_container model", transfer.model);
+		this.render();
+	}
 });
 
 
@@ -117,22 +99,36 @@ var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
 	delete:function(){
 		if(!this.model.get("kind")) { 
-			/* TODO: destroy all nodes from channel */
 			this.model.delete_channel();
 		}else{
 			if(this.containing_list_view.item_view != "uploading_content"){
-				console.log("trees",window.current_channel.deleted);
+				this.containing_list_view.lock = true;
 				if(!this.deleted_root)
-					this.deleted_root = this.containing_list_view.topictrees.get({id : window.current_channel.deleted}).get("root_node");
-				this.model.save("parent" , this.deleted_root);
-				this.containing_list_view.collection.remove(this.model);
-				/*TODO: check if node name already exists in trash, then delete older version*/
+					this.deleted_root = this.containing_list_view.topictrees.get({id : window.current_channel.deleted}).get_root();
+				
+				/*Check if node name already exists in trash, then delete older version*/
+				var self = this;
+				var trash_collection = this.containing_list_view.collection.get_all_fetch(this.deleted_root.get("children"));
+				$(trash_collection.models).each(function(){
+					if(this.get("title") == self.model.get("title")){
+						this.destroy({async:false});
+					}
+				});
+				
+				var old_parent = this.containing_list_view.collection.add({id: this.model.get("parent")});
+				old_parent.fetch();
+				console.log("old parent before", old_parent.get("children"));
+				console.log("deleted root", this.deleted_root);
+				this.model.save({"parent" :this.deleted_root.id}, {async:false, success:function(){console.log("called save");}});
+				console.log("old parent after", old_parent.get("children"));
+				this.delete_view();
+				this.containing_list_view.lock = false;
+				//this.containing_list_view.collection.remove(this.model);
 			}
 		}
 	},
 
-	save: function(data){
-
+	save: function(data, options){
 		/* TODO: Implement funtion to allow saving one item */
 		if(!this.model){
 			if(!data.title){
@@ -141,35 +137,11 @@ var BaseListItemView = BaseView.extend({
 			else{
 				var node_data = new Models.NodeModel(data);
 				node_data.fetch();
-				this.containing_list_view.collection.create(node_data,{
-					error: function(model, response) {
-			            console.log(model);
-			        },
-				});
+				this.containing_list_view.collection.create(node_data, options);
 			}
 		}
 		else{
-			console.log("before save", this.model);
-			if(this.model.isNew()){
-				console.log("found new", this.model);
-				this.model.save(data, {
-					async:false,
-					error: function(model, response) {
-			            console.log("error", model);
-			        },
-				});
-			}else{
-				if(this.model.attributes != data){
-					console.log("setting data");
-					//this.model.set(data);
-					this.model.save(data, {
-						async:false,
-						error:function(){
-							console.log("error", data);
-						}
-					});
-				}
-			}
+			this.model.save(data, options);
 			
 			if(!data.title){ //Saving a channel
 				this.model.update_root({
@@ -178,23 +150,10 @@ var BaseListItemView = BaseView.extend({
 				});
 			}			
 		}
-		console.log("at save", this.model);
 	},
-	publish:function(){
-		this.model.save("published", true);
 
-		//Save published of all children
-	},
 	set_editing: function(edit_mode_on){
 		this.containing_list_view.set_editing(edit_mode_on);
-	},
-	/*Set up to be saved*/
-	enqueue: function(){
-		this.containing_list_view.enqueue(this.model);
-	},
-	/*Remove from list to be saved*/
-	dequeue: function(){
-		this.containing_list_view.dequeue(this.model);
 	},
 });
 

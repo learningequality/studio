@@ -64,14 +64,15 @@ var ClipboardList = BaseViews.BaseListView.extend({
 			container.collection.add(entry);
 		});
 	},
-
-	add_to_container: function(transfer){
+/*
+	drop_in_container: function(transfer){
 		console.log("adding");
 		var copy = transfer.data.model.duplicate(this.root.id);
 		this.collection.add(copy);
 		this.render();
 		console.log("added");
 	}
+	*/
 });
 
 /* Loaded when user clicks clipboard button below navigation bar */
@@ -133,7 +134,7 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 	},
 	load_subfiles:function(){
 		var subfiles = new Models.NodeCollection();
-		subfiles.get_all_fetch(this.model.get("children"));
+		subfiles = this.collection.get_all_fetch(this.model.get("children"));
 		var self = this;
 		subfiles.forEach(function(entry){
 			console.log(self.$el.find("#clipboard_item_" + entry.id));

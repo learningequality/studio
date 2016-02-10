@@ -65,6 +65,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 		this.views.push(item_view);
 	},
 	close_uploader: function(){
+		this.parent_view.set_editing(false);
 		this.delete_view();
 	},
 	edit_metadata: function(){
@@ -102,6 +103,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 	disable: false,
 	current_node: null,
 	item_view:"uploading_content",
+	model_queue: [], // Used to keep track of temporary model data
 	initialize: function(options) {
 		_.bindAll(this, 'close_uploader', "save_nodes", 'check_item',
 						'add_tag','save_and_finish','add_more','set_edited');	
@@ -150,33 +152,44 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 	},
 
 	close_uploader: function(){
-		if(this.model_queue.length == 0 || confirm("Unsaved Metadata Detected! Exiting now will"
-			+ " undo any new changes. \n\nAre you sure you want to exit?")){
+		if(this.model_queue.length == 0){
 			this.parent_view.render();
 			this.parent_view.set_editing(false);
 			this.delete_view();
-		}else{
-			this.reset();
+		}else if(confirm("Unsaved Metadata Detected! Exiting now will"
+			+ " undo any new changes. \n\nAre you sure you want to exit?")){
+			this.views.forEach(function(entry){
+				entry.unset_node();
+			});
+			this.parent_view.render();
+			this.parent_view.set_editing(false);
+			this.delete_view();
 		}
 	},
 	save_nodes: function(){
 		/* TODO :fix to save multiple nodes at a time */
 		//this.current_view.save_node();
-		var collection = this.parent_view.collection;
-		$(this.views).each(function(){
-			this.save(this.model.attributes);
-			collection.add(this.model);
-			this.set_edited(false);
-		});
-		collection.save();
-		this.parent_view.render();
+		var self = this;
+		if(this.root){
+			if(self.allow_add)
+				this.parent_view.add_nodes(this.views);
+			$(this.views).each(function(){
+				this.set_edited(false);
+			});
+		}else{
+			this.parent_view.lock = true;
+			$(this.views).each(function(){
+				this.save(this.model.attributes);
+			});
+			this.parent_view.lock = false;
+		}
+		
+		this.save_queued();
 		//this.main_collection.add(this.collection);
 	},
 	save_and_finish: function(){
 		this.save_nodes();
-		this.parent_view.set_editing(false);
-		this.parent_view.render();
-		this.delete_view();
+		this.close_uploader();
 	},
 	add_more:function(event){
 		if(this.model_queue.length == 0 || confirm("Unsaved Data Detected! Exiting now will"
@@ -188,10 +201,12 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 				root: (this.allow_add)? this.root : null,
 				main_collection : this.main_collection
 			});
+			$(this.views).each(function(){
+				this.unset_node();
+			});
+			this.reset();
 			this.undelegateEvents();
 			this.unbind();	
-		}else{
-			this.reset();
 		}
 	},
 	set_current_node:function(view){
@@ -204,8 +219,8 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		this.$el.find("#description_error").css("display", (this.current_view && this.$el.find("#input_description").val().trim() == "")? "inline" : "none");
 		if(!this.current_view || (this.$el.find("#input_title").val().trim() != "" && this.$el.find("#input_description").val().trim() !="")){
 			if(this.current_view){
-				if(this.allow_add)
-					this.current_view.set_node();
+				//if(this.allow_add)
+				this.current_view.set_node();
 				this.current_view.render();
 				this.current_view.$el.css("background-color", "transparent");
 			}
@@ -247,7 +262,18 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		this.current_view.set_edited(true);
 		this.current_view.set_node();
 	},
-	
+	enqueue: function(model){
+		this.model_queue.push(model);
+	},
+	dequeue:function(model){
+		this.model_queue.remove(model);
+	},
+	save_queued:function(){
+		this.model_queue.forEach(function(entry){
+			entry.save();
+		});
+		this.model_queue = [];
+	},
 });
 
 
@@ -328,15 +354,19 @@ var UploadedItem = ContentItem.extend({
 		_.bindAll(this, 'remove_topic','set_current_node');	
 		this.containing_list_view = options.containing_list_view;
 		this.root = options.root;
-		
 		this.edited = false;
+		this.originalData = {
+			"title":this.model.get("title"),
+			"description":this.model.get("description")
+		};
 		this.render();
+		console.log("setting featured", this.originalData);
 
 	},
 	render: function() {
 		this.$el.html(this.template({
 			topic: this.model,
-			kind: this.model.attributes.kind.toUpperCase(),
+			kind: this.model.get("kind").toUpperCase(),
 			id: this.model.cid,
 		}));
 		this.set_edited(this.edited);
@@ -358,21 +388,27 @@ var UploadedItem = ContentItem.extend({
 		this.containing_list_view.set_current_node(this);
 	},
 	save_node:function(){
-		console.log("calling save node");
 		this.set_edited(false);
 		this.save({
 			title: $("#input_title").val(), 
 			description: $("#input_description").val(),
-			parent: (this.root.id) ? this.root.id : this.model.parent
+			parent: (this.root) ? this.root.id : this.model.get("parent")
 		});
+		this.originalData = {
+			"title":$("#input_title").val(), 
+			"description":$("#input_description").val(),
+		};
 	},
 	set_node:function(){
 		this.model.set({
 			title: $("#input_title").val(), 
 			description: $("#input_description").val(),
-			parent: (this.root.id) ? this.root.id : this.model.parent
+			parent: (this.root) ? this.root.id : this.model.get("parent")
 		});
 	},
+	unset_node:function(){
+		this.save(this.originalData, {async:false});
+	}
 });
 
 module.exports = {

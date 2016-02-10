@@ -10,7 +10,7 @@
 {{else}}
 	<label class="file" for="item_{{node.id}}" title="{{node.attributes.title}}">
 {{/if}}
-{{node.id}}
+{{node.id}} ({{#if node.attributes.published}}p{{else}}up{{/if}}) : {{#each node.attributes.children}}{{this}}&nbsp;{{/each}}
 {{#if allow_edit}}
 	<input id="textbox_{{node.id}}" type="text" class="topic_textbox" value="{{node.attributes.title}}" placeholder="Enter Topic Name"/>
 	{{#if isfolder}}
