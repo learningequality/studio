@@ -21,12 +21,13 @@
 	@uploader-list-height: 200px;
 	@uploader-preview-bg-color: #585858;
 	@uploader-grayed-out-color: #BDBDBD;
+	@uploader-error-input-color : #F6CECE;
 
 
 	background-color: @uploader-background-color;
 	height: @uploader-height;
 	border: 1px solid gray;
-	overflow:auto;
+	overflow:hidden;
 	position:absolute;
 	top: 10vh;
 	left:30vw;
@@ -122,6 +123,9 @@
 	.gray-out{
 		background-color:@uploader-grayed-out-color;
 	}
+	.error_input{
+		background-color :@uploader-error-input-color;
+	}
 
 	.tag{
 		background-color: lightgray;
@@ -133,17 +137,21 @@
 		border-radius:5px;
 	}
 
+	#tag_area{
+		height:100px;
+		overflow-y:auto;
+	}
+
 	.required{
 		margin-left:5px;
 		color:red;
 		span{
 			font-style:italic;
 			font-size: 8pt;
-			display:none;
 		}
 	}
 
-	.upload_input{
+	.upload_input, .tag_input{
 		width:100%;
 	}
 

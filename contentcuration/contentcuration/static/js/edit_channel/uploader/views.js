@@ -50,7 +50,8 @@ var AddContentView = BaseViews.BaseListView.extend({
 		$("#upload_content_add_list").append("<div id='new'></div>");
 		var topic = new Models.NodeModel({
 			"kind":"topic", 
-			"title": (this.counter > 0)? "Topic " + this.counter : "Topic"
+			"title": (this.counter > 0)? "Topic " + this.counter : "Topic",
+			"parent" : this.root.id
 		});
 		console.log("Adding", topic);
 		this.collection.add(topic);
@@ -123,7 +124,6 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			allow_add: this.allow_add
 		}));
 		this.load_content();
-		console.log("COLLECTION IS NOW", this.collection);
 	},
 	events: {
 		'click .close_uploader' : 'close_uploader',
@@ -158,9 +158,11 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			this.delete_view();
 		}else if(confirm("Unsaved Metadata Detected! Exiting now will"
 			+ " undo any new changes. \n\nAre you sure you want to exit?")){
-			this.views.forEach(function(entry){
-				entry.unset_node();
-			});
+			if(!this.allow_add){
+				this.views.forEach(function(entry){
+					entry.unset_node();
+				});
+			}
 			this.parent_view.render();
 			this.parent_view.set_editing(false);
 			this.delete_view();
@@ -168,24 +170,28 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 	},
 	save_nodes: function(){
 		/* TODO :fix to save multiple nodes at a time */
-		//this.current_view.save_node();
-		var self = this;
-		if(this.root){
-			if(self.allow_add)
-				this.parent_view.add_nodes(this.views);
-			$(this.views).each(function(){
-				this.set_edited(false);
+		if(this.allow_add){
+			this.views.forEach(function(entry){
+				if(entry.model.isValid()){
+					entry.set_edited(false);
+				}else{
+					entry.set_current_node(null);
+				}
 			});
+			this.parent_view.add_nodes(this.views);
 		}else{
-			this.parent_view.lock = true;
-			$(this.views).each(function(){
-				this.save(this.model.attributes);
+			this.views.forEach(function(entry){
+				this.views.model.set(entry.model.attributes, {validate:true});
+				if(this.views.isValid()){
+					entry.save(entry.model.attributes, {validate:false});
+					entry.set_edited(false);
+				}else{
+					entry.set_current_node(null);
+				}
+				
 			});
-			this.parent_view.lock = false;
 		}
-		
 		this.save_queued();
-		//this.main_collection.add(this.collection);
 	},
 	save_and_finish: function(){
 		this.save_nodes();
@@ -215,33 +221,37 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			this.current_node.set_edited(true);
 			to_save.push(this.current_node);
 		}*/
-		this.$el.find("#title_error").css("display", (this.current_view && this.$el.find("#input_title").val().trim() == "")? "inline" : "none");
-		this.$el.find("#description_error").css("display", (this.current_view && this.$el.find("#input_description").val().trim() == "")? "inline" : "none");
-		if(!this.current_view || (this.$el.find("#input_title").val().trim() != "" && this.$el.find("#input_description").val().trim() !="")){
-			if(this.current_view){
-				//if(this.allow_add)
-				this.current_view.set_node();
-				this.current_view.render();
-				this.current_view.$el.css("background-color", "transparent");
+		this.$el.find(".disable_on_error").prop("disabled", false);
+		this.$el.find(".disable_on_error").css("cursor", "pointer");
+		if(!this.current_view && !this.disable){
+			this.set_current(view);
+		}else {
+			if(!this.disable && this.current_view.validate()){
+				/* Previous node passes all tests */
+				this.$el.find("#title_error").html("");
+				this.$el.find("#description_error").html("");
+				this.set_current(view);
+			}else{
+				/*TODO: disable everything*/
+				this.$el.find(".disable_on_error").prop("disabled", true);
+				this.$el.find(".disable_on_error").css("cursor", "not-allowed");
 			}
-
-			this.current_node = this.collection.get({cid: view.model.cid});
-			this.current_view = view;
-
-			this.current_view.$el.css("background-color", "#E6E6E6");
-
-			if(!this.disable){
-				this.parent_view.set_editing(false);
-				this.$el.find("#input_title").val(this.current_node.attributes.title);
-				this.$el.find("#input_description").val(this.current_node.attributes.description);
-			}			
 		}
+	},
+	set_current:function(view){
+		this.current_node = this.collection.get({cid: view.model.cid});
+		if(this.current_view) this.current_view.$el.css("background-color", "transparent");
+		this.current_view = view;
+		this.current_view.$el.css("background-color", "#E6E6E6");
+		this.parent_view.set_editing(false);
+		this.$el.find("#input_title").val(this.current_node.get("title"));
+		this.$el.find("#input_description").val(this.current_node.get("description"));
 	},
 	check_item: function(){
 		this.disable = this.$el.find("#uploaded_list :checked").length > 1;
 		this.parent_view.set_editing(this.disable);
-		this.$el.find("#input_title").val((this.disable || !this.current_node)? " " : this.current_node.attributes.title);
-		this.$el.find("#input_description").val((this.disable || !this.current_node)? " " : this.current_node.attributes.description);
+		this.$el.find("#input_title").val((this.disable || !this.current_node)? " " : this.current_node.get("title"));
+		this.$el.find("#input_description").val((this.disable || !this.current_node)? " " : this.current_node.get("description"));
 
 		if(this.disable) {
 			this.$el.find(".disable-on-edit").addClass("gray-out");
@@ -258,9 +268,10 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		}
 	},
 	set_edited:function(event){
-		this.current_view.enqueue();
+		this.enqueue(this.current_view.model);
 		this.current_view.set_edited(true);
 		this.current_view.set_node();
+		this.current_view.render();
 	},
 	enqueue: function(model){
 		this.model_queue.push(model);
@@ -291,8 +302,6 @@ var ContentItem =  BaseViews.BaseListItemView.extend({
 	},
 });
 
-
-
 var NodeListItem = ContentItem.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
 	initialize: function(options) {
@@ -303,10 +312,6 @@ var NodeListItem = ContentItem.extend({
 		
 		this.$el.attr("id", this.model.cid);
 		this.render();
-		
-		this.model.set({
-			parent: this.root.id
-		});
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -341,11 +346,10 @@ var NodeListItem = ContentItem.extend({
 	edit_topic: function(){
 		this.edit = true;
 		this.remove_item();
-		this.enqueue();
+		this.containing_list_view.enqueue(this.model);
 		this.render();
 	}
 });
-
 
 var UploadedItem = ContentItem.extend({
 	tags: [],
@@ -360,8 +364,6 @@ var UploadedItem = ContentItem.extend({
 			"description":this.model.get("description")
 		};
 		this.render();
-		console.log("setting featured", this.originalData);
-
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -380,11 +382,11 @@ var UploadedItem = ContentItem.extend({
 	},
 	set_edited:function(edited){
 		this.edited = edited;
-		$("#item_" + this.model.cid + " .item_name").html(this.model.attributes.title + ((edited) ? " <b>*</b>" : ""));
+		$("#item_" + this.model.cid + " .item_name").html(this.model.get("title") + ((edited) ? " <b>*</b>" : ""));
 	},
 	
 	set_current_node:function(event){
-		event.preventDefault();
+		if(event) event.preventDefault();
 		this.containing_list_view.set_current_node(this);
 	},
 	save_node:function(){
@@ -392,7 +394,7 @@ var UploadedItem = ContentItem.extend({
 		this.save({
 			title: $("#input_title").val(), 
 			description: $("#input_description").val(),
-			parent: (this.root) ? this.root.id : this.model.get("parent")
+			parent: (this.allow_add) ? this.root.id : this.model.get("parent")
 		});
 		this.originalData = {
 			"title":$("#input_title").val(), 
@@ -401,13 +403,34 @@ var UploadedItem = ContentItem.extend({
 	},
 	set_node:function(){
 		this.model.set({
-			title: $("#input_title").val(), 
-			description: $("#input_description").val(),
-			parent: (this.root) ? this.root.id : this.model.get("parent")
+			title: $("#input_title").val().trim(), 
+			description: $("#input_description").val().trim(),
+			parent: (this.allow_add) ? this.root.id : this.model.get("parent")
 		});
 	},
 	unset_node:function(){
-		this.save(this.originalData, {async:false});
+		this.save(this.originalData, {async:false, validate:false});
+	},
+	validate:function(){
+		if(this.containing_list_view.$el.find("#input_title").val() == ""){
+			this.containing_list_view.$el.find("#title_error").html("Title is required");
+			this.containing_list_view.$el.find("#input_title").addClass("error_input");
+			return false;
+		}
+		if(this.containing_list_view.$el.find("#input_description").val() == ""){
+			this.containing_list_view.$el.find("#description_error").html("Description is required");
+			this.containing_list_view.$el.find("#input_description").addClass("error_input");
+			return false;
+		}
+		this.model.set(this.model.attributes, {validate:true});
+		if(this.model.validationError){
+			this.containing_list_view.$el.find("#title_error").html(this.model.validationError);
+			this.containing_list_view.$el.find("#input_title").addClass("error_input");
+			return false;
+		}
+		this.containing_list_view.$el.find("#input_title").removeClass("error_input");
+		this.containing_list_view.$el.find("#input_description").removeClass("error_input");
+		return true;
 	}
 });
 

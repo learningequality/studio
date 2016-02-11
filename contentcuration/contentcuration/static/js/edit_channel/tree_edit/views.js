@@ -165,8 +165,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		var index = 1;
 		var self = this;
 		this.childrenCollection.models.forEach(function(entry){
-			console.log("entry is", entry);
-			entry.save({'sort_order' : index++});
+			entry.save({'sort_order' : index++}, {validate: false});
 		});
 		this.lock = false;
 	},
@@ -209,15 +208,10 @@ var ContentList = BaseViews.BaseListView.extend({
 
 	/* Resets folders to initial state */
 	close_folders:function(){
-		this.$el.find(".folder").css({
-			"width": "302px",
-			"background-color": "white",
-			"border" : "none"
-		});
 		$(this.views).each(function(){
 			this.set_opened(false, false);
 		});
-		this.$el.find(".folder .glyphicon").css("display", "inline-block");
+		//this.$el.find(".folder .glyphicon").css("display", "inline-block");
 	},
 
 	add_nodes:function(views){
@@ -229,7 +223,7 @@ var ContentList = BaseViews.BaseListView.extend({
 				"sort_order" : i++,
 				"parent" : self.model.id
 			});
-			entry.save(entry.model.attributes, {async:false});			
+			entry.save(entry.model.attributes, {async:false, validate:false});			
 			self.model.get("children").push(entry.model.id);
 		});
 		this.list_index = i;
@@ -305,15 +299,8 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	},
 	set_opened:function(is_opened, animate){
 		if(is_opened){
-			this.$el.addClass("current_topic");
 			this.$el.find(".folder").animate({'width' : "345px"}, (animate)? 500 : 0);
-			
-			this.$el.find(".folder").css({
-				'background-color': (this.edit_mode)? "#CCCCCC" : "#87A3C6",
-				'border' : "4px solid white",
-				'border-right' : 'none'
-			});
-			this.$el.find(".folder .glyphicon").css("display", "none");
+			this.$el.addClass("current_topic");
 			this.$el.attr("draggable", "false");
 
 			/*Checks if opened topic has scrolled out of view*/
@@ -334,6 +321,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		}else{
 			this.$el.off("offset_changed");
 			this.$el.attr("draggable", "true");
+			this.$el.find(".folder").css("width" , "302px");
 			this.$el.removeClass("current_topic");
 		}
 	},
@@ -346,9 +334,16 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	submit_edit: function(event){
 		var title = ($("#textbox_" + this.model.id).val().trim() == "")? "Untitled" : $("#textbox_" + this.model.id).val().trim();
 		var description = ($("#textarea_" + this.model.id).val().trim() == "")? " " : $("#textarea_" + this.model.id).val().trim();
-		this.save({title:title, description:description});
-		this.allow_edit = false;
-		this.render();
+		this.model.set({title:title, description:description}, {validate:true});
+		if(this.model.isValid()){
+			this.model.save();
+			this.allow_edit = false;
+			this.render();
+		}
+		else{
+			/*Display Error*/
+		}
+		
 	},
 	cancel_edit: function(event){
 		this.allow_edit = false;
@@ -367,15 +362,17 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		});
 	},
 	publish:function(){
-		this.model.save("published", true);
-		this.publish_children(this.model, this.containing_list_view.children);
+		this.model.save({"published": true},{validate:false});
+		this.publish_children(this.model, this.containing_list_view.collection);
+		this.render();
 	},
 	publish_children:function(model, collection){
 		var self = this;
 		var children = collection.get_all_fetch(model.get("children"));
 		$(children.models).each(function(){
-			if(!this.get("published"))
-				this.save("published", true);
+			if(!this.get("published")){
+				this.save({"published":true},{validate:false});
+			}
 			self.publish_children(this, collection);
 		});
 	}

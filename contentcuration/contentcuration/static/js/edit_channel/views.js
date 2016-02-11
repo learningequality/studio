@@ -79,7 +79,7 @@ BaseListView = BaseView.extend({
 			this.model.get("children").push(transfer.model.id);
 			transfer.model.set({
 				parent: this.model.id
-			});
+			}, {validate:true});
 			transfer.model.save({
 				async:false,
 				success:function(){

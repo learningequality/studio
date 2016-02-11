@@ -18,7 +18,7 @@
 	overflow:hidden;
 	overflow-x:auto;
 	position:absolute;
-	padding-top: 10px;
+	padding: 10px;
 	width:90vw;
 }
 
@@ -66,7 +66,7 @@
 			visibility:hidden;
 		}
 		.bottom_border{
-			margin-top:@container-height * 0.98;
+			margin-top:7px;
 		}
 
 		
@@ -205,6 +205,17 @@
 					height:@folder-height;
 				}
 			}
+
+			.current_topic{
+				.folder{
+					border : 4px solid white;
+					border-right : none;
+					width : 345px;
+					.glyphicon{
+						display:none;
+					}
+				}
+			}
 		}
 	}
 
@@ -250,6 +261,7 @@
 			font-size: 14px;
 			margin-bottom: 15px;
 		}
+		
 
 		input[type=checkbox]{
 			display:inline-block;
@@ -285,6 +297,11 @@
 				visibility:visible;
 			}
 		}
+		.current_topic{
+			.folder{
+				background-color: #CCCCCC;
+			}
+		} 
 	}
 }
 
@@ -304,6 +321,11 @@
 		padding-left: 40px;
 		.glyphicon{
 			visibility:hidden;
+		}
+		.current_topic{
+			.folder{
+				background-color: #87A3C6;
+			}
 		}
 	}
 }
