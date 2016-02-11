@@ -150,6 +150,9 @@
 						font-weight: bold;
 						width: @container-width - @sidebar-width - 60px;
 					}
+					.folder_details{
+						visibility:visible
+					}
 					.description{
 						font-size:@description-font-size;
 						visibility:visible;
@@ -192,15 +195,7 @@
 					}
 				}
 
-				.hidden_details{
-					height:@file-height;
-					.options{
-						width:65px;
-					}
-					.description{
-						visibility:hidden;
-					}
-				}
+
 				.editing{
 					height:@folder-height;
 				}
@@ -225,7 +220,20 @@
 		opacity: 0.4;
 		margin-left: @sidebar-width;
 	}
-
+	.hidden_details{
+		.folder{
+			max-height:@file-height;
+			.options{
+				width:65px;
+			}
+			.description{
+				visibility:hidden;
+			}
+		}
+		.editing{
+			max-height:@folder-height;
+		}
+	}
 }
 
 #edit{

@@ -104,7 +104,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 	disable: false,
 	current_node: null,
 	item_view:"uploading_content",
-	model_queue: [], // Used to keep track of temporary model data
+	unsaved_queue: [], // Used to keep track of temporary model data
 	initialize: function(options) {
 		_.bindAll(this, 'close_uploader', "save_nodes", 'check_item',
 						'add_tag','save_and_finish','add_more','set_edited');	
@@ -152,7 +152,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 	},
 
 	close_uploader: function(){
-		if(this.model_queue.length == 0){
+		if(this.unsaved_queue.length == 0){
 			this.parent_view.render();
 			this.parent_view.set_editing(false);
 			this.delete_view();
@@ -170,35 +170,41 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 	},
 	save_nodes: function(){
 		/* TODO :fix to save multiple nodes at a time */
+		var errorsFound = false;
 		if(this.allow_add){
 			this.views.forEach(function(entry){
-				if(entry.model.isValid()){
+				entry.model.set(entry.model.attributes, {validate:true});
+				if(!entry.model.validationError){
 					entry.set_edited(false);
 				}else{
 					entry.set_current_node(null);
+					errorsFound = true;
 				}
 			});
-			this.parent_view.add_nodes(this.views);
+
+			if(!errorsFound) this.parent_view.add_nodes(this.views);
 		}else{
 			this.views.forEach(function(entry){
-				this.views.model.set(entry.model.attributes, {validate:true});
-				if(this.views.isValid()){
+				entry.model.set(entry.model.attributes, {validate:true});
+				if(!this.views.model.validationError){
 					entry.save(entry.model.attributes, {validate:false});
 					entry.set_edited(false);
 				}else{
 					entry.set_current_node(null);
+					errorsFound = true;
 				}
-				
 			});
 		}
-		this.save_queued();
+		if(!errorsFound)
+			errorsFound = !this.save_queued();
+		return !errorsFound; //Return true if successful, false if errors found
 	},
 	save_and_finish: function(){
-		this.save_nodes();
-		this.close_uploader();
+		if(this.save_nodes())
+			this.close_uploader();
 	},
 	add_more:function(event){
-		if(this.model_queue.length == 0 || confirm("Unsaved Data Detected! Exiting now will"
+		if(this.unsaved_queue.length == 0 || confirm("Unsaved Data Detected! Exiting now will"
 			+ " undo any new changes. \n\nAre you sure you want to exit?")){
 			var content_view = new AddContentView({
 				collection: this.collection,
@@ -268,22 +274,28 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		}
 	},
 	set_edited:function(event){
-		this.enqueue(this.current_view.model);
+		this.enqueue(this.current_view);
 		this.current_view.set_edited(true);
 		this.current_view.set_node();
 		this.current_view.render();
 	},
-	enqueue: function(model){
-		this.model_queue.push(model);
-	},
-	dequeue:function(model){
-		this.model_queue.remove(model);
+	enqueue: function(view){
+		this.unsaved_queue.push(view);
 	},
 	save_queued:function(){
-		this.model_queue.forEach(function(entry){
-			entry.save();
+		var self = this;
+		var success = true;
+		this.unsaved_queue.forEach(function(entry){
+			entry.model.set(entry.model.attributes, {validate:true});
+			if(entry.model.validationError){
+				entry.set_current_node(null);
+				return false
+			}else{
+				entry.save(entry.model.attributes, {validate:false});
+			}	
 		});
-		this.model_queue = [];
+		this.unsaved_queue = [];
+		return success;
 	},
 });
 
@@ -346,7 +358,7 @@ var NodeListItem = ContentItem.extend({
 	edit_topic: function(){
 		this.edit = true;
 		this.remove_item();
-		this.containing_list_view.enqueue(this.model);
+		this.containing_list_view.enqueue(this);
 		this.render();
 	}
 });

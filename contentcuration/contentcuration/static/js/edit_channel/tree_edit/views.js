@@ -97,7 +97,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	},	
 	toggle_details:function(event){
 		/*TODO: Debug more with editing and opening folders*/
-		this.$el.find("label").toggleClass("hidden_details");
+		this.$el.find("#container_area").toggleClass("hidden_details");
 	}
 
 });
@@ -215,19 +215,17 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	add_nodes:function(views){
-		this.lock = true;
 		var self = this;
 		var i  =this.collection.models.length + 1;
 		views.forEach(function(entry){
-			entry.model.set({
+			entry.save({
+				"title" : entry.model.get("title"),
 				"sort_order" : i++,
 				"parent" : self.model.id
-			});
-			entry.save(entry.model.attributes, {async:false, validate:false});			
+			}, {validate:false, async:false});		
 			self.model.get("children").push(entry.model.id);
 		});
 		this.list_index = i;
-		this.lock=false;
 	},
 });
 
@@ -326,10 +324,9 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		}
 	},
 	edit_folder: function(event){
-		this.$el.find("label").removeClass("hidden_details");
-		this.$el.find("label").addClass("editing");
 		this.allow_edit = this.edit_mode;
 		this.render();
+		this.$el.find("label").addClass("editing");
 	},
 	submit_edit: function(event){
 		var title = ($("#textbox_" + this.model.id).val().trim() == "")? "Untitled" : $("#textbox_" + this.model.id).val().trim();

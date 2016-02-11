@@ -76,31 +76,44 @@ var NodeModel = Backbone.Model.extend({
 		console.trace();
 		var self = this;
 
+		console.log("Checking if title is blank...");
 		//Case: title blank
 		if(attrs.title == "")
 			return "Name is required.";
+		if(attrs.parent){
+			var parent = new NodeModel({'id': attrs.parent});
+			parent.fetch({async:false});
+			if(attrs.kind == "topic"){
+				console.log("Checking if topic is descendant of itself..");
+				//Case: is a child of itself
+				if(parent.id == self.id)
+					return "Cannot place topic under itself."
 
-		//Case: topic with same name exists in children
-		var parent = new NodeModel({'id': attrs.parent});
-		parent.fetch({async:false});
-		console.log("validating parent", this);
-		if(!this.siblings)
-			this.siblings = new NodeCollection();
-		if(!this.parent_children || parent.get("children") != this.parent_children){
-			this.parent_children = parent.get("children");
-			this.siblings = this.siblings.get_all_fetch(this.parent_children);
-		}
-		console.log("validating collection", this.siblings);
-		for(var i = 0; i < this.siblings.models.length; i++){
-			console.log("validating model", this.siblings.models[i].get("title"));
-			console.log("validating attrs", attrs.title);
-			if(this.siblings.models[i].get("title") == attrs.title && this.siblings.models[i].id != self.id){
-				console.log("validating error");
-				return "Name already exists under this topic.";
+				//Case: is a child of its descendants
+				var temp = new NodeModel({'id': parent.get("parent")});
+				while(temp.get("parent")){
+					temp = new NodeModel({'id': parent.get("parent")});
+					temp.fetch();
+					if(temp.id == self.id)
+						return "Cannot place topic under any of its subtopics."
+				}
+			}
+
+			console.log("Checking if title already exists in topic..");
+			//Case: topic with same name exists in children
+			if(!this.siblings)
+				this.siblings = new NodeCollection();
+			if(!this.parent_children || parent.get("children") != this.parent_children){
+				this.parent_children = parent.get("children");
+				this.siblings = this.siblings.get_all_fetch(this.parent_children);
+			}
+			for(var i = 0; i < this.siblings.models.length; i++){
+				if(this.siblings.models[i].get("title") == attrs.title && this.siblings.models[i].id != self.id){
+					return "Name already exists under this topic.";
+				}
 			}
 		}
-
-		//Case: is a child of itself or descendant
+		console.log("Validated!");
 	},
 	/*
 	remove_parent:function(){

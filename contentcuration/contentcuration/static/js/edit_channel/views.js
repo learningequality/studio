@@ -102,7 +102,6 @@ var BaseListItemView = BaseView.extend({
 			this.model.delete_channel();
 		}else{
 			if(this.containing_list_view.item_view != "uploading_content"){
-				this.containing_list_view.lock = true;
 				if(!this.deleted_root)
 					this.deleted_root = this.containing_list_view.topictrees.get({id : window.current_channel.deleted}).get_root();
 				
@@ -117,13 +116,12 @@ var BaseListItemView = BaseView.extend({
 				
 				var old_parent = this.containing_list_view.collection.add({id: this.model.get("parent")});
 				old_parent.fetch();
-				console.log("old parent before", old_parent.get("children"));
-				console.log("deleted root", this.deleted_root);
-				this.model.save({"parent" :this.deleted_root.id}, {async:false, success:function(){console.log("called save");}});
-				console.log("old parent after", old_parent.get("children"));
+				var new_children = old_parent.get("children");
+				new_children.splice(new_children.indexOf(this.model.id), 1);
+				console.log("new children", new_children);
+				old_parent.save({"children" : new_children}, {validate:false});
+				this.model.save({"parent" :this.deleted_root.id}, {async:false, validate:false});
 				this.delete_view();
-				this.containing_list_view.lock = false;
-				//this.containing_list_view.collection.remove(this.model);
 			}
 		}
 	},
