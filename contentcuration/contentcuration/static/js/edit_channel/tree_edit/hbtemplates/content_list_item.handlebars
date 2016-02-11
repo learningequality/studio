@@ -12,7 +12,8 @@
 {{/if}}
 {{node.id}} ({{#if node.attributes.published}}p{{else}}up{{/if}}) : {{#each node.attributes.children}}{{this}}&nbsp;{{/each}}
 {{#if allow_edit}}
-	<input id="textbox_{{node.id}}" type="text" class="topic_textbox" value="{{node.attributes.title}}" placeholder="Enter Topic Name"/>
+	<p class="error_msg"><p>
+	<input id="textbox_{{node.id}}" type="text" class="node_title_textbox" value="{{node.attributes.title}}" placeholder="Enter Item Name"/>
 	{{#if isfolder}}
 	<textarea id="textarea_{{node.id}}" class="topic_textarea"  placeholder="Enter Description">{{node.attributes.description}}</textarea>
 	{{/if}}

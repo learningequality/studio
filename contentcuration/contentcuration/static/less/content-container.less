@@ -165,6 +165,12 @@
 					.filler{
 						display:none;
 					}
+
+					.error_msg{
+						font-style:italic;
+						color:red;
+						font-size: 10px;
+					}
 				}
 
 				.file{
@@ -197,7 +203,7 @@
 
 
 				.editing{
-					height:@folder-height;
+					height:@folder-height + 15px;
 				}
 			}
 
@@ -290,7 +296,7 @@
 				}
 			}
 
-			.topic_textbox{
+			.node_title_textbox{
 				width:95%;
 				font-size: @title-size;
 			}

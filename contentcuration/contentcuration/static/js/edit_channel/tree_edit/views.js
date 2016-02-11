@@ -332,13 +332,15 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		var title = ($("#textbox_" + this.model.id).val().trim() == "")? "Untitled" : $("#textbox_" + this.model.id).val().trim();
 		var description = ($("#textarea_" + this.model.id).val().trim() == "")? " " : $("#textarea_" + this.model.id).val().trim();
 		this.model.set({title:title, description:description}, {validate:true});
-		if(this.model.isValid()){
+		if(this.model.validationError){
+			console.log("ERROR DETECTED!");
+			this.$el.find(".node_title_textbox").addClass("error_input");
+			this.$el.find(".error_msg").html(this.model.validationError);
+		}
+		else{
 			this.model.save();
 			this.allow_edit = false;
 			this.render();
-		}
-		else{
-			/*Display Error*/
 		}
 		
 	},

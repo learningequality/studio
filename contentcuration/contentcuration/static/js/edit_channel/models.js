@@ -115,15 +115,6 @@ var NodeModel = Backbone.Model.extend({
 		}
 		console.log("Validated!");
 	},
-	/*
-	remove_parent:function(){
-		var nodes = new NodeCollection();
-		var old_parent = nodes.add({id: this.id});
-		old_parent.get("children").splice(old_parent.get("children").indexOf(this.id), 1);
-		old_parent.save("children", old_parent.get("children"));
-		console.log("rendering oldparent", old_parent);
-	}
-	*/
 });
 
 var NodeCollection = Backbone.Collection.extend({
