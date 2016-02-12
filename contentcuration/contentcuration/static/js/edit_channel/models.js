@@ -73,7 +73,6 @@ var NodeModel = Backbone.Model.extend({
 		});
 	},
 	validate:function (attrs, options){
-		console.trace();
 		var self = this;
 
 		console.log("Checking if title is blank...");
@@ -119,11 +118,11 @@ var NodeModel = Backbone.Model.extend({
 
 var NodeCollection = Backbone.Collection.extend({
 	model: NodeModel,
-	save: function() {
+	/*save: function() {
 		$(this.models).each(function(){
 			this.save();
 		});
-	},
+	},*/
 
 	url: function(){
        return window.Urls["node-list"]();

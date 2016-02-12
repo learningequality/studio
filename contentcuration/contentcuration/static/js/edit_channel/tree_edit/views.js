@@ -337,7 +337,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			this.$el.find(".error_msg").html(this.model.validationError);
 		}
 		else{
-			this.model.save();
+			this.save();
 			this.allow_edit = false;
 			this.render();
 		}
@@ -360,7 +360,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		});
 	},
 	publish:function(){
-		this.model.save({"published": true},{validate:false});
+		this.save({"published": true},{validate:false});
 		this.publish_children(this.model, this.containing_list_view.collection);
 		this.render();
 	},

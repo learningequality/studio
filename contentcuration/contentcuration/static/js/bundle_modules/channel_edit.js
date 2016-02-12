@@ -8,10 +8,13 @@ $(function() {
 });
 
 function publish_nodes(){
-	$("#main-content-area").find(".to_publish").each(function(){
-		console.log("Publishing...");
-		$("#" + this.id).data("data").publish();
-	});
+	if(confirm("Are you sure you would like to publish?")){
+		$("#main-content-area").find(".to_publish").each(function(){
+			console.log("Publishing...");
+			$("#" + this.id).data("data").publish();
+		});
+		alert("Published!");
+	}
 }
 
 

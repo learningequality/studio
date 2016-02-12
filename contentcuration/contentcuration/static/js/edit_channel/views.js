@@ -142,7 +142,7 @@ var BaseListItemView = BaseView.extend({
 	save: function(data, options){
 		/* TODO: Implement funtion to allow saving one item */
 		if(!this.model){
-			if(!data.title){
+			if(this.containing_list_view.item_view == "channel"){
 				this.containing_list_view.collection.create_channel(data, $(".createprogress"));
 			}
 			else{
@@ -154,7 +154,7 @@ var BaseListItemView = BaseView.extend({
 		else{
 			this.model.save(data, options);
 			
-			if(!data.title){ //Saving a channel
+			if(this.containing_list_view.item_view == "channel"){
 				this.model.update_root({
 					'title' : data.name, 
 					'description' : data.description

@@ -187,7 +187,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			this.model.set(this.model.attributes, {validate:true});
 			if(!this.model.validationError){
 				if(!self.allow_add)
-					this.model.save({validate:false});
+					this.save({validate:false});
 				this.set_edited(false);
 			}else{
 				self.handle_error(this);
@@ -297,6 +297,9 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		this.current_view.render();
 	},
 	enqueue: function(view){
+		var index = this.unsaved_queue.indexOf(view);
+		if(index >= 0)
+			this.unsaved_queue.splice(index, 1);
 		this.unsaved_queue.push(view);
 	},
 	save_queued:function(){
@@ -308,9 +311,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			if(this.model.validationError){
 				self.handle_error(this);
 				success = false;
-			}else{
-				this.save(this.model.attributes, {validate:false});
-			}	
+			}
 		});
 		return success;
 	},
