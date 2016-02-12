@@ -170,33 +170,44 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 	},
 	save_nodes: function(){
 		/* TODO :fix to save multiple nodes at a time */
+		this.$el.find(".upload_input").removeClass("gray-out");
+		this.parent_view.set_editing(false);
+		var self = this;
 		var errorsFound = false;
-		if(this.allow_add){
-			this.views.forEach(function(entry){
-				entry.model.set(entry.model.attributes, {validate:true});
-				if(!entry.model.validationError){
-					entry.set_edited(false);
-				}else{
-					entry.set_current_node(null);
-					errorsFound = true;
-				}
-			});
-
-			if(!errorsFound) this.parent_view.add_nodes(this.views);
+		console.log("description is " + this.$el.find("#input_description").val())
+		if(!this.disable && this.$el.find("#input_description").val() == "" && this.current_view){
+			this.$el.find("#description_error").html("Description is required");
+			this.$el.find("#input_description").addClass("error_input");
+			errorsFound = true;
 		}else{
-			this.views.forEach(function(entry){
-				entry.model.set(entry.model.attributes, {validate:true});
-				if(!this.views.model.validationError){
-					entry.save(entry.model.attributes, {validate:false});
-					entry.set_edited(false);
-				}else{
-					entry.set_current_node(null);
-					errorsFound = true;
-				}
-			});
+			this.$el.find("#description_error").html("");
+			this.$el.find("#input_description").removeClass("error_input");
 		}
-		if(!errorsFound)
-			errorsFound = !this.save_queued();
+		$(this.views).each(function(){
+			this.model.set(this.model.attributes, {validate:true});
+			if(!this.model.validationError){
+				if(!self.allow_add)
+					this.model.save({validate:false});
+				this.set_edited(false);
+			}else{
+				self.handle_error(this);
+				errorsFound = true;
+			}
+		});
+		errorsFound = errorsFound || !this.save_queued();
+
+		if(!errorsFound){
+			this.$el.find("#title_error").html("");
+			this.$el.find("#description_error").html("");
+			if(this.disable){
+				this.$el.find(".upload_input").addClass("gray-out");
+				this.parent_view.set_editing(this.disable);
+				this.$el.find("#input_title").val(" ");
+				this.$el.find("#input_description").val(" ");
+			}
+		}
+
+		if(!errorsFound && this.allow_add) this.parent_view.add_nodes(this.views);
 		return !errorsFound; //Return true if successful, false if errors found
 	},
 	save_and_finish: function(){
@@ -227,7 +238,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			this.current_node.set_edited(true);
 			to_save.push(this.current_node);
 		}*/
-		this.$el.find(".disable_on_error").prop("disabled", false);
+		this.$el.find("#title_error").html("");
 		this.$el.find(".disable_on_error").css("cursor", "pointer");
 		if(!this.current_view && !this.disable){
 			this.set_current(view);
@@ -263,8 +274,10 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			this.$el.find(".disable-on-edit").addClass("gray-out");
 			//TODO: Clear tagging area $("#tag_area").html("");
 		}
-		else 
+		else {
 			this.$el.find(".upload_input").removeClass("gray-out");
+			this.set_current_node(this.$el.find("#uploaded_list :checked").parent("li").data("data"));
+		}
 	},
 	add_tag: function(event){
 		if((!event.keyCode || event.keyCode ==13) && this.$el.find("#tag_box").val().trim() != ""){
@@ -274,6 +287,10 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		}
 	},
 	set_edited:function(event){
+		this.$el.find(".disable_on_error").prop("disabled", false);
+		this.$el.find("#input_title").removeClass("error_input");
+		this.$el.find("#title_error").html("");
+
 		this.enqueue(this.current_view);
 		this.current_view.set_edited(true);
 		this.current_view.set_node();
@@ -285,18 +302,25 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 	save_queued:function(){
 		var self = this;
 		var success = true;
-		this.unsaved_queue.forEach(function(entry){
-			entry.model.set(entry.model.attributes, {validate:true});
-			if(entry.model.validationError){
-				entry.set_current_node(null);
-				return false
+		$(this.unsaved_queue).each(function(){
+			this.model.set(this.model.attributes, {validate:true});
+			self.unsaved_queue.splice(self.unsaved_queue.indexOf(this), 1);
+			if(this.model.validationError){
+				self.handle_error(this);
+				success = false;
 			}else{
-				entry.save(entry.model.attributes, {validate:false});
+				this.save(this.model.attributes, {validate:false});
 			}	
 		});
-		this.unsaved_queue = [];
 		return success;
 	},
+	handle_error:function(view){
+		this.$el.find(".disable_on_error").prop("disabled", true);
+		this.set_current(view);
+		this.$el.find("#input_title").addClass("error_input");
+		this.$el.find("#title_error").html(view.model.validationError);
+		view.$el.css("background-color", "#F6CECE");
+	}
 });
 
 
@@ -367,10 +391,11 @@ var UploadedItem = ContentItem.extend({
 	tags: [],
 	template: require("./hbtemplates/uploaded_list_item.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'remove_topic','set_current_node');	
+		_.bindAll(this, 'remove_topic','set_current_node','set_checked');	
 		this.containing_list_view = options.containing_list_view;
 		this.root = options.root;
 		this.edited = false;
+		this.checked = false;
 		this.originalData = {
 			"title":this.model.get("title"),
 			"description":this.model.get("description")
@@ -383,11 +408,14 @@ var UploadedItem = ContentItem.extend({
 			kind: this.model.get("kind").toUpperCase(),
 			id: this.model.cid,
 		}));
+		this.$el.find("input[type=checkbox]").prop("checked", this.checked);
 		this.set_edited(this.edited);
+		this.$el.data("data", this);
 	},
 	events: {
 		'click .remove_topic' : 'remove_topic',
 		'click label' : 'set_current_node',
+		'click :checkbox' : 'set_checked'
 	},
 	remove_topic: function(){
 		this.delete_item();
@@ -443,6 +471,9 @@ var UploadedItem = ContentItem.extend({
 		this.containing_list_view.$el.find("#input_title").removeClass("error_input");
 		this.containing_list_view.$el.find("#input_description").removeClass("error_input");
 		return true;
+	},
+	set_checked:function(){
+		this.checked = this.$el.find("input[type=checkbox]").prop("checked");
 	}
 });
 

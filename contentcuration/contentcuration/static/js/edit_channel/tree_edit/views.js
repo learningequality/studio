@@ -333,7 +333,6 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		var description = ($("#textarea_" + this.model.id).val().trim() == "")? " " : $("#textarea_" + this.model.id).val().trim();
 		this.model.set({title:title, description:description}, {validate:true});
 		if(this.model.validationError){
-			console.log("ERROR DETECTED!");
 			this.$el.find(".node_title_textbox").addClass("error_input");
 			this.$el.find(".error_msg").html(this.model.validationError);
 		}

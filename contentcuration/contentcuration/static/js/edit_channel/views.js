@@ -80,17 +80,29 @@ BaseListView = BaseView.extend({
 			transfer.model.set({
 				parent: this.model.id
 			}, {validate:true});
-			transfer.model.save({
-				async:false,
-				success:function(){
-					transfer.containing_list_view.render();
-				}
-			});
 			
-		}else
+			if(transfer.model.validationError){
+				alert(transfer.model.validationError);
+				transfer.model.unset({silent:true});
+				transfer.containing_list_view.render();
+			}else{
+				transfer.model.save({
+					success:function(){
+						transfer.containing_list_view.render();
+					}
+				});
+			}
+			
+		}else{
 			transfer.model.save({async:false});
+		}
+			
 		console.log("add_to_container model", transfer.model);
 		this.render();
+	},
+	remove_view: function(view){
+		this.views.splice(this.views.indexOf(this), 1);
+		view.delete_view();
 	}
 });
 
@@ -121,7 +133,8 @@ var BaseListItemView = BaseView.extend({
 				console.log("new children", new_children);
 				old_parent.save({"children" : new_children}, {validate:false});
 				this.model.save({"parent" :this.deleted_root.id}, {async:false, validate:false});
-				this.delete_view();
+				this.containing_list_view.remove_view(this);
+
 			}
 		}
 	},
