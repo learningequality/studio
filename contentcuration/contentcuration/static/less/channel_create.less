@@ -1,6 +1,6 @@
 @import "global-variables.less";
 
-@channel-container-bg-color: #F2F2F3;
+@channel-container-bg-color: white;
 @channel-container-width: 800px;
 @channel-container-height: 250px;
 @channel-profile-width: 150px;
@@ -27,9 +27,9 @@
 #channel-container{
 	/* Title at top of page */
 	#manage-channel-nav{
-		background-color: @topnav-bg-color;
+		/*background-color: @topnav-bg-color;*/
 		width:100%;
-		color: white;
+		color: @body-font-color;
 	}
 
 	/* List of Channels */
@@ -40,7 +40,7 @@
 		height:100vh - 30vh;
 
 		#new_channel_button{
-			color:white;
+			color:@body-font-color;
 			cursor: pointer;
 		}
 

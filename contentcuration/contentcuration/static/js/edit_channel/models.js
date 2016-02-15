@@ -24,6 +24,8 @@ var NodeModel = Backbone.Model.extend({
 
 	/*Used when copying items to clipboard*/
     duplicate: function(parent_id){
+    	console.log("PERFORMANCE models.js: starting duplicate...");
+    	var start = new Date().getTime();
     	var title = this.generate_title(this.get("title"));
 		var data = {
 			title: title,
@@ -44,11 +46,14 @@ var NodeModel = Backbone.Model.extend({
 				self.copy_children(node_data, self.get("children"));
 			}
 		});
+		console.log("PERFORMANCE models.js: duplicate end (time = " + (new Date().getTime() - start) + ")");
 		return node_data;
 	},
 
 	/* Function in case want to append (Copy #) to end of copied content*/
 	generate_title:function(title){
+		console.log("PERFORMANCE models.js: starting generate_title...");
+		var start = new Date().getTime();
     	var list = this.attributes.title.split(" ");
     	if(list[list.length - 1] == "(Copy)"){ 				//model has been copied once before
     		list[list.length - 1] = "(Copy 2)";
@@ -62,18 +67,25 @@ var NodeModel = Backbone.Model.extend({
     	}else{
     		title += " (Copy)";
     	}
+    	console.log("PERFORMANCE models.js: generate_title end (time = " + (new Date().getTime() - start) + ")");
 	},
 	copy_children:function(node, original_collection){
+		console.log("PERFORMANCE models.js: starting copy_children...");
+		var start = new Date().getTime();
 		var self = this;
 		var parent_id = node.id;
 		var copied_collection = new NodeCollection();
 		copied_collection.get_all_fetch(original_collection);
 		$(copied_collection.models).each(function(){
-			console.log("end",this.duplicate(parent_id));
+			this.duplicate(parent_id);
 		});
+		console.log("PERFORMANCE models.js: copy_children end (time = " + (new Date().getTime() - start) + ")");
 	},
 	validate:function (attrs, options){
+		console.log("PERFORMANCE models.js: starting validate on " + attrs.title + "...");
+		var start = new Date().getTime();
 		var self = this;
+
 
 		console.log("Checking if title is blank...");
 		//Case: title blank
@@ -112,7 +124,7 @@ var NodeModel = Backbone.Model.extend({
 				}
 			}
 		}
-		console.log("Validated!");
+		console.log("PERFORMANCE models.js: validate end (time = " + (new Date().getTime() - start) + ")");
 	},
 });
 
@@ -123,24 +135,29 @@ var NodeCollection = Backbone.Collection.extend({
 			this.save();
 		});
 	},*/
-
+	save: function() {
+        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
+	},
 	url: function(){
        return window.Urls["node-list"]();
     },
 
    /* TODO: would be better to fetch all values at once */
     get_all_fetch: function(ids){
-    	console.log("Calling get_all_fetch on ", ids);
+    	console.log("PERFORMANCE models.js: starting get_all_fetch...", ids);
+		var start = new Date().getTime();
     	var to_fetch = new NodeCollection();
     	for(var i = 0; i < ids.length; i++){
-    		var model = this.get({id: ids[i]});
-    		if(!model){
-    			model = this.add({'id':ids[i]});
-    			model.fetch({async:false});
+    		if(ids[i]){
+    			var model = this.get({id: ids[i]});
+	    		if(!model){
+	    			model = this.add({'id':ids[i]});
+	    			model.fetch({async:false});
+	    		}
+	    		to_fetch.add(model);
     		}
-    		to_fetch.add(model);
     	}
-    	console.log("get_all_fetch is", to_fetch);
+    	console.log("PERFORMANCE models.js: get_all_fetch end (time = " + (new Date().getTime() - start) + ")");
     	return to_fetch;
     },
     sort_by_order:function(){
@@ -216,11 +233,14 @@ var ChannelModel = Backbone.Model.extend({
     	this.destroy();
     },
     create_tree:function(tree_name){
-    	console.log(tree_name + " tree is being created...");
+    	console.log("PERFORMANCE models.js: starting create_tree " + tree_name + "...");
+    	var start = new Date().getTime();
+
     	var root_node = new NodeModel();
     	var self = this;
 		return root_node.save({title: self.get("name")}, {
-			async: false,
+			async:false,
+			validate: false,
 			success: function(){
 				var tree = new TopicTreeModel();
 				return tree.save({
@@ -230,8 +250,10 @@ var ChannelModel = Backbone.Model.extend({
 					kind:"topic",
 					description: "Root node for " + tree_name + "tree"
 				}, {
-					async: false,
+					async:false,
+					validate:false,
 					success: function(){
+						console.log("PERFORMANCE models.js: create_tree " + tree_name + " end (time = " + ((new Date().getTime() - start)/1000) + "s)");
 						return self.save(tree_name, tree.id);
 					}
 				});

@@ -169,6 +169,8 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		}
 	},
 	save_nodes: function(){
+		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
+    		var start = new Date().getTime();
 		/* TODO :fix to save multiple nodes at a time */
 		this.$el.find(".upload_input").removeClass("gray-out");
 		this.parent_view.set_editing(false);
@@ -187,7 +189,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			this.model.set(this.model.attributes, {validate:true});
 			if(!this.model.validationError){
 				if(!self.allow_add)
-					this.save({validate:false});
+					this.save(null, {validate:false, async:false});
 				this.set_edited(false);
 			}else{
 				self.handle_error(this);
@@ -208,6 +210,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		}
 
 		if(!errorsFound && this.allow_add) this.parent_view.add_nodes(this.views);
+		console.log("PERFORMANCE tree_edit/views.js: save_nodes end (time = " + (new Date().getTime() - start) + ")");
 		return !errorsFound; //Return true if successful, false if errors found
 	},
 	save_and_finish: function(){
@@ -382,7 +385,7 @@ var NodeListItem = ContentItem.extend({
 	},
 	edit_topic: function(){
 		this.edit = true;
-		this.remove_item();
+		//this.remove_item();
 		this.containing_list_view.enqueue(this);
 		this.render();
 	}

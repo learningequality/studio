@@ -37,6 +37,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 		'click #hide_details_checkbox' :'toggle_details'
 	},	
 	add_container: function(index, topic){
+		console.log("PERFORMANCE tree_edit/views.js: starting add_container ...");
+    	var start = new Date().getTime();
 		/* Close directories of children and siblings of opened topic*/
 		if(index < this.containers.length){
 			while(this.containers.length > index){
@@ -57,17 +59,23 @@ var TreeEditView = BaseViews.BaseView.extend({
 			topictrees : this.topictrees
 		});
 		this.containers.push(container_view);
+		console.log("PERFORMANCE tree_edit/views.js: add_container end (time = " + (new Date().getTime() - start) + ")");
 	},
 
 	delete_content: function (event){
 		if(confirm("Are you sure you want to delete the selected files?")){
+			console.log("PERFORMANCE tree_edit/views.js: starting delete_content ...");
+    		var start = new Date().getTime();
 			var list = this.$el.find('input:checked').parent("li");
 			for(var i = 0; i < list.length; i++){
 				$("#" + list[i].id).data("data").delete();
 			}
+			console.log("PERFORMANCE tree_edit/views.js: delete_content end (time = " + (new Date().getTime() - start) + ")");
 		}
 	},
 	copy_content: function(event){
+		console.log("PERFORMANCE tree_edit/views.js: starting copy_content ...");
+    	var start = new Date().getTime();
 		var clipboard_root = this.topictrees.get({id : window.current_channel.clipboard}).get("root_node");
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = new Models.NodeCollection();
@@ -77,6 +85,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			clipboard_list.add(content);
 		}
 		this.clipboard_view.add_to_clipboard(clipboard_list);
+		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + (new Date().getTime() - start) + ")");
 	},	
 	edit_content: function(event){
 		var list = this.$el.find('input:checked').parent("li");
@@ -140,6 +149,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		console.log("rendering list for " + this.model.get("title") + " with collection", this.model);
 		DragHelper.removeDragDrop(this);
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
+		console.log("COLLECTION",this.childrenCollection);
 		this.childrenCollection.sort_by_order();
 		this.$el.html(this.template({
 			topic: this.model, 
@@ -161,15 +171,18 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	set_sort_orders: function(){
-		this.lock = true;
+		console.log("PERFORMANCE tree_edit/views.js: starting set_sort_orders ...");
+    	var start = new Date().getTime();
 		var index = 1;
 		var self = this;
 		this.childrenCollection.models.forEach(function(entry){
 			entry.save({'sort_order' : index++}, {validate: false});
 		});
-		this.lock = false;
+		console.log("PERFORMANCE tree_edit/views.js: set_sort_orders end (time = " + (new Date().getTime() - start) + ")");
 	},
 	load_content : function(){
+		console.log("PERFORMANCE tree_edit/views.js: starting load_content ...");
+    	var start = new Date().getTime();
 		this.views = [];
 		var self = this;
 		var el = this.$el.find(".content-list");
@@ -187,6 +200,7 @@ var ContentList = BaseViews.BaseListView.extend({
 				file_view.set_opened(true, false);
 			self.views.push(file_view);
 		});
+		console.log("PERFORMANCE tree_edit/views.js: load_content end (time = " + (new Date().getTime() - start) + ")");
 	},
 
 	add_content: function(event){ 
@@ -208,24 +222,32 @@ var ContentList = BaseViews.BaseListView.extend({
 
 	/* Resets folders to initial state */
 	close_folders:function(){
+		console.log("PERFORMANCE tree_edit/views.js: starting close_folders ...");
+    	var start = new Date().getTime();
 		$(this.views).each(function(){
 			this.set_opened(false, false);
 		});
+		console.log("PERFORMANCE tree_edit/views.js: close_folders end (time = " + (new Date().getTime() - start) + ")");
 		//this.$el.find(".folder .glyphicon").css("display", "inline-block");
 	},
 
 	add_nodes:function(views){
+		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
+    	var start = new Date().getTime();
 		var self = this;
 		var i  =this.collection.models.length + 1;
-		views.forEach(function(entry){
-			entry.save({
-				"title" : entry.model.get("title"),
+		$(views).each(function(){
+			this.save({
+				"title" : this.model.get("title"),
 				"sort_order" : i++,
 				"parent" : self.model.id
 			}, {validate:false, async:false});		
-			self.model.get("children").push(entry.model.id);
+			self.model.get("children").push(this.model.id);
 		});
+		//this.collection.save();
+
 		this.list_index = i;
+		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
 	},
 });
 
@@ -296,7 +318,10 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		this.containing_list_view.add_container(this);
 	},
 	set_opened:function(is_opened, animate){
+
 		if(is_opened){
+			console.log("PERFORMANCE tree_edit/views.js: starting set_opened " + this.model.get("title") + " ...");
+    		var start = new Date().getTime();
 			this.$el.find(".folder").animate({'width' : "345px"}, (animate)? 500 : 0);
 			this.$el.addClass("current_topic");
 			this.$el.attr("draggable", "false");
@@ -316,6 +341,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			this.$el.onOffsetChanged(function(){
 				 view.$el.trigger('offset_changed');
 			});
+			console.log("PERFORMANCE tree_edit/views.js: set_opened " + this.model.get("title") + " end (time = " + ((new Date().getTime() - start)/1000) + "s)");
 		}else{
 			this.$el.off("offset_changed");
 			this.$el.attr("draggable", "true");
