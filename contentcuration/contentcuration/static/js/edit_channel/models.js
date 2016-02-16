@@ -16,29 +16,15 @@ var NodeModel = Backbone.Model.extend({
 	  json.cid = this.cid;
 	  return json;
 	},
-	parse: function(response) {
-	    return _(response).isArray()
-	         ? response[0]
-	         : response;
-	},
 
 	/*Used when copying items to clipboard*/
     duplicate: function(parent_id){
     	console.log("PERFORMANCE models.js: starting duplicate...");
     	var start = new Date().getTime();
     	var title = this.generate_title(this.get("title"));
-		var data = {
-			title: title,
-			created : this.get("created"),
-			modified : this.get("modified"),
-			description: this.get("description"),
-			deleted: this.get("deleted"),
-			sort_order : this.get("sort_order"),
-			license_owner : this.get("license_owner"),
-			license: this.get("license"),
-			kind: this.get("kind"),
-			parent: parent_id
-		};
+    	var data = this.pick('created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
+    	data['title'] = title;
+    	data['parent_id'] = parent_id;
 		var node_data = new NodeModel(data);
 		var self = this;
 		node_data.save(data, {async:false,
@@ -54,20 +40,19 @@ var NodeModel = Backbone.Model.extend({
 	generate_title:function(title){
 		console.log("PERFORMANCE models.js: starting generate_title...");
 		var start = new Date().getTime();
-    	var list = this.attributes.title.split(" ");
-    	if(list[list.length - 1] == "(Copy)"){ 				//model has been copied once before
-    		list[list.length - 1] = "(Copy 2)";
-    		title = list.join(" ");
-    	}else if(list.length > 2 							//model has been copied multiple times
-    			&& list[list.length-2] == "(Copy" 
-    			&& list[list.length-1].includes(")")){
-    		var copy_number = list[list.length-1].replace(")","");
-    		list[list.length-1] = ++copy_number + ")";
-			title = list.join(" ");
-    	}else{
-    		title += " (Copy)";
-    	}
+		var new_title = title;
+		var matching = /\(Copy\s*([0-9]*)\)/g;
+		if (matching.test(new_title)) {
+		    new_title = new_title.replace(matching, function(match, p1) {
+		        // Already has "(Copy)"  or "(Copy <p1>)" in the title, so return either
+		        // "(Copy 2)" or "(Copy <p1+1>)"
+		        return "(Copy " + (p1==="" ? 2: Number(p1) + 1) + ")";
+		    });
+		}else{
+			new_title += " (Copy)";
+		}
     	console.log("PERFORMANCE models.js: generate_title end (time = " + (new Date().getTime() - start) + ")");
+    	return new_title;
 	},
 	copy_children:function(node, original_collection){
 		console.log("PERFORMANCE models.js: starting copy_children...");
@@ -180,11 +165,6 @@ var TopicTreeModel = Backbone.Model.extend({
 	defaults: {
 		name: "Untitled Tree",
 		is_published: false
-	},
-	parse: function(response) {
-	    return _(response).isArray()
-	         ? response[0]
-	         : response;
 	}
 });
 

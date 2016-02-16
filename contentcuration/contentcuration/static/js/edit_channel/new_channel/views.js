@@ -1,10 +1,8 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
-var Quill = require("quilljs");
-var Dropzone = require("dropzone");
 require("channel_create.less");
-require("dropzone/dist/dropzone.css");
-require("quilljs/dist/quill.snow.css");
+var Dropzone = require("dropzone");    //For later when images are added to channels
+require("dropzone/dist/dropzone.css"); //For later when images are added to channels
 var BaseViews = require("./../views");
 	
 var ChannelList  = BaseListView.extend({
@@ -68,7 +66,7 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 	render: function() {
 		this.$el.html(this.template({
 			edit: this.edit, 
-			channel: (this.model) ? this.model.attributes : null,
+			channel: (this.model) ? this.model.attributes : null
 		}));
 	},
 	events: {
@@ -104,9 +102,7 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 		var title = (this.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : this.$el.find("#new_channel_name").val().trim();
 		var description = (this.$el.find("#new_channel_description").val() == "") ? " " : this.$el.find("#new_channel_description").val();
 		var data = {name: title, description: description};
-		var self = this;
-
-		self.save(data);
+		this.save(data);
 	}
 });
 

@@ -99,14 +99,10 @@ var AddContentView = BaseViews.BaseListView.extend({
 	}
 });
 
-var EditMetadataView = BaseViews.BaseListView.extend({
+var EditMetadataView = BaseViews.BaseEditorView.extend({
 	template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
-	disable: false,
-	current_node: null,
-	item_view:"uploading_content",
-	unsaved_queue: [], // Used to keep track of temporary model data
 	initialize: function(options) {
-		_.bindAll(this, 'close_uploader', "save_nodes", 'check_item',
+		_.bindAll(this, 'close_uploader', "check_and_save_nodes", 'check_item',
 						'add_tag','save_and_finish','add_more','set_edited');	
 		this.parent_view = options.parent_view;
 		this.collection = options.collection;
@@ -127,7 +123,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 	},
 	events: {
 		'click .close_uploader' : 'close_uploader',
-		'click #upload_save_button' : 'save_nodes',
+		'click #upload_save_button' : 'check_and_save_nodes',
 		'click #upload_save_finish_button' : 'save_and_finish',
 		'click #add_more_button' : 'add_more',
 		'click #uploader' : 'finish_editing',
@@ -150,55 +146,27 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			self.views.push(node_view);
 		});
 	},
-
-	close_uploader: function(){
-		if(this.unsaved_queue.length == 0){
-			this.parent_view.render();
-			this.parent_view.set_editing(false);
-			this.delete_view();
-		}else if(confirm("Unsaved Metadata Detected! Exiting now will"
-			+ " undo any new changes. \n\nAre you sure you want to exit?")){
-			if(!this.allow_add){
-				this.views.forEach(function(entry){
-					entry.unset_node();
-				});
-			}
-			this.parent_view.render();
-			this.parent_view.set_editing(false);
-			this.delete_view();
-		}
-	},
-	save_nodes: function(){
+	check_and_save_nodes: function(){
 		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
     		var start = new Date().getTime();
 		/* TODO :fix to save multiple nodes at a time */
 		this.$el.find(".upload_input").removeClass("gray-out");
 		this.parent_view.set_editing(false);
 		var self = this;
-		var errorsFound = false;
+		this.errorsFound = false;
 		console.log("description is " + this.$el.find("#input_description").val())
 		if(!this.disable && this.$el.find("#input_description").val() == "" && this.current_view){
 			this.$el.find("#description_error").html("Description is required");
 			this.$el.find("#input_description").addClass("error_input");
-			errorsFound = true;
+			this.errorsFound = true;
 		}else{
 			this.$el.find("#description_error").html("");
 			this.$el.find("#input_description").removeClass("error_input");
 		}
-		$(this.views).each(function(){
-			this.model.set(this.model.attributes, {validate:true});
-			if(!this.model.validationError){
-				if(!self.allow_add)
-					this.save(null, {validate:false, async:false});
-				this.set_edited(false);
-			}else{
-				self.handle_error(this);
-				errorsFound = true;
-			}
-		});
-		errorsFound = errorsFound || !this.save_queued();
+ 		
+		this.save_nodes();
 
-		if(!errorsFound){
+		if(!this.errorsFound){
 			this.$el.find("#title_error").html("");
 			this.$el.find("#description_error").html("");
 			if(this.disable){
@@ -209,12 +177,12 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 			}
 		}
 
-		if(!errorsFound && this.allow_add) this.parent_view.add_nodes(this.views);
+		if(!this.errorsFound && this.allow_add) this.parent_view.add_nodes(this.views);
 		console.log("PERFORMANCE tree_edit/views.js: save_nodes end (time = " + (new Date().getTime() - start) + ")");
-		return !errorsFound; //Return true if successful, false if errors found
 	},
 	save_and_finish: function(){
-		if(this.save_nodes())
+		this.check_and_save_nodes();
+		if(!this.errorsFound)
 			this.close_uploader();
 	},
 	add_more:function(event){
@@ -294,29 +262,7 @@ var EditMetadataView = BaseViews.BaseListView.extend({
 		this.$el.find("#input_title").removeClass("error_input");
 		this.$el.find("#title_error").html("");
 
-		this.enqueue(this.current_view);
-		this.current_view.set_edited(true);
-		this.current_view.set_node();
-		this.current_view.render();
-	},
-	enqueue: function(view){
-		var index = this.unsaved_queue.indexOf(view);
-		if(index >= 0)
-			this.unsaved_queue.splice(index, 1);
-		this.unsaved_queue.push(view);
-	},
-	save_queued:function(){
-		var self = this;
-		var success = true;
-		$(this.unsaved_queue).each(function(){
-			this.model.set(this.model.attributes, {validate:true});
-			self.unsaved_queue.splice(self.unsaved_queue.indexOf(this), 1);
-			if(this.model.validationError){
-				self.handle_error(this);
-				success = false;
-			}
-		});
-		return success;
+		this.set_node_edited();
 	},
 	handle_error:function(view){
 		this.$el.find(".disable_on_error").prop("disabled", true);

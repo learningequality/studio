@@ -101,7 +101,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			parent_view: this,
 			el: $("#dialog"),
 			allow_add : false,
-			main_collection: this.collection,
+			main_collection: this.collection
 		});
 	},	
 	toggle_details:function(event){
@@ -118,8 +118,6 @@ var ContentList = BaseViews.BaseListView.extend({
 	current_node : null,
 	initialize: function(options) {
 		_.bindAll(this, 'add_content');	
-	//	this.listenTo(this.collection, "sync", this.prerender);
-      //  this.listenTo(this.collection, "remove", this.prerender);
 		this.index = options.index;
 		this.lock = true;
 		this.edit_mode = options.edit_mode;
@@ -136,17 +134,8 @@ var ContentList = BaseViews.BaseListView.extend({
 		$("#container_area").width(this.$el.find(".container-interior").outerWidth() * (this.index + 2));
 		this.$el.animate({'margin-left' : "0px"}, 500);	
 	},
-	/* in case want to do initial check first
-	prerender:function(){
-		console.log("lock is " + this.lock);
-		if(!this.lock){
-			
-			this.render();
-		}	
-	},*/
 	render: function() {
 		console.log("*************RENDERING " + this.model.get("title") + "****************");
-		console.log("rendering list for " + this.model.get("title") + " with collection", this.model);
 		DragHelper.removeDragDrop(this);
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		console.log("COLLECTION",this.childrenCollection);
@@ -155,13 +144,13 @@ var ContentList = BaseViews.BaseListView.extend({
 			topic: this.model, 
 			edit_mode: this.edit_mode, 
 			index: this.index,
-			content_list: this.childrenCollection.toJSON(),
+			content_list: this.childrenCollection.toJSON()
 		}));
 		this.load_content();
 		this.$el.data("container", this);
 		this.$el.find(".default-item").data("data", {
 			containing_list_view: this, 
-			index:0,
+			index:0
 		});
 		DragHelper.addDragDrop(this);
 	},
@@ -248,7 +237,7 @@ var ContentList = BaseViews.BaseListView.extend({
 
 		this.list_index = i;
 		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
-	},
+	}
 });
 
 

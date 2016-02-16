@@ -4,8 +4,8 @@ var Models = require("./models");
 
 var BaseView = Backbone.View.extend({
 	delete_view: function(){
-		this.undelegateEvents();
-		this.unbind();		
+		//this.undelegateEvents();
+		//this.unbind();		
 		this.remove();
 	},
 	set_editing: function(edit_mode_on){
@@ -81,7 +81,7 @@ BaseListView = BaseView.extend({
 		/*Set model's parent*/
 		var self=this;
 		transfer.model.set({
-			sort_order: new_sort_order,
+			sort_order: new_sort_order
 		});
 		if(this.model.id != transfer.model.get("parent")){
 			var old_parent = transfer.containing_list_view.model;
@@ -106,7 +106,6 @@ BaseListView = BaseView.extend({
 				//console.log("NEW CHILDREN", old_parent.get("children"));*/
 				//transfer.containing_list_view.collection.remove();
 			}
-			console.log("RENDERING>>>>>>>>>>");
 			//transfer.containing_list_view.render();
 		}else{
 			transfer.model.save({async:false});
@@ -185,7 +184,77 @@ var BaseListItemView = BaseView.extend({
 
 	set_editing: function(edit_mode_on){
 		this.containing_list_view.set_editing(edit_mode_on);
+	}
+});
+
+
+var BaseEditorView = BaseListView.extend({
+	disable: false,
+	current_node: null,
+	item_view:"uploading_content",
+	unsaved_queue: [], // Used to keep track of temporary model data
+	errorsFound : false,
+	parent_view : null,
+	close_uploader: function(){
+		if(this.unsaved_queue.length == 0){
+			this.parent_view.render();
+			this.parent_view.set_editing(false);
+			this.delete_view();
+		}else if(confirm("Unsaved Metadata Detected! Exiting now will"
+			+ " undo any new changes. \n\nAre you sure you want to exit?")){
+			if(!this.allow_add){
+				this.views.forEach(function(entry){
+					entry.unset_node();
+				});
+			}
+			this.parent_view.render();
+			this.parent_view.set_editing(false);
+			this.delete_view();
+		}
 	},
+	save_nodes: function(){
+		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
+    	var start = new Date().getTime();
+		this.parent_view.set_editing(false);
+		var self = this;
+		$(this.views).each(function(){
+			this.model.set(this.model.attributes, {validate:true});
+			if(!this.model.validationError){
+				if(!self.allow_add)
+					this.save(null, {validate:false, async:false});
+				this.set_edited(false);
+			}else{
+				self.handle_error(this);
+				this.errorsFound = true;
+			}
+		});
+		this.errorsFound = this.errorsFound || !this.save_queued();
+	},
+	set_node_edited:function(){
+		this.enqueue(this.current_view);
+		this.current_view.set_edited(true);
+		this.current_view.set_node();
+		this.current_view.render();
+	},
+	enqueue: function(view){
+		var index = this.unsaved_queue.indexOf(view);
+		if(index >= 0)
+			this.unsaved_queue.splice(index, 1);
+		this.unsaved_queue.push(view);
+	},
+	save_queued:function(){
+		var self = this;
+		var success = true;
+		$(this.unsaved_queue).each(function(){
+			this.model.set(this.model.attributes, {validate:true});
+			self.unsaved_queue.splice(self.unsaved_queue.indexOf(this), 1);
+			if(this.model.validationError){
+				self.handle_error(this);
+				success = false;
+			}
+		});
+		return success;
+	}
 });
 
 
@@ -193,4 +262,5 @@ module.exports = {
 	BaseView: BaseView,
 	BaseListView:BaseListView,
 	BaseListItemView: BaseListItemView,
+	BaseEditorView:BaseEditorView
 }
