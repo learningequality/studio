@@ -124,6 +124,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.container = options.container;
 		this.collection = options.collection;
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
+		this.childrenCollection.sort_by_order();
 		this.topictrees = options.topictrees;
 		this.set_sort_orders();
 		this.render();

@@ -84,6 +84,7 @@ BaseListView = BaseView.extend({
 			sort_order: new_sort_order
 		});
 		if(this.model.id != transfer.model.get("parent")){
+			console.log("transferring containers", transfer.model);
 			var old_parent = transfer.containing_list_view.model;
 			this.model.get("children").push(transfer.model.id);
 			transfer.model.set({
@@ -95,6 +96,7 @@ BaseListView = BaseView.extend({
 				transfer.model.unset({silent:true});
 			}else{
 				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
+				console.log("transferred", transfer.model);
 				//var old_parent = this.collection.get_all_fetch([old_parentid]).models[0];
 				/*console.log("old parent", old_parent);
 				console.log("OLD CHILDREN", old_parent.get("children"));
@@ -108,7 +110,7 @@ BaseListView = BaseView.extend({
 			}
 			//transfer.containing_list_view.render();
 		}else{
-			transfer.model.save({async:false});
+			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false});
 		}
 			
 		console.log("add_to_container model", transfer.model);

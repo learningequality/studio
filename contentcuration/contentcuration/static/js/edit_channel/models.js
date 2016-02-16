@@ -70,13 +70,12 @@ var NodeModel = Backbone.Model.extend({
 		console.log("PERFORMANCE models.js: starting validate on " + attrs.title + "...");
 		var start = new Date().getTime();
 		var self = this;
-
-
 		console.log("Checking if title is blank...");
 		//Case: title blank
 		if(attrs.title == "")
 			return "Name is required.";
 		if(attrs.parent){
+			console.log("Checking if topic is descendant of itself..");
 			var parent = new NodeModel({'id': attrs.parent});
 			parent.fetch({async:false});
 			if(attrs.kind == "topic"){

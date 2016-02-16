@@ -47,7 +47,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
-			edit: Backbone.history.getFragment().includes("edit"),
+			edit: Backbone.history.getFragment().indexOf("edit") >= 0,
 			collection: this.nodeCollection,
 			topictrees: topictrees
 		});
