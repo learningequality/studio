@@ -59,7 +59,7 @@ function addDragDrop(element){
 			isaboveclosest = $closestItemOrContainer.offset().top > $(placeholder).offset().top;
 			target = $closestItemOrContainer;
 	    	//console.log("near item", $closestItemOrContainer);
-	    },
+	    }
 	});
 }
 
@@ -69,5 +69,5 @@ function removeDragDrop(element){
 
 module.exports = {
 	addDragDrop : addDragDrop,
-	removeDragDrop : removeDragDrop,
+	removeDragDrop : removeDragDrop
 }

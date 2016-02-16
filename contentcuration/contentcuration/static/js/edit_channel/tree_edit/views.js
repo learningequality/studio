@@ -413,5 +413,5 @@ $.fn.onOffsetChanged = function (trigger, millis) {
 };
 
 module.exports = {
-	TreeEditView: TreeEditView,
+	TreeEditView: TreeEditView
 }

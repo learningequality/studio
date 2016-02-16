@@ -61,7 +61,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 			containing_list_view: this,
 			el: this.$el.find("#new"),
 			model: topic,
-			root: this.root,
+			root: this.root
 		});
 		this.views.push(item_view);
 	},
@@ -141,7 +141,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 				model: entry,
 				el: self.$el.find("#uploaded_list #item_" + entry.cid),
 				containing_list_view: self,
-				root: root,
+				root: root
 			});
 			self.views.push(node_view);
 		});
@@ -285,7 +285,7 @@ var ContentItem =  BaseViews.BaseListItemView.extend({
 	},
 	delete_item: function(){
 		this.delete(true);
-	},
+	}
 });
 
 var NodeListItem = ContentItem.extend({
@@ -311,7 +311,7 @@ var NodeListItem = ContentItem.extend({
 		'click .submit_topic' : 'submit_topic',
 		'keyup .content_name' : 'submit_topic',
 		'dblclick .folder_name' : 'edit_topic',
-		'click .remove_topic' : 'remove_topic',
+		'click .remove_topic' : 'remove_topic'
 	},
 	remove_topic: function(){
 		this.remove_item();
@@ -356,7 +356,7 @@ var UploadedItem = ContentItem.extend({
 		this.$el.html(this.template({
 			topic: this.model,
 			kind: this.model.get("kind").toUpperCase(),
-			id: this.model.cid,
+			id: this.model.cid
 		}));
 		this.$el.find("input[type=checkbox]").prop("checked", this.checked);
 		this.set_edited(this.edited);
@@ -388,7 +388,7 @@ var UploadedItem = ContentItem.extend({
 		});
 		this.originalData = {
 			"title":$("#input_title").val(), 
-			"description":$("#input_description").val(),
+			"description":$("#input_description").val()
 		};
 	},
 	set_node:function(){

@@ -14,7 +14,7 @@ var PreviewerView = Backbone.View.extend({
     render: function() {
         this.$el.html(this.template({
         	file : this.model,
-        	view_description : this.view_description,
+        	view_description : this.view_description
         }));
 
 		var parent_data = this.model;
@@ -35,7 +35,7 @@ var PreviewerView = Backbone.View.extend({
 		'click .toggle_previewer': 'toggle_preview',
 		'click .toggle_details':'toggle_details',
 		'click #description_nav' : 'load_description',
-		'click #detail_nav' : 'load_details',
+		'click #detail_nav' : 'load_details'
 	},
 
 	toggle_preview: function(event){

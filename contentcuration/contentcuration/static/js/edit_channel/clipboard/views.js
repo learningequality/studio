@@ -53,7 +53,7 @@ var ClipboardList = BaseViews.BaseListView.extend({
 				containing_list_view: containing_list_view,
 				el: containing_list_view.$el.find("#clipboard_item_" + entry.id),
 				model: entry,
-				indent : 0,
+				indent : 0
 			});
 			containing_list_view.views.push(clipboard_item_view);
 		});
@@ -63,16 +63,7 @@ var ClipboardList = BaseViews.BaseListView.extend({
 		models.forEach(function(entry){
 			container.collection.add(entry);
 		});
-	},
-/*
-	drop_in_container: function(transfer){
-		console.log("adding");
-		var copy = transfer.data.model.duplicate(this.root.id);
-		this.collection.add(copy);
-		this.render();
-		console.log("added");
 	}
-	*/
 });
 
 /* Loaded when user clicks clipboard button below navigation bar */
@@ -92,7 +83,7 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 			isfolder: this.model.get("kind").toLowerCase() == "topic",
 			allow_edit: this.allow_edit,
 			sub_list: this.model.get("children"),
-			indent: this.indent,
+			indent: this.indent
 		}));
 
 		this.$el.data("data", this);
@@ -142,7 +133,7 @@ var ClipboardItem = BaseViews.BaseListItemView.extend({
 				containing_list_view: self.containing_list_view,
 				el: self.$el.find("#clipboard_item_" + entry.id),
 				model: entry,
-				indent : self.indent,
+				indent : self.indent
 			});
 		});
 	}
