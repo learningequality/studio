@@ -195,8 +195,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 				root: (this.allow_add)? this.root : null,
 				main_collection : this.main_collection
 			});
-			$(this.views).each(function(){
-				this.unset_node();
+			this.views.forEach(function(entry){
+				entry.unset_node();
 			});
 			this.reset();
 			this.undelegateEvents();

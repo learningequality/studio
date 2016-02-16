@@ -24,8 +24,8 @@ BaseListView = BaseView.extend({
 	save_all: function(){
 		console.log("PERFORMANCE views.js: starting save_all...");
     	var start = new Date().getTime();
-		$(this.views).each(function(){
-			this.save(this.model.attributes);
+		this.views.forEach(function(entry){
+			entry.save(entry.model.attributes);
 		});
 		console.log("PERFORMANCE views.js: save_all end (time = " + (new Date().getTime() - start) + ")");
 	},
@@ -137,9 +137,9 @@ var BaseListItemView = BaseView.extend({
 				/*Check if node name already exists in trash, then delete older version*/
 				var self = this;
 				var trash_collection = this.containing_list_view.collection.get_all_fetch(this.deleted_root.get("children"));
-				$(trash_collection.models).each(function(){
-					if(this.get("title") == self.model.get("title")){
-						this.destroy({async:false});
+				trash_collection.forEach(function(entry){
+					if(entry.get("title") == self.model.get("title")){
+						entry.destroy({async:false});
 					}
 				});
 
@@ -217,15 +217,15 @@ var BaseEditorView = BaseListView.extend({
     	var start = new Date().getTime();
 		this.parent_view.set_editing(false);
 		var self = this;
-		$(this.views).each(function(){
-			this.model.set(this.model.attributes, {validate:true});
-			if(!this.model.validationError){
+		this.views.forEach(function(entry){
+			entry.model.set(entry.model.attributes, {validate:true});
+			if(!entry.model.validationError){
 				if(!self.allow_add)
-					this.save(null, {validate:false, async:false});
-				this.set_edited(false);
+					entry.save(null, {validate:false, async:false});
+				entry.set_edited(false);
 			}else{
-				self.handle_error(this);
-				this.errorsFound = true;
+				self.handle_error(entry);
+				self.errorsFound = true;
 			}
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
@@ -245,11 +245,11 @@ var BaseEditorView = BaseListView.extend({
 	save_queued:function(){
 		var self = this;
 		var success = true;
-		$(this.unsaved_queue).each(function(){
-			this.model.set(this.model.attributes, {validate:true});
-			self.unsaved_queue.splice(self.unsaved_queue.indexOf(this), 1);
-			if(this.model.validationError){
-				self.handle_error(this);
+		this.unsaved_queue.forEach(function(entry){
+			entry.model.set(entry.model.attributes, {validate:true});
+			self.unsaved_queue.splice(self.unsaved_queue.indexOf(entry), 1);
+			if(entry.model.validationError){
+				self.handle_error(entry);
 				success = false;
 			}
 		});

@@ -213,8 +213,8 @@ var ContentList = BaseViews.BaseListView.extend({
 	close_folders:function(){
 		console.log("PERFORMANCE tree_edit/views.js: starting close_folders ...");
     	var start = new Date().getTime();
-		$(this.views).each(function(){
-			this.set_opened(false, false);
+		this.views.forEach(function(entry){
+			entry.set_opened(false, false);
 		});
 		console.log("PERFORMANCE tree_edit/views.js: close_folders end (time = " + (new Date().getTime() - start) + ")");
 		//this.$el.find(".folder .glyphicon").css("display", "inline-block");
@@ -225,13 +225,13 @@ var ContentList = BaseViews.BaseListView.extend({
     	var start = new Date().getTime();
 		var self = this;
 		var i  =this.collection.models.length + 1;
-		$(views).each(function(){
-			this.save({
-				"title" : this.model.get("title"),
+		views.forEach(function(entry){
+			entry.save({
+				"title" : entry.model.get("title"),
 				"sort_order" : i++,
 				"parent" : self.model.id
 			}, {validate:false, async:false});		
-			self.model.get("children").push(this.model.id);
+			self.model.get("children").push(entry.model.id);
 		});
 		//this.collection.save();
 
@@ -382,9 +382,9 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	publish_children:function(model, collection){
 		var self = this;
 		var children = collection.get_all_fetch(model.get("children"));
-		$(children.models).each(function(){
-			if(!this.get("published")){
-				this.save({"published":true},{validate:false});
+		children.forEach(function(entry){
+			if(!entry.get("published")){
+				entry.save({"published":true},{validate:false});
 			}
 			self.publish_children(this, collection);
 		});

@@ -12,7 +12,8 @@ ChannelEditRouter  = Backbone.Router.extend({
         _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page");
 		this.user = options.user;
 		this.model = options.model;
-		
+		this.nodeCollection = new Models.NodeCollection();
+		this.nodeCollection.fetch();
 		//this.listenTo(saveDispatcher, "save", this.save);
     },
 	
@@ -43,8 +44,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 	open_channel: function(edit_mode_on){
 		var topictrees = new Models.TopicTreeModelCollection(window.topic_trees);
 		topictrees.fetch();
-		this.nodeCollection = new Models.NodeCollection();
-		this.nodeCollection.fetch();
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),

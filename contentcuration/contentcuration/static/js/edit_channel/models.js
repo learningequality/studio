@@ -61,8 +61,8 @@ var NodeModel = Backbone.Model.extend({
 		var parent_id = node.id;
 		var copied_collection = new NodeCollection();
 		copied_collection.get_all_fetch(original_collection);
-		$(copied_collection.models).each(function(){
-			this.duplicate(parent_id);
+		copied_collection.forEach(function(entry){
+			entry.duplicate(parent_id);
 		});
 		console.log("PERFORMANCE models.js: copy_children end (time = " + (new Date().getTime() - start) + ")");
 	},
@@ -115,11 +115,6 @@ var NodeModel = Backbone.Model.extend({
 
 var NodeCollection = Backbone.Collection.extend({
 	model: NodeModel,
-	/*save: function() {
-		$(this.models).each(function(){
-			this.save();
-		});
-	},*/
 	save: function() {
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	},
@@ -197,16 +192,16 @@ var ChannelModel = Backbone.Model.extend({
 
     update_root:function(data){
     	var channel = this;
-    	$(["clipboard","deleted","draft"]).each(function(){
-			var node = channel.get_tree(this.toString()).get_root();
+    	["clipboard","deleted","draft"].forEach(function(entry){
+			var node = channel.get_tree(entry.toString()).get_root();
 			node.save(data);
 		});
     },
 
     delete_channel:function(){
     	var channel = this;
-    	$(["clipboard","deleted","draft"]).each(function() {
-		  	var tree = channel.get_tree(this);
+    	["clipboard","deleted","draft"].forEach(function(entry) {
+		  	var tree = channel.get_tree(entry);
 	    	tree.destroy();
 	    	/*TODO: Delete all child nodes*/
 		});
@@ -263,12 +258,12 @@ var ChannelCollection = Backbone.Collection.extend({
 		return this.create(channel_data, {
 			async: false,
 			success:function(){
-				$(["draft","clipboard","deleted"]).each(function(){
+				["draft","clipboard","deleted"].forEach(function(entry){
 					/*For future branch: implement progress bar on channel creation
 					percent += 25;
 					progress_bar.width(percent + "%");*/
 
-					channel_data.create_tree(this.toString());
+					channel_data.create_tree(entry.toString());
 				});
    			}
 		});
