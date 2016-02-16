@@ -1,0 +1,163 @@
+@import "global-variables.less";
+
+@uploader-width: 600px;
+@metadata-width: 900px;
+
+#uploader{
+	width: @uploader-width;
+}
+
+#metadata{
+	width: @metadata-width;
+}
+
+
+#uploader, #metadata{
+	@uploader-background-color:#D8D8D8;
+	
+	@uploader-height: 600px;
+	@uploader-header-color:#848484;
+	@uploader-option-size: (@uploader-width - 100px) /3;
+	@uploader-list-height: 200px;
+	@uploader-preview-bg-color: #585858;
+	@uploader-grayed-out-color: #BDBDBD;
+
+
+
+	background-color: @uploader-background-color;
+	height: @uploader-height;
+	border: 1px solid gray;
+	overflow:hidden;
+	position:absolute;
+	top: 10vh;
+	left:30vw;
+	z-index: 99999999999;
+
+	.line{
+		height:2px;
+		background-color:gray;
+		width: 100%;
+	}
+
+	.headers{
+		background-color: @uploader-header-color;
+		margin: 0px 10px;
+	}
+
+	#uploaded_list{
+		margin: 10px;
+		height: @uploader-height - 150px;
+		background-color:white;
+		overflow-y:auto;
+		overflow-x:none;
+	}
+
+	#upload_content_add_list{
+		margin: 0px 10px;
+		height: @uploader-list-height;
+		background-color:white;
+		overflow-y:auto;
+		overflow-x:none;
+
+		.glyphicon{
+			padding-left: 5px;
+		}
+					
+		.row{
+			vertical-align:middle;
+
+		}
+		.content_type{
+			padding:1px;
+			background-color: #E6E6E6;
+		}
+		
+		.content_name{
+			width: 80%;
+		}
+		.folder_name{
+			font-weight:normal;
+		}
+		.name{
+			cursor:pointer;
+		}
+	}
+
+	.create_option{
+		width: @uploader-option-size;
+		background-color:white;
+		margin: 10px;
+		cursor:pointer;
+	}
+	select{
+		width:80%;
+		margin:10px;
+	}
+
+	.section{
+		display:inline-block;
+		height:100%;
+		width: @metadata-width / 3.2;
+		padding:10px;
+	}
+
+	iframe{
+		background-color: @uploader-preview-bg-color;
+		height: 60%;
+	}
+
+	.uploaded{
+		border-bottom: 1px solid gray;
+		padding:10px;
+		cursor:pointer;
+		.uploaded_list_item{
+			width:90%;
+			height:100%;
+			padding:5px;
+		}
+	}
+	.uploaded:hover{
+		background-color: #E6E6E6;
+	}
+
+	.gray-out{
+		background-color:@uploader-grayed-out-color;
+	}
+
+	.tag{
+		background-color: lightgray;
+		border:1px solid gray;
+		margin: 3px;
+		width:auto;
+		max-width: @metadata-width / 3.2;
+		word-wrap:break-word;
+		border-radius:5px;
+	}
+
+	#tag_area{
+		height:100px;
+		overflow-y:auto;
+	}
+
+	.required{
+		margin-left:5px;
+		color:red;
+		span{
+			font-style:italic;
+			font-size: 8pt;
+		}
+	}
+
+	.upload_input, .tag_input{
+		width:100%;
+	}
+
+	textarea{
+		resize:none;
+		height:@uploader-list-height;
+	}
+
+	input[type=file]{
+		display:none;
+	}
+}	

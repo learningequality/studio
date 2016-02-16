@@ -10,7 +10,7 @@ body {
 
 /* NAVIGATION BAR */
 /* nav variables/mixins */
-@topnav-bg-color: #816793;
+
 @dropdown-bg-color: #efefef;
 @dropdown-text-color: #515151;
 .channel-img {
@@ -26,6 +26,7 @@ body {
 	border: none;
 	padding: 0px 40px;
 	margin-bottom: 0;
+	z-index: 100000000;
 
 	#logo-container { 
 		.inline-block;
@@ -125,7 +126,7 @@ body {
 	} 
 }
 
-@subnav-bg-color: #dbdddc;
+@subnav-bg-color: #EAEAEA;
 .nav-img {
 	img {
 		height: 25px;
@@ -137,31 +138,42 @@ body {
 	background: @subnav-bg-color;
 	border: none;
 	width: 100%;
-	
-	div {
-		padding: 0;
-	}
-	
-	a{
-		text-decoration:none;
-		float:left;
-	}
+	padding:0;margin:0;
+	vertical-align:middle;
+	z-index: 30000;
 	
 	li {
+		margin:0;
 		width: 160px;
 		height: 50px;
 		font-size: 15px;
-		text-align: center;
-		padding: 13px;
+		padding: 5px;
 		color: #474747;
 		border-right: 2px solid #464646;
-		.nav-img;
 		cursor:pointer;
 	}
 	#publish {
 		float: right;
-		position: relative;
 		border-left: 2px solid #464646;
-		.nav-img;
+		background-color: #89C0B1;
 	}
+
+}
+
+a {
+	text-decoration:none;
+	cursor:pointer;
+	color:black;
+}
+
+#main-content-area{
+	margin-top: 20px;
+}
+
+.wordwrap { 
+   white-space: pre-wrap;      /* CSS3 */   
+   white-space: -moz-pre-wrap; /* Firefox */    
+   white-space: -pre-wrap;     /* Opera <7 */   
+   white-space: -o-pre-wrap;   /* Opera 7 */    
+   word-wrap: break-word;      /* IE */
 }

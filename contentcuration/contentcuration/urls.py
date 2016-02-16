@@ -26,17 +26,6 @@ import views
 from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
 
-
-class ContentViewSet(viewsets.ModelViewSet):
-    queryset = ContentNode.objects.all()
-    serializer_class = serializers.ContentSerializer
-
-
-class TopicViewSet(viewsets.ModelViewSet):
-    queryset = TopicNode.objects.all()
-    serializer_class = serializers.TopicSerializer
-
-
 class LicenseViewSet(viewsets.ModelViewSet):
     queryset = ContentLicense.objects.all()
     serializer_class = serializers.LicenseSerializer
@@ -52,7 +41,7 @@ class TopicTreeViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.TopicTreeSerializer
 
 
-class NodeViewSet(viewsets.ModelViewSet):
+class NodeViewSet(BulkModelViewSet):
     queryset = Node.objects.all()
     serializer_class = serializers.NodeSerializer
 
@@ -69,8 +58,6 @@ class AssessmentItemViewSet(BulkModelViewSet):
 
 
 router = routers.DefaultRouter()
-router.register(r'topics', TopicViewSet)
-router.register(r'content', ContentViewSet)
 router.register(r'license', LicenseViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'topictree', TopicTreeViewSet)
@@ -92,7 +79,8 @@ urlpatterns = [
     url(r'^file_upload/', views.file_upload, name="file_upload"),
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
     url(r'^accounts/', include('django.contrib.auth.urls')),
-    url(r'^channel_edit/', views.edit, name='edit')
+    url(r'^channels/$', views.channel_list, name='channels'),
+    url(r'channels/(?P<channel_id>\w+)', views.channel, name='channel'),
 ]
 
 

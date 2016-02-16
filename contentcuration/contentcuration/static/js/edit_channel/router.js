@@ -1,44 +1,57 @@
-/* Todo: Remove this (testing purposes only)*/
-var ClipboardViews = require("edit_channel/clipboard/views");
-var PreviewerViews = require("edit_channel/previewer/views");
+var _ = require("underscore");
+var Backbone = require("backbone");
+var Models = require("./models");
+var Views = require("./views");
+var ChannelManageView = require("edit_channel/new_channel/views");
 
-/* TODO: REMOVE THIS LATER ONCE REFERENCE DB */
-var Models = require("edit_channel/models");
-var channelModel = new Models.ChannelModel({name: 'Khan Academy', description: 'Default value for testing purposes');
-
-/*
-var Models = require("edit_channel/models");
-var topicNodeModel = new Models.TopicNodeModel({title:'Khan Academy', description:'This is a sample description'});
-var topicNode1 = new Models.TopicNodeModel({parent: topicNodeModel, title:'Math', description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua'});
-var topicNode2 = new Models.TopicNodeModel({parent: topicNodeModel, title:'Science', description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua'});
-var topicNodeCollection = new Models.TopicNodeCollection([topicNodeModel, topicNode1, topicNode2]);
-*/
-
+//var saveDispatcher = _.clone(Backbone.Events);
 
 ChannelEditRouter  = Backbone.Router.extend({
-    initialize: function() {
-        _.bindAll(this);
-		this.default_channel = channelModel;
+	nodeCollection: new Models.NodeCollection(),
+    initialize: function(options) {
+        _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page");
+		this.user = options.user;
+		this.model = options.model;
+		this.nodeCollection = new Models.NodeCollection();
+		this.nodeCollection.fetch();
+		//this.listenTo(saveDispatcher, "save", this.save);
+    },
+	
+    routes: {
+		"": "navigate_channel_home",
+		":channel/edit": "edit_page", 
+		":channel/preview": "preview_page",
     },
 
-    routes: {
-		"": "navigate_default_channel",
-		":channel/(*splat)":    "navigate_channel"
+	navigate_channel_home: function() {
+		this.channelCollection = new Models.ChannelCollection();
+		this.channelCollection.fetch();
+		var channel_manager_view = new ChannelManageView.ChannelList ({
+			el: $("#channel-container"),
+			model: this.model,
+			channels: this.channelCollection
+		});
+		
     },
 	
-	navigate_default_channel: function() {
-        this.navigate(this.default_channel + "/", {trigger: true, replace: true});
-    },
-	
-	navigate_channel: function(channel, splat) {
-        if (this.channel!==channel) {
-            this.control_view = new SidebarView({
-                channel: channel,
-                entity_key: "children",
-                entity_collection: TopicCollection
-            });
-            this.channel = channel;
-        }
-        this.navigate_splat(splat);
-    }
+	edit_page : function(){
+		this.open_channel(true);
+	},
+	preview_page : function(){
+		this.open_channel(false);
+	},
+
+	open_channel: function(edit_mode_on){
+		var topictrees = new Models.TopicTreeModelCollection(window.topic_trees);
+		topictrees.fetch();
+		var EditViews = require("edit_channel/tree_edit/views");
+		var edit_page_view = new EditViews.TreeEditView({
+			el: $("#main-content-area"),
+			edit: Backbone.history.getFragment().includes("edit"),
+			collection: this.nodeCollection,
+			topictrees: topictrees
+		});
+	}
 });
+
+module.exports = ChannelEditRouter;

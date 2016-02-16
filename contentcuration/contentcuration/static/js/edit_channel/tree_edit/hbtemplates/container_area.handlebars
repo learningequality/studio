@@ -1,0 +1,21 @@
+<div id={{#if edit}}"edit"{{else}}"preview"{{/if}} class="container-fluid">
+
+	{{#if edit}}
+	<nav id="button_bar">
+		<a class="btn btn-default copy_button disable-on-edit">Copy Selected</a>
+		<a class="btn btn-default delete_button disable-on-edit">Delete Selected</a>
+		<a class="btn btn-default edit_button disable-on-edit">Edit Selected</a>
+		<input type="checkbox" id="hide_details_checkbox"/>
+		<label for="hide_details_checkbox">Hide details</label>
+	</nav>
+	{{else}}
+		<h1>Select content to preview.</h1>
+		<input type="checkbox" id="hide_details_checkbox"/>
+		<label for="hide_details_checkbox">Hide details</label>
+	{{/if}}
+	<div id="container-wrapper">
+		<ul id="container_area" class="container-fluid row list-unstyled">
+		</ul>
+	</div>
+
+</div>

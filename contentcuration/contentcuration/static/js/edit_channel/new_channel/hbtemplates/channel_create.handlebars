@@ -1,0 +1,23 @@
+
+<nav id="manage-channel-nav" class="container">
+	<h2 class="text-center">Welcome back, {{user}}</h2>
+	<h3>My Channels</h3>
+	<!-- <h4>Create a new channel for your educational content.</h4> -->
+</nav>
+<div id="bookmark-area" class="pull-right">
+	<h4>Channels I've Bookmarked</h4>
+	<ul id="bookmark_list" class="list-unstyled">
+	</ul>
+</div>
+<div id="channel-list-area">
+	<ul id="channel_list" class="list-unstyled">
+		{{#each channel_list}}
+		    <li class="channel_container container" id={{id}}></li>
+		    {{else}} <li><h5 class="default-item">No channels found.</h5></li>
+		{{/each}}
+	</ul>
+	<h3 id="new_channel_button" class="disable-on-edit">
+		<span  class="glyphicon glyphicon-plus-sign"></span> 
+		New Channel
+	</h3>
+</div>

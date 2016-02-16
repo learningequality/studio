@@ -1,5 +1,4 @@
 /* GLOBAL VARIABLES */
-
 @icon-font-path: "/static/fonts/";
 
 @font-face {
@@ -7,18 +6,11 @@
 	src: url("@{icon-font-path}OpenSans-Regular.ttf") format("truetype");
 }
 
-@body-background: #f2f2f2;
+@topnav-bg-color: #816793;
+@error-input-color : #F6CECE;
+@body-font-color: white;
 
-@container-shadow: #BDBDBC;
-@folder-color: #EBECED;
-@folder-shadow: #8D8F90;
-@highlighted-file: #B6B6B7;
-@container-width: 360px;
-@container-height: 75vh; 
-@sidebar-width: 38px;
-@container-min-height:500px;
-@container-background-color: #D4D5D4;
-@folder-height: 90px; 
+@body-background: #292A2B;
 
 /* GLOBAL STYLES */
 .inline-block {
@@ -26,4 +18,25 @@
 }
 body {
 	background: @body-background;
+}
+
+body.dragging, body.dragging * {
+  cursor: move !important;
+}
+
+.dragged {
+  position: absolute;
+  opacity: 0.5;
+  z-index: 2000;
+}
+
+ul li.placeholder {
+  position: relative;
+}
+ul li.placeholder:before {
+  position: absolute;
+}
+
+.error_input{
+  background-color :@error-input-color;
 }

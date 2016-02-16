@@ -5,69 +5,60 @@ require("previewer.less");
 var PreviewerView = Backbone.View.extend({
 	template: require("./hbtemplates/previewer.handlebars"),
 	initialize: function(options) {
-        _.bindAll(this, 'toggle_preview', 'open_pdf', 'open_audio', 'open_video', 'toggle_details');
+        _.bindAll(this, 'toggle_preview', 'toggle_details', 'load_description', 'load_details');
         //this.listenTo(this.model, "change:number_of_hexagons", this.render);
-		this.file_type = options.file_type;
+		this.file = options.file;
+		this.view_description = true;
         this.render();
     },
     render: function() {
-        this.$el.html(this.template(this.model));
-		var detail_template = require("./hbtemplates/details.handlebars");
-		var content_view;
-		switch(this.file_type){
-			case "pdf":
-				content_view =  require("./hbtemplates/previewer_pdf.handlebars");
-				detail_template = require("./hbtemplates/pdf_details.handlebars");
-				$("#previewer").prepend(detail_template(this.model.file));
-				break;
-			case "audio":
-				content_view =  require("./hbtemplates/previewer_audio.handlebars");
-				$("#previewer").append(detail_template(this.model.file));
-				break;
-			default: //video by default
-				content_view =  require("./hbtemplates/previewer_video.handlebars");
-				$("#previewer").append(detail_template(this.model.file));
+        this.$el.html(this.template({
+        	file : this.model,
+        	view_description : this.view_description
+        }));
+
+		var parent_data = this.model;
+		while(parent_data.attributes.parent){
+			parent_data = parent_data.attributes.parent;
+			$(".breadcrumb").prepend("<li>" + parent_data.attributes.title + "</li>");
 		}
-		$("#preview_window").append(content_view(this.model));
+		
 		$(".details").css("display", "none");
+		$("#previewer").css("margin-right", - $("#previewer").outerWidth());
+		$("#previewer").animate({
+			marginRight: parseInt($("#previewer").css('marginRight'),10) == 0 ?
+				$("#previewer").outerWidth() : 0
+		}); 
     },
 		
 	events: {
 		'click .toggle_previewer': 'toggle_preview',
 		'click .toggle_details':'toggle_details',
-		'click .pdf_sample': 'open_pdf',
-		'click .audio_sample': 'open_audio',
-		'click .video_sample': 'open_video'
+		'click #description_nav' : 'load_description',
+		'click #detail_nav' : 'load_details'
 	},
 
 	toggle_preview: function(event){
-		$("#previewer").hide();
+		this.delete_view();
 	},
 	toggle_details: function(event){
-		$(".details").slideToggle();
-		$(".toggle_details").html(($(".toggle_details").html() == "Show Details") ? "Hide Details" : "Show Details");
+		if($(".toggle_details").hasClass("glyphicon-menu-down")){
+			$(".toggle_details").attr("class", "pull-right toggle_details glyphicon glyphicon-menu-up");
+			$(".details").slideDown();
+		}
+		else{
+			$(".toggle_details").attr("class", "pull-right toggle_details glyphicon glyphicon-menu-down");
+			$(".details").slideUp();
+		}
 	},
-	
-	/* Going to be determined by this.file_type (testing purposes only) */
-	open_pdf: function(event){
-		this.file_type = "pdf";
-		var content_view =  require("./hbtemplates/previewer_pdf.handlebars");
-		$("#preview_window").empty();
-		$("#preview_window").append(content_view(this.model));
+	load_description: function(){
+		this.view_description = true;
+		this.render();
 	},
-	open_audio: function(event){
-		this.file_type = "audio";
-		var content_view =  require("./hbtemplates/previewer_audio.handlebars");
-		$("#preview_window").empty();
-		$("#preview_window").append(content_view(this.model));
-	},
-	open_video: function(event){
-		this.file_type = "video";
-		var content_view =  require("./hbtemplates/previewer_video.handlebars");
-		$("#preview_window").empty();
-		$("#preview_window").append(content_view(this.model));
+	load_details: function(){
+		this.view_description = false;
+		this.render();
 	}
-	
 });
 
 module.exports = {

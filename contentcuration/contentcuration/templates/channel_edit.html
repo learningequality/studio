@@ -1,11 +1,34 @@
 <!DOCTYPE HTML>
 {% extends "base.html" %}
-
 {% load staticfiles %}
+{% load i18n %}
 
 {% block content %}
 	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
-	<script type="text/javascript" src="{% static 'js/edit_channel/views.js' %}"></script>
+
+	<script>
+		var current_channel = JSON.parse("{{ channel|escapejs}}");
+		var topic_trees = JSON.parse("{{ topictrees|escapejs }}");
+	</script>
+	<script type="text/javascript">		
+		var bundle = require("channel_edit");
+		bundle.$(function() {
+            window.channel_router = new bundle.ChannelEditRouter({user: "current_user"});
+			bundle.Backbone.history.start({pushState: true, root: "{% url 'channels' %}"});
+        });
+    </script>
 	
-	<div id="channel-edit-container"></div>
+	<nav class="navbar navbar-default collapse navbar-collapse" id="secondary-nav">
+		<ul class="nav navbar-nav">
+			<a href="edit"><li id="channel-edit-button" class="text-center pull-left">Edit</li></a>
+			<a href="preview"><li id="channel-preview-button" class="text-center pull-left">Preview</li></a>
+			<!--<a><li id="channel-trash-button" class="text-center pull-left">Trash</li></a>-->
+		</ul>
+		<ul class="nav navbar-nav" id="publish">
+			<li id="channel-publish-button" class="text-center pull-right">Publish</li>
+		</ul>
+	</nav>	
+	<div id="main-content-area" class="container-fluid"></div>
+	<div id="previewer-area" class="container pull-right"></div>
+	<div id="clipboard-area" class="container pull-right"></div>
 {% endblock content %}

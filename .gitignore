@@ -66,5 +66,8 @@ Thumbs.db
 # Ignore built javascript files
 /contentcuration/*/static/js/bundles
 
+# Ignore Django collected static files
+/contentcuration/static/*
+
 # Ignore node_modules
 /node_modules

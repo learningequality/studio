@@ -1,0 +1,44 @@
+<div id="uploader" class="container text-center">
+	<h3 class="header">
+		<span class="glyphicon glyphicon-plus-sign pull-left" aria-hidden="true"></span>
+		Adding to "{{folder.attributes.title}}"
+		<span class="glyphicon glyphicon-remove pull-right close_uploader" aria-hidden="true"></span>
+	</h3>
+	<div class="line">&nbsp</div>
+
+	 <div class="row">
+	 	<div class="col-xs-4 create_option" id="create_topic">
+	 		<h1><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></h1>
+	 		Create Topic
+	 	</div>
+	 	<div class="col-xs-4 create_option" id="upload_file">
+
+	 		<h1><span class="glyphicon glyphicon-duplicate" aria-hidden="true"></span></h1>
+	 		Upload
+	 	</div>
+	 	<div class="col-xs-4 create_option">
+	 		<h1><span class="glyphicon glyphicon-star" aria-hidden="true"></span></h1>
+	 		Create Exercise
+	 	</div>
+	 </div>
+	 <h5>You can also drag and drop from your computer</h5>
+
+	 <h4>Content to be added</h4>
+	 <div class="row headers">
+	 	<div class="col-xs-2">Type</div>
+	 	<div class="col-xs-10">Name <em>(Double-click to edit)</em></div>
+ 	 </div>
+	 <ul class="list-unstyled" id="upload_content_add_list">
+	 {{#each node_list}}
+	 	<li id="content_item_{{cid}}" class="row {{kind}}"></li>
+	 {{/each}}
+	 </ul>
+
+	 <h5>Add from a channel I'm subscribed to</h4>
+	 <select>
+	 	<option>Khan Academy</option>
+	 </select>
+
+	 <a class="btn btn-default edit_metadata">Edit Metadata</a>
+	 	<input type='file' id="file-dialog"/>
+</div>

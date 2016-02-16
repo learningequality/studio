@@ -2,38 +2,26 @@ from contentcuration.models import *    # TODO: Change this later?
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
 
-class ContentSerializer(serializers.ModelSerializer):
-    class Meta: 
-        model = ContentNode
-        # TODO: content_file
-        fields = ('created', 'modified', 'parent', 'title', 'published', 'sort_order',
-                  'author', 'license_owner', 'license')
-
-class TopicSerializer(serializers.ModelSerializer):
-    class Meta: 
-        model = TopicNode
-        fields = ('created', 'modified', 'parent', 'title', 'description', 'sort_order',
-                  'color1', 'color2', 'color3')
-
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta: 
         model = ContentLicense
-        fields = ('name',)
+        fields = ('name', 'id')
 
 class ChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
-        fields = ('name', 'description', 'editors')
+        fields = ('name', 'description', 'editors', 'id', 'draft', 'clipboard', 'deleted', 'published')
 
 class TopicTreeSerializer(serializers.ModelSerializer):
     class Meta:
         model = TopicTree
-        fields = ('name',)
+        fields = ('name', 'channel', 'root_node', 'id')
 
-class NodeSerializer(serializers.ModelSerializer):
+class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Node
-        fields = ('name', 'published', 'deleted')
+        fields = ('title', 'published', 'deleted', 'id', 'description', 'published', 
+                  'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent')
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
