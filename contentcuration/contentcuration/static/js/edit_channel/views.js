@@ -3,6 +3,7 @@ var _ = require("underscore");
 var Models = require("./models");
 
 var BaseView = Backbone.View.extend({
+	list_index : 0,
 	delete_view: function(){
 		//this.undelegateEvents();
 		//this.unbind();		
@@ -13,6 +14,63 @@ var BaseView = Backbone.View.extend({
 		$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
 		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
 	},
+	delete_selected:function(){
+		if(confirm("Are you sure you want to delete these selected items?")){
+			var list = this.$el.find('input:checked').parent("li");
+			for(var i = 0; i < list.length; i++){
+				$("#" + list[i].id).data("data").delete();
+			}
+		}
+	},
+	edit_selected:function(){
+		var UploaderViews = require("edit_channel/uploader/views");
+		var list = this.$el.find('input:checked').parent("li");
+		var edit_collection = new Models.NodeCollection();
+		/* Create list of nodes to edit */
+		for(var i = 0; i < list.length; i++){
+			var model = $(list[i]).data("data").model;
+			edit_collection.add(model);
+		}
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var metadata_view = new UploaderViews.EditMetadataView({
+			collection: edit_collection,
+			parent_view: this,
+			el: $("#dialog"),
+			allow_add : false,
+			main_collection: this.collection
+		});
+	},
+	add_to_view:function(){
+		var UploaderViews = require("edit_channel/uploader/views");
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var new_collection = new Models.NodeCollection();
+		var add_view = new UploaderViews.AddContentView({
+			el : $("#dialog"),
+			collection: new_collection,
+			main_collection: this.collection,
+			parent_view: this,
+			root: this.model
+		});
+	},
+
+	add_nodes:function(views){
+		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
+    	var start = new Date().getTime();
+		var self = this;
+		var i  =this.collection.models.length + 1;
+		views.forEach(function(entry){
+			entry.save({
+				"title" : entry.model.get("title"),
+				"sort_order" : i++,
+				"parent" : self.model.id
+			}, {validate:false, async:false});		
+			self.model.get("children").push(entry.model.id);
+		});
+		//this.collection.save();
+
+		this.list_index = i;
+		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
+	}
 });
 
 BaseListView = BaseView.extend({
@@ -264,6 +322,11 @@ var BaseEditorView = BaseListView.extend({
 				success = false;
 			}
 		});
+		if(success){
+			this.unsaved_queue.forEach(function(entry){
+				self.views.push(self.unsaved_queue.pop());
+			});
+		}
 		return success;
 	}
 });

@@ -24,30 +24,29 @@
 <div id="queue_content">
 	{{#if is_clipboard}}
 		<div class="row clipboard_options text-center">
-			<a class="col-xs-3 add_to_queue btn btn-option">Add to<br/>Queue</a>
-			<a class="col-xs-3 edit_selected_queue btn btn-option">Edit<br/>Selected</a>
+			<a class="col-xs-3 add_items btn btn-option">Add to<br/>Queue</a>
+			<a class="col-xs-3 edit_items btn btn-option">Edit<br/>Selected</a>
 			<a class="col-xs-3 move_selected_queue btn btn-option">Move<br/>Selected</a>
-			<a class="col-xs-3 delete_selected_queue btn btn-option">Delete<br/>Selected</a>
+			<a class="col-xs-3 delete_items btn btn-option">Delete<br/>Selected</a>
 		</div>
 		<div id = "clipboard_list" class="list_content">
-			<input type="checkbox" class="select_all" id="clipboard_select_all"/>
-			<label for="clipboard_select_all">Select All</label>
 	{{else}}
 		<div class="row trash_options text-center">
 			<a class="col-xs-6 restore_trash btn btn-option">Restore Selected</a>
-			<a class="col-xs-6 delete_trash btn btn-option">Delete Permanently</a>
+			<a class="col-xs-6 delete_items btn btn-option">Delete Permanently</a>
 		</div>
 		<div id = "trash_list" class="list_content">
-			<input type="checkbox" class="select_all" id="trash_select_all"/>
-			<label for="trash_select_all">Select All</label>
 	{{/if}}
+		<input type="checkbox" class="select_all" id="select_all_check"/>
+		<label for="select_all_check">Select All</label>
 {{/if}}
-			<ul class="list-unstyled content-list">
-				{{#unless content_list}}
-					<li><em>No items found.</em></li>
-				{{/unless}}
-			</ul>
+			
+		<ul class="list-unstyled content-list">
+			{{#unless content_list}}
+				<li><em>No items found.</em></li>
+			{{/unless}}
+		</ul>
 {{#if add_controls}}
-		</div>
+	</div>
 </div>
 {{/if}}

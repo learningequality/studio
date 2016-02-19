@@ -2,7 +2,6 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 require("content-container.less");
 var BaseViews = require("./../views");
-var UploaderViews = require("edit_channel/uploader/views");
 var PreviewerViews = require("edit_channel/previewer/views");
 var QueueView = require("edit_channel/queue/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
@@ -62,15 +61,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	},
 
 	delete_content: function (event){
-		if(confirm("Are you sure you want to delete the selected files?")){
-			console.log("PERFORMANCE tree_edit/views.js: starting delete_content ...");
-    		var start = new Date().getTime();
-			var list = this.$el.find('input:checked').parent("li");
-			for(var i = 0; i < list.length; i++){
-				$("#" + list[i].id).data("data").delete();
-			}
-			console.log("PERFORMANCE tree_edit/views.js: delete_content end (time = " + (new Date().getTime() - start) + ")");
-		}
+		this.delete_selected();
 	},
 	copy_content: function(event){
 		console.log("PERFORMANCE tree_edit/views.js: starting copy_content ...");
@@ -87,21 +78,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + (new Date().getTime() - start) + ")");
 	},	
 	edit_content: function(event){
-		var list = this.$el.find('input:checked').parent("li");
-		var edit_collection = new Models.NodeCollection();
-		/* Create list of nodes to edit */
-		for(var i = 0; i < list.length; i++){
-			var model = $(list[i]).data("data").model;
-			edit_collection.add(model);
-		}
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var metadata_view = new UploaderViews.EditMetadataView({
-			collection: edit_collection,
-			parent_view: this,
-			el: $("#dialog"),
-			allow_add : false,
-			main_collection: this.collection
-		});
+		this.edit_selected();
 	},	
 	toggle_details:function(event){
 		/*TODO: Debug more with editing and opening folders*/
@@ -126,7 +103,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.childrenCollection.sort_by_order();
 		this.set_sort_orders(this.childrenCollection);
 		this.render();
-        this.list_index = 0;
 		
 		/* Animate sliding in from left */
 		this.$el.css('margin-left', -this.$el.find(".container-interior").outerWidth());
@@ -181,15 +157,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	add_content: function(event){ 
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var new_collection = new Models.NodeCollection();
-		var add_view = new UploaderViews.AddContentView({
-			el : $("#dialog"),
-			collection: new_collection,
-			main_collection: this.collection,
-			parent_view: this,
-			root: this.model
-		});
+		this.add_to_view();
 	},
 
 	add_container:function(view){
@@ -206,25 +174,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		});
 		console.log("PERFORMANCE tree_edit/views.js: close_folders end (time = " + (new Date().getTime() - start) + ")");
 		//this.$el.find(".folder .glyphicon").css("display", "inline-block");
-	},
-
-	add_nodes:function(views){
-		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
-    	var start = new Date().getTime();
-		var self = this;
-		var i  =this.collection.models.length + 1;
-		views.forEach(function(entry){
-			entry.save({
-				"title" : entry.model.get("title"),
-				"sort_order" : i++,
-				"parent" : self.model.id
-			}, {validate:false, async:false});		
-			self.model.get("children").push(entry.model.id);
-		});
-		//this.collection.save();
-
-		this.list_index = i;
-		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
 	}
 });
 

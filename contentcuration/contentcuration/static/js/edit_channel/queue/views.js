@@ -76,7 +76,14 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.collection = options.collection.get_all_fetch(this.model.get("children"));
 		this.add_controls = options.add_controls;
 		this.indent = options.indent;
+		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_items');
 		this.render();
+	},
+	events: {
+		'click #select_all_check' : 'check_all',
+		'click .delete_items' : 'delete_items',
+		'click .edit_items' : 'edit_items',
+		'click .add_items' : 'add_items'
 	},
 	render: function() {
 		DragHelper.removeDragDrop(this);
@@ -98,14 +105,14 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.set_sort_orders(this.collection);
 		this.collection.sort_by_order();
 		var self = this;
-		var index = 0;
+		this.list_index = 0;
 		this.collection.forEach(function(entry){
 			var item_view;
 			var options = {
 				containing_list_view: self,
 				model: entry,
 				indent : self.indent,
-				index : index ++
+				index : self.list_index ++
 			};
 			if(self.is_clipboard){
 				item_view = new ClipboardItem(options);
@@ -115,7 +122,20 @@ var QueueList = BaseViews.BaseListView.extend({
 			self.$el.find("ul").append(item_view.el);
 			self.views.push(item_view);
 		});
+	},
+	check_all :function(){
+		this.$el.find("input[type=checkbox]").attr("checked", this.$el.find("#select_all_check").is(":checked"));
+	},
+	delete_items:function(){
+		this.delete_selected();
+	},
+	edit_items:function(){
+		this.edit_selected();
+	},
+	add_items:function(){
+		this.add_to_view();
 	}
+	
 });
 
 /* Loaded when user clicks clipboard button below navigation bar */
@@ -183,14 +203,14 @@ var TrashItem = QueueItem.extend({
 		this.allow_edit = false;
 		this.indent = options.indent + 20;
 		this.index = options.index;
-		_.bindAll(this, 'remove_item', 'toggle');
+		_.bindAll(this, 'delete', 'toggle');
 		this.render();
 	},
 	events: {
-		'click .delete_content' : 'remove_item',
+		'click .delete_content' : 'delete',
 		'click .tog_folder' : 'toggle'
 	},
-	remove_item: function(){
+	delete: function(){
 		this.model.destroy();
 		this.delete_view();
 	},
@@ -221,16 +241,27 @@ var ClipboardItem = QueueItem.extend({
 		'dblclick .clipboard_item_title' : 'edit_item',
 		'click .tog_folder' : 'toggle'
 	},
+	remove_item: function(){
+		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?"))
+			this.delete();
+	},
 	edit_item: function(){
+		console.log("editing item...");
 		this.allow_edit = true;
 		this.render();
 	},
-	remove_item: function(){
-		this.delete(true);
-	},
 	submit_item:function(event){
 		if(!event.keyCode || event.keyCode ==13){
-			this.save({title: this.$el.find(".clipboard_title_input").val()});	
+			this.model.set({title: this.$el.find(".queue_title_input").val().trim()}, {validate:true});
+			if(this.model.validationError){
+				this.$el.find(".node_title_textbox").addClass("error_input");
+				this.$el.find(".error_msg").html(this.model.validationError);
+			}
+			else{
+				this.save();
+				this.allow_edit = false;
+				this.render();
+			}
 		}
 	},
 	toggle:function(event){

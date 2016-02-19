@@ -110,9 +110,9 @@
 
 			#queue_content{
 				width:100%;
-				height: @queue-height * 0.85;
+				height: @queue-height * 0.75;
 				.list_content{
-					height:@queue-height * 0.9;
+					height:inherit;
 					width: @queue-width - 20px;
 					padding-top:10px;
 					.select_all{
@@ -124,9 +124,12 @@
 					.select_all+label{
 						font-size:10pt;
 					}
+					.placeholder{
+						height:@queue-list-item-height;
+					}
 				}
 				ul{
-					height:@queue-height * 0.85;
+					height:inherit;
 					position:relative;
 					margin-top: 5px;
 					height:inherit;
