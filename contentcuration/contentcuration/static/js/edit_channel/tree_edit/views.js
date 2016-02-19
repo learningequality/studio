@@ -4,7 +4,7 @@ require("content-container.less");
 var BaseViews = require("./../views");
 var UploaderViews = require("edit_channel/uploader/views");
 var PreviewerViews = require("edit_channel/previewer/views");
-var ClipboardView = require("edit_channel/clipboard/views");
+var QueueView = require("edit_channel/queue/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var Models = require("./../models");
 
@@ -12,22 +12,22 @@ var TreeEditView = BaseViews.BaseView.extend({
 	container_index: 0,
 	containers:[],
 	template: require("./hbtemplates/container_area.handlebars"),
-	topictrees: null,
 	initialize: function(options) {
 		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details');
-		this.topictrees = options.topictrees;
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
-		this.root = this.topictrees.get({id : window.current_channel.draft}).get_root();
+		this.root = window.current_channel.get_tree("draft").get_root();
 		this.render();
-		this.clipboard_view = new ClipboardView.ClipboardList({
-	 		el: $("#clipboard-area"),
-	 		topictrees: this.topictrees,
+		this.queue_view = new QueueView.Queue({
+	 		el: $("#queue-area"),
 	 		collection: this.collection
 	 	});
 	},
 	render: function() {
-		this.$el.html(this.template({edit: this.is_edit_page}));
+		this.$el.html(this.template({
+			edit: this.is_edit_page,
+			channel : window.current_channel
+		}));
 		this.add_container(this.containers.length, this.root);
 	},
 	events: {
@@ -56,7 +56,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 			edit_mode: this.is_edit_page,
 			collection: this.collection,
 			container : this,
-			topictrees : this.topictrees
 		});
 		this.containers.push(container_view);
 		console.log("PERFORMANCE tree_edit/views.js: add_container end (time = " + (new Date().getTime() - start) + ")");
@@ -76,15 +75,15 @@ var TreeEditView = BaseViews.BaseView.extend({
 	copy_content: function(event){
 		console.log("PERFORMANCE tree_edit/views.js: starting copy_content ...");
     	var start = new Date().getTime();
-		var clipboard_root = this.topictrees.get({id : window.current_channel.clipboard}).get("root_node");
+		var clipboard_root = window.current_channel.get_tree("clipboard").get("root_node");
 		var list = this.$el.find('input:checked').parent("li");
-		var clipboard_list = new Models.NodeCollection();
+		//var clipboard_list = new Models.NodeCollection();
 		for(var i = 0; i < list.length; i++){
 			var content = $(list[i]).data("data").model.duplicate(clipboard_root);
 			content.fetch();
-			clipboard_list.add(content);
+			//clipboard_list.add(content);
 		}
-		this.clipboard_view.add_to_clipboard(clipboard_list);
+		this.queue_view.render();
 		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + (new Date().getTime() - start) + ")");
 	},	
 	edit_content: function(event){
@@ -125,8 +124,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.collection = options.collection;
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();
-		this.topictrees = options.topictrees;
-		this.set_sort_orders();
+		this.set_sort_orders(this.childrenCollection);
 		this.render();
         this.list_index = 0;
 		
@@ -139,7 +137,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		console.log("*************RENDERING " + this.model.get("title") + "****************");
 		DragHelper.removeDragDrop(this);
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
-		console.log("COLLECTION",this.childrenCollection);
 		this.childrenCollection.sort_by_order();
 		this.$el.html(this.template({
 			topic: this.model, 
@@ -160,16 +157,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		'click .add_content_button':'add_content',
 	},
 
-	set_sort_orders: function(){
-		console.log("PERFORMANCE tree_edit/views.js: starting set_sort_orders ...");
-    	var start = new Date().getTime();
-		var index = 1;
-		var self = this;
-		this.childrenCollection.models.forEach(function(entry){
-			entry.save({'sort_order' : index++}, {validate: false});
-		});
-		console.log("PERFORMANCE tree_edit/views.js: set_sort_orders end (time = " + (new Date().getTime() - start) + ")");
-	},
 	load_content : function(){
 		console.log("PERFORMANCE tree_edit/views.js: starting load_content ...");
     	var start = new Date().getTime();

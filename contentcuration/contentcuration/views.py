@@ -31,11 +31,7 @@ def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id)
     channel_serializer =  ChannelSerializer(channel)
 
-    topictrees = TopicTree.objects.filter(channel = channel)
-    topictree_serializer = TopicTreeSerializer(topictrees, many=True)
-
-    return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
-                                                 "topictrees" : JSONRenderer().render(topictree_serializer.data)})
+    return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data)})
 
 @login_required
 def exercise_list(request):

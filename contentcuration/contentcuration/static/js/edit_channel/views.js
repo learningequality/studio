@@ -20,7 +20,6 @@ BaseListView = BaseView.extend({
 	collection : null,		//Collection to be used for data
 	allow_edit: false,
 	item_view: null, // Use to determine how to save, delete, update files
-	topictrees : null,
 	save_all: function(){
 		console.log("PERFORMANCE views.js: starting save_all...");
     	var start = new Date().getTime();
@@ -43,6 +42,16 @@ BaseListView = BaseView.extend({
 			entry.model.unset();
 		}); 
 		console.log("PERFORMANCE views.js: reset end (time = " + (new Date().getTime() - start) + ")");
+	},
+	set_sort_orders: function(collection){
+		console.log("PERFORMANCE tree_edit/views.js: starting set_sort_orders ...");
+    	var start = new Date().getTime();
+		var index = 1;
+		var self = this;
+		collection.models.forEach(function(entry){
+			entry.save({'sort_order' : index++}, {validate: false});
+		});
+		console.log("PERFORMANCE tree_edit/views.js: set_sort_orders end (time = " + (new Date().getTime() - start) + ")");
 	},
 	drop_in_container:function(transfer, target){
 		console.log("PERFORMANCE views.js: starting drop_in_container...", transfer);
@@ -134,7 +143,7 @@ var BaseListItemView = BaseView.extend({
 		}else{
 			if(this.containing_list_view.item_view != "uploading_content"){
 				if(!this.deleted_root)
-					this.deleted_root = this.containing_list_view.topictrees.get({id : window.current_channel.deleted}).get_root();
+					this.deleted_root = window.current_channel.get_tree("deleted").get_root();
 				
 				/*Check if node name already exists in trash, then delete older version*/
 				var self = this;

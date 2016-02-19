@@ -1,5 +1,4 @@
 <div id={{#if edit}}"edit"{{else}}"preview"{{/if}} class="container-fluid">
-
 	{{#if edit}}
 	<nav id="button_bar">
 		<a class="btn btn-default copy_button disable-on-edit">Copy Selected</a>
@@ -13,6 +12,7 @@
 		<input type="checkbox" id="hide_details_checkbox"/>
 		<label for="hide_details_checkbox">Hide details</label>
 	{{/if}}
+	{{channel.attributes.name}}
 	<div id="container-wrapper">
 		<ul id="container_area" class="container-fluid row list-unstyled">
 		</ul>

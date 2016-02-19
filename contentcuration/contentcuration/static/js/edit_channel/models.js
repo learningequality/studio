@@ -24,7 +24,7 @@ var NodeModel = Backbone.Model.extend({
     	var title = this.generate_title(this.get("title"));
     	var data = this.pick('created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
     	data['title'] = title;
-    	data['parent_id'] = parent_id;
+    	data['parent'] = parent_id;
 		var node_data = new NodeModel(data);
 		var self = this;
 		node_data.save(data, {async:false,
@@ -32,6 +32,7 @@ var NodeModel = Backbone.Model.extend({
 				self.copy_children(node_data, self.get("children"));
 			}
 		});
+		console.log("parent is", node_data.get("parent"));
 		console.log("PERFORMANCE models.js: duplicate end (time = " + (new Date().getTime() - start) + ")");
 		return node_data;
 	},
@@ -185,6 +186,13 @@ var ChannelModel = Backbone.Model.extend({
     },
     get_tree:function(tree_name){
     	var tree = new TopicTreeModel({id : this.get(tree_name)});
+    	console.log(tree_name + " tree is", tree);
+    	if(!tree.id){
+    		var channel = new ChannelModel({id: this.get("channel")});
+    		channel.fetch({async:false});
+    		console.log("got channel", channel);
+    		channel.create_tree(tree_name);
+    	}
     	tree.fetch({async:false});
     	return tree;
     },
@@ -258,10 +266,6 @@ var ChannelCollection = Backbone.Collection.extend({
 			async: false,
 			success:function(){
 				["draft","clipboard","deleted"].forEach(function(entry){
-					/*For future branch: implement progress bar on channel creation
-					percent += 25;
-					progress_bar.width(percent + "%");*/
-
 					channel_data.create_tree(entry.toString());
 				});
    			}
