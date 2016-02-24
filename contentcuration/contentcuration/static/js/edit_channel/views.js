@@ -1,9 +1,11 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 var Models = require("./models");
+//var UndoManager = require("backbone-undo");
 
 var BaseView = Backbone.View.extend({
 	list_index : 0,
+	undo_manager: null,
 	delete_view: function(){
 		//this.undelegateEvents();
 		//this.unbind();		
@@ -15,10 +17,14 @@ var BaseView = Backbone.View.extend({
 		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
 	},
 	delete_selected:function(){
-		if(confirm("Are you sure you want to delete these selected items?")){
-			var list = this.$el.find('input:checked').parent("li");
-			for(var i = 0; i < list.length; i++){
-				$("#" + list[i].id).data("data").delete();
+		var list = this.$el.find('input:checked').parent("li");
+		if(list.length == 0){
+			alert("No items selected.");
+		}else{
+			if(confirm("Are you sure you want to delete these selected items?")){
+				for(var i = 0; i < list.length; i++){
+					$("#" + list[i].id).data("data").delete();
+				}
 			}
 		}
 	},
@@ -70,7 +76,14 @@ var BaseView = Backbone.View.extend({
 
 		this.list_index = i;
 		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
-	}
+	},
+	undo: function() {
+        this.undo_manager.undo();
+    },
+
+    redo: function() {
+        this.undo_manager.redo();
+    }
 });
 
 BaseListView = BaseView.extend({
@@ -107,6 +120,7 @@ BaseListView = BaseView.extend({
 		var index = 1;
 		var self = this;
 		collection.models.forEach(function(entry){
+			console.log("current parent", entry);
 			entry.save({'sort_order' : index++}, {validate: false});
 		});
 		console.log("PERFORMANCE tree_edit/views.js: set_sort_orders end (time = " + (new Date().getTime() - start) + ")");
@@ -125,12 +139,18 @@ BaseListView = BaseView.extend({
 			}else{
 				var first_index = element.index;
 				var second_index = (target.data("isbelow"))? element.index - 1 : element.index + 1;
+				if(second_index == transfer.index){
+					second_index = (target.data("isbelow"))? element.index - 1 : element.index + 1;
+				}
+				console.log("inserting second index " + second_index);
+					
 
-				if(second_index <= 0 && target.data("isbelow")){ //Case 3: at top of list
+				if(second_index < 0 && target.data("isbelow")){ //Case 3: at top of list
 					console.log("add_to_container inserting at top of list");
+					console.log("first index inserting " + first_index + " with sort order " + this.views[first_index].model.get("sort_order"));
 					new_sort_order = this.views[first_index].model.get("sort_order") / 2;
 				}
-				else if(second_index >= this.views.length -1){ //Case 4: at bottom of list
+				else if(second_index >= this.views.length -1 && !target.data("isbelow")){ //Case 4: at bottom of list
 					console.log("add_to_container inserting at bottom of list");
 					new_sort_order = this.views[first_index].model.get("sort_order") + 1;
 				}
@@ -144,40 +164,47 @@ BaseListView = BaseView.extend({
 				}
 			}
 		}
+		console.log("inserting with sort order: " + new_sort_order);
 
 		/*Set model's parent*/
 		var self=this;
 		transfer.model.set({
 			sort_order: new_sort_order
 		});
+		console.log(this.model.id + " vs " +transfer.model.get("parent") );
 		if(this.model.id != transfer.model.get("parent")){
 			console.log("transferring containers", transfer.model);
 			var old_parent = transfer.containing_list_view.model;
-			this.model.get("children").push(transfer.model.id);
 			transfer.model.set({
 				parent: this.model.id
 			}, {validate:true});
 			
 			if(transfer.model.validationError){
 				alert(transfer.model.validationError);
-				transfer.model.unset({silent:true});
+				console.log("Found error");
+				transfer.model.set({parent: old_parent.id});
+				//old_parent.get("children").push(transfer.model.id);
+				transfer.containing_list_view.render();
 			}else{
-				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
+				this.model.get("children").push(transfer.model.id);
+				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false, 
+					success:function(){
+						console.log("inserting saved sort order");
+					}
+				});
 				console.log("transferred", transfer.model);
-				//var old_parent = this.collection.get_all_fetch([old_parentid]).models[0];
-				/*console.log("old parent", old_parent);
-				console.log("OLD CHILDREN", old_parent.get("children"));
-				console.log("INDEX", new_children.indexOf(transfer.model.id));
 				var new_children = old_parent.get("children");
-				new_children.splice(new_children.indexOf(transfer.model.id), 1);
-				
-				old_parent.save({"children": new_children}, {async:false, validate:false});
-				//console.log("NEW CHILDREN", old_parent.get("children"));*/
-				//transfer.containing_list_view.collection.remove();
+				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
+				console.log("children",new_children);
+				console.log("parent",old_parent);
+				//old_parent.save({"children": new_children}, {async:false});
 			}
-			//transfer.containing_list_view.render();
 		}else{
-			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false});
+			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false, 
+				success:function(){
+					console.log("inserting saved sort order");
+				}
+			});
 		}
 			
 		console.log("add_to_container model", transfer.model);
@@ -206,7 +233,10 @@ var BaseListItemView = BaseView.extend({
 				/*Check if node name already exists in trash, then delete older version*/
 				var self = this;
 				var trash_collection = this.containing_list_view.collection.get_all_fetch(this.deleted_root.get("children"));
+
 				trash_collection.forEach(function(entry){
+					console.log("first deleting", self.model);
+				console.log("second deleting", entry);
 					if(entry.get("title") == self.model.get("title")){
 						entry.destroy({async:false});
 					}

@@ -21,7 +21,7 @@ var NodeModel = Backbone.Model.extend({
     duplicate: function(parent_id){
     	console.log("PERFORMANCE models.js: starting duplicate...");
     	var start = new Date().getTime();
-    	var title = this.generate_title(this.get("title"));
+    	var title = this.generate_title();
     	var data = this.pick('created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
     	data['title'] = title;
     	data['parent'] = parent_id;
@@ -38,10 +38,10 @@ var NodeModel = Backbone.Model.extend({
 	},
 
 	/* Function in case want to append (Copy #) to end of copied content*/
-	generate_title:function(title){
+	generate_title:function(){
 		console.log("PERFORMANCE models.js: starting generate_title...");
 		var start = new Date().getTime();
-		var new_title = title;
+		var new_title = this.get("title");
 		var matching = /\(Copy\s*([0-9]*)\)/g;
 		if (matching.test(new_title)) {
 		    new_title = new_title.replace(matching, function(match, p1) {
@@ -187,12 +187,12 @@ var ChannelModel = Backbone.Model.extend({
     get_tree:function(tree_name){
     	var tree = new TopicTreeModel({id : this.get(tree_name)});
     	console.log(tree_name + " tree is", tree);
-    	if(!tree.id){
+    	/*if(!tree.id){
     		var channel = new ChannelModel({id: this.get("channel")});
     		channel.fetch({async:false});
     		console.log("got channel", channel);
     		channel.create_tree(tree_name);
-    	}
+    	}*/
     	tree.fetch({async:false});
     	return tree;
     },
@@ -253,20 +253,20 @@ var ChannelCollection = Backbone.Collection.extend({
 	url: function() {
 		return window.Urls["channel-list"]();
 	},
-	create_channel:function(data, progress_bar){
+	create_channel:function(data){
 		var channel_data = new ChannelModel(data);
 		
 		channel_data.fetch();
 		if(channel_data.get("description").trim() == "")
 			channel_data.set({description: "No description available."});
 		var container = this;
-		var percent = 0;
 		
 		return this.create(channel_data, {
 			async: false,
 			success:function(){
 				["draft","clipboard","deleted"].forEach(function(entry){
 					channel_data.create_tree(entry.toString());
+					console.log("creating " + entry.toString());
 				});
    			}
 		});

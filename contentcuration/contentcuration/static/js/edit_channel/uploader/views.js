@@ -214,16 +214,16 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		if(!this.current_view && !this.disable){
 			this.set_current(view);
 		}else {
-			if(!this.disable && this.current_view.validate()){
+			/*if(!this.disable && this.current_view.validate()){
 				/* Previous node passes all tests */
 				this.$el.find("#title_error").html("");
 				this.$el.find("#description_error").html("");
 				this.set_current(view);
-			}else{
-				/*TODO: disable everything*/
+			/*}else{
+				/*TODO: disable everything
 				this.$el.find(".disable_on_error").prop("disabled", true);
 				this.$el.find(".disable_on_error").css("cursor", "not-allowed");
-			}
+			}*/
 		}
 	},
 	set_current:function(view){
@@ -303,7 +303,6 @@ var NodeListItem = ContentItem.extend({
 		this.$el.html(this.template({
 			topic: this.model,
 			edit: this.edit,
-			kind: this.model.get("kind").toUpperCase()
 		}));
 		this.$el.find(".topic_textbox").focus();
 	},
@@ -355,7 +354,6 @@ var UploadedItem = ContentItem.extend({
 	render: function() {
 		this.$el.html(this.template({
 			topic: this.model,
-			kind: this.model.get("kind").toUpperCase(),
 			id: this.model.cid
 		}));
 		this.$el.find("input[type=checkbox]").prop("checked", this.checked);

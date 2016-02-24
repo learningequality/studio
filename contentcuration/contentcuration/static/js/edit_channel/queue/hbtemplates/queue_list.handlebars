@@ -1,52 +1,54 @@
-{{#if add_controls}}
-<input type="text" placeholder="Find in Queue..." class="search_queue"/>
-<div class="sort_box">
-	<label for="sort_queue">Sort by</label>
-	<br/>
-	<select id="sort_queue">
-		<option>Recently Added</option>
-		<option>Oldest First</option>
-		<option>A-Z</option>
-		<option>Z-A</option>
-	</select>
-</div>
-<div class="sort_box">
-	<label for="show_queue">Show only</label>
-	</br>
-	<select id="show_queue">
-		<option>All Media Types</option>
-		<option>Audio</option>
-		<option>Exercises</option>
-		<option>PDF</option>
-		<option>Video</option>
-	</select>
-</div>
-<div id="queue_content">
-	{{#if is_clipboard}}
-		<div class="row clipboard_options text-center">
-			<a class="col-xs-3 add_items btn btn-option">Add to<br/>Queue</a>
-			<a class="col-xs-3 edit_items btn btn-option">Edit<br/>Selected</a>
-			<a class="col-xs-3 move_selected_queue btn btn-option">Move<br/>Selected</a>
-			<a class="col-xs-3 delete_items btn btn-option">Delete<br/>Selected</a>
-		</div>
-		<div id = "clipboard_list" class="list_content">
-	{{else}}
-		<div class="row trash_options text-center">
-			<a class="col-xs-6 restore_trash btn btn-option">Restore Selected</a>
-			<a class="col-xs-6 delete_items btn btn-option">Delete Permanently</a>
-		</div>
-		<div id = "trash_list" class="list_content">
-	{{/if}}
-		<input type="checkbox" class="select_all" id="select_all_check"/>
-		<label for="select_all_check">Select All</label>
-{{/if}}
-			
-		<ul class="list-unstyled content-list">
-			{{#unless content_list}}
-				<li><em>No items found.</em></li>
-			{{/unless}}
-		</ul>
-{{#if add_controls}}
+<div class="wrapper"> <!-- used for dragging/dropping -->
+	{{#if add_controls}}
+	<input type="text" placeholder="Find in Queue..." class="search_queue"/>
+	<div class="sort_box">
+		<label for="sort_queue">Sort by</label>
+		<br/>
+		<select id="sort_queue">
+			<option>Recently Added</option>
+			<option>Oldest First</option>
+			<option>A-Z</option>
+			<option>Z-A</option>
+		</select>
 	</div>
+	<div class="sort_box">
+		<label for="show_queue">Show only</label>
+		</br>
+		<select id="show_queue">
+			<option>All Media Types</option>
+			<option>Audio</option>
+			<option>Exercises</option>
+			<option>PDF</option>
+			<option>Video</option>
+		</select>
+	</div>
+	<div id="queue_content">
+		{{#if is_clipboard}}
+			<div class="row clipboard_options text-center">
+				<a class="col-xs-3 add_items btn btn-option">Add to<br/>Queue</a>
+				<a class="col-xs-3 edit_items btn btn-option">Edit<br/>Selected</a>
+				<a class="col-xs-3 move_selected_queue btn btn-option">Move<br/>Selected</a>
+				<a class="col-xs-3 delete_items btn btn-option">Delete<br/>Selected</a>
+			</div>
+			<div id = "clipboard_list" class="list_content">
+		{{else}}
+			<div class="row trash_options text-center">
+				<a class="col-xs-6 move_trash btn btn-option">Move Selected</a>
+				<a class="col-xs-6 delete_items btn btn-option">Delete Permanently</a>
+			</div>
+			<div id = "trash_list" class="list_content">
+		{{/if}}
+			<input type="checkbox" class="select_all" id="select_all_check"/>
+			<label for="select_all_check">Select All</label>
+	{{/if}}
+				
+			<ul class="list-unstyled content-list">
+				{{#unless content_list}}
+					<li class="default-item"><h5>No items found.</h5></li>
+				{{/unless}}
+			</ul>
+	{{#if add_controls}}
+		</div>
+	</div>
+	{{/if}}
 </div>
-{{/if}}

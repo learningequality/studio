@@ -13,7 +13,26 @@ function addDragDrop(element){
 	  	exclude: '.current_topic, .default-item, #preview li',
 	  	delay:100,
 	  	revert:true,
-	  // animation on drop
+	 	// animation on drop
+  		start: function(event,ui) { 
+			var element = $(ui.item[0]);
+			element.data('lastParent', element.parent());
+		},
+		update: function(event,ui) {
+			var element = $(ui.item[0]);
+			if (element.hasClass('loading')) return;
+			element.addClass('loading');
+			$.ajax({
+				    url:'/ajax',
+				    context:element,
+				    complete:function(xhr,status) {
+				    $(this).removeClass('loading');
+				    if (xhr.status != 200) {
+				    $($(this).data('lastParent')).append(this);
+				    }
+			    },
+			});
+		},
 	  
 		onDrop: function  ($item, container, _super) {
 			target.data("isbelow", isaboveclosest);
@@ -24,8 +43,11 @@ function addDragDrop(element){
 				$clonedItem.detach();
 				_super($item, container);
 			});
+			console.log("FOUND", target, target.data("data"));
 			if(target.data("data"))
-				target.data("data").containing_list_view.drop_in_container(window.transfer_data, target);			
+				target.data("data").containing_list_view.drop_in_container(window.transfer_data, target);
+			else if(target.data("list"))
+				target.data("list").drop_in_container(window.transfer_data, target);	
 		},
 
 	    // set $item relative to cursor position*/
@@ -56,7 +78,7 @@ function addDragDrop(element){
 		afterMove: function (placeholder, container, $closestItemOrContainer) {
 			isaboveclosest = $closestItemOrContainer.offset().top > $(placeholder).offset().top;
 			target = $closestItemOrContainer;
-	    	//console.log("near item", $closestItemOrContainer);
+	    	console.log("inserting near item", $closestItemOrContainer);
 	    }
 	});
 }

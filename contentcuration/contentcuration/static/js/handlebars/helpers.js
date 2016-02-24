@@ -47,3 +47,12 @@ Handlebars.registerHelper('parse_newlines', function(text) {
   }
   return text;
 });
+
+// Convert text to all caps
+Handlebars.registerHelper('to_upper_case', function(text){
+  return text.toUpperCase();
+});
+
+Handlebars.registerHelper('check_is_topic', function(text){
+  return text.toLowerCase() == "topic";
+});

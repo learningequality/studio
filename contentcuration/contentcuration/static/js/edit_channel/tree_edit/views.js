@@ -5,6 +5,7 @@ var BaseViews = require("./../views");
 var PreviewerViews = require("edit_channel/previewer/views");
 var QueueView = require("edit_channel/queue/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
+//var UndoManager = require("backbone-undo");
 var Models = require("./../models");
 
 var TreeEditView = BaseViews.BaseView.extend({
@@ -12,7 +13,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	containers:[],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details');
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details'/*,'undo_action', 'redo_action'*/);
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.root = window.current_channel.get_tree("draft").get_root();
@@ -21,6 +22,11 @@ var TreeEditView = BaseViews.BaseView.extend({
 	 		el: $("#queue-area"),
 	 		collection: this.collection
 	 	});
+	 	/*
+	 	this.undo_manager = new UndoManager({
+            track: true,
+            register: [this.collection]
+        });*/
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -33,8 +39,18 @@ var TreeEditView = BaseViews.BaseView.extend({
 		'click .copy_button' : 'copy_content',
 		'click .delete_button' : 'delete_content',
 		'click .edit_button' : 'edit_content',
-		'click #hide_details_checkbox' :'toggle_details'
+		'click #hide_details_checkbox' :'toggle_details',
+		/*'click .undo_button' : 'undo_action',
+		'click .redo_button' : 'redo_action'*/
 	},	
+	/*
+	undo_action: function(){
+		console.log("undoing");
+		this.undo();
+	},
+	redo_action:function(){
+		this.redo();
+	},*/
 	add_container: function(index, topic){
 		console.log("PERFORMANCE tree_edit/views.js: starting add_container ...");
     	var start = new Date().getTime();
@@ -68,10 +84,11 @@ var TreeEditView = BaseViews.BaseView.extend({
     	var start = new Date().getTime();
 		var clipboard_root = window.current_channel.get_tree("clipboard").get("root_node");
 		var list = this.$el.find('input:checked').parent("li");
+		
 		//var clipboard_list = new Models.NodeCollection();
 		for(var i = 0; i < list.length; i++){
 			var content = $(list[i]).data("data").model.duplicate(clipboard_root);
-			content.fetch();
+			//content.fetch();
 			//clipboard_list.add(content);
 		}
 		this.queue_view.render();
@@ -122,6 +139,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		}));
 		this.load_content();
 		this.$el.data("container", this);
+		this.$el.find("ul").data("list", this);
 		this.$el.find(".default-item").data("data", {
 			containing_list_view: this, 
 			index:0
