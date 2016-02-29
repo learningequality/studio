@@ -14,6 +14,7 @@ function addDragDrop(element){
 	  	delay:100,
 	  	revert:true,
 	 	// animation on drop
+	 	/*
   		start: function(event,ui) { 
 			var element = $(ui.item[0]);
 			element.data('lastParent', element.parent());
@@ -32,7 +33,7 @@ function addDragDrop(element){
 				    }
 			    },
 			});
-		},
+		},*/
 	  
 		onDrop: function  ($item, container, _super) {
 			target.data("isbelow", isaboveclosest);
@@ -54,7 +55,7 @@ function addDragDrop(element){
 		onDragStart: function ($item, container, _super) {
 			window.transfer_data = $item.data("data");
 			console.log("model found  WINDOW IS NOW ", window.transfer_data);
-			
+			$item.css("z-index", "99999999999999999999");
 			var offset = $item.offset(),
 			pointer = container.rootGroup.pointer;
 			adjustment = {

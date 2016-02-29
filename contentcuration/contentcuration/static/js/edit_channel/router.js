@@ -9,7 +9,7 @@ var ChannelManageView = require("edit_channel/new_channel/views");
 ChannelEditRouter  = Backbone.Router.extend({
 	nodeCollection: new Models.NodeCollection(),
     initialize: function(options) {
-        _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page");
+        _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page");
 		this.user = options.user;
 		this.model = options.model;
 		this.nodeCollection = new Models.NodeCollection();
@@ -21,6 +21,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		"": "navigate_channel_home",
 		":channel/edit": "edit_page", 
 		":channel/preview": "preview_page",
+		":channel/clipboard": "clipboard_page"
     },
 
 	navigate_channel_home: function() {
@@ -35,18 +36,23 @@ ChannelEditRouter  = Backbone.Router.extend({
     },
 	
 	edit_page : function(){
-		this.open_channel(true);
+		this.open_channel(true, false, window.current_channel.get_tree("draft").get_root());
 	},
 	preview_page : function(){
-		this.open_channel(false);
+		this.open_channel(false, false, window.current_channel.get_tree("draft").get_root());
+	},
+	clipboard_page:function(){
+		this.open_channel(true, true, window.current_channel.get_tree("clipboard").get_root());
 	},
 
-	open_channel: function(edit_mode_on){
+	open_channel: function(edit_mode_on, is_clipboard, root){
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
-			edit: Backbone.history.getFragment().indexOf("edit") >= 0,
+			edit: edit_mode_on,
 			collection: this.nodeCollection,
+			model : root,
+			is_clipboard : is_clipboard
 		});
 	}
 });

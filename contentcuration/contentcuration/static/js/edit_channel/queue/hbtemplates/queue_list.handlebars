@@ -42,13 +42,16 @@
 			<label for="select_all_check">Select All</label>
 	{{/if}}
 				
-			<ul class="list-unstyled content-list">
+			<ul class="list-unstyled content-list" id="list_for_{{id}}">
 				{{#unless content_list}}
 					<li class="default-item"><h5>No items found.</h5></li>
 				{{/unless}}
 			</ul>
 	{{#if add_controls}}
+
 		</div>
-	</div>
+		{{#if is_clipboard}}
+				<a class="btn btn-default manage_clipboard text-center" href="clipboard">Manage Clipboard</a>
+			{{/if}}
 	{{/if}}
 </div>

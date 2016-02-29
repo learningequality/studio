@@ -223,6 +223,7 @@ var BaseListItemView = BaseView.extend({
 	delete:function(){
 		console.log("PERFORMANCE views.js: starting delete " + this.model.get("title") + "...");
     	var start = new Date().getTime();
+
 		if(!this.model.get("kind")) { 
 			this.model.delete_channel();
 		}else{
@@ -241,7 +242,9 @@ var BaseListItemView = BaseView.extend({
 						entry.destroy({async:false});
 					}
 				});
-
+				if(this.containing_list_view.index){
+					this.containing_list_view.container.remove_containers_from(this.containing_list_view.index);
+				}
 				var new_children = this.containing_list_view.model.get("children");
 				new_children.splice(new_children.indexOf(this.model.id), 1);
 				console.log("new children", new_children);

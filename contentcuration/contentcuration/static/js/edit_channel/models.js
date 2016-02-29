@@ -6,7 +6,7 @@ var NodeModel = Backbone.Model.extend({
 		title:"Untitled",
 		description:"No description",
 		parent: null,
-		children:[],
+		children:[]
     },
     urlRoot: function() {
 		return window.Urls["node-list"]();
@@ -145,7 +145,7 @@ var NodeCollection = Backbone.Collection.extend({
     		return node.get("sort_order");
     	};
     	this.sort();
-    },
+    }
 });
 
 var TopicTreeModel = Backbone.Model.extend({
@@ -184,6 +184,12 @@ var ChannelModel = Backbone.Model.extend({
 		license_owner: "No license found",
 		description:" "
     },
+    /*
+    get_data:function(){
+    		$.get("/api-test", function(result){
+    			console.log("Got data: ", JSON.parse(result)['filename']);
+    		});
+    },*/
     get_tree:function(tree_name){
     	var tree = new TopicTreeModel({id : this.get(tree_name)});
     	console.log(tree_name + " tree is", tree);

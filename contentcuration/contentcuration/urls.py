@@ -81,6 +81,7 @@ urlpatterns = [
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'channels/(?P<channel_id>\w+)', views.channel, name='channel'),
+    url(r'^api-test/', views.data, name="apidata"),
 ]
 
 

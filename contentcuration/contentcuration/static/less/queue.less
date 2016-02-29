@@ -5,6 +5,11 @@
 	@queue-width:400px;
 	@queue-height: 600px;
 	@queue-button-width:60px;
+	@badge-color: #3E5E9F;
+	@queue-border-color: #8DA9DB;
+	@queue-list-item-height: 40px;
+	@highlight-color: #E6E6E6;
+	@queue-tab-height: 30px;
 	right:0em;
 	top: 7em;
 	position:absolute;
@@ -12,12 +17,10 @@
 
 	*{margin:0;padding:0;}
 	width:@queue-button-width + @queue-width;
-	overflow-x:hidden;
-	overflow-y:auto;
+	overflow:hidden;
 	padding:0;
 	margin:0;
 	.queue-button{
-		@badge-color: #3E5E9F;
 		cursor:pointer;
 		border-radius:0px;
 		border-top-left-radius: 10px;
@@ -30,7 +33,7 @@
 		font-size: 15px;
 		font-weight:bold;
 		width:@queue-button-width;
-		display:inline-block;
+		display:inline;
 		.badge{
 			background-color: @badge-color;
 			color:white;
@@ -38,10 +41,7 @@
 		}
 	}
 	#main-queue{
-		@queue-border-color: #8DA9DB;
-		@queue-list-item-height: 40px;
-		@highlight-color: #E6E6E6;
-		@queue-tab-height: 30px;
+		
 		
 		display:inline-block;
 		padding:15px;
@@ -107,14 +107,22 @@
 			label{
 				font-weight:normal;
 			}
-
+			.manage_clipboard{
+				width:100%;
+				padding:10px;
+				text-align:center;
+				bottom:0;
+			}
 			#queue_content{
 				width:100%;
 				height: @queue-height * 0.75;
 				.list_content{
-					height:inherit;
+					height:80%;
 					width: @queue-width - 20px;
 					padding-top:10px;
+					position:relative;
+					margin-top: 5px;
+					overflow-y:auto;
 					.select_all{
 						width:16px;
 						height:16px;
@@ -125,24 +133,14 @@
 						font-size:10pt;
 					}
 					.placeholder{
-						height:@queue-list-item-height;
-					}
-				}
-				ul{
-					height:inherit;
-					position:relative;
-					margin-top: 5px;
-					height:inherit;
-					overflow-y:auto;
-					.placeholder{
 						width: 100%;
 						background-color: @highlight-color;
 						opacity: 0.4;
 						height: @queue-list-item-height;
 					}
 					li{
-						width:100%;
 						padding: 10px 5px;
+						width:@queue-width - 20px;
 						input[type=checkbox]{
 							display:inline-block;
 							width:20px;
@@ -155,8 +153,8 @@
 							vertical-align:middle;
 							cursor:pointer;
 							height:@queue-list-item-height;
-							width:@queue-width - 60px;
-							.glyphicon{
+							width:@queue-width - 70px;
+							.edit_content, .delete_content{
 								visibility:hidden;
 								margin-right:15px;
 							}
@@ -171,7 +169,6 @@
 							}
 						}
 					}
-					
 					.subdirectory{
 						display:none;
 					}
@@ -184,7 +181,6 @@
 					}
 				}
 			}
-
 		}
 	}
 }

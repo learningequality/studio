@@ -16,12 +16,13 @@ var TreeEditView = BaseViews.BaseView.extend({
 		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details'/*,'undo_action', 'redo_action'*/);
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
-		this.root = window.current_channel.get_tree("draft").get_root();
+		this.is_clipboard = options.is_clipboard;
 		this.render();
 		this.queue_view = new QueueView.Queue({
 	 		el: $("#queue-area"),
 	 		collection: this.collection
 	 	});
+	 	$("#queue-area").css("display", (this.is_clipboard || !this.is_edit_page)? "none" : "block");
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
@@ -31,9 +32,10 @@ var TreeEditView = BaseViews.BaseView.extend({
 	render: function() {
 		this.$el.html(this.template({
 			edit: this.is_edit_page,
-			channel : window.current_channel
+			channel : window.current_channel,
+			is_clipboard : this.is_clipboard
 		}));
-		this.add_container(this.containers.length, this.root);
+		this.add_container(this.containers.length, this.model);
 	},
 	events: {
 		'click .copy_button' : 'copy_content',
@@ -43,6 +45,12 @@ var TreeEditView = BaseViews.BaseView.extend({
 		/*'click .undo_button' : 'undo_action',
 		'click .redo_button' : 'redo_action'*/
 	},	
+	remove_containers_from:function(index){
+		while(this.containers.length > index){
+			this.containers[this.containers.length-1].delete_view();
+			this.containers.splice(this.containers.length-1);
+		}
+	},
 	/*
 	undo_action: function(){
 		console.log("undoing");
@@ -56,10 +64,7 @@ var TreeEditView = BaseViews.BaseView.extend({
     	var start = new Date().getTime();
 		/* Close directories of children and siblings of opened topic*/
 		if(index < this.containers.length){
-			while(this.containers.length > index){
-				this.containers[this.containers.length-1].delete_view();
-				this.containers.splice(this.containers.length-1);
-			}
+			this.remove_containers_from(index);
 		}
 		/* Create place for opened topic */
 		this.$el.find("#container_area").append("<div id='container_" + topic.id + "' class='container content-container "
@@ -84,7 +89,7 @@ var TreeEditView = BaseViews.BaseView.extend({
     	var start = new Date().getTime();
 		var clipboard_root = window.current_channel.get_tree("clipboard").get("root_node");
 		var list = this.$el.find('input:checked').parent("li");
-		
+
 		//var clipboard_list = new Models.NodeCollection();
 		for(var i = 0; i < list.length; i++){
 			var content = $(list[i]).data("data").model.duplicate(clipboard_root);
