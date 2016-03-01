@@ -10,7 +10,7 @@ from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 
-from kolibri.kolibri.content.models import *
+#from kolibri.kolibri.content.models import *
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
