@@ -85,19 +85,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.delete_selected();
 	},
 	copy_content: function(event){
-		console.log("PERFORMANCE tree_edit/views.js: starting copy_content ...");
-    	var start = new Date().getTime();
-		var clipboard_root = window.current_channel.get_tree("clipboard").get("root_node");
-		var list = this.$el.find('input:checked').parent("li");
-
-		//var clipboard_list = new Models.NodeCollection();
-		for(var i = 0; i < list.length; i++){
-			var content = $(list[i]).data("data").model.duplicate(clipboard_root);
-			//content.fetch();
-			//clipboard_list.add(content);
-		}
-		this.queue_view.render();
-		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + (new Date().getTime() - start) + ")");
+		this.copy_selected();
 	},	
 	edit_content: function(event){
 		this.edit_selected();

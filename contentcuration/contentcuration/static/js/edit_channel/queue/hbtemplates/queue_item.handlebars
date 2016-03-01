@@ -9,7 +9,7 @@
 		{{#if is_clipboard}}<span class="pull-right edit_content glyphicon glyphicon-pencil" aria-hidden="true"></span>{{/if}}
 		{{#if isfolder}}<div class="pull-left tog_folder"><span id="menu_toggle_{{node.id}}" class="glyphicon glyphicon-menu-up"></span></div>{{/if}}
 		<!--<span class="glyphicon glyphicon-{{file_icon}}"></span>-->
-		<h6>{{to_upper_case node.attributes.kind}}, {{node.attributes.sort_order}} ({{index}}) id: {{node.id}}</h6>
+		<h6>{{to_upper_case node.attributes.kind}}, {{node.attributes.sort_order}} id: {{node.id}}</h6>
 		<h4 class="queue_item_title">{{node.attributes.title}}</h4>
 	{{/if}}
 </label>

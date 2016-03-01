@@ -41,8 +41,6 @@
 		}
 	}
 	#main-queue{
-		
-		
 		display:inline-block;
 		padding:15px;
 
@@ -114,11 +112,11 @@
 				bottom:0;
 			}
 			#queue_content{
-				width:100%;
+				width:@queue-width - 30px;
 				height: @queue-height * 0.75;
 				.list_content{
 					height:80%;
-					width: @queue-width - 20px;
+					width: 95%;
 					padding-top:10px;
 					position:relative;
 					margin-top: 5px;
@@ -166,6 +164,7 @@
 							}
 							.tog_folder{
 								padding-left:10px;
+								padding-right:10px;
 							}
 						}
 					}

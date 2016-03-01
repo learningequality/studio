@@ -14,9 +14,11 @@ var Queue = BaseViews.BaseView.extend({
 		_.bindAll(this, 'toggle_queue', 'switch_to_queue', 'switch_to_trash');	
 		this.render();
 		this.$el.find("#queue").css("margin-right", -this.$el.find("#main-queue").outerWidth());
+		this.clipboard_root = window.current_channel.get_tree("clipboard").get_root();
+		this.trash_root = window.current_channel.get_tree("deleted").get_root();
 		this.clipboard_queue = new QueueList({
 			collection: this.collection,
-			model: window.current_channel.get_tree("clipboard").get_root(),
+			model: this.clipboard_root,
 			el: this.$el.find("#clipboard-queue"),
 			is_clipboard: true,
 			add_controls : true,
@@ -25,17 +27,17 @@ var Queue = BaseViews.BaseView.extend({
 		});
 		this.trash_queue = new QueueList({
 			collection: this.collection,
-			model : window.current_channel.get_tree("deleted").get_root(),
+			model : this.trash_root,
 			el: this.$el.find("#trash-queue"),
 			is_clipboard : false,
 			add_controls : true,
 			indent:0,
 			container: this
 		});
-		this.switch_tab("clipboard");
 	},
 	render: function() {
 		this.$el.html(this.template({}));
+		this.switch_tab("clipboard");
 	},
 	events: {
 		'click .queue-button' : 'toggle_queue',
@@ -48,12 +50,12 @@ var Queue = BaseViews.BaseView.extend({
 		else
 			this.$el.find("#queue").animate({marginRight: -this.$el.find("#main-queue").outerWidth()}, 500);
 	},
-	add_to_clipboard:function(models){
-		var self = this;
-		models.forEach(function(entry){
-			self.collection.add(entry);
-		});
-		this.render();
+	add_to_clipboard:function(views){
+		this.clipboard_queue.add_items(views);
+
+	},
+	add_to_trash:function(views){
+		this.trash_queue.add_items(views);
 	},
 	switch_to_queue:function(){
 		this.switch_tab("clipboard");	
@@ -83,7 +85,6 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.indent = options.indent;
 		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_items', 'move_trash', 'search');
 		this.render();
-		//this.listenTo(this.model, "change:children", this.prerender);
 	},
 	events: {
 		'click #select_all_check' : 'check_all',
@@ -118,7 +119,6 @@ var QueueList = BaseViews.BaseListView.extend({
 		DragHelper.addDragDrop(this);
 	},
 	load_content:function(){
-		console.log("Starting load content");
 		this.views = [];
 		this.collection.sort_by_order();
 		var self = this;
@@ -136,9 +136,7 @@ var QueueList = BaseViews.BaseListView.extend({
 			item_view.$el.find("label").width(item_view.$el.find("label").width() - self.indent);
 			self.views.push(item_view);
 		});
-		console.log("rendering", this.views);
 		$((this.is_clipboard && this.add_controls)? ".queue-badge" : ".trash-badge").html(this.views.length);
-		console.log("ending load content");
 	},
 	check_all :function(){
 		this.$el.find("input[type=checkbox]").attr("checked", this.$el.find("#select_all_check").is(":checked"));
@@ -177,26 +175,27 @@ var QueueList = BaseViews.BaseListView.extend({
 		if(list.length == 0){
 			alert("No items selected.");
 		}else{
-			var parent = window.current_channel.get_tree("clipboard").get_root();
+			var to_move = [];
 			for(var i =0 ;i < list.length; i++){
-				var model = $("#" + list[i].id).data("data").model;
-				model.set({parent:  parent.id}, {validate:true});
-				while(model.validationError){
-					model.set({title: model.generate_title()}, {validate:true});
+				var view = $("#" + list[i].id).data("data");
+				view.model.set({parent:  parent.id}, {validate:true});
+				while(view.model.validationError){
+					view.model.set({title: view.model.generate_title()}, {validate:true});
 				}
-				model.save({async:false});
-				parent.set({children: parent.get("children").push(model)});
+				to_move.push(view);
+				view.delete_view();
 			}
-			parent.save({validate:false});
-
-			model.set({parent:  window.current_channel.get_tree("clipboard").get("root_node")}, {validate:true});
-			this.render();
+			this.container.add_to_clipboard(to_move);
 			this.container.clipboard_queue.render();
+
 		}
 	},
 	search:function(){
 		//if(this.$el.find(".search_queue").val().length > 2)
 			//this.render();
+	},
+	add_items:function(views){
+		this.add_nodes(views);
 	}
 	
 });
@@ -239,12 +238,10 @@ var QueueItem = BaseViews.BaseListItemView.extend({
 			index: this.index
 		}));
 		this.$el.data("data", this);
-
 	},
 	toggle:function(){
 		event.stopPropagation();
 		event.preventDefault();
-		console.log(this.$el);
 		this.load_subfiles();
 		console.log("toggling", this.$el.find("#" + this.id() +"_sub"));
 		var el =  this.$el.find("#menu_toggle_" + this.model.id);
@@ -274,7 +271,8 @@ var QueueItem = BaseViews.BaseListItemView.extend({
 			console.log("is clipboard? ",this.is_clipboard);
 			if(this.is_clipboard){
 				this.delete();
-			//	this.containing_list_view.container.trash_queue.render();
+				this.containing_list_view.container.trash_root.get("children").push(this);
+				this.containing_list_view.container.trash_queue.render();
 			}else{
 				console.log("deleting permanently", this.model);
 				this.delete_view();
@@ -285,13 +283,10 @@ var QueueItem = BaseViews.BaseListItemView.extend({
 	edit_item: function(){
 		event.stopPropagation();
 		event.preventDefault();
-		console.log("editing item...");
 		this.allow_edit = true;
 		this.render();
 	},
 	submit_item:function(event){
-		event.stopPropagation();
-		event.preventDefault();
 		if(!event.keyCode || event.keyCode ==13){
 			this.model.set({title: this.$el.find(".queue_title_input").val().trim()}, {validate:true});
 			if(this.model.validationError){

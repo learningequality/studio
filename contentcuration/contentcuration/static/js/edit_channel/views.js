@@ -6,6 +6,7 @@ var Models = require("./models");
 var BaseView = Backbone.View.extend({
 	list_index : 0,
 	undo_manager: null,
+	queue_view: null,
 	delete_view: function(){
 		//this.undelegateEvents();
 		//this.unbind();		
@@ -22,9 +23,19 @@ var BaseView = Backbone.View.extend({
 			alert("No items selected.");
 		}else{
 			if(confirm("Are you sure you want to delete these selected items?")){
+				var to_delete = [];
 				for(var i = 0; i < list.length; i++){
-					$("#" + list[i].id).data("data").delete();
+					var view = $("#" + list[i].id).data("data");
+					//to_delete.push(view);
+					view.delete();
 				}
+				/*this.send_to_trash(to_delete);
+				if(this.queue_view){
+					this.queue_view.add_to_trash(to_delete);
+				}else{
+					this.add_to_trash(to_delete);
+				}*/
+				this.render();
 			}
 		}
 	},
@@ -45,6 +56,24 @@ var BaseView = Backbone.View.extend({
 			allow_add : false,
 			main_collection: this.collection
 		});
+	},
+	copy_selected:function(){
+		console.log("PERFORMANCE tree_edit/views.js: starting copy_content ...");
+    	var start = new Date().getTime();
+		var clipboard_root = window.current_channel.get_tree("clipboard").get("root_node");
+		var list = this.$el.find('input:checked').parent("li");
+
+		var clipboard_list = [];
+		for(var i = 0; i < list.length; i++){
+			clipboard_list.push($(list[i]).data("data"));//.model.duplicate(clipboard_root));
+		}
+		if(this.queue_view){
+			this.queue_view.add_to_clipboard(clipboard_list);
+		}else{
+			this.add_to_clipboard(clipboard_list);
+		}
+			
+		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + ((new Date().getTime() - start)/1000) + ")");
 	},
 	add_to_view:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
@@ -72,9 +101,8 @@ var BaseView = Backbone.View.extend({
 			}, {validate:false, async:false});		
 			self.model.get("children").push(entry.model.id);
 		});
-		//this.collection.save();
-
 		this.list_index = i;
+		this.render();
 		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
 	},
 	undo: function() {
@@ -242,16 +270,19 @@ var BaseListItemView = BaseView.extend({
 						entry.destroy({async:false});
 					}
 				});
-				if(this.containing_list_view.index){
+				if(this.containing_list_view.index && this.$el.hasClass("current_topic")){
 					this.containing_list_view.container.remove_containers_from(this.containing_list_view.index);
 				}
+				console.log("target delete:", this.deleted_root);
 				var new_children = this.containing_list_view.model.get("children");
 				new_children.splice(new_children.indexOf(this.model.id), 1);
 				console.log("new children", new_children);
 				this.containing_list_view.model.save({"children" : new_children}, {validate:false});
 				this.model.save({"parent" :this.deleted_root.id}, {validate:false});
 				this.containing_list_view.remove_view(this);
-
+				if(this.containing_list_view.queue_view)
+					this.containing_list_view.queue_view.add_to_trash([this]);
+				else this.containing_list_view.add_items([this]);
 			}
 		}
 		console.log("PERFORMANCE views.js: delete " + this.model.get("title") + " end (time = " + (new Date().getTime() - start) + ")");

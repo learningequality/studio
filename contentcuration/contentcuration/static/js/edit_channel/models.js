@@ -21,15 +21,16 @@ var NodeModel = Backbone.Model.extend({
     duplicate: function(parent_id){
     	console.log("PERFORMANCE models.js: starting duplicate...");
     	var start = new Date().getTime();
-    	var title = this.generate_title();
-    	var data = this.pick('created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
-    	data['title'] = title;
-    	data['parent'] = parent_id;
+    	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
 		var node_data = new NodeModel(data);
+		node_data.set({parent: parent_id}, {validate: true});
+		while(node_data.validationError){
+			node_data.set({title: this.generate_title()}, {validate:true});
+		}
 		var self = this;
 		node_data.save(data, {async:false,
 			success:function(){
-				self.copy_children(node_data, self.get("children"));
+				//self.copy_children(node_data, self.get("children"));
 			}
 		});
 		console.log("parent is", node_data.get("parent"));
@@ -61,7 +62,7 @@ var NodeModel = Backbone.Model.extend({
 		var self = this;
 		var parent_id = node.id;
 		var copied_collection = new NodeCollection();
-		copied_collection.get_all_fetch(original_collection);
+		copied_collection = copied_collection.get_all_fetch(original_collection);
 		copied_collection.forEach(function(entry){
 			entry.duplicate(parent_id);
 		});
@@ -242,7 +243,7 @@ var ChannelModel = Backbone.Model.extend({
 					validate:false,
 					success: function(){
 						console.log("PERFORMANCE models.js: create_tree " + tree_name + " end (time = " + ((new Date().getTime() - start)/1000) + "s)");
-						return self.save(tree_name, tree.id);
+						self.save(tree_name , tree.id, {async:false});
 					}
 				});
 			}
