@@ -22,38 +22,52 @@ var NodeModel = Backbone.Model.extend({
     	console.log("PERFORMANCE models.js: starting duplicate...");
     	var start = new Date().getTime();
     	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
-		var node_data = new NodeModel(data);
-		node_data.set({parent: parent_id}, {validate: true});
-		while(node_data.validationError){
-			node_data.set({title: this.generate_title()}, {validate:true});
-		}
+		var node_data = new NodeModel();
+		var nodeChildrenCollection = new NodeCollection();
 		var self = this;
 		node_data.save(data, {async:false,
 			success:function(){
-				//self.copy_children(node_data, self.get("children"));
+				self.copy_children(node_data, self.get("children"));
 			}
 		});
-		console.log("parent is", node_data.get("parent"));
-		console.log("PERFORMANCE models.js: duplicate end (time = " + (new Date().getTime() - start) + ")");
+
+		node_data.move(parent_id, 1);
 		return node_data;
 	},
 
+	move:function(parent_id, index){
+		console.log("PERFORMANCE models.js: starting move...");
+    	var start = new Date().getTime();
+    	var title = this.get("title").slice();
+		this.set({parent: parent_id}, {validate: true});
+		while(this.validationError){
+			title = this.generate_title(title);
+			this.set({title: title, parent: parent_id}, {validate:true});
+		}
+		this.save({
+			title: title, 
+			parent: parent_id, 
+			sort_order: index
+		}, {async:false, validate:false});
+		console.log("title is " + this.get("title"), "parent is " + this.get("parent"));
+		console.log("PERFORMANCE models.js: move end (time = " + (new Date().getTime() - start) + ")");
+	},
+
 	/* Function in case want to append (Copy #) to end of copied content*/
-	generate_title:function(){
-		console.log("PERFORMANCE models.js: starting generate_title...");
+	generate_title:function(title){
 		var start = new Date().getTime();
-		var new_title = this.get("title");
+		var new_title = title;
 		var matching = /\(Copy\s*([0-9]*)\)/g;
 		if (matching.test(new_title)) {
 		    new_title = new_title.replace(matching, function(match, p1) {
 		        // Already has "(Copy)"  or "(Copy <p1>)" in the title, so return either
 		        // "(Copy 2)" or "(Copy <p1+1>)"
-		        return "(Copy " + (p1==="" ? 2: Number(p1) + 1) + ")";
+		        return "(Copy " + ((p1==="") ? 2: Number(p1) + 1) + ")";
 		    });
 		}else{
 			new_title += " (Copy)";
 		}
-    	console.log("PERFORMANCE models.js: generate_title end (time = " + (new Date().getTime() - start) + ")");
+    	console.log("new title is " + new_title);
     	return new_title;
 	},
 	copy_children:function(node, original_collection){

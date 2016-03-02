@@ -17,27 +17,11 @@ var BaseView = Backbone.View.extend({
 		$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
 		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
 	},
-	delete_selected:function(){
-		var list = this.$el.find('input:checked').parent("li");
-		if(list.length == 0){
-			alert("No items selected.");
-		}else{
-			if(confirm("Are you sure you want to delete these selected items?")){
-				var to_delete = [];
-				for(var i = 0; i < list.length; i++){
-					var view = $("#" + list[i].id).data("data");
-					//to_delete.push(view);
-					view.delete();
-				}
-				/*this.send_to_trash(to_delete);
-				if(this.queue_view){
-					this.queue_view.add_to_trash(to_delete);
-				}else{
-					this.add_to_trash(to_delete);
-				}*/
-				this.render();
-			}
-		}
+	add_to_trash:function(views){
+		//OVERWRITE IN SUBCLASSES
+	},
+	add_to_clipboard:function(views){
+		//OVERWRITE IN SUBCLASSES
 	},
 	edit_selected:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
@@ -57,24 +41,7 @@ var BaseView = Backbone.View.extend({
 			main_collection: this.collection
 		});
 	},
-	copy_selected:function(){
-		console.log("PERFORMANCE tree_edit/views.js: starting copy_content ...");
-    	var start = new Date().getTime();
-		var clipboard_root = window.current_channel.get_tree("clipboard").get("root_node");
-		var list = this.$el.find('input:checked').parent("li");
 
-		var clipboard_list = [];
-		for(var i = 0; i < list.length; i++){
-			clipboard_list.push($(list[i]).data("data"));//.model.duplicate(clipboard_root));
-		}
-		if(this.queue_view){
-			this.queue_view.add_to_clipboard(clipboard_list);
-		}else{
-			this.add_to_clipboard(clipboard_list);
-		}
-			
-		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + ((new Date().getTime() - start)/1000) + ")");
-	},
 	add_to_view:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
@@ -86,24 +53,6 @@ var BaseView = Backbone.View.extend({
 			parent_view: this,
 			root: this.model
 		});
-	},
-
-	add_nodes:function(views){
-		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
-    	var start = new Date().getTime();
-		var self = this;
-		var i  =this.collection.models.length + 1;
-		views.forEach(function(entry){
-			entry.save({
-				"title" : entry.model.get("title"),
-				"sort_order" : i++,
-				"parent" : self.model.id
-			}, {validate:false, async:false});		
-			self.model.get("children").push(entry.model.id);
-		});
-		this.list_index = i;
-		this.render();
-		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
 	},
 	undo: function() {
         this.undo_manager.undo();
@@ -146,12 +95,39 @@ BaseListView = BaseView.extend({
 		console.log("PERFORMANCE tree_edit/views.js: starting set_sort_orders ...");
     	var start = new Date().getTime();
 		var index = 1;
-		var self = this;
-		collection.models.forEach(function(entry){
-			console.log("current parent", entry);
+		collection.forEach(function(entry){
 			entry.save({'sort_order' : index++}, {validate: false});
 		});
 		console.log("PERFORMANCE tree_edit/views.js: set_sort_orders end (time = " + (new Date().getTime() - start) + ")");
+	},
+	copy_selected:function(){
+		console.log("PERFORMANCE tree_edit/views.js: starting copy_content ...");
+    	var start = new Date().getTime();
+		var list = this.$el.find('input:checked').parent("li");
+
+		var clipboard_list = [];
+		var clipboard_root = window.current_channel.get_tree("clipboard").get("root_node");
+		for(var i = 0; i < list.length; i++){
+			var to_add = $(list[i]).data("data").model.duplicate(clipboard_root);
+			clipboard_list.push(to_add);
+		}
+		console.log("add_node adding to clipboard: ", clipboard_list);
+		this.add_to_clipboard(clipboard_list);
+			
+		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + ((new Date().getTime() - start)/1000) + ")");
+		return this.$el.find(".current_topic input:checked").length != 0;
+	},
+	delete_selected:function(){
+		var list = this.$el.find('input:checked').parent("li");
+		var stopLoop = this.$el.find(".current_topic input").is(":checked");
+		var to_delete = [];
+		for(var i = 0; i < list.length; i++){
+			var view = $("#" + list[i].id).data("data");
+			to_delete.push(view);
+		}
+		this.add_to_trash(to_delete);
+		console.log("current topic found", this.$el.find(".current_topic"));
+		return stopLoop;
 	},
 	drop_in_container:function(transfer, target){
 		console.log("PERFORMANCE views.js: starting drop_in_container...", transfer);
@@ -242,6 +218,23 @@ BaseListView = BaseView.extend({
 	remove_view: function(view){
 		this.views.splice(this.views.indexOf(this), 1);
 		view.delete_view();
+	},
+	add_nodes:function(views, collection){
+		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
+    	var start = new Date().getTime();
+		var self = this;
+		var i  = collection.length;
+		console.log("add_nodes views", views);
+		views.forEach(function(entry){
+			var model = (entry.model) ? entry.model : entry;
+			model.move(self.model.id, ++i);
+			console.log("add_nodes now", model);
+			self.model.get("children").push(model.id);
+		});
+		this.list_index = i;
+
+		this.render();
+		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
 	}
 });
 
@@ -256,11 +249,11 @@ var BaseListItemView = BaseView.extend({
 			this.model.delete_channel();
 		}else{
 			if(this.containing_list_view.item_view != "uploading_content"){
-				if(!this.deleted_root)
-					this.deleted_root = window.current_channel.get_tree("deleted").get_root();
+				this.add_to_trash();
 				
 				/*Check if node name already exists in trash, then delete older version*/
 				var self = this;
+				/*
 				var trash_collection = this.containing_list_view.collection.get_all_fetch(this.deleted_root.get("children"));
 
 				trash_collection.forEach(function(entry){
@@ -276,13 +269,14 @@ var BaseListItemView = BaseView.extend({
 				console.log("target delete:", this.deleted_root);
 				var new_children = this.containing_list_view.model.get("children");
 				new_children.splice(new_children.indexOf(this.model.id), 1);
-				console.log("new children", new_children);
+
 				this.containing_list_view.model.save({"children" : new_children}, {validate:false});
 				this.model.save({"parent" :this.deleted_root.id}, {validate:false});
 				this.containing_list_view.remove_view(this);
-				if(this.containing_list_view.queue_view)
+				*/
+				/*if(this.containing_list_view.queue_view)
 					this.containing_list_view.queue_view.add_to_trash([this]);
-				else this.containing_list_view.add_items([this]);
+				else this.containing_list_view.add_items([this]);*/
 			}
 		}
 		console.log("PERFORMANCE views.js: delete " + this.model.get("title") + " end (time = " + (new Date().getTime() - start) + ")");
@@ -354,7 +348,7 @@ var BaseEditorView = BaseListView.extend({
 			entry.model.set(entry.model.attributes, {validate:true});
 			if(!entry.model.validationError){
 				if(!self.allow_add)
-					entry.save(null, {validate:false, async:false});
+					entry.save(entry.model.attributes, {validate:false, async:false});
 				entry.set_edited(false);
 			}else{
 				self.handle_error(entry);

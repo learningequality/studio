@@ -51,11 +51,12 @@ var Queue = BaseViews.BaseView.extend({
 			this.$el.find("#queue").animate({marginRight: -this.$el.find("#main-queue").outerWidth()}, 500);
 	},
 	add_to_clipboard:function(views){
-		this.clipboard_queue.add_items(views);
+		this.clipboard_queue.add_to_list(views);
 
 	},
 	add_to_trash:function(views){
-		this.trash_queue.add_items(views);
+		console.log("TRASH adding to trash");
+		this.trash_queue.add_to_list(views);
 	},
 	switch_to_queue:function(){
 		this.switch_tab("clipboard");	
@@ -77,9 +78,10 @@ var QueueList = BaseViews.BaseListView.extend({
 	item_view:"queue",
 	initialize: function(options) {
 		this.is_clipboard = options.is_clipboard;
-		this.collection = options.collection.get_all_fetch(this.model.get("children"));
+		this.collection = options.collection;
+		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.collection.sort_by_order();
-		this.set_sort_orders(this.collection);
+		this.set_sort_orders(this.childrenCollection);
 		this.add_controls = options.add_controls;
 		this.container = options.container;
 		this.indent = options.indent;
@@ -97,19 +99,16 @@ var QueueList = BaseViews.BaseListView.extend({
 	render: function() {
 		DragHelper.removeDragDrop(this);
 		console.log("RENDERING " + ((this.is_clipboard)? "clipboard" : "trash"));
-		this.collection = this.collection.get_all_fetch(this.model.get("children"));
-		this.collection.sort_by_order();
+		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
+		this.childrenCollection.sort_by_order();
 		this.$el.html(this.template({
-			content_list : this.collection.toJSON(),
+			content_list : this.childrenCollection.toJSON(),
 			is_clipboard : this.is_clipboard,
 			add_controls : this.add_controls,
 			id: this.model.id
 		}));
 
 		this.load_content();
-		console.log("views", this.views);
-
-		
 		this.$el.data("container", this);
 		this.$el.find("ul").data("list", this);
 		this.$el.find(".default-item").data("data", {
@@ -120,10 +119,9 @@ var QueueList = BaseViews.BaseListView.extend({
 	},
 	load_content:function(){
 		this.views = [];
-		this.collection.sort_by_order();
 		var self = this;
 		this.list_index = 0;
-		this.collection.forEach(function(entry){
+		this.childrenCollection.forEach(function(entry){
 			console.log("entry is", entry);
 			var item_view = new QueueItem({
 				containing_list_view: self,
@@ -143,10 +141,12 @@ var QueueList = BaseViews.BaseListView.extend({
 	},
 	delete_items:function(){
 		if(this.is_clipboard){
-			this.delete_selected();
-			console.log("before render", this.views);
-			this.container.trash_queue.render();
-			console.log("after render", this.views);
+			if(confirm("Are you sure you want to delete these selected items?")){
+				this.delete_selected();
+				console.log("before render", this.views);
+				this.container.trash_queue.render();
+				console.log("after render", this.views);
+			}
 		}
 			
 		else{
@@ -167,9 +167,6 @@ var QueueList = BaseViews.BaseListView.extend({
 	edit_items:function(){
 		this.edit_selected();
 	},
-	add_items:function(){
-		this.add_to_view();
-	},
 	move_trash:function(){
 		var list = this.$el.find('input:checked').parent("li");
 		if(list.length == 0){
@@ -187,17 +184,18 @@ var QueueList = BaseViews.BaseListView.extend({
 			}
 			this.container.add_to_clipboard(to_move);
 			this.container.clipboard_queue.render();
-
 		}
 	},
 	search:function(){
 		//if(this.$el.find(".search_queue").val().length > 2)
 			//this.render();
 	},
-	add_items:function(views){
-		this.add_nodes(views);
+	add_items:function(){
+		this.add_to_view();
+	},
+	add_to_list:function(views){
+		this.add_nodes(views, this.childrenCollection);
 	}
-	
 });
 
 /* Loaded when user clicks clipboard button below navigation bar */
@@ -271,8 +269,8 @@ var QueueItem = BaseViews.BaseListItemView.extend({
 			console.log("is clipboard? ",this.is_clipboard);
 			if(this.is_clipboard){
 				this.delete();
-				this.containing_list_view.container.trash_root.get("children").push(this);
-				this.containing_list_view.container.trash_queue.render();
+				//this.containing_list_view.container.trash_root.get("children").push(this);
+				//this.containing_list_view.container.trash_queue.render();
 			}else{
 				console.log("deleting permanently", this.model);
 				this.delete_view();
@@ -299,6 +297,13 @@ var QueueItem = BaseViews.BaseListItemView.extend({
 				this.render();
 			}
 		}
+	},
+	add_to_trash:function(){
+		this.containing_list_view.add_to_trash([this]);
+		this.delete_view();
+	},
+	add_to_clipboard:function(){
+		this.containing_list_view.add_to_clipboard([this]);
 	}
 });
 

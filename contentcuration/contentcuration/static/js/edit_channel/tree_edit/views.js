@@ -75,17 +75,29 @@ var TreeEditView = BaseViews.BaseView.extend({
 			index: this.containers.length + 1,
 			edit_mode: this.is_edit_page,
 			collection: this.collection,
-			container : this,
+			container : this
 		});
 		this.containers.push(container_view);
 		console.log("PERFORMANCE tree_edit/views.js: add_container end (time = " + (new Date().getTime() - start) + ")");
 	},
 
 	delete_content: function (event){
-		this.delete_selected();
+		if(confirm("Are you sure you want to delete these selected items?")){
+			var self = this;
+			this.containers.forEach(function(entry){
+				if(entry.delete_selected()){
+					self.remove_containers_from(self.index);
+					return;
+				}
+					
+			});
+		}
 	},
 	copy_content: function(event){
-		this.copy_selected();
+		this.containers.forEach(function(entry){
+			if(entry.copy_selected())
+				return;
+		});
 	},	
 	edit_content: function(event){
 		this.edit_selected();
@@ -93,8 +105,16 @@ var TreeEditView = BaseViews.BaseView.extend({
 	toggle_details:function(event){
 		/*TODO: Debug more with editing and opening folders*/
 		this.$el.find("#container_area").toggleClass("hidden_details");
+	},
+	add_to_trash:function(views){
+		this.queue_view.add_to_trash(views);
+		views.forEach(function(entry){
+			entry.delete_view();
+		});
+	},
+	add_to_clipboard:function(views){
+		this.queue_view.add_to_clipboard(views);
 	}
-
 });
 
 /* Open directory view */
@@ -185,6 +205,12 @@ var ContentList = BaseViews.BaseListView.extend({
 		});
 		console.log("PERFORMANCE tree_edit/views.js: close_folders end (time = " + (new Date().getTime() - start) + ")");
 		//this.$el.find(".folder .glyphicon").css("display", "inline-block");
+	},
+	add_to_trash:function(views){
+		this.container.add_to_trash(views);
+	},
+	add_to_clipboard:function(views){
+		this.container.add_to_clipboard(views);
 	}
 });
 
@@ -336,6 +362,11 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			}
 			self.publish_children(this, collection);
 		});
+	},
+	add_to_trash:function(){
+		this.containing_list_view.add_to_trash([this]);
+		this.render();
+		this.delete_view();
 	}
 }); 
 
