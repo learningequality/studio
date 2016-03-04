@@ -188,8 +188,7 @@ class Node(MPTTModel):
         verbose_name = _("Topic")
         verbose_name_plural = _("Topics")
         # Do not allow two nodes with the same name on the same level
-        unique_together = ('parent', 'title')
-
+        unique_together = (('parent', 'title'))
 
 
 class ContentLicense(models.Model):

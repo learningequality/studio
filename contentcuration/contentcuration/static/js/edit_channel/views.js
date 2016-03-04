@@ -230,7 +230,7 @@ BaseListView = BaseView.extend({
 		views.forEach(function(entry){
 			var model = (entry.model) ? entry.model : entry;
 			model.move(self.model.id, ++i);
-			console.log("add_nodes now", model);
+			console.log("add_nodes now", model.get("title"));
 			self.model.get("children").push(model.id);
 		});
 		this.list_index = i;

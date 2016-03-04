@@ -37,11 +37,12 @@ var NodeModel = Backbone.Model.extend({
 		console.log("add_nodes move called by", this);
 		console.log("PERFORMANCE models.js: starting move...");
     	var start = new Date().getTime();
-    	this.save({parent: null},{async:false});
+    	var old_parent = this.get("parent");
 				
-    	var title = this.get("title").slice();
+    	var title = this.get("title");
 		this.set({parent: parent_id,sort_order:index}, {validate:true});
-		while(this.validationError){
+		console.log(this.validationError);
+		while(this.validationError !== null){
 			title = this.generate_title(title);
 			console.log("add_node title is now", title);
 			this.set({
@@ -49,9 +50,10 @@ var NodeModel = Backbone.Model.extend({
 				parent: parent_id,
 				sort_order:index
 			}, {validate:true});
-			console.log("add_node validation error!", this);
+			console.log("add_node validation error!", this.get("title"));
 		}
-		this.save(null, {async:false, validate:false}); //Save any other values
+		this.save({title: title, parent: old_parent}, {async:false, validate:false}); //Save any other values
+		this.save({parent: parent_id, sort_order:index}, {async:false, validate:false}); //Save any other values
 		console.log("PERFORMANCE models.js: move end (time = " + (new Date().getTime() - start) + ")");
 	},
 

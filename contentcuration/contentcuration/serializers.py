@@ -19,6 +19,7 @@ class TopicTreeSerializer(serializers.ModelSerializer):
 
 class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    parent = serializers.PrimaryKeyRelatedField(queryset=Node.objects.all())
 
     class Meta:
         model = Node
