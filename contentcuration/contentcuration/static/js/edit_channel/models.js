@@ -18,38 +18,40 @@ var NodeModel = Backbone.Model.extend({
 	},
 
 	/*Used when copying items to clipboard*/
-    duplicate: function(parent_id){
+    duplicate: function(parent_id, index){
+    	console.log("add_nodes duplicate called by", this);
     	console.log("PERFORMANCE models.js: starting duplicate...");
     	var start = new Date().getTime();
     	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
 		var node_data = new NodeModel();
 		var nodeChildrenCollection = new NodeCollection();
 		var self = this;
-		node_data.save(data, {async:false,
-			success:function(){
-				self.copy_children(node_data, self.get("children"));
-			}
-		});
-
-		node_data.move(parent_id, 1);
+		node_data.set(data);
+		node_data.move(parent_id, index);
+		self.copy_children(node_data, self.get("children"));
+		console.log("add_node sending back data", node_data);
 		return node_data;
 	},
 
 	move:function(parent_id, index){
+		console.log("add_nodes move called by", this);
 		console.log("PERFORMANCE models.js: starting move...");
     	var start = new Date().getTime();
+    	this.save({parent: null},{async:false});
+				
     	var title = this.get("title").slice();
-		this.set({parent: parent_id}, {validate: true});
+		this.set({parent: parent_id,sort_order:index}, {validate:true});
 		while(this.validationError){
 			title = this.generate_title(title);
-			this.set({title: title, parent: parent_id}, {validate:true});
+			console.log("add_node title is now", title);
+			this.set({
+				title: title, 
+				parent: parent_id,
+				sort_order:index
+			}, {validate:true});
+			console.log("add_node validation error!", this);
 		}
-		this.save({
-			title: title, 
-			parent: parent_id, 
-			sort_order: index
-		}, {async:false, validate:false});
-		console.log("title is " + this.get("title"), "parent is " + this.get("parent"));
+		this.save(null, {async:false, validate:false}); //Save any other values
 		console.log("PERFORMANCE models.js: move end (time = " + (new Date().getTime() - start) + ")");
 	},
 
@@ -68,7 +70,7 @@ var NodeModel = Backbone.Model.extend({
 			new_title += " (Copy)";
 		}
     	console.log("new title is " + new_title);
-    	return new_title;
+    	return new_title.slice(0, new_title.length);
 	},
 	copy_children:function(node, original_collection){
 		console.log("PERFORMANCE models.js: starting copy_children...");

@@ -84,20 +84,19 @@ var TreeEditView = BaseViews.BaseView.extend({
 	delete_content: function (event){
 		if(confirm("Are you sure you want to delete these selected items?")){
 			var self = this;
-			this.containers.forEach(function(entry){
-				if(entry.delete_selected()){
-					self.remove_containers_from(self.index);
-					return;
+			for(var i = 0; i < this.containers.length; i++){
+				if(this.containers[i].delete_selected()){
+					this.remove_containers_from(this.containers[i].index);
+					break;
 				}
-					
-			});
+			}
 		}
 	},
 	copy_content: function(event){
-		this.containers.forEach(function(entry){
-			if(entry.copy_selected())
-				return;
-		});
+		for(var i = 0; i < this.containers.length; i++){
+			if(this.containers[i].copy_selected())
+				break;
+		}
 	},	
 	edit_content: function(event){
 		this.edit_selected();
@@ -113,6 +112,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 		});
 	},
 	add_to_clipboard:function(views){
+		console.log("clipboard views", views);
 		this.queue_view.add_to_clipboard(views);
 	}
 });
@@ -131,7 +131,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.collection = options.collection;
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();
-		this.set_sort_orders(this.childrenCollection);
+		//this.set_sort_orders(this.childrenCollection);
 		this.render();
 		
 		/* Animate sliding in from left */

@@ -108,13 +108,15 @@ BaseListView = BaseView.extend({
 		var clipboard_list = [];
 		var clipboard_root = window.current_channel.get_tree("clipboard").get("root_node");
 		for(var i = 0; i < list.length; i++){
-			var to_add = $(list[i]).data("data").model.duplicate(clipboard_root);
-			clipboard_list.push(to_add);
+			var newNode = new Models.NodeModel();
+			newNode = $(list[i]).data("data").model.duplicate(clipboard_root, i);
+			console.log("add_node model is", newNode);
+			clipboard_list.push(newNode);
 		}
-		console.log("add_node adding to clipboard: ", clipboard_list);
+		//console.log("add_node adding to clipboard: ", clipboard_list);
 		this.add_to_clipboard(clipboard_list);
 			
-		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + ((new Date().getTime() - start)/1000) + ")");
+		//console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + ((new Date().getTime() - start)/1000) + ")");
 		return this.$el.find(".current_topic input:checked").length != 0;
 	},
 	delete_selected:function(){
@@ -252,7 +254,7 @@ var BaseListItemView = BaseView.extend({
 				this.add_to_trash();
 				
 				/*Check if node name already exists in trash, then delete older version*/
-				var self = this;
+				//var self = this;
 				/*
 				var trash_collection = this.containing_list_view.collection.get_all_fetch(this.deleted_root.get("children"));
 

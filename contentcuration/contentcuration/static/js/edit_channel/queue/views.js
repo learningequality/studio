@@ -52,7 +52,6 @@ var Queue = BaseViews.BaseView.extend({
 	},
 	add_to_clipboard:function(views){
 		this.clipboard_queue.add_to_list(views);
-
 	},
 	add_to_trash:function(views){
 		console.log("TRASH adding to trash");
@@ -60,9 +59,11 @@ var Queue = BaseViews.BaseView.extend({
 	},
 	switch_to_queue:function(){
 		this.switch_tab("clipboard");	
+		
 	},
 	switch_to_trash:function(){
 		this.switch_tab("trash");
+		
 	},
 	switch_tab:function(tabname){
 		this.$el.find((tabname == "trash")? "#trash-queue" : "#clipboard-queue").css("display", "block");
@@ -81,7 +82,7 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.collection = options.collection;
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.collection.sort_by_order();
-		this.set_sort_orders(this.childrenCollection);
+		//this.set_sort_orders(this.childrenCollection);
 		this.add_controls = options.add_controls;
 		this.container = options.container;
 		this.indent = options.indent;
@@ -131,7 +132,6 @@ var QueueList = BaseViews.BaseListView.extend({
 				is_clipboard : self.is_clipboard
 			});
 			self.$el.find("#list_for_" + self.model.id).append(item_view.el);
-			item_view.$el.find("label").width(item_view.$el.find("label").width() - self.indent);
 			self.views.push(item_view);
 		});
 		$((this.is_clipboard && this.add_controls)? ".queue-badge" : ".trash-badge").html(this.views.length);
@@ -140,28 +140,28 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.$el.find("input[type=checkbox]").attr("checked", this.$el.find("#select_all_check").is(":checked"));
 	},
 	delete_items:function(){
-		if(this.is_clipboard){
+		/*if(this.is_clipboard){
 			if(confirm("Are you sure you want to delete these selected items?")){
 				this.delete_selected();
-				console.log("before render", this.views);
 				this.container.trash_queue.render();
-				console.log("after render", this.views);
 			}
 		}
 			
-		else{
+		else{*/
 			var list = this.$el.find('input:checked').parent("li");
 			if(list.length == 0){
 				alert("No items selected.");
 			}else{
-				if(confirm("Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
+				if(confirm((this.is_clipboard)? "Are you sure you want to delete these selected items?" : "Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
 					for(var i = 0; i < list.length; i++){
-						$("#" + list[i].id).data("data").model.destroy();
-						$("#" + list[i].id).data("data").delete_view();
+						$("#" + list[i].id).data("data").remove_item();
+						//$("#" + list[i].id).data("data").model.destroy();
+						//$("#" + list[i].id).data("data").delete_view();
+
 					}
 				}
 			}
-		}
+		//}
 		//this.container.trash_queue.render();
 	},
 	edit_items:function(){
@@ -195,6 +195,12 @@ var QueueList = BaseViews.BaseListView.extend({
 	},
 	add_to_list:function(views){
 		this.add_nodes(views, this.childrenCollection);
+	},
+	add_to_trash:function(views){
+		this.container.add_to_trash(views);
+	},
+	add_to_clipboard:function(views){
+		this.container.add_to_clipboard(views);
 	}
 });
 
@@ -218,7 +224,7 @@ var QueueItem = BaseViews.BaseListItemView.extend({
 		this.render();
 	},
 	events: {
-		'click .delete_content' : 'remove_item',
+		'click .delete_content' : 'delete_content',
 		'click .tog_folder' : 'toggle',
 		'click .edit_content' : 'edit_item',
 		'click .submit_content' : "submit_item",
@@ -262,21 +268,22 @@ var QueueItem = BaseViews.BaseListItemView.extend({
 			indent: this.indent
 		});
 	},
-	remove_item: function(){
+	delete_content:function(){
 		event.stopPropagation();
 		event.preventDefault();
-		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
-			console.log("is clipboard? ",this.is_clipboard);
+		this.remove_item(true);
+	},
+	remove_item: function(prompt){
+		if((prompt && confirm("Are you sure you want to delete " + this.model.get("title") + "?")) || !prompt){
 			if(this.is_clipboard){
-				this.delete();
-				//this.containing_list_view.container.trash_root.get("children").push(this);
-				//this.containing_list_view.container.trash_queue.render();
+				this.add_to_trash();
 			}else{
-				console.log("deleting permanently", this.model);
 				this.delete_view();
 				this.model.destroy();
 			}
 		}
+		var element = $((this.is_clipboard)? ".queue-badge" : ".trash-badge");
+		element.html(Number(element.text()) - 1);
 	},
 	edit_item: function(){
 		event.stopPropagation();
