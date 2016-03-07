@@ -171,7 +171,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		var self = this;
 		var el = this.$el.find(".content-list");
 		this.list_index = 0;		
-		this.childrenCollection.models.forEach(function(entry){
+		this.childrenCollection.forEach(function(entry){
 			var file_view = new ContentItem({
 				el: el.find("#" + entry.id),
 				model: entry, 

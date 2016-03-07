@@ -177,7 +177,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			}
 		}
 
-		if(!this.errorsFound && this.allow_add) this.parent_view.add_nodes(this.views, this.main_collection);
+		if(!this.errorsFound && this.allow_add) this.parent_view.add_nodes(this.views, this.main_collection.length);
 		console.log("PERFORMANCE tree_edit/views.js: save_nodes end (time = " + (new Date().getTime() - start) + ")");
 	},
 	save_and_finish: function(){

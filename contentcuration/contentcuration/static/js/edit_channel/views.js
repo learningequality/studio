@@ -203,6 +203,7 @@ BaseListView = BaseView.extend({
 				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
 				console.log("children",new_children);
 				console.log("parent",old_parent);
+				
 				//old_parent.save({"children": new_children}, {async:false});
 			}
 		}else{
@@ -213,7 +214,7 @@ BaseListView = BaseView.extend({
 			});
 		}
 			
-		console.log("add_to_container model", transfer.model);
+		//console.log("add_to_container model", transfer.model);
 		console.log("PERFORMANCE views.js: drop_in_container end (time = " + (new Date().getTime() - start) + ")");
 		this.render();
 	},
@@ -221,19 +222,20 @@ BaseListView = BaseView.extend({
 		this.views.splice(this.views.indexOf(this), 1);
 		view.delete_view();
 	},
-	add_nodes:function(views, collection){
+	add_nodes:function(views, startingIndex){
 		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
     	var start = new Date().getTime();
 		var self = this;
-		var i  = collection.length;
-		console.log("add_nodes views", views);
+		//console.log("add_nodes views", views);
 		views.forEach(function(entry){
 			var model = (entry.model) ? entry.model : entry;
-			model.move(self.model.id, ++i);
-			console.log("add_nodes now", model.get("title"));
+			model.move(self.model.id, ++startingIndex);
+			//console.log("add_nodes now", model.get("title"));
 			self.model.get("children").push(model.id);
+
 		});
-		this.list_index = i;
+		this.list_index = startingIndex;
+		console.log("trash model children is at", this.model.get("children"));
 
 		this.render();
 		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");

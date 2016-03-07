@@ -16,6 +16,14 @@ var NodeModel = Backbone.Model.extend({
 	  json.cid = this.cid;
 	  return json;
 	},
+	getChildCount:function(includeParent, collection){
+		var count = (includeParent) ? 1:0;
+		var children = collection.get_all_fetch(this.get("children"));
+		children.forEach(function(entry){
+			count += entry.getChildCount(true, collection);
+		});
+		return count;
+	},
 
 	/*Used when copying items to clipboard*/
     duplicate: function(parent_id, index){
@@ -38,10 +46,9 @@ var NodeModel = Backbone.Model.extend({
 		console.log("PERFORMANCE models.js: starting move...");
     	var start = new Date().getTime();
     	var old_parent = this.get("parent");
-				
     	var title = this.get("title");
 		this.set({parent: parent_id,sort_order:index}, {validate:true});
-		console.log(this.validationError);
+
 		while(this.validationError !== null){
 			title = this.generate_title(title);
 			console.log("add_node title is now", title);
@@ -52,8 +59,22 @@ var NodeModel = Backbone.Model.extend({
 			}, {validate:true});
 			console.log("add_node validation error!", this.get("title"));
 		}
-		this.save({title: title, parent: old_parent}, {async:false, validate:false}); //Save any other values
+		if(old_parent){
+			this.save({title: title, parent: old_parent}, {async:false, validate:false}); //Save any other values
+		}else{
+			this.save({title: title}, {async:false, validate:false}); //Save any other values
+		}
+		
 		this.save({parent: parent_id, sort_order:index}, {async:false, validate:false}); //Save any other values
+		
+		/*if(old_parent){
+			var old = new NodeModel({id:old_parent});
+			old.fetch({async:false});
+			console.log("add_node queue model old parent is", old.get("children"));
+			var newChildren = old.get("children");
+			newChildren.splice(newChildren.indexOf(this.id), 1);
+			old.save({children: newChildren}, {async:false});
+		}*/
 		console.log("PERFORMANCE models.js: move end (time = " + (new Date().getTime() - start) + ")");
 	},
 
@@ -149,10 +170,10 @@ var NodeCollection = Backbone.Collection.extend({
     	for(var i = 0; i < ids.length; i++){
     		if(ids[i]){
     			var model = this.get({id: ids[i]});
-	    		if(!model){
+	    		//if(!model){
 	    			model = this.add({'id':ids[i]});
 	    			model.fetch({async:false});
-	    		}
+	    		//}
 	    		to_fetch.add(model);
     		}
     	}

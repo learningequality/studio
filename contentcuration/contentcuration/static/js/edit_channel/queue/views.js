@@ -52,10 +52,15 @@ var Queue = BaseViews.BaseView.extend({
 	},
 	add_to_clipboard:function(views){
 		this.clipboard_queue.add_to_list(views);
+		this.trash_queue.model.fetch({async:false});
+		//console.log("queue model trash is now", this.trash_queue.model.get("children"));
+		this.trash_queue.render();
 	},
 	add_to_trash:function(views){
-		console.log("TRASH adding to trash");
 		this.trash_queue.add_to_list(views);
+		this.clipboard_queue.model.fetch({async:false});
+		//console.log("queue model clipboard is now", this.clipboard_queue.model.get("children"));
+		this.clipboard_queue.render();
 	},
 	switch_to_queue:function(){
 		this.switch_tab("clipboard");	
@@ -99,7 +104,6 @@ var QueueList = BaseViews.BaseListView.extend({
 	},
 	render: function() {
 		DragHelper.removeDragDrop(this);
-		console.log("RENDERING " + ((this.is_clipboard)? "clipboard" : "trash"));
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();
 		this.$el.html(this.template({
@@ -123,7 +127,6 @@ var QueueList = BaseViews.BaseListView.extend({
 		var self = this;
 		this.list_index = 0;
 		this.childrenCollection.forEach(function(entry){
-			console.log("entry is", entry);
 			var item_view = new QueueItem({
 				containing_list_view: self,
 				model: entry,
@@ -134,35 +137,22 @@ var QueueList = BaseViews.BaseListView.extend({
 			self.$el.find("#list_for_" + self.model.id).append(item_view.el);
 			self.views.push(item_view);
 		});
-		$((this.is_clipboard && this.add_controls)? ".queue-badge" : ".trash-badge").html(this.views.length);
+		$((this.is_clipboard && this.add_controls)? ".queue-badge" : ".trash-badge").html(this.model.getChildCount(false, this.collection));
 	},
 	check_all :function(){
 		this.$el.find("input[type=checkbox]").attr("checked", this.$el.find("#select_all_check").is(":checked"));
 	},
 	delete_items:function(){
-		/*if(this.is_clipboard){
-			if(confirm("Are you sure you want to delete these selected items?")){
-				this.delete_selected();
-				this.container.trash_queue.render();
-			}
-		}
-			
-		else{*/
-			var list = this.$el.find('input:checked').parent("li");
-			if(list.length == 0){
-				alert("No items selected.");
-			}else{
-				if(confirm((this.is_clipboard)? "Are you sure you want to delete these selected items?" : "Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
-					for(var i = 0; i < list.length; i++){
-						$("#" + list[i].id).data("data").remove_item();
-						//$("#" + list[i].id).data("data").model.destroy();
-						//$("#" + list[i].id).data("data").delete_view();
-
-					}
+		var list = this.$el.find('input:checked').parent("li");
+		if(list.length == 0){
+			alert("No items selected.");
+		}else{
+			if(confirm((this.is_clipboard)? "Are you sure you want to delete these selected items?" : "Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
+				for(var i = 0; i < list.length; i++){
+					$("#" + list[i].id).data("data").remove_item();
 				}
 			}
-		//}
-		//this.container.trash_queue.render();
+		}
 	},
 	edit_items:function(){
 		this.edit_selected();
@@ -175,15 +165,11 @@ var QueueList = BaseViews.BaseListView.extend({
 			var to_move = [];
 			for(var i =0 ;i < list.length; i++){
 				var view = $("#" + list[i].id).data("data");
-				view.model.set({parent:  parent.id}, {validate:true});
-				while(view.model.validationError){
-					view.model.set({title: view.model.generate_title()}, {validate:true});
-				}
 				to_move.push(view);
-				view.delete_view();
 			}
 			this.container.add_to_clipboard(to_move);
-			this.container.clipboard_queue.render();
+			//var element = $((this.is_clipboard)? ".queue-badge" : ".trash-badge");
+			//element.html(Number(element.text()) - 1);
 		}
 	},
 	search:function(){
@@ -194,7 +180,10 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.add_to_view();
 	},
 	add_to_list:function(views){
-		this.add_nodes(views, this.childrenCollection);
+		//console.log("queue model calling!");
+		this.add_nodes(views, this.childrenCollection.length);
+		this.model.fetch({async:false});
+		//console.log("queue model check against", this.model.get("children"));
 	},
 	add_to_trash:function(views){
 		this.container.add_to_trash(views);
@@ -214,13 +203,13 @@ var QueueItem = BaseViews.BaseListItemView.extend({
 	},
 	initialize: function(options) {
 		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item');
-		console.log("loading", this.model);
+		//console.log("loading", this.model);
 		this.containing_list_view = options.containing_list_view;
 		this.allow_edit = false;
 		this.indent = options.indent + 15;
 		this.is_clipboard = options.is_clipboard;
 		this.index = options.index;
-		console.log("model is now", this.model);
+		//console.log("model is now", this.model);
 		this.render();
 	},
 	events: {
@@ -247,7 +236,7 @@ var QueueItem = BaseViews.BaseListItemView.extend({
 		event.stopPropagation();
 		event.preventDefault();
 		this.load_subfiles();
-		console.log("toggling", this.$el.find("#" + this.id() +"_sub"));
+		//console.log("toggling", this.$el.find("#" + this.id() +"_sub"));
 		var el =  this.$el.find("#menu_toggle_" + this.model.id);
 		if(el.hasClass("glyphicon-menu-up")){
 			this.$el.find("#" + this.id() +"_sub").slideDown();
@@ -258,7 +247,7 @@ var QueueItem = BaseViews.BaseListItemView.extend({
 		}
 	},
 	load_subfiles:function(){
-		console.log("SUBFILES ", this.$el.find("#" + this.id() +"_sub"));
+		//console.log("SUBFILES ", this.$el.find("#" + this.id() +"_sub"));
 		this.subfile_view = new QueueList({
 			collection: this.containing_list_view.collection,
 			el: this.$el.find("#" + this.id() +"_sub"),
@@ -280,10 +269,11 @@ var QueueItem = BaseViews.BaseListItemView.extend({
 			}else{
 				this.delete_view();
 				this.model.destroy();
+				this.containing_list_view.render();
 			}
 		}
-		var element = $((this.is_clipboard)? ".queue-badge" : ".trash-badge");
-		element.html(Number(element.text()) - 1);
+		//var element = $((this.is_clipboard)? ".queue-badge" : ".trash-badge");
+		//element.html(Number(element.text()) - 1);
 	},
 	edit_item: function(){
 		event.stopPropagation();
