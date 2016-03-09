@@ -20,7 +20,7 @@ class TopicTreeSerializer(serializers.ModelSerializer):
 class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Node
-        fields = ('title', 'published', 'deleted', 'id', 'description', 'published', 
+        fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published', 
                   'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent')
 
 

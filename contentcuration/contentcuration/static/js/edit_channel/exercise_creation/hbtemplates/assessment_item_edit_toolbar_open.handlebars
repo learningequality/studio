@@ -1,0 +1,6 @@
+<div class="btn-group" role="group" aria-label="Edit Tools">
+<button class="btn btn-danger cancel" role="button" {{#unless undo}}disabled="disabled"{{/unless}} title="Cancel"><span class="glyphicon glyphicon-ban-circle"></span></button>
+<button class="btn btn-warning undo" role="button" {{#unless undo}}disabled="disabled"{{/unless}} title="Undo"><span class="glyphicon glyphicon-arrow-left"></span></button>
+<button class="btn btn-warning redo" role="button" {{#unless redo}}disabled="disabled"{{/unless}} title="Redo"><span class="glyphicon glyphicon-arrow-right"></span></button>
+<button class="btn btn-success" role="button" data-toggle="collapse" data-parent="#accordion" href="#{{ model.id }}" aria-expanded="false" aria-controls="{{ model.id }}" title="Save"><span class="glyphicon glyphicon-floppy-save"></span></button>
+</div>

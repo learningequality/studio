@@ -22,7 +22,7 @@ var ChannelList  = BaseListView.extend({
 		this.load_content();
 	},
 	events: {
-		'click #new_channel_button' : 'new_channel',
+		'click #new_channel_button' : 'new_channel'
 	},
 
 	new_channel: function(event){

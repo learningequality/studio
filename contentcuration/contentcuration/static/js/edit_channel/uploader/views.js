@@ -1,8 +1,12 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 require("uploader.less");
-var BaseViews = require("./../views");
-var Models = require("./../models");
+var BaseViews = require("edit_channel/views");
+var Models = require("edit_channel/models");
+var Dropzone = require("dropzone");
+require("uploader.less");
+require("dropzone/dist/dropzone.css");
+var get_cookie = require("utils/get_cookie");
 
 var AddContentView = BaseViews.BaseListView.extend({
 	template: require("./hbtemplates/add_content_dialog.handlebars"),
@@ -28,8 +32,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 		'click #create_topic':'add_topic',
 		'click .close_uploader' : 'close_uploader',
 		'click .edit_metadata' : 'edit_metadata',
-		'click #upload_file' : 'upload_file',
-		'change input:file' : 'add_file'
+		'click #upload_file' : 'add_file'
 	},
 
 	load_content:function(){
@@ -81,10 +84,8 @@ var AddContentView = BaseViews.BaseListView.extend({
 		this.undelegateEvents();
 		this.unbind();	
 	},
-	upload_file:function(){
-		this.$el.find("#file-dialog").trigger('click');
-	},
-	add_file:function(){
+	upload_file:function(file_data){
+		console.log("uploading file", file_data);
 		/* TODO: Need to implement uploading files
 		$("#upload_content_add_list").append("<div id='new'></div>");
 		var item_view = new NodeListItem({
@@ -95,7 +96,18 @@ var AddContentView = BaseViews.BaseListView.extend({
 			root: this.root,
 		});
 		this.views.push(item_view);
+		var topic = new Models.NodeModel({
+			"kind":"topic", 
+			"title": filename,
+			"parent" : this.root.id
+		});
 		*/
+        //this.editor.insertEmbed(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "image", "/media/" + filename);
+        //this.save();
+	},
+	add_file:function(){
+		var view = new FileUploadView({callback: this.upload_file, modal: true});
+		
 	}
 });
 
@@ -427,7 +439,61 @@ var UploadedItem = ContentItem.extend({
 	}
 });
 
+var FileUploadView = BaseViews.BaseView.extend({
+    template: require("./hbtemplates/file_upload.handlebars"),
+    modal_template: require("./hbtemplates/file_upload_modal.handlebars"),
+    file_list : [],
+    initialize: function(options) {
+        _.bindAll(this, "file_uploaded",  "close_file_uploader");
+        this.callback = options.callback;
+        this.modal = options.modal;
+        this.render();
+    },
+    events:{
+      "click .submit_uploaded_files" : "close_file_uploader"
+    },
+
+    render: function() {
+        if (this.modal) {
+            this.$el.html(this.modal_template());
+            this.$(".modal-body").append(this.template());
+            $("body").append(this.el);
+            this.$(".modal").modal({show: true});
+            this.$(".modal").on("hide.bs.modal", this.close);
+        } else {
+            this.$el.html(this.template());
+        }
+        this.file_list = [];
+
+        // TODO parameterize to allow different file uploads depending on initialization.
+        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
+            clickable: ["#dropzone", ".fileinput-button"], 
+            acceptedFiles: "image/*,application/pdf,video/*,text/*,audio/*", 
+            url: window.Urls.file_upload(), 
+            headers: {"X-CSRFToken": get_cookie("csrftoken")
+          }
+        });
+        this.dropzone.on("success", this.file_uploaded);
+    },
+    file_uploaded: function(file) {
+        console.log("FILE FOUND:", file);
+        this.file_list.push(file);
+    },
+    close_file_uploader:function(){
+      this.callback(this.file_list);
+      this.close();
+    },
+ 
+    close: function() {
+        if (this.modal) {
+            this.$(".modal").modal('hide');
+        }
+        this.remove();
+    }
+});
+
 module.exports = {
 	AddContentView: AddContentView,
-	EditMetadataView:EditMetadataView
+	EditMetadataView:EditMetadataView,
+	FileUploadView:FileUploadView
 }

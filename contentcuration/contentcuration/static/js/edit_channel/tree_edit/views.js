@@ -4,7 +4,7 @@ require("content-container.less");
 var BaseViews = require("./../views");
 var UploaderViews = require("edit_channel/uploader/views");
 var PreviewerViews = require("edit_channel/previewer/views");
-var ClipboardView = require("edit_channel/clipboard/views");
+//var ClipboardView = require("edit_channel/clipboard/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var Models = require("./../models");
 
@@ -20,11 +20,11 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.collection = options.collection;
 		this.root = this.topictrees.get({id : window.current_channel.draft}).get_root();
 		this.render();
-		this.clipboard_view = new ClipboardView.ClipboardList({
+		/*this.clipboard_view = new ClipboardView.ClipboardList({
 	 		el: $("#clipboard-area"),
 	 		topictrees: this.topictrees,
 	 		collection: this.collection
-	 	});
+	 	});*/
 	},
 	render: function() {
 		this.$el.html(this.template({edit: this.is_edit_page}));
@@ -84,7 +84,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			content.fetch();
 			clipboard_list.add(content);
 		}
-		this.clipboard_view.add_to_clipboard(clipboard_list);
+		//this.clipboard_view.add_to_clipboard(clipboard_list);
 		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + (new Date().getTime() - start) + ")");
 	},	
 	edit_content: function(event){

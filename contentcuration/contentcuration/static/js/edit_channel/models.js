@@ -4,11 +4,14 @@ var _= require("underscore");
 var NodeModel = Backbone.Model.extend({
 	defaults: {
 		title:"Untitled",
-		description:"No description",
 		parent: null,
 		children:[],
+		kind: "topic",
+		license:1,
+		total_file_size:0
     },
     urlRoot: function() {
+    	console.log("GETTING ROOT", window.Urls["node-list"]());
 		return window.Urls["node-list"]();
 	},
 	toJSON: function() {
@@ -145,7 +148,7 @@ var NodeCollection = Backbone.Collection.extend({
     		return node.get("sort_order");
     	};
     	this.sort();
-    },
+    }
 });
 
 var TopicTreeModel = Backbone.Model.extend({
@@ -175,11 +178,14 @@ var TopicTreeModelCollection = Backbone.Collection.extend({
 
 var ChannelModel = Backbone.Model.extend({
 	urlRoot: function() {
+		/*var url = window.Urls["channel-list"]();
+		url.substring(0, url.length -1);*/
+		console.log("channel url is", window.Urls["channel-list"]());
 		return window.Urls["channel-list"]();
 	},
 	defaults: {
 		name: " ",
-		editors: [],
+		editors: [1],
 		author: "Anonymous",
 		license_owner: "No license found",
 		description:" "
@@ -213,7 +219,7 @@ var ChannelModel = Backbone.Model.extend({
 
     	var root_node = new NodeModel();
     	var self = this;
-		return root_node.save({title: self.get("name")}, {
+		return root_node.save({title: self.get("name"), description: "Root node for " + tree_name + " tree"}, {
 			async:false,
 			validate: false,
 			success: function(){
@@ -221,9 +227,7 @@ var ChannelModel = Backbone.Model.extend({
 				return tree.save({
 					channel: self.id, 
 					root_node: root_node.id,
-					name: self.get("name"),
-					kind:"topic",
-					description: "Root node for " + tree_name + "tree"
+					name: self.get("name")
 				}, {
 					async:false,
 					validate:false,
