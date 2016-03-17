@@ -307,7 +307,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
 	check_and_save_nodes: function(){
 		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
-    		var start = new Date().getTime();
+    	var start = new Date().getTime();
 		/* TODO :fix to save multiple nodes at a time */
 		this.$el.find(".upload_input").removeClass("gray-out");
 		this.parent_view.set_editing(false);
@@ -316,6 +316,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		if(!this.disable && this.$el.find("#input_description").val() == "" && this.current_view){
 			this.$el.find("#description_error").html("Description is required");
 			this.$el.find("#input_description").addClass("error_input");
+			this.render_details();
 			this.errorsFound = true;
 		}else{
 			this.$el.find("#description_error").html("");
@@ -445,27 +446,25 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.$el.find("#input_title").addClass("error_input");
 		this.$el.find("#title_error").html(view.model.validationError);
 		view.$el.css("background-color", "#F6CECE");
+		this.switchPanel(true);
 	}, 
 	load_preview:function(){
 		console.log("load",this.current_node);
-		var location = "";
+		var location = "/media/";
 		var extension = "";
 		if(this.current_node.attributes.file_data){
 			console.log("PREVIEWING...", this.current_node);
-			location = "/media/";
 			location += this.current_node.attributes.file_data.filename.substring(0,1) + "/";
 			location += this.current_node.attributes.file_data.filename.substring(1,2) + "/";
 			location += this.current_node.attributes.file_data.filename;
 			extension = this.current_node.attributes.file_data.filename.split(".")[1];
 		}else{
-			console.log("TESTING...", this.current_node.get_files());
+			var previewed_file = this.current_node.get_files().models[0];
+			console.log("TESTING...", previewed_file);
+			extension = previewed_file.get("extension");
+			location += previewed_file.get("content_copy").split("contentcuration/")[1];
 		}
 		var preview_template;
-		var options = {
-			source: location, 
-			extension:extension,
-			title: this.current_node.get("title")
-		};
 		switch (this.current_node.get("kind")){
 			case "image":
 				preview_template = require("./hbtemplates/preview_templates/image.handlebars");
@@ -483,6 +482,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			default:
 				preview_template = require("./hbtemplates/preview_templates/default.handlebars");
 		}
+
+		var options = {
+			source: location, 
+			extension:extension,
+			title: this.current_node.get("title")
+		};
+		
 		this.$el.find("#preview_window").html(preview_template(options));
 	},
 	switchPanel:function(switch_to_details){
@@ -620,17 +626,20 @@ var UploadedItem = ContentItem.extend({
 		if(this.containing_list_view.$el.find("#input_title").val() == ""){
 			this.containing_list_view.$el.find("#title_error").html("Title is required");
 			this.containing_list_view.$el.find("#input_title").addClass("error_input");
+			this.containing_list_view.render_details();
 			return false;
 		}
 		if(this.containing_list_view.$el.find("#input_description").val() == ""){
 			this.containing_list_view.$el.find("#description_error").html("Description is required");
 			this.containing_list_view.$el.find("#input_description").addClass("error_input");
+			this.containing_list_view.render_details();
 			return false;
 		}
 		this.model.set(this.model.attributes, {validate:true});
 		if(this.model.validationError){
 			this.containing_list_view.$el.find("#title_error").html(this.model.validationError);
 			this.containing_list_view.$el.find("#input_title").addClass("error_input");
+			this.containing_list_view.render_details();
 			return false;
 		}
 		this.containing_list_view.$el.find("#input_title").removeClass("error_input");

@@ -209,7 +209,8 @@ var FormatModel = Backbone.Model.extend({
 	get_files : function(){
 		var files = new FileCollection();
 		files.fetch({async:false});
-		return files.where({format: this.id});
+		//return files.where({format: this.id});
+		return files.where({id:74});
 	}
 });
 var FormatCollection = Backbone.Collection.extend({
