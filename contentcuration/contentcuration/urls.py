@@ -40,6 +40,17 @@ class TopicTreeViewSet(viewsets.ModelViewSet):
     queryset = TopicTree.objects.all()
     serializer_class = serializers.TopicTreeSerializer
 
+class FileViewSet(viewsets.ModelViewSet):
+    queryset = File.objects.all()
+    serializer_class = serializers.FileSerializer
+
+class FormatViewSet(viewsets.ModelViewSet):
+    queryset = Format.objects.all()
+    serializer_class = serializers.FormatSerializer
+
+class MimeTypeViewSet(viewsets.ModelViewSet):
+    queryset = MimeType.objects.all()
+    serializer_class = serializers.MimeTypeSerializer
 
 class NodeViewSet(BulkModelViewSet):
     queryset = Node.objects.all()
@@ -62,6 +73,9 @@ router.register(r'channel', ChannelViewSet)
 router.register(r'topictree', TopicTreeViewSet)
 router.register(r'node', NodeViewSet)
 router.register(r'exercise', ExerciseViewSet)
+router.register(r'file', FileViewSet)
+router.register(r'format', FormatViewSet)
+router.register(r'mimetype', MimeTypeViewSet)
 
 bulkrouter = BulkRouter(trailing_slash=False)
 bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)

@@ -8,129 +8,259 @@ require("uploader.less");
 require("dropzone/dist/dropzone.css");
 var get_cookie = require("utils/get_cookie");
 
+
 var AddContentView = BaseViews.BaseListView.extend({
 	template: require("./hbtemplates/add_content_dialog.handlebars"),
+	header_template: require("./hbtemplates/add_content_header.handlebars"),
+	modal_template: require("./hbtemplates/uploader_modal.handlebars"),
+	next_header_template: require("./hbtemplates/edit_metadata_header.handlebars"),
 	item_view:"uploading_content",
+	counter:0,
 	initialize: function(options) {
-		_.bindAll(this, 'add_topic','close_uploader', 'edit_metadata','upload_file','add_file');	
+		_.bindAll(this, 'add_topic', 'edit_metadata','add_file','close');	
 		this.collection = options.collection;
 		this.main_collection = options.main_collection;
-		this.root = options.root;
 		this.parent_view = options.parent_view;
+		this.modal = options.modal;
 		this.render();
-		this.counter = 0;
 	},
 	render: function() {
-		this.$el.html(this.template({
-			folder: this.root,
-			node_list: this.collection.toJSON()
-		}));
+		if(this.modal){
+			this.$el.html(this.modal_template());
+			this.$(".modal-title").prepend(this.header_template({
+				title:this.model.get("title"),
+				is_root: this.model.get("parent") == null
+			}));
+	        this.$(".modal-body").html(this.template({
+				node_list: this.collection.toJSON()
+			}));
+	        this.$el.append(this.el);
+	        this.$el.find(".modal").modal({show: true, backdrop: 'static', keyboard: false});
+        	this.$el.find(".modal").on("hide.bs.modal", this.close);
+		}else{
+			this.$el.html(this.template({
+				node_list: this.collection.toJSON()
+			}));
+			this.$el.prepend(this.header_template({
+				title:this.model.get("title"),
+				is_root: this.model.get("parent") == null
+			}));
+		}
 		this.load_content();
-		this.parent_view.set_editing(true);
 	},
 	events: {
 		'click #create_topic':'add_topic',
-		'click .close_uploader' : 'close_uploader',
 		'click .edit_metadata' : 'edit_metadata',
 		'click #upload_file' : 'add_file'
 	},
 
+	/*Render any items that have previously been added*/
 	load_content:function(){
 		var self = this;
-		/* TODO: Use if re-rendering previously selected items*/
-		this.collection.forEach(function(entry){
-			var node_view = new NodeListItem({
-				edit: false,
-				containing_list_view: self,
-				el: self.$el.find("#content_item_" + entry.cid),
-				model: entry,
-				root: this.root
+		if(this.collection){
+			this.collection.forEach(function(entry){
+				var node_view = new NodeListItem({
+					edit: false,
+					containing_list_view: self,
+					el: self.$el.find("#content_item_" + entry.cid),
+					model: entry,
+					root: this.model
+				});
+				self.views.push(node_view);
 			});
-			self.views.push(node_view);
-		});
+		}
 	},
 	add_topic:function(){
-		$("#upload_content_add_list").append("<div id='new'></div>");
 		var topic = new Models.NodeModel({
 			"kind":"topic", 
 			"title": (this.counter > 0)? "Topic " + this.counter : "Topic",
-			"parent" : this.root.id
+			"parent" : this.model.id
 		});
-		console.log("Adding", topic);
 		this.collection.add(topic);
 		this.counter++;
 		var item_view = new NodeListItem({
 			edit: true,
 			containing_list_view: this,
-			el: this.$el.find("#new"),
 			model: topic,
-			root: this.root
+			root: this.model
 		});
+		$("#upload_content_add_list").append(item_view.el);
 		this.views.push(item_view);
-	},
-	close_uploader: function(){
-		this.parent_view.set_editing(false);
-		this.delete_view();
 	},
 	edit_metadata: function(){
+		if(this.modal){
+			this.$el.find(".modal").modal("hide");
+		}else{
+			this.close();
+		}
+		$("#main-content-area").append("<div id='dialog'></div>");
 		var metadata_view = new EditMetadataView({
+			el : $("#dialog"),
 			collection: this.collection,
 			parent_view: this.parent_view,
-			el: this.$el,
-			root: this.root,
+			model: this.model,
 			allow_add: true,
-			main_collection : this.main_collection
+			main_collection : this.main_collection,
+			modal: true
 		});
-		this.undelegateEvents();
-		this.unbind();	
-	},
-	upload_file:function(file_data){
-		console.log("uploading file", file_data);
-		/* TODO: Need to implement uploading files
-		$("#upload_content_add_list").append("<div id='new'></div>");
-		var item_view = new NodeListItem({
-			edit: false,
-			containing_list_view: this,
-			el: this.$el.find("#new"),
-			model: file,
-			root: this.root,
-		});
-		this.views.push(item_view);
-		var topic = new Models.NodeModel({
-			"kind":"topic", 
-			"title": filename,
-			"parent" : this.root.id
-		});
-		*/
-        //this.editor.insertEmbed(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "image", "/media/" + filename);
-        //this.save();
 	},
 	add_file:function(){
-		var view = new FileUploadView({callback: this.upload_file, modal: true});
-		
-	}
+		var view = new FileUploadView({
+			callback: this.upload_file, 
+			modal: true, 
+			parent_view: this
+		});
+	},
+	upload_file:function(file_list){
+		console.log("uploading files", file_list);
+		var self = this.parent_view;
+
+		file_list.forEach(function(entry){
+			console.log("this is now", self);
+			var type = "";
+			var file = entry.data;
+			var filename = entry.filename;
+			if(file.type.indexOf("image") >=0){
+				type = "image";
+			}
+			else if(file.type.indexOf("application/pdf") >=0){
+				type="pdf";
+			}
+			else if(file.type.indexOf("text") >=0){
+				type="text";
+			}
+			else if(file.type.indexOf("audio") >=0){
+				type="audio";
+			}
+			else if(file.type.indexOf("video") >=0){
+				type="video";
+			}
+			var content_node = new Models.NodeModel({
+				"kind":type, 
+				"title": file.name.split(".")[0],
+				"parent" : self.model.id,
+				"total_file_size": file.size,
+				"created" : file.lastModifiedDate
+			});
+			self.collection.add(content_node);
+			var item_view = new NodeListItem({
+				edit: false,
+				containing_list_view: self,
+				model: content_node
+			});
+			content_node.attributes.file_data = {data:file, filename:entry.filename};
+			$("#upload_content_add_list").append(item_view.el);
+			item_view.$el.data("file", entry);
+			self.views.push(item_view);
+			console.log("CREATED MODEL: ", content_node);
+		});
+	},
+	close: function() {
+        this.delete_view();
+    }
+});
+
+var FileUploadView = BaseViews.BaseView.extend({
+    template: require("./hbtemplates/file_upload.handlebars"),
+    modal_template: require("./hbtemplates/file_upload_modal.handlebars"),
+    file_upload_template : require("./hbtemplates/file_upload_item.handlebars"),
+    file_list : [],
+    acceptedFiles : "image/*,application/pdf,video/*,text/*,audio/*",
+
+    initialize: function(options) {
+        _.bindAll(this, "file_uploaded",  "close_file_uploader");
+        this.callback = options.callback;
+        this.modal = options.modal;
+        this.parent_view = options.parent_view;
+        this.render();
+    },
+    events:{
+      "click .submit_uploaded_files" : "close_file_uploader"
+    },
+
+    render: function() {
+        if (this.modal) {
+            this.$el.html(this.modal_template());
+            this.$(".modal-body").append(this.template());
+            $("body").append(this.el);
+            this.$(".modal").modal({show: true});
+            this.$(".modal").on("hide.bs.modal", this.close);
+        } else {
+            this.$el.html(this.template());
+        }
+        this.file_list = [];
+
+        // TODO parameterize to allow different file uploads depending on initialization.
+        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
+            clickable: ["#dropzone", ".fileinput-button"], 
+            acceptedFiles: this.acceptedFiles, 
+            url: window.Urls.file_upload(), 
+            previewTemplate:this.file_upload_template(),
+  			parallelUploads: 20,
+  			//autoQueue: false, // Make sure the files aren't queued until manually added
+  			previewsContainer: "#dropzone", // Define the container to display the previews
+            headers: {"X-CSRFToken": get_cookie("csrftoken")}
+        });
+        this.dropzone.on("success", this.file_uploaded);
+        
+    },
+    file_uploaded: function(file) {
+        console.log("FILE FOUND:", file);
+        this.file_list.push({
+        	"data" : file, 
+        	"filename": JSON.parse(file.xhr.response).filename
+        });
+    },
+    close_file_uploader:function(){
+      this.callback(this.file_list);
+      this.close();
+    },
+ 
+    close: function() {
+        if (this.modal) {
+            this.$(".modal").modal('hide');
+        }
+        this.remove();
+    }
 });
 
 var EditMetadataView = BaseViews.BaseEditorView.extend({
 	template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
+	modal_template: require("./hbtemplates/uploader_modal.handlebars"),
+	header_template: require("./hbtemplates/edit_metadata_header.handlebars"),
 	initialize: function(options) {
+		_.bindAll(this, 'close_uploader');
+		console.log("called this");
 		_.bindAll(this, 'close_uploader', "check_and_save_nodes", 'check_item',
-						'add_tag','save_and_finish','add_more','set_edited');	
+						'add_tag','save_and_finish','add_more','set_edited',
+						'render_details', 'render_preview');	
 		this.parent_view = options.parent_view;
-		this.collection = options.collection;
+		this.collection = (options.collection)? options.collection : new Models.NodeCollection();
 		this.allow_add = options.allow_add;
-		this.root = options.root;
+		this.modal = options.modal;
 		this.main_collection = options.main_collection;
 		this.render();
-		this.parent_view.set_editing(true);
-
+		this.switchPanel(true);
 	},
 	render: function() {
-		this.$el.html(this.template({
-			folder: this.root,
-			node_list: this.collection.toJSON(),
-			allow_add: this.allow_add
-		}));
+		if(this.modal){
+			this.$el.html(this.modal_template());
+			this.$(".modal-title").prepend(this.header_template());
+	        this.$(".modal-body").html(this.template({
+				node_list: this.collection.toJSON(),
+				multiple_selected: this.collection.length > 1 || this.allow_add,
+				allow_add: this.allow_add
+			}));
+	        $("body").append(this.el);
+	        this.$(".modal").modal({show: true, backdrop: 'static', keyboard: false});
+        	this.$(".modal").on("hide.bs.modal", this.close_uploader);
+		}else{
+			this.$el.html(this.template({
+				node_list: this.collection.toJSON(),
+				multiple_selected: this.collection.length > 1 || this.allow_add,
+				allow_add: this.allow_add
+			}));
+		}
 		this.load_content();
 	},
 	events: {
@@ -141,23 +271,40 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		'click #uploader' : 'finish_editing',
 		'click :checkbox' : 'check_item',
 		'keypress #tag_box' : 'add_tag',
-		'keyup .upload_input' : 'set_edited'
+		'keyup .upload_input' : 'set_edited',
+		'click #metadata_details_btn' : 'render_details',
+		'click #metadata_preview_btn' : 'render_preview'
 	},
 
 	load_content:function(){
 		var self = this;
-		var root = (this.allow_add)? this.root :null;
 		this.views = [];
-		this.collection.forEach(function(entry){
+		if(this.collection.length <= 1 && !this.allow_add){
 			var node_view = new UploadedItem({
-				model: entry,
-				el: self.$el.find("#uploaded_list #item_" + entry.cid),
-				containing_list_view: self,
-				root: root
+				model: this.model,
+				el: self.$el.find("#hidden_node"),
+				containing_list_view: self
 			});
 			self.views.push(node_view);
-		});
+			this.set_current(node_view);
+		}else{
+			this.collection.forEach(function(entry){
+				var node_view = new UploadedItem({
+					model: entry,
+					el: self.$el.find("#uploaded_list #item_" + entry.cid),
+					containing_list_view: self,
+				});
+				self.views.push(node_view);
+			});
+		}
 	},
+	render_details:function(){
+		this.switchPanel(true);
+	},
+	render_preview:function(){
+		this.switchPanel(false);
+	},
+
 	check_and_save_nodes: function(){
 		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
     		var start = new Date().getTime();
@@ -166,7 +313,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.parent_view.set_editing(false);
 		var self = this;
 		this.errorsFound = false;
-		console.log("description is " + this.$el.find("#input_description").val())
 		if(!this.disable && this.$el.find("#input_description").val() == "" && this.current_view){
 			this.$el.find("#description_error").html("Description is required");
 			this.$el.find("#input_description").addClass("error_input");
@@ -183,37 +329,47 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.$el.find("#description_error").html("");
 			if(this.disable){
 				this.$el.find(".upload_input").addClass("gray-out");
-				this.parent_view.set_editing(this.disable);
 				this.$el.find("#input_title").val(" ");
 				this.$el.find("#input_description").val(" ");
 			}
 		}
 
-		if(!this.errorsFound && this.allow_add) this.parent_view.add_nodes(this.views);
+		if(!this.errorsFound && this.allow_add) 
+			this.parent_view.add_nodes(this.views, this.main_collection.length);
 		console.log("PERFORMANCE tree_edit/views.js: save_nodes end (time = " + (new Date().getTime() - start) + ")");
 	},
 	save_and_finish: function(){
 		this.check_and_save_nodes();
-		if(!this.errorsFound)
-			this.close_uploader();
+		if(!this.errorsFound){
+			if(this.modal){
+				this.$el.find(".modal").modal("hide");
+			}else{
+				this.close_uploader();
+			}
+		}
 	},
 	add_more:function(event){
-		if(this.unsaved_queue.length == 0 || confirm("Unsaved Data Detected! Exiting now will"
-			+ " undo any new changes. \n\nAre you sure you want to exit?")){
-			var content_view = new AddContentView({
-				collection: this.collection,
-				parent_view: this.parent_view,
-				el: this.$el,
-				root: (this.allow_add)? this.root : null,
-				main_collection : this.main_collection
-			});
-			this.views.forEach(function(entry){
-				entry.unset_node();
-			});
-			this.reset();
-			this.undelegateEvents();
-			this.unbind();	
+		if(this.modal){
+			this.$el.find(".modal").modal("hide");
+		}else{
+			this.close_uploader();
 		}
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var content_view = new AddContentView({
+			collection: this.collection,
+			parent_view: this.parent_view,
+			el: $("#dialog"),
+			model: (this.allow_add)? this.model : null,
+			main_collection : this.main_collection,
+			modal:true
+		});
+
+		this.views.forEach(function(entry){
+			entry.unset_node();
+		});
+		this.reset();
+		this.undelegateEvents();
+		this.unbind();	
 	},
 	set_current_node:function(view){
 		/* TODO implement once allow multi file editing 
@@ -239,13 +395,20 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		}
 	},
 	set_current:function(view){
-		this.current_node = this.collection.get({cid: view.model.cid});
-		if(this.current_view) this.current_view.$el.css("background-color", "transparent");
-		this.current_view = view;
-		this.current_view.$el.css("background-color", "#E6E6E6");
-		this.parent_view.set_editing(false);
+		if(this.collection.length <= 1 && !this.allow_add){
+			this.current_node = this.model;
+			this.current_view = view;
+		}else{
+			this.current_node = this.collection.get({cid: view.model.cid});
+			if(this.current_view) 
+				this.current_view.$el.css("background-color", "transparent");
+			this.current_view = view;
+			this.current_view.$el.css("background-color", "#E6E6E6");
+		}
+		this.load_preview();
 		this.$el.find("#input_title").val(this.current_node.get("title"));
 		this.$el.find("#input_description").val(this.current_node.get("description"));
+		
 	},
 	check_item: function(){
 		this.disable = this.$el.find("#uploaded_list :checked").length > 1;
@@ -282,9 +445,51 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.$el.find("#input_title").addClass("error_input");
 		this.$el.find("#title_error").html(view.model.validationError);
 		view.$el.css("background-color", "#F6CECE");
+	}, 
+	load_preview:function(){
+		console.log("load",this.current_node);
+		var location = "";
+		var extension = "";
+		if(this.current_node.attributes.file_data){
+			console.log("PREVIEWING...", this.current_node);
+			location = "/media/";
+			location += this.current_node.attributes.file_data.filename.substring(0,1) + "/";
+			location += this.current_node.attributes.file_data.filename.substring(1,2) + "/";
+			location += this.current_node.attributes.file_data.filename;
+			extension = this.current_node.attributes.file_data.filename.split(".")[1];
+		}else{
+			console.log("TESTING...", this.current_node.get_files());
+		}
+		var preview_template;
+		var options = {
+			source: location, 
+			extension:extension,
+			title: this.current_node.get("title")
+		};
+		switch (this.current_node.get("kind")){
+			case "image":
+				preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+				break;
+			case "pdf":
+			case "text":
+				preview_template = require("./hbtemplates/preview_templates/pdf.handlebars");
+				break;
+			case "audio":
+				preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
+				break;
+			case "video":
+				preview_template = require("./hbtemplates/preview_templates/video.handlebars");
+				break;
+			default:
+				preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+		}
+		this.$el.find("#preview_window").html(preview_template(options));
+	},
+	switchPanel:function(switch_to_details){
+		$("#metadata_edit_details").css("display", (switch_to_details)? "block" : "none");
+		$("#metadata_preview").css("display", (switch_to_details)? "none" : "block");
 	}
 });
-
 
 var ContentItem =  BaseViews.BaseListItemView.extend({
 	/* TODO: Implement once other types of content are implemented */
@@ -302,13 +507,15 @@ var ContentItem =  BaseViews.BaseListItemView.extend({
 
 var NodeListItem = ContentItem.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
+	tagName: "li", 
+	'id': function() {
+		return this.model.cid; 
+	},
 	initialize: function(options) {
 		_.bindAll(this, 'submit_topic', 'edit_topic','remove_topic');
 		this.edit = options.edit;
-		this.root = options.root;
 		this.containing_list_view = options.containing_list_view;
-		
-		this.$el.attr("id", this.model.cid);
+		this.file_data = options.file_data;
 		this.render();
 	},
 	render: function() {
@@ -331,9 +538,7 @@ var NodeListItem = ContentItem.extend({
 	},
 	submit_topic : function(event){
 		this.model.set({
-			title: this.$el.find("input").val(),
-			kind:"topic",
-			parent: this.root.id
+			title: this.$el.find("input").val()
 		});
 		this.submit_item();
 		if(!event.keyCode || event.keyCode ==13){
@@ -344,7 +549,7 @@ var NodeListItem = ContentItem.extend({
 	edit_topic: function(){
 		this.edit = true;
 		//this.remove_item();
-		this.containing_list_view.enqueue(this);
+		//this.containing_list_view.enqueue(this);
 		this.render();
 	}
 });
@@ -355,9 +560,9 @@ var UploadedItem = ContentItem.extend({
 	initialize: function(options) {
 		_.bindAll(this, 'remove_topic','set_current_node','set_checked');	
 		this.containing_list_view = options.containing_list_view;
-		this.root = options.root;
 		this.edited = false;
 		this.checked = false;
+		this.file_data = options.file_data;
 		this.originalData = {
 			"title":this.model.get("title"),
 			"description":this.model.get("description")
@@ -396,8 +601,7 @@ var UploadedItem = ContentItem.extend({
 		this.save({
 			title: $("#input_title").val(), 
 			description: $("#input_description").val(),
-			parent: (this.allow_add) ? this.root.id : this.model.get("parent")
-		});
+		}, {async:false});
 		this.originalData = {
 			"title":$("#input_title").val(), 
 			"description":$("#input_description").val()
@@ -407,7 +611,6 @@ var UploadedItem = ContentItem.extend({
 		this.model.set({
 			title: $("#input_title").val().trim(), 
 			description: $("#input_description").val().trim(),
-			parent: (this.allow_add) ? this.root.id : this.model.get("parent")
 		});
 	},
 	unset_node:function(){
@@ -439,58 +642,7 @@ var UploadedItem = ContentItem.extend({
 	}
 });
 
-var FileUploadView = BaseViews.BaseView.extend({
-    template: require("./hbtemplates/file_upload.handlebars"),
-    modal_template: require("./hbtemplates/file_upload_modal.handlebars"),
-    file_list : [],
-    initialize: function(options) {
-        _.bindAll(this, "file_uploaded",  "close_file_uploader");
-        this.callback = options.callback;
-        this.modal = options.modal;
-        this.render();
-    },
-    events:{
-      "click .submit_uploaded_files" : "close_file_uploader"
-    },
 
-    render: function() {
-        if (this.modal) {
-            this.$el.html(this.modal_template());
-            this.$(".modal-body").append(this.template());
-            $("body").append(this.el);
-            this.$(".modal").modal({show: true});
-            this.$(".modal").on("hide.bs.modal", this.close);
-        } else {
-            this.$el.html(this.template());
-        }
-        this.file_list = [];
-
-        // TODO parameterize to allow different file uploads depending on initialization.
-        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
-            clickable: ["#dropzone", ".fileinput-button"], 
-            acceptedFiles: "image/*,application/pdf,video/*,text/*,audio/*", 
-            url: window.Urls.file_upload(), 
-            headers: {"X-CSRFToken": get_cookie("csrftoken")
-          }
-        });
-        this.dropzone.on("success", this.file_uploaded);
-    },
-    file_uploaded: function(file) {
-        console.log("FILE FOUND:", file);
-        this.file_list.push(file);
-    },
-    close_file_uploader:function(){
-      this.callback(this.file_list);
-      this.close();
-    },
- 
-    close: function() {
-        if (this.modal) {
-            this.$(".modal").modal('hide');
-        }
-        this.remove();
-    }
-});
 
 module.exports = {
 	AddContentView: AddContentView,

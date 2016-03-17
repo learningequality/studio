@@ -9,6 +9,7 @@
 	<script>
 		var current_channel = JSON.parse("{{ channel|escapejs}}");
 		var topic_trees = JSON.parse("{{ topictrees|escapejs }}");
+		var mtypes = JSON.parse("{{ mimetypes|escapejs }}");
 	</script>
 	<script type="text/javascript">		
 		var bundle = require("channel_edit");

@@ -7,7 +7,7 @@ var NodeModel = Backbone.Model.extend({
 		parent: null,
 		children:[],
 		kind: "topic",
-		license:1,
+		license:2,
 		total_file_size:0
     },
     urlRoot: function() {
@@ -37,6 +37,34 @@ var NodeModel = Backbone.Model.extend({
 		});
 		console.log("PERFORMANCE models.js: duplicate end (time = " + (new Date().getTime() - start) + ")");
 		return node_data;
+	},
+
+	move:function(parent_id, index){
+		console.log("add_nodes move called by", this);
+		console.log("PERFORMANCE models.js: starting move...");
+    	var start = new Date().getTime();
+    	var old_parent = this.get("parent");
+    	var title = this.get("title");
+		this.set({parent: parent_id,sort_order:index}, {validate:true});
+
+		while(this.validationError !== null){
+			title = this.generate_title(title);
+			console.log("add_node title is now", title);
+			this.set({
+				title: title, 
+				parent: parent_id,
+				sort_order:index
+			}, {validate:true});
+			console.log("add_node validation error!", this.get("title"));
+		}
+		if(old_parent){
+			this.save({title: title, parent: old_parent}, {async:false, validate:false}); //Save any other values
+		}else{
+			this.save({title: title}, {async:false, validate:false}); //Save any other values
+		}
+		
+		this.save({parent: parent_id, sort_order:index}, {async:false, validate:false}); //Save any other values
+		console.log("PERFORMANCE models.js: move end (time = " + (new Date().getTime() - start) + ")");
 	},
 
 	/* Function in case want to append (Copy #) to end of copied content*/
@@ -114,6 +142,126 @@ var NodeModel = Backbone.Model.extend({
 		}
 		console.log("PERFORMANCE models.js: validate end (time = " + (new Date().getTime() - start) + ")");
 	},
+	create_file:function(){
+		if(this.attributes.file_data){
+			var file_data = this.attributes.file_data;
+			var format = new FormatModel();
+			format.save({
+				available : false,
+				format_size: file_data.data.size,
+				quality: "normal",
+				contentmetadata : this.id,
+				mimetype : this.get_mimetype(file_data.data.type).id
+			},{
+				success:function(){
+					var files = new FileCollection();
+					files.fetch({async:false});
+
+					var file = files.findWhere({
+						checksum: file_data.filename.split(".")[0],
+						extension: "." + file_data.filename.split(".")[1]
+					});
+					file.save({
+						format: format.id
+					});
+				}
+			});
+		}
+	},
+	get_formats:function(){
+		var formats = new FormatCollection();
+		formats.fetch({async:false});
+		return formats.where({contentmetadata : this.id});
+	},
+	get_mimetype:function(type){
+		return window.mimetypes.findWhere({machine_name: type});
+	},
+	get_files: function(){
+		var formats = this.get_formats();
+		var to_return = new FileCollection();
+		console.log("TESTING FORMAT RETRIEVAL...", formats);
+		formats.forEach(function(entry){
+			to_return.add(entry.get_files());
+		});
+		return to_return;
+	}
+});
+
+var FileModel = Backbone.Model.extend({
+    urlRoot: function() {
+		return window.Urls["file-list"]();
+	}
+});
+var FileCollection = Backbone.Collection.extend({
+	model: FileModel,
+	save: function() {
+        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
+	},
+	url: function(){
+       return window.Urls["file-list"]();
+    }
+});
+
+var FormatModel = Backbone.Model.extend({
+    urlRoot: function() {
+		return window.Urls["format-list"]();
+	},
+	get_files : function(){
+		var files = new FileCollection();
+		files.fetch({async:false});
+		return files.where({format: this.id});
+	}
+});
+var FormatCollection = Backbone.Collection.extend({
+	model: FormatModel,
+	save: function() {
+        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
+	},
+	url: function(){
+       return window.Urls["format-list"]();
+    }
+});
+
+var MimeTypeModel = Backbone.Model.extend({
+	defaults: {
+		readable_name:"invalid",
+		machine_name: "invalid"
+    },
+    urlRoot: function() {
+		return window.Urls["mimetype-list"]();
+	}
+});
+
+var MimeTypeCollection = Backbone.Collection.extend({
+	model: MimeTypeModel,
+	save: function() {
+        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
+	},
+	url: function(){
+       return window.Urls["mimetype-list"]();
+    },
+    create_mimetypes:function(){
+    	var self = this;
+    	[{readable_name: ".avi", machine_name : "video/avi"},
+    	 {readable_name: ".bmp", machine_name : "image/bmp"},
+    	 {readable_name: ".gif", machine_name : "image/gif"},
+    	 {readable_name: ".html", machine_name : "text/html"},
+    	 {readable_name: ".ico", machine_name : "image/x-icon"},
+    	 {readable_name: ".jpeg", machine_name : "image/jpeg"},
+    	 {readable_name: ".jpg", machine_name : "image/jpeg"},
+    	 {readable_name: ".mov", machine_name : "video/quicktime"},
+    	 {readable_name: ".mp3", machine_name : "audio/mpeg3"},
+    	 {readable_name: ".mp4", machine_name : "video/mp4"},
+    	 {readable_name: ".pdf", machine_name : "application/pdf"},
+    	 {readable_name: ".png", machine_name : "image/png"},
+    	 {readable_name: ".text", machine_name : "text/plain"},
+    	 {readable_name: ".txt", machine_name : "text/plain"},
+    	 {readable_name: ".wav", machine_name : "audio/wav"}].forEach(function(entry){
+    	 	if(self.where(entry).length == 0){
+				self.create(entry, {async:false});
+    	 	}
+    	});
+    }
 });
 
 var NodeCollection = Backbone.Collection.extend({
@@ -185,7 +333,7 @@ var ChannelModel = Backbone.Model.extend({
 	},
 	defaults: {
 		name: " ",
-		editors: [1],
+		editors: [2],
 		author: "Anonymous",
 		license_owner: "No license found",
 		description:" "
@@ -281,5 +429,6 @@ module.exports = {
 	TopicTreeModel:TopicTreeModel,
 	TopicTreeModelCollection: TopicTreeModelCollection,
 	ChannelModel: ChannelModel,
-	ChannelCollection: ChannelCollection
+	ChannelCollection: ChannelCollection,
+	MimeTypeCollection:MimeTypeCollection
 }

@@ -9,9 +9,10 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, Node, TopicTree
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, NodeSerializer, TopicTreeSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, Node, TopicTree, MimeType
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, NodeSerializer, TopicTreeSerializer, MimeTypeSerializer
 
+from kolibri.content.models import File
 
 def base(request):
     return render(request, 'base.html')
@@ -34,8 +35,12 @@ def channel(request, channel_id):
     topictrees = TopicTree.objects.filter(channel = channel)
     topictree_serializer = TopicTreeSerializer(topictrees, many=True)
 
+    mimetypes = MimeType.objects.all()
+    mimetype_serializer = MimeTypeSerializer(mimetypes, many=True)
+
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
-                                                 "topictrees" : JSONRenderer().render(topictree_serializer.data)})
+                                                 "topictrees" : JSONRenderer().render(topictree_serializer.data),
+                                                 "mimetypes" : JSONRenderer().render(mimetype_serializer.data)})
 
 @login_required
 def exercise_list(request):
@@ -76,11 +81,11 @@ def exercise(request, exercise_id):
 
 @login_required
 def file_upload(request):
+    
     if request.method == 'POST':
-        storage_class = get_storage_class()()
-        file_object = request.FILES.values()[0]
-        filename = storage_class.save(None, file_object)
+        file_object = File(content_copy=request.FILES.values()[0])
+        file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
-            "filename": filename,
+            "filename": str(file_object),
         }))

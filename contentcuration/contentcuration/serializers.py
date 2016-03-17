@@ -10,7 +10,7 @@ class LicenseSerializer(serializers.ModelSerializer):
 class ChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
-        fields = ('name', 'description', 'editors', 'id', 'draft', 'clipboard', 'deleted', 'published')
+        fields = ('name', 'description', 'editors', 'id', 'draft', 'clipboard', 'deleted', 'published','channel_id')
 
 class TopicTreeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,14 +21,27 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Node
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published', 
-                  'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent')
+                  'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id')
 
+class FileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+        fields = ('checksum', 'extension', 'file_size', 'content_copy', 'id', 'available', 'format')
+
+class FormatSerializer(serializers.ModelSerializer):
+   class Meta:
+    model = Format
+    fields = ('format_size', 'quality', 'contentmetadata', 'available', 'mimetype', 'id') 
+
+class MimeTypeSerializer(serializers.ModelSerializer):
+   class Meta:
+    model = MimeType
+    fields = ('readable_name', 'machine_name', 'id') 
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exercise
         fields = ('title', 'description', 'id')
-
 
 class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     exercise = serializers.PrimaryKeyRelatedField(queryset=Exercise.objects.all())
