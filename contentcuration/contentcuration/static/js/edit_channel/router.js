@@ -14,6 +14,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		this.model = options.model;
 		this.nodeCollection = new Models.NodeCollection();
 		this.nodeCollection.fetch();
+		window.current_channel = new Models.ChannelModel(window.channel);
 		//this.listenTo(saveDispatcher, "save", this.save);
     },
 	
@@ -21,6 +22,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		"": "navigate_channel_home",
 		":channel/edit": "edit_page", 
 		":channel/preview": "preview_page",
+		":channel/clipboard": "clipboard_page"
     },
 
 	navigate_channel_home: function() {
@@ -35,21 +37,26 @@ ChannelEditRouter  = Backbone.Router.extend({
     },
 	
 	edit_page : function(){
-		this.open_channel(true);
+		this.open_channel(true, false, window.current_channel.get_tree("draft").get_root());
 	},
 	preview_page : function(){
-		this.open_channel(false);
+		this.open_channel(false, false, window.current_channel.get_tree("draft").get_root());
+	},
+	clipboard_page:function(){
+		this.open_channel(true, true, window.current_channel.get_tree("clipboard").get_root());
 	},
 
-	open_channel: function(edit_mode_on){
-		var topictrees = new Models.TopicTreeModelCollection(window.topic_trees);
-		topictrees.fetch();
+	open_channel: function(edit_mode_on, is_clipboard, root){
+		window.mimetypes = new Models.MimeTypeCollection(window.mtypes);
+		window.mimetypes.fetch();
+		window.mimetypes.create_mimetypes();
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
-			edit: Backbone.history.getFragment().includes("edit"),
 			collection: this.nodeCollection,
-			topictrees: topictrees
+			edit: edit_mode_on,
+			model : root,
+			is_clipboard : is_clipboard
 		});
 	}
 });

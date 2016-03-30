@@ -10,7 +10,6 @@
 {{else}}
 	<label class="file" for="item_{{node.id}}" title="{{node.attributes.title}}">
 {{/if}}
-{{node.id}} ({{#if node.attributes.published}}p{{else}}up{{/if}}) : {{#each node.attributes.children}}{{this}}&nbsp;{{/each}}
 {{#if allow_edit}}
 	<p class="error_msg"><p>
 	<input id="textbox_{{node.id}}" type="text" class="node_title_textbox" value="{{node.attributes.title}}" placeholder="Enter Item Name"/>
@@ -25,11 +24,22 @@
 		{{#if isfolder}}
 			<span class="edit_folder_button disable-on-edit glyphicon glyphicon-pencil" aria-hidden="true"></span>
 			<span class="open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>
-		{{else}}
-			<span class="glyphicon glyphicon-pencil disable-on-edit edit_file_button" aria-hidden="true"></span>
-			<span class="glyphicon glyphicon-search preview_button" aria-hidden="true"></span>
 		{{/if}}
 	</div>
+	<h6 class="content_metadata_summary">
+		{{to_upper_case node.attributes.kind}}
+		{{#if time}}&nbsp<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
+		{{#if isfolder}}&nbsp{{resource_count}} Resources{{/if}}
+		&nbsp<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.attributes.total_file_size}}{{/format_file_size}}
+		&nbsp
+		{{#if node.attributes.published}}
+			<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+			<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+			<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+			<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+			<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+		{{else}}<em class="unpublished">Unpublished</em>{{/if}}
+	</h6>
 	<h3 class = "title">{{#if node}}{{node.attributes.title}}{{else}}Item Name{{/if}}</h3>
 
 	{{#if isfolder}}

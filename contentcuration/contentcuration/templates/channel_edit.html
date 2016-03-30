@@ -7,8 +7,8 @@
 	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
 
 	<script>
-		var current_channel = JSON.parse("{{ channel|escapejs}}");
-		var topic_trees = JSON.parse("{{ topictrees|escapejs }}");
+		var channel = JSON.parse("{{ channel|escapejs}}");
+		var mtypes = JSON.parse("{{ mimetypes|escapejs }}");
 	</script>
 	<script type="text/javascript">		
 		var bundle = require("channel_edit");
@@ -30,5 +30,5 @@
 	</nav>	
 	<div id="main-content-area" class="container-fluid"></div>
 	<div id="previewer-area" class="container pull-right"></div>
-	<div id="clipboard-area" class="container pull-right"></div>
+	<div id="queue-area" class="container pull-right"></div>
 {% endblock content %}
