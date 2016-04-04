@@ -66,6 +66,23 @@ var BaseView = Backbone.View.extend({
 
     redo: function() {
         this.undo_manager.redo();
+    },
+
+    display_load:function(callback){
+    	console.log("displaying load");
+    	var self = this;
+		var load = '<div id="loading_modal" class="text-center">' +
+            '<div id="kolibri_load_gif"></div>' +
+            '</div>';
+        $(load).appendTo('body');
+        if(callback){	
+    		setTimeout(function(){ 
+				callback();
+				$("#loading_modal").remove();
+			 }, 500);
+    	}else{
+    		$("#loading_modal").remove();
+    	}	
     }
 });
 
@@ -309,8 +326,10 @@ var BaseListItemView = BaseView.extend({
 		}
 		else{
 			this.model.save(data, options);
-			if(this.model.get("kind").toLowerCase() != "topic"){
-				this.model.create_file();
+			if(this.model.get("kind")){
+				if(this.model.get("kind").toLowerCase() != "topic"){
+					this.model.create_file();
+				}
 			}
 			
 			if(this.containing_list_view.item_view == "channel"){

@@ -143,13 +143,7 @@ class Node(ContentMetadata):
 #     """
 #     Model for Exercise data
 #     """
-class ContentLicense(models.Model):
-    name = models.CharField(
-        max_length=255,
-        default=(""),
-        verbose_name=_("name"),
-        help_text=_("Name of license, e.g. 'Creative Commons Share-Alike 2.0'"),
-    )
+class ContentLicense(License):
     exists = models.BooleanField(
         default=False,
         verbose_name=_("license exists"),

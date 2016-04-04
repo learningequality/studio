@@ -7,7 +7,7 @@ var Dropzone = require("dropzone");
 require("uploader.less");
 require("dropzone/dist/dropzone.css");
 var get_cookie = require("utils/get_cookie");
-
+//var ExerciseViews = require("edit_channel/exercise_creation/views");
 
 var AddContentView = BaseViews.BaseListView.extend({
 	template: require("./hbtemplates/add_content_dialog.handlebars"),
@@ -17,7 +17,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 	item_view:"uploading_content",
 	counter:0,
 	initialize: function(options) {
-		_.bindAll(this, 'add_topic', 'edit_metadata','add_file','close');	
+		_.bindAll(this, 'add_topic', 'edit_metadata','add_file','close', 'add_exercise');	
 		this.collection = options.collection;
 		this.main_collection = options.main_collection;
 		this.parent_view = options.parent_view;
@@ -51,7 +51,8 @@ var AddContentView = BaseViews.BaseListView.extend({
 	events: {
 		'click #create_topic':'add_topic',
 		'click .edit_metadata' : 'edit_metadata',
-		'click #upload_file' : 'add_file'
+		'click #upload_file' : 'add_file',
+		'click #create_exercise' : 'add_exercise'
 	},
 
 	/*Render any items that have previously been added*/
@@ -60,7 +61,6 @@ var AddContentView = BaseViews.BaseListView.extend({
 		if(this.collection){
 			this.collection.forEach(function(entry){
 				var node_view = new NodeListItem({
-					edit: false,
 					containing_list_view: self,
 					el: self.$el.find("#content_item_" + entry.cid),
 					model: entry,
@@ -79,7 +79,6 @@ var AddContentView = BaseViews.BaseListView.extend({
 		this.collection.add(topic);
 		this.counter++;
 		var item_view = new NodeListItem({
-			edit: true,
 			containing_list_view: this,
 			model: topic,
 			root: this.model
@@ -144,7 +143,6 @@ var AddContentView = BaseViews.BaseListView.extend({
 			});
 			self.collection.add(content_node);
 			var item_view = new NodeListItem({
-				edit: false,
 				containing_list_view: self,
 				model: content_node
 			});
@@ -155,16 +153,44 @@ var AddContentView = BaseViews.BaseListView.extend({
 			console.log("CREATED MODEL: ", content_node);
 		});
 	},
+	add_exercise:function(){
+		var view = new ExerciseCreateView({
+			callback: this.create_exercise, 
+			modal: true, 
+			parent_view: this, 
+			model: this.model
+		});
+	},
+	create_exercise:function(exercise_list){
+		console.log("exercises", exercise_list);
+	},
 	close: function() {
         this.delete_view();
     }
 });
 
-var FileUploadView = BaseViews.BaseView.extend({
+var UploadItemView = BaseViews.BaseView.extend({
+    template: null,
+    modal_template: null,
+    file_list : [],
+ 	callback:null,
+    close: function() {
+        if (this.modal) {
+            this.$(".modal").modal('hide');
+        }
+        this.remove();
+    },
+    close_file_uploader:function(){
+      this.callback(this.file_list);
+      this.close();
+    }
+});
+
+
+var FileUploadView = UploadItemView.extend({
     template: require("./hbtemplates/file_upload.handlebars"),
     modal_template: require("./hbtemplates/file_upload_modal.handlebars"),
     file_upload_template : require("./hbtemplates/file_upload_item.handlebars"),
-    file_list : [],
     acceptedFiles : "image/*,application/pdf,video/*,text/*,audio/*",
 
     initialize: function(options) {
@@ -210,17 +236,56 @@ var FileUploadView = BaseViews.BaseView.extend({
         	"data" : file, 
         	"filename": JSON.parse(file.xhr.response).filename
         });
+    }
+});
+
+var ExerciseCreateView = UploadItemView.extend({
+    template: require("./hbtemplates/exercise_create.handlebars"),
+    modal_template: require("./hbtemplates/exercise_create_modal.handlebars"),
+
+    initialize: function(options) {
+        _.bindAll(this, "file_uploaded", "create_question", "close_file_uploader", "close_modal");
+        this.callback = options.callback;
+        this.modal = options.modal;
+        this.parent_view = options.parent_view;
+        this.render();
     },
-    close_file_uploader:function(){
-      this.callback(this.file_list);
-      this.close();
+    events:{
+      "click .submit_exercise" : "close_file_uploader",
+      "click .create_question" : "create_question",
+      'click .close_exercise_create' : 'close_modal'
     },
- 
-    close: function() {
+
+    render: function() {
         if (this.modal) {
-            this.$(".modal").modal('hide');
+            this.$el.html(this.modal_template({
+            	title: this.model.get("title")
+            }));
+            this.$(".modal-body").append(this.template());
+            $("body").append(this.el);
+            this.$(".modal").modal({show: true});
+            this.$(".modal").on("hide.bs.modal", this.close);
+        } else {
+            this.$el.html(this.template({
+            	title: this.model.get("title")
+            }));
         }
-        this.remove();
+        this.file_list = [];   
+       /* var exercise_list_view = new ExerciseViews.ExerciseListView({
+        	el:$("#exercise-list")
+        });*/
+    },
+    file_uploaded: function(file) {
+        console.log("FILE FOUND:", file);
+        this.file_list.push({
+        	"data" : file, 
+        	"filename": JSON.parse(file.xhr.response).filename
+        });
+    },
+    create_question: function(){
+    },
+    close_modal:function(){
+    	this.close();
     }
 });
 
@@ -306,36 +371,40 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
 	check_and_save_nodes: function(){
 		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
-    	var start = new Date().getTime();
-		/* TODO :fix to save multiple nodes at a time */
-		this.$el.find(".upload_input").removeClass("gray-out");
-		this.parent_view.set_editing(false);
+		var start = new Date().getTime();
 		var self = this;
-		this.errorsFound = false;
-		if(!this.disable && this.$el.find("#input_description").val() == "" && this.current_view){
-			this.$el.find("#description_error").html("Description is required");
-			this.$el.find("#input_description").addClass("error_input");
-			this.render_details();
-			this.errorsFound = true;
+    	
+		/* TODO :fix to save multiple nodes at a time */
+		self.$el.find(".upload_input").removeClass("gray-out");
+		self.parent_view.set_editing(false);
+		self.errorsFound = false;
+		if(!self.disable && self.$el.find("#input_description").val() == "" && self.current_view){
+			self.$el.find("#description_error").html("Description is required");
+			self.$el.find("#input_description").addClass("error_input");
+			self.render_details();
+			self.errorsFound = true;
 		}else{
-			this.$el.find("#description_error").html("");
-			this.$el.find("#input_description").removeClass("error_input");
-		}
- 		
-		this.save_nodes();
-
-		if(!this.errorsFound){
-			this.$el.find("#title_error").html("");
-			this.$el.find("#description_error").html("");
-			if(this.disable){
-				this.$el.find(".upload_input").addClass("gray-out");
-				this.$el.find("#input_title").val(" ");
-				this.$el.find("#input_description").val(" ");
-			}
+			self.$el.find("#description_error").html("");
+			self.$el.find("#input_description").removeClass("error_input");
 		}
 
-		if(!this.errorsFound && this.allow_add) 
-			this.parent_view.add_nodes(this.views, this.main_collection.length);
+		if(!self.errorsFound){
+			this.display_load(function(){
+	 			self.save_nodes();
+
+				if(!self.errorsFound){
+					self.$el.find("#title_error").html("");
+					self.$el.find("#description_error").html("");
+					if(self.disable){
+						self.$el.find(".upload_input").addClass("gray-out");
+						self.$el.find("#input_title").val(" ");
+						self.$el.find("#input_description").val(" ");
+					}
+				}
+				if(!self.errorsFound && self.allow_add) 
+					self.parent_view.add_nodes(self.views, self.main_collection.length);
+	 		});
+		}
 		console.log("PERFORMANCE tree_edit/views.js: save_nodes end (time = " + (new Date().getTime() - start) + ")");
 	},
 	save_and_finish: function(){
@@ -352,7 +421,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		if(this.modal){
 			this.$el.find(".modal").modal("hide");
 		}else{
-			this.close_uploader();
+	        this.close_uploader();
 		}
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var content_view = new AddContentView({
@@ -493,6 +562,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.$el.find("#preview_window").html(preview_template(options));
 	},
 	switchPanel:function(switch_to_details){
+		$((switch_to_details)? "#metadata_details_btn" : "#metadata_preview_btn").addClass("btn-tab-active");
+		$((switch_to_details)? "#metadata_preview_btn" : "#metadata_details_btn").removeClass("btn-tab-active");
 		$("#metadata_edit_details").css("display", (switch_to_details)? "block" : "none");
 		$("#metadata_preview").css("display", (switch_to_details)? "none" : "block");
 	}
@@ -519,23 +590,19 @@ var NodeListItem = ContentItem.extend({
 		return this.model.cid; 
 	},
 	initialize: function(options) {
-		_.bindAll(this, 'submit_topic', 'edit_topic','remove_topic');
-		this.edit = options.edit;
+		_.bindAll(this, 'submit_topic','remove_topic');
 		this.containing_list_view = options.containing_list_view;
 		this.file_data = options.file_data;
 		this.render();
 	},
 	render: function() {
 		this.$el.html(this.template({
-			topic: this.model,
-			edit: this.edit
+			topic: this.model
 		}));
 		this.$el.find(".topic_textbox").focus();
 	},
 	events: {
-		'click .submit_topic' : 'submit_topic',
 		'keyup .content_name' : 'submit_topic',
-		'dblclick .folder_name' : 'edit_topic',
 		'click .remove_topic' : 'remove_topic'
 	},
 	remove_topic: function(){
@@ -548,15 +615,8 @@ var NodeListItem = ContentItem.extend({
 		});
 		this.submit_item();
 		if(!event.keyCode || event.keyCode ==13){
-			this.edit = false;
 			this.render();
 		}
-	},
-	edit_topic: function(){
-		this.edit = true;
-		//this.remove_item();
-		//this.containing_list_view.enqueue(this);
-		this.render();
 	}
 });
 

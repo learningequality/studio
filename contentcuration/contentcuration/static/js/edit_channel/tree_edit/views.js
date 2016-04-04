@@ -161,7 +161,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	events: {
-		'click .add_content_button':'add_content',
+		'click .add_content_button':'add_content'
 	},
 
 	load_content : function(){
@@ -220,7 +220,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_folder','open_folder',/*'expand_or_collapse_folder', */
-					'submit_edit', 'cancel_edit','preview_node');
+					'submit_edit', 'cancel_edit','preview_node', 'cancel_open_folder');
 		this.edit_mode = options.edit_mode;
 		this.allow_edit = options.allow_edit;
 		this.containing_list_view = options.containing_list_view;
@@ -255,8 +255,10 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	},
 	events: {
 		'click .edit_folder_button': 'edit_folder',
+		'click .node_title_textbox': 'cancel_open_folder',
+		'click .topic_textarea' : 'cancel_open_folder',
 		'click .open_folder':'open_folder',
-		'dblclick .folder' : "open_folder",
+		'click .folder' : "open_folder",
 		//'click .filler' : 'expand_or_collapse_folder',
 		'click .cancel_edit' : 'cancel_edit',
 		'click .submit_edit' : 'submit_edit',
@@ -283,6 +285,10 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		this.containing_list_view.close_folders();
 		this.set_opened(true, true);
 		this.containing_list_view.add_container(this);
+	},
+	cancel_open_folder:function(event){
+		event.preventDefault();
+		event.stopPropagation();
 	},
 	set_opened:function(is_opened, animate){
 
@@ -317,6 +323,8 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		}
 	},
 	edit_folder: function(event){
+		event.preventDefault();
+		event.stopPropagation();
 		this.allow_edit = this.edit_mode;
 		this.render();
 		this.$el.find("label").addClass("editing");
@@ -337,6 +345,8 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		
 	},
 	cancel_edit: function(event){
+		event.preventDefault();
+		event.stopPropagation();
 		this.allow_edit = false;
 		this.render();
 		if($("#hide_details_checkbox").attr("checked")){

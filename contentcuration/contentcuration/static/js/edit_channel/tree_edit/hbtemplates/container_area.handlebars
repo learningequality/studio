@@ -1,7 +1,7 @@
 <div id={{#if edit}}"edit"{{else}}"preview"{{/if}} class="container-fluid">
 	{{#if edit}}
 	<nav id="button_bar">
-		{{#if is_clipboard}}<a class="btn btn-default disable-on-edit">Import to Channel</a>{{/if}}
+		{{#if is_clipboard}}<a class="btn btn-default disable-on-edit construction">Import to Channel</a>{{/if}}
 		{{#unless is_clipboard}}<a class="btn btn-default copy_button disable-on-edit">Copy Selected</a>{{/unless}}
 		<a class="btn btn-default delete_button disable-on-edit">Delete Selected</a>
 		<a class="btn btn-default edit_button disable-on-edit">Edit Selected</a>
@@ -11,11 +11,12 @@
 		<label for="hide_details_checkbox">Hide details</label>
 	</nav>
 	{{else}}
-		<h1>Select content to preview.</h1>
-		<input type="checkbox" id="hide_details_checkbox"/>
-		<label for="hide_details_checkbox">Hide details</label>
+		<h1>Select content to preview. 
+			<input type="checkbox" id="hide_details_checkbox"/>
+			<label for="hide_details_checkbox">Hide details</label>
+		</h1>
 	{{/if}}
-	<h3 id="container_area_title">{{#if is_clipboard}}Clipboard{{else}}{{channel.attributes.name}}</h3>{{/if}}
+	<h3 id="container_area_title">{{#if is_clipboard}}Clipboard{{else}}{{channel.attributes.name}}{{/if}}</h3>
 	<div id="container-wrapper">
 		<ul id="container_area" class="container-fluid row list-unstyled">
 		</ul>

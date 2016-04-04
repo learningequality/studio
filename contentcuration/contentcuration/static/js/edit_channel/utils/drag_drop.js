@@ -39,7 +39,6 @@ function addDragDrop(element){
 				left: pointer.left - offset.left,
 				top: pointer.top - offset.top
 			};
-			item_height = $item.height();
 		    _super($item, container);
 	  	},
 	  	onDragEnd: function ($item, container, _super) {
@@ -55,7 +54,6 @@ function addDragDrop(element){
 		},
 
 		afterMove: function (placeholder, container, $closestItemOrContainer) {
-			placeholder.height(item_height);
 			isaboveclosest = $closestItemOrContainer.offset().top > $(placeholder).offset().top;
 			target = $closestItemOrContainer;
 	    	//console.log("near item", $closestItemOrContainer);

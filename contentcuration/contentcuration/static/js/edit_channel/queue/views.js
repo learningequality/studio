@@ -114,6 +114,10 @@ var QueueList = BaseViews.BaseListView.extend({
 		}));
 
 		this.load_content();
+		if(this.add_controls){
+			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.getChildCount(false, this.collection));
+		}
+		
 		this.$el.data("container", this);
 		this.$el.find("ul").data("list", this);
 		this.$el.find(".default-item").data("data", {
@@ -123,6 +127,7 @@ var QueueList = BaseViews.BaseListView.extend({
 		DragHelper.addDragDrop(this);
 	},
 	load_content:function(){
+		console.log("LOADING CONTENT");
 		this.views = [];
 		var self = this;
 		this.list_index = 0;
@@ -137,7 +142,6 @@ var QueueList = BaseViews.BaseListView.extend({
 			self.$el.find("#list_for_" + self.model.id).append(item_view.el);
 			self.views.push(item_view);
 		});
-		$((this.is_clipboard && this.add_controls)? ".queue-badge" : ".trash-badge").html(this.model.getChildCount(false, this.collection));
 	},
 	check_all :function(){
 		this.$el.find("input[type=checkbox]").attr("checked", this.$el.find("#select_all_check").is(":checked"));
