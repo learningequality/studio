@@ -1,12 +1,7 @@
 <div class="col-xs-2 content_type">
-	{{kind}}
+	{{to_upper_case topic.attributes.kind}}
 </div>
 <div class="col-xs-10 name">
-	{{#if edit}} 
-		<input type="text" class="content_name" value="{{topic.attributes.title}}"/>
-		<span class="glyphicon glyphicon-ok submit_topic" aria-hidden="true"></span>
-	{{else}}
-		<label class="folder_name">{{topic.attributes.title}}</label>
-		<span class="glyphicon glyphicon-remove remove_topic pull-right" aria-hidden="true"></span>
-	{{/if}}
+	<input type="text" class="content_name" value="{{topic.attributes.title}}"/>
+	<span class="glyphicon glyphicon-remove remove_topic pull-right" aria-hidden="true"></span>
 </div>

@@ -5,7 +5,7 @@ from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta: 
         model = ContentLicense
-        fields = ('name', 'id')
+        fields = ('license_name', 'exists', 'id')
 
 class ChannelSerializer(serializers.ModelSerializer):
     class Meta:

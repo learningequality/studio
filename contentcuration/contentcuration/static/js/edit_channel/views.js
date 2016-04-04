@@ -43,7 +43,23 @@ var BaseView = Backbone.View.extend({
 			parent_view: this,		
 			root: this.model		
 		});		
-	}
+	},
+	display_load:function(callback){
+    	console.log("displaying load");
+    	var self = this;
+		var load = '<div id="loading_modal" class="text-center">' +
+            '<div id="kolibri_load_gif"></div>' +
+            '</div>';
+        $(load).appendTo('body');
+        if(callback){	
+    		setTimeout(function(){ 
+				callback();
+				$("#loading_modal").remove();
+			 }, 500);
+    	}else{
+    		$("#loading_modal").remove();
+    	}	
+    }
 });
 
 BaseListView = BaseView.extend({
@@ -293,7 +309,7 @@ var BaseEditorView = BaseListView.extend({
 		if(this.unsaved_queue.length == 0){
 			this.parent_view.render();
 			if (this.modal) {
-	            this.$el.modal('hide');
+				this.$el.modal('hide');
 	        }
 	        this.remove();
 		}else if(confirm("Unsaved Metadata Detected! Exiting now will"
@@ -304,21 +320,23 @@ var BaseEditorView = BaseListView.extend({
 				});
 			}
 			this.parent_view.render();
-	        if (this.modal) {
-	            this.$el.modal('hide');
+			if (this.modal) {
+				this.$el.modal('hide');
 	        }
 	        this.remove();
-	    }
+		}
 	},
 	save_nodes: function(){
+		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
+    	var start = new Date().getTime();
 		this.parent_view.set_editing(false);
 		var self = this;
 		this.views.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
+			console.log("FILE SAVE", entry);
 			if(!entry.model.validationError){
-				//if(!self.allow_add){
-				entry.save(null, {validate:false, async:false});
-				//}
+				if(!self.allow_add)
+					entry.save(entry.model.attributes, {validate:false, async:false});
 				entry.set_edited(false);
 			}else{
 				self.handle_error(entry);
@@ -358,6 +376,7 @@ var BaseEditorView = BaseListView.extend({
 		return success;
 	}
 });
+
 
 
 module.exports = {

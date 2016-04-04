@@ -7,7 +7,7 @@ var NodeModel = Backbone.Model.extend({
 		parent: null,
 		children:[],
 		kind: "topic",
-		license:2,
+		license:1,
 		total_file_size:0
     },
     urlRoot: function() {
@@ -243,14 +243,10 @@ var MimeTypeCollection = Backbone.Collection.extend({
     },
     create_mimetypes:function(){
     	var self = this;
-    	[{readable_name: ".avi", machine_name : "video/avi"},
-    	 {readable_name: ".bmp", machine_name : "image/bmp"},
-    	 {readable_name: ".gif", machine_name : "image/gif"},
+    	[{readable_name: ".gif", machine_name : "image/gif"},
     	 {readable_name: ".html", machine_name : "text/html"},
-    	 {readable_name: ".ico", machine_name : "image/x-icon"},
     	 {readable_name: ".jpeg", machine_name : "image/jpeg"},
     	 {readable_name: ".jpg", machine_name : "image/jpeg"},
-    	 {readable_name: ".mov", machine_name : "video/quicktime"},
     	 {readable_name: ".mp3", machine_name : "audio/mpeg3"},
     	 {readable_name: ".mp4", machine_name : "video/mp4"},
     	 {readable_name: ".pdf", machine_name : "application/pdf"},
@@ -334,7 +330,7 @@ var ChannelModel = Backbone.Model.extend({
 	},
 	defaults: {
 		name: " ",
-		editors: [2],
+		editors: [1],
 		author: "Anonymous",
 		license_owner: "No license found",
 		description:" "
