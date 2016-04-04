@@ -13,12 +13,16 @@ var ChannelList  = BaseListView.extend({
 		_.bindAll(this, 'new_channel');
 		this.collection = options.channels;
 		this.render();
+		this.user = options.user;
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(this.collection, "sync", this.render);
 	},
 	render: function() {
 		this.set_editing(false);
-		this.$el.html(this.template({channel_list: this.collection.toJSON()}));
+		this.$el.html(this.template({
+			channel_list: this.collection.toJSON(),
+			user: this.user
+		}));
 		this.load_content();
 	},
 	events: {
@@ -30,7 +34,8 @@ var ChannelList  = BaseListView.extend({
 
 		var new_channel = new ChannelListItem({
 			edit:true,
-			containing_list_view: this
+			containing_list_view: this,
+			default_license: window.licenses.get_default()
 		});
 		this.$el.find("#channel_list").append("<li class='channel_container container' id='new'></li>")
 		this.$el.find("#new").append(new_channel.el);
@@ -60,6 +65,7 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = options.edit;
 		this.containing_list_view = options.containing_list_view;
+		this.default_license = options.default_license;
 		this.render();
 	},
 
@@ -98,11 +104,14 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 		}
 	},
 	save_channel: function(event){
-		this.containing_list_view.set_editing(false);
-		var title = (this.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : this.$el.find("#new_channel_name").val().trim();
-		var description = (this.$el.find("#new_channel_description").val() == "") ? " " : this.$el.find("#new_channel_description").val();
-		var data = {name: title, description: description};
-		this.save(data);
+		var self = this;
+		this.display_load(function(){
+			self.containing_list_view.set_editing(false);
+			var title = (self.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : self.$el.find("#new_channel_name").val().trim();
+			var description = (self.$el.find("#new_channel_description").val() == "") ? " " : self.$el.find("#new_channel_description").val();
+			var data = {name: title, description: description};
+			self.save(data);
+		});
 	}
 });
 

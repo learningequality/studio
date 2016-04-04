@@ -23,6 +23,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 		this.parent_view = options.parent_view;
 		this.modal = options.modal;
 		this.render();
+		console.log("CURRENT LICENSES", window.licenses);
 	},
 	render: function() {
 		if(this.modal){
@@ -319,7 +320,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.switchPanel(false);
 	},
 
-	check_and_save_nodes: function(){
+	check_and_save_nodes: function(callback){
 		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
 		var start = new Date().getTime();
 		var self = this;
@@ -346,19 +347,26 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 				}
 				if(!self.errorsFound && self.allow_add) 
 					self.parent_view.add_nodes(self.views, self.main_collection.length);
+				if(callback)
+					callback();
+				console.log("THREAD: end of display load");
 	 		});
 		}
+		
 		console.log("PERFORMANCE tree_edit/views.js: save_nodes end (time = " + (new Date().getTime() - start) + ")");
 	},
 	save_and_finish: function(){
-		this.check_and_save_nodes();
-		if(!this.errorsFound){
-			if(this.modal){
-				this.$el.find(".modal").modal("hide");
-			}else{
-				this.close_uploader();
+		var self = this;
+		this.check_and_save_nodes(function(){
+			if(!self.errorsFound){
+				if(self.modal){
+					self.$el.find(".modal").modal("hide");
+				}else{
+					self.close_uploader();
+				}
 			}
-		}
+			console.log("THREAD: end of save and finish");
+		});
 	},
 	add_more:function(event){
 		if(this.modal){
@@ -509,6 +517,9 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 });
 
 var ContentItem =  BaseViews.BaseListItemView.extend({
+	license:function(){
+		return window.licenses.get_default().id;
+	},
 	/* TODO: Implement once other types of content are implemented */
 	remove_item: function(){
 		this.containing_list_view.collection.remove(this.model);
@@ -608,13 +619,16 @@ var UploadedItem = ContentItem.extend({
 		}, {async:false});
 		this.originalData = {
 			"title":$("#input_title").val(), 
-			"description":$("#input_description").val()
+			"description":$("#input_description").val(),
+			"license": this.license()
 		};
 	},
 	set_node:function(){
+		console.log("LICENSE IS", this.license());
 		this.model.set({
 			title: $("#input_title").val().trim(), 
 			description: $("#input_description").val().trim(),
+			license: this.license()
 		});
 	},
 	unset_node:function(){

@@ -14,6 +14,9 @@ ChannelEditRouter  = Backbone.Router.extend({
 		this.model = options.model;
 		this.nodeCollection = new Models.NodeCollection();
 		this.nodeCollection.fetch();
+		window.licenses = new Models.LicenseCollection(window.license_list);
+		window.licenses.fetch();
+		window.licenses.create_licenses();
 		//this.listenTo(saveDispatcher, "save", this.save);
     },
 	
@@ -26,10 +29,13 @@ ChannelEditRouter  = Backbone.Router.extend({
 	navigate_channel_home: function() {
 		this.channelCollection = new Models.ChannelCollection();
 		this.channelCollection.fetch();
+
 		var channel_manager_view = new ChannelManageView.ChannelList ({
 			el: $("#channel-container"),
 			model: this.model,
-			channels: this.channelCollection
+			channels: this.channelCollection,
+			user: this.user,
+			licenses:window.licenses
 		});
 		
     },
@@ -47,6 +53,8 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.mimetypes = new Models.MimeTypeCollection(window.mtypes);
 		window.mimetypes.fetch();
 		window.mimetypes.create_mimetypes();
+		
+
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),

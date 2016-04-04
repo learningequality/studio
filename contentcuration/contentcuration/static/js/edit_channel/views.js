@@ -278,7 +278,7 @@ var BaseListItemView = BaseView.extend({
 		else{
 			
 			this.model.save(data, options);
-			if(this.model.get("kind").toLowerCase() != "topic"){
+			if(this.model.get("kind") && this.model.get("kind").toLowerCase() != "topic"){
 				this.model.create_file();
 			}
 			

@@ -1,7 +1,38 @@
 var Backbone = require("backbone");
 var _= require("underscore");
+var presets = require("edit_channel/presets.json");
 
-var NodeModel = Backbone.Model.extend({
+var mimetype_list = presets["mimetypes"];
+
+var license_list = presets["licenses"];
+
+/**** BASE MODELS ****/
+var BaseModel = Backbone.Model.extend({
+	root_list:null,
+	urlRoot: function() {
+		return window.Urls[this.root_list]();
+	},
+	toJSON: function() {
+	  var json = Backbone.Model.prototype.toJSON.apply(this, arguments);
+	  json.cid = this.cid;
+	  return json;
+	}
+});
+
+var BaseCollection = Backbone.Collection.extend({
+	list_name:null,
+	url: function() {
+		return window.Urls[this.list_name]();
+	},
+	save: function() {
+        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
+	}
+});
+
+
+/**** CHANNEL AND CONTENT MODELS ****/
+var NodeModel = BaseModel.extend({
+	root_list:"node-list",
 	defaults: {
 		title:"Untitled",
 		parent: null,
@@ -10,15 +41,6 @@ var NodeModel = Backbone.Model.extend({
 		license:1,
 		total_file_size:0
     },
-    urlRoot: function() {
-    	console.log("GETTING ROOT", window.Urls["node-list"]());
-		return window.Urls["node-list"]();
-	},
-	toJSON: function() {
-	  var json = Backbone.Model.prototype.toJSON.apply(this, arguments);
-	  json.cid = this.cid;
-	  return json;
-	},
 
 	/*Used when copying items to clipboard*/
     duplicate: function(parent_id){
@@ -187,88 +209,9 @@ var NodeModel = Backbone.Model.extend({
 	}
 });
 
-var FileModel = Backbone.Model.extend({
-    urlRoot: function() {
-		return window.Urls["file-list"]();
-	}
-});
-var FileCollection = Backbone.Collection.extend({
-	model: FileModel,
-	save: function() {
-        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
-	},
-	url: function(){
-       return window.Urls["file-list"]();
-    }
-});
-
-var FormatModel = Backbone.Model.extend({
-    urlRoot: function() {
-		return window.Urls["format-list"]();
-	},
-	get_files : function(){
-		var files = new FileCollection();
-		files.fetch({async:false});
-		//return files.where({format: this.id});
-		return files.where({id:74});
-	}
-});
-var FormatCollection = Backbone.Collection.extend({
-	model: FormatModel,
-	save: function() {
-        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
-	},
-	url: function(){
-       return window.Urls["format-list"]();
-    }
-});
-
-var MimeTypeModel = Backbone.Model.extend({
-	defaults: {
-		readable_name:"invalid",
-		machine_name: "invalid"
-    },
-    urlRoot: function() {
-		return window.Urls["mimetype-list"]();
-	}
-});
-
-var MimeTypeCollection = Backbone.Collection.extend({
-	model: MimeTypeModel,
-	save: function() {
-        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
-	},
-	url: function(){
-       return window.Urls["mimetype-list"]();
-    },
-    create_mimetypes:function(){
-    	var self = this;
-    	[{readable_name: ".gif", machine_name : "image/gif"},
-    	 {readable_name: ".html", machine_name : "text/html"},
-    	 {readable_name: ".jpeg", machine_name : "image/jpeg"},
-    	 {readable_name: ".jpg", machine_name : "image/jpeg"},
-    	 {readable_name: ".mp3", machine_name : "audio/mpeg3"},
-    	 {readable_name: ".mp4", machine_name : "video/mp4"},
-    	 {readable_name: ".pdf", machine_name : "application/pdf"},
-    	 {readable_name: ".png", machine_name : "image/png"},
-    	 {readable_name: ".text", machine_name : "text/plain"},
-    	 {readable_name: ".txt", machine_name : "text/plain"},
-    	 {readable_name: ".wav", machine_name : "audio/wav"}].forEach(function(entry){
-    	 	if(self.where(entry).length == 0){
-				self.create(entry, {async:false});
-    	 	}
-    	});
-    }
-});
-
-var NodeCollection = Backbone.Collection.extend({
+var NodeCollection = BaseCollection.extend({
 	model: NodeModel,
-	save: function() {
-        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
-	},
-	url: function(){
-       return window.Urls["node-list"]();
-    },
+	list_name:"node-list",
 
    /* TODO: would be better to fetch all values at once */
     get_all_fetch: function(ids){
@@ -296,38 +239,8 @@ var NodeCollection = Backbone.Collection.extend({
     }
 });
 
-var TopicTreeModel = Backbone.Model.extend({
-	get_root: function(){
-		var root = new NodeModel({id: this.get("root_node")});
-		root.fetch({async:false});
-		return root;
-	},
-	urlRoot: function() {
-		return window.Urls["topictree-list"]();
-	},
-	defaults: {
-		name: "Untitled Tree",
-		is_published: false
-	}
-});
-
-var TopicTreeModelCollection = Backbone.Collection.extend({
-	model: TopicTreeModel,
-	save: function() {
-        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
-	},
-	url: function() {
-		return window.Urls["topictree-list"]();
-	}
-});
-
-var ChannelModel = Backbone.Model.extend({
-	urlRoot: function() {
-		/*var url = window.Urls["channel-list"]();
-		url.substring(0, url.length -1);*/
-		console.log("channel url is", window.Urls["channel-list"]());
-		return window.Urls["channel-list"]();
-	},
+var ChannelModel = BaseModel.extend({
+	root_list : "channel-list",
 	defaults: {
 		name: " ",
 		editors: [1],
@@ -386,39 +299,129 @@ var ChannelModel = Backbone.Model.extend({
     }
 });
 
-var ChannelCollection = Backbone.Collection.extend({
+var ChannelCollection = BaseCollection.extend({
 	model: ChannelModel,
+	list_name:"channel-list",
 
-	save: function() {
-        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
-	},
-	url: function() {
-		return window.Urls["channel-list"]();
-	},
 	create_channel:function(data, progress_bar){
 		var channel_data = new ChannelModel(data);
 		
 		channel_data.fetch();
 		if(channel_data.get("description").trim() == "")
 			channel_data.set({description: "No description available."});
-		var container = this;
-		var percent = 0;
 		
 		return this.create(channel_data, {
 			async: false,
 			success:function(){
 				["draft","clipboard","deleted"].forEach(function(entry){
-					/*For future branch: implement progress bar on channel creation
-					percent += 25;
-					progress_bar.width(percent + "%");*/
-
 					channel_data.create_tree(entry.toString());
 				});
    			}
 		});
     },
-   
 });
+
+var TopicTreeModel = BaseModel.extend({
+	root_list:"topictree-list",
+	defaults: {
+		name: "Untitled Tree",
+		is_published: false
+	},
+	get_root: function(){
+		var root = new NodeModel({id: this.get("root_node")});
+		root.fetch({async:false});
+		return root;
+	}
+});
+
+var TopicTreeModelCollection = BaseCollection.extend({
+	model: TopicTreeModel,
+	list_name:"topictree-list"
+});
+
+
+/**** MODELS SPECIFIC TO FILE NODES ****/
+var FileModel = BaseModel.extend({
+	root_list:"file-list"
+});
+
+var FileCollection = BaseCollection.extend({
+	model: FileModel,
+	list_name:"file-list"
+});
+
+var FormatModel = BaseModel.extend({
+	root_list:"format-list",
+	/*HARDCODED FOR NOW, NEED TO ASSIGN FORMATS*/
+	get_files : function(){
+		var files = new FileCollection();
+		files.fetch({async:false});
+		//return files.where({format: this.id});
+		return files.where({id:74});
+	}
+});
+
+var FormatCollection = BaseCollection.extend({
+	model: FormatModel,
+	list_name:"format-list"
+});
+
+
+/**** PRESETS AUTOMATICALLY GENERATED UPON FIRST USE ****/
+var PresetCollection = BaseCollection.extend({
+	model: MimeTypeModel,
+	list_to_create:[],
+	list_name: null,
+
+    create_presets:function(){
+    	var self = this;
+    	this.list_to_create.forEach(function(entry){
+    	 	if(self.where(entry).length == 0){
+				self.create(entry, {async:false});
+    	 	}
+    	});
+    }
+});
+
+var MimeTypeModel = Backbone.Model.extend({
+	root_list: "mimetype-list",
+	defaults: {
+		readable_name:"invalid",
+		machine_name: "invalid"
+    } 
+});
+
+var MimeTypeCollection = PresetCollection.extend({
+	model: MimeTypeModel,
+	list_name:"mimetype-list",
+	list_to_create:mimetype_list,
+
+    create_mimetypes:function(){
+    	this.create_presets();
+    }
+});
+
+var LicenseModel = BaseModel.extend({
+	root_list:"contentlicense-list",
+	defaults: {
+		license_name:"Unlicensed",
+		exists: false
+    }
+});
+
+var LicenseCollection = PresetCollection.extend({
+	model: LicenseModel,
+	list_name:"contentlicense-list",
+	list_to_create:license_list,
+
+    create_licenses:function(){
+    	this.create_presets();
+    },
+    get_default:function(){
+    	return this.findWhere({license_name:"CC-BY"});
+    }
+});
+
 
 module.exports = {
 	NodeModel: NodeModel,
@@ -427,5 +430,6 @@ module.exports = {
 	TopicTreeModelCollection: TopicTreeModelCollection,
 	ChannelModel: ChannelModel,
 	ChannelCollection: ChannelCollection,
-	MimeTypeCollection:MimeTypeCollection
+	MimeTypeCollection:MimeTypeCollection,
+	LicenseCollection:LicenseCollection
 }

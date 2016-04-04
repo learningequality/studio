@@ -9,8 +9,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, Node, TopicTree, MimeType
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, NodeSerializer, TopicTreeSerializer, MimeTypeSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, Node, TopicTree, MimeType, ContentLicense
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, NodeSerializer, TopicTreeSerializer, MimeTypeSerializer, LicenseSerializer
 
 from kolibri.content.models import File
 
@@ -25,7 +25,11 @@ def testpage(request):
 def channel_list(request):
     channel_list = Channel.objects.all() # Todo: only allow access to certain channels?
     channel_serializer = ChannelSerializer(channel_list, many=True)
-    return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data)})
+
+    licenses = ContentLicense.objects.all()
+    license_serializer = LicenseSerializer(licenses, many=True)
+    return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
+                                                 "license_list" : JSONRenderer().render(license_serializer.data)})
 
 @login_required
 def channel(request, channel_id):
@@ -38,9 +42,12 @@ def channel(request, channel_id):
     mimetypes = MimeType.objects.all()
     mimetype_serializer = MimeTypeSerializer(mimetypes, many=True)
 
+    licenses = ContentLicense.objects.all()
+    license_serializer = LicenseSerializer(licenses, many=True)
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
                                                  "topictrees" : JSONRenderer().render(topictree_serializer.data),
-                                                 "mimetypes" : JSONRenderer().render(mimetype_serializer.data)})
+                                                 "mimetypes" : JSONRenderer().render(mimetype_serializer.data),
+                                                 "license_list" : JSONRenderer().render(license_serializer.data)})
 
 @login_required
 def exercise_list(request):
