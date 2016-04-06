@@ -1,40 +1,45 @@
 <div class="profile pull-left text-center">
 	{{#if edit}}
-		<form action="/file-upload" class="dropzone" id="picture-upload">
-		  <div class="fallback">
-			<img class="new_channel_pic construction" alt="Drag picture here (under construction)"></img>
-		  </div>
-		</form>
+		<img class="new_channel_pic construction" alt="Drag picture here (under construction)"></img>
 	{{else}}
 		<img id="channel_pic" alt="No picture found."></img>
 	{{/if}}
-	<a class="delete_channel btn btn-default">
-		<span class="glyphicon glyphicon-trash"></span> 
-		Delete Channel
-	</a>
 </div>
 {{#if edit}}
 	<span class="channel_toggle pull-right glyphicon glyphicon-remove"></span>
 		<input type=text id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}"></input>
 	<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}">{{channel.description}}</textarea>
-	<a class="save_channel btn btn-default"><span class="glyphicon glyphicon-ok"></span>
-		{{#if edit}}Update Channel{{else}}Create Channel{{/if}}
-	</a>
-	<!--
-	<div class="progress">
-		  <div class="progress-bar progress-bar-striped active createprogress" aria-valuemin="0" aria-valuemax="100">
-		  </div>
+	<div class="channel_options">
+		<a class="delete_channel btn btn-default">
+			<span class="glyphicon glyphicon-trash"></span> 
+			Delete Channel
+		</a>
+		<a class="save_channel btn btn-default pull-right"><span class="glyphicon glyphicon-ok"></span>
+			{{#if edit}}Update Channel{{else}}Create Channel{{/if}}
+		</a>
 	</div>
-	-->
 {{else}}
-	<a  class="open_channel pull-right" href="{{channel.id}}/edit"">
-		<span class="glyphicon glyphicon-chevron-right"></span>
-	</a>
+	<div  class="pull-right manage_area">
+		<a class="btn open_channel" href="{{channel.id}}/edit">Manage</a>
+	</div>
+	<span class="channel_metadata">
+		<span class="resource_count">0</span> Resources 
+		<span class="exercise_count">0</span> Exercises 
+		<span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+		<span class="exercise_count">0</span>{{#format_file_size total_file_size}}{{/format_file_size}}
+	</span>
 	<h4>
 		<span id="channel_name" title="{{channel.name}}">{{channel.name}}</span>
 		<span class="edit_channel disable-on-edit glyphicon glyphicon-pencil"></span>
 	</h4>
 	<div class="description">
 		<p id="channel_description" class="wordwrap" title="{{channel.description}}">{{channel.description}}</p>
+	</div>
+	<div class="tag_area">
+		<ul class="list-unstyle list-inline">
+		{{#each tag_list}}
+			<li>{{name}}</li>
+		{{/each}}
+		</ul>
 	</div>
 {{/if}}
