@@ -8,6 +8,11 @@ class LicenseSerializer(serializers.ModelSerializer):
         fields = ('license_name', 'exists', 'id')
 
 class ChannelSerializer(serializers.ModelSerializer):
+    current_user = serializers.SerializerMethodField('_user')
+    def _user(self, obj):
+        user = self.context['request'].user
+        return user
+
     class Meta:
         model = Channel
         fields = ('name', 'description', 'editors', 'id', 'draft', 'clipboard', 'deleted', 'published','channel_id')
