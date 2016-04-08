@@ -11,7 +11,7 @@
                         {{#each answer}}
                         {
                             "correct": {{#if correct}}true{{else}}false{{/if}},
-                            "content": "{{parse_newlines content }}"
+                            "content": "{{parse_newlines answer }}"
                         }{{#unless @last}},{{/unless}}
                         {{/each}}
                     ],
