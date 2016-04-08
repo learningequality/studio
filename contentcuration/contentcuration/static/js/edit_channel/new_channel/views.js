@@ -94,7 +94,7 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 			this.edit = false;
 			this.render();
 		}else{
-			this.delete_view();
+			this.remove();
 		}
 	},
 	save_channel: function(event){

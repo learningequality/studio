@@ -2,49 +2,69 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 require("content-container.less");
 var BaseViews = require("./../views");
-var UploaderViews = require("edit_channel/uploader/views");
 var PreviewerViews = require("edit_channel/previewer/views");
-var ClipboardView = require("edit_channel/clipboard/views");
+var QueueView = require("edit_channel/queue/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
+//var UndoManager = require("backbone-undo");
 var Models = require("./../models");
 
 var TreeEditView = BaseViews.BaseView.extend({
 	container_index: 0,
 	containers:[],
 	template: require("./hbtemplates/container_area.handlebars"),
-	topictrees: null,
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details');
-		this.topictrees = options.topictrees;
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details'/*,'undo_action', 'redo_action'*/);
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
-		this.root = this.topictrees.get({id : window.current_channel.draft}).get_root();
+		this.is_clipboard = options.is_clipboard;
 		this.render();
-		this.clipboard_view = new ClipboardView.ClipboardList({
-	 		el: $("#clipboard-area"),
-	 		topictrees: this.topictrees,
+		this.queue_view = new QueueView.Queue({
+	 		el: $("#queue-area"),
 	 		collection: this.collection
 	 	});
+	 	$("#queue-area").css("display", (this.is_clipboard || !this.is_edit_page)? "none" : "block");
+	 	/*
+	 	this.undo_manager = new UndoManager({
+            track: true,
+            register: [this.collection]
+        });*/
 	},
 	render: function() {
-		this.$el.html(this.template({edit: this.is_edit_page}));
-		this.add_container(this.containers.length, this.root);
+		this.$el.html(this.template({
+			edit: this.is_edit_page,
+			channel : window.current_channel,
+			is_clipboard : this.is_clipboard
+		}));
+		this.add_container(this.containers.length, this.model);
 	},
 	events: {
 		'click .copy_button' : 'copy_content',
 		'click .delete_button' : 'delete_content',
 		'click .edit_button' : 'edit_content',
-		'click #hide_details_checkbox' :'toggle_details'
+		'click #hide_details_checkbox' :'toggle_details',
+		/*'click .undo_button' : 'undo_action',
+		'click .redo_button' : 'redo_action'*/
 	},	
+	remove_containers_from:function(index){
+		while(this.containers.length > index){
+			this.containers[this.containers.length-1].delete_view();
+			this.containers.splice(this.containers.length-1);
+		}
+	},
+	/*
+	undo_action: function(){
+		console.log("undoing");
+		this.undo();
+	},
+	redo_action:function(){
+		this.redo();
+	},*/
 	add_container: function(index, topic){
 		console.log("PERFORMANCE tree_edit/views.js: starting add_container ...");
     	var start = new Date().getTime();
 		/* Close directories of children and siblings of opened topic*/
 		if(index < this.containers.length){
-			while(this.containers.length > index){
-				this.containers[this.containers.length-1].delete_view();
-				this.containers.splice(this.containers.length-1);
-			}
+			this.remove_containers_from(index);
 		}
 		/* Create place for opened topic */
 		this.$el.find("#container_area").append("<div id='container_" + topic.id + "' class='container content-container "
@@ -55,60 +75,46 @@ var TreeEditView = BaseViews.BaseView.extend({
 			index: this.containers.length + 1,
 			edit_mode: this.is_edit_page,
 			collection: this.collection,
-			container : this,
-			topictrees : this.topictrees
+			container : this
 		});
 		this.containers.push(container_view);
 		console.log("PERFORMANCE tree_edit/views.js: add_container end (time = " + (new Date().getTime() - start) + ")");
 	},
 
 	delete_content: function (event){
-		if(confirm("Are you sure you want to delete the selected files?")){
-			console.log("PERFORMANCE tree_edit/views.js: starting delete_content ...");
-    		var start = new Date().getTime();
-			var list = this.$el.find('input:checked').parent("li");
-			for(var i = 0; i < list.length; i++){
-				$("#" + list[i].id).data("data").delete();
+		if(confirm("Are you sure you want to delete these selected items?")){
+			var self = this;
+			for(var i = 0; i < this.containers.length; i++){
+				if(this.containers[i].delete_selected()){
+					this.remove_containers_from(this.containers[i].index);
+					break;
+				}
 			}
-			console.log("PERFORMANCE tree_edit/views.js: delete_content end (time = " + (new Date().getTime() - start) + ")");
 		}
 	},
 	copy_content: function(event){
-		console.log("PERFORMANCE tree_edit/views.js: starting copy_content ...");
-    	var start = new Date().getTime();
-		var clipboard_root = this.topictrees.get({id : window.current_channel.clipboard}).get("root_node");
-		var list = this.$el.find('input:checked').parent("li");
-		var clipboard_list = new Models.NodeCollection();
-		for(var i = 0; i < list.length; i++){
-			var content = $(list[i]).data("data").model.duplicate(clipboard_root);
-			content.fetch();
-			clipboard_list.add(content);
+		for(var i = 0; i < this.containers.length; i++){
+			if(this.containers[i].copy_selected())
+				break;
 		}
-		this.clipboard_view.add_to_clipboard(clipboard_list);
-		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + (new Date().getTime() - start) + ")");
 	},	
 	edit_content: function(event){
-		var list = this.$el.find('input:checked').parent("li");
-		var edit_collection = new Models.NodeCollection();
-		/* Create list of nodes to edit */
-		for(var i = 0; i < list.length; i++){
-			var model = $(list[i]).data("data").model;
-			edit_collection.add(model);
-		}
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var metadata_view = new UploaderViews.EditMetadataView({
-			collection: edit_collection,
-			parent_view: this,
-			el: $("#dialog"),
-			allow_add : false,
-			main_collection: this.collection
-		});
+		this.edit_selected();
 	},	
 	toggle_details:function(event){
 		/*TODO: Debug more with editing and opening folders*/
 		this.$el.find("#container_area").toggleClass("hidden_details");
+	},
+	add_to_trash:function(views){
+		this.queue_view.add_to_trash(views);
+		views.forEach(function(entry){
+			entry.delete_view();
+		});
+	},
+	add_to_clipboard:function(views){
+		console.log("clipboard views", views);
+		this.queue_view.add_to_clipboard(views);
 	}
-
 });
 
 /* Open directory view */
@@ -124,10 +130,9 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.container = options.container;
 		this.collection = options.collection;
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
-		this.topictrees = options.topictrees;
-		this.set_sort_orders();
+		this.childrenCollection.sort_by_order();
+		//this.set_sort_orders(this.childrenCollection);
 		this.render();
-        this.list_index = 0;
 		
 		/* Animate sliding in from left */
 		this.$el.css('margin-left', -this.$el.find(".container-interior").outerWidth());
@@ -138,7 +143,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		console.log("*************RENDERING " + this.model.get("title") + "****************");
 		DragHelper.removeDragDrop(this);
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
-		console.log("COLLECTION",this.childrenCollection);
 		this.childrenCollection.sort_by_order();
 		this.$el.html(this.template({
 			topic: this.model, 
@@ -148,6 +152,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		}));
 		this.load_content();
 		this.$el.data("container", this);
+		this.$el.find("ul").data("list", this);
 		this.$el.find(".default-item").data("data", {
 			containing_list_view: this, 
 			index:0
@@ -159,16 +164,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		'click .add_content_button':'add_content',
 	},
 
-	set_sort_orders: function(){
-		console.log("PERFORMANCE tree_edit/views.js: starting set_sort_orders ...");
-    	var start = new Date().getTime();
-		var index = 1;
-		var self = this;
-		this.childrenCollection.models.forEach(function(entry){
-			entry.save({'sort_order' : index++}, {validate: false});
-		});
-		console.log("PERFORMANCE tree_edit/views.js: set_sort_orders end (time = " + (new Date().getTime() - start) + ")");
-	},
 	load_content : function(){
 		console.log("PERFORMANCE tree_edit/views.js: starting load_content ...");
     	var start = new Date().getTime();
@@ -176,7 +171,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		var self = this;
 		var el = this.$el.find(".content-list");
 		this.list_index = 0;		
-		this.childrenCollection.models.forEach(function(entry){
+		this.childrenCollection.forEach(function(entry){
 			var file_view = new ContentItem({
 				el: el.find("#" + entry.id),
 				model: entry, 
@@ -193,15 +188,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	add_content: function(event){ 
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var new_collection = new Models.NodeCollection();
-		var add_view = new UploaderViews.AddContentView({
-			el : $("#dialog"),
-			collection: new_collection,
-			main_collection: this.collection,
-			parent_view: this,
-			root: this.model
-		});
+		this.add_to_view();
 	},
 
 	add_container:function(view){
@@ -219,24 +206,11 @@ var ContentList = BaseViews.BaseListView.extend({
 		console.log("PERFORMANCE tree_edit/views.js: close_folders end (time = " + (new Date().getTime() - start) + ")");
 		//this.$el.find(".folder .glyphicon").css("display", "inline-block");
 	},
-
-	add_nodes:function(views){
-		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
-    	var start = new Date().getTime();
-		var self = this;
-		var i  =this.collection.models.length + 1;
-		views.forEach(function(entry){
-			entry.save({
-				"title" : entry.model.get("title"),
-				"sort_order" : i++,
-				"parent" : self.model.id
-			}, {validate:false, async:false});		
-			self.model.get("children").push(entry.model.id);
-		});
-		//this.collection.save();
-
-		this.list_index = i;
-		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
+	add_to_trash:function(views){
+		this.container.add_to_trash(views);
+	},
+	add_to_clipboard:function(views){
+		this.container.add_to_clipboard(views);
 	}
 });
 
@@ -388,6 +362,11 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			}
 			self.publish_children(this, collection);
 		});
+	},
+	add_to_trash:function(){
+		this.containing_list_view.add_to_trash([this]);
+		this.render();
+		this.delete_view();
 	}
 }); 
 

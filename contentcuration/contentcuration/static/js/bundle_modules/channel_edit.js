@@ -5,6 +5,10 @@ var ChannelEditRouter = require("edit_channel/router");
 
 $(function() {
 	$("#channel-publish-button").on("click", publish_nodes);
+	if(window.channel){
+		window.current_channel = new Models.ChannelModel(window.channel);
+		window.current_channel.fetch({async:false});
+	}
 });
 
 function publish_nodes(){

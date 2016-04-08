@@ -1,5 +1,6 @@
 @import "global-variables.less";
 
+
 @sidebar-width: 38px;
 @container-width: 360px;
 @container-height: 60vh; 
@@ -11,9 +12,11 @@
 @folder-height: 120px; 
 @title-size: 17px;
 @highlighted-file: #B6B6B7;
-@file-height:30px;
+@file-height:50px;
 @description-font-size : 14px;
-
+/*body {
+	overflow:hidden;
+}*/
 #container-wrapper{
 	overflow:hidden;
 	overflow-x:auto;
@@ -22,9 +25,11 @@
 	width:90vw;
 }
 
+#container_area_title{
+	color:white;
+}
+
 #edit, #preview{
-
-
 	::-webkit-scrollbar {
 		width: 12px;
 		margin-left:-100px;
@@ -122,6 +127,7 @@
 					vertical-align: middle;
 					width: @container-width - @sidebar-width - 20px;
 					background-color: @folder-color;
+					word-wrap:break-word;
 					cursor:pointer;
 					overflow:hidden;
 					padding: 5px;
@@ -157,9 +163,9 @@
 						font-size:@description-font-size;
 						visibility:visible;
 						padding-left:10px;
-						word-wrap:break-word;
 						a{text-decoration:none; color:black;}
 						font-weight: normal;
+						overflow-y:auto;
 						width: @container-width - @sidebar-width - 60px;
 					}
 					.filler{
@@ -191,6 +197,7 @@
 					height:@folder-height;
 					.description{
 						height: @description-font-size * 4;
+						word-wrap:break-word;
 					}
 				}
 
@@ -225,6 +232,7 @@
 		background-color: white;
 		opacity: 0.4;
 		margin-left: @sidebar-width;
+		height: @folder-height;
 	}
 	.hidden_details{
 		.folder{
