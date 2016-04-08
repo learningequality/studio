@@ -10,7 +10,7 @@ class LicenseSerializer(serializers.ModelSerializer):
 class ChannelSerializer(serializers.ModelSerializer):
     current_user = serializers.SerializerMethodField('_user')
     def _user(self, obj):
-        user = self.context['request'].user
+        user = self.context['request'].user 
         return user
 
     class Meta:
