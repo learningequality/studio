@@ -243,7 +243,7 @@ var ChannelModel = BaseModel.extend({
 	root_list : "channel-list",
 	defaults: {
 		name: " ",
-		editors: [1],
+
 		author: "Anonymous",
 		license_owner: "No license found",
 		description:" "

@@ -1,18 +1,15 @@
 from contentcuration.models import *    # TODO: Change this later?
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
-
+import logging
+logger = logging.getLogger(__name__)
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta: 
         model = ContentLicense
         fields = ('license_name', 'exists', 'id')
 
 class ChannelSerializer(serializers.ModelSerializer):
-    current_user = serializers.SerializerMethodField('_user')
-    def _user(self, obj):
-        user = self.context['request'].user 
-        return user
-
+    
     class Meta:
         model = Channel
         fields = ('name', 'description', 'editors', 'id', 'draft', 'clipboard', 'deleted', 'published','channel_id')
