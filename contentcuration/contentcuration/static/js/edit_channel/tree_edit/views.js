@@ -3,8 +3,7 @@ var _ = require("underscore");
 require("content-container.less");
 var BaseViews = require("./../views");
 var UploaderViews = require("edit_channel/uploader/views");
-var PreviewerViews = require("edit_channel/previewer/views");
-var ClipboardView = require("edit_channel/clipboard/views");
+//var ClipboardView = require("edit_channel/clipboard/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var Models = require("./../models");
 
@@ -20,11 +19,11 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.collection = options.collection;
 		this.root = this.topictrees.get({id : window.current_channel.draft}).get_root();
 		this.render();
-		this.clipboard_view = new ClipboardView.ClipboardList({
+		/*this.clipboard_view = new ClipboardView.ClipboardList({
 	 		el: $("#clipboard-area"),
 	 		topictrees: this.topictrees,
 	 		collection: this.collection
-	 	});
+	 	});*/
 	},
 	render: function() {
 		this.$el.html(this.template({edit: this.is_edit_page}));
@@ -84,25 +83,11 @@ var TreeEditView = BaseViews.BaseView.extend({
 			content.fetch();
 			clipboard_list.add(content);
 		}
-		this.clipboard_view.add_to_clipboard(clipboard_list);
+		//this.clipboard_view.add_to_clipboard(clipboard_list);
 		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + (new Date().getTime() - start) + ")");
 	},	
 	edit_content: function(event){
-		var list = this.$el.find('input:checked').parent("li");
-		var edit_collection = new Models.NodeCollection();
-		/* Create list of nodes to edit */
-		for(var i = 0; i < list.length; i++){
-			var model = $(list[i]).data("data").model;
-			edit_collection.add(model);
-		}
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var metadata_view = new UploaderViews.EditMetadataView({
-			collection: edit_collection,
-			parent_view: this,
-			el: $("#dialog"),
-			allow_add : false,
-			main_collection: this.collection
-		});
+		this.edit_selected();
 	},	
 	toggle_details:function(event){
 		/*TODO: Debug more with editing and opening folders*/
@@ -200,7 +185,8 @@ var ContentList = BaseViews.BaseListView.extend({
 			collection: new_collection,
 			main_collection: this.collection,
 			parent_view: this,
-			root: this.model
+			model: this.model,
+			modal:true
 		});
 	},
 
@@ -218,25 +204,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		});
 		console.log("PERFORMANCE tree_edit/views.js: close_folders end (time = " + (new Date().getTime() - start) + ")");
 		//this.$el.find(".folder .glyphicon").css("display", "inline-block");
-	},
-
-	add_nodes:function(views){
-		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
-    	var start = new Date().getTime();
-		var self = this;
-		var i  =this.collection.models.length + 1;
-		views.forEach(function(entry){
-			entry.save({
-				"title" : entry.model.get("title"),
-				"sort_order" : i++,
-				"parent" : self.model.id
-			}, {validate:false, async:false});		
-			self.model.get("children").push(entry.model.id);
-		});
-		//this.collection.save();
-
-		this.list_index = i;
-		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
 	}
 });
 
@@ -307,7 +274,6 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		this.containing_list_view.add_container(this);
 	},
 	set_opened:function(is_opened, animate){
-
 		if(is_opened){
 			console.log("PERFORMANCE tree_edit/views.js: starting set_opened " + this.model.get("title") + " ...");
     		var start = new Date().getTime();
@@ -368,10 +334,14 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	},
 	preview_node: function(event){
 		event.preventDefault();
-		var view = new PreviewerViews.PreviewerView({
-			el: $("#previewer-area"),
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var metadata_view = new UploaderViews.EditMetadataView({
+			el : $("#dialog"),
 			model: this.model,
-			file: this
+			allow_add: false,
+			main_collection : this.main_collection,
+			modal: true,
+			parent_view : this
 		});
 	},
 	publish:function(){

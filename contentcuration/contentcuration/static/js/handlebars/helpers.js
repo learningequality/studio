@@ -1,3 +1,4 @@
+
 var Handlebars = require("hbsfy/runtime");
 var marked = require("marked");
 marked.setOptions({
@@ -46,4 +47,25 @@ Handlebars.registerHelper('parse_newlines', function(text) {
     text = text.replace(/\n/g, "\\n");
   }
   return text;
+});
+
+// Convert text to all caps
+Handlebars.registerHelper('to_upper_case', function(text){
+  return text.toUpperCase();
+});
+
+Handlebars.registerHelper('check_is_topic', function(text){
+  return text.toLowerCase() == "topic";
+});
+
+Handlebars.registerHelper('format_file_size', function(text){
+  var value = Number(text);
+  if(value > 999999999)
+    return parseInt(value/1000000000) + "GB";
+  else if(value > 999999)
+    return parseInt(value/1000000) + "MB";
+  else if(value > 999)
+    return parseInt(value/1000) + "KB";
+  else
+    return parseInt(value) + "B";
 });
