@@ -1,9 +1,23 @@
-from django.db import models
+import logging
+import os
+from uuid import uuid4
+
+from django.conf import settings
+from django.contrib import admin
+from django.core.files.storage import FileSystemStorage
+from django.db import IntegrityError, connections, models
+from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 from kolibri.content.models import *
 
+<<<<<<< HEAD
 class Channel(ChannelMetadata):
+=======
+#from kolibri.kolibri.content.models import *
+
+class Channel(models.Model):
+>>>>>>> 3f016463678668c047c96803884f94ba7614f270
     """ Permissions come from association with organizations """
     editors = models.ManyToManyField(
         'auth.User',
@@ -82,6 +96,45 @@ class Node(ContentMetadata):
         help_text=_("Organization of person who holds the essential rights"),
     )
 
+<<<<<<< HEAD
+=======
+    license = models.ForeignKey(
+        'ContentLicense',
+        null=True,
+        verbose_name=_("license"),
+        help_text=_("License under which the work is distributed"),
+    )
+
+    kind = models.CharField(
+        max_length=50,
+        verbose_name=_("kind"),
+        help_text=_("Type of node (topic, video, exercise, etc.)"),
+        default="Topic"
+    )
+    """
+    slug = models.CharField(
+        max_length=100,
+        null = True,
+        verbose_name=_("slug")
+    )
+
+    prerequisite = models.ManyToManyField(
+        'self', 
+        related_name='is_prerequisite_of', 
+        through='PrerequisiteContentRelationship', 
+        symmetrical=False, 
+        blank=True
+    )
+
+     is_related = models.ManyToManyField(
+        'self', 
+        related_name='relate_to', 
+        through='RelatedContentRelationship', 
+        symmetrical=False, 
+        blank=True
+    )
+    """
+>>>>>>> 3f016463678668c047c96803884f94ba7614f270
     @property
     def has_draft(self):
         return self.draft_set.all().exists()
@@ -102,7 +155,26 @@ class Node(ContentMetadata):
         verbose_name = _("Topic")
         verbose_name_plural = _("Topics")
         # Do not allow two nodes with the same name on the same level
+<<<<<<< HEAD
         #unique_together = ('parent', 'title')
+=======
+        unique_together = (('parent', 'title'))
+
+
+class ContentLicense(models.Model):
+    name = models.CharField(
+        max_length=255,
+        default=(""),
+        verbose_name=_("name"),
+        help_text=_("Name of license, e.g. 'Creative Commons Share-Alike 2.0'"),
+    )
+    exists = models.BooleanField(
+        default=False,
+        verbose_name=_("license exists"),
+        help_text=_("Tells whether or not a content item is licensed to share"),
+    )
+
+>>>>>>> 3f016463678668c047c96803884f94ba7614f270
 
 # If we decide to subclass Content:
 #

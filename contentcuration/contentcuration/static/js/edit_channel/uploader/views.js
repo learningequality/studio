@@ -336,6 +336,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.display_load(function(){
 	 			self.save_nodes();
 
+<<<<<<< HEAD
 				if(!self.errorsFound){
 					self.$el.find("#title_error").html("");
 					self.$el.find("#description_error").html("");
@@ -353,6 +354,9 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	 		});
 		}
 		
+=======
+		if(!this.errorsFound && this.allow_add) this.parent_view.add_nodes(this.views, this.main_collection.length);
+>>>>>>> 3f016463678668c047c96803884f94ba7614f270
 		console.log("PERFORMANCE tree_edit/views.js: save_nodes end (time = " + (new Date().getTime() - start) + ")");
 	},
 	save_and_finish: function(){
@@ -402,12 +406,24 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		if(!this.current_view && !this.disable){
 			this.set_current(view);
 		}else {
+<<<<<<< HEAD
 			if(!this.disable){
+=======
+			/*if(!this.disable && this.current_view.validate()){
+>>>>>>> 3f016463678668c047c96803884f94ba7614f270
 				/* Previous node passes all tests */
 				this.$el.find("#title_error").html("");
 				this.$el.find("#description_error").html("");
 				this.set_current(view);
+<<<<<<< HEAD
 			}
+=======
+			/*}else{
+				/*TODO: disable everything
+				this.$el.find(".disable_on_error").prop("disabled", true);
+				this.$el.find(".disable_on_error").css("cursor", "not-allowed");
+			}*/
+>>>>>>> 3f016463678668c047c96803884f94ba7614f270
 		}
 	},
 	set_current:function(view){
@@ -547,7 +563,12 @@ var NodeListItem = ContentItem.extend({
 	},
 	render: function() {
 		this.$el.html(this.template({
+<<<<<<< HEAD
 			topic: this.model
+=======
+			topic: this.model,
+			edit: this.edit,
+>>>>>>> 3f016463678668c047c96803884f94ba7614f270
 		}));
 		this.$el.find(".topic_textbox").focus();
 	},

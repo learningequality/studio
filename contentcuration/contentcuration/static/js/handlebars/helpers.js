@@ -56,6 +56,7 @@ Handlebars.registerHelper('to_upper_case', function(text){
 
 Handlebars.registerHelper('check_is_topic', function(text){
   return text.toLowerCase() == "topic";
+<<<<<<< HEAD
 });
 
 Handlebars.registerHelper('format_file_size', function(text){
@@ -68,4 +69,6 @@ Handlebars.registerHelper('format_file_size', function(text){
     return parseInt(value/1000) + "KB";
   else
     return parseInt(value) + "B";
+=======
+>>>>>>> 3f016463678668c047c96803884f94ba7614f270
 });

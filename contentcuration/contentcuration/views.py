@@ -36,6 +36,7 @@ def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id)
     channel_serializer =  ChannelSerializer(channel)
 
+<<<<<<< HEAD
     topictrees = TopicTree.objects.filter(channel = channel)
     topictree_serializer = TopicTreeSerializer(topictrees, many=True)
 
@@ -48,6 +49,9 @@ def channel(request, channel_id):
                                                  "topictrees" : JSONRenderer().render(topictree_serializer.data),
                                                  "mimetypes" : JSONRenderer().render(mimetype_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data)})
+=======
+    return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data)})
+>>>>>>> 3f016463678668c047c96803884f94ba7614f270
 
 @login_required
 def exercise_list(request):
@@ -95,4 +99,10 @@ def file_upload(request):
         return HttpResponse(json.dumps({
             "success": True,
             "filename": str(file_object),
+        }))
+
+def data(request):
+    return HttpResponse(json.dumps({
+            "success": True,
+            "filename": "blah blah blah",
         }))

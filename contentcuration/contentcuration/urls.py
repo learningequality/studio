@@ -93,7 +93,12 @@ urlpatterns = [
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^channels/$', views.channel_list, name='channels'),
+<<<<<<< HEAD
     url(r'^channels/(?P<channel_id>\w+)', views.channel, name='channel'),
+=======
+    url(r'channels/(?P<channel_id>\w+)', views.channel, name='channel'),
+    url(r'^api-test/', views.data, name="apidata"),
+>>>>>>> 3f016463678668c047c96803884f94ba7614f270
 ]
 
 
