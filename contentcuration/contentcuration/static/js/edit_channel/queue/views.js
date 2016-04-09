@@ -4,14 +4,14 @@ require("queue.less");
 var BaseViews = require("./../views");
 var Models = require("./../models");
 var DragHelper = require("edit_channel/utils/drag_drop");
-var PreviewerViews = require("edit_channel/previewer/views");
+//var PreviewerViews = require("edit_channel/previewer/views");
 
 /* Loaded when user clicks clipboard button below navigation bar */
 var Queue = BaseViews.BaseView.extend({
 	template: require("./hbtemplates/queue.handlebars"),
 	item_view:"queue",
 	initialize: function(options) {
-		_.bindAll(this, 'toggle_queue', 'switch_to_queue', 'switch_to_trash');	
+		_.bindAll(this, 'toggle_queue', 'switch_to_queue', 'switch_to_trash');
 		this.render();
 		this.$el.find("#queue").css("margin-right", -this.$el.find("#main-queue").outerWidth());
 		this.clipboard_root = window.current_channel.get_tree("clipboard").get_root();
@@ -63,12 +63,12 @@ var Queue = BaseViews.BaseView.extend({
 		this.clipboard_queue.render();
 	},
 	switch_to_queue:function(){
-		this.switch_tab("clipboard");	
-		
+		this.switch_tab("clipboard");
+
 	},
 	switch_to_trash:function(){
 		this.switch_tab("trash");
-		
+
 	},
 	switch_tab:function(tabname){
 		this.$el.find((tabname == "trash")? "#trash-queue" : "#clipboard-queue").css("display", "block");
@@ -117,7 +117,7 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.$el.data("container", this);
 		this.$el.find("ul").data("list", this);
 		this.$el.find(".default-item").data("data", {
-			containing_list_view: this, 
+			containing_list_view: this,
 			index:0
 		});
 		DragHelper.addDragDrop(this);
@@ -196,10 +196,10 @@ var QueueList = BaseViews.BaseListView.extend({
 /* Loaded when user clicks clipboard button below navigation bar */
 var QueueItem = BaseViews.BaseListItemView.extend({
 	template: require("./hbtemplates/queue_item.handlebars"),
-	tagName: "li", 
+	tagName: "li",
 	indent: 0,
 	'id': function() {
-		return "queue_item_" + this.model.get("id"); 
+		return "queue_item_" + this.model.get("id");
 	},
 	initialize: function(options) {
 		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item');

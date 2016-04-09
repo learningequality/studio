@@ -64,6 +64,7 @@ var BaseView = Backbone.View.extend({
     	}else{
     		$("#loading_modal").remove();
     	}
+    },
 	add_to_trash:function(views){
 		//OVERWRITE IN SUBCLASSES
 	},
