@@ -5,6 +5,7 @@ var BaseViews = require("./../views");
 //var PreviewerViews = require("edit_channel/previewer/views");
 var QueueView = require("edit_channel/queue/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
+var UploaderViews = require("edit_channel/uploader/views");
 //var UndoManager = require("backbone-undo");
 var Models = require("./../models");
 
