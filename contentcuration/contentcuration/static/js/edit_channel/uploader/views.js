@@ -17,7 +17,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 	item_view:"uploading_content",
 	counter:0,
 	initialize: function(options) {
-		_.bindAll(this, 'add_topic', 'edit_metadata','add_file','close', 'add_exercise');	
+		_.bindAll(this, 'add_topic', 'edit_metadata','add_file','close', 'add_exercise');
 		this.collection = options.collection;
 		this.main_collection = options.main_collection;
 		this.parent_view = options.parent_view;
@@ -73,7 +73,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 	},
 	add_topic:function(){
 		var topic = new Models.NodeModel({
-			"kind":"topic", 
+			"kind":"topic",
 			"title": (this.counter > 0)? "Topic " + this.counter : "Topic",
 			"parent" : this.model.id
 		});
@@ -106,8 +106,8 @@ var AddContentView = BaseViews.BaseListView.extend({
 	},
 	add_file:function(){
 		var view = new FileUploadView({
-			callback: this.upload_file, 
-			modal: true, 
+			callback: this.upload_file,
+			modal: true,
 			parent_view: this
 		});
 	},
@@ -136,7 +136,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 				type="video";
 			}
 			var content_node = new Models.NodeModel({
-				"kind":type, 
+				"kind":type,
 				"title": file.name.split(".")[0],
 				"parent" : self.model.id,
 				"total_file_size": file.size,
@@ -156,9 +156,9 @@ var AddContentView = BaseViews.BaseListView.extend({
 	},
 	add_exercise:function(){
 		var view = new ExerciseCreateView({
-			callback: this.create_exercise, 
-			modal: true, 
-			parent_view: this, 
+			callback: this.create_exercise,
+			modal: true,
+			parent_view: this,
 			model: this.model
 		});
 	},
@@ -219,9 +219,9 @@ var FileUploadView = UploadItemView.extend({
 
         // TODO parameterize to allow different file uploads depending on initialization.
         this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
-            clickable: ["#dropzone", ".fileinput-button"], 
-            acceptedFiles: this.acceptedFiles, 
-            url: window.Urls.file_upload(), 
+            clickable: ["#dropzone", ".fileinput-button"],
+            acceptedFiles: this.acceptedFiles,
+            url: window.Urls.file_upload(),
             previewTemplate:this.file_upload_template(),
   			parallelUploads: 20,
   			//autoQueue: false, // Make sure the files aren't queued until manually added
@@ -229,12 +229,12 @@ var FileUploadView = UploadItemView.extend({
             headers: {"X-CSRFToken": get_cookie("csrftoken")}
         });
         this.dropzone.on("success", this.file_uploaded);
-        
+
     },
     file_uploaded: function(file) {
         console.log("FILE FOUND:", file);
         this.file_list.push({
-        	"data" : file, 
+        	"data" : file,
         	"filename": JSON.parse(file.xhr.response).filename
         });
     }
@@ -248,7 +248,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		console.log("called this");
 		_.bindAll(this, 'close_uploader', "check_and_save_nodes", 'check_item',
 						'add_tag','save_and_finish','add_more','set_edited',
-						'render_details', 'render_preview');	
+						'render_details', 'render_preview');
 		this.parent_view = options.parent_view;
 		this.collection = (options.collection)? options.collection : new Models.NodeCollection();
 		this.allow_add = options.allow_add;
@@ -324,7 +324,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
 		var start = new Date().getTime();
 		var self = this;
-    	
+
 		/* TODO :fix to save multiple nodes at a time */
 		self.$el.find(".upload_input").removeClass("gray-out");
 		self.parent_view.set_editing(false);
@@ -345,14 +345,14 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 						self.$el.find("#input_description").val(" ");
 					}
 				}
-				if(!self.errorsFound && self.allow_add) 
+				if(!self.errorsFound && self.allow_add)
 					self.parent_view.add_nodes(self.views, self.main_collection.length);
 				if(callback)
 					callback();
 				console.log("THREAD: end of display load");
 	 		});
 		}
-		
+
 		console.log("PERFORMANCE tree_edit/views.js: save_nodes end (time = " + (new Date().getTime() - start) + ")");
 	},
 	save_and_finish: function(){
@@ -389,10 +389,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		});
 		this.reset();
 		this.undelegateEvents();
-		this.unbind();	
+		this.unbind();
 	},
 	set_current_node:function(view){
-		/* TODO implement once allow multi file editing 
+		/* TODO implement once allow multi file editing
 		if(this.current_node){
 			this.current_node.set_edited(true);
 			to_save.push(this.current_node);
@@ -416,7 +416,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.current_view = view;
 		}else{
 			this.current_node = this.collection.get({cid: view.model.cid});
-			if(this.current_view) 
+			if(this.current_view)
 				this.current_view.$el.css("background-color", "transparent");
 			this.current_view = view;
 			this.current_view.$el.css("background-color", "#E6E6E6");
@@ -424,7 +424,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.load_preview();
 		this.$el.find("#input_title").val(this.current_node.get("title"));
 		this.$el.find("#input_description").val(this.current_node.get("description"));
-		
+
 	},
 	check_item: function(){
 		this.disable = this.$el.find("#uploaded_list :checked").length > 1;
@@ -462,7 +462,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.$el.find("#title_error").html(view.model.validationError);
 		view.$el.css("background-color", "#F6CECE");
 		this.switchPanel(true);
-	}, 
+	},
 	load_preview:function(){
 		console.log("load",this.current_node);
 		var location = "/media/";
@@ -501,11 +501,11 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		}
 
 		var options = {
-			source: location, 
+			source: location,
 			extension:extension,
 			title: this.current_node.get("title")
 		};
-		
+
 		this.$el.find("#preview_window").html(preview_template(options));
 	},
 	switchPanel:function(switch_to_details){
@@ -535,9 +535,9 @@ var ContentItem =  BaseViews.BaseListItemView.extend({
 
 var NodeListItem = ContentItem.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
-	tagName: "li", 
+	tagName: "li",
 	'id': function() {
-		return this.model.cid; 
+		return this.model.cid;
 	},
 	initialize: function(options) {
 		_.bindAll(this, 'submit_topic','remove_topic');
@@ -547,7 +547,8 @@ var NodeListItem = ContentItem.extend({
 	},
 	render: function() {
 		this.$el.html(this.template({
-			topic: this.model
+			topic: this.model,
+			edit: this.edit,
 		}));
 		this.$el.find(".topic_textbox").focus();
 	},
@@ -574,7 +575,7 @@ var UploadedItem = ContentItem.extend({
 	tags: [],
 	template: require("./hbtemplates/uploaded_list_item.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'remove_topic','set_current_node','set_checked');	
+		_.bindAll(this, 'remove_topic','set_current_node','set_checked');
 		this.containing_list_view = options.containing_list_view;
 		this.edited = false;
 		this.checked = false;
@@ -606,7 +607,7 @@ var UploadedItem = ContentItem.extend({
 		this.edited = edited;
 		$("#item_" + this.model.cid + " .item_name").html(this.model.get("title") + ((edited) ? " <b>*</b>" : ""));
 	},
-	
+
 	set_current_node:function(event){
 		if(event) event.preventDefault();
 		this.containing_list_view.set_current_node(this);
@@ -614,11 +615,11 @@ var UploadedItem = ContentItem.extend({
 	save_node:function(){
 		this.set_edited(false);
 		this.save({
-			title: $("#input_title").val(), 
+			title: $("#input_title").val(),
 			description: $("#input_description").val(),
 		}, {async:false});
 		this.originalData = {
-			"title":$("#input_title").val(), 
+			"title":$("#input_title").val(),
 			"description":$("#input_description").val(),
 			"license": this.license()
 		};
@@ -626,7 +627,7 @@ var UploadedItem = ContentItem.extend({
 	set_node:function(){
 		console.log("LICENSE IS", this.license());
 		this.model.set({
-			title: $("#input_title").val().trim(), 
+			title: $("#input_title").val().trim(),
 			description: $("#input_description").val().trim(),
 			license: this.license()
 		});

@@ -96,3 +96,9 @@ def file_upload(request):
             "success": True,
             "filename": str(file_object),
         }))
+
+def data(request):
+    return HttpResponse(json.dumps({
+            "success": True,
+            "filename": "blah blah blah",
+        }))

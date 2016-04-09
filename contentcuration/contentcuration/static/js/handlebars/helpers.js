@@ -59,6 +59,9 @@ Handlebars.registerHelper('check_is_topic', function(text){
 });
 
 Handlebars.registerHelper('format_file_size', function(text){
+  if (!text) {
+    return "0B";
+  }
   var value = Number(text);
   if(value > 999999999)
     return parseInt(value/1000000000) + "GB";

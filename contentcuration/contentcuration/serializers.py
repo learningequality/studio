@@ -18,6 +18,8 @@ class TopicTreeSerializer(serializers.ModelSerializer):
         fields = ('name', 'channel', 'root_node', 'id')
 
 class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
     class Meta:
         model = Node
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published', 

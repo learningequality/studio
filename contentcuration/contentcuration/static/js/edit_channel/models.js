@@ -29,7 +29,6 @@ var BaseCollection = Backbone.Collection.extend({
 	}
 });
 
-
 /**** CHANNEL AND CONTENT MODELS ****/
 var NodeModel = BaseModel.extend({
 	root_list:"node-list",
@@ -42,22 +41,28 @@ var NodeModel = BaseModel.extend({
 		total_file_size:0
     },
 
+	getChildCount:function(includeParent, collection){
+		var count = (includeParent) ? 1:0;
+		var children = collection.get_all_fetch(this.get("children"));
+		children.forEach(function(entry){
+			count += entry.getChildCount(true, collection);
+		});
+		return count;
+	},
+
 	/*Used when copying items to clipboard*/
-    duplicate: function(parent_id){
+    duplicate: function(parent_id, index){
+    	console.log("add_nodes duplicate called by", this);
     	console.log("PERFORMANCE models.js: starting duplicate...");
     	var start = new Date().getTime();
-    	var title = this.generate_title(this.get("title"));
-    	var data = this.pick('created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
-    	data['title'] = title;
-    	data['parent_id'] = parent_id;
-		var node_data = new NodeModel(data);
+    	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
+		var node_data = new NodeModel();
+		var nodeChildrenCollection = new NodeCollection();
 		var self = this;
-		node_data.save(data, {async:false,
-			success:function(){
-				self.copy_children(node_data, self.get("children"));
-			}
-		});
-		console.log("PERFORMANCE models.js: duplicate end (time = " + (new Date().getTime() - start) + ")");
+		node_data.set(data);
+		node_data.move(parent_id, index);
+		self.copy_children(node_data, self.get("children"));
+		console.log("add_node sending back data", node_data);
 		return node_data;
 	},
 
@@ -73,7 +78,7 @@ var NodeModel = BaseModel.extend({
 			title = this.generate_title(title);
 			console.log("add_node title is now", title);
 			this.set({
-				title: title, 
+                title: title,
 				parent: parent_id,
 				sort_order:index
 			}, {validate:true});
@@ -84,14 +89,14 @@ var NodeModel = BaseModel.extend({
 		}else{
 			this.save({title: title}, {async:false, validate:false}); //Save any other values
 		}
-		
+
 		this.save({parent: parent_id, sort_order:index}, {async:false, validate:false}); //Save any other values
+
 		console.log("PERFORMANCE models.js: move end (time = " + (new Date().getTime() - start) + ")");
 	},
 
 	/* Function in case want to append (Copy #) to end of copied content*/
 	generate_title:function(title){
-		console.log("PERFORMANCE models.js: starting generate_title...");
 		var start = new Date().getTime();
 		var new_title = title;
 		var matching = /\(Copy\s*([0-9]*)\)/g;
@@ -99,13 +104,13 @@ var NodeModel = BaseModel.extend({
 		    new_title = new_title.replace(matching, function(match, p1) {
 		        // Already has "(Copy)"  or "(Copy <p1>)" in the title, so return either
 		        // "(Copy 2)" or "(Copy <p1+1>)"
-		        return "(Copy " + (p1==="" ? 2: Number(p1) + 1) + ")";
+		        return "(Copy " + ((p1==="") ? 2: Number(p1) + 1) + ")";
 		    });
 		}else{
 			new_title += " (Copy)";
 		}
-    	console.log("PERFORMANCE models.js: generate_title end (time = " + (new Date().getTime() - start) + ")");
-    	return new_title;
+    	console.log("new title is " + new_title);
+    	return new_title.slice(0, new_title.length);
 	},
 	copy_children:function(node, original_collection){
 		console.log("PERFORMANCE models.js: starting copy_children...");
@@ -113,7 +118,7 @@ var NodeModel = BaseModel.extend({
 		var self = this;
 		var parent_id = node.id;
 		var copied_collection = new NodeCollection();
-		copied_collection.get_all_fetch(original_collection);
+		copied_collection = copied_collection.get_all_fetch(original_collection);
 		copied_collection.forEach(function(entry){
 			entry.duplicate(parent_id);
 		});
@@ -123,13 +128,12 @@ var NodeModel = BaseModel.extend({
 		console.log("PERFORMANCE models.js: starting validate on " + attrs.title + "...");
 		var start = new Date().getTime();
 		var self = this;
-
-
 		console.log("Checking if title is blank...");
 		//Case: title blank
 		if(attrs.title == "")
 			return "Name is required.";
 		if(attrs.parent){
+			console.log("Checking if topic is descendant of itself..");
 			var parent = new NodeModel({'id': attrs.parent});
 			parent.fetch({async:false});
 			if(attrs.kind == "topic"){
@@ -221,10 +225,10 @@ var NodeCollection = BaseCollection.extend({
     	for(var i = 0; i < ids.length; i++){
     		if(ids[i]){
     			var model = this.get({id: ids[i]});
-	    		if(!model){
+	    		//if(!model){
 	    			model = this.add({'id':ids[i]});
 	    			model.fetch({async:false});
-	    		}
+	    		//}
 	    		to_fetch.add(model);
     		}
     	}
@@ -248,8 +252,21 @@ var ChannelModel = BaseModel.extend({
 		license_owner: "No license found",
 		description:" "
     },
+    /*
+    get_data:function(){
+    		$.get("/api-test", function(result){
+    			console.log("Got data: ", JSON.parse(result)['filename']);
+    		});
+    },*/
     get_tree:function(tree_name){
     	var tree = new TopicTreeModel({id : this.get(tree_name)});
+    	console.log(tree_name + " tree is", tree);
+    	/*if(!tree.id){
+    		var channel = new ChannelModel({id: this.get("channel")});
+    		channel.fetch({async:false});
+    		console.log("got channel", channel);
+    		channel.create_tree(tree_name);
+    	}*/
     	tree.fetch({async:false});
     	return tree;
     },
@@ -283,7 +300,7 @@ var ChannelModel = BaseModel.extend({
 			success: function(){
 				var tree = new TopicTreeModel();
 				return tree.save({
-					channel: self.id, 
+                    channel: self.id,
 					root_node: root_node.id,
 					name: self.get("name")
 				}, {
@@ -291,7 +308,7 @@ var ChannelModel = BaseModel.extend({
 					validate:false,
 					success: function(){
 						console.log("PERFORMANCE models.js: create_tree " + tree_name + " end (time = " + ((new Date().getTime() - start)/1000) + "s)");
-						return self.save(tree_name, tree.id);
+						self.save(tree_name , tree.id, {async:false});
 					}
 				});
 			}
@@ -305,16 +322,17 @@ var ChannelCollection = BaseCollection.extend({
 
 	create_channel:function(data, progress_bar){
 		var channel_data = new ChannelModel(data);
-		
+
 		channel_data.fetch();
 		if(channel_data.get("description").trim() == "")
 			channel_data.set({description: "No description available."});
-		
+
 		return this.create(channel_data, {
 			async: false,
 			success:function(){
 				["draft","clipboard","deleted"].forEach(function(entry){
 					channel_data.create_tree(entry.toString());
+					console.log("creating " + entry.toString());
 				});
    			}
 		});
@@ -388,7 +406,7 @@ var MimeTypeModel = Backbone.Model.extend({
 	defaults: {
 		readable_name:"invalid",
 		machine_name: "invalid"
-    } 
+    }
 });
 
 var MimeTypeCollection = PresetCollection.extend({
