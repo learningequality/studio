@@ -187,9 +187,10 @@ var NodeModel = Backbone.Model.extend({
 						extension: "." + file_data.filename.split(".")[1]
 					});
 					self.save({total_file_size: file.get("file_size")});
-					/*file.save({
+					console.log("SAVING FILE:", file);
+					file.save({
 						format: format.id
-					});*/
+					});
 				}
 			});
 		}

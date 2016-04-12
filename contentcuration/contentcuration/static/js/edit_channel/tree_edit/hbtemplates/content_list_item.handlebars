@@ -16,9 +16,10 @@
 	{{#if isfolder}}
 	<textarea id="textarea_{{node.id}}" class="topic_textarea"  placeholder="Enter Description">{{node.attributes.description}}</textarea>
 	{{/if}}
-	
-	<span class="cancel_edit glyphicon glyphicon-remove pull-right" aria-hidden="true"></span>
-	<span class="submit_edit glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>
+	<div class="item_edit_options">
+		<span class="cancel_edit glyphicon glyphicon-remove pull-right" aria-hidden="true"></span>
+		<span class="submit_edit glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>
+	</div>
 {{else}}
 	<div class="options pull-right">
 		{{#if isfolder}}
@@ -28,19 +29,21 @@
 	</div>
 	<h6 class="content_metadata_summary">
 		{{to_upper_case node.attributes.kind}}
-		{{#if time}}&nbsp<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
-		{{#if isfolder}}&nbsp{{resource_count}} Resources{{/if}}
-		&nbsp<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.attributes.total_file_size}}{{/format_file_size}}
-		&nbsp
-		{{#if node.attributes.published}}
-			<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
-			<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
-			<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
-			<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
-			<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
-		{{else}}<em class="unpublished">Unpublished</em>{{/if}}
+		<span class="metadata_to_hide">
+			{{#if time}}&nbsp<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
+			{{#if isfolder}}&nbsp{{resource_count}} Resources{{/if}}
+			&nbsp<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.attributes.total_file_size}}{{/format_file_size}}
+			&nbsp
+			{{#if node.attributes.published}}
+				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+			{{else}}<em class="unpublished">Unpublished</em>{{/if}}
+		</span>
 	</h6>
-	<h3 class = "title">{{#if node}}{{node.attributes.title}}{{else}}Item Name{{/if}}</h3>
+	<h3 class = "title truncate">{{#if node}}{{node.attributes.title}}{{else}}<em>[Untitled]</em>{{/if}}</h3>
 
 	{{#if isfolder}}
 		<p class="description wordwrap">{{#if node}}{{node.attributes.description}}{{else}}Description of the folder{{/if}}</p>

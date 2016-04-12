@@ -81,7 +81,7 @@ bulkrouter = BulkRouter(trailing_slash=False)
 bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
 
 urlpatterns = [
-    url(r'^$', views.base, name='base'),
+    url(r'^$', views.channel_list, name='base'),
     url(r'^test/', views.testpage, name='test'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),

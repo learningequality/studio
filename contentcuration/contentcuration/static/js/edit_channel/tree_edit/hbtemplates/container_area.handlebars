@@ -1,4 +1,5 @@
 <div id={{#if edit}}"edit"{{else}}"preview"{{/if}} class="container-fluid">
+	<h3 id="container_area_title">{{#if is_clipboard}}Clipboard{{else}}{{channel.attributes.name}}{{/if}}</h3>
 	{{#if edit}}
 	<nav id="button_bar">
 		{{#if is_clipboard}}<a class="btn btn-default disable-on-edit construction">Import to Channel</a>{{/if}}
@@ -16,7 +17,14 @@
 			<label for="hide_details_checkbox">Hide details</label>
 		</h1>
 	{{/if}}
-	<h3 id="container_area_title">{{#if is_clipboard}}Clipboard{{else}}{{channel.attributes.name}}{{/if}}</h3>
+
+	<ol id="container-breadcrumb">
+	  <li><a href="#">Home</a></li>
+	  <li><a href="#">Library</a></li>
+	  <li><a href="#">Library Library Library</a></li>
+	  <li class="active"><a href="#">Data</a></li>
+	</ol>
+	
 	<div id="container-wrapper">
 		<ul id="container_area" class="container-fluid row list-unstyled">
 		</ul>

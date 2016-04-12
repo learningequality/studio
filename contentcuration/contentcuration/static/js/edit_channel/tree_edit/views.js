@@ -23,6 +23,13 @@ var TreeEditView = BaseViews.BaseView.extend({
 	 		collection: this.collection
 	 	});
 	 	$("#queue-area").css("display", (this.is_clipboard || !this.is_edit_page)? "none" : "block");
+	 	$("#main-nav-home-button").removeClass("active");
+
+	 	if(this.is_edit_page){
+			$("#channel-edit-button").addClass("active");
+	 	}else if(!this.is_clipboard){
+	 		$("#channel-preview-button").addClass("active");
+	 	}
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
@@ -233,8 +240,6 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	},
 	
 	render:function(){
-		console.log("FILES GOTTEN ARE " + this.model.get("kind"),this.files);
-
 		this.$el.html(this.template({
 			node: this.model,
 			isfolder: this.model.get("kind").toLowerCase() == "topic",
@@ -243,13 +248,6 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			resource_count : (this.model.get("kind") == "topic")? this.model.getChildCount(false, this.containing_list_view.collection) : this.files.length
 		}));
 		this.$el.data("data", this);
-		/*TODO: for future branch- automatically shorten length of descriptions that are too long
-		if(this.$el.find(".description").height() > 103){
-			//this.$el.find(".description").height(this.$el.find(".description").css("font-size").replace("px", "") * 3);
-			console.log(this.model.get("title"), this.$el.find(".description").height());
-			this.$el.find(".filler").css("display", "inline");
-			//this.$el.find(".description").
-		}*/
 		if($("#hide_details_checkbox").attr("checked"))
 			this.$el.find("label").addClass("hidden_details");
 	},
@@ -259,26 +257,11 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		'click .topic_textarea' : 'cancel_open_folder',
 		'click .open_folder':'open_folder',
 		'click .folder' : "open_folder",
-		//'click .filler' : 'expand_or_collapse_folder',
 		'click .cancel_edit' : 'cancel_edit',
 		'click .submit_edit' : 'submit_edit',
 		'click .preview_button': 'preview_node',
 		'click .file' : 'preview_node'
 	},
-	/*TODO: For future branch- expands and collapses folders when descriptions too long
-	expand_or_collapse_folder: function(event){
-		event.preventDefault();
-		event.stopPropagation();
-		if(this.$(".filler").parent("label").hasClass("collapsed")){
-			this.$(".filler").parent("label").removeClass("collapsed").addClass("expanded");
-			this.$(".description").text(this.$(".filler").attr("title"));
-			this.$(".filler").text("See Less");
-		}
-		else {
-			this.$(".filler").parent("label").removeClass("expanded").addClass("collapsed");
-			this.$(".filler").text("See More");
-		}
-	},*/
 	open_folder:function(event){
 		event.preventDefault();
 		event.stopPropagation();
@@ -295,7 +278,6 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		if(is_opened){
 			console.log("PERFORMANCE tree_edit/views.js: starting set_opened " + this.model.get("title") + " ...");
     		var start = new Date().getTime();
-			this.$el.find(".folder").animate({'width' : "345px"}, (animate)? 500 : 0);
 			this.$el.addClass("current_topic");
 			this.$el.attr("draggable", "false");
 
@@ -318,7 +300,6 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		}else{
 			this.$el.off("offset_changed");
 			this.$el.attr("draggable", "true");
-			this.$el.find(".folder").css("width" , "302px");
 			this.$el.removeClass("current_topic");
 		}
 	},
