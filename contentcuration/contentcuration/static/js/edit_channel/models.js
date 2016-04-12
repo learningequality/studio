@@ -188,9 +188,12 @@ var NodeModel = BaseModel.extend({
 						extension: "." + file_data.filename.split(".")[1]
 					});
 					file.save({
-						format: format.id
-					});
-				}
+						  format: format.id,
+          },
+          {
+              patch: true,
+          });
+        }
 			});
 		}
 	},
