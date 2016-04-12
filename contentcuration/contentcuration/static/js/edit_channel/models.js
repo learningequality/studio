@@ -377,8 +377,7 @@ var FormatModel = BaseModel.extend({
 	get_files : function(){
 		var files = new FileCollection();
 		files.fetch({async:false});
-		//return files.where({format: this.id});
-		return files.where({id:74});
+		return files.where({format: this.id});
 	}
 });
 
