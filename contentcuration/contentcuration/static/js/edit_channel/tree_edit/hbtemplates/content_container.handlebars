@@ -1,4 +1,7 @@
-<h2 class="text-center title-bar truncate">{{topic.attributes.title}}</h2>
+<h2 class="text-center title-bar truncate">
+	<span class="glyphicon glyphicon-triangle-left back_button pull-left" aria-hidden="true"></span>
+	{{topic.attributes.title}}
+</h2>
 <ul class="content-list sortable list-unstyled" id="container_list_{{topic.id}}">
 	{{#each content_list}}
 		<li class="content draggable to_publish" id="{{id}}""></li>

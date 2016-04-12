@@ -44,10 +44,9 @@
 		</span>
 	</h6>
 	<h3 class = "title truncate">{{#if node}}{{node.attributes.title}}{{else}}<em>[Untitled]</em>{{/if}}</h3>
-
-	{{#if isfolder}}
+	<div class="description_wrapper">
 		<p class="description wordwrap">{{#if node}}{{node.attributes.description}}{{else}}Description of the folder{{/if}}</p>
-		<a class="filler" title="{{node.attributes.description}}">See More</a>
-	{{/if}}
+	</div> 
+	<a class="filler" title="{{node.attributes.description}}">See More</a>
 {{/if}}
 </label>

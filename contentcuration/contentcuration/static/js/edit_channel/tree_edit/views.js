@@ -57,6 +57,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			this.containers[this.containers.length-1].delete_view();
 			this.containers.splice(this.containers.length-1);
 		}
+		this.containers[this.containers.length-1].close_folders();
 	},
 	/*
 	undo_action: function(){
@@ -74,8 +75,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 			this.remove_containers_from(index);
 		}
 		/* Create place for opened topic */
-		this.$el.find("#container_area").append("<div id='container_" + topic.id + "' class='container content-container "
-						+ "' name='" + (this.containers.length + 1) + "'></div>");
+		this.$el.find("#container_area").append("<li id='container_" + topic.id + "' class='container content-container "
+						+ "' name='" + (this.containers.length + 1) + "'></li>");
 		var container_view = new ContentList({
 			el: this.$el.find("#container_area #container_" + topic.id),
 			model: topic, 
@@ -142,8 +143,8 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.render();
 		
 		/* Animate sliding in from left */
-		this.$el.css('margin-left', -this.$el.find(".container-interior").outerWidth());
-		$("#container_area").width(this.$el.find(".container-interior").outerWidth() * (this.index + 2));
+		this.$el.css('margin-left', -this.$el.find(".content-list").outerWidth());
+		$("#container_area").width(this.$el.find(".content-list").outerWidth() * (this.index + 1));
 		this.$el.animate({'margin-left' : "0px"}, 500);	
 	},
 	render: function() {
@@ -168,7 +169,8 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	events: {
-		'click .add_content_button':'add_content'
+		'click .add_content_button':'add_content',
+		'click .back_button' :'close_container'
 	},
 
 	load_content : function(){
@@ -218,6 +220,13 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 	add_to_clipboard:function(views){
 		this.container.add_to_clipboard(views);
+	},
+	close_container:function(views){
+		var self = this;
+		this.$el.animate({'margin-left' : -this.$el.outerWidth()}, 100,function(){
+			self.container.remove_containers_from(self.index - 1);
+		});	
+		
 	}
 });
 
@@ -308,9 +317,11 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		event.stopPropagation();
 		this.allow_edit = this.edit_mode;
 		this.render();
-		this.$el.find("label").addClass("editing");
+		this.$el.addClass("editing");
 	},
 	submit_edit: function(event){
+		event.preventDefault();
+		event.stopPropagation();
 		var title = ($("#textbox_" + this.model.id).val().trim() == "")? "Untitled" : $("#textbox_" + this.model.id).val().trim();
 		var description = ($("#textarea_" + this.model.id).val().trim() == "")? " " : $("#textarea_" + this.model.id).val().trim();
 		this.model.set({title:title, description:description}, {validate:true});
@@ -321,6 +332,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		else{
 			this.save();
 			this.allow_edit = false;
+			this.$el.removeClass("editing");
 			this.render();
 		}
 		

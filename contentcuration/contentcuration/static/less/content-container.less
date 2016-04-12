@@ -40,20 +40,23 @@
 	@container-min-height:400px;
 	@container-border-color: #BCBCBC;
 	@container-title-color: #666666;
+	@container-last-width: 450px;
 
 	@folder-gap-width: 0px;
 	@item-color: white;
-	@folder-height: 61px; 
+	@expanded-height: 80px; 
 	@title-size: 16pt;
 	@channel-edit-font-color:black;
-	@highlighted-file: white;
-	@file-height:45px;
+	@highlighted-file: #E8E8E8;
+	@collapsed-height:61px;
 	@item-title-font-size: 13pt;
 	@item-font-color: #999999;
+	@item-last-font-color: #333333;
 	@description-font-size : 14px;
 
 	overflow-x:hidden;
 	width:100vw;
+	height:100%;
 
 	#container-wrapper{
 		overflow:hidden;
@@ -125,23 +128,28 @@
 			left: 100%;
 			z-index: 1; 
 		}
-		.active a{
+		li:last-child a{
 			background-color: @breadcrumb-active-color;
 			color:white;
 		}
-		.active a:after{
+		li:last-child a:after{
 			border-left: 15px solid @breadcrumb-active-color;
 		}
 	}
+
+
+
 	.content-container{
 		padding:2px;
 		margin:0;
+		margin-right:5px;
 		width: @container-width;
 		display:inline-block;
 		height:  @container-height;
 		min-height: @container-min-height; 
-		width:@container-width;
-
+		.back_button{
+			cursor:pointer;
+		}
 		.truncate{
 			white-space: nowrap;
 			overflow:hidden;
@@ -154,17 +162,16 @@
 			margin-top:15px;
 			margin-bottom:15px;
 		}
+		
 
 		.content-list{
-			width:100%;
+			width: inherit - 25px;
 			overflow-y: auto;
 			overflow-x:hidden;
 			padding:0;
 			background-color:white;
+			margin-bottom:0px;
 			border:1px solid @container-border-color;
-			input[type="radio"]{
-				display:none;
-			}
 			.default-item{
 				font-style:italic;
 				font-size: @description-font-size;
@@ -172,8 +179,10 @@
 				padding-left: 10px;
 			}
 			li{
+				input[type="radio"]{
+					display:none;
+				}
 				background-color: @item-color;
-				height:@folder-height;
 				label{
 					padding:5px;
 					vertical-align: middle;
@@ -184,20 +193,84 @@
 					}
 					h3{
 						font-size: @item-title-font-size;
-						font-weight:bold;
 					}
 					.metadata_to_hide, .description, .filler{
 						display:none;
 					}
 				}
+				.folder{
+					h3{
+						font-weight:bold;
+					}
+				}
+			}
+			li:hover{
+				background-color: @highlighted-file;
+			}
+			.editing{
+				
+				.error_msg{
+					font-style:italic;
+					color:red;
+					font-size: 10px;
+				}
 			}
 		}
+	}
 
+	#container_area li:last-child{
+		width: @container-last-width;
+
+		.content-list{
+			li{
+				label{
+					
+					.metadata_to_hide{
+						display:inline-block;
+					}
+					.description{
+						display:block;
+						font-weight:normal;
+						max-height:@description-font-size * 3;
+						overflow:hidden;
+						text-overflow: ellipsis;
+					}
+					h3, p, h6{
+						color : @item-last-font-color;
+					}
+				}
+			}
+			.unpublished{
+				border-radius:10px;
+				background-color:lightgray;
+				padding: 1px 10px;
+			}
+			.content_metadata_summary{
+				color:@container-title-color;
+				margin-bottom:2px;
+				.glyphicon{
+					font-size: 10px;
+					padding:0px;
+					margin:0px;
+				}
+			}
+		}
+	}
+
+	.hidden_details{
+		label{
+			.options{
+				width:65px;
+			}
+			.metadata_to_hide, .description, .filler{
+				display:none;
+			}
+		}
 	}
 
 	#edit{
 		@edit-new-button-color: #C9C9C9;
-		@edit-container-color: #F7F7F7;
+		@edit-container-color: #E8E8E8;
 		@edit-new-content-color: #89C0B1;
 		@edit-current-folder-color:#666666;
 
@@ -210,13 +283,16 @@
 		.content-container{
 			background-color: @edit-container-color;
 			border: 2px solid @edit-container-color;
-
+			::-webkit-scrollbar-track {
+				background-color: @edit-container-color;
+			}
 			.content-list{
 				height:@container-height * 0.78;
 				min-height: @container-min-height * 0.78; 
 				margin: 5px 0px;
+				
 				li{
-					border: 1px solid  @edit-container-color;
+					border-top: 1px solid  @edit-container-color;
 				}
 				input[type=checkbox]{
 					display:inline-block;
@@ -241,9 +317,7 @@
 							visibility:hidden;
 						}
 					}
-					.options:hover .edit_folder_button{
-						visibility:visible;
-					}
+					
 					.node_title_textbox, .topic_textarea{
 						width:100%;
 						resize:none;
@@ -257,6 +331,9 @@
 							margin-right:20px;
 						}
 					}
+				}
+				label:hover .edit_folder_button{
+					visibility:visible;
 				}
 				.folder{
 					width: @container-width - 45px;
@@ -272,9 +349,6 @@
 				.current_topic{
 					background-color: @edit-container-color;
 					border-left:4px solid @edit-current-folder-color;
-					.open_folder{
-						visibility:hidden;
-					}
 				}
 			}
 
@@ -282,35 +356,67 @@
 				cursor:pointer;
 				width: 100%;
 				background-color: @edit-new-button-color;
-				margin-top:5px;
-				padding:5px;
+				margin-top:0px;
+				padding:3px;
 				border:1px solid @container-border-color;
 				font-size: 12pt;
-				margin-bottom: 15px;
 			}
 			.placeholder{
 				width: 100%;
 				background-color: @edit-current-folder-color;
 				opacity: 0.4;
-				height: @folder-height;
+				height: @collapsed-height;
 			}
+		}
+
+		#container_area li:last-child{
+			.folder{
+				width: @container-last-width - 45px;
+				h3{
+					width:@container-last-width  - @item-title-font-size - 65px;
+				}
+			}
+			.file{
+				width: @container-last-width - 45px;
+				h3{
+					width:@container-last-width  - 75px;
+				}
+			}
+			.placeholder{
+				height: @expanded-height;
+			}
+			.add_content_button{
+				padding:3px 20px;
+				width:150px;
+				margin-left:@container-last-width - 160px;
+			}
+		}
+
+		#container_area li:first-child .back_button{
+			display:none;
 		}
 	}
 
 	#preview{
 		@preview-container-color:#DAE8EA;
 		@preview-selected-folder:#6B959C;
-	
+		
+		h1{
+			font-size:12pt;
+		}
 		.content-container{
 			background-color: @preview-container-color;
 			.glyphicon{
 				display:none;
 			}
-
+			::-webkit-scrollbar-track {
+				background-color: @preview-container-color;
+			}
 			.content-list{
 				height:@container-height * 0.87;
 				min-height: @container-min-height * 0.87;
-				.glyphicon{
+
+				.edit_folder_button{
 					visibility:hidden;
 				}
 				li{
@@ -331,6 +437,12 @@
 				}
 			}
 		}
+		#container_area li:last-child{
+			.folder{
+				h3{
+					width:@container-last-width - @item-title-font-size - 20px;
+				}
+			}
+		}
 	}
-
 }
