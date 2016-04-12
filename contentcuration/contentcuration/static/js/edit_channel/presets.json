@@ -5,6 +5,7 @@
     	{"readable_name": ".jpeg", "machine_name" : "image/jpeg"},
     	{"readable_name": ".jpg", "machine_name" : "image/jpeg"},
     	{"readable_name": ".mp3", "machine_name" : "audio/mpeg3"},
+        {"readable_name": ".mp3", "machine_name" : "audio/mp3"},
     	{"readable_name": ".mp4", "machine_name" : "video/mp4"},
     	{"readable_name": ".pdf", "machine_name" : "application/pdf"},
     	{"readable_name": ".png", "machine_name" : "image/png"},

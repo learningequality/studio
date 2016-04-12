@@ -321,7 +321,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	},
 
 	check_and_save_nodes: function(callback){
-		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
 		var start = new Date().getTime();
 		var self = this;
 
@@ -348,16 +347,15 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 				if(!self.errorsFound && self.allow_add)
 					self.parent_view.add_nodes(self.views, self.main_collection.length);
 				if(callback)
-					callback();
-				console.log("THREAD: end of display load");
+					return callback();
 	 		});
 		}
-
-		console.log("PERFORMANCE tree_edit/views.js: save_nodes end (time = " + (new Date().getTime() - start) + ")");
 	},
 	save_and_finish: function(){
 		var self = this;
+		console.log("STARTING SAVE FILE");
 		this.check_and_save_nodes(function(){
+			console.log("THREAD: end of save and finish");
 			if(!self.errorsFound){
 				if(self.modal){
 					self.$el.find(".modal").modal("hide");
@@ -365,7 +363,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 					self.close_uploader();
 				}
 			}
-			console.log("THREAD: end of save and finish");
+			
 		});
 	},
 	add_more:function(event){
