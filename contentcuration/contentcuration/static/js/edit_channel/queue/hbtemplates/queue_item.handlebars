@@ -1,0 +1,24 @@
+<input type="checkbox" id="queue_file_{{node.id}}"></input>
+<label for="queue_file_{{node.id}}" class="queue_item">
+	{{#if allow_edit}}
+		<p class="error_msg"></p>
+		<input type="text" placeholder="Press 'Enter' to save" value="{{node.attributes.title}}" class="queue_title_input"/>
+		<span class="pull-right submit_content glyphicon glyphicon-ok" aria-hidden="true"></span>
+	{{else}}
+		<span class="pull-right delete_content glyphicon glyphicon-trash" aria-hidden="true"></span>
+		{{#if is_clipboard}}<span class="pull-right edit_content glyphicon glyphicon-pencil" aria-hidden="true"></span>{{/if}}
+		{{#if isfolder}}<div class="pull-left tog_folder"><span id="menu_toggle_{{node.id}}" class="glyphicon glyphicon-menu-up"></span></div>{{/if}}
+		<!--<span class="glyphicon glyphicon-{{file_icon}}"></span>-->
+		<h6>{{to_upper_case node.attributes.kind}}, {{node.attributes.sort_order}} id: {{node.id}}</h6>
+		<h4 class="queue_item_title">{{node.attributes.title}}</h4>
+	{{/if}}
+</label>
+{{#if isfolder}}<div id="queue_item_{{node.id}}_sub" style="padding-left: {{indent}}px;" class="subdirectory">
+	<ul class="list-unstyled content-list">
+		{{#each sub_list}}
+			<li id="queue_item_{{this}}" class="queue_item"></li>
+		{{else}}
+			<li><em>No items found.</em></li>
+		{{/each}}
+	</ul>
+{{/if}}

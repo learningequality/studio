@@ -10,7 +10,6 @@
 {{else}}
 	<label class="file" for="item_{{node.id}}" title="{{node.attributes.title}}">
 {{/if}}
-{{node.id}} ({{#if node.attributes.published}}p{{else}}up{{/if}}) : {{#each node.attributes.children}}{{this}}&nbsp;{{/each}}
 {{#if allow_edit}}
 	<p class="error_msg"><p>
 	<input id="textbox_{{node.id}}" type="text" class="node_title_textbox" value="{{node.attributes.title}}" placeholder="Enter Item Name"/>
@@ -30,6 +29,7 @@
 			<span class="glyphicon glyphicon-search preview_button" aria-hidden="true"></span>
 		{{/if}}
 	</div>
+	<h6>{{to_upper_case node.attributes.kind}}</h6>
 	<h3 class = "title">{{#if node}}{{node.attributes.title}}{{else}}Item Name{{/if}}</h3>
 
 	{{#if isfolder}}

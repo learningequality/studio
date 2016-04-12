@@ -1,0 +1,24 @@
+{
+    "mimetypes": [
+        {"readable_name": ".gif", "machine_name" : "image/gif"},
+    	{"readable_name": ".html", "machine_name" : "text/html"},
+    	{"readable_name": ".jpeg", "machine_name" : "image/jpeg"},
+    	{"readable_name": ".jpg", "machine_name" : "image/jpeg"},
+    	{"readable_name": ".mp3", "machine_name" : "audio/mpeg3"},
+    	{"readable_name": ".mp4", "machine_name" : "video/mp4"},
+    	{"readable_name": ".pdf", "machine_name" : "application/pdf"},
+    	{"readable_name": ".png", "machine_name" : "image/png"},
+    	{"readable_name": ".text", "machine_name" : "text/plain"},
+    	{"readable_name": ".txt", "machine_name" : "text/plain"},
+    	{"readable_name": ".wav", "machine_name" : "audio/wav"}
+    ],
+    "licenses":[
+        {"license_name": "CC-BY", "exists": true},
+        {"license_name": "CC BY-SA", "exists": true},
+        {"license_name": "CC BY-ND", "exists": true},
+        {"license_name": "CC BY-NC", "exists": true},
+        {"license_name": "CC BY-NC-SA", "exists": true},
+        {"license_name": "CC BY-NC-ND", "exists": true},
+        {"license_name": "All rights reserved", "exists":true}
+    ]
+}
