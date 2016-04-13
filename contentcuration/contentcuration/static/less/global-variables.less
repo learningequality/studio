@@ -6,16 +6,38 @@
 	src: url("@{icon-font-path}OpenSans-Regular.ttf") format("truetype");
 }
 
-@topnav-bg-color: #816793;
+/* ICONS AND BUTTONS */
+@action-enabled: #2196F3;
 @topnav-active-tab-color:#564462; 
-@error-input-color : #F6CECE;
-@body-font-color: black;
+.action-button {
+  background: @action-enabled;
+  color: white;
+  padding: 6px 16px;
+  border: none;
+}
+.action-text {
+  color: @action-enabled;
+  font-weight: bold;
+}
 
-@body-background: white;
+/* TYPOGRAPHY */
+@annotation-gray: #A4A4A4;
+@error-input-color : #F6CECE;
+@body-font-color: #696969;
+@delete-color: #FF5252;
+
+/* CONTAINERS */
+@body-background: #FAFAFA;
+@panel-container-color: #EEEEEE;
+@topnav-bg-color: #816793;
+@box-shadow: 0 0 2px 0px rgba(0,0,0,0.4);
 
 /* GLOBAL STYLES */
 .inline-block {
 	display: inline-block;
+}
+a {
+  text-decoration: none;
 }
 body {
 	background: @body-background;
@@ -45,6 +67,10 @@ ul li.placeholder:before {
 .construction{
   cursor: not-allowed;
   opacity:0.6;
+}
+
+.btn, a {
+  cursor: pointer;
 }
 
 ::-webkit-scrollbar {
