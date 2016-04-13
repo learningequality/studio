@@ -22,7 +22,7 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Node
-        fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published', 
+        fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published', 'tags', 
                   'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id')
 
 class FileSerializer(serializers.ModelSerializer):
@@ -39,6 +39,11 @@ class MimeTypeSerializer(serializers.ModelSerializer):
    class Meta:
     model = MimeType
     fields = ('readable_name', 'machine_name', 'id') 
+
+class TagSerializer(serializers.ModelSerializer):
+   class Meta:
+    model = ContentTag
+    fields = ('tag_name', 'tag_type', 'id') 
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:

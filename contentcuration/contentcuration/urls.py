@@ -56,6 +56,9 @@ class NodeViewSet(BulkModelViewSet):
     queryset = Node.objects.all()
     serializer_class = serializers.NodeSerializer
 
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = ContentTag.objects.all()
+    serializer_class = serializers.TagSerializer
 
 class ExerciseViewSet(viewsets.ModelViewSet):
     queryset = Exercise.objects.all()
@@ -76,6 +79,7 @@ router.register(r'exercise', ExerciseViewSet)
 router.register(r'file', FileViewSet)
 router.register(r'format', FormatViewSet)
 router.register(r'mimetype', MimeTypeViewSet)
+router.register(r'tag', TagViewSet)
 
 bulkrouter = BulkRouter(trailing_slash=False)
 bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)

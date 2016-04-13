@@ -248,7 +248,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		console.log("called this");
 		_.bindAll(this, 'close_uploader', "check_and_save_nodes", 'check_item',
 						'add_tag','save_and_finish','add_more','set_edited',
-						'render_details', 'render_preview');
+						'render_details', 'render_preview', 'remove_tag');
 		this.parent_view = options.parent_view;
 		this.collection = (options.collection)? options.collection : new Models.NodeCollection();
 		this.allow_add = options.allow_add;
@@ -288,7 +288,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		'keypress #tag_box' : 'add_tag',
 		'keyup .upload_input' : 'set_edited',
 		'click #metadata_details_btn' : 'render_details',
-		'click #metadata_preview_btn' : 'render_preview'
+		'click #metadata_preview_btn' : 'render_preview',
+		'click .delete_tag':'remove_tag'
 	},
 
 	load_content:function(){
@@ -442,9 +443,12 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	add_tag: function(event){
 		if((!event.keyCode || event.keyCode ==13) && this.$el.find("#tag_box").val().trim() != ""){
 			/* TODO: FIX THIS LATER TO APPEND TAG VIEWS TO AREA*/
-			this.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + this.$el.find("#tag_box").val().trim() + "</div>");
+			this.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + this.$el.find("#tag_box").val().trim() + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
 			this.$el.find("#tag_box").val("");
 		}
+	},
+	remove_tag:function(event){
+		event.target.parentNode.remove();
 	},
 	set_edited:function(event){
 		this.$el.find(".disable_on_error").prop("disabled", false);

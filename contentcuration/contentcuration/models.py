@@ -61,6 +61,12 @@ class TopicTree(models.Model):
         verbose_name = _("Topic tree")
         verbose_name_plural = _("Topic trees")
 
+class ContentTag(AbstractContent):
+    tag_name = models.CharField(max_length=30, null=True, blank=True)
+    tag_type = models.CharField(max_length=30, null=True, blank=True)
+    
+    def __str__(self):
+        return self.tag_name
 
 class Node(ContentMetadata):
     """
@@ -89,6 +95,7 @@ class Node(ContentMetadata):
         null=True,
         help_text=_("Organization of person who holds the essential rights"),
     )
+    tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
 
     @property
     def has_draft(self):
