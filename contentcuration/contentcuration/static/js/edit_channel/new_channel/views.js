@@ -37,7 +37,7 @@ var ChannelList  = BaseListView.extend({
 			containing_list_view: this,
 			default_license: window.licenses.get_default()
 		});
-		this.$el.find("#channel_list").append("<li class='channel_container container' id='new'></li>")
+		this.$el.find("#channel_list").append("<li class='channel_container' id='new'></li>")
 		this.$el.find("#new").append(new_channel.el);
 	},
 	load_content:function(){

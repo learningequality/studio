@@ -23,7 +23,6 @@ var AddContentView = BaseViews.BaseListView.extend({
 		this.parent_view = options.parent_view;
 		this.modal = options.modal;
 		this.render();
-		console.log("CURRENT LICENSES", window.licenses);
 	},
 	render: function() {
 		if(this.modal){
@@ -229,14 +228,63 @@ var FileUploadView = UploadItemView.extend({
             headers: {"X-CSRFToken": get_cookie("csrftoken")}
         });
         this.dropzone.on("success", this.file_uploaded);
-
     },
     file_uploaded: function(file) {
         console.log("FILE FOUND:", file);
         this.file_list.push({
-        	"data" : file,
+        	"data" : file, 
         	"filename": JSON.parse(file.xhr.response).filename
         });
+    }
+});
+
+var ExerciseCreateView = UploadItemView.extend({
+    template: require("./hbtemplates/exercise_create.handlebars"),
+    modal_template: require("./hbtemplates/exercise_create_modal.handlebars"),
+
+    initialize: function(options) {
+        _.bindAll(this, "file_uploaded", "create_question", "close_file_uploader", "close_modal");
+        this.callback = options.callback;
+        this.modal = options.modal;
+        this.parent_view = options.parent_view;
+        this.render();
+    },
+    events:{
+      "click .submit_exercise" : "close_file_uploader",
+      "click .create_question" : "create_question",
+      'click .close_exercise_create' : 'close_modal'
+    },
+
+    render: function() {
+        if (this.modal) {
+            this.$el.html(this.modal_template({
+            	title: this.model.get("title")
+            }));
+            this.$(".modal-body").append(this.template());
+            $("body").append(this.el);
+            this.$(".modal").modal({show: true});
+            this.$(".modal").on("hide.bs.modal", this.close);
+        } else {
+            this.$el.html(this.template({
+            	title: this.model.get("title")
+            }));
+        }
+        this.file_list = [];   
+       /* var exercise_list_view = new ExerciseViews.ExerciseListView({
+        	el:$("#exercise-list")
+        });*/
+    },
+    file_uploaded: function(file) {
+        console.log("FILE FOUND:", file);
+        this.file_list.push({
+        	"data" : file, 
+        	"filename": JSON.parse(file.xhr.response).filename
+        });
+    },
+    create_question: function(){
+    },
+    close_modal:function(){
+    	this.close();
     }
 });
 
@@ -322,6 +370,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	},
 
 	check_and_save_nodes: function(callback){
+		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
 		var start = new Date().getTime();
 		var self = this;
 
@@ -335,7 +384,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		if(!self.errorsFound){
 			this.display_load(function(){
 	 			self.save_nodes();
-
 				if(!self.errorsFound){
 					self.$el.find("#title_error").html("");
 					self.$el.find("#description_error").html("");
@@ -423,7 +471,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.load_preview();
 		this.$el.find("#input_title").val(this.current_node.get("title"));
 		this.$el.find("#input_description").val(this.current_node.get("description"));
-
 	},
 	check_item: function(){
 		this.disable = this.$el.find("#uploaded_list :checked").length > 1;
@@ -507,7 +554,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			extension:extension,
 			title: this.current_node.get("title")
 		};
-
 		this.$el.find("#preview_window").html(preview_template(options));
 	},
 	switchPanel:function(switch_to_details){
@@ -537,9 +583,9 @@ var ContentItem =  BaseViews.BaseListItemView.extend({
 
 var NodeListItem = ContentItem.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
-	tagName: "li",
+	tagName: "li", 
 	'id': function() {
-		return this.model.cid;
+		return this.model.cid; 
 	},
 	initialize: function(options) {
 		_.bindAll(this, 'submit_topic','remove_topic');

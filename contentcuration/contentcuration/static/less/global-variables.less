@@ -7,10 +7,11 @@
 }
 
 @topnav-bg-color: #816793;
+@topnav-active-tab-color:#564462; 
 @error-input-color : #F6CECE;
-@body-font-color: white;
+@body-font-color: black;
 
-@body-background: #292A2B;
+@body-background: white;
 
 /* GLOBAL STYLES */
 .inline-block {
@@ -27,7 +28,7 @@ body.dragging, body.dragging * {
 .dragged {
   position: absolute;
   opacity: 0.5;
-  z-index: 2000;
+  z-index: 999999999999999;
 }
 
 ul li.placeholder {
@@ -39,4 +40,25 @@ ul li.placeholder:before {
 
 .error_input{
   background-color :@error-input-color;
+}
+
+.construction{
+  cursor: not-allowed;
+  opacity:0.6;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  margin-left:-100px;
+  position: relative;
+}
+ 
+::-webkit-scrollbar-track {
+  /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);*/
+}
+ 
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);*/
+   background-color:gray;
 }

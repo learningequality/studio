@@ -17,6 +17,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.licenses = new Models.LicenseCollection(window.license_list);
 		window.licenses.fetch();
 		window.licenses.create_licenses();
+		window.current_channel = new Models.ChannelModel(window.channel);
 		//this.listenTo(saveDispatcher, "save", this.save);
     },
 
@@ -52,17 +53,14 @@ ChannelEditRouter  = Backbone.Router.extend({
 	},
 
 	open_channel: function(edit_mode_on, is_clipboard, root){
-		var topictrees = new Models.TopicTreeModelCollection(window.topic_trees);
-		topictrees.fetch();
 		window.mimetypes = new Models.MimeTypeCollection(window.mtypes);
 		window.mimetypes.fetch();
 		window.mimetypes.create_mimetypes();
-
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
-			edit: edit_mode_on,
 			collection: this.nodeCollection,
+			edit: edit_mode_on,
 			model : root,
 			is_clipboard : is_clipboard
 		});

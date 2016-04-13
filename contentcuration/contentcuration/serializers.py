@@ -25,16 +25,20 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published', 'tags', 
                   'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id')
 
-class FileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = File
-        fields = ('checksum', 'extension', 'file_size', 'content_copy', 'id', 'available', 'format')
-
 class FormatSerializer(serializers.ModelSerializer):
    class Meta:
     model = Format
     fields = ('format_size', 'quality', 'contentmetadata', 'available', 'mimetype', 'id') 
 
+class FileSerializer(serializers.ModelSerializer):
+    content_copy = serializers.FileField(use_url=False)
+ 
+    def get(*args, **kwargs):
+         return super.get(*args, **kwargs)
+    class Meta:
+        model = File
+        fields = ('checksum', 'extension', 'file_size', 'content_copy', 'id', 'available', 'format')
+        
 class MimeTypeSerializer(serializers.ModelSerializer):
    class Meta:
     model = MimeType

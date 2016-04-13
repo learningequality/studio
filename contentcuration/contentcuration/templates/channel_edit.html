@@ -8,9 +8,8 @@
 
 	<script>
 		var channel = JSON.parse("{{ channel|escapejs}}");
-		var topic_trees = JSON.parse("{{ topictrees|escapejs }}");
-		var mtypes = JSON.parse("{{ mimetypes|escapejs }}");
 		var license_list = JSON.parse("{{ license_list|escapejs}}");
+		var mtypes = JSON.parse("{{ mimetypes|escapejs }}");
 	</script>
 	<script type="text/javascript">		
 		var bundle = require("channel_edit");
@@ -20,19 +19,21 @@
         });
     </script>
 	
-	<nav class="navbar navbar-default collapse navbar-collapse" id="secondary-nav">
-		<ul class="nav navbar-nav">
+	<nav class="navbar collapse navbar-collapse" id="secondary-nav">
+		<ul class="nav navbar-nav navbar-left">
 			<a href="edit"><li id="channel-edit-button" class="text-center pull-left">Edit</li></a>
 			<a href="preview"><li id="channel-preview-button" class="text-center pull-left">Preview</li></a>
 			<!--<a><li id="channel-trash-button" class="text-center pull-left">Trash</li></a>-->
 		</ul>
-		<ul class="nav navbar-nav" id="publish">
-			<li id="channel-publish-button" class="text-center pull-right">Publish</li>
+		<ul class="nav navbar-nav navbar-right" id="publish">
+			<li id="channel-publish-button" class="text-center">Unpublish Selected</li>
+			<li id="channel-publish-button" class="text-center">Publish Changes</li>
 		</ul>
 	</nav>	
-
-	<div id="main-content-area" class="container-fluid"></div>
-	<div id="previewer-area" class="container pull-right"></div>
-	<div id="queue-area" class="container pull-right"></div>
+	<div id="channel-edit-content-wrapper">
+		<div id="main-content-area" class="container-fluid"></div>
+		<div id="previewer-area" class="container pull-right"></div>
+		<div id="queue-area" class="container pull-right"></div>
+	</div>
 
 {% endblock content %}
