@@ -3,38 +3,39 @@
 #secondary-nav {
 	@secondary-nav-btn-color:#F2F2F2;
 	padding:0px 20px;
-	margin:0px;
+	margin: 0 0 0 27px;
 	background-color:transparent;
 	border:none;
 	width:100vw;
+	min-height: 0;
 
 	li {
-		font-size: 11pt;
+		font-size: @larger-body-text;
 		cursor:pointer;
 		color:black;
 	}
 
-	.navbar-left{
-		li{
-			margin-right:20px;
-			width: 80px;
-			padding-bottom:5px;
+	.navbar-left {
+		li {
+			margin-right: 40px;
+			padding-bottom: 5px;
 		}
-		li:hover, .active{
-			border-bottom: 4px solid @topnav-active-tab-color;
+		li:hover, .active {
+			color: @blue-900;
+			font-weight: bold;
+		}
+		.active {
+			border-bottom: 4px solid @blue-900;
 		}
 	}
 
 	.navbar-right li{
-		margin-right:20px;
-		background-color:@secondary-nav-btn-color;
-		border:1px solid gray;
-		border-radius:5px;
-		padding:2px 15px;
+		margin: -6px 40px 0 0;
+		.action-button;
 	}
 }
 
-#channel-edit-content-wrapper{
+#channel-edit-content-wrapper {
 	@container-width: 230px;
 	@container-height: 60vh; 
 	@container-min-height:400px;
@@ -58,7 +59,8 @@
 	width:100vw;
 	height:100%;
 	background: @blue-100;
-	padding: 20px 0 20px 15px;
+	padding: 13px 0 0 15px;
+	border-top: 2px solid @blue-900;
 
 	#container-wrapper{
 		overflow:hidden;
@@ -69,10 +71,9 @@
 	}
 
 	#container_area_title{
-		margin-top:0px;
-		color:@channel-edit-font-color;
-		margin-bottom:15px;
-		font-weight:bold;
+		margin-top: 0px;
+		color: @channel-edit-font-color;
+		margin-bottom: 10px;
 	}
 
 	#hide_details_checkbox + label{
@@ -270,7 +271,7 @@
 		}
 	}
 
-	#edit{
+	#edit {
 		@edit-new-button-color: #C9C9C9;
 		@edit-container-color: #E8E8E8;
 		@edit-new-content-color: #89C0B1;
@@ -278,28 +279,27 @@
 
 		#button_bar {
 			.nav-button-container {
-				width: 60px;
+				width: 50px;
 				.inline-block;
 				margin-right: 35px;
 				.nav-button {
 					width: 100%;
-					height: 50px;
+					height: 40px;
 					background: @body-background;
 					border-radius: 2px;
 					cursor: pointer;
 					span {
-						font-size: 30px;
+						font-size: 23px;
 					    text-align: center;
 					    display: block;
-					    top: 10px;
-					    color: @action-enabled;
+					    top: 8px;
+					    color: @blue-500;
 					}
 				}
 				a {
-					padding:2px 20px;
-					margin-right:10px;
 					color: @body-font-color;
 					display: block;
+					text-align: center;
 					&:hover {
 						text-decoration: none;
 					}
@@ -307,7 +307,7 @@
 			}
 			.hide-details-container {
 				position: relative;
-				bottom: 27px;
+				bottom: 22px;
 				.inline-block;
 				input {
 					width: 20px;
