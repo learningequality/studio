@@ -45,7 +45,6 @@ def channel(request, channel_id):
     licenses = ContentLicense.objects.all()
     license_serializer = LicenseSerializer(licenses, many=True)
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
-                                                 "topictrees" : JSONRenderer().render(topictree_serializer.data),
                                                  "mimetypes" : JSONRenderer().render(mimetype_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data)})
 

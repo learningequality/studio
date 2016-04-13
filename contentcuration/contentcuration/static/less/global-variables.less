@@ -2,23 +2,57 @@
 @icon-font-path: "/static/fonts/";
 
 @font-face {
-	font-family: "Open Sans";
-	src: url("@{icon-font-path}OpenSans-Regular.ttf") format("truetype");
+  font-family: "Noto Sans";
+  src: url("@{icon-font-path}NotoSans-Regular.ttf") format("truetype");
 }
 
-@topnav-bg-color: #816793;
+/* ICONS AND BUTTONS */
 @topnav-active-tab-color:#564462; 
-@error-input-color : #F6CECE;
-@body-font-color: black;
+.action-button {
+  background: @blue-500;
+  color: white;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 2px;
+}
+.action-text {
+  color: @blue-500;
+  font-weight: bold;
+}
 
-@body-background: white;
+/* TYPOGRAPHY */
+@title: 24px;
+@larger-body-text: 16px;
+@body-text: 14px;
+@annotation-text: 12px;
+
+
+@body-font-color: #30302F;
+@annotation-gray: #A4A4A4;
+@error-input-color : #F6CECE;
+@delete-color: #FF5252;
+
+/* CONTAINERS */
+@body-background: #FAFAFA;
+@panel-container-color: #EEEEEE;
+@topnav-bg-color: #816793;
+@box-shadow: 0 0 2px 0px rgba(0,0,0,0.4);
+
+/* COLOR PALETTE */
+@blue-100: #BBDEFB;
+@blue-500: #2196F3;
+@blue-700: #1976D2;
+@blue-900: #0D47A1;
 
 /* GLOBAL STYLES */
 .inline-block {
-	display: inline-block;
+  display: inline-block;
+}
+a {
+  text-decoration: none;
 }
 body {
-	background: @body-background;
+  background: @body-background;
 }
 
 body.dragging, body.dragging * {
@@ -45,6 +79,10 @@ ul li.placeholder:before {
 .construction{
   cursor: not-allowed;
   opacity:0.6;
+}
+
+.btn, a {
+  cursor: pointer;
 }
 
 ::-webkit-scrollbar {

@@ -147,7 +147,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		
 		/* Animate sliding in from left */
 		this.$el.css('margin-left', -this.$el.find(".content-list").outerWidth());
-		$("#container_area").width(this.$el.find(".content-list").outerWidth() * (this.index + 1));
+		$("#container_area").width(this.$el.find(".content-list").outerWidth() * (this.index));
 		this.$el.animate({'margin-left' : "0px"}, 500);	
 	},
 	render: function() {
