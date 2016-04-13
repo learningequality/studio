@@ -39,7 +39,7 @@
 	@container-height: 60vh; 
 	@container-min-height:400px;
 	@container-border-color: #BCBCBC;
-	@container-title-color: #666666;
+	@container-title-color: #30302F;
 	@container-last-width: 450px;
 
 	@folder-gap-width: 0px;
@@ -57,6 +57,8 @@
 	overflow-x:hidden;
 	width:100vw;
 	height:100%;
+	background: @blue-100;
+	padding: 20px 0 20px 15px;
 
 	#container-wrapper{
 		overflow:hidden;
@@ -274,10 +276,49 @@
 		@edit-new-content-color: #89C0B1;
 		@edit-current-folder-color:#666666;
 
-		#button_bar{
-			a{
-				padding:2px 20px;
-				margin-right:10px;
+		#button_bar {
+			.nav-button-container {
+				width: 60px;
+				.inline-block;
+				margin-right: 35px;
+				.nav-button {
+					width: 100%;
+					height: 50px;
+					background: @body-background;
+					border-radius: 2px;
+					cursor: pointer;
+					span {
+						font-size: 30px;
+					    text-align: center;
+					    display: block;
+					    top: 10px;
+					    color: @action-enabled;
+					}
+				}
+				a {
+					padding:2px 20px;
+					margin-right:10px;
+					color: @body-font-color;
+					display: block;
+					&:hover {
+						text-decoration: none;
+					}
+				}
+			}
+			.hide-details-container {
+				position: relative;
+				bottom: 27px;
+				.inline-block;
+				input {
+					width: 20px;
+					height: 20px;
+				}
+				label {
+					font-size: 14px;
+					color: @body-font-color;
+					position: relative;
+					bottom: 4px;
+				}
 			}
 		}
 		.content-container{
@@ -296,8 +337,8 @@
 				}
 				input[type=checkbox]{
 					display:inline-block;
-					width:15px;
-					height:15px;
+					width:20px;
+					height:20px;
 					vertical-align:middle;
 					margin-left:2px;
 				}
