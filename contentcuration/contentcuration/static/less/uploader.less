@@ -33,7 +33,7 @@
 
 
 .upload-modal-content{
-	background-color: @uploader-background-color;
+	background-color: @body-background;
 	height: @uploader-height;
 	border: 1px solid gray;
 	/*overflow:hidden;*/
@@ -117,11 +117,24 @@ div#dropzone {
 		height:100%;
 		width: @metadata-width / 3.5;
 	}
+	nav a.btn-tab-active {
+			font-weight: bold;
+		    border-bottom: 2px solid @blue-700;
+		    border-radius: 0;
+		    padding: 1px 2px;
+		    margin: 0 13px;
+		}
+	nav a {
+		color: @blue-700;
+		&:hover {
+			font-weight: bold;
+		}
+	}
 
 	.metadata_panel{
-		height:100%;
-		padding:10px;
-		max-height:@uploader-height * 0.7;
+		height: 100%;
+		padding: 10px;
+		max-height: @uploader-height * 0.7;
 	}
 
 	#metadata_preview{
