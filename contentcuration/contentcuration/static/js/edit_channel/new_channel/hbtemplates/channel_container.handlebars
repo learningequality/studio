@@ -2,7 +2,7 @@
 	{{#if edit}}
 		<img class="new_channel_pic construction" alt="Drag picture here (under construction)"></img>
 	{{else}}
-		<img id="channel_pic" alt="No picture found."></img>
+		<img id="channel_pic" alt="No picture found." src="/img/unicef logo.jpg"/>
 	{{/if}}
 </div>
 {{#if edit}}
@@ -21,7 +21,7 @@
 {{else}}
 	
 	<span class="channel_metadata">
-		<span class="resource_count">0</span> Resources 
+		<span class="resource_count">{{resource_count}}</span> Resources 
 		<!--<span class="exercise_count">0</span> Exercises
 		
 		<span class="exercise_count">0</span>--><span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size total_file_size}}{{/format_file_size}}

@@ -50,6 +50,9 @@ var NodeModel = BaseModel.extend({
 		return count;
 	},
 	getChildCount:function(includeParent, collection){
+		if(!collection){
+			collection = new NodeCollection();
+		}
 		var count = (includeParent) ? 1:0;
 		var children = collection.get_all_fetch(this.get("children"));
 		children.forEach(function(entry){

@@ -71,9 +71,20 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 	},
 
 	render: function() {
+		var draft_node = (this.model)? this.model.get_tree("draft").get_root() : null;
+		var draft_count = (draft_node)? draft_node.getChildCount(false, null) : 0;
+		var draft_size = (draft_node)? draft_node.get("total_file_size") : 0;
+
+		var clipboard_node = (this.model)? this.model.get_tree("clipboard").get_root() : null;
+		var clipboard_count = (clipboard_node)? this.model.get_tree("clipboard").get_root().getChildCount(false, null) : 0;
+		var clipboard_size = (clipboard_node)? clipboard_node.get("total_file_size") : 0;
+
 		this.$el.html(this.template({
 			edit: this.edit, 
-			channel: (this.model) ? this.model.attributes : null
+			channel: (this.model) ? this.model.attributes : null,
+			total_file_size: clipboard_size + draft_size,
+			resource_count: draft_count + clipboard_count,
+			picture: "/img/unicef logo.jpg"
 		}));
 		this.$el.addClass('channel_container');
 	},

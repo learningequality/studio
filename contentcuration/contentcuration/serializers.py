@@ -17,13 +17,21 @@ class TopicTreeSerializer(serializers.ModelSerializer):
         model = TopicTree
         fields = ('name', 'channel', 'root_node', 'id')
 
+class FileSerializer(serializers.ModelSerializer):
+    content_copy = serializers.FileField(use_url=False)
+ 
+    def get(*args, **kwargs):
+         return super.get(*args, **kwargs)
+    class Meta:
+        model = File
+        fields = ('checksum', 'extension', 'file_size', 'content_copy', 'id', 'available', 'format')
+
 class FormatSerializer(serializers.ModelSerializer):
    files = FileSerializer(many=True, read_only=True)
 
    class Meta:
         model = Format
         fields = ('format_size', 'quality', 'contentmetadata', 'available', 'mimetype', 'id', 'files')
-
 
 class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -34,17 +42,7 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',
                   'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id',
                   'formats')
-
-
-class FileSerializer(serializers.ModelSerializer):
-    content_copy = serializers.FileField(use_url=False)
- 
-    def get(*args, **kwargs):
-         return super.get(*args, **kwargs)
-    class Meta:
-        model = File
-        fields = ('checksum', 'extension', 'file_size', 'content_copy', 'id', 'available', 'format')
-        
+   
 class MimeTypeSerializer(serializers.ModelSerializer):
    class Meta:
     model = MimeType
