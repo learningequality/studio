@@ -1,7 +1,7 @@
 import json
 from rest_framework import status
 from django.http import Http404, HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.core import paginator
 from django.core.files.storage import get_storage_class
@@ -15,7 +15,7 @@ from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerial
 from kolibri.content.models import File
 
 def base(request):
-    return render(request, 'base.html')
+    return redirect(channel_list)    # redirect to the channel list page
 
 
 def testpage(request):
