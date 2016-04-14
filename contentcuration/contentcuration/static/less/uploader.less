@@ -33,7 +33,7 @@
 
 
 .upload-modal-content{
-	background-color: @panel-container-color;
+	background-color: @body-background;
 	height: @uploader-height;
 	border: 1px solid gray;
 	/*overflow:hidden;*/
@@ -119,13 +119,14 @@ div#dropzone {
 	}
 	nav a.btn-tab-active {
 			font-weight: bold;
-		    border-bottom: 2px solid @blue-700;
+		    border-bottom: 2px solid @body-font-color;
 		    border-radius: 0;
 		    padding: 1px 2px;
 		    margin: 0 13px;
 		}
 	nav a {
-		color: @blue-700;
+		color: @body-font-color;
+		font-size: @larger-body-text;
 		&:hover {
 			font-weight: bold;
 		}
@@ -214,7 +215,7 @@ div#dropzone {
 	}
 
 	.gray-out{
-		background-color:@uploader-grayed-out-color;
+		background-color:@uploader-grayed-out-color !important;
 	}
 
 	.tag{
