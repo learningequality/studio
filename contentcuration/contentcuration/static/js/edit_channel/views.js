@@ -377,9 +377,8 @@ var BaseEditorView = BaseListView.extend({
 			entry.model.set(entry.model.attributes, {validate:true});
 			console.log("FILE SAVE", entry);
 			if(!entry.model.validationError){
-				//if(!self.allow_add)
-					entry.save(entry.model.attributes, {validate:false, async:false});
-				entry.set_edited(false);
+	          entry.save(entry.model.attributes, {validate:false, async:false});
+	          entry.set_edited(false);
 			}else{
 				self.handle_error(entry);
 				self.errorsFound = true;

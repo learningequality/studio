@@ -212,9 +212,12 @@ var NodeModel = BaseModel.extend({
 					self.save({total_file_size: file.get("file_size")});
 					console.log("SAVING FILE:", file);
 					file.save({
-						format: format.id
-					});
-				}
+						  format: format.id,
+          },
+          {
+              patch: true,
+          });
+        }
 			});
 		}
 	},
@@ -396,8 +399,7 @@ var FormatModel = BaseModel.extend({
 	get_files : function(){
 		var files = new FileCollection();
 		files.fetch({async:false});
-		//return files.where({format: this.id});
-		return files.where({id:74});
+		return files.where({format: this.id});
 	}
 });
 

@@ -194,7 +194,7 @@ var FileUploadView = UploadItemView.extend({
     acceptedFiles : "image/*,application/pdf,video/*,text/*,audio/*",
 
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded",  "close_file_uploader");
+        _.bindAll(this, "file_uploaded",  "close_file_uploader", "all_files_uploaded", "file_added", "file_removed");
         this.callback = options.callback;
         this.modal = options.modal;
         this.parent_view = options.parent_view;
@@ -225,9 +225,18 @@ var FileUploadView = UploadItemView.extend({
   			parallelUploads: 20,
   			//autoQueue: false, // Make sure the files aren't queued until manually added
   			previewsContainer: "#dropzone", // Define the container to display the previews
-            headers: {"X-CSRFToken": get_cookie("csrftoken")}
+            headers: {"X-CSRFToken": get_cookie("csrftoken")},
+            addRemoveLinks: true
         });
         this.dropzone.on("success", this.file_uploaded);
+
+        // Only enable the submit upload files button once all files have finished uploading.
+		this.dropzone.on("queuecomplete", this.all_files_uploaded);
+
+        // Disable the submit upload files button if a new file is added to the queue.
+        this.dropzone.on("addedfile", this.file_added);
+
+        this.dropzone.on("removedfile", this.file_removed);
     },
     file_uploaded: function(file) {
         console.log("FILE FOUND:", file);
@@ -235,56 +244,25 @@ var FileUploadView = UploadItemView.extend({
         	"data" : file, 
         	"filename": JSON.parse(file.xhr.response).filename
         });
-    }
-});
-
-var ExerciseCreateView = UploadItemView.extend({
-    template: require("./hbtemplates/exercise_create.handlebars"),
-    modal_template: require("./hbtemplates/exercise_create_modal.handlebars"),
-
-    initialize: function(options) {
-        _.bindAll(this, "file_uploaded", "create_question", "close_file_uploader", "close_modal");
-        this.callback = options.callback;
-        this.modal = options.modal;
-        this.parent_view = options.parent_view;
-        this.render();
     },
-    events:{
-      "click .submit_exercise" : "close_file_uploader",
-      "click .create_question" : "create_question",
-      'click .close_exercise_create' : 'close_modal'
+    disable_submit: function() {
+        this.$(".submit_uploaded_files").attr("disabled", "disabled");
+    },
+    enable_submit: function() {
+        this.$(".submit_uploaded_files").removeAttr("disabled");
+    },
+    all_files_uploaded: function() {
+        this.enable_submit();
+    },
+    file_added: function() {
+        this.disable_submit();
     },
 
-    render: function() {
-        if (this.modal) {
-            this.$el.html(this.modal_template({
-            	title: this.model.get("title")
-            }));
-            this.$(".modal-body").append(this.template());
-            $("body").append(this.el);
-            this.$(".modal").modal({show: true});
-            this.$(".modal").on("hide.bs.modal", this.close);
-        } else {
-            this.$el.html(this.template({
-            	title: this.model.get("title")
-            }));
+    file_removed: function(file) {
+        this.file_list.splice(this.file_list.indexOf(file), 1);
+        if (this.file_list.length === 0) {
+            this.disable_submit();
         }
-        this.file_list = [];   
-       /* var exercise_list_view = new ExerciseViews.ExerciseListView({
-        	el:$("#exercise-list")
-        });*/
-    },
-    file_uploaded: function(file) {
-        console.log("FILE FOUND:", file);
-        this.file_list.push({
-        	"data" : file, 
-        	"filename": JSON.parse(file.xhr.response).filename
-        });
-    },
-    create_question: function(){
-    },
-    close_modal:function(){
-    	this.close();
     }
 });
 
@@ -474,6 +452,9 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.load_preview();
 		this.$el.find("#input_title").val(this.current_node.get("title"));
 		this.$el.find("#input_description").val(this.current_node.get("description"));
+        // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
+        var file_size = (((this.current_node.get("formats") || [])[0] || {}).format_size) || ((this.current_node.get("file_data") || {}).data || {}).size || "";
+        this.$("#display_file_size").text(file_size);
 	},
 	check_item: function(){
 		this.disable = this.$el.find("#uploaded_list :checked").length > 1;
