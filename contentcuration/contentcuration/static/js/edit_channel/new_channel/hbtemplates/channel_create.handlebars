@@ -1,6 +1,6 @@
 <div id="channel_area_wrapper">
 	<nav id="manage-channel-nav" class="container">
-		<h2 class="text-center">Welcome back, {{ user }}</h2>
+		<!--<h2 class="text-center">Welcome back, {{user}}</h2>
 		<input type="text" placeholder="Start finding great educational content..." id="search_channels_input"/>
 		<div class="row">
 			<div class="col-xs-2 search_section text-center">
@@ -37,15 +37,15 @@
 				<a class="btn" id="channel_find_button">Find</a>
 			</div>
 		</div>
-		<hr/>
+		<hr/>-->
 	</nav>
-	<div id="bookmark-area" class="pull-right">
+	<!--<div id="bookmark-area" class="pull-right">
 		<a class="btn btn-default" id="subscribed_clipboard_button">Clipboard<span class="badge">0</span></a>
 		<h4>My Subscriptions</h4>
 		<p><em>(under construction)</em></p>
 		<ul id="bookmark_list" class="list-unstyled">
 		</ul>
-	</div>
+	</div>-->
 	<div id="channel-list-area">
 		<h3>My Channels</h3>
 		<ul id="channel_list" class="list-unstyled">
@@ -54,7 +54,7 @@
 			    {{else}} <li><h5 class="default-item">No channels found.</h5></li>
 			{{/each}}
 		</ul>
-		<div class="new_channel_button round-plus">+</div>
+		<div class="new_channel_button round-plus disable-on-edit">+</div>
 		<h3 class="new_channel_button disable-on-edit new-channel">New Channel</h3>
 	</div>
 </div>

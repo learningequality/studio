@@ -104,7 +104,9 @@
 				margin: 3px 0 10px 3px;
 				padding: 15px;
 				.edit_channel {
-					display:none;
+					cursor:pointer;
+					display:inline-block;
+					margin-top:@channel-font-size /2;
 				}
 				.profile{
 					height:100%;
@@ -116,10 +118,9 @@
 					}
 				}
 				.manage_area{
-					height:100%;
+					width:100%;
 					.open_channel {
 						.action-button;
-						margin-top:@channel-container-height * 0.7;
 						margin-right:10px;
 					}
 				}
@@ -135,6 +136,13 @@
 					font-size: @channel-font-size;
 					font-weight: bold;
 					color: @body-font-color;
+					width:@channel-container-width - @channel-profile-width - 30px;
+					margin-left:@channel-profile-width;
+					height:@channel-font-size;
+					.channel_name{
+						max-width:75%;
+						display:inline-block;
+					}
 					.glyphicon{
 						font-size: @channel-font-size * .9;
 						margin-left:10px;
@@ -142,7 +150,9 @@
 					}
 				}
 				.description{
-					height: @channel-container-height - @channel-font-size - 75px;
+					height: @channel-container-height - @channel-font-size - 100px;
+					width:@channel-container-width - @channel-profile-width - 40px;
+					margin-left:@channel-profile-width;
 					overflow-y:auto;
 					p{
 						font-size: @channel-description-font-size;
@@ -183,7 +193,7 @@
 					.channel_toggle {
 						position: relative;
 						top: 7px;
-						left: 400px;
+						left: 375px;
 					}
 				}
 				input[type=text] {
@@ -204,11 +214,6 @@
 						padding: 0px 5px;
 						font-size:9pt;
 					}
-				}
-			}
-			li:hover{
-				.edit_channel{
-					display:inline-block;
 				}
 			}
 		}

@@ -31,6 +31,11 @@ var TreeEditView = BaseViews.BaseView.extend({
 	 	}else if(!this.is_clipboard){
 	 		$("#channel-preview-button").addClass("active");
 	 	}
+
+	 	options.channels.forEach(function (entry){
+			$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
+		});
+		$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
@@ -365,13 +370,14 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	},
 	publish_children:function(model, collection){
 		var self = this;
+		console.log("MODEL IS", model);
 		var children = collection.get_all_fetch(model.get("children"));
 		children.forEach(function(entry){
 			if(!entry.get("published")){
 				entry.save({"published":true},{validate:false});
 			}
 			self.publish_children(this, collection);
-		});
+		});		
 	},
 	add_to_trash:function(){
 		this.containing_list_view.add_to_trash([this]);

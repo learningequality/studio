@@ -12,7 +12,7 @@
 			{{/each}}
 			</ul>
 			{{#if allow_add}}
-				<a class="btn btn-default" id="add_more_button">Add more to Channel</a>
+				<a class="btn btn-default" id="add_more_button">Back</a>
 			{{/if}}
 		</div>
 	{{/if}}
@@ -27,13 +27,14 @@
 				<input type="text" id="input_title" class="disable-on-edit upload_input" required/>
 				<h4>Description<label class="required">*<span id="description_error"></span></label></h4> 
 				<textarea id="input_description" class="disable-on-edit upload_input" required/></textarea>
-				<h4>Keywords (optional)</h4> 
+				<h4>Tags (optional)</h4> 
 				<input type="text" id="tag_box" class="tag_input" placeholder="Press 'Enter' to add tag"/>
 				<div class="container-fluid">
 					<div class="row" id="tag_area">
 					</div>
 				</div>					
 			</div>
+			<!--
 			<div class="section construction pull-right">
 				<h4>Related Content</h4>
 				<div class="content-relation-area">
@@ -43,6 +44,7 @@
 				<div class="content-relation-area">
 				</div>
 			</div>
+			-->
 		</div>
 
 		<div id="metadata_preview" class="container-fluid">

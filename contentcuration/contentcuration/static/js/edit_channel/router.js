@@ -19,6 +19,8 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.licenses.create_licenses();
 		window.current_channel = new Models.ChannelModel(window.channel);
 		//this.listenTo(saveDispatcher, "save", this.save);
+		this.channelCollection = new Models.ChannelCollection();
+		this.channelCollection.fetch({async:false});
     },
 
     routes: {
@@ -29,9 +31,6 @@ ChannelEditRouter  = Backbone.Router.extend({
     },
 
 	navigate_channel_home: function() {
-		this.channelCollection = new Models.ChannelCollection();
-		this.channelCollection.fetch();
-
 		var channel_manager_view = new ChannelManageView.ChannelList ({
 			el: $("#channel-container"),
 			model: this.model,
@@ -39,7 +38,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 			user: this.user,
 			licenses:window.licenses
 		});
-
     },
 
 	edit_page : function(){
@@ -62,8 +60,10 @@ ChannelEditRouter  = Backbone.Router.extend({
 			collection: this.nodeCollection,
 			edit: edit_mode_on,
 			model : root,
-			is_clipboard : is_clipboard
+			is_clipboard : is_clipboard,
+			channels : this.channelCollection
 		});
+
 	}
 });
 

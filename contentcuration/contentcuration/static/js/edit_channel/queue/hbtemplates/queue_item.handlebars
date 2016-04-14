@@ -10,7 +10,7 @@
 		{{#if isfolder}}<div class="pull-left tog_folder"><span id="menu_toggle_{{node.id}}" class="glyphicon glyphicon-menu-up"></span></div>{{/if}}
 		<!--<span class="glyphicon glyphicon-{{file_icon}}"></span>-->
 		<h6>{{to_upper_case node.attributes.kind}}</h6>
-		<h4 class="queue_item_title">{{node.attributes.title}}</h4>
+		<h4 class="queue_item_title truncate">{{node.attributes.title}}</h4>
 	{{/if}}
 </label>
 {{#if isfolder}}<div id="queue_item_{{node.id}}_sub" style="padding-left: {{indent}}px;" class="subdirectory">

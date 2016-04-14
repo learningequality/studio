@@ -324,6 +324,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 				allow_add: this.allow_add
 			}));
 		}
+		this.gray_out();
 		this.load_content();
 	},
 	events: {
@@ -359,7 +360,11 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 					containing_list_view: self,
 				});
 				self.views.push(node_view);
+				if(self.collection.length ==1){
+					self.set_current(node_view);
+				}
 			});
+
 		}
 	},
 	render_details:function(){
@@ -388,9 +393,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 					self.$el.find("#title_error").html("");
 					self.$el.find("#description_error").html("");
 					if(self.disable){
-						self.$el.find(".upload_input").addClass("gray-out");
-						self.$el.find("#input_title").val(" ");
-						self.$el.find("#input_description").val(" ");
+						self.gray_out();
 					}
 				}
 				if(!self.errorsFound && self.allow_add)
@@ -479,13 +482,19 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.$el.find("#input_description").val((this.disable || !this.current_node)? " " : this.current_node.get("description"));
 
 		if(this.disable) {
-			this.$el.find(".disable-on-edit").addClass("gray-out");
+			this.gray_out();
 			//TODO: Clear tagging area $("#tag_area").html("");
 		}
 		else {
 			this.$el.find(".upload_input").removeClass("gray-out");
 			this.set_current_node(this.$el.find("#uploaded_list :checked").parent("li").data("data"));
 		}
+	},
+	gray_out:function(){
+		this.$el.find(".disable-on-edit").addClass("gray-out");
+		this.$el.find(".upload_input").addClass("gray-out");
+		this.$el.find("#input_title").val(" ");
+		this.$el.find("#input_description").val(" ");
 	},
 	add_tag: function(event){
 		if((!event.keyCode || event.keyCode ==13) && this.$el.find("#tag_box").val().trim() != ""){

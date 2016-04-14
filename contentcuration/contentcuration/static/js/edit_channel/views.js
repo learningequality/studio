@@ -261,8 +261,11 @@ BaseListView = BaseView.extend({
 var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
 	delete:function(){
-		console.log("PERFORMANCE views.js: starting delete " + this.model.get("title") + "...");
     	var start = new Date().getTime();
+    	if(!this.model){
+    		this.delete_view();
+    		return;
+    	}
 
 		if(!this.model.get("kind")) {
 			this.model.delete_channel();

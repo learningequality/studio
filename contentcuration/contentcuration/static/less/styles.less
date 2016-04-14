@@ -52,7 +52,7 @@ body {
 		margin-right:10px;
 	}
 
-	.active .btn-main, .dropdown-toggle:active,  .open .dropdown-toggle {
+	.active .btn-main{
 		background-color: @topnav-active-tab-color;
 	}
 	
@@ -83,30 +83,18 @@ body {
 	.dropdown-menu{
 		background-color: @search-bg-color;
 	}
-
-/*
-	.collapse{
-		max-width:100vw;
-		border:none;
-		overflow:hidden;
-		text-align:center;
-		*{
-			margin:0;
-			padding:5px;
-			width:100%;
-		}
-		#content-search{
-			padding:0px;
-			input{
-				width:95%;
-			}
-			.glyphicon{
-				margin:0;
-				padding:0;
-			}
+	.dropdown-toggle{
+		padding:5px;
+		margin-top:10px;
+		min-width:300px;
+		background-color: @search-bg-color;
+		border-radius:5px;
+		.caret{
+			color:gray;
+			height:25px;
+			margin:5px;
 		}
 	}
-*/
 }
 
 #kolibri_load_gif{
@@ -119,6 +107,7 @@ body {
     background: url('/static/img/kolibri_load.gif');
     background-size: 200px 170px;
     background-repeat: no-repeat;
+    z-index:999999999999999999999999999999999999999;
 }
 
 #loading_modal{
@@ -130,6 +119,7 @@ body {
     background: #000;
     opacity: 0.8;
     filter: alpha(opacity=80);
+    z-index:999999999999999999999999999999999999999;
 }
 
 #temp_splash{
@@ -144,3 +134,4 @@ body {
 		margin-bottom:30px;
 	}
 }
+

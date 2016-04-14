@@ -16,6 +16,7 @@ var ChannelList  = BaseListView.extend({
 		this.user = options.user;
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(this.collection, "sync", this.render);
+
 	},
 	render: function() {
 		this.set_editing(false);
@@ -26,19 +27,17 @@ var ChannelList  = BaseListView.extend({
 		this.load_content();
 	},
 	events: {
-		'click #new_channel_button' : 'new_channel'
+		'click .new_channel_button' : 'new_channel'
 	},
 
 	new_channel: function(event){
 		this.set_editing(true);
-
 		var new_channel = new ChannelListItem({
 			edit:true,
 			containing_list_view: this,
-			default_license: window.licenses.get_default()
+			default_license: window.licenses.get_default(),
 		});
-		this.$el.find("#channel_list").append("<li class='channel_container' id='new'></li>")
-		this.$el.find("#new").append(new_channel.el);
+		this.$el.find("#channel_list").append(new_channel.el);
 	},
 	load_content:function(){
 		var containing_list_view = this;
@@ -51,6 +50,7 @@ var ChannelList  = BaseListView.extend({
 				channel_list: containing_list_view.collection.toJSON()
 			});
 			containing_list_view.views.push(view);
+        	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 		});
 	}
 });
@@ -59,6 +59,7 @@ var ChannelList  = BaseListView.extend({
 	edit: determines whether to load channel or editor
 */
 var ChannelListItem = BaseViews.BaseListItemView.extend({
+	tagName: "li",
 	template: require("./hbtemplates/channel_container.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel');
@@ -74,6 +75,7 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 			edit: this.edit, 
 			channel: (this.model) ? this.model.attributes : null
 		}));
+		this.$el.addClass('channel_container');
 	},
 	events: {
 		'click .edit_channel':'edit_channel',
@@ -99,8 +101,10 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 		if(this.model){
 			this.edit = false;
 			this.render();
+			console.log("first");
 		}else{
-			this.remove();
+			this.delete_view();
+			console.log("second");
 		}
 	},
 	save_channel: function(event){

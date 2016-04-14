@@ -36,7 +36,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="#"id="logo-container">
+              <a class="navbar-brand" href="/channels"id="logo-container">
                 <img src="{% static 'img/logo.png' %}">
               </a>
               <label id="kolibri_label">Kolibri</label>
@@ -45,12 +45,18 @@
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
               <ul class="nav navbar-nav">
-                <li class="active" id="main-nav-home-button"><a href="/channels" class="btn btn-main">Home</li>
-                <li class="search" id="content-search">
+                <li class="active" id="main-nav-home-button"><a href="/channels" class="btn btn-main">Home</a></li>
+                <!--<li class="search" id="content-search">
                       <input type="text" placeholder="Search for content in your channels..." aria-describedby="basic-addon2">
                       <span class="glyphicon glyphicon-search" id="main-search-button" aria-hidden="true"></span>
+                </li>-->
+                 <li class="dropdown">
+                    <a href="#" id="channel_selection_dropdown" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Select a Channel... <span class="caret pull-right"></span></a>
+                    <ul class="dropdown-menu" id="channel_selection_dropdown_list">
+                    </ul>
                 </li>
               </ul>
+              <!--
               <ul class="nav navbar-nav navbar-right">
                 <li> <a class="btn btn-main">Discover</a></li>
                 <li class="dropdown">
@@ -61,6 +67,7 @@
                   </ul>
                 </li>
               </ul>
+            -->
             </div><!-- /.navbar-collapse -->
           </div><!-- /.container-fluid -->
         </nav>
