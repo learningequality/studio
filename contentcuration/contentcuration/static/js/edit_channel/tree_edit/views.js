@@ -370,14 +370,15 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	},
 	publish_children:function(model, collection){
 		var self = this;
-		console.log("MODEL IS", model);
-		var children = collection.get_all_fetch(model.get("children"));
-		children.forEach(function(entry){
-			if(!entry.get("published")){
-				entry.save({"published":true},{validate:false});
-			}
-			self.publish_children(this, collection);
-		});		
+		if(model.attributes){
+			var children = collection.get_all_fetch(model.get("children"));
+			children.forEach(function(entry){
+				if(!entry.get("published")){
+					entry.save({"published":true},{validate:false});
+				}
+				self.publish_children(this, collection);
+			});
+		}
 	},
 	add_to_trash:function(){
 		this.containing_list_view.add_to_trash([this]);

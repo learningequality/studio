@@ -137,16 +137,13 @@
 					height:@channel-font-size;
 					.channel_name{
 						max-width:75%;
-						display:inline-block;
 					}
 					.edit_channel {
 						cursor:pointer;
-						display:inline;
+						display:inline-block;
 						font-size: @channel-font-size * .9;
-						margin-left:10px;
+						margin-right:30px;
 						color: @blue-500;
-						margin-top:-20px;
-						padding:0;
 					}
 				}
 				.description{
@@ -154,6 +151,7 @@
 					width:@channel-container-width - @channel-profile-width - 40px;
 					margin-left:@channel-profile-width;
 					overflow-y:auto;
+					margin-bottom:5px;
 					p{
 						font-size: @channel-description-font-size;
 					}

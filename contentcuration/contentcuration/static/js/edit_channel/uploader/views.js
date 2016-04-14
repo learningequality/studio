@@ -270,6 +270,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
 	modal_template: require("./hbtemplates/uploader_modal.handlebars"),
 	header_template: require("./hbtemplates/edit_metadata_header.handlebars"),
+
 	initialize: function(options) {
 		console.log("called this");
 		_.bindAll(this, 'close_uploader', "check_and_save_nodes", 'check_item',
@@ -302,6 +303,12 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 				allow_add: this.allow_add
 			}));
 		}
+		this.preview_view = new PreviewView({
+			modal:false,
+			el: $("#metadata_preview"),
+			model:this.current_node
+		});
+
 		this.gray_out();
 		this.load_content();
 	},
@@ -503,48 +510,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.switchPanel(true);
 	},
 	load_preview:function(){
-		console.log("load",this.current_node);
-		var location = "/media/";
-		var extension = "";
-		if(this.current_node.attributes.file_data){
-			console.log("PREVIEWING...", this.current_node);
-			location += this.current_node.attributes.file_data.filename.substring(0,1) + "/";
-			location += this.current_node.attributes.file_data.filename.substring(1,2) + "/";
-			location += this.current_node.attributes.file_data.filename;
-			extension = this.current_node.attributes.file_data.filename.split(".")[1];
-		}else{
-			var previewed_file = this.current_node.get_files().models[0];
-			console.log("GOT FILE:", previewed_file);
-			if(previewed_file){
-				extension = previewed_file.get("extension");
-				location += previewed_file.get("content_copy").split("contentcuration/")[1];
-			}
-		}
-		var preview_template;
-		switch (this.current_node.get("kind")){
-			case "image":
-				preview_template = require("./hbtemplates/preview_templates/image.handlebars");
-				break;
-			case "pdf":
-			case "text":
-				preview_template = require("./hbtemplates/preview_templates/pdf.handlebars");
-				break;
-			case "audio":
-				preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
-				break;
-			case "video":
-				preview_template = require("./hbtemplates/preview_templates/video.handlebars");
-				break;
-			default:
-				preview_template = require("./hbtemplates/preview_templates/default.handlebars");
-		}
-
-		var options = {
-			source: location,
-			extension:extension,
-			title: this.current_node.get("title")
-		};
-		this.$el.find("#preview_window").html(preview_template(options));
+		this.preview_view.switch_preview(this.current_node);
 	},
 	switchPanel:function(switch_to_details){
 		$((switch_to_details)? "#metadata_details_btn" : "#metadata_preview_btn").addClass("btn-tab-active");
@@ -702,6 +668,85 @@ var UploadedItem = ContentItem.extend({
 	}
 });
 
+var PreviewView = BaseViews.BaseView.extend({
+	template: require("./hbtemplates/preview_dialog.handlebars"),
+	modal_template: require("./hbtemplates/preview_modal.handlebars"),
+	initialize: function(options) {
+		this.modal = options.modal;
+		this.render();
+	},
+	render: function() {
+		if(this.modal){
+			this.$el.html(this.modal_template());
+			
+	        this.$(".modal-body").html(this.template({
+				node_list: this.collection.toJSON()
+			}));
+	        this.$el.append(this.el);
+
+
+        	this.$el.find(".modal").on("hide.bs.modal", this.close);
+		}else{
+			this.$el.html(this.template({
+				node: this.model
+			}));
+		}
+		this.load_preview();
+	},
+
+	load_preview:function(){
+		var location = "/media/";
+		var extension = "";
+		if(this.model.attributes.file_data){
+			console.log("PREVIEWING...", this.model);
+			location += this.model.attributes.file_data.filename.substring(0,1) + "/";
+			location += this.model.attributes.file_data.filename.substring(1,2) + "/";
+			location += this.model.attributes.file_data.filename;
+			extension = this.model.attributes.file_data.filename.split(".")[1];
+		}else{
+			var previewed_file = this.model.get_files().models[0];
+			console.log("GOT FILE:", previewed_file);
+			if(previewed_file){
+				extension = previewed_file.get("extension");
+				location += previewed_file.get("content_copy").split("contentcuration/")[1];
+			}
+		}
+		var preview_template;
+		switch (this.model.get("kind")){
+			case "image":
+				preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+				break;
+			case "pdf":
+			case "text":
+				preview_template = require("./hbtemplates/preview_templates/pdf.handlebars");
+				break;
+			case "audio":
+				preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
+				break;
+			case "video":
+				preview_template = require("./hbtemplates/preview_templates/video.handlebars");
+				break;
+			default:
+				preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+		}
+
+		var options = {
+			source: location,
+			extension:extension,
+			title: this.model.get("title")
+		};
+		this.$el.find("#preview_window").html(preview_template(options));
+	},
+
+	switch_preview:function(model){
+		this.model = model;
+		this.load_preview();
+	},
+
+	close: function() {
+        this.delete_view();
+    }
+});
 
 
 module.exports = {
