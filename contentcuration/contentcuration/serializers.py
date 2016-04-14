@@ -17,14 +17,6 @@ class TopicTreeSerializer(serializers.ModelSerializer):
         model = TopicTree
         fields = ('name', 'channel', 'root_node', 'id')
 
-class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
-    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-
-    class Meta:
-        model = Node
-        fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published', 
-                  'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id')
-
 class FileSerializer(serializers.ModelSerializer):
     content_copy = serializers.FileField(use_url=False)
 
@@ -35,9 +27,23 @@ class FileSerializer(serializers.ModelSerializer):
         fields = ('checksum', 'extension', 'file_size', 'content_copy', 'id', 'available', 'format')
 
 class FormatSerializer(serializers.ModelSerializer):
+   files = FileSerializer(many=True, read_only=True)
+
    class Meta:
-    model = Format
-    fields = ('format_size', 'quality', 'contentmetadata', 'available', 'mimetype', 'id') 
+        model = Format
+        fields = ('format_size', 'quality', 'contentmetadata', 'available', 'mimetype', 'id', 'files')
+
+
+class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    formats = FormatSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Node
+        fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',
+                  'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id',
+                  'formats')
+
 
 class MimeTypeSerializer(serializers.ModelSerializer):
    class Meta:
