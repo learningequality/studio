@@ -53,11 +53,12 @@ var BaseView = Backbone.View.extend({
 			modal:true
 		});
 	},
-	display_load:function(callback){
+	display_load:function(message, callback){
     	console.log("displaying load");
     	var self = this;
 		var load = '<div id="loading_modal" class="text-center">' +
             '<div id="kolibri_load_gif"></div>' +
+            '<h4 id="kolibri_load_text" class="text-center">' + message + '</h4>' +
             '</div>';
         $(load).appendTo('body');
 
@@ -65,7 +66,7 @@ var BaseView = Backbone.View.extend({
     		setTimeout(function(){ 
 				callback();
 				$("#loading_modal").remove();
-			 }, 500);
+			 }, 800);
     	}else{
     		$("#loading_modal").remove();
     	}
@@ -374,26 +375,24 @@ var BaseEditorView = BaseListView.extend({
 		this.parent_view.set_editing(false);
 		var self = this;
 		this.views.forEach(function(entry){
-	        entry.save(entry.model.attributes, {async:false});
-	        if(entry.model.validationError){
-				self.handle_error(entry);
-				self.errorsFound = true;
-			}
+	        entry.save(entry.model.attributes, {async:false, validate:false});
 	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
 	},
 	check_nodes:function(){
 		var self = this;
+		self.errorsFound = true;
+		
 		this.views.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
 			if(entry.model.validationError){
 				self.handle_error(entry);
-				self.errorsFound = true;
-				return entry;
+				self.errorsFound = false;
 			}
 		});
-		return null;
+		//this.$el.find("#validating_text").css("display", "none");
+		return self.errorsFound ;
 	},
 	set_node_edited:function(){
 		this.enqueue(this.current_view);

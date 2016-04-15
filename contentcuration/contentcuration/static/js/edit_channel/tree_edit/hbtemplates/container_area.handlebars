@@ -3,6 +3,12 @@
 	{{#if edit}}
 	<nav id="button_bar">
 		<!--{{#if is_clipboard}}<a class="btn btn-default disable-on-edit construction">Import to Channel</a>{{/if}}-->
+		{{#if is_clipboard}}
+		<div class="nav-button-container">
+			<div class="nav-button back_to_edit_button disable-on-edit"><span class="glyphicon glyphicon-arrow-left"></span></div>
+			<a class="nav-label back_to_edit_button disable-on-edit">Back</a>
+		</div>
+		{{/if}}
 		<div class="nav-button-container">
 			<div class="nav-button edit_button disable-on-edit"><span class="glyphicon glyphicon-pencil"></span></div>
 			<a class="nav-label edit_button disable-on-edit">Edit</a>
