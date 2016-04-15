@@ -2,7 +2,7 @@
 	{{#if edit}}
 		<img class="new_channel_pic construction" alt="Drag picture here (under construction)"></img>
 	{{else}}
-		<img id="channel_pic" alt="No picture found." src="/static/img/unicef logo.jpg"/>
+		<img id="channel_pic" alt="No picture found." src="{{picture}}"/>
 	{{/if}}
 </div>
 {{#if edit}}
@@ -10,21 +10,24 @@
 	<input type=text id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}"></input>
 	<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}"  maxlength="400">{{channel.description}}</textarea>
 	<div class="channel_options">
-		<a class="delete_channel">
-			DELETE
-		</a>
+		<a class="delete_channel <!--btn btn-default-->">
+			<!--<span class="glyphicon glyphicon-trash"></span>--> 
+			DELETE</a>
 		<a class="channel_toggle action-text">CANCEL</a>
 		<a class="save_channel btn pull-right">
 			{{#if edit}}SAVE{{else}}CREATE CHANNEL{{/if}}
 		</a>
 	</div>
 {{else}}
-	
+
+	<div  class="pull-right manage_area">
+		<a class="btn open_channel" href="{{channel.id}}/edit">MANAGE</a>
+	</div>
 	<span class="channel_metadata">
 		<span class="resource_count">{{resource_count}}</span> Resources 
 		<!--<span class="exercise_count">0</span> Exercises
-		
-		<span class="exercise_count">0</span>--><span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size total_file_size}}{{/format_file_size}}
+		<span class="exercise_count">0</span>-->
+		<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size total_file_size}}{{/format_file_size}}
 	</span>
 	<h4>
 		<span class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right"></span>

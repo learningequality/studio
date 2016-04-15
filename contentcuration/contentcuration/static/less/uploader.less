@@ -6,7 +6,7 @@
 @uploader-height: 600px;
 @uploader-header-color:#848484;
 @uploader-option-size: (@uploader-width - 100px) /2;
-@uploader-list-height: 200px;
+@uploader-list-height: 100px;
 @uploader-preview-bg-color: #585858;
 @uploader-grayed-out-color: #BDBDBD;
 
@@ -33,7 +33,7 @@
 
 
 .upload-modal-content{
-	background-color: @uploader-background-color;
+	background-color: @body-background;
 	height: @uploader-height;
 	border: 1px solid gray;
 	/*overflow:hidden;*/
@@ -117,11 +117,40 @@ div#dropzone {
 		height:100%;
 		width: @metadata-width / 2.5;
 	}
+	nav a.btn-tab-active {
+			font-weight: bold;
+		    border-bottom: 2px solid @body-font-color;
+		    border-radius: 0;
+		    padding: 1px 2px;
+		    margin: 0 13px;
+		}
+	nav a {
+		color: @body-font-color;
+		font-size: @larger-body-text;
+		&:hover {
+			font-weight: bold;
+		}
+	}
 
-	.metadata_panel{
-		height:100%;
-		padding:10px;
-		max-height:@uploader-height * 0.7;
+	.metadata_panel {
+		height: 100%;
+		padding: 10px;
+		max-height: @uploader-height * 0.7;
+		h4 {
+			font-size: 13px;
+			color: @gray-800;
+			margin-top: 5px;
+			font-weight: bold;
+		}
+		#keywords {
+			margin-bottom: 8px;
+		}
+		input[type="text"], textarea {
+			padding: 2px 0;
+			margin-bottom: 25px;
+			font-size: @larger-body-text;
+			.input-form;
+		}
 	}
 
 	#metadata_preview{
@@ -156,13 +185,29 @@ div#dropzone {
 	
 
 	.uploaded{
-		border-bottom: 1px solid gray;
-		padding:10px;
+		padding: 0 10px;
 		cursor:pointer;
+		input[type="checkbox"] {
+			width: 15px;
+			height: 15px;
+		}
+		label {
+			margin-bottom: 0;
+		}
 		.uploaded_list_item{
-			width:90%;
-			height:100%;
-			padding:5px;
+			width: 90%;
+			height: 100%;
+			h5, h6 {
+				font-size: 12px;
+			}
+			h5 {
+				font-weight: bold;
+				margin-top: 0;
+			}
+			h6 {
+				margin: 5px 0 0 0;
+				color: @annotation-gray;
+			}
 		}
 	}
 	.uploaded:hover{
@@ -170,7 +215,7 @@ div#dropzone {
 	}
 
 	.gray-out{
-		background-color:@uploader-grayed-out-color;
+		background-color: @gray-200 !important;
 	}
 
 	.tag{
@@ -207,6 +252,12 @@ div#dropzone {
 	}	
 	.metadata_save_buttons{
 		margin-right:30px;
+		#upload_save_button {
+			.action-text;
+		}
+		#upload_save_finish_button {
+			.action-button;
+		}
 	}
 
 	.content-relation-area{

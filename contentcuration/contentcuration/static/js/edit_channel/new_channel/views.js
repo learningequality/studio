@@ -84,7 +84,7 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 			channel: (this.model) ? this.model.attributes : null,
 			total_file_size: clipboard_size + draft_size,
 			resource_count: draft_count + clipboard_count,
-			picture: "/img/unicef logo.jpg"
+			picture: "/static/img/unicef logo.jpg"
 		}));
 		this.$el.addClass('channel_container');
 	},
