@@ -95,6 +95,11 @@ class Node(ContentMetadata):
         null=True,
         help_text=_("Organization of person who holds the essential rights"),
     )
+    original_filename = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+    )
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
 
     @property

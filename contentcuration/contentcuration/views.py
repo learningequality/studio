@@ -2,6 +2,7 @@ import json
 from rest_framework import status
 from django.http import Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
 from django.core import paginator
 from django.core.files.storage import get_storage_class
 from django.template import RequestContext

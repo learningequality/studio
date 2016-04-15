@@ -139,7 +139,8 @@ var AddContentView = BaseViews.BaseListView.extend({
 				"title": file.name.split(".")[0],
 				"parent" : self.model.id,
 				"total_file_size": file.size,
-				"created" : file.lastModifiedDate
+				"created" : file.lastModifiedDate,
+				"original_filename" : file.name
 			});
 			self.collection.add(content_node);
 			var item_view = new NodeListItem({
@@ -475,6 +476,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.load_preview();
 		this.$el.find("#input_title").val(this.current_node.get("title"));
 		this.$el.find("#input_description").val(this.current_node.get("description"));
+		this.$el.find("#original_filename").html( this.current_node.get("original_filename"));
         // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
         var file_size = (((this.current_node.get("formats") || [])[0] || {}).format_size) || ((this.current_node.get("file_data") || {}).data || {}).size || "";
         this.$("#display_file_size").text(file_size);
