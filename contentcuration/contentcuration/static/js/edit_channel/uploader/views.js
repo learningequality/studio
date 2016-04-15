@@ -273,7 +273,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
 	initialize: function(options) {
 		console.log("called this");
-		_.bindAll(this, 'close_uploader', "check_and_save_nodes", 'check_item',
+		_.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',
 						'add_tag','save_and_finish','add_more','set_edited',
 						'render_details', 'render_preview', 'remove_tag');
 		this.parent_view = options.parent_view;
@@ -314,7 +314,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	},
 	events: {
 		'click .close_uploader' : 'close_uploader',
-		'click #upload_save_button' : 'check_and_save_nodes',
+		'click #upload_save_button' : 'save_and_keep_open',
 		'click #upload_save_finish_button' : 'save_and_finish',
 		'click #add_more_button' : 'add_more',
 		'click #uploader' : 'finish_editing',
@@ -359,38 +359,55 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.switchPanel(false);
 	},
 
-	check_and_save_nodes: function(callback){
-		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
-		var start = new Date().getTime();
+	save_and_keep_open:function(){
 		var self = this;
+		this.check_and_save_nodes(null);
+	},
 
-		/* TODO :fix to save multiple nodes at a time */
-		self.$el.find(".upload_input").removeClass("gray-out");
-		self.parent_view.set_editing(false);
-		self.errorsFound = false;
-		self.$el.find("#description_error").html("");
-		self.$el.find("#input_description").removeClass("error_input");
-
-		self.errorsFound = self.check_nodes();
-
-		if(!self.errorsFound){
-			this.display_load(function(){
-	 			self.save_nodes(callback);
-				if(!self.errorsFound){
-					self.$el.find("#title_error").html("");
-					self.$el.find("#description_error").html("");
-					if(self.disable){
-						self.gray_out();
-					}
-				}
-				if(!self.errorsFound && self.allow_add)
-					self.parent_view.add_nodes(self.views, self.main_collection.length);
-	 		});
-	 		if(callback){
-				return callback();
-			}
-		}
+	check_and_save_nodes: function(callback){
+		console.log("UPLOADING PERFORMANCE uploader/views.js: starting check_nodes...");
+		var start = new Date().getTime();
+		this.$el.find("#validating_text").css("display", "inline");
+		this.$el.find(".editmetadata_save").prop("disabled", true);
+		this.$el.find(".editmetadata_save").css("pointer", "not-allowed");
 		
+		var self = this;
+		setTimeout(function() {
+           /* TODO :fix to save multiple nodes at a time */
+			self.$el.find(".upload_input").removeClass("gray-out");
+			self.parent_view.set_editing(false);
+			self.errorsFound = false;
+			self.$el.find("#description_error").html("");
+			self.$el.find("#input_description").removeClass("error_input");
+
+			self.errorsFound = !self.check_nodes();
+			self.$el.find(".editmetadata_save").prop("disabled", false);
+			self.$el.find("#validating_text").css("display", "none");
+			self.$el.find(".editmetadata_save").css("pointer", "cursor");
+
+			if(!self.errorsFound){
+				self.$el.css("visibility", "hidden");
+				self.display_load("Saving Content...", function(){
+					self.save_nodes();
+					if(!self.errorsFound){
+						$(".uploaded").css("background-color", "white");
+						self.$el.find("#title_error").html("");
+						self.$el.find("#description_error").html("");
+						if(self.disable){
+							self.gray_out();
+						}
+					}
+					if(!self.errorsFound && self.allow_add){
+						self.parent_view.add_nodes(self.views, self.main_collection.length);
+					}
+					self.$el.css("visibility", "visible");
+					if(callback){
+						callback();
+					}
+				});
+			}
+			
+        }, 200);
 	},
 	save_and_finish: function(){
 		var self = this;
@@ -421,9 +438,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			modal:true
 		});
 
-		this.views.forEach(function(entry){
-			entry.unset_node();
-		});
 		this.reset();
 		this.undelegateEvents();
 		this.unbind();
@@ -612,6 +626,9 @@ var UploadedItem = ContentItem.extend({
 	},
 	set_edited:function(edited){
 		this.edited = edited;
+		if(edited){
+			this.set_node();
+		}
 		$("#item_" + this.model.cid + " .item_name").html(this.model.get("title") + ((edited) ? " <b>*</b>" : ""));
 	},
 
@@ -632,7 +649,6 @@ var UploadedItem = ContentItem.extend({
 		};
 	},
 	set_node:function(){
-		console.log("LICENSE IS", this.license());
 		this.model.set({
 			title: $("#input_title").val().trim(),
 			description: $("#input_description").val().trim(),

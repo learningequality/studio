@@ -49,6 +49,10 @@
 	}
 }
 
+.modal-title{
+	max-width:80%;
+}
+
 .modal-dialog{
 	width: @uploader-width;
 }
@@ -182,7 +186,11 @@ div#dropzone {
 		overflow-x:none;
 	}
 
-	
+	#validating_text{
+		margin-left:20px;
+		display:none;
+		color:#816793;
+	}
 
 	.uploaded{
 		padding: 0 10px;
@@ -256,7 +264,7 @@ div#dropzone {
 		div{
 			margin-right:30px;
 		}
-		#upload_save_button {
+		#upload_save_button, #add_more_button {
 			.action-text;
 		}
 		#upload_save_finish_button {

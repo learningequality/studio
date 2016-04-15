@@ -14,28 +14,33 @@ var TreeEditView = BaseViews.BaseView.extend({
 	containers:[],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details'/*,'undo_action', 'redo_action'*/);
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details', 'back_to_edit'/*,'undo_action', 'redo_action'*/);
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
-		this.render();
-		this.queue_view = new QueueView.Queue({
-	 		el: $("#queue-area"),
-	 		collection: this.collection
-	 	});
-	 	$("#queue-area").css("display", (this.is_clipboard || !this.is_edit_page)? "none" : "block");
-	 	$("#main-nav-home-button").removeClass("active");
 
-	 	if(this.is_edit_page){
-			$("#channel-edit-button").addClass("active");
-	 	}else if(!this.is_clipboard){
-	 		$("#channel-preview-button").addClass("active");
-	 	}
+		var self=this;
+		this.display_load("Loading Content...", function(){
+			self.render();
+			self.queue_view = new QueueView.Queue({
+		 		el: $("#queue-area"),
+		 		collection: self.collection
+		 	});
+		 	$("#queue-area").css("display", (self.is_clipboard || !self.is_edit_page)? "none" : "block");
+		 	$("#main-nav-home-button").removeClass("active");
 
-	 	options.channels.forEach(function (entry){
-			$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
+		 	if(self.is_edit_page){
+				$("#channel-edit-button").addClass("active");
+		 	}else if(!self.is_clipboard){
+		 		$("#channel-preview-button").addClass("active");
+		 	}
+
+		 	options.channels.forEach(function (entry){
+				$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
+			});
+			$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
 		});
-		$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
+		
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
@@ -54,10 +59,14 @@ var TreeEditView = BaseViews.BaseView.extend({
 		'click .copy_button' : 'copy_content',
 		'click .delete_button' : 'delete_content',
 		'click .edit_button' : 'edit_content',
-		'click #hide_details_checkbox' :'toggle_details'
+		'click #hide_details_checkbox' :'toggle_details',
+		'click .back_to_edit_button' : 'back_to_edit'
 		/*'click .undo_button' : 'undo_action',
 		'click .redo_button' : 'redo_action'*/
 	},	
+	back_to_edit:function(){
+		window.location = window.location.href.replace("clipboard", "edit");
+	},
 	remove_containers_from:function(index){
 		while(this.containers.length > index){
 			this.containers[this.containers.length-1].delete_view();
@@ -107,10 +116,14 @@ var TreeEditView = BaseViews.BaseView.extend({
 		}
 	},
 	copy_content: function(event){
-		for(var i = 0; i < this.containers.length; i++){
-			if(this.containers[i].copy_selected())
-				break;
-		}
+		var self = this;
+		this.display_load("Copying Content...", function(){
+			for(var i = 0; i < self.containers.length; i++){
+				if(self.containers[i].copy_selected()){
+					break;
+				}
+			}
+		});
 		//this.clipboard_view.add_to_clipboard(clipboard_list);
 		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + (new Date().getTime() - start) + ")");
 	},
@@ -374,9 +387,13 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		
 	},
 	publish:function(){
-		this.save({"published": true},{validate:false});
-		this.publish_children(this.model, this.containing_list_view.collection);
-		this.render();
+		var self = this;
+		this.display_load("Publishing Content...", function(){
+			self.save({"published": true},{validate:false});
+			self.publish_children(self.model, self.containing_list_view.collection);
+			self.render();
+		});
+		
 	},
 	publish_children:function(model, collection){
 		var self = this;

@@ -120,11 +120,11 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 	},
 	save_channel: function(event){
 		var self = this;
-		this.display_load(function(){
-			self.containing_list_view.set_editing(false);
-			var title = (self.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : self.$el.find("#new_channel_name").val().trim();
-			var description = (self.$el.find("#new_channel_description").val() == "") ? " " : self.$el.find("#new_channel_description").val();
-			var data = {name: title, description: description};
+		self.containing_list_view.set_editing(false);
+		var title = (self.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : self.$el.find("#new_channel_name").val().trim();
+		var description = (self.$el.find("#new_channel_description").val() == "") ? " " : self.$el.find("#new_channel_description").val();
+		var data = {name: title, description: description};
+		this.display_load("Saving Channel...", function(){
 			self.save(data);
 		});
 	}
