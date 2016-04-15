@@ -374,22 +374,22 @@ var BaseEditorView = BaseListView.extend({
 		this.parent_view.set_editing(false);
 		var self = this;
 		this.views.forEach(function(entry){
-			entry.model.set(entry.model.attributes, {validate:true});
-			console.log("FILE SAVE", entry);
-			if(!entry.model.validationError){
-	          entry.save(entry.model.attributes, {validate:false, async:false});
-	          entry.set_edited(false);
-			}else{
+	        entry.save(entry.model.attributes, {async:false});
+	        if(entry.model.validationError){
 				self.handle_error(entry);
 				self.errorsFound = true;
 			}
+	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
 	},
 	check_nodes:function(){
+		var self = this;
 		this.views.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
 			if(entry.model.validationError){
+				self.handle_error(entry);
+				self.errorsFound = true;
 				return entry;
 			}
 		});

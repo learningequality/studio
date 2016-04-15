@@ -359,7 +359,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.switchPanel(false);
 	},
 
-	check_and_save_nodes: function(){
+	check_and_save_nodes: function(callback){
 		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
 		var start = new Date().getTime();
 		var self = this;
@@ -375,7 +375,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
 		if(!self.errorsFound){
 			this.display_load(function(){
-	 			self.save_nodes();
+	 			self.save_nodes(callback);
 				if(!self.errorsFound){
 					self.$el.find("#title_error").html("");
 					self.$el.find("#description_error").html("");
@@ -386,19 +386,26 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 				if(!self.errorsFound && self.allow_add)
 					self.parent_view.add_nodes(self.views, self.main_collection.length);
 	 		});
-		}
-	},
-	save_and_finish: function(){
-		this.check_and_save_nodes();
-		if(!this.errorsFound){
-			if(this.modal){
-				this.$el.find(".modal").modal("hide");
-			}else{
-				this.close_uploader();
+	 		if(callback){
+				return callback();
 			}
 		}
+		
+	},
+	save_and_finish: function(){
+		var self = this;
+		this.check_and_save_nodes(function(){
+			if(!self.errorsFound){
+				if(self.modal){
+					self.$el.find(".modal").modal("hide");
+				}else{
+					self.close_uploader();
+				}
+			}
+		});
 	},
 	add_more:function(event){
+		this.save_queued();
 		if(this.modal){
 			this.$el.find(".modal").modal("hide");
 		}else{
@@ -664,7 +671,7 @@ var UploadedItem = ContentItem.extend({
 	}
 });
 
-var PreviewView = BaseViews.BaseView.extend({
+var PreviewView = UploadItemView.extend({
 	template: require("./hbtemplates/preview_dialog.handlebars"),
 	modal_template: require("./hbtemplates/preview_modal.handlebars"),
 	initialize: function(options) {
@@ -674,11 +681,9 @@ var PreviewView = BaseViews.BaseView.extend({
 	render: function() {
 		if(this.modal){
 			this.$el.html(this.modal_template());
-			
 	        this.$(".modal-body").html(this.template({}));
 	        this.$el.append(this.el);
-
-
+	        this.$(".modal").modal({show: true});
         	this.$el.find(".modal").on("hide.bs.modal", this.close);
 		}else{
 			this.$el.html(this.template({
@@ -738,11 +743,7 @@ var PreviewView = BaseViews.BaseView.extend({
 	switch_preview:function(model){
 		this.model = model;
 		this.load_preview();
-	},
-
-	close: function() {
-        this.delete_view();
-    }
+	}
 });
 
 
