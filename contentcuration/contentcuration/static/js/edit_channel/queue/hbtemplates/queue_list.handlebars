@@ -25,7 +25,10 @@
 	<div id="queue_content">
 		{{#if is_clipboard}}
 			<div class="row clipboard_options text-center">
-				<a class="col-xs-4 add_items btn btn-option">Add to<br/>Queue</a>
+				<div class="toolbar-button">
+					<div class="add_items"><span class="glyphicon glyphicon-plus-sign"></span></div>
+					<a class="col-xs-4 add_items">Add to<br/>Queue</a>
+				</div>
 				<a class="col-xs-4 edit_items btn btn-option">Edit<br/>Selected</a>
 				<!--<a class="col-xs-3 move_selected_queue btn btn-option construction">Move<br/>Selected</a>-->
 				<a class="col-xs-4 delete_items btn btn-option">Delete<br/>Selected</a>
