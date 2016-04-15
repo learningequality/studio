@@ -52,9 +52,9 @@
 		@channel-btn-color:#CCCCCC;
 
 		height:100vh - 30vh;
-		margin-top: 20px;
-		margin-left:175px;
-		overflow:auto;
+	    width: 900px;
+	    margin: auto;
+	    display: block;
 
 		h3 {
 			color: @body-font-color;
@@ -89,7 +89,7 @@
 		    top: 6px;
 		}
 		#channel_list {
-			overflow:auto;
+			//overflow:auto;
 			.default-item{
 				font-size: 12pt;
 				margin: 10px 0px 10px 50px;
@@ -142,8 +142,10 @@
 						cursor:pointer;
 						display:inline-block;
 						font-size: @channel-font-size * .9;
-						margin-right:30px;
+						margin-right: 10px;
 						color: @blue-500;
+						position: relative;
+						top: -27px;
 					}
 				}
 				.description{

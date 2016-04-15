@@ -81,17 +81,30 @@ body {
 		}
 	}
 	.dropdown-menu{
-		background-color: @search-bg-color;
+		background-color: @body-background;
 		max-width:300px;
+		margin-top: -3px;
+		border: none;
+		li a {
+			min-width: 300px;
+			font-weight: bold;
+			padding: 3px 16px;
+		}
 	}
 	.dropdown-toggle{
-		padding:5px;
-		margin-top:5px;
-		width:300px;
-		background-color: @search-bg-color;
-		border-radius:5px;
-		.caret{
-			color:gray;
+		padding: 2px 15px;
+		margin-top: 6px;
+		width: 300px;
+		background-color: @body-background;
+		border-radius: 5px;
+		font-weight: bold;
+		.caret {
+			color: gray;
+			height: 25px;
+			margin: 5px;
+			position: relative;
+			left: 40px;
+			top: 10px;
 		}
 	}
 }
