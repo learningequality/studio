@@ -41,7 +41,7 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         model = Node
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',
                   'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id',
-                  'formats')
+                  'formats', 'original_filename')
    
 class MimeTypeSerializer(serializers.ModelSerializer):
    class Meta:
