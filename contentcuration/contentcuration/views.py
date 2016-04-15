@@ -14,7 +14,7 @@ from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerial
 from kolibri.content.models import File
 
 def base(request):
-    return redirect(channel_list)    # redirect to the channel list page
+    return redirect('channels')    # redirect to the channel list page
 
 
 def testpage(request):
