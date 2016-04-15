@@ -359,7 +359,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.switchPanel(false);
 	},
 
-	check_and_save_nodes: function(callback){
+	check_and_save_nodes: function(){
 		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
 		var start = new Date().getTime();
 		var self = this;
@@ -370,6 +370,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		self.errorsFound = false;
 		self.$el.find("#description_error").html("");
 		self.$el.find("#input_description").removeClass("error_input");
+
+		self.errorsFound = self.check_nodes();
 
 		if(!self.errorsFound){
 			this.display_load(function(){
@@ -383,25 +385,18 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 				}
 				if(!self.errorsFound && self.allow_add)
 					self.parent_view.add_nodes(self.views, self.main_collection.length);
-				if(callback)
-					return callback();
 	 		});
 		}
 	},
 	save_and_finish: function(){
-		var self = this;
-		console.log("STARTING SAVE FILE");
-		this.check_and_save_nodes(function(){
-			console.log("THREAD: end of save and finish");
-			if(!self.errorsFound){
-				if(self.modal){
-					self.$el.find(".modal").modal("hide");
-				}else{
-					self.close_uploader();
-				}
+		this.check_and_save_nodes();
+		if(!this.errorsFound){
+			if(this.modal){
+				this.$el.find(".modal").modal("hide");
+			}else{
+				this.close_uploader();
 			}
-			
-		});
+		}
 	},
 	add_more:function(event){
 		if(this.modal){
@@ -462,6 +457,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
         var file_size = (((this.current_node.get("formats") || [])[0] || {}).format_size) || ((this.current_node.get("file_data") || {}).data || {}).size || "";
         this.$("#display_file_size").text(file_size);
+        this.$el.find(".upload_input").removeClass("gray-out");
 	},
 	check_item: function(){
 		this.disable = this.$el.find("#uploaded_list :checked").length > 1;
@@ -679,9 +675,7 @@ var PreviewView = BaseViews.BaseView.extend({
 		if(this.modal){
 			this.$el.html(this.modal_template());
 			
-	        this.$(".modal-body").html(this.template({
-				node_list: this.collection.toJSON()
-			}));
+	        this.$(".modal-body").html(this.template({}));
 	        this.$el.append(this.el);
 
 
@@ -697,45 +691,48 @@ var PreviewView = BaseViews.BaseView.extend({
 	load_preview:function(){
 		var location = "/media/";
 		var extension = "";
-		if(this.model.attributes.file_data){
-			console.log("PREVIEWING...", this.model);
-			location += this.model.attributes.file_data.filename.substring(0,1) + "/";
-			location += this.model.attributes.file_data.filename.substring(1,2) + "/";
-			location += this.model.attributes.file_data.filename;
-			extension = this.model.attributes.file_data.filename.split(".")[1];
-		}else{
-			var previewed_file = this.model.get_files().models[0];
-			console.log("GOT FILE:", previewed_file);
-			if(previewed_file){
-				extension = previewed_file.get("extension");
-				location += previewed_file.get("content_copy").split("contentcuration/")[1];
+		if(this.model){
+			if(this.model.attributes.file_data){
+				console.log("PREVIEWING...", this.model);
+				location += this.model.attributes.file_data.filename.substring(0,1) + "/";
+				location += this.model.attributes.file_data.filename.substring(1,2) + "/";
+				location += this.model.attributes.file_data.filename;
+				extension = this.model.attributes.file_data.filename.split(".")[1];
+			}else{
+				var previewed_file = this.model.get_files().models[0];
+				console.log("GOT FILE:", previewed_file);
+				if(previewed_file){
+					extension = previewed_file.get("extension");
+					location += previewed_file.get("content_copy").split("contentcuration/")[1];
+				}
 			}
-		}
-		var preview_template;
-		switch (this.model.get("kind")){
-			case "image":
-				preview_template = require("./hbtemplates/preview_templates/image.handlebars");
-				break;
-			case "pdf":
-			case "text":
-				preview_template = require("./hbtemplates/preview_templates/pdf.handlebars");
-				break;
-			case "audio":
-				preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
-				break;
-			case "video":
-				preview_template = require("./hbtemplates/preview_templates/video.handlebars");
-				break;
-			default:
-				preview_template = require("./hbtemplates/preview_templates/default.handlebars");
-		}
+			var preview_template;
+			switch (this.model.get("kind")){
+				case "image":
+					preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+					break;
+				case "pdf":
+				case "text":
+					preview_template = require("./hbtemplates/preview_templates/pdf.handlebars");
+					break;
+				case "audio":
+					preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
+					break;
+				case "video":
+					preview_template = require("./hbtemplates/preview_templates/video.handlebars");
+					break;
+				default:
+					preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+			}
 
-		var options = {
-			source: location,
-			extension:extension,
-			title: this.model.get("title")
-		};
-		this.$el.find("#preview_window").html(preview_template(options));
+			var options = {
+				source: location,
+				extension:extension,
+				title: this.model.get("title")
+			};
+			this.$el.find("#preview_window").html(preview_template(options));
+		}
+		
 	},
 
 	switch_preview:function(model){
@@ -752,5 +749,6 @@ var PreviewView = BaseViews.BaseView.extend({
 module.exports = {
 	AddContentView: AddContentView,
 	EditMetadataView:EditMetadataView,
-	FileUploadView:FileUploadView
+	FileUploadView:FileUploadView,
+	PreviewView:PreviewView
 }

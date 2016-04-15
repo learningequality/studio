@@ -386,6 +386,15 @@ var BaseEditorView = BaseListView.extend({
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
 	},
+	check_nodes:function(){
+		this.views.forEach(function(entry){
+			entry.model.set(entry.model.attributes, {validate:true});
+			if(entry.model.validationError){
+				return entry;
+			}
+		});
+		return null;
+	},
 	set_node_edited:function(){
 		this.enqueue(this.current_view);
 		this.current_view.set_edited(true);

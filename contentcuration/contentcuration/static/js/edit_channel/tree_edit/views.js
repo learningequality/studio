@@ -354,14 +354,24 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	preview_node: function(event){
 		event.preventDefault();
 		$("#main-content-area").append("<div id='dialog'></div>");
-		var metadata_view = new UploaderViews.EditMetadataView({
-			el : $("#dialog"),
-			model: this.model,
-			allow_add: false,
-			main_collection : this.main_collection,
-			modal: true,
-			parent_view : this
-		});
+		if(this.edit_mode){
+			var metadata_view = new UploaderViews.EditMetadataView({
+				el : $("#dialog"),
+				model: this.model,
+				allow_add: false,
+				main_collection : this.main_collection,
+				modal: true,
+				parent_view : this
+			});
+		}else{
+			var preview_view = new UploaderViews.PreviewView({
+				modal:true,
+				model: this.model,
+				el : $("#dialog")
+			});
+		}
+		
+		
 	},
 	publish:function(){
 		this.save({"published": true},{validate:false});

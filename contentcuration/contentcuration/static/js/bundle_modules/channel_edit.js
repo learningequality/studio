@@ -20,8 +20,6 @@ function publish_nodes(){
 	}
 }
 
-
-
 module.exports = {
 	$: $,
 	ChannelEditRouter: ChannelEditRouter,
