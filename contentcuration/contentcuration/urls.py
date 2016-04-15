@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
-from contentcuration.models import *    # TODO: Change this later?
+from contentcuration.models import *
 import serializers
 import views
 
@@ -40,11 +40,25 @@ class TopicTreeViewSet(viewsets.ModelViewSet):
     queryset = TopicTree.objects.all()
     serializer_class = serializers.TopicTreeSerializer
 
+class FileViewSet(viewsets.ModelViewSet):
+    queryset = File.objects.all()
+    serializer_class = serializers.FileSerializer
+
+class FormatViewSet(viewsets.ModelViewSet):
+    queryset = Format.objects.all()
+    serializer_class = serializers.FormatSerializer
+
+class MimeTypeViewSet(viewsets.ModelViewSet):
+    queryset = MimeType.objects.all()
+    serializer_class = serializers.MimeTypeSerializer
 
 class NodeViewSet(BulkModelViewSet):
     queryset = Node.objects.all()
     serializer_class = serializers.NodeSerializer
 
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = ContentTag.objects.all()
+    serializer_class = serializers.TagSerializer
 
 class ExerciseViewSet(viewsets.ModelViewSet):
     queryset = Exercise.objects.all()
@@ -56,19 +70,22 @@ class AssessmentItemViewSet(BulkModelViewSet):
     queryset = AssessmentItem.objects.all()
     serializer_class = serializers.AssessmentItemSerializer
 
-
-router = routers.DefaultRouter()
+router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'topictree', TopicTreeViewSet)
 router.register(r'node', NodeViewSet)
 router.register(r'exercise', ExerciseViewSet)
+router.register(r'file', FileViewSet)
+router.register(r'format', FormatViewSet)
+router.register(r'mimetype', MimeTypeViewSet)
+router.register(r'tag', TagViewSet)
 
-bulkrouter = BulkRouter()
+bulkrouter = BulkRouter(trailing_slash=False)
 bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
 
 urlpatterns = [
-    url(r'^$', views.base, name='base'),
+    url(r'^$', views.channel_list, name='base'),
     url(r'^test/', views.testpage, name='test'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
@@ -80,7 +97,7 @@ urlpatterns = [
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^channels/$', views.channel_list, name='channels'),
-    url(r'channels/(?P<channel_id>\w+)', views.channel, name='channel'),
+    url(r'^channels/(?P<channel_id>\w+)', views.channel, name='channel'),
 ]
 
 

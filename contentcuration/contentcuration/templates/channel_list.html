@@ -8,15 +8,14 @@
 
 	<script>
 		var channels = JSON.parse("{{ channels |escapejs }}");
+		var license_list = JSON.parse("{{ license_list|escapejs}}");
 	</script>
 	<script type="text/javascript">		
 		var bundle = require("channel_edit");
 		bundle.$(function() {
-            window.channel_router = new bundle.ChannelEditRouter({user: "current_user"});
+            window.channel_router = new bundle.ChannelEditRouter({user: window.current_user});
 			bundle.Backbone.history.start({pushState: true, root: "{% url 'channels' %}"});
         });
     </script>
-
 	<div id="channel-container"></div>
-
 {% endblock content %}

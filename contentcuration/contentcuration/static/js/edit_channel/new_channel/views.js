@@ -13,27 +13,31 @@ var ChannelList  = BaseListView.extend({
 		_.bindAll(this, 'new_channel');
 		this.collection = options.channels;
 		this.render();
+		this.user = options.user;
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(this.collection, "sync", this.render);
+
 	},
 	render: function() {
 		this.set_editing(false);
-		this.$el.html(this.template({channel_list: this.collection.toJSON()}));
+		this.$el.html(this.template({
+			channel_list: this.collection.toJSON(),
+			user: this.user
+		}));
 		this.load_content();
 	},
 	events: {
-		'click #new_channel_button' : 'new_channel',
+		'click .new_channel_button' : 'new_channel'
 	},
 
 	new_channel: function(event){
 		this.set_editing(true);
-
 		var new_channel = new ChannelListItem({
 			edit:true,
-			containing_list_view: this
+			containing_list_view: this,
+			default_license: window.licenses.get_default(),
 		});
-		this.$el.find("#channel_list").append("<li class='channel_container container' id='new'></li>")
-		this.$el.find("#new").append(new_channel.el);
+		this.$el.find("#channel_list").append(new_channel.el);
 	},
 	load_content:function(){
 		var containing_list_view = this;
@@ -46,6 +50,7 @@ var ChannelList  = BaseListView.extend({
 				channel_list: containing_list_view.collection.toJSON()
 			});
 			containing_list_view.views.push(view);
+        	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 		});
 	}
 });
@@ -54,20 +59,34 @@ var ChannelList  = BaseListView.extend({
 	edit: determines whether to load channel or editor
 */
 var ChannelListItem = BaseViews.BaseListItemView.extend({
+	tagName: "li",
 	template: require("./hbtemplates/channel_container.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel');
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = options.edit;
 		this.containing_list_view = options.containing_list_view;
+		this.default_license = options.default_license;
 		this.render();
 	},
 
 	render: function() {
+		var draft_node = (this.model)? this.model.get_tree("draft").get_root() : null;
+		var draft_count = (draft_node)? draft_node.getChildCount(false, null) : 0;
+		var draft_size = (draft_node)? draft_node.get("total_file_size") : 0;
+
+		var clipboard_node = (this.model)? this.model.get_tree("clipboard").get_root() : null;
+		var clipboard_count = (clipboard_node)? this.model.get_tree("clipboard").get_root().getChildCount(false, null) : 0;
+		var clipboard_size = (clipboard_node)? clipboard_node.get("total_file_size") : 0;
+
 		this.$el.html(this.template({
 			edit: this.edit, 
-			channel: (this.model) ? this.model.attributes : null
+			channel: (this.model) ? this.model.attributes : null,
+			total_file_size: clipboard_size + draft_size,
+			resource_count: draft_count + clipboard_count,
+			picture: "/static/img/unicef logo.jpg"
 		}));
+		this.$el.addClass('channel_container');
 	},
 	events: {
 		'click .edit_channel':'edit_channel',
@@ -93,16 +112,21 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 		if(this.model){
 			this.edit = false;
 			this.render();
+			console.log("first");
 		}else{
 			this.delete_view();
+			console.log("second");
 		}
 	},
 	save_channel: function(event){
-		this.containing_list_view.set_editing(false);
-		var title = (this.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : this.$el.find("#new_channel_name").val().trim();
-		var description = (this.$el.find("#new_channel_description").val() == "") ? " " : this.$el.find("#new_channel_description").val();
+		var self = this;
+		self.containing_list_view.set_editing(false);
+		var title = (self.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : self.$el.find("#new_channel_name").val().trim();
+		var description = (self.$el.find("#new_channel_description").val() == "") ? " " : self.$el.find("#new_channel_description").val();
 		var data = {name: title, description: description};
-		this.save(data);
+		this.display_load("Saving Channel...", function(){
+			self.save(data);
+		});
 	}
 });
 

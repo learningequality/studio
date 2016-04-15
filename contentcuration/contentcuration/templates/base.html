@@ -26,30 +26,60 @@
     <body>
         {% block nav %}
         <!-- Navigation bar -->
-        <div class="navbar nav" id="top-navigation">
-            <div id="logo-container">
+        <nav class="nav navbar navbar-default" id="top-navigation">
+          <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="/channels"id="logo-container">
                 <img src="{% static 'img/logo.png' %}">
-                <span>Kolibri</span>
+              </a>
+              <label id="kolibri_label">Kolibri</label>
             </div>
-            <div class="dropdown" id="channel-selector">
-                <button id="dLabel" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="{% static 'img/logo.png' %}"><span id="channel-dropdown">Channel Name</span><span class="caret"></span></button>
-                <ul class="dropdown-menu" aria-labelledby="dLabel" id="channel_select">
-                  <li>Sample Item</li>
-                  <li>Sample Item2</li>
-                </ul>
-            </div>
-            <div id="search-logout-container">
-                <div class="search" id="content-search">
-                    <input type="text" placeholder="Search for content in your channels..." aria-describedby="basic-addon2">
-                    <div id="basic-addon2">Q</div>
-                </div>
-                <img id="logout" src="{% static 'img/power-button.png' %}">
-            </div>
-        </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              <ul class="nav navbar-nav">
+                <li class="active" id="main-nav-home-button"><a href="/channels" class="btn btn-main">Home</a></li>
+                <!--<li class="search" id="content-search">
+                      <input type="text" placeholder="Search for content in your channels..." aria-describedby="basic-addon2">
+                      <span class="glyphicon glyphicon-search" id="main-search-button" aria-hidden="true"></span>
+                </li>-->
+                 <li class="dropdown">
+                    <a href="#" id="channel_selection_dropdown" class="dropdown-toggle truncate" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Select a Channel... <span class="caret"></span></a>
+                    <ul class="dropdown-menu" id="channel_selection_dropdown_list">
+                    </ul>
+                </li>
+              </ul>
+              <!--
+              <ul class="nav navbar-nav navbar-right">
+                <li> <a class="btn btn-main">Discover</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="#">Settings</a></li>
+                    <li><a href="#">Log Out</a></li>
+                  </ul>
+                </li>
+              </ul>
+            -->
+            </div><!-- /.navbar-collapse -->
+          </div><!-- /.container-fluid -->
+        </nav>
 
         {% endblock nav %}
 		
         <!-- Site content gets injected here -->
-		{% block content %}{% endblock content %}
+		{% block content %}
+            <a href="channels" class="btn btn-default text-center" id="temp_splash">
+                <img src="{% static 'img/chalkboard.jpg' %}">
+                <p>Go to Channels  ></p>
+            </a>
+        {% endblock content %}
     </body>
 </html>

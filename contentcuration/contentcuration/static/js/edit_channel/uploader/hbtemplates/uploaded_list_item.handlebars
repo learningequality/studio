@@ -1,8 +1,8 @@
 <input type="checkbox" id="check_{{id}}"/>
 <label for="check_{{id}}" class="uploaded_list_item">
 	<!--<span class="glyphicon glyphicon-remove remove_item pull-right" aria-hidden="true"></span>-->
-	<h6>{{kind}}</h6>
-	<h5>
+	<h6>{{to_upper_case topic.attributes.kind}}</h6>
+	<h5 class="truncate">
 		<span class="item_name" id="{{id}}">{{topic.attributes.title}}</span>
 		<!--<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>-->
 	</h5>

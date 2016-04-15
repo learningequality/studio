@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rest_framework',
     'django_js_reverse',
+    'kolibri.content',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -54,13 +55,13 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
 )
 
-REST_FRAMEWORK = {
+#REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
-}
+ #   'DEFAULT_PERMISSION_CLASSES': [
+ #     'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+  # ]
+#}
 
 ROOT_URLCONF = 'contentcuration.urls'
 
@@ -113,6 +114,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-DEFAULT_FILE_STORAGE = 'django_hashedfilenamestorage.storage.HashedFilenameFileSystemStorage'
+DEFAULT_FILE_STORAGE = 'kolibri.content.models.ContentCopyStorage'
 
 LOGIN_REDIRECT_URL = '/exercises/'
+
+CONTENT_COPY_DIR = BASE_DIR
