@@ -4,7 +4,6 @@ require("queue.less");
 var BaseViews = require("./../views");
 var Models = require("./../models");
 var DragHelper = require("edit_channel/utils/drag_drop");
-//var PreviewerViews = require("edit_channel/previewer/views");
 
 /* Loaded when user clicks clipboard button below navigation bar */
 var Queue = BaseViews.BaseView.extend({
@@ -68,7 +67,6 @@ var Queue = BaseViews.BaseView.extend({
 	},
 	switch_to_trash:function(){
 		this.switch_tab("trash");
-
 	},
 	switch_tab:function(tabname){
 		this.$el.find((tabname == "trash")? "#trash-queue" : "#clipboard-queue").css("display", "block");
@@ -114,10 +112,14 @@ var QueueList = BaseViews.BaseListView.extend({
 		}));
 
 		this.load_content();
+		if(this.add_controls){
+			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.getChildCount(false, this.collection));
+		}
+		
 		this.$el.data("container", this);
 		this.$el.find("ul").data("list", this);
 		this.$el.find(".default-item").data("data", {
-			containing_list_view: this,
+			containing_list_view: this, 
 			index:0
 		});
 		DragHelper.addDragDrop(this);
@@ -137,10 +139,9 @@ var QueueList = BaseViews.BaseListView.extend({
 			self.$el.find("#list_for_" + self.model.id).append(item_view.el);
 			self.views.push(item_view);
 		});
-		$((this.is_clipboard && this.add_controls)? ".queue-badge" : ".trash-badge").html(this.model.getChildCount(false, this.collection));
 	},
 	check_all :function(){
-		this.$el.find("input[type=checkbox]").attr("checked", this.$el.find("#select_all_check").is(":checked"));
+		this.$el.find(":checkbox").attr("checked", this.$el.find("#select_all_check").is(":checked"));
 	},
 	delete_items:function(){
 		var list = this.$el.find('input:checked').parent("li");

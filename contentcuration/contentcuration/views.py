@@ -33,8 +33,8 @@ def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id)
     channel_serializer =  ChannelSerializer(channel)
 
-    topictrees = TopicTree.objects.filter(channel = channel)
-    topictree_serializer = TopicTreeSerializer(topictrees, many=True)
+    mimetypes = MimeType.objects.all()
+    mimetype_serializer = MimeTypeSerializer(mimetypes, many=True)
 
     mimetypes = MimeType.objects.all()
     mimetype_serializer = MimeTypeSerializer(mimetypes, many=True)
@@ -42,7 +42,6 @@ def channel(request, channel_id):
     licenses = ContentLicense.objects.all()
     license_serializer = LicenseSerializer(licenses, many=True)
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
-                                                 "topictrees" : JSONRenderer().render(topictree_serializer.data),
                                                  "mimetypes" : JSONRenderer().render(mimetype_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data)})
 
@@ -89,10 +88,4 @@ def file_upload(request):
         return HttpResponse(json.dumps({
             "success": True,
             "filename": str(file_object),
-        }))
-
-def data(request):
-    return HttpResponse(json.dumps({
-            "success": True,
-            "filename": "blah blah blah",
         }))

@@ -1,21 +1,23 @@
 <div id="uploader" class="container text-center">
 	 <div class="row">
-	 	<div class="col-xs-4 create_option" id="create_topic">
+	 	<div class="col-xs-6 create_option" id="create_topic">
 	 		<h1><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></h1>
 	 		Create Topic
 	 	</div>
-	 	<div class="col-xs-4 create_option" id="upload_file">
+	 	<div class="col-xs-6 create_option" id="upload_file">
 	 		<h1><span class="glyphicon glyphicon-duplicate" aria-hidden="true"></span></h1>
 	 		Upload
 	 	</div>
-	 	<div class="col-xs-4 create_option" id="create_exercise">
+	 	<!--
+	 	<div class="col-xs-4 create_option construction" id="create_exercise">
 	 		<h1><span class="glyphicon glyphicon-star" aria-hidden="true"></span></h1>
 	 		Create Exercise
 	 	</div>
+	 	-->
 	 </div>
-	 <h5>You can also drag and drop from your computer (under construction)</h5>
+	  <!--<h5>You can also drag and drop from your computer (under construction)</h5>-->
 
-	 <h4>Review and rearrange your content</h4>
+	 <h4>You can batch upload and arrange your content here.</h4>
 	 <div class="row headers">
 	 	<div class="col-xs-2">Type</div>
 	 	<div class="col-xs-10">Name</div>
@@ -25,11 +27,15 @@
 	 	<li id="content_item_{{cid}}" class="row {{kind}}"></li>
 	 {{/each}}
 	 </ul>
-
+	 <!--
 	 <h5>Add from a channel I'm subscribed to (under construction)</h4>
 	 <select class="construction">
 	 	<option>Khan Academy</option>
 	 </select>
-	 <p class="pull-right">Edit Details</p>
-	 <a class="btn btn-default edit_metadata pull-right">Next</a>
+	 -->
+	 <div class="edit_metadata pull-right">
+		<p>Edit Details</p>
+		<a class="btn btn-default">Next</a>
+	 </div>
+	
 </div>

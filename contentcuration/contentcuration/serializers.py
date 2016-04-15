@@ -19,9 +19,9 @@ class TopicTreeSerializer(serializers.ModelSerializer):
 
 class FileSerializer(serializers.ModelSerializer):
     content_copy = serializers.FileField(use_url=False)
-
+ 
     def get(*args, **kwargs):
-        return super.get(*args, **kwargs)
+         return super.get(*args, **kwargs)
     class Meta:
         model = File
         fields = ('checksum', 'extension', 'file_size', 'content_copy', 'id', 'available', 'format')
@@ -33,7 +33,6 @@ class FormatSerializer(serializers.ModelSerializer):
         model = Format
         fields = ('format_size', 'quality', 'contentmetadata', 'available', 'mimetype', 'id', 'files')
 
-
 class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     formats = FormatSerializer(many=True, read_only=True)
@@ -43,12 +42,16 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',
                   'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id',
                   'formats')
-
-
+   
 class MimeTypeSerializer(serializers.ModelSerializer):
    class Meta:
     model = MimeType
     fields = ('readable_name', 'machine_name', 'id') 
+
+class TagSerializer(serializers.ModelSerializer):
+   class Meta:
+    model = ContentTag
+    fields = ('tag_name', 'tag_type', 'id') 
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:

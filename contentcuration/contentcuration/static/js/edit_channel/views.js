@@ -27,13 +27,17 @@ var BaseView = Backbone.View.extend({
 			edit_collection.add(model);
 		}
 		$("#main-content-area").append("<div id='dialog'></div>");
+		var content = null;
+		if(edit_collection.length ==1)
+			content = edit_collection.models[0];
 		var metadata_view = new UploaderViews.EditMetadataView({
 			collection: edit_collection,
 			parent_view: this,
 			el: $("#dialog"),
 			allow_add : false,
 			main_collection: this.collection,
-			modal:true
+			modal:true,
+			model: content
 		});
 	},
 	add_to_view:function(){
@@ -56,8 +60,9 @@ var BaseView = Backbone.View.extend({
             '<div id="kolibri_load_gif"></div>' +
             '</div>';
         $(load).appendTo('body');
-        if(callback){
-    		setTimeout(function(){
+
+        if(callback){	
+    		setTimeout(function(){ 
 				callback();
 				$("#loading_modal").remove();
 			 }, 500);
@@ -130,7 +135,6 @@ BaseListView = BaseView.extend({
 		}
 		//console.log("add_node adding to clipboard: ", clipboard_list);
 		this.add_to_clipboard(clipboard_list);
-
 		//console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + ((new Date().getTime() - start)/1000) + ")");
 		return this.$el.find(".current_topic input:checked").length != 0;
 	},
@@ -164,8 +168,6 @@ BaseListView = BaseView.extend({
 					second_index = (target.data("isbelow"))? element.index - 1 : element.index + 1;
 				}
 				console.log("inserting second index " + second_index);
-
-
 				if(second_index < 0 && target.data("isbelow")){ //Case 3: at top of list
 					console.log("add_to_container inserting at top of list");
 					console.log("first index inserting " + first_index + " with sort order " + this.views[first_index].model.get("sort_order"));
@@ -218,7 +220,6 @@ BaseListView = BaseView.extend({
 				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
 				console.log("children",new_children);
 				console.log("parent",old_parent);
-
 				//old_parent.save({"children": new_children}, {async:false});
 			}
 		}else{
@@ -228,7 +229,6 @@ BaseListView = BaseView.extend({
 				}
 			});
 		}
-
 		//console.log("add_to_container model", transfer.model);
 		console.log("PERFORMANCE views.js: drop_in_container end (time = " + (new Date().getTime() - start) + ")");
 		this.render();
@@ -261,15 +261,17 @@ BaseListView = BaseView.extend({
 var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
 	delete:function(){
-		console.log("PERFORMANCE views.js: starting delete " + this.model.get("title") + "...");
     	var start = new Date().getTime();
+    	if(!this.model){
+    		this.delete_view();
+    		return;
+    	}
 
 		if(!this.model.get("kind")) {
 			this.model.delete_channel();
 		}else{
 			if(this.containing_list_view.item_view != "uploading_content"){
 				this.add_to_trash();
-
 				/*Check if node name already exists in trash, then delete older version*/
 				//var self = this;
 				/*
@@ -288,7 +290,6 @@ var BaseListItemView = BaseView.extend({
 				console.log("target delete:", this.deleted_root);
 				var new_children = this.containing_list_view.model.get("children");
 				new_children.splice(new_children.indexOf(this.model.id), 1);
-
 				this.containing_list_view.model.save({"children" : new_children}, {validate:false});
 				this.model.save({"parent" :this.deleted_root.id}, {validate:false});
 				this.containing_list_view.remove_view(this);
@@ -319,12 +320,10 @@ var BaseListItemView = BaseView.extend({
 			}
 		}
 		else{
-
 			this.model.save(data, options);
 			if(this.model.get("kind") && this.model.get("kind").toLowerCase() != "topic"){
 				this.model.create_file();
 			}
-
 			if(this.containing_list_view.item_view == "channel"){
 				this.model.update_root({
 					'title' : data.name,
@@ -375,17 +374,26 @@ var BaseEditorView = BaseListView.extend({
 		this.parent_view.set_editing(false);
 		var self = this;
 		this.views.forEach(function(entry){
-			entry.model.set(entry.model.attributes, {validate:true});
-			console.log("FILE SAVE", entry);
-			if(!entry.model.validationError){
-          entry.save(entry.model.attributes, {validate:false, async:false});
-          entry.set_edited(false);
-			}else{
+	        entry.save(entry.model.attributes, {async:false});
+	        if(entry.model.validationError){
 				self.handle_error(entry);
 				self.errorsFound = true;
 			}
+	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
+	},
+	check_nodes:function(){
+		var self = this;
+		this.views.forEach(function(entry){
+			entry.model.set(entry.model.attributes, {validate:true});
+			if(entry.model.validationError){
+				self.handle_error(entry);
+				self.errorsFound = true;
+				return entry;
+			}
+		});
+		return null;
 	},
 	set_node_edited:function(){
 		this.enqueue(this.current_view);

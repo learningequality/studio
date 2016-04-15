@@ -24,6 +24,18 @@ var TreeEditView = BaseViews.BaseView.extend({
 	 		collection: this.collection
 	 	});
 	 	$("#queue-area").css("display", (this.is_clipboard || !this.is_edit_page)? "none" : "block");
+	 	$("#main-nav-home-button").removeClass("active");
+
+	 	if(this.is_edit_page){
+			$("#channel-edit-button").addClass("active");
+	 	}else if(!this.is_clipboard){
+	 		$("#channel-preview-button").addClass("active");
+	 	}
+
+	 	options.channels.forEach(function (entry){
+			$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
+		});
+		$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
@@ -42,15 +54,16 @@ var TreeEditView = BaseViews.BaseView.extend({
 		'click .copy_button' : 'copy_content',
 		'click .delete_button' : 'delete_content',
 		'click .edit_button' : 'edit_content',
-		'click #hide_details_checkbox' :'toggle_details',
+		'click #hide_details_checkbox' :'toggle_details'
 		/*'click .undo_button' : 'undo_action',
 		'click .redo_button' : 'redo_action'*/
-	},
+	},	
 	remove_containers_from:function(index){
 		while(this.containers.length > index){
 			this.containers[this.containers.length-1].delete_view();
 			this.containers.splice(this.containers.length-1);
 		}
+		this.containers[this.containers.length-1].close_folders();
 	},
 	/*
 	undo_action: function(){
@@ -68,8 +81,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 			this.remove_containers_from(index);
 		}
 		/* Create place for opened topic */
-		this.$el.find("#container_area").append("<div id='container_" + topic.id + "' class='container content-container "
-						+ "' name='" + (this.containers.length + 1) + "'></div>");
+		this.$el.find("#container_area").append("<li id='container_" + topic.id + "' class='container content-container "
+						+ "' name='" + (this.containers.length + 1) + "'></li>");
 		var container_view = new ContentList({
 			el: this.$el.find("#container_area #container_" + topic.id),
 			model: topic,
@@ -136,11 +149,11 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.childrenCollection.sort_by_order();
 		//this.set_sort_orders(this.childrenCollection);
 		this.render();
-
+		
 		/* Animate sliding in from left */
-		this.$el.css('margin-left', -this.$el.find(".container-interior").outerWidth());
-		$("#container_area").width(this.$el.find(".container-interior").outerWidth() * (this.index + 2));
-		this.$el.animate({'margin-left' : "0px"}, 500);
+		this.$el.css('margin-left', -this.$el.find(".content-list").outerWidth());
+		$("#container_area").width(this.$el.find(".content-list").outerWidth() * (this.index));
+		this.$el.animate({'margin-left' : "0px"}, 500);	
 	},
 	render: function() {
 		console.log("*************RENDERING " + this.model.get("title") + "****************");
@@ -165,6 +178,7 @@ var ContentList = BaseViews.BaseListView.extend({
 
 	events: {
 		'click .add_content_button':'add_content',
+		'click .back_button' :'close_container'
 	},
 
 	load_content : function(){
@@ -189,7 +203,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		});
 		console.log("PERFORMANCE tree_edit/views.js: load_content end (time = " + (new Date().getTime() - start) + ")");
 	},
-
 	add_content: function(event){
 		this.add_to_view();
 	},
@@ -214,6 +227,12 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 	add_to_clipboard:function(views){
 		this.container.add_to_clipboard(views);
+	},
+	close_container:function(views){
+		var self = this;
+		this.$el.animate({'margin-left' : -this.$el.outerWidth()}, 100,function(){
+			self.container.remove_containers_from(self.index - 1);
+		});	
 	}
 });
 
@@ -223,12 +242,12 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_folder','open_folder',/*'expand_or_collapse_folder', */
-					'submit_edit', 'cancel_edit','preview_node');
+					'submit_edit', 'cancel_edit','preview_node', 'cancel_open_folder');
 		this.edit_mode = options.edit_mode;
 		this.allow_edit = options.allow_edit;
 		this.containing_list_view = options.containing_list_view;
 		this.index = options.index;
-
+		this.files = (this.model.get("title").trim() == "topic")?  null : this.model.get_files();
 		this.render();
 
 		console.log(this.model.get("title") + " parent is " + this.model.get("parent") + " and has index " + this.index);
@@ -239,43 +258,24 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			node: this.model,
 			isfolder: this.model.get("kind").toLowerCase() == "topic",
 			edit_mode: this.edit_mode,
-			allow_edit: this.allow_edit
+			allow_edit: this.allow_edit,
+			resource_count : (this.model.get("kind") == "topic")? this.model.getChildCount(false, this.containing_list_view.collection) : this.files.length
 		}));
 		this.$el.data("data", this);
-		/*TODO: for future branch- automatically shorten length of descriptions that are too long
-		if(this.$el.find(".description").height() > 103){
-			//this.$el.find(".description").height(this.$el.find(".description").css("font-size").replace("px", "") * 3);
-			console.log(this.model.get("title"), this.$el.find(".description").height());
-			this.$el.find(".filler").css("display", "inline");
-			//this.$el.find(".description").
-		}*/
 		if($("#hide_details_checkbox").attr("checked"))
 			this.$el.find("label").addClass("hidden_details");
 	},
 	events: {
 		'click .edit_folder_button': 'edit_folder',
+		'click .node_title_textbox': 'cancel_open_folder',
+		'click .topic_textarea' : 'cancel_open_folder',
 		'click .open_folder':'open_folder',
-		'dblclick .folder' : "open_folder",
-		//'click .filler' : 'expand_or_collapse_folder',
+		'click .folder' : "open_folder",
 		'click .cancel_edit' : 'cancel_edit',
 		'click .submit_edit' : 'submit_edit',
 		'click .preview_button': 'preview_node',
 		'click .file' : 'preview_node'
 	},
-	/*TODO: For future branch- expands and collapses folders when descriptions too long
-	expand_or_collapse_folder: function(event){
-		event.preventDefault();
-		event.stopPropagation();
-		if(this.$(".filler").parent("label").hasClass("collapsed")){
-			this.$(".filler").parent("label").removeClass("collapsed").addClass("expanded");
-			this.$(".description").text(this.$(".filler").attr("title"));
-			this.$(".filler").text("See Less");
-		}
-		else {
-			this.$(".filler").parent("label").removeClass("expanded").addClass("collapsed");
-			this.$(".filler").text("See More");
-		}
-	},*/
 	open_folder:function(event){
 		event.preventDefault();
 		event.stopPropagation();
@@ -283,11 +283,14 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		this.set_opened(true, true);
 		this.containing_list_view.add_container(this);
 	},
+	cancel_open_folder:function(event){
+		event.preventDefault();
+		event.stopPropagation();
+	},
 	set_opened:function(is_opened, animate){
 		if(is_opened){
 			console.log("PERFORMANCE tree_edit/views.js: starting set_opened " + this.model.get("title") + " ...");
     		var start = new Date().getTime();
-			this.$el.find(".folder").animate({'width' : "345px"}, (animate)? 500 : 0);
 			this.$el.addClass("current_topic");
 			this.$el.attr("draggable", "false");
 
@@ -310,16 +313,19 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		}else{
 			this.$el.off("offset_changed");
 			this.$el.attr("draggable", "true");
-			this.$el.find(".folder").css("width" , "302px");
 			this.$el.removeClass("current_topic");
 		}
 	},
 	edit_folder: function(event){
+		event.preventDefault();
+		event.stopPropagation();
 		this.allow_edit = this.edit_mode;
 		this.render();
-		this.$el.find("label").addClass("editing");
+		this.$el.addClass("editing");
 	},
 	submit_edit: function(event){
+		event.preventDefault();
+		event.stopPropagation();
 		var title = ($("#textbox_" + this.model.id).val().trim() == "")? "Untitled" : $("#textbox_" + this.model.id).val().trim();
 		var description = ($("#textarea_" + this.model.id).val().trim() == "")? " " : $("#textarea_" + this.model.id).val().trim();
 		this.model.set({title:title, description:description}, {validate:true});
@@ -330,11 +336,14 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		else{
 			this.save();
 			this.allow_edit = false;
+			this.$el.removeClass("editing");
 			this.render();
 		}
 
 	},
 	cancel_edit: function(event){
+		event.preventDefault();
+		event.stopPropagation();
 		this.allow_edit = false;
 		this.render();
 		if($("#hide_details_checkbox").attr("checked")){
@@ -345,14 +354,24 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	preview_node: function(event){
 		event.preventDefault();
 		$("#main-content-area").append("<div id='dialog'></div>");
-		var metadata_view = new UploaderViews.EditMetadataView({
-			el : $("#dialog"),
-			model: this.model,
-			allow_add: false,
-			main_collection : this.main_collection,
-			modal: true,
-			parent_view : this
-		});
+		if(this.edit_mode){
+			var metadata_view = new UploaderViews.EditMetadataView({
+				el : $("#dialog"),
+				model: this.model,
+				allow_add: false,
+				main_collection : this.main_collection,
+				modal: true,
+				parent_view : this
+			});
+		}else{
+			var preview_view = new UploaderViews.PreviewView({
+				modal:true,
+				model: this.model,
+				el : $("#dialog")
+			});
+		}
+		
+		
 	},
 	publish:function(){
 		this.save({"published": true},{validate:false});
@@ -361,13 +380,15 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	},
 	publish_children:function(model, collection){
 		var self = this;
-		var children = collection.get_all_fetch(model.get("children"));
-		children.forEach(function(entry){
-			if(!entry.get("published")){
-				entry.save({"published":true},{validate:false});
-			}
-			self.publish_children(this, collection);
-		});
+		if(model.attributes){
+			var children = collection.get_all_fetch(model.get("children"));
+			children.forEach(function(entry){
+				if(!entry.get("published")){
+					entry.save({"published":true},{validate:false});
+				}
+				self.publish_children(this, collection);
+			});
+		}
 	},
 	add_to_trash:function(){
 		this.containing_list_view.add_to_trash([this]);

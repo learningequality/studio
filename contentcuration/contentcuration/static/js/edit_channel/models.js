@@ -49,6 +49,17 @@ var NodeModel = BaseModel.extend({
 		});
 		return count;
 	},
+	getChildCount:function(includeParent, collection){
+		if(!collection){
+			collection = new NodeCollection();
+		}
+		var count = (includeParent) ? 1:0;
+		var children = collection.get_all_fetch(this.get("children"));
+		children.forEach(function(entry){
+			count += entry.getChildCount(true, collection);
+		});
+		return count;
+	},
 
 	/*Used when copying items to clipboard*/
     duplicate: function(parent_id, index){
@@ -86,15 +97,28 @@ var NodeModel = BaseModel.extend({
 		}
 		if(old_parent){
 			this.save({title: title, parent: old_parent}, {async:false, validate:false}); //Save any other values
+			var old_parent_node = new NodeModel({id:old_parent});
+			old_parent_node.fetch({async:false});
+			old_parent_node.save({total_file_size: old_parent_node.get_size()});
 		}else{
 			this.save({title: title}, {async:false, validate:false}); //Save any other values
 		}
 
 		this.save({parent: parent_id, sort_order:index}, {async:false, validate:false}); //Save any other values
-
+		var new_parent = new NodeModel({id:parent_id});
+		new_parent.fetch({async:false});
+		new_parent.save({total_file_size: new_parent.get_size()});
 		console.log("PERFORMANCE models.js: move end (time = " + (new Date().getTime() - start) + ")");
 	},
-
+	get_size:function(){
+		var collection = new NodeCollection();
+		var size = 0;
+		var children = collection.get_all_fetch(this.get("children"));
+		children.forEach(function(entry){
+			size += entry.get("total_file_size");
+		});
+		return size;
+	},
 	/* Function in case want to append (Copy #) to end of copied content*/
 	generate_title:function(title){
 		var start = new Date().getTime();
@@ -172,6 +196,7 @@ var NodeModel = BaseModel.extend({
 		if(this.attributes.file_data){
 			var file_data = this.attributes.file_data;
 			var format = new FormatModel();
+			var self = this;
 			format.save({
 				available : false,
 				format_size: file_data.data.size,
@@ -187,6 +212,8 @@ var NodeModel = BaseModel.extend({
 						checksum: file_data.filename.split(".")[0],
 						extension: "." + file_data.filename.split(".")[1]
 					});
+					self.save({total_file_size: file.get("file_size")});
+					console.log("SAVING FILE:", file);
 					file.save({
 						  format: format.id,
           },
@@ -322,14 +349,12 @@ var ChannelModel = BaseModel.extend({
 var ChannelCollection = BaseCollection.extend({
 	model: ChannelModel,
 	list_name:"channel-list",
-
-	create_channel:function(data, progress_bar){
+	create_channel:function(data){
 		var channel_data = new ChannelModel(data);
 
 		channel_data.fetch();
 		if(channel_data.get("description").trim() == "")
 			channel_data.set({description: "No description available."});
-
 		return this.create(channel_data, {
 			async: false,
 			success:function(){
@@ -442,6 +467,35 @@ var LicenseCollection = PresetCollection.extend({
     }
 });
 
+
+var TagModel = BaseModel.extend({
+	root_list : "tag-list",
+	defaults: {
+		tag_name: "Untagged"
+    },
+    get_or_create:function(){
+		var collection = new TagCollection();
+		collection.get_or_create(this.get("tag_name"), this.get("tag_type"));
+	}
+});
+
+var TagCollection = BaseCollection.extend({
+	model: TagModel,
+	list_name:"tag-list",
+	get_or_create:function(name, type){
+		var to_return = this.get({"tag_name" : name});
+		if(!to_return){
+			to_return.fetch({async:false});
+			if(!to_return){
+				to_return = this.create({
+					tag_name : name,
+					tag_type : type
+				}, {async:false});
+			}
+		}
+		return to_return;
+	}
+});
 
 module.exports = {
 	NodeModel: NodeModel,

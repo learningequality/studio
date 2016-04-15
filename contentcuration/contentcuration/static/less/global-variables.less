@@ -2,22 +2,74 @@
 @icon-font-path: "/static/fonts/";
 
 @font-face {
-	font-family: "Open Sans";
-	src: url("@{icon-font-path}OpenSans-Regular.ttf") format("truetype");
+  font-family: "Noto Sans";
+  src: url("@{icon-font-path}NotoSans-Regular.ttf") format("truetype");
 }
 
-@topnav-bg-color: #816793;
-@error-input-color : #F6CECE;
-@body-font-color: white;
+/* ICONS AND BUTTONS */
+@topnav-active-tab-color:#564462; 
+.action-button {
+  background: @blue-500;
+  color: white;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 2px;
+}
+.action-text {
+  color: @blue-500;
+  font-weight: bold;
+  padding: 6px 16px;
+}
 
-@body-background: #292A2B;
+/* TYPOGRAPHY */
+@title: 24px;
+@larger-body-text: 16px;
+@body-text: 14px;
+@annotation-text: 12px;
+
+
+@body-font-color: #30302F;
+@annotation-gray: #A4A4A4;
+@gray-200: #EEEEEE;
+@gray-700: #616161;
+@gray-800: #424242;
+@error-input-color : #F6CECE;
+@delete-color: #FF5252;
+
+/* CONTAINERS */
+@body-background: #FAFAFA;
+@panel-container-color: #EEEEEE;
+@topnav-bg-color: #816793;
+@box-shadow: 0 0 2px 0px rgba(0,0,0,0.4);
+.input-form {
+  color: @body-font-color;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #BDBDBD;
+  &:focus {
+    outline: none;
+    border-bottom: 2px solid @blue-700;
+  }
+}
+
+/* COLOR PALETTE */
+@blue-100: #BBDEFB;
+@blue-500: #2196F3;
+@blue-700: #1976D2;
+@blue-900: #0D47A1;
 
 /* GLOBAL STYLES */
 .inline-block {
-	display: inline-block;
+  display: inline-block;
+}
+a {
+  text-decoration: none;
+}
+a {
+  text-decoration: none;
 }
 body {
-	background: @body-background;
+  background: @body-background;
 }
 
 body.dragging, body.dragging * {
@@ -27,7 +79,7 @@ body.dragging, body.dragging * {
 .dragged {
   position: absolute;
   opacity: 0.5;
-  z-index: 2000;
+  z-index: 999999999999999;
 }
 
 ul li.placeholder {
@@ -39,4 +91,70 @@ ul li.placeholder:before {
 
 .error_input{
   background-color :@error-input-color;
+}
+
+.construction{
+  display:none;
+  cursor: not-allowed;
+  opacity:0.6;
+}
+
+.btn, a {
+  cursor: pointer;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  margin-left:-100px;
+  position: relative;
+}
+ 
+::-webkit-scrollbar-track {
+  /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);*/
+}
+ 
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);*/
+   background-color:gray;
+}
+
+.truncate{
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wordwrap { 
+   white-space: pre-wrap;      /* CSS3 */   
+   white-space: -moz-pre-wrap; /* Firefox */    
+   white-space: -pre-wrap;     /* Opera <7 */   
+   white-space: -o-pre-wrap;   /* Opera 7 */    
+   word-wrap: break-word;      /* IE */
+}
+
+
+#kolibri_load_gif{
+  width: 200px;
+  height:170px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -100px 0 0 -85px;
+    background: url('/static/img/kolibri_load.gif');
+    background-size: 200px 170px;
+    background-repeat: no-repeat;
+    z-index:999999999999999999999999999999999999999;
+}
+
+#loading_modal{
+  position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    background: #000;
+    opacity: 0.8;
+    filter: alpha(opacity=80);
+    z-index:999999999999999999999999999999999999999;
 }

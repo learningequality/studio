@@ -17,11 +17,8 @@ function publish_nodes(){
 			console.log("Publishing...");
 			$("#" + this.id).data("data").publish();
 		});
-		alert("Published!");
 	}
 }
-
-
 
 module.exports = {
 	$: $,

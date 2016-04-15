@@ -23,7 +23,6 @@ var AddContentView = BaseViews.BaseListView.extend({
 		this.parent_view = options.parent_view;
 		this.modal = options.modal;
 		this.render();
-		console.log("CURRENT LICENSES", window.licenses);
 	},
 	render: function() {
 		if(this.modal){
@@ -238,12 +237,11 @@ var FileUploadView = UploadItemView.extend({
         this.dropzone.on("addedfile", this.file_added);
 
         this.dropzone.on("removedfile", this.file_removed);
-
     },
     file_uploaded: function(file) {
         console.log("FILE FOUND:", file);
         this.file_list.push({
-        	"data" : file,
+        	"data" : file, 
         	"filename": JSON.parse(file.xhr.response).filename
         });
     },
@@ -272,11 +270,12 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
 	modal_template: require("./hbtemplates/uploader_modal.handlebars"),
 	header_template: require("./hbtemplates/edit_metadata_header.handlebars"),
+
 	initialize: function(options) {
 		console.log("called this");
 		_.bindAll(this, 'close_uploader', "check_and_save_nodes", 'check_item',
 						'add_tag','save_and_finish','add_more','set_edited',
-						'render_details', 'render_preview');
+						'render_details', 'render_preview', 'remove_tag');
 		this.parent_view = options.parent_view;
 		this.collection = (options.collection)? options.collection : new Models.NodeCollection();
 		this.allow_add = options.allow_add;
@@ -304,6 +303,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 				allow_add: this.allow_add
 			}));
 		}
+		this.preview_view = new PreviewView({
+			modal:false,
+			el: $("#metadata_preview"),
+			model:this.current_node
+		});
+
+		this.gray_out();
 		this.load_content();
 	},
 	events: {
@@ -316,7 +322,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		'keypress #tag_box' : 'add_tag',
 		'keyup .upload_input' : 'set_edited',
 		'click #metadata_details_btn' : 'render_details',
-		'click #metadata_preview_btn' : 'render_preview'
+		'click #metadata_preview_btn' : 'render_preview',
+		'click .delete_tag':'remove_tag'
 	},
 
 	load_content:function(){
@@ -338,7 +345,11 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 					containing_list_view: self,
 				});
 				self.views.push(node_view);
+				if(self.collection.length ==1){
+					self.set_current(node_view);
+				}
 			});
+
 		}
 	},
 	render_details:function(){
@@ -360,28 +371,26 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		self.$el.find("#description_error").html("");
 		self.$el.find("#input_description").removeClass("error_input");
 
+		self.errorsFound = self.check_nodes();
+
 		if(!self.errorsFound){
 			this.display_load(function(){
-	 			self.save_nodes();
-
+	 			self.save_nodes(callback);
 				if(!self.errorsFound){
 					self.$el.find("#title_error").html("");
 					self.$el.find("#description_error").html("");
 					if(self.disable){
-						self.$el.find(".upload_input").addClass("gray-out");
-						self.$el.find("#input_title").val(" ");
-						self.$el.find("#input_description").val(" ");
+						self.gray_out();
 					}
 				}
 				if(!self.errorsFound && self.allow_add)
 					self.parent_view.add_nodes(self.views, self.main_collection.length);
-				if(callback)
-					callback();
-				console.log("THREAD: end of display load");
 	 		});
+	 		if(callback){
+				return callback();
+			}
 		}
-
-		console.log("PERFORMANCE tree_edit/views.js: save_nodes end (time = " + (new Date().getTime() - start) + ")");
+		
 	},
 	save_and_finish: function(){
 		var self = this;
@@ -393,10 +402,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 					self.close_uploader();
 				}
 			}
-			console.log("THREAD: end of save and finish");
 		});
 	},
 	add_more:function(event){
+		this.save_queued();
 		if(this.modal){
 			this.$el.find(".modal").modal("hide");
 		}else{
@@ -455,7 +464,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
         var file_size = (((this.current_node.get("formats") || [])[0] || {}).format_size) || ((this.current_node.get("file_data") || {}).data || {}).size || "";
         this.$("#display_file_size").text(file_size);
-
+        this.$el.find(".upload_input").removeClass("gray-out");
 	},
 	check_item: function(){
 		this.disable = this.$el.find("#uploaded_list :checked").length > 1;
@@ -464,7 +473,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.$el.find("#input_description").val((this.disable || !this.current_node)? " " : this.current_node.get("description"));
 
 		if(this.disable) {
-			this.$el.find(".disable-on-edit").addClass("gray-out");
+			this.gray_out();
 			//TODO: Clear tagging area $("#tag_area").html("");
 		}
 		else {
@@ -472,12 +481,21 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.set_current_node(this.$el.find("#uploaded_list :checked").parent("li").data("data"));
 		}
 	},
+	gray_out:function(){
+		this.$el.find(".disable-on-edit").addClass("gray-out");
+		this.$el.find(".upload_input").addClass("gray-out");
+		this.$el.find("#input_title").val(" ");
+		this.$el.find("#input_description").val(" ");
+	},
 	add_tag: function(event){
 		if((!event.keyCode || event.keyCode ==13) && this.$el.find("#tag_box").val().trim() != ""){
 			/* TODO: FIX THIS LATER TO APPEND TAG VIEWS TO AREA*/
-			this.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + this.$el.find("#tag_box").val().trim() + "</div>");
+			this.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + this.$el.find("#tag_box").val().trim() + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
 			this.$el.find("#tag_box").val("");
 		}
+	},
+	remove_tag:function(event){
+		event.target.parentNode.remove();
 	},
 	set_edited:function(event){
 		this.$el.find(".disable_on_error").prop("disabled", false);
@@ -495,49 +513,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.switchPanel(true);
 	},
 	load_preview:function(){
-		console.log("load",this.current_node);
-		var location = "/media/";
-		var extension = "";
-		if(this.current_node.attributes.file_data){
-			console.log("PREVIEWING...", this.current_node);
-			location += this.current_node.attributes.file_data.filename.substring(0,1) + "/";
-			location += this.current_node.attributes.file_data.filename.substring(1,2) + "/";
-			location += this.current_node.attributes.file_data.filename;
-			extension = this.current_node.attributes.file_data.filename.split(".")[1];
-		}else{
-			var previewed_file = this.current_node.get_files().models[0];
-			console.log("GOT FILE:", previewed_file);
-			if(previewed_file){
-				extension = previewed_file.get("extension");
-				location += previewed_file.get("content_copy").split("contentcuration/")[1];
-			}
-		}
-		var preview_template;
-		switch (this.current_node.get("kind")){
-			case "image":
-				preview_template = require("./hbtemplates/preview_templates/image.handlebars");
-				break;
-			case "pdf":
-			case "text":
-				preview_template = require("./hbtemplates/preview_templates/pdf.handlebars");
-				break;
-			case "audio":
-				preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
-				break;
-			case "video":
-				preview_template = require("./hbtemplates/preview_templates/video.handlebars");
-				break;
-			default:
-				preview_template = require("./hbtemplates/preview_templates/default.handlebars");
-		}
-
-		var options = {
-			source: location,
-			extension:extension,
-			title: this.current_node.get("title")
-		};
-
-		this.$el.find("#preview_window").html(preview_template(options));
+		this.preview_view.switch_preview(this.current_node);
 	},
 	switchPanel:function(switch_to_details){
 		$((switch_to_details)? "#metadata_details_btn" : "#metadata_preview_btn").addClass("btn-tab-active");
@@ -566,9 +542,9 @@ var ContentItem =  BaseViews.BaseListItemView.extend({
 
 var NodeListItem = ContentItem.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
-	tagName: "li",
+	tagName: "li", 
 	'id': function() {
-		return this.model.cid;
+		return this.model.cid; 
 	},
 	initialize: function(options) {
 		_.bindAll(this, 'submit_topic','remove_topic');
@@ -695,10 +671,85 @@ var UploadedItem = ContentItem.extend({
 	}
 });
 
+var PreviewView = UploadItemView.extend({
+	template: require("./hbtemplates/preview_dialog.handlebars"),
+	modal_template: require("./hbtemplates/preview_modal.handlebars"),
+	initialize: function(options) {
+		this.modal = options.modal;
+		this.render();
+	},
+	render: function() {
+		if(this.modal){
+			this.$el.html(this.modal_template());
+	        this.$(".modal-body").html(this.template({}));
+	        this.$el.append(this.el);
+	        this.$(".modal").modal({show: true});
+        	this.$el.find(".modal").on("hide.bs.modal", this.close);
+		}else{
+			this.$el.html(this.template({
+				node: this.model
+			}));
+		}
+		this.load_preview();
+	},
+
+	load_preview:function(){
+		var location = "/media/";
+		var extension = "";
+		if(this.model){
+			if(this.model.attributes.file_data){
+				console.log("PREVIEWING...", this.model);
+				location += this.model.attributes.file_data.filename.substring(0,1) + "/";
+				location += this.model.attributes.file_data.filename.substring(1,2) + "/";
+				location += this.model.attributes.file_data.filename;
+				extension = this.model.attributes.file_data.filename.split(".")[1];
+			}else{
+				var previewed_file = this.model.get_files().models[0];
+				console.log("GOT FILE:", previewed_file);
+				if(previewed_file){
+					extension = previewed_file.get("extension");
+					location += previewed_file.get("content_copy").split("contentcuration/")[1];
+				}
+			}
+			var preview_template;
+			switch (this.model.get("kind")){
+				case "image":
+					preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+					break;
+				case "pdf":
+				case "text":
+					preview_template = require("./hbtemplates/preview_templates/pdf.handlebars");
+					break;
+				case "audio":
+					preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
+					break;
+				case "video":
+					preview_template = require("./hbtemplates/preview_templates/video.handlebars");
+					break;
+				default:
+					preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+			}
+
+			var options = {
+				source: location,
+				extension:extension,
+				title: this.model.get("title")
+			};
+			this.$el.find("#preview_window").html(preview_template(options));
+		}
+		
+	},
+
+	switch_preview:function(model){
+		this.model = model;
+		this.load_preview();
+	}
+});
 
 
 module.exports = {
 	AddContentView: AddContentView,
 	EditMetadataView:EditMetadataView,
-	FileUploadView:FileUploadView
+	FileUploadView:FileUploadView,
+	PreviewView:PreviewView
 }
