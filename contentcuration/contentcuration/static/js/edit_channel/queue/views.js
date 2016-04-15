@@ -141,7 +141,7 @@ var QueueList = BaseViews.BaseListView.extend({
 		});
 	},
 	check_all :function(){
-		this.$el.find(":checkbox").attr("checked", this.$el.find("#select_all_check").is(":checked"));
+		this.$el.find(":checkbox").prop("checked", this.$el.find("#select_all_check").prop('checked'));
 	},
 	delete_items:function(){
 		var list = this.$el.find('input:checked').parent("li");
