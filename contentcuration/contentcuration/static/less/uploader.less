@@ -18,6 +18,7 @@
 
 .file-row{
 	width:100%;
+	padding: 0 25px;
 	.inline{
 		display:inline-block;
 		vertical-align: middle;
@@ -29,8 +30,18 @@
 	.file_upload_progress{
 		height:15px;
 	}
+	div .name {
+		font-weight: bold;
+	}
 }
-
+.dz-remove {
+	position: relative;
+	bottom: 18px;
+	margin-left: 25px;
+}
+.progress-bar-success {
+	background: @blue-200;
+}
 
 .upload-modal-content{
 	background-color: @body-background;
@@ -44,6 +55,8 @@
 }
 
 .modal-header{
+	border: none;
+	padding-bottom: 5px;
 	.glyphicon{
 		margin-right:15px;
 	}
@@ -63,40 +76,56 @@ div#dropzone {
 
 #uploader{
 	width: @uploader-width;
-	.create_option{
-		width: @uploader-option-size;
-		background-color:white;
-		margin: 10px;
-		cursor:pointer;
+	.uploader-row {
+		padding: 0 0 8px 15px;
+	}
+	div .action-button {
+		display: inline-block;
+		margin: 0 5px 0 0;
+		font-size: @larger-body-text;
+		cursor: pointer;
 	}
 	.headers{
-		background-color: @uploader-header-color;
+		background-color: @blue-100;
 		margin: 0px;
 		margin-right: 30px;
+		padding: 5px 0;
 	}
 	#upload_content_add_list{
 		margin: 0px;
 		margin-right: 30px;
-		height: @uploader-list-height;
+		height: 370px;
 		background-color:white;
 		overflow-y:auto;
 		overflow-x:none;
-
+		li {
+			margin: 7px 0;
+			height: 22px;
+		}
 		.glyphicon{
-			padding-left: 5px;
+			padding: 7px 30px 0 0;
+			color: @gray-700;
 		}
 					
 		.row{
 			vertical-align:middle;
-
 		}
 		.content_type{
-			padding:1px;
-			background-color: #E6E6E6;
+			padding-top: 1px;
+			text-align: center;
+			color: @annotation-gray;
 		}
 		
 		.content_name{
-			width: 80%;
+			width: 83%;
+			border: none;
+			border-bottom: 1px solid @gray-200;
+			padding: 0 0 0 5px;
+			&:focus {
+				outline: none;
+				border-bottom: 2px solid @gray-400;
+				font-weight: bold;
+			}
 		}
 		.folder_name{
 			font-weight:normal;
@@ -105,6 +134,10 @@ div#dropzone {
 			cursor:pointer;
 		}
 	}
+	h4 {
+		font-size: @larger-body-text;
+		margin-bottom: 5px;
+	}
 	select{
 		width:80%;
 		margin:10px;
@@ -112,6 +145,9 @@ div#dropzone {
 
 	.edit_metadata{
 		margin-right:30px
+	}
+	.action-text {
+		font-size: @larger-body-text;
 	}
 }
 
@@ -184,6 +220,12 @@ div#dropzone {
 		background-color:white;
 		overflow-y:auto;
 		overflow-x:none;
+		#none-in-metadata-form {
+			color: @annotation-gray;
+			text-align: center;
+			position: relative;
+			top: 150px;
+		}
 	}
 
 	#validating_text{

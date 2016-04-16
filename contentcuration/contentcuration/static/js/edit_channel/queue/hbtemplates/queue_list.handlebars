@@ -27,17 +27,29 @@
 			<div class="row clipboard_options text-center">
 				<div class="toolbar-button">
 					<div class="add_items"><span class="glyphicon glyphicon-plus-sign"></span></div>
-					<a class="col-xs-4 add_items">Add to<br/>Queue</a>
+					<a class="add_items">Add</a>
 				</div>
-				<a class="col-xs-4 edit_items btn btn-option">Edit<br/>Selected</a>
+				<div class="toolbar-button">
+					<div class="edit_items"><span class="glyphicon glyphicon-pencil"></span></div>
+					<a class="edit_items">Edit</a>
+				</div>
 				<!--<a class="col-xs-3 move_selected_queue btn btn-option construction">Move<br/>Selected</a>-->
-				<a class="col-xs-4 delete_items btn btn-option">Delete<br/>Selected</a>
+				<div class="toolbar-button">
+					<div class="delete_items"><span class="glyphicon glyphicon-remove"></span></div>
+					<a class="delete_items">Delete</a>
+				</div>
 			</div>
-			<div id = "clipboard_list" class="list_content">
+			<div id="clipboard_list" class="list_content">
 		{{else}}
 			<div class="row trash_options text-center">
-				<a class="col-xs-6 move_trash btn btn-option">Move to Clipboard</a>
-				<a class="col-xs-6 delete_items btn btn-option">Delete Permanently</a>
+				<div class="toolbar-button">
+					<div class="move_trash"><span class="glyphicon glyphicon-share-alt"></span></div>
+					<a class="move_trash">Restore</a>
+				</div>
+				<div class="toolbar-button">
+					<div class="delete_items"><span class="glyphicon glyphicon-remove-circle"></span></div>
+					<a class="delete_items">Clear</a>
+				</div>
 			</div>
 			<div id = "trash_list" class="list_content">
 		{{/if}}
