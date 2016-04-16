@@ -4,19 +4,19 @@
 	@queue-background-color:#EFEFEF;
 	@queue-width:400px;
 	@queue-height: 600px;
-	@queue-button-width:70px;
+	@queue-button-width: 110px;
 	@badge-color: #55777D;
 	@queue-border-color: #8DA9DB;
 	@queue-list-item-height: 40px;
 	@highlight-color: #E6E6E6;
 	@queue-tab-height: 30px;
 	right:0em;
-	top: 7em;
+	top: 6.7em;
 	position:absolute;
 	z-index:999999;
 
 	*{margin:0;padding:0;}
-	width:@queue-button-width + @queue-width;
+	//width:@queue-button-width + @queue-width;
 	overflow:hidden;
 	padding:0;
 	margin:0;
@@ -29,54 +29,59 @@
 		border-top-left-radius: 10px;
 		border-bottom-left-radius: 10px;
 		background-color:@queue-background-color;
-		margin-top:30px;
+		margin-top:12px;
 		padding:5px;
 		color:black;
 		border:none;
-		font-size: 10pt;
+		font-size: @body-text;
 		width:@queue-button-width;
 		display:inline;
+		box-shadow: @box-shadow;
 		.badge{
 			background-color: @badge-color;
 			color:white;
-			padding: 2px 10px;
+			padding: 2px 10px !important;
 		}
 	}
 	#main-queue{
-		display:inline-block;
-		padding:15px;
-
-		height:@queue-height;
-		width:@queue-width;
-		background-color:@queue-background-color;
+		display: inline-block;
+		padding: 10px 15px 15px 15px;
+		height: @queue-height;
+		width: @queue-width;
+		background-color: @queue-background-color;
+		div ul {
+			border-bottom: 1px solid @blue-500;
+			.trash-badge {
+				padding: 2px 10px !important;
+				position: relative;
+				bottom: 2px;
+				right: 8px;
+				background: @blue-500
+			}
+		}
 		.queue-tab{
-			margin-top:20px;
-			background-color:@queue-background-color;
-			border-top-right-radius:5px;
-			border-top-left-radius:5px;
-			border:1px solid gray;
-			padding:5px 10px;
 			text-decoration:none;
-			color:black;
-			z-index:-100;
-			height:@queue-tab-height - 1px;
+			color: @gray-700;
+			font-size: @larger-body-text;
+			height: 31px;
+			list-style: none;
+			display: inline-block;
+			margin: 0 10px;
 		}
 		.active-queue-tab{
-			background-color:white;
-			z-index:100;
-			border-bottom:none;
-			height:@queue-tab-height;
+			font-weight: bold;
+			border-bottom: 3px solid @blue-500;
+			color: @body-font-color;
 		}
 
 		.queue-interior{
 			border:1px solid gray;
 			background-color:white;
 			height:@queue-height * 0.9;
-			margin-top:6px;
 			padding:0;
-			padding-top:10px;
 			z-index:10;
 			display:none;
+			border-top: none;
 			.search_queue{
 				width:100%;
 				margin-bottom:10px;
@@ -94,13 +99,19 @@
 				padding:5px;
 				background-color:@queue-background-color;
 			}
-			.trash_options, .clipboard_options{
-				margin-top:10px;
-			}
 
-			.clipboard_options{
-				.btn-option{
-					line-height: 95%;
+			.trash_options, .clipboard_options{
+					background: @gray-400;
+					padding: 15px 0 10px 0;
+				.toolbar-button {
+					width: 50px;
+					display: inline-block;
+					margin: 0 30px;
+				}
+			}
+			.trash_options {
+				.toolbar-button {
+					margin: 0 47px;
 				}
 			}
 

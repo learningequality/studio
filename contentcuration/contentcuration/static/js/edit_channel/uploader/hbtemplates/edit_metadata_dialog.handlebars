@@ -8,11 +8,11 @@
 			{{#each node_list}}
 				<li id="item_{{cid}}" class="uploaded disable_on_error"><li>
 			{{else}}
-				<li><h5>&nbsp;No items listed</h5></li>
+				<li><h5 id="none-in-metadata-form">&nbsp;You didn't add<br>any content</h5></li>
 			{{/each}}
 			</ul>
 			{{#if allow_add}}
-				<a class="btn btn-default" id="add_more_button">Back</a>
+				<a class="action-text" id="add_more_button">BACK</a>
 			{{/if}}
 		</div>
 	{{/if}}
