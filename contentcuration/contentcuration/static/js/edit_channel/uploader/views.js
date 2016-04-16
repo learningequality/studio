@@ -715,6 +715,7 @@ var PreviewView = UploadItemView.extend({
 		var location = "/media/";
 		var extension = "";
 		if(this.model){
+			// TODO-BLOCKER: this whole if-else needs to be burned to the ground, once we fix the API
 			if(this.model.attributes.file_data){
 				console.log("PREVIEWING...", this.model);
 				location += this.model.attributes.file_data.filename.substring(0,1) + "/";
@@ -726,7 +727,7 @@ var PreviewView = UploadItemView.extend({
 				console.log("GOT FILE:", previewed_file);
 				if(previewed_file){
 					extension = previewed_file.get("extension");
-					location += previewed_file.get("content_copy").split("contentcuration/")[1];
+					location += previewed_file.get("content_copy").split("/").slice(-3).join("/");
 				}
 			}
 			var preview_template;
