@@ -41,26 +41,6 @@ var NodeModel = BaseModel.extend({
 		total_file_size:0
     },
 
-	getChildCount:function(includeParent, collection){
-		var count = (includeParent) ? 1:0;
-		var children = collection.get_all_fetch(this.get("children"));
-		children.forEach(function(entry){
-			count += entry.getChildCount(true, collection);
-		});
-		return count;
-	},
-	getChildCount:function(includeParent, collection){
-		if(!collection){
-			collection = new NodeCollection();
-		}
-		var count = (includeParent) ? 1:0;
-		var children = collection.get_all_fetch(this.get("children"));
-		children.forEach(function(entry){
-			count += entry.getChildCount(true, collection);
-		});
-		return count;
-	},
-
 	/*Used when copying items to clipboard*/
     duplicate: function(parent_id, index){
     	console.log("add_nodes duplicate called by", this);
@@ -282,12 +262,7 @@ var ChannelModel = BaseModel.extend({
 		license_owner: "No license found",
 		description:" "
     },
-    /*
-    get_data:function(){
-    		$.get("/api-test", function(result){
-    			console.log("Got data: ", JSON.parse(result)['filename']);
-    		});
-    },*/
+
     get_tree:function(tree_name){
     	var tree = new TopicTreeModel({id : this.get(tree_name)});
     	console.log(tree_name + " tree is", tree);
@@ -324,6 +299,7 @@ var ChannelModel = BaseModel.extend({
 
     	var root_node = new NodeModel();
     	var self = this;
+
 		return root_node.save({title: self.get("name"), description: "Root node for " + tree_name + " tree"}, {
 			async:false,
 			validate: false,
@@ -343,6 +319,7 @@ var ChannelModel = BaseModel.extend({
 				});
 			}
 		});
+
     }
 });
 
@@ -351,18 +328,13 @@ var ChannelCollection = BaseCollection.extend({
 	list_name:"channel-list",
 	create_channel:function(data){
 		var channel_data = new ChannelModel(data);
-
-		channel_data.fetch();
-		if(channel_data.get("description").trim() == "")
-			channel_data.set({description: "No description available."});
 		return this.create(channel_data, {
-			async: false,
 			success:function(){
 				["draft","clipboard","deleted"].forEach(function(entry){
 					channel_data.create_tree(entry.toString());
 					console.log("creating " + entry.toString());
 				});
-   			}
+			}
 		});
     },
 });

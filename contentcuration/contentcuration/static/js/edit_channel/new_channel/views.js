@@ -4,7 +4,7 @@ require("channel_create.less");
 var Dropzone = require("dropzone");    //For later when images are added to channels
 require("dropzone/dist/dropzone.css"); //For later when images are added to channels
 var BaseViews = require("./../views");
-	
+
 var ChannelList  = BaseListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
 	item_view: "channel", // TODO: Use to indicate how to save items on list
@@ -44,7 +44,7 @@ var ChannelList  = BaseListView.extend({
 		this.collection.forEach(function(entry){
 			var view = new ChannelListItem({
 				el : containing_list_view.$el.find("#channel_list #" + entry.id),
-				model: entry, 
+				model: entry,
 				edit: false,
 				containing_list_view: containing_list_view,
 				channel_list: containing_list_view.collection.toJSON()
@@ -71,19 +71,11 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 	},
 
 	render: function() {
-		var draft_node = (this.model)? this.model.get_tree("draft").get_root() : null;
-		var draft_count = (draft_node)? draft_node.getChildCount(false, null) : 0;
-		var draft_size = (draft_node)? draft_node.get("total_file_size") : 0;
-
-		var clipboard_node = (this.model)? this.model.get_tree("clipboard").get_root() : null;
-		var clipboard_count = (clipboard_node)? this.model.get_tree("clipboard").get_root().getChildCount(false, null) : 0;
-		var clipboard_size = (clipboard_node)? clipboard_node.get("total_file_size") : 0;
-
 		this.$el.html(this.template({
-			edit: this.edit, 
+			edit: this.edit,
 			channel: (this.model) ? this.model.attributes : null,
-			total_file_size: clipboard_size + draft_size,
-			resource_count: draft_count + clipboard_count,
+			total_file_size: this.model.get("resource_size"),
+			resource_count: this.model.get("resource_count"),
 			picture: "/static/img/unicef logo.jpg"
 		}));
 		this.$el.addClass('channel_container');
@@ -131,5 +123,5 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 });
 
 module.exports = {
-	ChannelList : ChannelList 
+	ChannelList : ChannelList
 }

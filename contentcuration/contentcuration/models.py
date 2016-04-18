@@ -10,6 +10,7 @@ from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 from kolibri.content.models import *
+from kolibri.content.api import *
 
 class Channel(ChannelMetadata):
     """ Permissions come from association with organizations """
@@ -56,7 +57,7 @@ class TopicTree(models.Model):
         verbose_name=_("Published"),
         help_text=_("If published, students can access this channel"),
     )
-    
+
     class Meta:
         verbose_name = _("Topic tree")
         verbose_name_plural = _("Topic trees")
@@ -64,7 +65,7 @@ class TopicTree(models.Model):
 class ContentTag(AbstractContent):
     tag_name = models.CharField(max_length=30, null=True, blank=True)
     tag_type = models.CharField(max_length=30, null=True, blank=True)
-    
+
     def __str__(self):
         return self.tag_name
 
@@ -105,7 +106,7 @@ class Node(ContentMetadata):
     @property
     def has_draft(self):
         return self.draft_set.all().exists()
-    
+
     @property
     def get_draft(self):
         """
@@ -114,7 +115,7 @@ class Node(ContentMetadata):
         :raises: Draft.DoesNotExist and Draft.MultipleObjectsReturned
         """
         return Draft.objects.get(publish_in=self)
-    
+
     class MPTTMeta:
         order_insertion_by = ['sort_order']
 

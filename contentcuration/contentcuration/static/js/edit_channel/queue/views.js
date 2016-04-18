@@ -113,13 +113,13 @@ var QueueList = BaseViews.BaseListView.extend({
 
 		this.load_content();
 		if(this.add_controls){
-			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.getChildCount(false, this.collection));
+			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("resource_count"));
 		}
-		
+
 		this.$el.data("container", this);
 		this.$el.find("ul").data("list", this);
 		this.$el.find(".default-item").data("data", {
-			containing_list_view: this, 
+			containing_list_view: this,
 			index:0
 		});
 		DragHelper.addDragDrop(this);
