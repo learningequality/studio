@@ -726,7 +726,7 @@ var PreviewView = UploadItemView.extend({
 				var previewed_file = this.model.get_files().models[0];
 				console.log("GOT FILE:", previewed_file);
 				if(previewed_file){
-					extension = previewed_file.get("extension");
+					extension = previewed_file.get("extension").replace(".", "");
 					location += previewed_file.get("content_copy").split("/").slice(-3).join("/");
 				}
 			}
