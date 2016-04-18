@@ -9,6 +9,7 @@
 {% block content %}
 
 <div class="container">
+	<img id="login-image" src="{% static 'img/kolibri_login.png' %}"/>
 {% if form.errors %}
 <p>{% trans "Your username and password didn't match. Please try again." %}</p>
 {% endif %}
