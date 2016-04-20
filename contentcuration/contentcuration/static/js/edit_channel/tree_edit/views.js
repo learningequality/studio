@@ -83,8 +83,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.redo();
 	},*/
 	add_container: function(index, topic){
-		console.log("PERFORMANCE tree_edit/views.js: starting add_container ...");
-    	var start = new Date().getTime();
 		/* Close directories of children and siblings of opened topic*/
 		if(index < this.containers.length){
 			this.remove_containers_from(index);
@@ -101,7 +99,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 			container : this
 		});
 		this.containers.push(container_view);
-		console.log("PERFORMANCE tree_edit/views.js: add_container end (time = " + (new Date().getTime() - start) + ")");
 	},
 
 	delete_content: function (event){
@@ -124,8 +121,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 				}
 			}
 		});
-		//this.clipboard_view.add_to_clipboard(clipboard_list);
-		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + (new Date().getTime() - start) + ")");
 	},
 	edit_content: function(event){
 		this.edit_selected();
@@ -251,7 +246,7 @@ var ContentList = BaseViews.BaseListView.extend({
 
 
 /*folders, files, exercises listed*/
-var ContentItem = BaseViews.BaseListItemView.extend({
+var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_folder','open_folder',/*'expand_or_collapse_folder', */

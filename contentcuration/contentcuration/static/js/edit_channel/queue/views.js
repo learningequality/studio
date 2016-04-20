@@ -195,7 +195,7 @@ var QueueList = BaseViews.BaseListView.extend({
 });
 
 /* Loaded when user clicks clipboard button below navigation bar */
-var QueueItem = BaseViews.BaseListItemView.extend({
+var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	template: require("./hbtemplates/queue_item.handlebars"),
 	tagName: "li",
 	indent: 0,

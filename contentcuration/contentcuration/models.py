@@ -9,7 +9,7 @@ from django.db import IntegrityError, connections, models
 from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
-from kolibri.content.models import *
+from kolibri.content.models import ChannelMetadata, AbstractContent, ContentMetadata, License, File, Format, MimeType
 from kolibri.content.api import *
 
 class Channel(ChannelMetadata):
@@ -24,6 +24,24 @@ class Channel(ChannelMetadata):
     deleted =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='deleted')
     clipboard =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='clipboard')
     draft =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='draft')
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            super(Channel, self).save(*args, **kwargs)
+            self.draft.name = self.name
+            self.draft.save()
+            self.clipboard.name = self.name
+            self.clipboard.save()
+            self.deleted.name = self.name
+            self.deleted.save()
+        else:
+            super(Channel, self).save(*args, **kwargs)
+            self.draft = TopicTree.objects.create(channel=self, name=self.name)
+            self.draft.save()
+            self.clipboard = TopicTree.objects.create(channel=self, name=self.name)
+            self.clipboard.save()
+            self.deleted = TopicTree.objects.create(channel=self, name=self.name)
+            self.deleted.save()
 
     class Meta:
         verbose_name = _("Channel")
@@ -57,6 +75,16 @@ class TopicTree(models.Model):
         verbose_name=_("Published"),
         help_text=_("If published, students can access this channel"),
     )
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            super(TopicTree, self).save(*args, **kwargs)
+            self.root_node.title = self.name
+            self.root_node.save()
+        else:
+            super(TopicTree, self).save(*args, **kwargs)
+            self.root_node = Node.objects.create(title=self.name, kind="topic", total_file_size = 0, license_id=ContentLicense.objects.first().id)
+            self.root_node.save()
 
     class Meta:
         verbose_name = _("Topic tree")
@@ -125,45 +153,6 @@ class Node(ContentMetadata):
         # Do not allow two nodes with the same name on the same level
         #unique_together = ('parent', 'title')
 
-# If we decide to subclass Content:
-#
-# class ContentVideo(Content):
-#     """
-#     Model for video data
-#     """
-#
-#     video_file = models.FileField(
-#         blank=True,
-#         null=True,
-#         upload_to='contents/video/thumbnails/',
-#         verbose_name=_("video file"),
-#         help_text=_("Upload video here"),
-#     )
-#
-#     thumbnail = models.ImageField(
-#         null=True,
-#         upload_to='contents/video/thumbnails/',
-#         help_text=_("Automatically created when new video is uploaded")
-#     )
-#
-#
-# class ContentPDF(Content):
-#     """
-#     Model for video data
-#     """
-#     pdf_file = models.FileField(
-#         blank=True,
-#         null=True,
-#         upload_to='contents/video/thumbnails/',
-#         verbose_name=_("video file"),
-#         help_text=_("Upload video here"),
-#     )
-#
-#
-# class Exercise(Content):
-#     """
-#     Model for Exercise data
-#     """
 class ContentLicense(License):
     exists = models.BooleanField(
         default=False,
@@ -186,7 +175,6 @@ class Exercise(models.Model):
         default=_("Description"),
         help_text=_("Brief description of what this content item is"),
     )
-
 
 class AssessmentItem(models.Model):
 

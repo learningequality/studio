@@ -17,6 +17,10 @@ var ChannelList  = BaseListView.extend({
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(this.collection, "sync", this.render);
 
+        var self = this;
+        window.onbeforeunload = function(event) {
+		    self.save();
+		}
 	},
 	render: function() {
 		this.set_editing(false);
@@ -58,7 +62,7 @@ var ChannelList  = BaseListView.extend({
 /*
 	edit: determines whether to load channel or editor
 */
-var ChannelListItem = BaseViews.BaseListItemView.extend({
+var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	tagName: "li",
 	template: require("./hbtemplates/channel_container.handlebars"),
 	initialize: function(options) {
@@ -74,8 +78,8 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 		this.$el.html(this.template({
 			edit: this.edit,
 			channel: (this.model) ? this.model.attributes : null,
-			total_file_size: this.model.get("resource_size"),
-			resource_count: this.model.get("resource_count"),
+			total_file_size: (this.model)? this.model.get("resource_size") : 0,
+			resource_count: (this.model)? this.model.get("resource_count") : 0,
 			picture: "/static/img/unicef logo.jpg"
 		}));
 		this.$el.addClass('channel_container');
@@ -96,7 +100,10 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 	delete_channel: function(event){
 		if(confirm("WARNING: All content under this channel will be permanently deleted."
 					+ "\nAre you sure you want to delete this channel?")){
-			this.delete(true);
+			var self = this;
+			this.display_load("Deleting Channel...", function(){
+				self.delete(true);
+			});
 		}
 	},
 	toggle_channel: function(event){
@@ -104,10 +111,8 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 		if(this.model){
 			this.edit = false;
 			this.render();
-			console.log("first");
 		}else{
 			this.delete_view();
-			console.log("second");
 		}
 	},
 	save_channel: function(event){
@@ -117,7 +122,9 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 		var description = (self.$el.find("#new_channel_description").val() == "") ? " " : self.$el.find("#new_channel_description").val();
 		var data = {name: title, description: description};
 		this.display_load("Saving Channel...", function(){
-			self.save(data);
+			self.set(data);
+			self.edit = false;
+			self.render();
 		});
 	}
 });

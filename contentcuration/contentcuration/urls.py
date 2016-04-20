@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
-from contentcuration.models import *
+from contentcuration.models import Channel, TopicTree, ContentTag, Node, ContentLicense, Exercise, AssessmentItem, File, Format, MimeType
 import serializers
 import views
 

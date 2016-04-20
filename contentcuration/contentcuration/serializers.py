@@ -1,7 +1,7 @@
-from contentcuration.models import *    # TODO: Change this later?
+from contentcuration.models import Channel, TopicTree, ContentTag, Node, ContentLicense, Exercise, AssessmentItem, File, Format, MimeType
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
-from contentcuration.api import *
+from contentcuration.api import count_children, get_total_size
 
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -14,10 +14,16 @@ class ChannelSerializer(serializers.ModelSerializer):
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
 
     def count_resources(self, channel):
-        return count_children(channel.draft.root_node)
+        if not channel.draft:
+            return 0
+        else:
+            return count_children(channel.draft.root_node) + count_children(channel.clipboard.root_node)
 
     def calculate_resources_size(self, channel):
-        return get_total_size(channel.draft.root_node)
+        if not channel.draft:
+            return 0
+        else:
+            return get_total_size(channel.draft.root_node) + get_total_size(channel.clipboard.root_node)
 
     class Meta:
         model = Channel

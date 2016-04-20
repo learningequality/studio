@@ -62,8 +62,8 @@ var BaseView = Backbone.View.extend({
             '</div>';
         $(load).appendTo('body');
 
-        if(callback){	
-    		setTimeout(function(){ 
+        if(callback){
+    		setTimeout(function(){
 				callback();
 				$("#loading_modal").remove();
 			 }, 800);
@@ -255,12 +255,21 @@ BaseListView = BaseView.extend({
 
 		this.render();
 		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
+	},
+	save:function(){
+		this.collection.save();
 	}
 });
 
 
 var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
+	set_editing: function(edit_mode_on){
+		this.containing_list_view.set_editing(edit_mode_on);
+	}
+});
+
+var BaseListNodeItemView = BaseListItemView.extend({
 	delete:function(){
     	var start = new Date().getTime();
     	if(!this.model){
@@ -268,45 +277,17 @@ var BaseListItemView = BaseView.extend({
     		return;
     	}
 
-		if(!this.model.get("kind")) {
-			this.model.delete_channel();
-		}else{
-			if(this.containing_list_view.item_view != "uploading_content"){
-				this.add_to_trash();
-				/*Check if node name already exists in trash, then delete older version*/
-				//var self = this;
-				/*
-				var trash_collection = this.containing_list_view.collection.get_all_fetch(this.deleted_root.get("children"));
-
-				trash_collection.forEach(function(entry){
-					console.log("first deleting", self.model);
-				console.log("second deleting", entry);
-					if(entry.get("title") == self.model.get("title")){
-						entry.destroy({async:false});
-					}
-				});
-				if(this.containing_list_view.index && this.$el.hasClass("current_topic")){
-					this.containing_list_view.container.remove_containers_from(this.containing_list_view.index);
-				}
-				console.log("target delete:", this.deleted_root);
-				var new_children = this.containing_list_view.model.get("children");
-				new_children.splice(new_children.indexOf(this.model.id), 1);
-				this.containing_list_view.model.save({"children" : new_children}, {validate:false});
-				this.model.save({"parent" :this.deleted_root.id}, {validate:false});
-				this.containing_list_view.remove_view(this);
-				*/
-				/*if(this.containing_list_view.queue_view)
-					this.containing_list_view.queue_view.add_to_trash([this]);
-				else this.containing_list_view.add_items([this]);*/
-			}
+		if(this.containing_list_view.item_view != "uploading_content"){
+			this.add_to_trash();
 		}
 		console.log("PERFORMANCE views.js: delete " + this.model.get("title") + " end (time = " + (new Date().getTime() - start) + ")");
 	},
-
 	save: function(data, options){
 		console.log("PERFORMANCE views.js: starting save " + ((data && data.title) ? data.title : "") + "...");
     	var start = new Date().getTime();
-		/* TODO: Implement funtion to allow saving one item */
+
+
+		/* TODO: Implement funtion to allow saving one item
 		if(!this.model){
 			if(this.containing_list_view.item_view == "channel"){
 				this.containing_list_view.collection.create_channel(data, $(".createprogress"));
@@ -325,21 +306,33 @@ var BaseListItemView = BaseView.extend({
 			if(this.model.get("kind") && this.model.get("kind").toLowerCase() != "topic"){
 				this.model.create_file();
 			}
-			if(this.containing_list_view.item_view == "channel"){
-				this.model.update_root({
-					'title' : data.name,
-					'description' : data.description
-				});
-			}
-		}
+		}*/
 		console.log("PERFORMANCE views.js: save " + ((data && data.title) ? data.title : "") + " end (time = " +((new Date().getTime() - start)/1000) + "s)");
 	},
-
-	set_editing: function(edit_mode_on){
-		this.containing_list_view.set_editing(edit_mode_on);
-	}
 });
 
+var BaseListChannelItemView = BaseListItemView.extend({
+	delete:function(){
+    	var start = new Date().getTime();
+    	if(!this.model){
+    		this.delete_view();
+    		return;
+    	}
+    	this.model.destroy();
+		console.log("PERFORMANCE views.js: delete " + this.model.get("title") + " end (time = " + (new Date().getTime() - start) + ")");
+	},
+	save: function(data, options){
+    	this.containing_list_view.collection.save();
+	},
+	set:function(data, options){
+		if(!this.model){
+    		this.model = new Models.ChannelModel(data);
+    		this.containing_list_view.collection.create_channel(this.model);
+    	}else{
+    		this.model.set(data, options);
+    	}
+	}
+});
 
 var BaseEditorView = BaseListView.extend({
 	disable: false,
@@ -383,7 +376,7 @@ var BaseEditorView = BaseListView.extend({
 	check_nodes:function(){
 		var self = this;
 		self.errorsFound = true;
-		
+
 		this.views.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
 			if(entry.model.validationError){
@@ -426,11 +419,10 @@ var BaseEditorView = BaseListView.extend({
 	}
 });
 
-
-
 module.exports = {
 	BaseView: BaseView,
 	BaseListView:BaseListView,
-	BaseListItemView: BaseListItemView,
+	BaseListChannelItemView: BaseListChannelItemView,
+	BaseListNodeItemView:BaseListNodeItemView,
 	BaseEditorView:BaseEditorView
 }

@@ -25,6 +25,12 @@ var BaseCollection = Backbone.Collection.extend({
 		return window.Urls[this.list_name]();
 	},
 	save: function() {
+		var self = this;
+		this.models.forEach(function(entry){
+			if(entry.hasChanged()){
+				entry.save();
+			}
+		});
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	}
 });
@@ -43,8 +49,6 @@ var NodeModel = BaseModel.extend({
 
 	/*Used when copying items to clipboard*/
     duplicate: function(parent_id, index){
-    	console.log("add_nodes duplicate called by", this);
-    	console.log("PERFORMANCE models.js: starting duplicate...");
     	var start = new Date().getTime();
     	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
 		var node_data = new NodeModel();
@@ -53,13 +57,10 @@ var NodeModel = BaseModel.extend({
 		node_data.set(data);
 		node_data.move(parent_id, index);
 		self.copy_children(node_data, self.get("children"));
-		console.log("add_node sending back data", node_data);
 		return node_data;
 	},
 
 	move:function(parent_id, index){
-		console.log("add_nodes move called by", this);
-		console.log("PERFORMANCE models.js: starting move...");
     	var start = new Date().getTime();
     	var old_parent = this.get("parent");
     	var title = this.get("title");
@@ -67,13 +68,11 @@ var NodeModel = BaseModel.extend({
 
 		while(this.validationError !== null){
 			title = this.generate_title(title);
-			console.log("add_node title is now", title);
 			this.set({
                 title: title,
 				parent: parent_id,
 				sort_order:index
 			}, {validate:true});
-			console.log("add_node validation error!", this.get("title"));
 		}
 		if(old_parent){
 			this.save({title: title, parent: old_parent}, {async:false, validate:false}); //Save any other values
@@ -88,7 +87,6 @@ var NodeModel = BaseModel.extend({
 		var new_parent = new NodeModel({id:parent_id});
 		new_parent.fetch({async:false});
 		new_parent.save({total_file_size: new_parent.get_size()});
-		console.log("PERFORMANCE models.js: move end (time = " + (new Date().getTime() - start) + ")");
 	},
 	get_size:function(){
 		var collection = new NodeCollection();
@@ -274,52 +272,6 @@ var ChannelModel = BaseModel.extend({
     	}*/
     	tree.fetch({async:false});
     	return tree;
-    },
-
-    update_root:function(data){
-    	var channel = this;
-    	["clipboard","deleted","draft"].forEach(function(entry){
-			var node = channel.get_tree(entry.toString()).get_root();
-			node.save(data);
-		});
-    },
-
-    delete_channel:function(){
-    	var channel = this;
-    	["clipboard","deleted","draft"].forEach(function(entry) {
-		  	var tree = channel.get_tree(entry);
-	    	tree.destroy();
-	    	/*TODO: Delete all child nodes*/
-		});
-    	this.destroy();
-    },
-    create_tree:function(tree_name){
-    	console.log("PERFORMANCE models.js: starting create_tree " + tree_name + "...");
-    	var start = new Date().getTime();
-
-    	var root_node = new NodeModel();
-    	var self = this;
-
-		return root_node.save({title: self.get("name"), description: "Root node for " + tree_name + " tree"}, {
-			async:false,
-			validate: false,
-			success: function(){
-				var tree = new TopicTreeModel();
-				return tree.save({
-                    channel: self.id,
-					root_node: root_node.id,
-					name: self.get("name")
-				}, {
-					async:false,
-					validate:false,
-					success: function(){
-						console.log("PERFORMANCE models.js: create_tree " + tree_name + " end (time = " + ((new Date().getTime() - start)/1000) + "s)");
-						self.save(tree_name , tree.id, {async:false});
-					}
-				});
-			}
-		});
-
     }
 });
 
@@ -327,16 +279,8 @@ var ChannelCollection = BaseCollection.extend({
 	model: ChannelModel,
 	list_name:"channel-list",
 	create_channel:function(data){
-		var channel_data = new ChannelModel(data);
-		return this.create(channel_data, {
-			success:function(){
-				["draft","clipboard","deleted"].forEach(function(entry){
-					channel_data.create_tree(entry.toString());
-					console.log("creating " + entry.toString());
-				});
-			}
-		});
-    },
+		this.create(data, {async:false});
+    }
 });
 
 var TopicTreeModel = BaseModel.extend({

@@ -242,7 +242,7 @@ var FileUploadView = UploadItemView.extend({
     file_uploaded: function(file) {
         console.log("FILE FOUND:", file);
         this.file_list.push({
-        	"data" : file, 
+        	"data" : file,
         	"filename": JSON.parse(file.xhr.response).filename
         });
     },
@@ -371,7 +371,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.$el.find("#validating_text").css("display", "inline");
 		this.$el.find(".editmetadata_save").prop("disabled", true);
 		this.$el.find(".editmetadata_save").css("pointer", "not-allowed");
-		
+
 		var self = this;
 		setTimeout(function() {
            /* TODO :fix to save multiple nodes at a time */
@@ -407,7 +407,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 					}
 				});
 			}
-			
+
         }, 200);
 	},
 	save_and_finish: function(){
@@ -539,7 +539,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	}
 });
 
-var ContentItem =  BaseViews.BaseListItemView.extend({
+var ContentItem =  BaseViews.BaseListNodeItemView.extend({
 	license:function(){
 		return window.licenses.get_default().id;
 	},
@@ -558,9 +558,9 @@ var ContentItem =  BaseViews.BaseListItemView.extend({
 
 var NodeListItem = ContentItem.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
-	tagName: "li", 
+	tagName: "li",
 	'id': function() {
-		return this.model.cid; 
+		return this.model.cid;
 	},
 	initialize: function(options) {
 		_.bindAll(this, 'submit_topic','remove_topic');
@@ -756,7 +756,7 @@ var PreviewView = UploadItemView.extend({
 			};
 			this.$el.find("#preview_window").html(preview_template(options));
 		}
-		
+
 	},
 
 	switch_preview:function(model){
