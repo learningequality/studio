@@ -381,7 +381,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			self.$el.find("#description_error").html("");
 			self.$el.find("#input_description").removeClass("error_input");
 
-			self.errorsFound = !self.check_nodes();
+			self.check_nodes();
 			self.$el.find(".editmetadata_save").prop("disabled", false);
 			self.$el.find("#validating_text").css("display", "none");
 			self.$el.find(".editmetadata_save").css("pointer", "cursor");
@@ -413,14 +413,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	save_and_finish: function(){
 		var self = this;
 		this.check_and_save_nodes(function(){
-			if(!self.errorsFound){
-				if(self.modal){
-					self.$el.find(".modal").modal("hide");
-				}else{
-					self.close_uploader();
-				}
+			if(self.modal){
+				self.$el.find(".modal").modal("hide");
+			}else{
+				self.close_uploader();
 			}
 		});
+
 	},
 	add_more:function(event){
 		this.save_queued();
@@ -638,20 +637,9 @@ var UploadedItem = ContentItem.extend({
 		if(event) event.preventDefault();
 		this.containing_list_view.set_current_node(this);
 	},
-	save_node:function(){
-		this.set_edited(false);
-		this.save({
-			title: $("#input_title").val(),
-			description: $("#input_description").val(),
-		}, {async:false});
-		this.originalData = {
-			"title":$("#input_title").val(),
-			"description":$("#input_description").val(),
-			"license": this.license()
-		};
-	},
+
 	set_node:function(){
-		this.model.set({
+		this.set({
 			title: $("#input_title").val().trim(),
 			description: $("#input_description").val().trim(),
 			license: this.license()
@@ -660,30 +648,7 @@ var UploadedItem = ContentItem.extend({
 	unset_node:function(){
 		this.save(this.originalData, {async:false, validate:false});
 	},
-	validate:function(){
-		if(this.containing_list_view.$el.find("#input_title").val() == ""){
-			this.containing_list_view.$el.find("#title_error").html("Title is required");
-			this.containing_list_view.$el.find("#input_title").addClass("error_input");
-			this.containing_list_view.render_details();
-			return false;
-		}
-		if(this.containing_list_view.$el.find("#input_description").val() == ""){
-			this.containing_list_view.$el.find("#description_error").html("Description is required");
-			this.containing_list_view.$el.find("#input_description").addClass("error_input");
-			this.containing_list_view.render_details();
-			return false;
-		}
-		this.model.set(this.model.attributes, {validate:true});
-		if(this.model.validationError){
-			this.containing_list_view.$el.find("#title_error").html(this.model.validationError);
-			this.containing_list_view.$el.find("#input_title").addClass("error_input");
-			this.containing_list_view.render_details();
-			return false;
-		}
-		this.containing_list_view.$el.find("#input_title").removeClass("error_input");
-		this.containing_list_view.$el.find("#input_description").removeClass("error_input");
-		return true;
-	},
+
 	set_checked:function(){
 		this.checked = this.$el.find("input[type=checkbox]").prop("checked");
 	}

@@ -42,5 +42,5 @@ def get_node_ancestors(node):
 def get_child_names(node):
     names = []
     for n in node.get_children():
-        names.append(n.title)
+        names.append({"title": n.title, "id" : n.id})
     return names

@@ -206,10 +206,9 @@ BaseListView = BaseView.extend({
 		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
     	var start = new Date().getTime();
 		var self = this;
-		var counter = self.model.get("children");
 		views.forEach(function(entry){
 			var model = (entry.model) ? entry.model : entry;
-			model.move(self.model, allowDuplicates, ++counter);
+			model.move(self.model, allowDuplicates, ++startingIndex);
 			self.model.get("children").push(model.id);
 		});
 		this.list_index = startingIndex;
@@ -335,17 +334,15 @@ var BaseEditorView = BaseListView.extend({
 	},
 	check_nodes:function(){
 		var self = this;
-		self.errorsFound = true;
+		self.errorsFound = false;
 
 		this.views.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
 			if(entry.model.validationError){
 				self.handle_error(entry);
-				self.errorsFound = false;
+				self.errorsFound = true;
 			}
 		});
-		//this.$el.find("#validating_text").css("display", "none");
-		return self.errorsFound ;
 	},
 	set_node_edited:function(){
 		this.enqueue(this.current_view);
@@ -364,10 +361,11 @@ var BaseEditorView = BaseListView.extend({
 		var success = true;
 		this.unsaved_queue.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
-			self.unsaved_queue.splice(self.unsaved_queue.indexOf(entry), 1);
 			if(entry.model.validationError){
 				self.handle_error(entry);
 				success = false;
+			}else{
+				self.unsaved_queue.splice(self.unsaved_queue.indexOf(entry), 1);
 			}
 		});
 		if(success){
