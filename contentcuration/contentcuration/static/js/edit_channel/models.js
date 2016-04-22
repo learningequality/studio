@@ -110,6 +110,7 @@ var NodeModel = BaseModel.extend({
 		console.log("PERFORMANCE models.js: copy_children end (time = " + (new Date().getTime() - start) + ")");
 	},
 	validate:function (attrs, options){
+		console.log("VALIDATE OPTIONS:", options);
 		if(attrs.title == "")
 			return "Name is required.";
 
@@ -117,9 +118,9 @@ var NodeModel = BaseModel.extend({
 			var parent = new NodeModel({'id': attrs.parent});
 			parent.fetch({async:false});
 
-			//if(parent.get("child_names").indexOf(attrs.title) >= 0){
-			//	return "'" + attrs.title + "' already exists under this topic. Rename and try again.";
-			//}
+			if(parent.get("child_names").indexOf(attrs.title) >= 0){
+				return "'" + attrs.title + "' already exists under this topic. Rename and try again.";
+			}
 
 			if(parent.get("ancestors").indexOf(attrs.id) >= 0){
 				return "Cannot place topic under itself."
@@ -146,15 +147,13 @@ var NodeModel = BaseModel.extend({
 						checksum: file_data.filename.split(".")[0],
 						extension: "." + file_data.filename.split(".")[1]
 					});
-					self.save({total_file_size: file.get("file_size")});
-					console.log("SAVING FILE:", file);
 					file.save({
 						  format: format.id,
-          },
-          {
-              patch: true,
-          });
-        }
+          			},
+		          	{
+		              	patch: true,
+		          	});
+		        }
 			});
 		}
 	},
@@ -165,11 +164,13 @@ var NodeModel = BaseModel.extend({
 	get_files: function(){
 		var formats = this.get("formats");
 		var to_return = new FileCollection();
-		formats.forEach(function(entry){
-			entry.files.forEach(function(file){
-				to_return.add(new FileModel(file));
+		if(formats){
+			formats.forEach(function(entry){
+				entry.files.forEach(function(file){
+					to_return.add(new FileModel(file));
+				});
 			});
-		});
+		}
 		return to_return;
 	}
 });
@@ -186,10 +187,10 @@ var NodeCollection = BaseCollection.extend({
     	for(var i = 0; i < ids.length; i++){
     		if(ids[i]){
     			var model = this.get({id: ids[i]});
-	    		//if(!model){
+	    		if(!model){
 	    			model = this.add({'id':ids[i]});
 	    			model.fetch({async:false});
-	    		//}
+	    		}
 	    		to_fetch.add(model);
     		}
     	}

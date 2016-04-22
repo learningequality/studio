@@ -109,7 +109,7 @@ BaseListView = BaseView.extend({
 	set_sort_orders: function(collection){
 		var index = 1;
 		views.forEach(function(entry){
-			entry.set({'sort_order' : index++}, {validate: false});
+			entry.set({'sort_order' : ++index}, {validate: false});
 		});
 	},
 	copy_selected:function(){
@@ -140,7 +140,6 @@ BaseListView = BaseView.extend({
     	var start = new Date().getTime();
 		/*Calculate new sort order*/
 		var new_sort_order = this.get_new_sort_order(transfer, target);
-		console.log("NEW SORT ORDER IS: " , new_sort_order);
 
 		/*Set model's parent*/
 		var self=this;
@@ -203,14 +202,14 @@ BaseListView = BaseView.extend({
 		this.views.splice(this.views.indexOf(this), 1);
 		view.delete_view();
 	},
-	add_nodes:function(views, startingIndex){
+	add_nodes:function(views, startingIndex, allowDuplicates){
 		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
     	var start = new Date().getTime();
 		var self = this;
 		var counter = self.model.get("children");
 		views.forEach(function(entry){
 			var model = (entry.model) ? entry.model : entry;
-			model.move(self.model, true, ++counter);
+			model.move(self.model, allowDuplicates, ++counter);
 			self.model.get("children").push(model.id);
 		});
 		this.list_index = startingIndex;

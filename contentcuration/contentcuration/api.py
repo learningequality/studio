@@ -22,7 +22,9 @@ def get_total_size(node):
         for n in node.children.all():
             total_size += get_total_size(n)
     else:
-        return node.total_file_size
+        for format in node.formats.all():
+            for f in format.files.all():
+                total_size += f.file_size
     return total_size
 
 def get_node_siblings(node):
