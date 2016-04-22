@@ -140,6 +140,7 @@ BaseListView = BaseView.extend({
     	var start = new Date().getTime();
 		/*Calculate new sort order*/
 		var new_sort_order = this.get_new_sort_order(transfer, target);
+		console.log("NEW SORT ORDER IS: " , new_sort_order);
 
 		/*Set model's parent*/
 		var self=this;
@@ -148,11 +149,12 @@ BaseListView = BaseView.extend({
 		});
 		if(this.model.id != transfer.model.get("parent")){
 			var old_parent = transfer.containing_list_view.model;
-			if(transfer.model.move(this.model, false) != null){
+			if(transfer.model.move(this.model, false, new_sort_order) != null){
 				alert(transfer.model.validationError);
 				transfer.model.save({parent: old_parent.id});
 				transfer.containing_list_view.render();
-			}else{
+			}
+			else{
 				this.model.get("children").push(transfer.model.id);
 				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
 				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
@@ -205,11 +207,11 @@ BaseListView = BaseView.extend({
 		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
     	var start = new Date().getTime();
 		var self = this;
+		var counter = self.model.get("children");
 		views.forEach(function(entry){
 			var model = (entry.model) ? entry.model : entry;
-			model.move(self.model, true);
+			model.move(self.model, true, ++counter);
 			self.model.get("children").push(model.id);
-
 		});
 		this.list_index = startingIndex;
 

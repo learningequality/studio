@@ -55,16 +55,16 @@ var NodeModel = BaseModel.extend({
 		var nodeChildrenCollection = new NodeCollection();
 		var self = this;
 		node_data.set(data);
-		node_data.move(target_parent, true);
+		node_data.move(target_parent, true, target_parent.get("children").length);
 		self.copy_children(node_data, self.get("children"));
 		return node_data;
 	},
 
-	move:function(target_parent, allow_duplicate){
+	move:function(target_parent, allow_duplicate, sort_order){
     	var start = new Date().getTime();
     	var old_parent = this.get("parent");
     	var title = this.get("title");
-		this.set({parent: target_parent.id,sort_order:target_parent.get("children").length}, {validate:true});
+		this.set({parent: target_parent.id,sort_order:sort_order}, {validate:true});
 
 		if(allow_duplicate){
 			while(this.validationError !== null){
@@ -72,14 +72,15 @@ var NodeModel = BaseModel.extend({
 				this.set({
 	                title: title,
 					parent: target_parent.id,
-					sort_order:target_parent.get("children").length
+					sort_order:sort_order
 				}, {validate:true});
 			}
+			this.save(this.attributes, {async:false, validate:false}); //Save any other values
 		}else{
 			return this.validationError;
 		}
-
 	},
+
 	/* Function in case want to append (Copy #) to end of copied content*/
 	generate_title:function(title){
 		var start = new Date().getTime();
@@ -109,9 +110,6 @@ var NodeModel = BaseModel.extend({
 		console.log("PERFORMANCE models.js: copy_children end (time = " + (new Date().getTime() - start) + ")");
 	},
 	validate:function (attrs, options){
-		var self = this;
-
-		//Case: title blank
 		if(attrs.title == "")
 			return "Name is required.";
 
@@ -119,9 +117,9 @@ var NodeModel = BaseModel.extend({
 			var parent = new NodeModel({'id': attrs.parent});
 			parent.fetch({async:false});
 
-			if(parent.get("child_names").indexOf(attrs.title) >= 0){
-				return "'" + attrs.title + "' already exists under this topic. Rename and try again.";
-			}
+			//if(parent.get("child_names").indexOf(attrs.title) >= 0){
+			//	return "'" + attrs.title + "' already exists under this topic. Rename and try again.";
+			//}
 
 			if(parent.get("ancestors").indexOf(attrs.id) >= 0){
 				return "Cannot place topic under itself."
@@ -160,20 +158,17 @@ var NodeModel = BaseModel.extend({
 			});
 		}
 	},
-	get_formats:function(){
-		var formats = new FormatCollection();
-		formats.fetch({async:false});
-		return formats.where({contentmetadata : this.id});
-	},
+
 	get_mimetype:function(type){
 		return window.mimetypes.findWhere({machine_name: type});
 	},
 	get_files: function(){
-		var formats = this.get_formats();
+		var formats = this.get("formats");
 		var to_return = new FileCollection();
-		console.log("TESTING FORMAT RETRIEVAL...", formats);
 		formats.forEach(function(entry){
-			to_return.add(entry.get_files());
+			entry.files.forEach(function(file){
+				to_return.add(new FileModel(file));
+			});
 		});
 		return to_return;
 	}
@@ -271,13 +266,7 @@ var FileCollection = BaseCollection.extend({
 });
 
 var FormatModel = BaseModel.extend({
-	root_list:"format-list",
-	/*HARDCODED FOR NOW, NEED TO ASSIGN FORMATS*/
-	get_files : function(){
-		var files = new FileCollection();
-		files.fetch({async:false});
-		return files.where({format: this.id});
-	}
+	root_list:"format-list"
 });
 
 var FormatCollection = BaseCollection.extend({

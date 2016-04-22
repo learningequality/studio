@@ -15,7 +15,7 @@ function addDragDrop(element){
 	  	revert:true,
 	 	// animation on drop
 	 	/*
-  		start: function(event,ui) { 
+  		start: function(event,ui) {
 			var element = $(ui.item[0]);
 			element.data('lastParent', element.parent());
 		},
@@ -34,7 +34,7 @@ function addDragDrop(element){
 			    },
 			});
 		},*/
-	  
+
 		onDrop: function  ($item, container, _super) {
 			target.data("isbelow", isaboveclosest);
 			var $clonedItem = $('<li/>').css({height: 0});
@@ -44,17 +44,15 @@ function addDragDrop(element){
 				$clonedItem.detach();
 				_super($item, container);
 			});
-			console.log("FOUND", target, target.data("data"));
 			if(target.data("data"))
 				target.data("data").containing_list_view.drop_in_container(window.transfer_data, target);
 			else if(target.data("list"))
-				target.data("list").drop_in_container(window.transfer_data, target);	
+				target.data("list").drop_in_container(window.transfer_data, target);
 		},
 
 	    // set $item relative to cursor position*/
 		onDragStart: function ($item, container, _super) {
 			window.transfer_data = $item.data("data");
-			console.log("model found  WINDOW IS NOW ", window.transfer_data);
 			$item.css("z-index", "99999999999999999999");
 			var offset = $item.offset(),
 			pointer = container.rootGroup.pointer;
@@ -65,7 +63,6 @@ function addDragDrop(element){
 		    _super($item, container);
 	  	},
 	  	onDragEnd: function ($item, container, _super) {
-			console.log("model found  drag end", window.transfer_data);
 		    _super($item, container);
 	  	},
 
@@ -79,7 +76,6 @@ function addDragDrop(element){
 		afterMove: function (placeholder, container, $closestItemOrContainer) {
 			isaboveclosest = $closestItemOrContainer.offset().top > $(placeholder).offset().top;
 			target = $closestItemOrContainer;
-	    	console.log("inserting near item", $closestItemOrContainer);
 	    }
 	});
 }
