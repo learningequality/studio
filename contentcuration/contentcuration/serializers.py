@@ -1,8 +1,8 @@
+import logging
 from contentcuration.models import Channel, TopicTree, ContentTag, Node, ContentLicense, Exercise, AssessmentItem, File, Format, MimeType
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
-from contentcuration.api import count_children, get_total_size
-
+from contentcuration.api import count_children, get_total_size, get_node_siblings, get_node_ancestors, get_child_names
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -56,18 +56,27 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
+    ancestors = serializers.SerializerMethodField('get_node_ancestors')
+    child_names = serializers.SerializerMethodField('get_children_names')
 
     def count_resources(self, node):
+        logging.warning(node.get_siblings())
         return count_children(node)
 
     def calculate_resources_size(self, node):
         return get_total_size(node)
 
+    def get_node_ancestors(self,node):
+        return get_node_ancestors(node)
+
+    def get_children_names(self, node):
+        return get_child_names(node)
+
     class Meta:
         model = Node
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',
                   'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id',
-                  'formats', 'original_filename', 'resource_count', 'resource_size')
+                  'formats', 'original_filename', 'resource_count', 'resource_size', 'ancestors','child_names')
 
 class MimeTypeSerializer(serializers.ModelSerializer):
    class Meta:

@@ -25,3 +25,20 @@ def get_total_size(node):
         return node.total_file_size
     return total_size
 
+def get_node_siblings(node):
+    siblings = []
+    for n in node.get_siblings(include_self=False):
+        siblings.append(n.title)
+    return siblings
+
+def get_node_ancestors(node):
+    ancestors = []
+    for n in node.get_ancestors(include_self=True):
+        ancestors.append(n.id)
+    return ancestors
+
+def get_child_names(node):
+    names = []
+    for n in node.get_children():
+        names.append(n.title)
+    return names

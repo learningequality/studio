@@ -82,7 +82,10 @@ var BaseView = Backbone.View.extend({
     },
     redo: function() {
         this.undo_manager.redo();
-    }
+    },
+    save:function(){
+		this.collection.save();
+	}
 });
 
 BaseListView = BaseView.extend({
@@ -90,14 +93,7 @@ BaseListView = BaseView.extend({
 	collection : null,		//Collection to be used for data
 	allow_edit: false,
 	item_view: null, // Use to determine how to save, delete, update files
-	save_all: function(){
-		console.log("PERFORMANCE views.js: starting save_all...");
-    	var start = new Date().getTime();
-		this.views.forEach(function(entry){
-			entry.save(entry.model.attributes);
-		});
-		console.log("PERFORMANCE views.js: save_all end (time = " + (new Date().getTime() - start) + ")");
-	},
+
 	set_editing: function(edit_mode_on){
 		this.allow_edit = !edit_mode_on;
 		$(".disable-on-edit").prop("disabled", edit_mode_on);
@@ -106,37 +102,26 @@ BaseListView = BaseView.extend({
 	},
 
 	reset: function(){
-		console.log("PERFORMANCE views.js: starting reset...");
-    	var start = new Date().getTime();
 		this.views.forEach(function(entry){
 			entry.model.unset();
 		});
-		console.log("PERFORMANCE views.js: reset end (time = " + (new Date().getTime() - start) + ")");
 	},
 	set_sort_orders: function(collection){
-		console.log("PERFORMANCE tree_edit/views.js: starting set_sort_orders ...");
-    	var start = new Date().getTime();
 		var index = 1;
-		collection.forEach(function(entry){
-			entry.save({'sort_order' : index++}, {validate: false});
+		views.forEach(function(entry){
+			entry.set({'sort_order' : index++}, {validate: false});
 		});
-		console.log("PERFORMANCE tree_edit/views.js: set_sort_orders end (time = " + (new Date().getTime() - start) + ")");
 	},
 	copy_selected:function(){
-		console.log("PERFORMANCE tree_edit/views.js: starting copy_content ...");
-    	var start = new Date().getTime();
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = [];
-		var clipboard_root = window.current_channel.get_tree("clipboard").get("root_node");
+		var clipboard_root = window.current_channel.get_tree("clipboard").get_root();
 		for(var i = 0; i < list.length; i++){
 			var newNode = new Models.NodeModel();
-			newNode = $(list[i]).data("data").model.duplicate(clipboard_root, i);
-			console.log("add_node model is", newNode);
+			newNode = $(list[i]).data("data").model.duplicate(clipboard_root);
 			clipboard_list.push(newNode);
 		}
-		//console.log("add_node adding to clipboard: ", clipboard_list);
 		this.add_to_clipboard(clipboard_list);
-		//console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + ((new Date().getTime() - start)/1000) + ")");
 		return this.$el.find(".current_topic input:checked").length != 0;
 	},
 	delete_selected:function(){
@@ -148,19 +133,45 @@ BaseListView = BaseView.extend({
 			to_delete.push(view);
 		}
 		this.add_to_trash(to_delete);
-		console.log("current topic found", this.$el.find(".current_topic"));
 		return stopLoop;
 	},
 	drop_in_container:function(transfer, target){
 		console.log("PERFORMANCE views.js: starting drop_in_container...", transfer);
     	var start = new Date().getTime();
 		/*Calculate new sort order*/
+		var new_sort_order = this.get_new_sort_order(transfer, target);
+
+		/*Set model's parent*/
+		var self=this;
+		transfer.model.set({
+			sort_order: new_sort_order
+		});
+		if(this.model.id != transfer.model.get("parent")){
+			var old_parent = transfer.containing_list_view.model;
+			if(transfer.model.move(this.model, false) != null){
+				alert(transfer.model.validationError);
+				transfer.model.save({parent: old_parent.id});
+				transfer.containing_list_view.render();
+			}else{
+				this.model.get("children").push(transfer.model.id);
+				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
+				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
+			}
+		}else{
+			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false});
+		}
+		console.log("PERFORMANCE views.js: drop_in_container end (time = " + (new Date().getTime() - start) + ")");
+		this.render();
+	},
+	get_new_sort_order: function(transfer, target){
 		var new_sort_order = 1;
-		if(target.data("data") && this.views.length > 0){ //Case 1: Remains at 1 if no items in list
-			console.log("add_to_container called inside with " + this.views.length + " views");
+
+		/* Case 1: Remains at 1 if no items in list */
+		if(target.data("data") && this.views.length > 0){
 			var element = target.data("data");
 
-			if(this.views.length == 1){ //Case 2: one item in list
+		/* Case 2: one item in list */
+			if(this.views.length == 1){
 				new_sort_order =  (target.data("isbelow"))? element.model.get("sort_order") / 2 : element.model.get("sort_order") + 1;
 			}else{
 				var first_index = element.index;
@@ -168,72 +179,24 @@ BaseListView = BaseView.extend({
 				if(second_index == transfer.index){
 					second_index = (target.data("isbelow"))? element.index - 1 : element.index + 1;
 				}
-				console.log("inserting second index " + second_index);
-				if(second_index < 0 && target.data("isbelow")){ //Case 3: at top of list
-					console.log("add_to_container inserting at top of list");
-					console.log("first index inserting " + first_index + " with sort order " + this.views[first_index].model.get("sort_order"));
+		/* Case 3: at top of list */
+				if(second_index < 0 && target.data("isbelow")){
 					new_sort_order = this.views[first_index].model.get("sort_order") / 2;
 				}
-				else if(second_index >= this.views.length -1 && !target.data("isbelow")){ //Case 4: at bottom of list
-					console.log("add_to_container inserting at bottom of list");
+		/* Case 4: at bottom of list */
+				else if(second_index >= this.views.length -1 && !target.data("isbelow")){
 					new_sort_order = this.views[first_index].model.get("sort_order") + 1;
 				}
-				else{ //Case 5: in middle of list
-					console.log("add_to_container inserting bewteen " + this.views[first_index].model.get("title")
-								+ "(order " + this.views[first_index].model.get("sort_order") + ") and "
-								+ this.views[second_index].model.get("title") + "(order "
-								+ this.views[second_index].model.get("sort_order") + ")");
+		/* Case 5: in middle of list */
+				else{
 					new_sort_order = (this.views[second_index].model.get("sort_order")
 					+ this.views[first_index].model.get("sort_order")) / 2;
 				}
 			}
 		}
-		console.log("inserting with sort order: " + new_sort_order);
-
-		/*Set model's parent*/
-		var self=this;
-		transfer.model.set({
-			sort_order: new_sort_order
-		});
-		console.log(this.model.id + " vs " +transfer.model.get("parent") );
-		if(this.model.id != transfer.model.get("parent")){
-			console.log("transferring containers", transfer.model);
-			var old_parent = transfer.containing_list_view.model;
-			transfer.model.set({
-				parent: this.model.id
-			}, {validate:true});
-
-			if(transfer.model.validationError){
-				alert(transfer.model.validationError);
-				console.log("Found error");
-				transfer.model.set({parent: old_parent.id});
-				//old_parent.get("children").push(transfer.model.id);
-				transfer.containing_list_view.render();
-			}else{
-				this.model.get("children").push(transfer.model.id);
-				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false,
-					success:function(){
-						console.log("inserting saved sort order");
-					}
-				});
-				console.log("transferred", transfer.model);
-				var new_children = old_parent.get("children");
-				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
-				console.log("children",new_children);
-				console.log("parent",old_parent);
-				//old_parent.save({"children": new_children}, {async:false});
-			}
-		}else{
-			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false,
-				success:function(){
-					console.log("inserting saved sort order");
-				}
-			});
-		}
-		//console.log("add_to_container model", transfer.model);
-		console.log("PERFORMANCE views.js: drop_in_container end (time = " + (new Date().getTime() - start) + ")");
-		this.render();
+		return new_sort_order;
 	},
+
 	remove_view: function(view){
 		this.views.splice(this.views.indexOf(this), 1);
 		view.delete_view();
@@ -242,22 +205,16 @@ BaseListView = BaseView.extend({
 		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
     	var start = new Date().getTime();
 		var self = this;
-		//console.log("add_nodes views", views);
 		views.forEach(function(entry){
 			var model = (entry.model) ? entry.model : entry;
-			model.move(self.model.id, ++startingIndex);
-			//console.log("add_nodes now", model.get("title"));
+			model.move(self.model, true);
 			self.model.get("children").push(model.id);
 
 		});
 		this.list_index = startingIndex;
-		console.log("trash model children is at", this.model.get("children"));
 
 		this.render();
 		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
-	},
-	save:function(){
-		this.collection.save();
 	}
 });
 
@@ -285,30 +242,32 @@ var BaseListNodeItemView = BaseListItemView.extend({
 	save: function(data, options){
 		console.log("PERFORMANCE views.js: starting save " + ((data && data.title) ? data.title : "") + "...");
     	var start = new Date().getTime();
-
-
-		/* TODO: Implement funtion to allow saving one item
-		if(!this.model){
-			if(this.containing_list_view.item_view == "channel"){
-				this.containing_list_view.collection.create_channel(data, $(".createprogress"));
+    	if(!this.model){
+    		var node_data = new Models.NodeModel(data);
+			this.containing_list_view.collection.create(node_data, options);
+			if(this.model.get("kind").toLowerCase() != "topic"){
+				node_data.create_file();
 			}
-			else{
-				var node_data = new Models.NodeModel(data);
-				node_data.fetch();
-				this.containing_list_view.collection.create(node_data, options);
-				if(this.model.get("kind").toLowerCase() != "topic"){
-					node_data.create_file();
-				}
-			}
-		}
+    	}
 		else{
 			this.model.save(data, options);
 			if(this.model.get("kind") && this.model.get("kind").toLowerCase() != "topic"){
 				this.model.create_file();
 			}
-		}*/
+		}
 		console.log("PERFORMANCE views.js: save " + ((data && data.title) ? data.title : "") + " end (time = " +((new Date().getTime() - start)/1000) + "s)");
 	},
+	set:function(data, options){
+		if(!this.model){
+    		var node_data = new Models.NodeModel(data);
+			this.containing_list_view.collection.create(node_data, options);
+			if(this.model.get("kind").toLowerCase() != "topic"){
+				node_data.create_file();
+			}
+    	}else{
+    		this.model.set(data, options);
+    	}
+	}
 });
 
 var BaseListChannelItemView = BaseListItemView.extend({
