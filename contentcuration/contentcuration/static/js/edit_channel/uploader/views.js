@@ -74,7 +74,8 @@ var AddContentView = BaseViews.BaseListView.extend({
 		var topic = new Models.NodeModel({
 			"kind":"topic",
 			"title": (this.counter > 0)? "Topic " + this.counter : "Topic",
-			"parent" : this.model.id
+			"parent" : this.model.id,
+			"sort_order" : this.main_collection.length + this.collection.length
 		});
 		this.collection.add(topic);
 		this.counter++;
@@ -140,7 +141,8 @@ var AddContentView = BaseViews.BaseListView.extend({
 				"parent" : self.model.id,
 				"total_file_size": file.size,
 				"created" : file.lastModifiedDate,
-				"original_filename" : file.name
+				"original_filename" : file.name,
+				"sort_order": self.main_collection.length + self.collection.length
 			});
 			self.collection.add(content_node);
 			var item_view = new NodeListItem({

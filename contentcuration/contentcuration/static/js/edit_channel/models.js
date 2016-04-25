@@ -121,6 +121,7 @@ var NodeModel = BaseModel.extend({
 				return "Cannot place topic under itself."
 			}
 
+			/*If want to make items unique under same parent
 			var error = null;
 
 			parent.get("child_names").forEach(function(entry){
@@ -130,6 +131,7 @@ var NodeModel = BaseModel.extend({
 			})
 
 			return error;
+			*/
 		}
 	},
 	create_file:function(){

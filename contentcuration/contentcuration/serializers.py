@@ -57,7 +57,6 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
-    child_names = serializers.SerializerMethodField('get_children_names')
 
     def count_resources(self, node):
         return count_children(node)
@@ -68,14 +67,11 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def get_node_ancestors(self,node):
         return get_node_ancestors(node)
 
-    def get_children_names(self, node):
-        return get_child_names(node)
-
     class Meta:
         model = Node
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',  'sort_order',
                  'license_owner', 'license', 'kind', 'children', 'parent', 'content_id', 'formats',
-                 'original_filename', 'resource_count', 'resource_size', 'ancestors','child_names')
+                 'original_filename', 'resource_count', 'resource_size', 'ancestors')
 
 class MimeTypeSerializer(serializers.ModelSerializer):
    class Meta:

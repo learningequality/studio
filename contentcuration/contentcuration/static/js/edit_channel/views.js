@@ -136,32 +136,30 @@ BaseListView = BaseView.extend({
 		return stopLoop;
 	},
 	drop_in_container:function(transfer, target){
-		console.log("PERFORMANCE views.js: starting drop_in_container...", transfer);
-    	var start = new Date().getTime();
-		/*Calculate new sort order*/
-		var new_sort_order = this.get_new_sort_order(transfer, target);
-
 		/*Set model's parent*/
-		var self=this;
+		var new_sort_order = this.get_new_sort_order(transfer, target);
 		transfer.model.set({
 			sort_order: new_sort_order
 		});
 		if(this.model.id != transfer.model.get("parent")){
 			var old_parent = transfer.containing_list_view.model;
-			if(transfer.model.move(this.model, false, new_sort_order) != null){
+			transfer.model.set({
+				parent: this.model.id
+			}, {validate:true});
+
+			if(transfer.model.validationError){
 				alert(transfer.model.validationError);
-				transfer.model.save({parent: old_parent.id});
+				transfer.model.set({parent: old_parent.id});
 				transfer.containing_list_view.render();
-			}
-			else{
+			}else{
 				this.model.get("children").push(transfer.model.id);
 				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
+				var new_children = old_parent.get("children");
 				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
 			}
 		}else{
 			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false});
 		}
-		console.log("PERFORMANCE views.js: drop_in_container end (time = " + (new Date().getTime() - start) + ")");
 		this.render();
 	},
 	get_new_sort_order: function(transfer, target){
