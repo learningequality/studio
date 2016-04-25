@@ -2,7 +2,7 @@
 <label for="queue_file_{{node.id}}" class="queue_item">
 	{{#if allow_edit}}
 		<p class="error_msg"></p>
-		<input type="text" placeholder="Press 'Enter' to save" value="{{node.attributes.title}}" class="queue_title_input"/>
+		<input type="text" placeholder="Press 'Enter' to save" value="{{node.attributes.title}}" class="queue_title_input" maxlength="200"/>
 		<span class="pull-right submit_content glyphicon glyphicon-ok" aria-hidden="true"></span>
 	{{else}}
 		<span class="pull-right delete_content glyphicon glyphicon-trash" aria-hidden="true"></span>

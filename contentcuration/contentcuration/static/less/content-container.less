@@ -230,7 +230,7 @@
 					.description{
 						display:block;
 						font-weight:normal;
-						max-height:@description-font-size * 3;
+						max-height:@description-font-size * 4;
 						overflow-y:auto;
 					}
 					h3, p, h6{
@@ -430,9 +430,6 @@
 		}
 		.content-container{
 			background-color: @preview-container-color;
-			.glyphicon{
-				display:none;
-			}
 			::-webkit-scrollbar-track {
 				background-color: @preview-container-color;
 			}
@@ -440,6 +437,9 @@
 				height:@container-height * 0.87;
 				min-height: @container-min-height * 0.87;
 
+				.glyphicon{
+					display:none;
+				}
 				.edit_folder_button{
 					visibility:hidden;
 				}
@@ -454,6 +454,7 @@
 				label{
 					width: 100%;
 					margin:2px;
+					cursor:pointer;
 				}
 				.folder{
 					h3{
@@ -461,6 +462,12 @@
 					}
 				}
 			}
+		}
+
+		.content-container:first-child{
+			.glyphicon{
+					display:none;
+				}
 		}
 		#container_area li:last-child{
 			.folder{

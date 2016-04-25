@@ -7,11 +7,11 @@
 </div>
 {{#if edit}}
 	<!--<span class="channel_toggle pull-right glyphicon glyphicon-remove"></span>-->
-	<input type="text" id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}"></input>
+	<input type="text" id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}" maxlength="200"></input>
 	<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}"  maxlength="400">{{channel.description}}</textarea>
 	<div class="channel_options">
 		<a class="delete_channel <!--btn btn-default-->">
-			<!--<span class="glyphicon glyphicon-trash"></span>--> 
+			<!--<span class="glyphicon glyphicon-trash"></span>-->
 			DELETE</a>
 		<a class="channel_toggle action-text">CANCEL</a>
 		<a class="save_channel btn pull-right">
@@ -21,7 +21,7 @@
 {{else}}
 
 	<span class="channel_metadata">
-		<span class="resource_count">{{resource_count}}</span> Resources 
+		<span class="resource_count">{{resource_count}}</span> Resources
 		<!--<span class="exercise_count">0</span> Exercises
 		<span class="exercise_count">0</span>-->
 		<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size total_file_size}}{{/format_file_size}}

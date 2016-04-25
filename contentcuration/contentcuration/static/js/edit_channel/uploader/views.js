@@ -477,7 +477,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.load_preview();
 		this.$el.find("#input_title").val(this.current_node.get("title"));
 		this.$el.find("#input_description").val(this.current_node.get("description"));
-		this.$el.find("#original_filename").html( this.current_node.get("original_filename"));
+		if(this.current_node.get("original_filename")){
+			this.$el.find("#original_filename_area").css("display", "block");
+			this.$el.find("#original_filename").html( this.current_node.get("original_filename"));
+		}else{
+			this.$el.find("#original_filename_area").css("display", "none");
+		}
+
         // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
         var file_size = (((this.current_node.get("formats") || [])[0] || {}).format_size) || ((this.current_node.get("file_data") || {}).data || {}).size || "";
         this.$("#display_file_size").text(file_size);

@@ -26,22 +26,21 @@ class Channel(ChannelMetadata):
     draft =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='draft')
 
     def save(self, *args, **kwargs):
-        if self.pk:
-            super(Channel, self).save(*args, **kwargs)
-            self.draft.name = self.name
-            self.draft.save()
-            self.clipboard.name = self.name
-            self.clipboard.save()
-            self.deleted.name = self.name
-            self.deleted.save()
-        else:
-            super(Channel, self).save(*args, **kwargs)
+        isNew = not self.pk
+        super(Channel, self).save(*args, **kwargs)
+        if isNew:
             self.draft = TopicTree.objects.create(channel=self, name=self.name)
             self.draft.save()
             self.clipboard = TopicTree.objects.create(channel=self, name=self.name)
             self.clipboard.save()
             self.deleted = TopicTree.objects.create(channel=self, name=self.name)
             self.deleted.save()
+            self.save()
+
+    def delete(self):
+        #TODO: delete all nodes under this channel
+
+        super(Channel, self).delete()
 
     class Meta:
         verbose_name = _("Channel")
@@ -77,14 +76,12 @@ class TopicTree(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        if self.pk:
-            super(TopicTree, self).save(*args, **kwargs)
-            self.root_node.title = self.name
-            self.root_node.save()
-        else:
-            super(TopicTree, self).save(*args, **kwargs)
+        isNew = not self.pk
+        super(TopicTree, self).save(*args, **kwargs)
+        if isNew:
             self.root_node = Node.objects.create(title=self.name, kind="topic", total_file_size = 0, license_id=ContentLicense.objects.first().id)
             self.root_node.save()
+            self.save()
 
     class Meta:
         verbose_name = _("Topic tree")

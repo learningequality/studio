@@ -12,9 +12,9 @@
 {{/if}}
 {{#if allow_edit}}
 	<p class="error_msg"><p>
-	<input id="textbox_{{node.id}}" type="text" class="node_title_textbox" value="{{node.attributes.title}}" placeholder="Enter Item Name"/>
+	<input id="textbox_{{node.id}}" type="text" class="node_title_textbox" value="{{node.attributes.title}}" placeholder="Enter Item Name" maxlength="200"/>
 	{{#if isfolder}}
-	<textarea id="textarea_{{node.id}}" class="topic_textarea"  placeholder="Enter Description">{{node.attributes.description}}</textarea>
+	<textarea id="textarea_{{node.id}}" class="topic_textarea"  placeholder="Enter Description" maxlength="400" >{{node.attributes.description}}</textarea>
 	{{/if}}
 	<div class="item_edit_options">
 		<span class="cancel_edit glyphicon glyphicon-remove pull-right" aria-hidden="true"></span>
@@ -42,7 +42,6 @@
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
 			{{else}}<em class="unpublished">Draft</em>{{/if}}
 		</span>
-		{{node.attributes.sort_order}}
 	</h6>
 	<h3 class = "title truncate">{{#if node}}{{node.attributes.title}}{{else}}<em>[Untitled]</em>{{/if}}</h3>
 	<div class="description_wrapper">
