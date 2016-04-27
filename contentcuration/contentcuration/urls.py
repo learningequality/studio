@@ -35,7 +35,6 @@ class ChannelViewSet(viewsets.ModelViewSet):
     queryset = Channel.objects.all()
     serializer_class = serializers.ChannelSerializer
 
-
 class TopicTreeViewSet(viewsets.ModelViewSet):
     queryset = TopicTree.objects.all()
     serializer_class = serializers.TopicTreeSerializer

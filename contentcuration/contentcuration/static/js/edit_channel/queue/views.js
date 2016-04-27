@@ -101,6 +101,7 @@ var QueueList = BaseViews.BaseListView.extend({
 		'keydown .search_queue' : 'search'
 	},
 	render: function() {
+		console.log("************************ RENDERING CLIPBOARD ************************");
 		DragHelper.removeDragDrop(this);
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();

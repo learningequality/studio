@@ -10,6 +10,7 @@
 	@queue-list-item-height: 40px;
 	@highlight-color: #E6E6E6;
 	@queue-tab-height: 30px;
+	@manage-clipboard-btn-height : 50px;
 	right:0em;
 	top: 6.7em;
 	position:absolute;
@@ -123,13 +124,14 @@
 				width:100%;
 				padding:10px;
 				text-align:center;
-				bottom:0;
+				bottom:   0;
+				height: @manage-clipboard-btn-height;
 			}
 			#queue_content{
 				width:@queue-width - 30px;
 				height: @queue-height * 0.75;
 				.list_content{
-					height:80%;
+					height:@queue-height * 0.75 - @manage-clipboard-btn-height;
 					width: 100%;
 					padding-top:10px;
 					position:relative;

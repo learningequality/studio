@@ -2,6 +2,7 @@
 This module acts as the only interface point between other apps and the database backend for the content.
 It exposes several convenience functions for accessing content
 """
+import logging
 from functools import wraps
 
 from django.core.files import File as DjFile
@@ -44,3 +45,8 @@ def get_child_names(node):
     for n in node.get_children():
         names.append({"title": n.title, "id" : n.id})
     return names
+
+def delete_children(node):
+    for n in node.get_children():
+        delete_children(n)
+    node.delete()

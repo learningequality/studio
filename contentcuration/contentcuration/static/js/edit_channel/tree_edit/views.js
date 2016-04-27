@@ -41,10 +41,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 			});
 			$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
 		});
-
-		window.onbeforeunload = function(event) {
-		    self.save();
-		}
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
@@ -162,6 +158,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.childrenCollection.sort_by_order();
 		this.$el.html(this.template({
 			topic: this.model,
+			title: (this.model.parent)? this.model.get("title") : window.current_channel.get("name"),
 			edit_mode: this.edit_mode,
 			index: this.index,
 			content_list: this.childrenCollection.toJSON()

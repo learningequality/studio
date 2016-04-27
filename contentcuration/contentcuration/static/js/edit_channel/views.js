@@ -156,6 +156,7 @@ BaseListView = BaseView.extend({
 				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
 				var new_children = old_parent.get("children");
 				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
+
 			}
 		}else{
 			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false});
@@ -271,21 +272,19 @@ var BaseListNodeItemView = BaseListItemView.extend({
 var BaseListChannelItemView = BaseListItemView.extend({
 	delete:function(){
 		if(!this.model){
-	    		this.delete_view();
-	    		return;
-	    }else if(confirm("Deleting this channel will permanently delete all content under this channel. Are you sure you want to delete?")){
-    		this.model.destroy();
-    	}
+    		this.delete_view();
+    		return;
+	    }else{
+	    	console.log("DELETE HERE");
+	    	this.model.destroy();
+	    }
 	},
 	save: function(data, options){
-    	this.containing_list_view.collection.save();
-	},
-	set:function(data, options){
-		if(!this.model){
+    	if(!this.model){
     		this.model = new Models.ChannelModel(data);
     		this.containing_list_view.collection.create_channel(this.model);
     	}else{
-    		this.model.set(data, options);
+    		this.model.save(data, options);
     	}
 	}
 });

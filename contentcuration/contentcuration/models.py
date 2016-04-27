@@ -11,6 +11,9 @@ from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 from kolibri.content.models import ChannelMetadata, AbstractContent, ContentMetadata, License, File, Format, MimeType
 from kolibri.content.api import *
+from contentcuration.api import delete_children
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 
 class Channel(ChannelMetadata):
     """ Permissions come from association with organizations """
@@ -29,17 +32,23 @@ class Channel(ChannelMetadata):
         isNew = not self.pk
         super(Channel, self).save(*args, **kwargs)
         if isNew:
-            self.draft = TopicTree.objects.create(channel=self, name=self.name)
+            self.draft = TopicTree.objects.create(channel=self)
             self.draft.save()
-            self.clipboard = TopicTree.objects.create(channel=self, name=self.name)
+            self.clipboard = TopicTree.objects.create(channel=self)
             self.clipboard.save()
-            self.deleted = TopicTree.objects.create(channel=self, name=self.name)
+            self.deleted = TopicTree.objects.create(channel=self)
             self.deleted.save()
             self.save()
 
     def delete(self):
-        #TODO: delete all nodes under this channel
-
+        logging.warning(self)
+        delete_children(self.draft.root_node)
+        self.draft.delete()
+        delete_children(self.clipboard.root_node)
+        self.clipboard.delete()
+        delete_children(self.deleted.root_node)
+        self.deleted.delete()
+        logging.warning("REACHED HERE")
         super(Channel, self).delete()
 
     class Meta:
@@ -48,12 +57,13 @@ class Channel(ChannelMetadata):
 
 class TopicTree(models.Model):
     """Base model for all channels"""
-
+    """
     name = models.CharField(
         max_length=255,
         verbose_name=_("topic tree name"),
         help_text=_("Displayed to the user"),
     )
+    """
     channel = models.ForeignKey(
         'Channel',
         verbose_name=_("channel"),
@@ -79,7 +89,7 @@ class TopicTree(models.Model):
         isNew = not self.pk
         super(TopicTree, self).save(*args, **kwargs)
         if isNew:
-            self.root_node = Node.objects.create(title=self.name, kind="topic", total_file_size = 0, license_id=ContentLicense.objects.first().id)
+            self.root_node = Node.objects.create(title=self.channel.name, kind="topic", total_file_size = 0, license_id=ContentLicense.objects.first().id)
             self.root_node.save()
             self.save()
 

@@ -76,6 +76,11 @@ var NodeModel = BaseModel.extend({
 				}, {validate:true});
 			}
 			this.save(this.attributes, {async:false, validate:false}); //Save any other values
+
+			// this.model.get("children").push(transfer.model.id);
+			// transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
+			// var new_children = old_parent.get("children");
+			// old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
 		}else{
 			return this.validationError;
 		}
@@ -224,13 +229,6 @@ var ChannelModel = BaseModel.extend({
 
     get_tree:function(tree_name){
     	var tree = new TopicTreeModel({id : this.get(tree_name)});
-    	console.log(tree_name + " tree is", tree);
-    	/*if(!tree.id){
-    		var channel = new ChannelModel({id: this.get("channel")});
-    		channel.fetch({async:false});
-    		console.log("got channel", channel);
-    		channel.create_tree(tree_name);
-    	}*/
     	tree.fetch({async:false});
     	return tree;
     }

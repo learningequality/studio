@@ -18,9 +18,6 @@ var ChannelList  = BaseListView.extend({
         this.listenTo(this.collection, "sync", this.render);
 
         var self = this;
-        window.onbeforeunload = function(event) {
-		    self.save();
-		}
 	},
 	render: function() {
 		this.set_editing(false);
@@ -98,7 +95,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	},
 
 	delete_channel: function(event){
-		if(confirm("WARNING: All content under this channel will be permanently deleted."
+		if(this.model && this.model.get("resource_count") > 0 && confirm("WARNING: All content under this channel will be permanently deleted."
 					+ "\nAre you sure you want to delete this channel?")){
 			var self = this;
 			this.display_load("Deleting Channel...", function(){
@@ -122,7 +119,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		var description = (self.$el.find("#new_channel_description").val() == "") ? " " : self.$el.find("#new_channel_description").val();
 		var data = {name: title, description: description};
 		this.display_load("Saving Channel...", function(){
-			self.set(data);
+			self.save(data);
 			self.edit = false;
 			self.render();
 		});

@@ -30,6 +30,11 @@ class ChannelSerializer(serializers.ModelSerializer):
         fields = ('name', 'description', 'editors', 'id', 'draft', 'clipboard', 'deleted', 'published','channel_id', 'resource_count', 'resource_size')
 
 class TopicTreeSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField('get_channel_name')
+
+    def get_channel_name(self, tree):
+        return tree.channel.name
+
     class Meta:
         model = TopicTree
         fields = ('name', 'channel', 'root_node', 'id')
