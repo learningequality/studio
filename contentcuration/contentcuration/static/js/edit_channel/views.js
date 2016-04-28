@@ -271,6 +271,7 @@ var BaseListNodeItemView = BaseListItemView.extend({
 
 var BaseListChannelItemView = BaseListItemView.extend({
 	delete:function(){
+		console.log("DELETE HERE 1");
 		if(!this.model){
     		this.delete_view();
     		return;

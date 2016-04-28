@@ -45,8 +45,3 @@ def get_child_names(node):
     for n in node.get_children():
         names.append({"title": n.title, "id" : n.id})
     return names
-
-def delete_children(node):
-    for n in node.get_children():
-        delete_children(n)
-    node.delete()
