@@ -367,7 +367,6 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	},
 	add_to_trash:function(){
 		this.containing_list_view.add_to_trash([this]);
-		this.render();
 		this.delete_view();
 	}
 });
