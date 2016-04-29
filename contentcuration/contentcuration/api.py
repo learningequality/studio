@@ -58,4 +58,4 @@ def batch_save_tags(request):
     with transaction.commit_on_success():
         for tag in tags:
             KolibriContent.ContentTag.objects.create(tag_name=tag)
-    return HttpResponse("All tags are saved.", status=200)
+    return HttpResponse("Tags are successfully saved.", status=200)
