@@ -325,6 +325,7 @@ var BaseEditorView = BaseListView.extend({
 		var self = this;
 		this.views.forEach(function(entry){
 	        entry.save(entry.model.attributes, {async:false, validate:false});
+	        console.log("saving tags: ", entry.tags);
 	        Backbone.ajax({
 	            dataType: 'text',
 	            type: "POST",
