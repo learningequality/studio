@@ -254,6 +254,7 @@ var BaseListNodeItemView = BaseListItemView.extend({
 				this.model.create_file();
 			}
 		}
+
 		console.log("PERFORMANCE views.js: save " + ((data && data.title) ? data.title : "") + " end (time = " +((new Date().getTime() - start)/1000) + "s)");
 	},
 	set:function(data, options){
@@ -324,6 +325,18 @@ var BaseEditorView = BaseListView.extend({
 		var self = this;
 		this.views.forEach(function(entry){
 	        entry.save(entry.model.attributes, {async:false, validate:false});
+	        Backbone.ajax({
+	            dataType: 'text',
+	            type: "POST",
+	            url: "/api/save_tags/",
+	            data: {tags: entry.tags},
+	            success: function(m) {
+	                console.log(m);
+	            },
+	            error: function(e) {
+	                console.log("Saving tags failed: ", e);
+	            }
+	        });
 	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();

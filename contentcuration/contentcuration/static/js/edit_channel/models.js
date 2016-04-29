@@ -44,7 +44,8 @@ var NodeModel = BaseModel.extend({
 		children:[],
 		kind: "topic",
 		license:1,
-		total_file_size:0
+		total_file_size:0,
+		tags:[]
     },
 
 	/*Used when copying items to clipboard*/

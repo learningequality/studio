@@ -7,9 +7,11 @@ from functools import wraps
 
 from django.core.files import File as DjFile
 from django.db.models import Q
+from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
 from kolibri.content.utils import validate
 from kolibri.content.api import *
+from django.db import transaction
 
 def count_children(node):
     count = node.children.count()
@@ -50,3 +52,10 @@ def delete_children(node):
     for n in node.get_children():
         delete_children(n)
     node.delete()
+
+def batch_save_tags(request):
+    tags = request.POST.getlist('tags[]')
+    with transaction.commit_on_success():
+        for tag in tags:
+            KolibriContent.ContentTag.objects.create(tag_name=tag)
+    return HttpResponse("Tags are successfully saved.", status=200)
