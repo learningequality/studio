@@ -97,6 +97,7 @@ urlpatterns = [
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
     url(r'^api/save_tags/', TagViewSet.as_view({'post': 'batch_save_tags'})),
+    url(r'^api/copy_node/$', views.copy_node, name='copy_node'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),

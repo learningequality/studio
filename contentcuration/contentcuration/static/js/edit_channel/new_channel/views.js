@@ -95,12 +95,15 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	},
 
 	delete_channel: function(event){
-		if(this.model && this.model.get("resource_count") > 0 && confirm("WARNING: All content under this channel will be permanently deleted."
-					+ "\nAre you sure you want to delete this channel?")){
+		if(this.model && (this.model.get("resource_count") == 0 || confirm("WARNING: All content under this channel will be permanently deleted."
+					+ "\nAre you sure you want to delete this channel?"))){
 			var self = this;
 			this.display_load("Deleting Channel...", function(){
 				self.delete(true);
 			});
+		}else if(!this.model){
+			this.containing_list_view.set_editing(false);
+			this.delete_view();
 		}
 	},
 	toggle_channel: function(event){

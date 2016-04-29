@@ -62,8 +62,10 @@ var NodeModel = BaseModel.extend({
 	},
 
 	move:function(target_parent, allow_duplicate, sort_order){
+		console.log("CALLED MOVE");
     	var start = new Date().getTime();
-    	var old_parent = this.get("parent");
+    	//var old_parent = new NodeModel({id: this.get("parent")});
+    	//old_parent.fetch({async:false});
     	var title = this.get("title");
 		this.set({parent: target_parent.id,sort_order:sort_order}, {validate:true});
 
@@ -77,11 +79,10 @@ var NodeModel = BaseModel.extend({
 				}, {validate:true});
 			}
 			this.save(this.attributes, {async:false, validate:false}); //Save any other values
+			/*target_parent.get("children").push(this.id);
 
-			// this.model.get("children").push(transfer.model.id);
-			// transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
-			// var new_children = old_parent.get("children");
-			// old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
+			var new_children = old_parent.get("children");
+			old_parent.get("children").splice(old_parent.get("children").indexOf(this.id), 1);*/
 		}else{
 			return this.validationError;
 		}

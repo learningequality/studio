@@ -227,16 +227,13 @@ var BaseListItemView = BaseView.extend({
 
 var BaseListNodeItemView = BaseListItemView.extend({
 	delete:function(){
-    	var start = new Date().getTime();
     	if(!this.model){
     		this.delete_view();
-    		return;
     	}
 
 		if(this.containing_list_view.item_view != "uploading_content"){
 			this.add_to_trash();
 		}
-		console.log("PERFORMANCE views.js: delete " + this.model.get("title") + " end (time = " + (new Date().getTime() - start) + ")");
 	},
 	save: function(data, options){
 		console.log("PERFORMANCE views.js: starting save " + ((data && data.title) ? data.title : "") + "...");
@@ -274,9 +271,7 @@ var BaseListChannelItemView = BaseListItemView.extend({
 	delete:function(){
 		if(!this.model){
     		this.delete_view();
-    		return;
 	    }else{
-	    	console.log("DELETE HERE");
 	    	this.model.destroy();
 	    }
 	},
