@@ -156,7 +156,7 @@ BaseListView = BaseView.extend({
 				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
 				var new_children = old_parent.get("children");
 				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
-
+				transfer.containing_list_view.render();
 			}
 		}else{
 			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false});
@@ -290,7 +290,7 @@ var BaseListChannelItemView = BaseListItemView.extend({
 });
 
 var BaseEditorView = BaseListView.extend({
-	disable: false,
+	multiple_selected: false,
 	current_node: null,
 	item_view:"uploading_content",
 	unsaved_queue: [], // Used to keep track of temporary model data

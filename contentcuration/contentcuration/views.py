@@ -85,7 +85,7 @@ def exercise(request, exercise_id):
 # TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
 @csrf_exempt
 def file_upload(request):
-    
+
     if request.method == 'POST':
         file_object = File(content_copy=request.FILES.values()[0])
         file_object.save()

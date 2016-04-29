@@ -342,6 +342,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.set_current(node_view);
 		}else{
 			this.collection.forEach(function(entry){
+				console.log("view = ", entry);
 				var node_view = new UploadedItem({
 					model: entry,
 					el: self.$el.find("#uploaded_list #item_" + entry.cid),
@@ -396,7 +397,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 						$(".uploaded").css("background-color", "white");
 						self.$el.find("#title_error").html("");
 						self.$el.find("#description_error").html("");
-						if(self.disable){
+						if(self.multiple_selected){
 							self.gray_out();
 						}
 					}
@@ -452,10 +453,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		}*/
 		this.$el.find("#title_error").html("");
 		this.$el.find(".disable_on_error").css("cursor", "pointer");
-		if(!this.current_view && !this.disable){
+		if(!this.current_view && !this.multiple_selected){
 			this.set_current(view);
 		}else {
-			if(!this.disable){
+			if(!this.multiple_selected){
 				/* Previous node passes all tests */
 				this.$el.find("#title_error").html("");
 				this.$el.find("#description_error").html("");
@@ -483,6 +484,9 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		}else{
 			this.$el.find("#original_filename_area").css("display", "none");
 		}
+		$("#tag_area").html("");
+		console.log("here is ", view.tags);
+		this.append_tags(view.tags);
 
         // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
         var file_size = (((this.current_node.get("formats") || [])[0] || {}).format_size) || ((this.current_node.get("file_data") || {}).data || {}).size || "";
@@ -490,14 +494,27 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.$el.find(".upload_input").removeClass("gray-out");
 	},
 	check_item: function(){
-		this.disable = this.$el.find("#uploaded_list :checked").length > 1;
-		this.parent_view.set_editing(this.disable);
-		this.$el.find("#input_title").val((this.disable || !this.current_node)? " " : this.current_node.get("title"));
-		this.$el.find("#input_description").val((this.disable || !this.current_node)? " " : this.current_node.get("description"));
+		this.multiple_selected = this.$el.find("#uploaded_list :checked").length > 1;
+		this.parent_view.set_editing(this.multiple_selected);
+		this.$el.find("#input_title").val((this.multiple_selected || !this.current_node)? " " : this.current_node.get("title"));
+		this.$el.find("#input_description").val((this.multiple_selected || !this.current_node)? " " : this.current_node.get("description"));
 
-		if(this.disable) {
+		if(this.multiple_selected) {
 			this.gray_out();
-			//TODO: Clear tagging area $("#tag_area").html("");
+			$("#tag_area").html("");
+			var list = this.$el.find('#uploaded_list input:checked').parent("li");
+
+			var tagList = $(list[0]).data("data").tags;
+			var self = this;
+			/* Create list of nodes to edit */
+			for(var i = 1; i < list.length; i++){
+				tagList.filter(function(n) {
+					console.log(n, $(list[i]).data("data").tags[i]);
+				    return $(list[i]).data("data").tags.indexOf(n) != -1;
+				});
+			}
+			console.log("data", tagList);
+			this.append_tags(tagList);
 		}
 		else {
 			this.$el.find(".upload_input").removeClass("gray-out");
@@ -512,12 +529,24 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	},
 	add_tag: function(event){
 		if((!event.keyCode || event.keyCode ==13) && this.$el.find("#tag_box").val().trim() != ""){
-			/* TODO: FIX THIS LATER TO APPEND TAG VIEWS TO AREA*/
-			this.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + this.$el.find("#tag_box").val().trim() + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
+			var tag = {"tag_name" : this.$el.find("#tag_box").val().trim()};
+			this.append_tags([tag]);
 			this.$el.find("#tag_box").val("");
+			if(this.multiple_selected){
+
+			}else{
+				this.current_view.add_tag(tag);
+			}
 		}
 	},
 	remove_tag:function(event){
+		var tagname = {"tag_name" : event.target.parentNode.textContent.trim()};
+		console.log("tag is now: ",tagname);
+		if(this.multiple_selected){
+
+		}else{
+			this.current_view.remove_tag(tagname);
+		}
 		event.target.parentNode.remove();
 	},
 	set_edited:function(event){
@@ -543,6 +572,14 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		$((switch_to_details)? "#metadata_preview_btn" : "#metadata_details_btn").removeClass("btn-tab-active");
 		$("#metadata_edit_details").css("display", (switch_to_details)? "block" : "none");
 		$("#metadata_preview").css("display", (switch_to_details)? "none" : "block");
+	},
+	append_tags:function(tags){
+		var self = this;
+		tags.forEach(function(entry){
+			console.log("entry is ", entry);
+			self.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + ((entry.attributes)? entry.get("tag_name") : entry.tag_name) + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
+
+		});
 	}
 });
 
@@ -602,10 +639,10 @@ var NodeListItem = ContentItem.extend({
 });
 
 var UploadedItem = ContentItem.extend({
-	tags: [],
 	template: require("./hbtemplates/uploaded_list_item.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'remove_topic','set_current_node','set_checked');
+		this.tags = [];
 		this.containing_list_view = options.containing_list_view;
 		this.edited = false;
 		this.checked = false;
@@ -615,6 +652,7 @@ var UploadedItem = ContentItem.extend({
 			"description":this.model.get("description")
 		};
 		this.render();
+		console.log("tags : ", this.tags);
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -659,6 +697,20 @@ var UploadedItem = ContentItem.extend({
 
 	set_checked:function(){
 		this.checked = this.$el.find("input[type=checkbox]").prop("checked");
+	},
+	add_tag:function(tagname){
+		this.tags.push(tagname);
+		console.log("tags are " , this.tags);
+	},
+	remove_tag:function(tagname){
+		var remove_at = 0;
+		for(remove_at; remove_at < this.tags.length; remove_at ++){
+			if(this.tags[remove_at].tag_name == tagname.tag_name){
+				break;
+			}
+		}
+		console.log("removing", remove_at);
+		this.tags.splice(remove_at, 1);
 	}
 });
 
