@@ -25,6 +25,12 @@ var BaseCollection = Backbone.Collection.extend({
 		return window.Urls[this.list_name]();
 	},
 	save: function() {
+		var self = this;
+		this.models.forEach(function(entry){
+			if(entry.hasChanged()){
+				entry.save();
+			}
+		});
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	}
 });
@@ -41,84 +47,46 @@ var NodeModel = BaseModel.extend({
 		total_file_size:0
     },
 
-	getChildCount:function(includeParent, collection){
-		var count = (includeParent) ? 1:0;
-		var children = collection.get_all_fetch(this.get("children"));
-		children.forEach(function(entry){
-			count += entry.getChildCount(true, collection);
-		});
-		return count;
-	},
-	getChildCount:function(includeParent, collection){
-		if(!collection){
-			collection = new NodeCollection();
-		}
-		var count = (includeParent) ? 1:0;
-		var children = collection.get_all_fetch(this.get("children"));
-		children.forEach(function(entry){
-			count += entry.getChildCount(true, collection);
-		});
-		return count;
-	},
-
 	/*Used when copying items to clipboard*/
-    duplicate: function(parent_id, index){
-    	console.log("add_nodes duplicate called by", this);
-    	console.log("PERFORMANCE models.js: starting duplicate...");
+    duplicate: function(target_parent){
     	var start = new Date().getTime();
     	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
 		var node_data = new NodeModel();
 		var nodeChildrenCollection = new NodeCollection();
 		var self = this;
 		node_data.set(data);
-		node_data.move(parent_id, index);
+		node_data.move(target_parent, true, target_parent.get("children").length);
 		self.copy_children(node_data, self.get("children"));
-		console.log("add_node sending back data", node_data);
 		return node_data;
 	},
 
-	move:function(parent_id, index){
-		console.log("add_nodes move called by", this);
-		console.log("PERFORMANCE models.js: starting move...");
+	move:function(target_parent, allow_duplicate, sort_order){
+		console.log("CALLED MOVE");
     	var start = new Date().getTime();
-    	var old_parent = this.get("parent");
+    	//var old_parent = new NodeModel({id: this.get("parent")});
+    	//old_parent.fetch({async:false});
     	var title = this.get("title");
-		this.set({parent: parent_id,sort_order:index}, {validate:true});
+		this.set({parent: target_parent.id,sort_order:sort_order}, {validate:true});
 
-		while(this.validationError !== null){
-			title = this.generate_title(title);
-			console.log("add_node title is now", title);
-			this.set({
-                title: title,
-				parent: parent_id,
-				sort_order:index
-			}, {validate:true});
-			console.log("add_node validation error!", this.get("title"));
-		}
-		if(old_parent){
-			this.save({title: title, parent: old_parent}, {async:false, validate:false}); //Save any other values
-			var old_parent_node = new NodeModel({id:old_parent});
-			old_parent_node.fetch({async:false});
-			old_parent_node.save({total_file_size: old_parent_node.get_size()});
+		if(allow_duplicate){
+			while(this.validationError !== null){
+				title = this.generate_title(title);
+				this.set({
+	                title: title,
+					parent: target_parent.id,
+					sort_order:sort_order
+				}, {validate:true});
+			}
+			this.save(this.attributes, {async:false, validate:false}); //Save any other values
+			/*target_parent.get("children").push(this.id);
+
+			var new_children = old_parent.get("children");
+			old_parent.get("children").splice(old_parent.get("children").indexOf(this.id), 1);*/
 		}else{
-			this.save({title: title}, {async:false, validate:false}); //Save any other values
+			return this.validationError;
 		}
+	},
 
-		this.save({parent: parent_id, sort_order:index}, {async:false, validate:false}); //Save any other values
-		var new_parent = new NodeModel({id:parent_id});
-		new_parent.fetch({async:false});
-		new_parent.save({total_file_size: new_parent.get_size()});
-		console.log("PERFORMANCE models.js: move end (time = " + (new Date().getTime() - start) + ")");
-	},
-	get_size:function(){
-		var collection = new NodeCollection();
-		var size = 0;
-		var children = collection.get_all_fetch(this.get("children"));
-		children.forEach(function(entry){
-			size += entry.get("total_file_size");
-		});
-		return size;
-	},
 	/* Function in case want to append (Copy #) to end of copied content*/
 	generate_title:function(title){
 		var start = new Date().getTime();
@@ -140,57 +108,37 @@ var NodeModel = BaseModel.extend({
 		console.log("PERFORMANCE models.js: starting copy_children...");
 		var start = new Date().getTime();
 		var self = this;
-		var parent_id = node.id;
 		var copied_collection = new NodeCollection();
 		copied_collection = copied_collection.get_all_fetch(original_collection);
 		copied_collection.forEach(function(entry){
-			entry.duplicate(parent_id);
+			entry.duplicate(node);
 		});
 		console.log("PERFORMANCE models.js: copy_children end (time = " + (new Date().getTime() - start) + ")");
 	},
 	validate:function (attrs, options){
-		console.log("PERFORMANCE models.js: starting validate on " + attrs.title + "...");
-		var start = new Date().getTime();
-		var self = this;
-		console.log("Checking if title is blank...");
-		//Case: title blank
 		if(attrs.title == "")
 			return "Name is required.";
+
 		if(attrs.parent){
-			console.log("Checking if topic is descendant of itself..");
 			var parent = new NodeModel({'id': attrs.parent});
 			parent.fetch({async:false});
-			if(attrs.kind == "topic"){
-				console.log("Checking if topic is descendant of itself..");
-				//Case: is a child of itself
-				if(parent.id == self.id)
-					return "Cannot place topic under itself."
 
-				//Case: is a child of its descendants
-				var temp = new NodeModel({'id': parent.get("parent")});
-				while(temp.get("parent")){
-					temp = new NodeModel({'id': parent.get("parent")});
-					temp.fetch();
-					if(temp.id == self.id)
-						return "Cannot place topic under any of its subtopics."
-				}
+			if(parent.get("ancestors").indexOf(attrs.id) >= 0){
+				return "Cannot place topic under itself."
 			}
 
-			console.log("Checking if title already exists in topic..");
-			//Case: topic with same name exists in children
-			if(!this.siblings)
-				this.siblings = new NodeCollection();
-			if(!this.parent_children || parent.get("children") != this.parent_children){
-				this.parent_children = parent.get("children");
-				this.siblings = this.siblings.get_all_fetch(this.parent_children);
-			}
-			for(var i = 0; i < this.siblings.models.length; i++){
-				if(this.siblings.models[i].get("title") == attrs.title && this.siblings.models[i].id != self.id){
-					return "Name already exists under this topic. Rename and try again.";
+			/*If want to make items unique under same parent
+			var error = null;
+
+			parent.get("child_names").forEach(function(entry){
+				if(entry.title === attrs.title && entry.id != attrs.id){
+					error = "'" + attrs.title + "' already exists under this topic. Rename and try again.";
 				}
-			}
+			})
+
+			return error;
+			*/
 		}
-		console.log("PERFORMANCE models.js: validate end (time = " + (new Date().getTime() - start) + ")");
 	},
 	create_file:function(){
 		if(this.attributes.file_data){
@@ -212,33 +160,30 @@ var NodeModel = BaseModel.extend({
 						checksum: file_data.filename.split(".")[0],
 						extension: "." + file_data.filename.split(".")[1]
 					});
-					self.save({total_file_size: file.get("file_size")});
-					console.log("SAVING FILE:", file);
 					file.save({
 						  format: format.id,
-          },
-          {
-              patch: true,
-          });
-        }
+          			},
+		          	{
+		              	patch: true,
+		          	});
+		        }
 			});
 		}
 	},
-	get_formats:function(){
-		var formats = new FormatCollection();
-		formats.fetch({async:false});
-		return formats.where({contentmetadata : this.id});
-	},
+
 	get_mimetype:function(type){
 		return window.mimetypes.findWhere({machine_name: type});
 	},
 	get_files: function(){
-		var formats = this.get_formats();
+		var formats = this.get("formats");
 		var to_return = new FileCollection();
-		console.log("TESTING FORMAT RETRIEVAL...", formats);
-		formats.forEach(function(entry){
-			to_return.add(entry.get_files());
-		});
+		if(formats){
+			formats.forEach(function(entry){
+				entry.files.forEach(function(file){
+					to_return.add(new FileModel(file));
+				});
+			});
+		}
 		return to_return;
 	}
 });
@@ -255,10 +200,10 @@ var NodeCollection = BaseCollection.extend({
     	for(var i = 0; i < ids.length; i++){
     		if(ids[i]){
     			var model = this.get({id: ids[i]});
-	    		//if(!model){
+	    		if(!model){
 	    			model = this.add({'id':ids[i]});
 	    			model.fetch({async:false});
-	    		//}
+	    		}
 	    		to_fetch.add(model);
     		}
     	}
@@ -282,67 +227,11 @@ var ChannelModel = BaseModel.extend({
 		license_owner: "No license found",
 		description:" "
     },
-    /*
-    get_data:function(){
-    		$.get("/api-test", function(result){
-    			console.log("Got data: ", JSON.parse(result)['filename']);
-    		});
-    },*/
+
     get_tree:function(tree_name){
     	var tree = new TopicTreeModel({id : this.get(tree_name)});
-    	console.log(tree_name + " tree is", tree);
-    	/*if(!tree.id){
-    		var channel = new ChannelModel({id: this.get("channel")});
-    		channel.fetch({async:false});
-    		console.log("got channel", channel);
-    		channel.create_tree(tree_name);
-    	}*/
     	tree.fetch({async:false});
     	return tree;
-    },
-
-    update_root:function(data){
-    	var channel = this;
-    	["clipboard","deleted","draft"].forEach(function(entry){
-			var node = channel.get_tree(entry.toString()).get_root();
-			node.save(data);
-		});
-    },
-
-    delete_channel:function(){
-    	var channel = this;
-    	["clipboard","deleted","draft"].forEach(function(entry) {
-		  	var tree = channel.get_tree(entry);
-	    	tree.destroy();
-	    	/*TODO: Delete all child nodes*/
-		});
-    	this.destroy();
-    },
-    create_tree:function(tree_name){
-    	console.log("PERFORMANCE models.js: starting create_tree " + tree_name + "...");
-    	var start = new Date().getTime();
-
-    	var root_node = new NodeModel();
-    	var self = this;
-		return root_node.save({title: self.get("name"), description: "Root node for " + tree_name + " tree"}, {
-			async:false,
-			validate: false,
-			success: function(){
-				var tree = new TopicTreeModel();
-				return tree.save({
-                    channel: self.id,
-					root_node: root_node.id,
-					name: self.get("name")
-				}, {
-					async:false,
-					validate:false,
-					success: function(){
-						console.log("PERFORMANCE models.js: create_tree " + tree_name + " end (time = " + ((new Date().getTime() - start)/1000) + "s)");
-						self.save(tree_name , tree.id, {async:false});
-					}
-				});
-			}
-		});
     }
 });
 
@@ -350,21 +239,8 @@ var ChannelCollection = BaseCollection.extend({
 	model: ChannelModel,
 	list_name:"channel-list",
 	create_channel:function(data){
-		var channel_data = new ChannelModel(data);
-
-		channel_data.fetch();
-		if(channel_data.get("description").trim() == "")
-			channel_data.set({description: "No description available."});
-		return this.create(channel_data, {
-			async: false,
-			success:function(){
-				["draft","clipboard","deleted"].forEach(function(entry){
-					channel_data.create_tree(entry.toString());
-					console.log("creating " + entry.toString());
-				});
-   			}
-		});
-    },
+		this.create(data, {async:false});
+    }
 });
 
 var TopicTreeModel = BaseModel.extend({
@@ -397,13 +273,7 @@ var FileCollection = BaseCollection.extend({
 });
 
 var FormatModel = BaseModel.extend({
-	root_list:"format-list",
-	/*HARDCODED FOR NOW, NEED TO ASSIGN FORMATS*/
-	get_files : function(){
-		var files = new FileCollection();
-		files.fetch({async:false});
-		return files.where({format: this.id});
-	}
+	root_list:"format-list"
 });
 
 var FormatCollection = BaseCollection.extend({

@@ -1,25 +1,47 @@
-from contentcuration.models import *    # TODO: Change this later?
+import logging
+from contentcuration.models import Channel, TopicTree, ContentTag, Node, ContentLicense, Exercise, AssessmentItem, File, Format, MimeType
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
+from contentcuration.api import count_children, get_total_size, get_node_siblings, get_node_ancestors, get_child_names
 
 class LicenseSerializer(serializers.ModelSerializer):
-    class Meta: 
+    class Meta:
         model = ContentLicense
         fields = ('license_name', 'exists', 'id')
 
 class ChannelSerializer(serializers.ModelSerializer):
+    resource_count = serializers.SerializerMethodField('count_resources')
+    resource_size = serializers.SerializerMethodField('calculate_resources_size')
+
+    def count_resources(self, channel):
+        if not channel.draft:
+            return 0
+        else:
+            return count_children(channel.draft.root_node) + count_children(channel.clipboard.root_node)
+
+    def calculate_resources_size(self, channel):
+        if not channel.draft:
+            return 0
+        else:
+            return get_total_size(channel.draft.root_node) + get_total_size(channel.clipboard.root_node)
+
     class Meta:
         model = Channel
-        fields = ('name', 'description', 'editors', 'id', 'draft', 'clipboard', 'deleted', 'published','channel_id')
+        fields = ('name', 'description', 'editors', 'id', 'draft', 'clipboard', 'deleted', 'published','channel_id', 'resource_count', 'resource_size')
 
 class TopicTreeSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField('get_channel_name')
+
+    def get_channel_name(self, tree):
+        return tree.channel.name
+
     class Meta:
         model = TopicTree
         fields = ('name', 'channel', 'root_node', 'id')
 
 class FileSerializer(serializers.ModelSerializer):
     content_copy = serializers.FileField(use_url=False)
- 
+
     def get(*args, **kwargs):
          return super.get(*args, **kwargs)
     class Meta:
@@ -37,21 +59,34 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     formats = FormatSerializer(many=True, read_only=True)
 
+    resource_count = serializers.SerializerMethodField('count_resources')
+    resource_size = serializers.SerializerMethodField('calculate_resources_size')
+    ancestors = serializers.SerializerMethodField('get_node_ancestors')
+
+    def count_resources(self, node):
+        return count_children(node)
+
+    def calculate_resources_size(self, node):
+        return get_total_size(node)
+
+    def get_node_ancestors(self,node):
+        return get_node_ancestors(node)
+
     class Meta:
         model = Node
-        fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',
-                  'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id',
-                  'formats', 'original_filename')
-   
+        fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',  'sort_order',
+                 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id', 'formats',
+                 'original_filename', 'resource_count', 'resource_size', 'ancestors')
+
 class MimeTypeSerializer(serializers.ModelSerializer):
    class Meta:
     model = MimeType
-    fields = ('readable_name', 'machine_name', 'id') 
+    fields = ('readable_name', 'machine_name', 'id')
 
 class TagSerializer(serializers.ModelSerializer):
    class Meta:
     model = ContentTag
-    fields = ('tag_name', 'tag_type', 'id') 
+    fields = ('tag_name', 'tag_type', 'id')
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:

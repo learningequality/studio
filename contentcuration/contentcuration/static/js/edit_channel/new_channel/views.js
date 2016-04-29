@@ -4,7 +4,7 @@ require("channel_create.less");
 var Dropzone = require("dropzone");    //For later when images are added to channels
 require("dropzone/dist/dropzone.css"); //For later when images are added to channels
 var BaseViews = require("./../views");
-	
+
 var ChannelList  = BaseListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
 	item_view: "channel", // TODO: Use to indicate how to save items on list
@@ -17,6 +17,7 @@ var ChannelList  = BaseListView.extend({
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(this.collection, "sync", this.render);
 
+        var self = this;
 	},
 	render: function() {
 		this.set_editing(false);
@@ -44,7 +45,7 @@ var ChannelList  = BaseListView.extend({
 		this.collection.forEach(function(entry){
 			var view = new ChannelListItem({
 				el : containing_list_view.$el.find("#channel_list #" + entry.id),
-				model: entry, 
+				model: entry,
 				edit: false,
 				containing_list_view: containing_list_view,
 				channel_list: containing_list_view.collection.toJSON()
@@ -58,7 +59,7 @@ var ChannelList  = BaseListView.extend({
 /*
 	edit: determines whether to load channel or editor
 */
-var ChannelListItem = BaseViews.BaseListItemView.extend({
+var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	tagName: "li",
 	template: require("./hbtemplates/channel_container.handlebars"),
 	initialize: function(options) {
@@ -71,19 +72,11 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 	},
 
 	render: function() {
-		var draft_node = (this.model)? this.model.get_tree("draft").get_root() : null;
-		var draft_count = (draft_node)? draft_node.getChildCount(false, null) : 0;
-		var draft_size = (draft_node)? draft_node.get("total_file_size") : 0;
-
-		var clipboard_node = (this.model)? this.model.get_tree("clipboard").get_root() : null;
-		var clipboard_count = (clipboard_node)? this.model.get_tree("clipboard").get_root().getChildCount(false, null) : 0;
-		var clipboard_size = (clipboard_node)? clipboard_node.get("total_file_size") : 0;
-
 		this.$el.html(this.template({
-			edit: this.edit, 
+			edit: this.edit,
 			channel: (this.model) ? this.model.attributes : null,
-			total_file_size: clipboard_size + draft_size,
-			resource_count: draft_count + clipboard_count,
+			total_file_size: (this.model)? this.model.get("resource_size") : 0,
+			resource_count: (this.model)? this.model.get("resource_count") : 0,
 			picture: "/static/img/unicef logo.jpg"
 		}));
 		this.$el.addClass('channel_container');
@@ -102,9 +95,15 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 	},
 
 	delete_channel: function(event){
-		if(confirm("WARNING: All content under this channel will be permanently deleted."
-					+ "\nAre you sure you want to delete this channel?")){
-			this.delete(true);
+		if(this.model && (this.model.get("resource_count") == 0 || confirm("WARNING: All content under this channel will be permanently deleted."
+					+ "\nAre you sure you want to delete this channel?"))){
+			var self = this;
+			this.display_load("Deleting Channel...", function(){
+				self.delete(true);
+			});
+		}else if(!this.model){
+			this.containing_list_view.set_editing(false);
+			this.delete_view();
 		}
 	},
 	toggle_channel: function(event){
@@ -112,10 +111,8 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 		if(this.model){
 			this.edit = false;
 			this.render();
-			console.log("first");
 		}else{
 			this.delete_view();
-			console.log("second");
 		}
 	},
 	save_channel: function(event){
@@ -126,10 +123,12 @@ var ChannelListItem = BaseViews.BaseListItemView.extend({
 		var data = {name: title, description: description};
 		this.display_load("Saving Channel...", function(){
 			self.save(data);
+			self.edit = false;
+			self.render();
 		});
 	}
 });
 
 module.exports = {
-	ChannelList : ChannelList 
+	ChannelList : ChannelList
 }

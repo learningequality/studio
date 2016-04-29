@@ -23,13 +23,13 @@
 	<div  class="metadata_panel">
 		<div id="metadata_edit_details" class="input_area container-fluid">
 			<div class="section pull-left">
-				<h4>Original Filename <i id="original_filename">No file selected.</i></h4>				
-				<h4>Title<label class="required">*<span id="title_error"></span></label></h4> 
-				<input type="text" id="input_title" class="disable-on-edit upload_input" placeholder="Enter a title" required/>
+				<h4 id="original_filename_area">Original Filename <i id="original_filename">No file selected.</i></h4>
+				<h4>Title<label class="required">*<span id="title_error"></span></label></h4>
+				<input type="text" id="input_title" class="disable-on-edit upload_input" placeholder="Enter a title" maxlength="200" required/>
 				<h4>File Size <i id="display_file_size">0</i> bytes</h4>
-				<h4>Description<label class="required">*<span id="description_error"></span></label></h4> 
-				<textarea id="input_description" class="disable-on-edit upload_input" placeholder="Enter a description of your content" required/></textarea>
-				<!--<h4>Tags (optional)</h4> 
+				<h4>Description</h4>
+				<textarea id="input_description" class="disable-on-edit upload_input" placeholder="Enter a description of your content" maxlength="400"/></textarea>
+				<!--<h4>Tags (optional)</h4>
 				<input type="text" id="tag_box" class="tag_input" placeholder="Press 'Enter' to add tag"/>
 				<div class="container-fluid">
 					<div class="row" id="tag_area">
@@ -50,7 +50,7 @@
 		</div>
 
 		<div id="metadata_preview" class="container-fluid">
-			
+
 		</div>
 	</div>
 	<br/>

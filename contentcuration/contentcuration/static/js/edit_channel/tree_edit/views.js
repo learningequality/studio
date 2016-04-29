@@ -9,6 +9,7 @@ var UploaderViews = require("edit_channel/uploader/views");
 //var UndoManager = require("backbone-undo");
 var Models = require("./../models");
 
+/* Main view for all draft tree editing */
 var TreeEditView = BaseViews.BaseView.extend({
 	container_index: 0,
 	containers:[],
@@ -40,7 +41,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 			});
 			$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
 		});
-		
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
@@ -61,9 +61,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 		'click .edit_button' : 'edit_content',
 		'click #hide_details_checkbox' :'toggle_details',
 		'click .back_to_edit_button' : 'back_to_edit'
-		/*'click .undo_button' : 'undo_action',
-		'click .redo_button' : 'redo_action'*/
-	},	
+	},
 	back_to_edit:function(){
 		window.location = window.location.href.replace("clipboard", "edit");
 	},
@@ -74,17 +72,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 		}
 		this.containers[this.containers.length-1].close_folders();
 	},
-	/*
-	undo_action: function(){
-		console.log("undoing");
-		this.undo();
-	},
-	redo_action:function(){
-		this.redo();
-	},*/
 	add_container: function(index, topic){
-		console.log("PERFORMANCE tree_edit/views.js: starting add_container ...");
-    	var start = new Date().getTime();
 		/* Close directories of children and siblings of opened topic*/
 		if(index < this.containers.length){
 			this.remove_containers_from(index);
@@ -101,7 +89,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 			container : this
 		});
 		this.containers.push(container_view);
-		console.log("PERFORMANCE tree_edit/views.js: add_container end (time = " + (new Date().getTime() - start) + ")");
 	},
 
 	delete_content: function (event){
@@ -124,8 +111,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 				}
 			}
 		});
-		//this.clipboard_view.add_to_clipboard(clipboard_list);
-		console.log("PERFORMANCE tree_edit/views.js: copy_content end (time = " + (new Date().getTime() - start) + ")");
 	},
 	edit_content: function(event){
 		this.edit_selected();
@@ -160,21 +145,20 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.collection = options.collection;
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();
-		//this.set_sort_orders(this.childrenCollection);
 		this.render();
-		
+
 		/* Animate sliding in from left */
 		this.$el.css('margin-left', -this.$el.find(".content-list").outerWidth());
 		$("#container_area").width(this.$el.find(".content-list").outerWidth() * (this.index));
-		this.$el.animate({'margin-left' : "0px"}, 500);	
+		this.$el.animate({'margin-left' : "0px"}, 500);
 	},
 	render: function() {
-		console.log("*************RENDERING " + this.model.get("title") + "****************");
 		DragHelper.removeDragDrop(this);
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();
 		this.$el.html(this.template({
 			topic: this.model,
+			title: (this.model.parent)? this.model.get("title") : window.current_channel.get("name"),
 			edit_mode: this.edit_mode,
 			index: this.index,
 			content_list: this.childrenCollection.toJSON()
@@ -195,7 +179,6 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	load_content : function(){
-		console.log("PERFORMANCE tree_edit/views.js: starting load_content ...");
     	var start = new Date().getTime();
 		this.views = [];
 		var self = this;
@@ -214,7 +197,6 @@ var ContentList = BaseViews.BaseListView.extend({
 				file_view.set_opened(true, false);
 			self.views.push(file_view);
 		});
-		console.log("PERFORMANCE tree_edit/views.js: load_content end (time = " + (new Date().getTime() - start) + ")");
 	},
 	add_content: function(event){
 		this.add_to_view();
@@ -227,13 +209,9 @@ var ContentList = BaseViews.BaseListView.extend({
 
 	/* Resets folders to initial state */
 	close_folders:function(){
-		console.log("PERFORMANCE tree_edit/views.js: starting close_folders ...");
-    	var start = new Date().getTime();
 		this.views.forEach(function(entry){
-			entry.set_opened(false, false);
+			entry.set_opened(false);
 		});
-		console.log("PERFORMANCE tree_edit/views.js: close_folders end (time = " + (new Date().getTime() - start) + ")");
-		//this.$el.find(".folder .glyphicon").css("display", "inline-block");
 	},
 	add_to_trash:function(views){
 		this.container.add_to_trash(views);
@@ -245,13 +223,13 @@ var ContentList = BaseViews.BaseListView.extend({
 		var self = this;
 		this.$el.animate({'margin-left' : -this.$el.outerWidth()}, 100,function(){
 			self.container.remove_containers_from(self.index - 1);
-		});	
+		});
 	}
 });
 
 
 /*folders, files, exercises listed*/
-var ContentItem = BaseViews.BaseListItemView.extend({
+var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_folder','open_folder',/*'expand_or_collapse_folder', */
@@ -272,7 +250,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			isfolder: this.model.get("kind").toLowerCase() == "topic",
 			edit_mode: this.edit_mode,
 			allow_edit: this.allow_edit,
-			resource_count : (this.model.get("kind") == "topic")? this.model.getChildCount(false, this.containing_list_view.collection) : this.files.length
+			resource_count : this.model.get("resource_count")
 		}));
 		this.$el.data("data", this);
 		if($("#hide_details_checkbox").attr("checked"))
@@ -293,38 +271,18 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 		event.preventDefault();
 		event.stopPropagation();
 		this.containing_list_view.close_folders();
-		this.set_opened(true, true);
 		this.containing_list_view.add_container(this);
+		this.set_opened(true);
 	},
 	cancel_open_folder:function(event){
 		event.preventDefault();
 		event.stopPropagation();
 	},
-	set_opened:function(is_opened, animate){
+	set_opened:function(is_opened){
 		if(is_opened){
-			console.log("PERFORMANCE tree_edit/views.js: starting set_opened " + this.model.get("title") + " ...");
-    		var start = new Date().getTime();
 			this.$el.addClass("current_topic");
 			this.$el.attr("draggable", "false");
-
-			/*Checks if opened topic has scrolled out of view*/
-			var view = this;
-			this.$el.on("offset_changed", function(){
-				var container = view.containing_list_view.$el;
-				var interior = view.containing_list_view.$el.find(".container-interior");
-				if(interior.offset().top > view.$el.offset().top + view.$el.height())
-					container.find(".top_border").css("visibility", "visible");
-				else if(interior.offset().top + interior.height() < view.$el.offset().top)
-					container.find(".bottom_border").css("visibility", "visible");
-				else
-					container.find(".boundary").css("visibility", "hidden");
-			});
-			this.$el.onOffsetChanged(function(){
-				 view.$el.trigger('offset_changed');
-			});
-			console.log("PERFORMANCE tree_edit/views.js: set_opened " + this.model.get("title") + " end (time = " + ((new Date().getTime() - start)/1000) + "s)");
 		}else{
-			this.$el.off("offset_changed");
 			this.$el.attr("draggable", "true");
 			this.$el.removeClass("current_topic");
 		}
@@ -383,8 +341,8 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 				el : $("#dialog")
 			});
 		}
-		
-		
+
+
 	},
 	publish:function(){
 		var self = this;
@@ -393,7 +351,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			self.publish_children(self.model, self.containing_list_view.collection);
 			self.render();
 		});
-		
+
 	},
 	publish_children:function(model, collection){
 		var self = this;
@@ -409,31 +367,9 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 	},
 	add_to_trash:function(){
 		this.containing_list_view.add_to_trash([this]);
-		this.render();
 		this.delete_view();
 	}
 });
-
-/* onOffsetChanged: handles when selected folder is offscreen */
-$.fn.onOffsetChanged = function (trigger, millis) {
-    if (millis == null) millis = 100;
-    var o = $(this[0]); // our jquery object
-    if (o.length < 1) return o;
-
-    var lastOff = null;
-    setInterval(function () {
-        if (o == null || o.length < 1) return o;
-        if (lastOff == null) lastOff = o.offset();
-        var newOff = o.offset();
-        if (lastOff.top != newOff.top) {
-            $(this).trigger('onOffsetChanged', { lastOff: lastOff, newOff: newOff});
-            if (typeof (trigger) == "function") trigger(lastOff, newOff);
-            lastOff= o.offset();
-        }
-    }, millis);
-
-    return o;
-};
 
 module.exports = {
 	TreeEditView: TreeEditView
