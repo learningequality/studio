@@ -22,6 +22,7 @@ from rest_framework.permissions import AllowAny
 from contentcuration.models import Channel, TopicTree, ContentTag, Node, ContentLicense, Exercise, AssessmentItem, File, Format, MimeType
 import serializers
 import views
+from contentcuration import api
 
 from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
@@ -59,6 +60,12 @@ class TagViewSet(viewsets.ModelViewSet):
     queryset = ContentTag.objects.all()
     serializer_class = serializers.TagSerializer
 
+    def batch_save_tags(self, request, *args, **kwargs):
+        """
+        endpoint for api method
+        """
+        return api.batch_save_tags(request)
+
 class ExerciseViewSet(viewsets.ModelViewSet):
     queryset = Exercise.objects.all()
     serializer_class = serializers.ExerciseSerializer
@@ -89,6 +96,7 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
+    url(r'^api/save_tags/', TagViewSet.as_view({'post': 'batch_save_tags'})),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),

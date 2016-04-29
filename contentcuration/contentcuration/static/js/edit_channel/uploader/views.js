@@ -515,6 +515,22 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			/* TODO: FIX THIS LATER TO APPEND TAG VIEWS TO AREA*/
 			this.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + this.$el.find("#tag_box").val().trim() + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
 			this.$el.find("#tag_box").val("");
+			//tags should be an array of tag names
+			tags = [];
+			tags[0] = 'hi';
+			tags[1] = 'jordan';
+			Backbone.ajax({
+				dataType: 'text', 
+				type: "POST",
+				url: "/api/save_tags/",
+			    data: {tags: tags},
+			    success: function() {
+		            console.log("Tags are successfully saved.");
+		        },
+		        error: function(e) {
+		            console.log("Saving tags failed: ", e);
+		        }
+			});
 		}
 	},
 	remove_tag:function(event){
