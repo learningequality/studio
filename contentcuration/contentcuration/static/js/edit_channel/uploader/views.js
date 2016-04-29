@@ -510,10 +510,12 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			var self = this;
 			/* Create list of nodes to edit */
 			for(var i = 1; i < list.length; i++){
+				tagList = $(tagList).filter($(list[i]).data("data").tags);
+				/*
 				tagList.filter(function(n) {
 					console.log(n, $(list[i]).data("data").tags[i]);
 				    return $(list[i]).data("data").tags.indexOf(n) != -1;
-				});
+				});*/
 			}
 			console.log("data", tagList);
 			this.append_tags(tagList);
@@ -586,11 +588,9 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	},
 	append_tags:function(tags){
 		var self = this;
-		tags.forEach(function(entry){
-			console.log("entry is ", entry);
-			self.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + entry + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
-
-		});
+		for(var i = 0; i < tags.length; i++){
+			self.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + tags[i] + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
+		}
 	}
 });
 
