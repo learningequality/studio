@@ -1,3 +1,4 @@
+import copy
 import json
 from rest_framework import status
 from django.http import Http404, HttpResponse
@@ -5,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.core import paginator
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import get_storage_class
 from django.template import RequestContext
 from rest_framework.views import APIView
@@ -85,7 +87,7 @@ def exercise(request, exercise_id):
 # TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
 @csrf_exempt
 def file_upload(request):
-    
+
     if request.method == 'POST':
         file_object = File(content_copy=request.FILES.values()[0])
         file_object.save()
@@ -93,3 +95,36 @@ def file_upload(request):
             "success": True,
             "filename": str(file_object),
         }))
+
+
+@csrf_exempt
+def copy_node(request):
+    if request.method != 'POST':
+        pass
+    else:
+        data = json.loads(request.body)
+
+        try:
+            node_id = data["node_id"]
+        except KeyError:
+            # return error that no node_id in json was found
+            raise ObjectDoesNotExist("Node id %s not given.".format(node_id))
+
+        new_node = _copy_node(node_id)
+
+        return HttpResponse(json.dumps({"node_id": new_node.id}))
+
+
+def _copy_node(node):
+    if isinstance(node, int):
+        node = Node.objects.get(pk=node)
+
+    node = copy.copy(node)
+    node.id = node.pk = None
+    node.parent = None
+    node.published = False
+
+    node.children = [_copy_node(c) for c in node.children.all()]
+    node.save()
+
+    return node
