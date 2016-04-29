@@ -21,5 +21,11 @@
         {"license_name": "CC BY-NC-SA", "exists": true},
         {"license_name": "CC BY-NC-ND", "exists": true},
         {"license_name": "All rights reserved", "exists":true}
+    ],
+    "format_templates":[
+        {"kind":"video", "format" : "High-Resolution"},
+        {"kind":"video", "format" : "Low-Resolution"},
+        {"kind":"video", "format" : "Vectorized"},
+        {"kind":"video", "format" : "Subtitles (EN)"}
     ]
 }
