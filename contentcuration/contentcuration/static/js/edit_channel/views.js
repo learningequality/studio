@@ -152,10 +152,9 @@ BaseListView = BaseView.extend({
 				transfer.model.set({parent: old_parent.id});
 				transfer.containing_list_view.render();
 			}else{
-				this.model.get("children").push(transfer.model.id);
 				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
-				var new_children = old_parent.get("children");
-				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
+				this.model.fetch({async:false});
+				old_parent.fetch({async:false});
 				transfer.containing_list_view.render();
 			}
 		}else{

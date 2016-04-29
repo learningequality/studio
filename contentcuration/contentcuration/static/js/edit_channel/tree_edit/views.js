@@ -214,7 +214,15 @@ var ContentList = BaseViews.BaseListView.extend({
 		});
 	},
 	add_to_trash:function(views){
+		var self = this;
+
+		/*views.forEach(function(entry){
+			self.model.get("children").splice(self.model.get("children").indexOf(entry.model.id), 1);
+			//self.childrenCollection.remove(entry.model);
+		});*/
+
 		this.container.add_to_trash(views);
+		this.model.fetch({async:false});
 	},
 	add_to_clipboard:function(views){
 		this.container.add_to_clipboard(views);
