@@ -467,7 +467,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		}
 	},
 	set_current:function(view){
-		if(this.collection.length <= 1 && !this.allow_add){
+		if(!this.multiple_selected){
 			this.current_node = this.model;
 			this.current_view = view;
 		}else{
@@ -500,22 +500,22 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.parent_view.set_editing(this.multiple_selected);
 		this.$el.find("#input_title").val((this.multiple_selected || !this.current_node)? " " : this.current_node.get("title"));
 		this.$el.find("#input_description").val((this.multiple_selected || !this.current_node)? " " : this.current_node.get("description"));
-
+		if(this.$el.find("#uploaded_list :checked").length == 0){
+			this.gray_out(true);
+			this.$el.find(".tag_input").addClass("gray-out");
+			this.$el.find(".tag_input").prop("disabled", true);
+			return;
+		}
 		if(this.multiple_selected) {
 			this.gray_out(true);
 			$("#tag_area").html("");
 			var list = this.$el.find('#uploaded_list input:checked').parent("li");
 
 			var tagList = $(list[0]).data("data").tags;
-			var self = this;
 			/* Create list of nodes to edit */
 			for(var i = 1; i < list.length; i++){
-				tagList.filter(function(n) {
-					console.log(n, $(list[i]).data("data").tags[i]);
-				    return $(list[i]).data("data").tags.indexOf(n) != -1;
-				});
+				tagList = $(tagList).filter($(list[i]).data("data").tags);
 			}
-			console.log("data", tagList);
 			this.append_tags(tagList);
 		}
 		else {
@@ -544,7 +544,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.append_tags([tag]);
 			this.$el.find("#tag_box").val("");
 			if(this.multiple_selected){
-
+				var list = this.$el.find('#uploaded_list input:checked').parent("li");
+				for(var i = 0; i < list.length; i++){
+					$(list[i]).data("data").add_tag(tag);
+				}
 			}else{
 				this.current_view.add_tag(tag);
 			}
@@ -554,7 +557,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		var tagname = event.target.parentNode.textContent.trim();
 		console.log("tag is now: ",tagname);
 		if(this.multiple_selected){
-
+			var list = this.$el.find('#uploaded_list input:checked').parent("li");
+			for(var i = 0; i < list.length; i++){
+				$(list[i]).data("data").remove_tag(tagname);
+			}
 		}else{
 			this.current_view.remove_tag(tagname);
 		}
@@ -586,11 +592,9 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	},
 	append_tags:function(tags){
 		var self = this;
-		tags.forEach(function(entry){
-			console.log("entry is ", entry);
-			self.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + entry + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
-
-		});
+		for(var i = 0; i < tags.length; i++){
+			self.$el.find("#tag_area").append("<div class='col-xs-4 tag'>" + tags[i] + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
+		}
 	}
 });
 

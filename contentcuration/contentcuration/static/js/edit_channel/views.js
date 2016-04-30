@@ -152,10 +152,9 @@ BaseListView = BaseView.extend({
 				transfer.model.set({parent: old_parent.id});
 				transfer.containing_list_view.render();
 			}else{
-				this.model.get("children").push(transfer.model.id);
 				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
-				var new_children = old_parent.get("children");
-				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
+				this.model.fetch({async:false});
+				old_parent.fetch({async:false});
 				transfer.containing_list_view.render();
 			}
 		}else{
@@ -227,16 +226,13 @@ var BaseListItemView = BaseView.extend({
 
 var BaseListNodeItemView = BaseListItemView.extend({
 	delete:function(){
-    	var start = new Date().getTime();
     	if(!this.model){
     		this.delete_view();
-    		return;
     	}
 
 		if(this.containing_list_view.item_view != "uploading_content"){
 			this.add_to_trash();
 		}
-		console.log("PERFORMANCE views.js: delete " + this.model.get("title") + " end (time = " + (new Date().getTime() - start) + ")");
 	},
 	save: function(data, options){
 		console.log("PERFORMANCE views.js: starting save " + ((data && data.title) ? data.title : "") + "...");
@@ -274,9 +270,7 @@ var BaseListChannelItemView = BaseListItemView.extend({
 	delete:function(){
 		if(!this.model){
     		this.delete_view();
-    		return;
 	    }else{
-	    	console.log("DELETE HERE");
 	    	this.model.destroy();
 	    }
 	},
@@ -325,6 +319,7 @@ var BaseEditorView = BaseListView.extend({
 		var self = this;
 		this.views.forEach(function(entry){
 	        entry.save(entry.model.attributes, {async:false, validate:false});
+	        console.log("saving tags: ", entry.tags);
 	        Backbone.ajax({
 	            dataType: 'text',
 	            type: "POST",

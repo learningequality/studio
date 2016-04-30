@@ -11,9 +11,6 @@ from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 from kolibri.content.models import ChannelMetadata, AbstractContent, ContentMetadata, License, File, Format, MimeType
 from kolibri.content.api import *
-from contentcuration.api import delete_children
-from django.db.models.signals import pre_delete
-from django.dispatch import receiver
 
 class Channel(ChannelMetadata):
     """ Permissions come from association with organizations """
@@ -32,23 +29,19 @@ class Channel(ChannelMetadata):
         isNew = not self.pk
         super(Channel, self).save(*args, **kwargs)
         if isNew:
-            self.draft = TopicTree.objects.create(channel=self)
+            self.draft = TopicTree.objects.create(channel=self, name=self.name + " draft")
             self.draft.save()
-            self.clipboard = TopicTree.objects.create(channel=self)
+            self.clipboard = TopicTree.objects.create(channel=self, name=self.name + " clipboard")
             self.clipboard.save()
-            self.deleted = TopicTree.objects.create(channel=self)
+            self.deleted = TopicTree.objects.create(channel=self, name=self.name + " deleted")
             self.deleted.save()
             self.save()
 
     def delete(self):
-        logging.warning(self)
-        delete_children(self.draft.root_node)
+        logging.warning("Channel Delete")
         self.draft.delete()
-        delete_children(self.clipboard.root_node)
         self.clipboard.delete()
-        delete_children(self.deleted.root_node)
         self.deleted.delete()
-        logging.warning("REACHED HERE")
         super(Channel, self).delete()
 
     class Meta:
@@ -57,13 +50,14 @@ class Channel(ChannelMetadata):
 
 class TopicTree(models.Model):
     """Base model for all channels"""
-    """
+
     name = models.CharField(
         max_length=255,
         verbose_name=_("topic tree name"),
         help_text=_("Displayed to the user"),
+        default = "tree"
     )
-    """
+
     channel = models.ForeignKey(
         'Channel',
         verbose_name=_("channel"),
@@ -92,6 +86,13 @@ class TopicTree(models.Model):
             self.root_node = Node.objects.create(title=self.channel.name, kind="topic", total_file_size = 0, license_id=ContentLicense.objects.first().id)
             self.root_node.save()
             self.save()
+
+    """
+    def delete(self):
+        logging.warning(self)
+        self.root_node.delete()
+        super(TopicTree, self).delete()
+    """
 
     class Meta:
         verbose_name = _("Topic tree")
@@ -150,6 +151,15 @@ class Node(ContentMetadata):
         :raises: Draft.DoesNotExist and Draft.MultipleObjectsReturned
         """
         return Draft.objects.get(publish_in=self)
+    """
+    def delete(self):
+        logging.warning(self)
+        for n in self.get_children():
+            #for format in Format.objects.filter(contentmetadata = self.pk):
+            #    format.delete()
+            n.delete()
+        super(Node, self).delete()
+    """
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
