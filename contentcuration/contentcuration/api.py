@@ -12,6 +12,7 @@ from kolibri.content import models as KolibriContent
 from kolibri.content.utils import validate
 from kolibri.content.api import *
 from django.db import transaction
+import models
 
 def count_children(node):
     count = node.children.count()
@@ -53,9 +54,25 @@ def delete_children(node):
         delete_children(n)
     node.delete()
 
-def batch_save_tags(request):
-    tags = request.POST.getlist('tags[]')
-    with transaction.commit_on_success():
-        for tag in tags:
-            KolibriContent.ContentTag.objects.create(tag_name=tag)
+def batch_add_tags(request):
+    # check existing tag and subtract them from bulk_create
+    insert_list = []
+    tag_names = request.POST.getlist('tags[]')
+    existing_tags = models.ContentTag.objects.filter(tag_name__in=tag_names)
+    existing_tag_names = existing_tags.values_list('tag_name', flat=True)
+    new_tag_names = set(tag_names) - set(existing_tag_names)
+    for name in new_tag_names:
+        insert_list.append(models.ContentTag(tag_name=name))
+    new_tags = models.ContentTag.objects.bulk_create(insert_list)
+
+    # bulk add all tags to selected nodes
+    all_tags = set(existing_tags).union(set(new_tags))
+    ThroughModel = models.Node.tags.through
+    bulk_list = []
+    node_pks = request.POST.getlist('nodes[]')
+    for tag in all_tags:
+        for pk in node_pks:
+            bulk_list.append(ThroughModel(node_id=pk, contenttag_id=tag.pk))
+    ThroughModel.objects.bulk_create(bulk_list)
+
     return HttpResponse("Tags are successfully saved.", status=200)
