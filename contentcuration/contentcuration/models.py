@@ -98,7 +98,7 @@ class TopicTree(models.Model):
         verbose_name_plural = _("Topic trees")
 
 class ContentTag(AbstractContent):
-    tag_name = models.CharField(max_length=30, null=True, blank=True)
+    tag_name = models.CharField(primary_key=True, max_length=30, unique=True)
     tag_type = models.CharField(max_length=30, null=True, blank=True)
 
     def __str__(self):
