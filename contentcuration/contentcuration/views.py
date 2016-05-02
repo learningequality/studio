@@ -1,7 +1,7 @@
 import copy
 import json
 from rest_framework import status
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -100,15 +100,14 @@ def file_upload(request):
 @csrf_exempt
 def copy_node(request):
     if request.method != 'POST':
-        pass
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
         try:
             node_id = data["node_id"]
         except KeyError:
-            # return error that no node_id in json was found
-            raise ObjectDoesNotExist("Node id %s not given.".format(node_id))
+            raise ObjectDoesNotExist("Node id %s not in POST data.".format(node_id))
 
         new_node = _copy_node(node_id, root=True)
 
