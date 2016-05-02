@@ -99,8 +99,13 @@ class TopicTree(models.Model):
         verbose_name_plural = _("Topic trees")
 
 class ContentTag(AbstractContent):
-    tag_name = models.CharField(max_length=30, null=True, blank=True)
+    tag_name = models.CharField(primary_key=True, max_length=30, unique=True)
     tag_type = models.CharField(max_length=30, null=True, blank=True)
+
+    def delete(self):
+        # No other nodes except for node about to be deleted use tag
+        if len(Node.objects.filter(tags__tag_name__contains = self.tag_name)) <= 1:
+            super(ContentTag, self).delete()
 
     def __str__(self):
         return self.tag_name
@@ -152,6 +157,7 @@ class Node(ContentMetadata):
         """
         return Draft.objects.get(publish_in=self)
     """
+    # If deleting all children
     def delete(self):
         logging.warning(self)
         for n in self.get_children():
@@ -160,6 +166,10 @@ class Node(ContentMetadata):
             n.delete()
         super(Node, self).delete()
     """
+    def delete(self):
+        for t in self.tags.all():
+            t.delete()
+        super(Node, self).delete()
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']

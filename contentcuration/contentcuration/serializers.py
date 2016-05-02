@@ -86,7 +86,7 @@ class MimeTypeSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
    class Meta:
     model = ContentTag
-    fields = ('tag_name', 'tag_type', 'id')
+    fields = ('tag_name', 'tag_type')
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:

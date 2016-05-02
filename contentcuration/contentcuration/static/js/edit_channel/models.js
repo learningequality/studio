@@ -58,6 +58,8 @@ var NodeModel = BaseModel.extend({
 		node_data.set(data);
 		node_data.move(target_parent, true, target_parent.get("children").length);
 		self.copy_children(node_data, self.get("children"));
+
+		//var node_data = new NodeModel(window.Urls.copy_node());
 		return node_data;
 	},
 

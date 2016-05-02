@@ -468,7 +468,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	},
 	set_current:function(view){
 		if(!this.multiple_selected){
-			this.current_node = this.model;
+			this.current_node = view.model;
 			this.current_view = view;
 		}else{
 			this.current_node = this.collection.get({cid: view.model.cid});
@@ -487,7 +487,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.$el.find("#original_filename_area").css("display", "none");
 		}
 		$("#tag_area").html("");
-		console.log("here is ", view.tags);
 		this.append_tags(view.tags);
 
         // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
@@ -685,8 +684,10 @@ var UploadedItem = ContentItem.extend({
 	},
 	load_tags:function(){
 		this.tags = [];
+        var self = this;
+        console.log("CURRENT TAGS: ", this.model.get("tags"));
 		this.model.get("tags").forEach(function(entry){
-			this.tags.push(entry.get("tag_name"));
+			self.tags.push(entry);
 		});
 		console.log("tags : ", this.tags);
 	},
@@ -721,7 +722,10 @@ var UploadedItem = ContentItem.extend({
 		this.checked = this.$el.find("input[type=checkbox]").prop("checked");
 	},
 	add_tag:function(tagname){
-		this.tags.push(tagname);
+        if(this.tags.indexOf(tagname) < 0){
+            this.tags.push(tagname);
+        }
+
 	},
 	remove_tag:function(tagname){
 		var remove_at = 0;

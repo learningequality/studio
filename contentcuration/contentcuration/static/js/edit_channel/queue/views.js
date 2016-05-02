@@ -101,8 +101,8 @@ var QueueList = BaseViews.BaseListView.extend({
 		'keydown .search_queue' : 'search'
 	},
 	render: function() {
-		console.log("************************ RENDERING CLIPBOARD ************************");
 		DragHelper.removeDragDrop(this);
+		this.model.fetch({async:false});
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();
 		this.$el.html(this.template({
@@ -273,13 +273,10 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			if(this.is_clipboard){
 				this.add_to_trash();
 			}else{
-				this.delete_view();
 				this.model.destroy();
 				this.containing_list_view.render();
 			}
 		}
-		//var element = $((this.is_clipboard)? ".queue-badge" : ".trash-badge");
-		//element.html(Number(element.text()) - 1);
 	},
 	edit_item: function(){
 		event.stopPropagation();

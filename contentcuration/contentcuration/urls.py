@@ -60,11 +60,11 @@ class TagViewSet(viewsets.ModelViewSet):
     queryset = ContentTag.objects.all()
     serializer_class = serializers.TagSerializer
 
-    def batch_save_tags(self, request, *args, **kwargs):
+    def batch_add_tags(self, request, *args, **kwargs):
         """
         endpoint for api method
         """
-        return api.batch_save_tags(request)
+        return api.batch_add_tags(request)
 
 class ExerciseViewSet(viewsets.ModelViewSet):
     queryset = Exercise.objects.all()
@@ -96,7 +96,7 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
-    url(r'^api/save_tags/', TagViewSet.as_view({'post': 'batch_save_tags'})),
+    url(r'^api/add_tags/', TagViewSet.as_view({'post': 'batch_add_tags'})),
     url(r'^api/copy_node/$', views.copy_node, name='copy_node'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),

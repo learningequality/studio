@@ -10,6 +10,9 @@ var BaseView = Backbone.View.extend({
 	delete_view: function(){
 		//this.undelegateEvents();
 		//this.unbind();
+		/*if(this.containing_list_view){
+			this.containing_list_view.views.splice(this.containing_list_view.views.indexOf(this),1);
+		}*/
 		this.remove();
 	},
 	set_editing: function(edit_mode_on){
@@ -28,8 +31,10 @@ var BaseView = Backbone.View.extend({
 		}
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var content = null;
-		if(edit_collection.length ==1)
+		if(edit_collection.length ==1){
 			content = edit_collection.models[0];
+		}
+
 		var metadata_view = new UploaderViews.EditMetadataView({
 			collection: edit_collection,
 			parent_view: this,
@@ -319,19 +324,22 @@ var BaseEditorView = BaseListView.extend({
 		var self = this;
 		this.views.forEach(function(entry){
 	        entry.save(entry.model.attributes, {async:false, validate:false});
-	        console.log("saving tags: ", entry.tags);
-	        Backbone.ajax({
-	            dataType: 'text',
+			var tags = entry.tags;
+			var nodes = [entry.model.id];
+			Backbone.ajax({
 	            type: "POST",
-	            url: "/api/save_tags/",
-	            data: {tags: entry.tags},
-	            success: function(m) {
+                url: "/api/add_tags/",
+                data: {
+                    tags: tags,
+                    nodes: nodes
+                },
+               success: function(m) {
 	                console.log(m);
 	            },
 	            error: function(e) {
 	                console.log("Saving tags failed: ", e);
 	            }
-	        });
+			});
 	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
