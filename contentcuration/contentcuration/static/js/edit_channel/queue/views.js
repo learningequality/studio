@@ -154,9 +154,14 @@ var QueueList = BaseViews.BaseListView.extend({
 			alert("No items selected.");
 		}else{
 			if(confirm((this.is_clipboard)? "Are you sure you want to delete these selected items?" : "Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
-				for(var i = 0; i < list.length; i++){
-					$("#" + list[i].id).data("data").remove_item();
-				}
+				var self = this;
+				this.display_load("Deleting Content...", function(){
+					for(var i = 0; i < list.length; i++){
+						$("#" + list[i].id).data("data").remove_item();
+					}
+					self.render();
+				});
+
 			}
 		}
 	},
@@ -274,6 +279,8 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 				this.add_to_trash();
 			}else{
 				this.model.destroy({async:false});
+			}
+			if(prompt){
 				this.containing_list_view.render();
 			}
 		}

@@ -345,17 +345,17 @@ var TagModel = BaseModel.extend({
 	root_list : "tag-list",
 	defaults: {
 		tag_name: "Untagged"
-    },
-    get_or_create:function(){
+    }
+   /* get_or_create:function(){
 		var collection = new TagCollection();
 		collection.get_or_create(this.get("tag_name"), this.get("tag_type"));
-	}
+	}*/
 });
 
 var TagCollection = BaseCollection.extend({
 	model: TagModel,
 	list_name:"tag-list",
-	get_or_create:function(name, type){
+	/*get_or_create:function(name, type){
 		var to_return = this.get({"tag_name" : name});
 		if(!to_return){
 			to_return.fetch({async:false});
@@ -367,7 +367,7 @@ var TagCollection = BaseCollection.extend({
 			}
 		}
 		return to_return;
-	}
+	}*/
 });
 
 module.exports = {

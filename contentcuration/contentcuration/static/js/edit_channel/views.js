@@ -323,7 +323,9 @@ var BaseEditorView = BaseListView.extend({
 		this.parent_view.set_editing(false);
 		var self = this;
 		this.views.forEach(function(entry){
+			//entry.model.set({tags: entry.tags});
 	        entry.save(entry.model.attributes, {async:false, validate:false});
+
 			var tags = entry.tags;
 			var nodes = [entry.model.id];
 			Backbone.ajax({
@@ -340,6 +342,7 @@ var BaseEditorView = BaseListView.extend({
 	                console.log("Saving tags failed: ", e);
 	            }
 			});
+
 	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();

@@ -67,6 +67,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	},
 	remove_containers_from:function(index){
 		while(this.containers.length > index){
+			$("#container_area").width(this.containers[this.containers.length-1].$el.outerWidth() * (this.containers.length-2));
 			this.containers[this.containers.length-1].delete_view();
 			this.containers.splice(this.containers.length-1);
 		}
