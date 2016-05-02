@@ -110,21 +110,21 @@ def copy_node(request):
             # return error that no node_id in json was found
             raise ObjectDoesNotExist("Node id %s not given.".format(node_id))
 
-        new_node = _copy_node(node_id)
+        new_node = _copy_node(node_id, root=True)
 
         return HttpResponse(json.dumps({"node_id": new_node.id}))
 
 
-def _copy_node(node):
+def _copy_node(node, root=False):
     if isinstance(node, int):
         node = Node.objects.get(pk=node)
 
     node = copy.copy(node)
     node.id = node.pk = None
-    node.parent = None
+    node.parent = None if root else node.parent
     node.published = False
 
-    node.children = [_copy_node(c) for c in node.children.all()]
+    node.children = [_copy_node(c, root=False) for c in node.children.all()]
     node.save()
 
     return node
