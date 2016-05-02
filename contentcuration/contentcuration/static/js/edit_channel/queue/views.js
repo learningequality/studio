@@ -273,7 +273,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			if(this.is_clipboard){
 				this.add_to_trash();
 			}else{
-				this.model.destroy();
+				this.model.destroy({async:false});
 				this.containing_list_view.render();
 			}
 		}
