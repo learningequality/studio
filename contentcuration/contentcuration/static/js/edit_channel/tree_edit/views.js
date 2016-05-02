@@ -159,7 +159,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.childrenCollection.sort_by_order();
 		this.$el.html(this.template({
 			topic: this.model,
-			title: (this.model.parent)? this.model.get("title") : window.current_channel.get("name"),
+			title: (this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name"),
 			edit_mode: this.edit_mode,
 			index: this.index,
 			content_list: this.childrenCollection.toJSON()
