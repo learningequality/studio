@@ -273,12 +273,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
 	modal_template: require("./hbtemplates/uploader_modal.handlebars"),
 	header_template: require("./hbtemplates/edit_metadata_header.handlebars"),
+    description_limit : 400,
 
 	initialize: function(options) {
 		console.log("called this");
 		_.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',
 						'add_tag','save_and_finish','add_more','set_edited',
-						'render_details', 'render_preview', 'remove_tag');
+						'render_details', 'render_preview', 'remove_tag', 'update_count');
 		this.parent_view = options.parent_view;
 		this.collection = (options.collection)? options.collection : new Models.NodeCollection();
 		this.allow_add = options.allow_add;
@@ -288,13 +289,15 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.switchPanel(true);
 	},
 	render: function() {
+        console.log("LIMIT IS", this.description_limit);
 		if(this.modal){
 			this.$el.html(this.modal_template());
 			this.$(".modal-title").prepend(this.header_template());
 	        this.$(".modal-body").html(this.template({
 				node_list: this.collection.toJSON(),
 				multiple_selected: this.collection.length > 1 || this.allow_add,
-				allow_add: this.allow_add
+				allow_add: this.allow_add,
+                word_limit : this.description_limit
 			}));
 	        $("body").append(this.el);
 	        this.$(".modal").modal({show: true, backdrop: 'static', keyboard: false});
@@ -303,7 +306,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.$el.html(this.template({
 				node_list: this.collection.toJSON(),
 				multiple_selected: this.collection.length > 1 || this.allow_add,
-				allow_add: this.allow_add
+				allow_add: this.allow_add,
+                word_limit : this.description_limit
 			}));
 		}
 		this.preview_view = new PreviewView({
@@ -328,9 +332,14 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		'keyup .upload_input' : 'set_edited',
 		'click #metadata_details_btn' : 'render_details',
 		'click #metadata_preview_btn' : 'render_preview',
-		'click .delete_tag':'remove_tag'
+		'click .delete_tag':'remove_tag',
+        'keyup #input_description': 'update_count',
+        'keydown #input_description': 'update_count',
+        'paste #input_description': 'update_count'
 	},
-
+    update_count:function(){
+        this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
+    },
 	load_content:function(){
 		var self = this;
 		this.views = [];
@@ -493,6 +502,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         var file_size = (((this.current_node.get("formats") || [])[0] || {}).format_size) || ((this.current_node.get("file_data") || {}).data || {}).size || "";
         this.$("#display_file_size").text(file_size);
         this.gray_out(false);
+        this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
 	},
 	check_item: function(){
 		this.multiple_selected = this.$el.find("#uploaded_list :checked").length > 1;
@@ -521,6 +531,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.gray_out(false);
 			this.set_current_node(this.$el.find("#uploaded_list :checked").parent("li").data("data"));
 		}
+        this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
 	},
 	gray_out:function(grayout){
 		if(grayout){
@@ -666,7 +677,6 @@ var UploadedItem = ContentItem.extend({
 		};
 		this.render();
 		this.load_tags();
-
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -685,7 +695,6 @@ var UploadedItem = ContentItem.extend({
 	load_tags:function(){
 		this.tags = [];
         var self = this;
-        console.log("CURRENT TAGS: ", this.model.get("tags"));
 		this.model.get("tags").forEach(function(entry){
 			self.tags.push(entry);
 		});
@@ -725,7 +734,10 @@ var UploadedItem = ContentItem.extend({
         if(this.tags.indexOf(tagname) < 0){
             this.tags.push(tagname);
         }
-
+        var new_tags = this.model.get("tags");
+        new_tags.push(tagname);
+        this.model.set({tags: new_tags});
+        this.set_edited(true);
 	},
 	remove_tag:function(tagname){
 		var remove_at = 0;
@@ -735,6 +747,7 @@ var UploadedItem = ContentItem.extend({
 			}
 		}
 		this.tags.splice(remove_at, 1);
+        this.set_edited(true);
 	}
 });
 

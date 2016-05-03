@@ -106,7 +106,7 @@ div#dropzone {
 			padding: 7px 30px 0 0;
 			color: @gray-700;
 		}
-					
+
 		.row{
 			vertical-align:middle;
 		}
@@ -115,7 +115,7 @@ div#dropzone {
 			text-align: center;
 			color: @annotation-gray;
 		}
-		
+
 		.content_name{
 			width: 83%;
 			border: none;
@@ -123,7 +123,7 @@ div#dropzone {
 			padding: 0 0 0 5px;
 			&:focus {
 				outline: none;
-				border-bottom: 2px solid @gray-400;
+				border-bottom: 4px solid @gray-400;
 				font-weight: bold;
 			}
 		}
@@ -175,6 +175,8 @@ div#dropzone {
 	.metadata_panel {
 		height: 100%;
 		padding: 10px;
+		overflow:hidden;
+		overflow-y:auto;
 		max-height: @uploader-height * 0.7;
 		h4 {
 			font-size: 13px;
@@ -190,6 +192,11 @@ div#dropzone {
 			margin-bottom: 25px;
 			font-size: @larger-body-text;
 			.input-form;
+		}
+		#description_counter{
+			color:gray;
+			font-style:italic;
+			font-size:9pt;
 		}
 	}
 
@@ -278,11 +285,6 @@ div#dropzone {
 		border-radius:5px;
 	}
 
-	#tag_area{
-		height:100px;
-		overflow-y:auto;
-	}
-
 	.required{
 		margin-left:5px;
 		color:red;
@@ -298,8 +300,8 @@ div#dropzone {
 
 	textarea{
 		resize:none;
-		height:@uploader-list-height;
-	}	
+		height:@larger-body-text * 6;
+	}
 	.metadata_save_buttons{
 		margin-right:30px;
 		width:100%;

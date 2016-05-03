@@ -90,6 +90,14 @@ var BaseView = Backbone.View.extend({
     },
     save:function(){
 		this.collection.save();
+	},
+	update_word_count:function(input, counter, limit){
+		var char_length = limit - input.val().length;
+		if(input.val().trim() == ""){
+			char_length = limit;
+		}
+	    counter.html(char_length + ((char_length  == 1) ? " char left" : " chars left"));
+	    counter.css("color", (char_length == 0)? "red" : "gray");
 	}
 });
 
@@ -324,6 +332,8 @@ var BaseEditorView = BaseListView.extend({
 		var self = this;
 		this.views.forEach(function(entry){
 			//entry.model.set({tags: entry.tags});
+			/*TODO: Change this once other method implemented*/
+			entry.model.set({tags: []});
 	        entry.save(entry.model.attributes, {async:false, validate:false});
 
 			var tags = entry.tags;
