@@ -333,7 +333,7 @@ var BaseEditorView = BaseListView.extend({
 		this.views.forEach(function(entry){
 			//entry.model.set({tags: entry.tags});
 			/*TODO: Change this once other method implemented*/
-			entry.model.set({tags: []});
+			//entry.model.set({tags: []});
 	        entry.save(entry.model.attributes, {async:false, validate:false});
 
 			var tags = entry.tags;
