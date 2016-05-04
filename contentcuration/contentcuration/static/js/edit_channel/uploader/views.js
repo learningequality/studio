@@ -496,7 +496,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.$el.find("#original_filename_area").css("display", "none");
 		}
 		$("#tag_area").html("");
-		this.append_tags(view.tags);
+		this.append_tags(this.current_view.tags);
 
         // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
         var file_size = (((this.current_node.get("formats") || [])[0] || {}).format_size) || ((this.current_node.get("file_data") || {}).data || {}).size || "";
