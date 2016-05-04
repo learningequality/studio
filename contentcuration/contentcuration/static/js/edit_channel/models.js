@@ -378,5 +378,6 @@ module.exports = {
 	ChannelModel: ChannelModel,
 	ChannelCollection: ChannelCollection,
 	MimeTypeCollection:MimeTypeCollection,
-	LicenseCollection:LicenseCollection
+	LicenseCollection:LicenseCollection,
+	TagModel: TagModel
 }
