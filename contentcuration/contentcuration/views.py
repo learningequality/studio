@@ -1,5 +1,6 @@
 import copy
 import json
+import logging
 from rest_framework import status
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
@@ -98,32 +99,37 @@ def file_upload(request):
 
 
 @csrf_exempt
-def copy_node(request):
+def duplicate_node(request):
+    logging.debug("Entering the copy_node endpoint")
+
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
-        data = json.loads(request.body)
+        data = request.POST
 
         try:
             node_id = data["node_id"]
+            sort_order = data["sort_order"]
+            target_parent = data["target_parent"]
         except KeyError:
-            raise ObjectDoesNotExist("Node id %s not in POST data.".format(node_id))
+            raise ObjectDoesNotExist("Missing attribute from data: %s".format(data))
 
-        new_node = _copy_node(node_id, root=True)
+        logging.info("Copying node id %s", node_id)
+        new_node = _duplicate_node(node_id, parent=target_parent)
 
         return HttpResponse(json.dumps({"node_id": new_node.id}))
 
 
-def _copy_node(node, root=False):
-    if isinstance(node, int):
+def _duplicate_node(node, parent=None):
+    if isinstance(node, int) or isinstance(node, basestring):
         node = Node.objects.get(pk=node)
 
     node = copy.copy(node)
     node.id = node.pk = None
-    node.parent = None if root else node.parent
+    node.parent = Node.objects.get(pk=parent) if parent else node.parent
     node.published = False
 
-    node.children = [_copy_node(c, root=False) for c in node.children.all()]
+    node.children = [_duplicate_node(c, parent=None) for c in node.children.all()]
     node.save()
 
     return node
