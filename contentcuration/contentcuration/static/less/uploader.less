@@ -91,6 +91,10 @@ div#dropzone {
 		margin-right: 30px;
 		padding: 5px 0;
 	}
+	#import_node{
+		margin-left:@uploader-width / 2;
+	}
+
 	#upload_content_add_list{
 		margin: 0px;
 		margin-right: 30px;
@@ -106,7 +110,7 @@ div#dropzone {
 			padding: 7px 30px 0 0;
 			color: @gray-700;
 		}
-					
+
 		.row{
 			vertical-align:middle;
 		}
@@ -115,7 +119,7 @@ div#dropzone {
 			text-align: center;
 			color: @annotation-gray;
 		}
-		
+
 		.content_name{
 			width: 83%;
 			border: none;
@@ -299,7 +303,7 @@ div#dropzone {
 	textarea{
 		resize:none;
 		height:@uploader-list-height;
-	}	
+	}
 	.metadata_save_buttons{
 		margin-right:30px;
 		width:100%;
@@ -374,5 +378,65 @@ div#dropzone {
 	p{
 		margin:0;
 		padding:2px;
+	}
+}
+
+
+
+.import_modal_content{
+	@import-list-item-height: 30px;
+	@import-list-width: 100%;
+	background-color:@blue-100;
+
+	#import_from_channel_box{
+		height: 400px;
+		width: @import-list-width;
+		background-color:white;
+		display:inline-block;
+
+		.import_list{
+			width:100%;
+			overflow-y:auto;
+			overflow-x:none;
+			height: 350px;
+			list-style:none;
+
+			.import_channel_item{
+				background-color:#E7F2F4;
+				padding:10px 5px;
+			}
+
+			li{
+				padding: 10px 5px;
+				.subdirectory{
+					display:none;
+				}
+				.import_item{
+					width: @import-list-width - 50px;
+					font-size:16px;
+					vertical-align:middle;
+					height:@import-list-item-height;
+
+					.import_item_title{
+						overflow:hidden;
+					}
+					h4, h6{
+						margin:0;
+					}
+					.tog_folder{
+						padding-left:10px;
+						padding-right:10px;
+						display:inline-block;
+					}
+					.glyphicon{
+						cursor:pointer;
+					}
+				}
+			}
+		}
+	}
+
+	#import_content_submit{
+		margin-left:77%;
 	}
 }

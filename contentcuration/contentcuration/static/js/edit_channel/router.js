@@ -54,6 +54,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.mimetypes = new Models.MimeTypeCollection(window.mtypes);
 		window.mimetypes.fetch();
 		window.mimetypes.create_mimetypes();
+		window.channels = this.channelCollection;
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
@@ -61,7 +62,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 			edit: edit_mode_on,
 			model : root,
 			is_clipboard : is_clipboard,
-			channels : this.channelCollection
 		});
 
 	}

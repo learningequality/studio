@@ -13,7 +13,8 @@
 		<h4 class="queue_item_title truncate">{{node.attributes.title}}</h4>
 	{{/if}}
 </label>
-{{#if isfolder}}<div id="queue_item_{{node.id}}_sub" style="padding-left: {{indent}}px;" class="subdirectory">
+{{#if isfolder}}
+	<div id="queue_item_{{node.id}}_sub" style="padding-left: {{indent}}px;" class="subdirectory">
 	<ul class="list-unstyled content-list">
 		{{#each sub_list}}
 			<li id="queue_item_{{this}}" class="queue_item"></li>
@@ -21,4 +22,5 @@
 			<li><em>No items found.</em></li>
 		{{/each}}
 	</ul>
+	</div>
 {{/if}}

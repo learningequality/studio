@@ -17,7 +17,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 	item_view:"uploading_content",
 	counter:0,
 	initialize: function(options) {
-		_.bindAll(this, 'add_topic', 'edit_metadata','add_file','close', 'add_exercise');
+		_.bindAll(this, 'add_topic', 'edit_metadata','add_file','close', 'add_exercise', 'import_content');
 		this.collection = options.collection;
 		this.main_collection = options.main_collection;
 		this.parent_view = options.parent_view;
@@ -52,7 +52,8 @@ var AddContentView = BaseViews.BaseListView.extend({
 		'click #create_topic':'add_topic',
 		'click .edit_metadata' : 'edit_metadata',
 		'click #upload_file' : 'add_file',
-		'click #create_exercise' : 'add_exercise'
+		'click #create_exercise' : 'add_exercise',
+        'click #import_node' : 'import_content'
 	},
 
 	/*Render any items that have previously been added*/
@@ -167,6 +168,13 @@ var AddContentView = BaseViews.BaseListView.extend({
 	},
 	close: function() {
         this.delete_view();
+    },
+    import_content:function(){
+        console.log("importing...");
+        var import_view = new ImportView({
+            modal: true,
+            parent_view: this
+        });
     }
 });
 
@@ -187,6 +195,146 @@ var UploadItemView = BaseViews.BaseView.extend({
     }
 });
 
+
+var ImportView = UploadItemView.extend({
+    template: require("./hbtemplates/import_dialog.handlebars"),
+    modal_template: require("./hbtemplates/import_modal.handlebars"),
+ //   file_upload_template : require("./hbtemplates/file_upload_item.handlebars"),
+
+    initialize: function(options) {
+        //_.bindAll(this, 'toggle_channel');
+        this.modal = options.modal;
+        this.parent_view = options.parent_view;
+        this.other_channels = window.channels.clone();
+        this.other_channels.remove(window.current_channel);
+        this.mainCollection = new Models.NodeCollection();
+        this.render();
+    },
+    events:{
+      //"click .submit_uploaded_files" : "close_file_uploader",
+    },
+
+    render: function() {
+        if (this.modal) {
+            this.$el.html(this.modal_template());
+            this.$(".modal-body").append(this.template());
+            $("body").append(this.el);
+            this.$(".modal").modal({show: true});
+            this.$(".modal").on("hide.bs.modal", this.close);
+        } else {
+            this.$el.html(this.template());
+        }
+        var importList = new ImportList({
+            parent_view: this,
+            model : null,
+            mainCollection: this.mainCollection,
+            indent:0,
+            index:0,
+            el:$("#import_from_channel_box"),
+            is_channel: true,
+            channels : this.other_channels
+        });
+    }
+});
+
+var ImportList = BaseViews.BaseListView.extend({
+    template: require("./hbtemplates/import_list.handlebars"),
+    initialize: function(options) {
+        this.mainCollection = options.mainCollection;
+        this.indent = options.indent;
+        this.index = options.index;
+        this.parent_view = options.parent_view;
+        this.is_channel = options.is_channel;
+        this.collection = new Models.NodeCollection();
+
+        if(this.is_channel){
+            var self = this;
+            options.channels.forEach(function(channel){
+                self.collection.add(channel.get_tree("draft").get_root());
+            });
+        }else{
+            this.collection = this.mainCollection.get_all_fetch(this.model.get("children"));
+            this.collection.sort_by_order();
+        }
+        this.render();
+    },
+    render: function() {
+        this.views = [];
+        this.$el.html(this.template());
+        var self = this;
+        this.list_index = 0;
+        this.collection.forEach(function(entry){
+            var item_view = new ImportItem({
+                containing_list_view: self,
+                model: entry,
+                indent : self.indent,
+                index : self.list_index ++,
+                is_channel : self.is_channel
+            });
+            self.$el.append(item_view.el);
+            self.views.push(item_view);
+        });
+    }
+});
+
+var ImportItem = BaseViews.BaseListItemView.extend({
+    template: require("./hbtemplates/import_list_item.handlebars"),
+    tagName: "li",
+    indent: 0,
+    'id': function() {
+        return "import_item_" + this.model.get("id");
+    },
+
+    initialize: function(options) {
+        _.bindAll(this, 'toggle');
+        this.containing_list_view = options.containing_list_view;
+        this.indent = options.indent + 15;
+        this.index = options.index;
+        this.is_channel = options.is_channel;
+        this.render();
+    },
+    events: {
+        'click .tog_folder' : 'toggle'
+    },
+    render: function() {
+        this.$el.html(this.template({
+            node:this.model,
+            isfolder: this.model.get("kind").toLowerCase() == "topic",
+            sub_list: this.model.get("children"),
+            indent: this.indent,
+            index: this.index,
+            is_channel:this.is_channel
+        }));
+        this.$el.data("data", this);
+    },
+    toggle:function(){
+        event.stopPropagation();
+        event.preventDefault();
+        this.load_subfiles();
+        //console.log("toggling", this.$el.find("#" + this.id() +"_sub"));
+        var el =  this.$el.find("#menu_toggle_" + this.model.id);
+        if(el.hasClass("glyphicon-menu-up")){
+            this.$el.find("#" + this.id() +"_sub").slideDown();
+            el.removeClass("glyphicon-menu-up").addClass("glyphicon-menu-down");
+        }else{
+            this.$el.find("#" + this.id() +"_sub").slideUp();
+            el.removeClass("glyphicon-menu-down").addClass("glyphicon-menu-up");
+        }
+    },
+    load_subfiles:function(){
+        this.subfile_view = new ImportList({
+            model : this.model,
+            indent: this.indent,
+            el: this.$el.find("#" + this.id() +"_sub"),
+            mainCollection: this.containing_list_view.mainCollection,
+            currentNodeCollection: new Models.NodeCollection(),
+            parent_view: this.containing_list_view.parent_view,
+            indent: this.indent,
+            index: this.index,
+            imported: this.imported
+        });
+    }
+});
 
 var FileUploadView = UploadItemView.extend({
     template: require("./hbtemplates/file_upload.handlebars"),
@@ -242,7 +390,7 @@ var FileUploadView = UploadItemView.extend({
     file_uploaded: function(file) {
         console.log("FILE FOUND:", file);
         this.file_list.push({
-        	"data" : file, 
+        	"data" : file,
         	"filename": JSON.parse(file.xhr.response).filename
         });
     },
@@ -371,7 +519,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.$el.find("#validating_text").css("display", "inline");
 		this.$el.find(".editmetadata_save").prop("disabled", true);
 		this.$el.find(".editmetadata_save").css("pointer", "not-allowed");
-		
+
 		var self = this;
 		setTimeout(function() {
            /* TODO :fix to save multiple nodes at a time */
@@ -407,7 +555,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 					}
 				});
 			}
-			
+
         }, 200);
 	},
 	save_and_finish: function(){
@@ -558,9 +706,9 @@ var ContentItem =  BaseViews.BaseListItemView.extend({
 
 var NodeListItem = ContentItem.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
-	tagName: "li", 
+	tagName: "li",
 	'id': function() {
-		return this.model.cid; 
+		return this.model.cid;
 	},
 	initialize: function(options) {
 		_.bindAll(this, 'submit_topic','remove_topic');
@@ -631,7 +779,12 @@ var UploadedItem = ContentItem.extend({
 		if(edited){
 			this.set_node();
 		}
-		$("#item_" + this.model.cid + " .item_name").html(this.model.get("title") + ((edited) ? " <b>*</b>" : ""));
+        if(this.containing_list_view.multiple_selected){
+
+        }else{
+            $("#item_" + this.model.cid + " .item_name").html(this.model.get("title") + ((edited) ? " <b>*</b>" : ""));
+        }
+
 	},
 
 	set_current_node:function(event){
@@ -756,7 +909,7 @@ var PreviewView = UploadItemView.extend({
 			};
 			this.$el.find("#preview_window").html(preview_template(options));
 		}
-		
+
 	},
 
 	switch_preview:function(model){

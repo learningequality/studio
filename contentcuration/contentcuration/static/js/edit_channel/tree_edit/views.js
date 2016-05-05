@@ -35,12 +35,12 @@ var TreeEditView = BaseViews.BaseView.extend({
 		 		$("#channel-preview-button").addClass("active");
 		 	}
 
-		 	options.channels.forEach(function (entry){
+		 	window.channels.forEach(function (entry){
 				$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 			});
 			$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
 		});
-		
+
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
@@ -63,7 +63,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 		'click .back_to_edit_button' : 'back_to_edit'
 		/*'click .undo_button' : 'undo_action',
 		'click .redo_button' : 'redo_action'*/
-	},	
+	},
 	back_to_edit:function(){
 		window.location = window.location.href.replace("clipboard", "edit");
 	},
@@ -162,11 +162,11 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.childrenCollection.sort_by_order();
 		//this.set_sort_orders(this.childrenCollection);
 		this.render();
-		
+
 		/* Animate sliding in from left */
 		this.$el.css('margin-left', -this.$el.find(".content-list").outerWidth());
 		$("#container_area").width(this.$el.find(".content-list").outerWidth() * (this.index));
-		this.$el.animate({'margin-left' : "0px"}, 500);	
+		this.$el.animate({'margin-left' : "0px"}, 500);
 	},
 	render: function() {
 		console.log("*************RENDERING " + this.model.get("title") + "****************");
@@ -245,7 +245,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		var self = this;
 		this.$el.animate({'margin-left' : -this.$el.outerWidth()}, 100,function(){
 			self.container.remove_containers_from(self.index - 1);
-		});	
+		});
 	}
 });
 
@@ -383,8 +383,8 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 				el : $("#dialog")
 			});
 		}
-		
-		
+
+
 	},
 	publish:function(){
 		var self = this;
@@ -393,7 +393,7 @@ var ContentItem = BaseViews.BaseListItemView.extend({
 			self.publish_children(self.model, self.containing_list_view.collection);
 			self.render();
 		});
-		
+
 	},
 	publish_children:function(model, collection){
 		var self = this;

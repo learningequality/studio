@@ -62,8 +62,8 @@ var BaseView = Backbone.View.extend({
             '</div>';
         $(load).appendTo('body');
 
-        if(callback){	
-    		setTimeout(function(){ 
+        if(callback){
+    		setTimeout(function(){
 				callback();
 				$("#loading_modal").remove();
 			 }, 800);
@@ -273,31 +273,6 @@ var BaseListItemView = BaseView.extend({
 		}else{
 			if(this.containing_list_view.item_view != "uploading_content"){
 				this.add_to_trash();
-				/*Check if node name already exists in trash, then delete older version*/
-				//var self = this;
-				/*
-				var trash_collection = this.containing_list_view.collection.get_all_fetch(this.deleted_root.get("children"));
-
-				trash_collection.forEach(function(entry){
-					console.log("first deleting", self.model);
-				console.log("second deleting", entry);
-					if(entry.get("title") == self.model.get("title")){
-						entry.destroy({async:false});
-					}
-				});
-				if(this.containing_list_view.index && this.$el.hasClass("current_topic")){
-					this.containing_list_view.container.remove_containers_from(this.containing_list_view.index);
-				}
-				console.log("target delete:", this.deleted_root);
-				var new_children = this.containing_list_view.model.get("children");
-				new_children.splice(new_children.indexOf(this.model.id), 1);
-				this.containing_list_view.model.save({"children" : new_children}, {validate:false});
-				this.model.save({"parent" :this.deleted_root.id}, {validate:false});
-				this.containing_list_view.remove_view(this);
-				*/
-				/*if(this.containing_list_view.queue_view)
-					this.containing_list_view.queue_view.add_to_trash([this]);
-				else this.containing_list_view.add_items([this]);*/
 			}
 		}
 		console.log("PERFORMANCE views.js: delete " + this.model.get("title") + " end (time = " + (new Date().getTime() - start) + ")");
@@ -383,7 +358,7 @@ var BaseEditorView = BaseListView.extend({
 	check_nodes:function(){
 		var self = this;
 		self.errorsFound = true;
-		
+
 		this.views.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
 			if(entry.model.validationError){
