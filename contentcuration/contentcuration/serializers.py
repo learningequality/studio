@@ -8,6 +8,7 @@ from collections import OrderedDict
 from rest_framework.fields import set_value, SkipField
 from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -65,10 +66,51 @@ class TagSerializer(serializers.ModelSerializer):
     model = ContentTag
     fields = ('tag_name', 'tag_type')
 
+
+class CustomListSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+        node_mapping = {node.id: node for node in instance}
+        update_nodes = {}
+        ret = []
+        tag_names = []
+        with transaction.atomic():
+            for item in validated_data:
+                if 'id' in item:
+                    update_nodes[item['id']] = item
+                else:
+                    # create new nodes
+                    tag_names += item.pop('tags')
+                    ret.append(Node.objects.create(**item))
+
+        if ret:
+            # new nodes have been created, now add tags to them
+            all_tags_pk = []
+            tag_names = list(set(tag_names)) #get rid of repetitive tag_names
+            for name in tag_names:
+                all_tags_pk.append(ContentTag.objects.get_or_create(tag_name=name)[0].pk)
+
+            bulk_adding_list = []
+            ThroughModel = Node.tags.through
+            for tag_pk in all_tags_pk:
+                for node in ret:
+                    bulk_adding_list.append(ThroughModel(node_id=node.pk, contenttag_id=tag_pk))
+            ThroughModel.objects.bulk_create(bulk_adding_list)
+
+        # Perform updates.
+        if update_nodes:
+            for node_id, data in update_nodes.items():
+                node = node_mapping.get(node_id, None)
+                if node:
+                    ret.append(self.child.update(node, data))
+
+        # current implementation does not support deletions.
+        return ret
+
 class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     formats = FormatSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, required=False)
+    id = serializers.IntegerField(required=False)
 
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
@@ -167,6 +209,7 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return get_node_ancestors(node)
 
     class Meta:
+        list_serializer_class = CustomListSerializer
         model = Node
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',  'sort_order',
                  'license_owner', 'license', 'kind', 'children', 'parent', 'content_id', 'formats',
