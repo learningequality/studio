@@ -26,11 +26,11 @@ var BaseCollection = Backbone.Collection.extend({
 	},
 	save: function() {
 		var self = this;
-		this.models.forEach(function(entry){
-			if(entry.hasChanged()){
-				entry.save();
-			}
-		});
+		// this.models.forEach(function(entry){
+		// 	if(entry.hasChanged()){
+		// 		entry.save();
+		// 	}
+		// });
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	}
 });
