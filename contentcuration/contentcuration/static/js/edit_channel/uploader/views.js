@@ -75,7 +75,8 @@ var AddContentView = BaseViews.BaseListView.extend({
 		var topic = new Models.NodeModel({
 			"kind":"topic",
 			"title": (this.counter > 0)? "Topic " + this.counter : "Topic",
-			"parent" : this.model.id
+			"parent" : this.model.id,
+			"sort_order" : this.main_collection.length + this.collection.length
 		});
 		this.collection.add(topic);
 		this.counter++;
@@ -141,7 +142,8 @@ var AddContentView = BaseViews.BaseListView.extend({
 				"parent" : self.model.id,
 				"total_file_size": file.size,
 				"created" : file.lastModifiedDate,
-				"original_filename" : file.name
+				"original_filename" : file.name,
+				"sort_order": self.main_collection.length + self.collection.length
 			});
 			self.collection.add(content_node);
 			var item_view = new NodeListItem({
@@ -529,7 +531,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			self.$el.find("#description_error").html("");
 			self.$el.find("#input_description").removeClass("error_input");
 
-			self.errorsFound = !self.check_nodes();
+			self.check_nodes();
 			self.$el.find(".editmetadata_save").prop("disabled", false);
 			self.$el.find("#validating_text").css("display", "none");
 			self.$el.find(".editmetadata_save").css("pointer", "cursor");
@@ -547,7 +549,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 						}
 					}
 					if(!self.errorsFound && self.allow_add){
-						self.parent_view.add_nodes(self.views, self.main_collection.length);
+						self.parent_view.add_nodes(self.views, self.main_collection.length, false);
 					}
 					self.$el.css("visibility", "visible");
 					if(callback){
@@ -561,14 +563,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	save_and_finish: function(){
 		var self = this;
 		this.check_and_save_nodes(function(){
-			if(!self.errorsFound){
-				if(self.modal){
-					self.$el.find(".modal").modal("hide");
-				}else{
-					self.close_uploader();
-				}
+			if(self.modal){
+				self.$el.find(".modal").modal("hide");
+			}else{
+				self.close_uploader();
 			}
 		});
+
 	},
 	add_more:function(event){
 		this.save_queued();
@@ -624,7 +625,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.load_preview();
 		this.$el.find("#input_title").val(this.current_node.get("title"));
 		this.$el.find("#input_description").val(this.current_node.get("description"));
-		this.$el.find("#original_filename").html( this.current_node.get("original_filename"));
+		if(this.current_node.get("original_filename")){
+			this.$el.find("#original_filename_area").css("display", "block");
+			this.$el.find("#original_filename").html( this.current_node.get("original_filename"));
+		}else{
+			this.$el.find("#original_filename_area").css("display", "none");
+		}
+
         // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
         var file_size = (((this.current_node.get("formats") || [])[0] || {}).format_size) || ((this.current_node.get("file_data") || {}).data || {}).size || "";
         this.$("#display_file_size").text(file_size);
@@ -687,7 +694,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	}
 });
 
-var ContentItem =  BaseViews.BaseListItemView.extend({
+var ContentItem =  BaseViews.BaseListNodeItemView.extend({
 	license:function(){
 		return window.licenses.get_default().id;
 	},
@@ -791,20 +798,9 @@ var UploadedItem = ContentItem.extend({
 		if(event) event.preventDefault();
 		this.containing_list_view.set_current_node(this);
 	},
-	save_node:function(){
-		this.set_edited(false);
-		this.save({
-			title: $("#input_title").val(),
-			description: $("#input_description").val(),
-		}, {async:false});
-		this.originalData = {
-			"title":$("#input_title").val(),
-			"description":$("#input_description").val(),
-			"license": this.license()
-		};
-	},
+
 	set_node:function(){
-		this.model.set({
+		this.set({
 			title: $("#input_title").val().trim(),
 			description: $("#input_description").val().trim(),
 			license: this.license()
@@ -813,30 +809,7 @@ var UploadedItem = ContentItem.extend({
 	unset_node:function(){
 		this.save(this.originalData, {async:false, validate:false});
 	},
-	validate:function(){
-		if(this.containing_list_view.$el.find("#input_title").val() == ""){
-			this.containing_list_view.$el.find("#title_error").html("Title is required");
-			this.containing_list_view.$el.find("#input_title").addClass("error_input");
-			this.containing_list_view.render_details();
-			return false;
-		}
-		if(this.containing_list_view.$el.find("#input_description").val() == ""){
-			this.containing_list_view.$el.find("#description_error").html("Description is required");
-			this.containing_list_view.$el.find("#input_description").addClass("error_input");
-			this.containing_list_view.render_details();
-			return false;
-		}
-		this.model.set(this.model.attributes, {validate:true});
-		if(this.model.validationError){
-			this.containing_list_view.$el.find("#title_error").html(this.model.validationError);
-			this.containing_list_view.$el.find("#input_title").addClass("error_input");
-			this.containing_list_view.render_details();
-			return false;
-		}
-		this.containing_list_view.$el.find("#input_title").removeClass("error_input");
-		this.containing_list_view.$el.find("#input_description").removeClass("error_input");
-		return true;
-	},
+
 	set_checked:function(){
 		this.checked = this.$el.find("input[type=checkbox]").prop("checked");
 	}

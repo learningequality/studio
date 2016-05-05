@@ -101,6 +101,7 @@ var QueueList = BaseViews.BaseListView.extend({
 		'keydown .search_queue' : 'search'
 	},
 	render: function() {
+		console.log("************************ RENDERING CLIPBOARD ************************");
 		DragHelper.removeDragDrop(this);
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();
@@ -113,13 +114,17 @@ var QueueList = BaseViews.BaseListView.extend({
 
 		this.load_content();
 		if(this.add_controls){
-			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.getChildCount(false, this.collection));
+			var count = this.views.length;
+			this.views.forEach(function(entry){
+				count += entry.model.get("resource_count");
+			});
+			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(count);
 		}
-		
+
 		this.$el.data("container", this);
 		this.$el.find("ul").data("list", this);
 		this.$el.find(".default-item").data("data", {
-			containing_list_view: this, 
+			containing_list_view: this,
 			index:0
 		});
 		DragHelper.addDragDrop(this);
@@ -182,7 +187,7 @@ var QueueList = BaseViews.BaseListView.extend({
 	},
 	add_to_list:function(views){
 		//console.log("queue model calling!");
-		this.add_nodes(views, this.childrenCollection.length);
+		this.add_nodes(views, this.childrenCollection.length, true);
 		this.model.fetch({async:false});
 		//console.log("queue model check against", this.model.get("children"));
 	},
@@ -195,7 +200,7 @@ var QueueList = BaseViews.BaseListView.extend({
 });
 
 /* Loaded when user clicks clipboard button below navigation bar */
-var QueueItem = BaseViews.BaseListItemView.extend({
+var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	template: require("./hbtemplates/queue_item.handlebars"),
 	tagName: "li",
 	indent: 0,

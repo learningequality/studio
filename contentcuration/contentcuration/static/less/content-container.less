@@ -37,7 +37,7 @@
 
 #channel-edit-content-wrapper {
 	@container-width: 230px;
-	@container-height: 60vh; 
+	@container-height: 60vh;
 	@container-min-height:400px;
 	@container-border-color: #BCBCBC;
 	@container-title-color: #30302F;
@@ -45,7 +45,7 @@
 
 	@folder-gap-width: 0px;
 	@item-color: white;
-	@expanded-height: 80px; 
+	@expanded-height: 80px;
 	@title-size: 16pt;
 	@channel-edit-font-color:black;
 	@highlighted-file: #E8E8E8;
@@ -87,49 +87,49 @@
 		@breadcrumb-active-color: #7BAEA9;
 		margin-top:20px;
 		background-color:transparent;
-		overflow: hidden; 
-		li { 
-			float: left; 
+		overflow: hidden;
+		li {
+			float: left;
 		}
 		li a{
 			color:gray;
-			text-decoration: none; 
+			text-decoration: none;
 			padding: 2px 0 2px 20px;
 			background: @breadcrumb-color;
 			border:1px solid white;
-			position: relative; 
+			position: relative;
 			display: block;
 			float:left;
 			width:auto;
 		}
-		li a:after { 
-			content: " "; 
-			display: block; 
-			width: 0; 
+		li a:after {
+			content: " ";
+			display: block;
+			width: 0;
 			height: 0;
 			border-top: 12px solid transparent;
 			border-bottom: 12px solid transparent;
 			border-left: 15px solid @breadcrumb-color;
 			position: absolute;
 			top: 50%;
-			margin-top: -12px; 
+			margin-top: -12px;
 			left: 100%;
-			z-index: 2; 
+			z-index: 2;
 		}
-		li a:before { 
-			content: " "; 
-			display: block; 
-			width: 0; 
+		li a:before {
+			content: " ";
+			display: block;
+			width: 0;
 			height: 0;
-			border-top: 12px solid transparent;       
+			border-top: 12px solid transparent;
 			border-bottom: 12px solid transparent;
 			border-left: 15px solid white;
 			position: absolute;
 			top: 50%;
-			margin-top: -12px; 
+			margin-top: -12px;
 			margin-left: 1px;
 			left: 100%;
-			z-index: 1; 
+			z-index: 1;
 		}
 		li:last-child a{
 			background-color: @breadcrumb-active-color;
@@ -149,19 +149,19 @@
 		width: @container-width;
 		display:inline-block;
 		height:  @container-height;
-		min-height: @container-min-height; 
+		min-height: @container-min-height;
 		.back_button{
 			cursor:pointer;
 		}
-		
-		
+
+
 		h2{
 			color:@container-title-color;
 			font-size: @title-size;
 			margin-top:15px;
 			margin-bottom:15px;
 		}
-		
+
 
 		.content-list{
 			width: inherit - 25px;
@@ -171,11 +171,12 @@
 			background-color:white;
 			margin-bottom:0px;
 			border:1px solid @container-border-color;
-			.default-item{
+			.default-item, .default-item:hover{
 				font-style:italic;
 				font-size: @description-font-size;
 				color:@item-font-color;
 				padding-left: 10px;
+				background-color:transparent;
 			}
 			li{
 				input[type="radio"]{
@@ -207,7 +208,7 @@
 				background-color: @highlighted-file;
 			}
 			.editing{
-				
+
 				.error_msg{
 					font-style:italic;
 					color:red;
@@ -217,20 +218,20 @@
 		}
 	}
 
-	#container_area li:last-child{
+	#container_area .content-container:last-child{
 		width: @container-last-width;
 
 		.content-list{
 			li{
 				label{
-					
+
 					.metadata_to_hide{
 						display:inline-block;
 					}
 					.description{
 						display:block;
 						font-weight:normal;
-						max-height:@description-font-size * 3;
+						max-height:@description-font-size * 4;
 						overflow-y:auto;
 					}
 					h3, p, h6{
@@ -312,9 +313,9 @@
 			}
 			.content-list{
 				height:@container-height * 0.78;
-				min-height: @container-min-height * 0.78; 
+				min-height: @container-min-height * 0.78;
 				margin: 5px 0px;
-				
+
 				li{
 					border-top: 1px solid  @edit-container-color;
 				}
@@ -341,7 +342,7 @@
 							visibility:hidden;
 						}
 					}
-					
+
 					.node_title_textbox, .topic_textarea{
 						width:100%;
 						resize:none;
@@ -393,7 +394,7 @@
 			}
 		}
 
-		#container_area li:last-child{
+		#container_area .content-container:last-child{
 			.folder{
 				width: @container-last-width - 55px;
 				h3{
@@ -424,15 +425,12 @@
 	#preview{
 		@preview-container-color:#DAE8EA;
 		@preview-selected-folder:#6B959C;
-		
+
 		h1{
 			font-size:12pt;
 		}
 		.content-container{
 			background-color: @preview-container-color;
-			.glyphicon{
-				display:none;
-			}
 			::-webkit-scrollbar-track {
 				background-color: @preview-container-color;
 			}
@@ -440,6 +438,9 @@
 				height:@container-height * 0.87;
 				min-height: @container-min-height * 0.87;
 
+				.glyphicon{
+					display:none;
+				}
 				.edit_folder_button{
 					visibility:hidden;
 				}
@@ -454,6 +455,7 @@
 				label{
 					width: 100%;
 					margin:2px;
+					cursor:pointer;
 				}
 				.folder{
 					h3{
@@ -461,6 +463,12 @@
 					}
 				}
 			}
+		}
+
+		.content-container:first-child{
+			.glyphicon{
+					display:none;
+				}
 		}
 		#container_area li:last-child{
 			.folder{

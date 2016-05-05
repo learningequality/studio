@@ -9,7 +9,8 @@ from django.db import IntegrityError, connections, models
 from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
-from kolibri.content.models import *
+from kolibri.content.models import ChannelMetadata, AbstractContent, ContentMetadata, License, File, Format, MimeType
+from kolibri.content.api import *
 
 class Channel(ChannelMetadata):
     """ Permissions come from association with organizations """
@@ -24,6 +25,25 @@ class Channel(ChannelMetadata):
     clipboard =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='clipboard')
     draft =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='draft')
 
+    def save(self, *args, **kwargs):
+        isNew = not self.pk
+        super(Channel, self).save(*args, **kwargs)
+        if isNew:
+            self.draft = TopicTree.objects.create(channel=self, name=self.name + " draft")
+            self.draft.save()
+            self.clipboard = TopicTree.objects.create(channel=self, name=self.name + " clipboard")
+            self.clipboard.save()
+            self.deleted = TopicTree.objects.create(channel=self, name=self.name + " deleted")
+            self.deleted.save()
+            self.save()
+
+    def delete(self):
+        logging.warning("Channel Delete")
+        self.draft.delete()
+        self.clipboard.delete()
+        self.deleted.delete()
+        super(Channel, self).delete()
+
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
@@ -35,7 +55,9 @@ class TopicTree(models.Model):
         max_length=255,
         verbose_name=_("topic tree name"),
         help_text=_("Displayed to the user"),
+        default = "tree"
     )
+
     channel = models.ForeignKey(
         'Channel',
         verbose_name=_("channel"),
@@ -56,7 +78,22 @@ class TopicTree(models.Model):
         verbose_name=_("Published"),
         help_text=_("If published, students can access this channel"),
     )
-    
+
+    def save(self, *args, **kwargs):
+        isNew = not self.pk
+        super(TopicTree, self).save(*args, **kwargs)
+        if isNew:
+            self.root_node = Node.objects.create(title=self.channel.name, kind="topic", total_file_size = 0, license_id=ContentLicense.objects.first().id)
+            self.root_node.save()
+            self.save()
+
+    """
+    def delete(self):
+        logging.warning(self)
+        self.root_node.delete()
+        super(TopicTree, self).delete()
+    """
+
     class Meta:
         verbose_name = _("Topic tree")
         verbose_name_plural = _("Topic trees")
@@ -64,7 +101,7 @@ class TopicTree(models.Model):
 class ContentTag(AbstractContent):
     tag_name = models.CharField(max_length=30, null=True, blank=True)
     tag_type = models.CharField(max_length=30, null=True, blank=True)
-    
+
     def __str__(self):
         return self.tag_name
 
@@ -105,7 +142,7 @@ class Node(ContentMetadata):
     @property
     def has_draft(self):
         return self.draft_set.all().exists()
-    
+
     @property
     def get_draft(self):
         """
@@ -114,7 +151,16 @@ class Node(ContentMetadata):
         :raises: Draft.DoesNotExist and Draft.MultipleObjectsReturned
         """
         return Draft.objects.get(publish_in=self)
-    
+    """
+    def delete(self):
+        logging.warning(self)
+        for n in self.get_children():
+            #for format in Format.objects.filter(contentmetadata = self.pk):
+            #    format.delete()
+            n.delete()
+        super(Node, self).delete()
+    """
+
     class MPTTMeta:
         order_insertion_by = ['sort_order']
 
@@ -124,45 +170,6 @@ class Node(ContentMetadata):
         # Do not allow two nodes with the same name on the same level
         #unique_together = ('parent', 'title')
 
-# If we decide to subclass Content:
-#
-# class ContentVideo(Content):
-#     """
-#     Model for video data
-#     """
-#
-#     video_file = models.FileField(
-#         blank=True,
-#         null=True,
-#         upload_to='contents/video/thumbnails/',
-#         verbose_name=_("video file"),
-#         help_text=_("Upload video here"),
-#     )
-#
-#     thumbnail = models.ImageField(
-#         null=True,
-#         upload_to='contents/video/thumbnails/',
-#         help_text=_("Automatically created when new video is uploaded")
-#     )
-#
-#
-# class ContentPDF(Content):
-#     """
-#     Model for video data
-#     """
-#     pdf_file = models.FileField(
-#         blank=True,
-#         null=True,
-#         upload_to='contents/video/thumbnails/',
-#         verbose_name=_("video file"),
-#         help_text=_("Upload video here"),
-#     )
-#
-#
-# class Exercise(Content):
-#     """
-#     Model for Exercise data
-#     """
 class ContentLicense(License):
     exists = models.BooleanField(
         default=False,
@@ -185,7 +192,6 @@ class Exercise(models.Model):
         default=_("Description"),
         help_text=_("Brief description of what this content item is"),
     )
-
 
 class AssessmentItem(models.Model):
 
