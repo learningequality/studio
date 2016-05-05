@@ -49,15 +49,24 @@ var NodeModel = BaseModel.extend({
 
 	/*Used when copying items to clipboard*/
     duplicate: function(target_parent){
-    	var start = new Date().getTime();
-    	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
-		var node_data = new NodeModel();
-		var nodeChildrenCollection = new NodeCollection();
-		var self = this;
-		node_data.set(data);
-		node_data.move(target_parent, true, target_parent.get("children").length);
-		self.copy_children(node_data, self.get("children"));
-		return node_data;
+        var node_id = this.get("id");
+        var sort_order = target_parent.get("children").length;
+        var parent_id = target_parent.get("id");
+        var data = {node_id: node_id,
+                    sort_order: sort_order,
+                    target_parent: parent_id};
+        var new_node_data;
+        $.post({
+            url: window.Urls.duplicate_node(),
+            data: data,
+            async: false,
+            success: function(data) {
+                var data = JSON.parse(data);
+                new_node_data = new NodeModel(data);
+            }
+        });
+        new_node_data.fetch({cache: false});
+        return new_node_data;
 	},
 
 	move:function(target_parent, allow_duplicate, sort_order){
