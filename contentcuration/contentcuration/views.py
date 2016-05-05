@@ -117,7 +117,8 @@ def duplicate_node(request):
         logging.info("Copying node id %s", node_id)
         new_node = _duplicate_node(node_id, parent=target_parent)
 
-        return HttpResponse(json.dumps({"node_id": new_node.id}))
+        serialized_node = NodeSerializer(new_node)
+        return HttpResponse(JSONRenderer().render(serialized_node.data))
 
 
 def _duplicate_node(node, parent=None):
