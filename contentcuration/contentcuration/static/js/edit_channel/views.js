@@ -330,12 +330,12 @@ var BaseEditorView = BaseListView.extend({
     	var start = new Date().getTime();
 		this.parent_view.set_editing(false);
 		var self = this;
+		window.ccc = this.collection;
 		this.views.forEach(function(entry){
 			entry.model.set({tags: entry.tags});
-	        entry.save(entry.model.attributes, {async:false, validate:false});
-
 	        entry.set_edited(false);
 		});
+		this.collection.save();
 		this.errorsFound = this.errorsFound || !this.save_queued();
 	},
 	check_nodes:function(){

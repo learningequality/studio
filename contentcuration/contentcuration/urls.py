@@ -80,7 +80,7 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'topictree', TopicTreeViewSet)
-router.register(r'node', NodeViewSet)
+# router.register(r'node', NodeViewSet)
 router.register(r'exercise', ExerciseViewSet)
 router.register(r'file', FileViewSet)
 router.register(r'format', FormatViewSet)
@@ -89,6 +89,7 @@ router.register(r'tag', TagViewSet)
 
 bulkrouter = BulkRouter(trailing_slash=False)
 bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
+bulkrouter.register(r'node', NodeViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
