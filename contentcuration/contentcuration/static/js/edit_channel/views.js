@@ -330,31 +330,12 @@ var BaseEditorView = BaseListView.extend({
     	var start = new Date().getTime();
 		this.parent_view.set_editing(false);
 		var self = this;
+		window.ccc = this.collection;
 		this.views.forEach(function(entry){
-			//entry.model.set({tags: entry.tags});
-			/*TODO: Change this once other method implemented*/
-			//entry.model.set({tags: []});
-	        entry.save(entry.model.attributes, {async:false, validate:false});
-
-			var tags = entry.tags;
-			var nodes = [entry.model.id];
-			Backbone.ajax({
-	            type: "POST",
-                url: "/api/add_tags/",
-                data: {
-                    tags: tags,
-                    nodes: nodes
-                },
-               success: function(m) {
-	                console.log(m);
-	            },
-	            error: function(e) {
-	                console.log("Saving tags failed: ", e);
-	            }
-			});
-
+			entry.model.set({tags: entry.tags});
 	        entry.set_edited(false);
 		});
+		this.collection.save();
 		this.errorsFound = this.errorsFound || !this.save_queued();
 	},
 	check_nodes:function(){
