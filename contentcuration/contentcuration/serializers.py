@@ -68,7 +68,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class CustomListSerializer(serializers.ListSerializer):
-    def update(self, instance, validated_data):
+    def update(self, instance, validated_data):    
         node_mapping = {node.id: node for node in instance}
         update_nodes = {}
         ret = []
@@ -101,10 +101,15 @@ class CustomListSerializer(serializers.ListSerializer):
             for node_id, data in update_nodes.items():
                 node = node_mapping.get(node_id, None)
                 if node:
-                    ret.append(self.child.update(node, data))
+                    # potential optimization opportunity
+                    for attr, value in data.items():
+                        setattr(node, attr, value)
+                    node.save()
+                    ret.append(node)
 
         # current implementation does not support deletions.
         return ret
+
 
 class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -118,6 +123,10 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
 
     def to_internal_value(self, data):
+        """
+        In order to be able to handle passing tag_name in array, 
+        we need to overwrite this method to bypass run_validation for tags 
+        """        
         if not isinstance(data, dict):
             message = self.error_messages['invalid'].format(
                 datatype=type(data).__name__
@@ -154,7 +163,6 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
             raise ValidationError(errors)
 
         return ret
-
 
     def create(self, validated_data):
         ModelClass = self.Meta.model
@@ -197,6 +205,19 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
             for field_name, value in many_to_many.items():
                 setattr(instance, field_name, value)
 
+        instance.save()
+
+        return instance
+
+    def update(self, instance, validated_data):
+        """
+        Since we are not doing anything crazy about the nested writable field(tags here),
+        so just bypass the raise_errors_on_nested_writes().
+        This may need to change in the future when we need to do crazy things on nested writable field.
+        """  
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
         return instance
 
     def count_resources(self, node):
