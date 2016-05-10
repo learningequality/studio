@@ -279,19 +279,24 @@ var ImportView = UploadItemView.extend({
         }
     },
     import_content:function(){
-        var checked_items = this.$el.find("#import_from_channel_box .import_checkbox:checked");
-        var collection_to_copy = new Models.NodeCollection();
-        for(var i = 0; i < checked_items.length; i++){
-            var view = $(checked_items[i]).parent("li").data("data");
-            if(view.model && view.model.get("kind") != "topic"){
-                //console.log("Copying file " + view.model.get("title"));
-                collection_to_copy.add(view.model);
-            }else if(view.model && !view.subfile_view){
-                //console.log("Copying topic " + view.model.get("title") + " with " + view.model.get("children").length + " files");
-                this.import_children(view.model.get("children"), collection_to_copy);
+        var self = this;
+        this.display_load("Importing Content...", function(){
+            var checked_items = self.$el.find("#import_from_channel_box .import_checkbox:checked");
+            var copyCollection = new Models.NodeCollection();
+            for(var i = 0; i < checked_items.length; i++){
+                var view = $(checked_items[i]).parent("li").data("data");
+                if(view.model && view.model.get("kind") != "topic"){
+                    copyCollection.add(view.model);
+                }else if(view.model && !view.subfile_view){
+                    self.import_children(view.model.get("children"), copyCollection);
+                }
             }
-        }
-        console.log("COPYING COLLECTION: ", collection_to_copy);
+            var addon = copyCollection.duplicate(null, {async:false});
+            self.parent_view.collection.add(addon.models);
+            console.log("collection is now:",self.parent_view.collection);
+            self.parent_view.render();
+            self.close();
+        });
     },
     import_children:function(children, copyCollection){
         var childrenCollection = this.mainCollection.get_all_fetch(children);
@@ -301,7 +306,6 @@ var ImportView = UploadItemView.extend({
                 self.import_children(node.get("children"), copyCollection);
             }else{
                 copyCollection.add(node);
-                //console.log("***** Copying file " + node.get("title"));
             }
         });
     }

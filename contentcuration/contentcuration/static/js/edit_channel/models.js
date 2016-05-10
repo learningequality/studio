@@ -48,14 +48,18 @@ var NodeModel = BaseModel.extend({
     },
 
 	/*Used when copying items to clipboard*/
-    duplicate: function(target_parent){
+    duplicate: function(target_parent, options){
     	var start = new Date().getTime();
     	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
 		var node_data = new NodeModel();
 		var nodeChildrenCollection = new NodeCollection();
 		var self = this;
 		node_data.set(data);
-		node_data.move(target_parent, true, target_parent.get("children").length);
+		if(target_parent){
+			node_data.move(target_parent, true, target_parent.get("children").length);
+		}else{
+			node_data.save(data, options);
+		}
 		self.copy_children(node_data, self.get("children"));
 		return node_data;
 	},
@@ -215,6 +219,13 @@ var NodeCollection = BaseCollection.extend({
     		return node.get("sort_order");
     	};
     	this.sort();
+    },
+    duplicate:function(target_parent, options){
+    	var copiedCollection = new NodeCollection();
+    	this.forEach(function(node){
+    		copiedCollection.add(node.duplicate(target_parent, options));
+    	});
+    	return copiedCollection;
     }
 });
 
