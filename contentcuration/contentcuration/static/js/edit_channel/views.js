@@ -316,6 +316,7 @@ var BaseEditorView = BaseListView.extend({
     	var start = new Date().getTime();
 		this.parent_view.set_editing(false);
 		var self = this;
+		console.log("VIEWS ARE:", this.views);
 		this.views.forEach(function(entry){
 	        entry.save(entry.model.attributes, {async:false, validate:false});
 	        entry.set_edited(false);

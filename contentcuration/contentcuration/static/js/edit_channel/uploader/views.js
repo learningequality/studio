@@ -172,7 +172,6 @@ var AddContentView = BaseViews.BaseListView.extend({
         this.delete_view();
     },
     import_content:function(){
-        console.log("importing...");
         var import_view = new ImportView({
             modal: true,
             parent_view: this
@@ -204,7 +203,7 @@ var ImportView = UploadItemView.extend({
  //   file_upload_template : require("./hbtemplates/file_upload_item.handlebars"),
 
     initialize: function(options) {
-        //_.bindAll(this, 'toggle_channel');
+        _.bindAll(this, 'import_content');
         this.modal = options.modal;
         this.parent_view = options.parent_view;
         this.other_channels = window.channels.clone();
@@ -212,8 +211,8 @@ var ImportView = UploadItemView.extend({
         this.mainCollection = new Models.NodeCollection();
         this.render();
     },
-    events:{
-      //"click .submit_uploaded_files" : "close_file_uploader",
+    events: {
+      "click #import_content_submit" : "import_content"
     },
 
     render: function() {
@@ -226,15 +225,84 @@ var ImportView = UploadItemView.extend({
         } else {
             this.$el.html(this.template());
         }
+
+        var channel_collection = new Models.NodeCollection();
+        this.other_channels.forEach(function(channel){
+            var node = channel.get_tree("draft").get_root();
+            node.set({title:channel.get("name")});
+            channel_collection.add(node);
+        });
+
         var importList = new ImportList({
             parent_view: this,
             model : null,
             mainCollection: this.mainCollection,
-            indent:0,
+            indent:20,
             index:0,
             el:$("#import_from_channel_box"),
             is_channel: true,
-            channels : this.other_channels
+            collection :  channel_collection,
+            selected:false,
+            parent_topic:null
+        });
+    },
+    update_file_count:function(){
+        var checked_items = this.$el.find("#import_from_channel_box>ul:first-child>li>.import_checkbox:checked");
+        var file_count = 0;
+        var file_size = 0;
+        for(var i = 0; i < checked_items.length; i++){
+            var view = $(checked_items[i]).parent("li").data("data");
+            file_count += view.selected_count;
+            file_size += view.selected_size;
+        }
+
+        if(file_count == 0){
+            this.$el.find("#import_file_count").html("");
+            $("#import_content_submit").prop("disabled", true);
+        }else{
+            $("#import_content_submit").prop("disabled", false);
+            var string_file_size;
+            switch(true){
+                case (file_size > 999999999):
+                    string_file_size = parseInt(file_size/1000000000) + "GB";
+                    break;
+                case (file_size > 999999):
+                    string_file_size = parseInt(file_size/1000000) + "MB";
+                    break;
+                case (file_size > 999):
+                    string_file_size = parseInt(file_size/1000) + "KB";
+                    break;
+                default:
+                    string_file_size = parseInt(file_size) + "B";
+            }
+            this.$el.find("#import_file_count").html(file_count + " file" + ((file_count == 1)? "   " : "s   ") + string_file_size);
+        }
+    },
+    import_content:function(){
+        var checked_items = this.$el.find("#import_from_channel_box .import_checkbox:checked");
+        var collection_to_copy = new Models.NodeCollection();
+        for(var i = 0; i < checked_items.length; i++){
+            var view = $(checked_items[i]).parent("li").data("data");
+            if(view.model && view.model.get("kind") != "topic"){
+                //console.log("Copying file " + view.model.get("title"));
+                collection_to_copy.add(view.model);
+            }else if(view.model && !view.subfile_view){
+                //console.log("Copying topic " + view.model.get("title") + " with " + view.model.get("children").length + " files");
+                this.import_children(view.model.get("children"), collection_to_copy);
+            }
+        }
+        console.log("COPYING COLLECTION: ", collection_to_copy);
+    },
+    import_children:function(children, copyCollection){
+        var childrenCollection = this.mainCollection.get_all_fetch(children);
+        var self = this;
+        childrenCollection.forEach(function(node){
+            if(node.get("kind") === "topic"){
+                self.import_children(node.get("children"), copyCollection);
+            }else{
+                copyCollection.add(node);
+                //console.log("***** Copying file " + node.get("title"));
+            }
         });
     }
 });
@@ -247,22 +315,19 @@ var ImportList = BaseViews.BaseListView.extend({
         this.index = options.index;
         this.parent_view = options.parent_view;
         this.is_channel = options.is_channel;
-        this.collection = new Models.NodeCollection();
-
-        if(this.is_channel){
-            var self = this;
-            options.channels.forEach(function(channel){
-                self.collection.add(channel.get_tree("draft").get_root());
-            });
-        }else{
-            this.collection = this.mainCollection.get_all_fetch(this.model.get("children"));
-            this.collection.sort_by_order();
-        }
+        this.collection = options.collection;
+        this.selected = options.selected;
+        this.parent_topic = options.parent_topic;
         this.render();
     },
     render: function() {
         this.views = [];
-        this.$el.html(this.template());
+        this.$el.html(this.template({
+            index : this.index,
+            is_empty : this.collection.length == 0,
+            is_channel:this.is_channel
+        }));
+
         var self = this;
         this.list_index = 0;
         this.collection.forEach(function(entry){
@@ -271,32 +336,52 @@ var ImportList = BaseViews.BaseListView.extend({
                 model: entry,
                 indent : self.indent,
                 index : self.list_index ++,
-                is_channel : self.is_channel
+                is_channel : self.is_channel,
+                mainCollection : self.mainCollection,
+                selected:self.selected,
+                parent_topic:self.parent_topic
             });
-            self.$el.append(item_view.el);
+            self.$el.find("#import_list_" + self.index).append(item_view.el);
+            if(entry.get("kind")=="topic"){
+                item_view.check_topic();
+            }
             self.views.push(item_view);
         });
+    },
+    handle_checked_item:function(){
+        if(this.parent_topic){
+            this.parent_topic.check_topic();
+        }else{
+            this.parent_view.update_file_count();
+        }
     }
 });
 
-var ImportItem = BaseViews.BaseListItemView.extend({
+var ImportItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/import_list_item.handlebars"),
     tagName: "li",
+    className: "import_list_item",
     indent: 0,
     'id': function() {
         return "import_item_" + this.model.get("id");
     },
 
     initialize: function(options) {
-        _.bindAll(this, 'toggle');
+        _.bindAll(this, 'toggle', 'check_item');
         this.containing_list_view = options.containing_list_view;
-        this.indent = options.indent + 15;
+        this.indent = options.indent;
         this.index = options.index;
         this.is_channel = options.is_channel;
+        this.collection = new Models.NodeCollection();
+        this.mainCollection = options.mainCollection;
+        this.selected = options.selected;
+        this.selected_count = 0;
+        this.selected_size = 0;
         this.render();
     },
     events: {
-        'click .tog_folder' : 'toggle'
+        'click .tog_folder' : 'toggle',
+        'click >.import_checkbox' : 'check_item'
     },
     render: function() {
         this.$el.html(this.template({
@@ -308,33 +393,82 @@ var ImportItem = BaseViews.BaseListItemView.extend({
             is_channel:this.is_channel
         }));
         this.$el.data("data", this);
+        this.$el.find(".import_checkbox").first().prop("checked", this.selected);
+    },
+    check_item:function(){
+        this.selected =  this.$el.find(".import_checkbox").first().is(":checked");
+
+        if(this.model.get("kind") != "topic"){
+            this.selected_count = (this.selected)? 1:0;
+            this.selected_size = (this.selected)? this.model.get("resource_size") : 0;
+            this.containing_list_view.handle_checked_item();
+        }
+        else{
+            var subfiles = this.$el.find("#" + this.id() +"_sub .import_checkbox");
+            for(var f = 0; f < subfiles.length; f++){
+                $(subfiles[f]).prop("checked", this.selected);
+                $(subfiles[f]).parent("li").data("data").check_item();
+            }
+            this.check_topic();
+        }
     },
     toggle:function(){
         event.stopPropagation();
         event.preventDefault();
         this.load_subfiles();
-        //console.log("toggling", this.$el.find("#" + this.id() +"_sub"));
         var el =  this.$el.find("#menu_toggle_" + this.model.id);
-        if(el.hasClass("glyphicon-menu-up")){
+        var collapsed_symbol = (this.is_channel)? "glyphicon-menu-right" : "glyphicon-triangle-top";
+        var expanded_symbol = (this.is_channel)? "glyphicon-menu-down" : "glyphicon-triangle-bottom";
+
+        if(el.hasClass(collapsed_symbol)){
             this.$el.find("#" + this.id() +"_sub").slideDown();
-            el.removeClass("glyphicon-menu-up").addClass("glyphicon-menu-down");
+            el.removeClass(collapsed_symbol).addClass(expanded_symbol);
         }else{
             this.$el.find("#" + this.id() +"_sub").slideUp();
-            el.removeClass("glyphicon-menu-down").addClass("glyphicon-menu-up");
+            el.removeClass(expanded_symbol).addClass(collapsed_symbol);
         }
     },
+    check_topic:function(){
+        var checked_items = this.$el.find("#" + this.id() +"_sub>ul:first-child>li>.import_checkbox:checked");
+        this.selected = (!this.subfile_view && this.selected) || checked_items.length > 0;
+        this.$el.find(".import_checkbox").first().prop("checked", this.selected);
+
+        this.selected_count = 0;
+        this.selected_size = 0;
+
+        if(!this.subfile_view && this.selected){
+            this.selected_count = this.model.get("file_count");
+            this.selected_size = this.model.get("resource_size");
+            console.log("before render, count is", this.selected_count);
+        }else{
+            for(var i = 0; i < checked_items.length; i++){
+                this.selected_count += $(checked_items[i]).parent("li").data("data").selected_count;
+                this.selected_size +=  $(checked_items[i]).parent("li").data("data").selected_size;
+            }
+        }
+
+        this.$el.find(".badge").first().css("visibility", (this.selected)? "visible":"hidden");
+        this.$el.find(".badge").first().html(this.selected_count);
+
+        this.containing_list_view.handle_checked_item();
+    },
     load_subfiles:function(){
-        this.subfile_view = new ImportList({
-            model : this.model,
-            indent: this.indent,
-            el: this.$el.find("#" + this.id() +"_sub"),
-            mainCollection: this.containing_list_view.mainCollection,
-            currentNodeCollection: new Models.NodeCollection(),
-            parent_view: this.containing_list_view.parent_view,
-            indent: this.indent,
-            index: this.index,
-            imported: this.imported
-        });
+        if(this.collection.length == 0){
+             this.collection = this.mainCollection.get_all_fetch(this.model.get("children"));
+             this.collection.sort_by_order();
+             this.subfile_view = new ImportList({
+                model : this.model,
+                indent: this.indent + 20,
+                el: $("#" + this.id() + "_sub"),
+                mainCollection: this.containing_list_view.mainCollection,
+                parent_view: this.containing_list_view.parent_view,
+                index: this.index + 1,
+                is_channel: false,
+                collection: this.collection,
+                selected: this.selected,
+                parent_topic : this
+            });
+        }
     }
 });
 
