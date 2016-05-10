@@ -1,1 +1,3 @@
-<ul class="list-unstyled import-list"></ul>
+<ul class="list-unstyled import-list {{#if is_channel}}first_list{{/if}}" id="import_list_{{index}}">
+	{{#if is_empty}}<em> No content found. </em>{{/if}}
+</ul>

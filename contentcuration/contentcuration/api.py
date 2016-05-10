@@ -11,6 +11,15 @@ from kolibri.content import models as KolibriContent
 from kolibri.content.utils import validate
 from kolibri.content.api import *
 
+def count_files(node):
+    count = 0
+    if node.kind == "topic":
+        for n in node.children.all():
+            count += count_files(n)
+    else:
+        count += node.formats.count()
+    return count
+
 def count_children(node):
     count = node.children.count()
     for n in node.children.all():
