@@ -562,7 +562,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	header_template: require("./hbtemplates/edit_metadata_header.handlebars"),
 
 	initialize: function(options) {
-		console.log("called this");
 		_.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',
 						'add_tag','save_and_finish','add_more','set_edited',
 						'render_details', 'render_preview', 'remove_tag');
@@ -988,11 +987,11 @@ var PreviewView = UploadItemView.extend({
 				location += this.model.attributes.file_data.filename;
 				extension = this.model.attributes.file_data.filename.split(".")[1];
 			}else{
-				var previewed_file = this.model.get_files().models[0];
+				var previewed_file = this.model.get("formats")[0].files[0];//this.model.get_files().models[0];
 				console.log("GOT FILE:", previewed_file);
 				if(previewed_file){
-					extension = previewed_file.get("extension").replace(".", "");
-					location += previewed_file.get("content_copy").split("/").slice(-3).join("/");
+					extension = previewed_file.extension.replace(".", "");//.get("extension").replace(".", "");
+					location += previewed_file.content_copy.split("/").slice(-3).join("/");//.get("content_copy").split("/").slice(-3).join("/");
 				}
 			}
 			var preview_template;

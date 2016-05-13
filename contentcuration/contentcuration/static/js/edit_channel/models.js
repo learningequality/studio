@@ -84,7 +84,6 @@ var NodeModel = BaseModel.extend({
 		if(this.get("kind") == "topic"){
 			self.copy_children(node_data, self.get("children"));
 		}else{
-			/* Need data.size, data.type, filename */
 			//TODO-BLOCKER: this will need to change when multiple formats allowed
 			var first_format = this.get("formats")[0];
 			var first_file = first_format.files[0];
@@ -182,6 +181,7 @@ var NodeModel = BaseModel.extend({
 			var file_data = this.attributes.file_data;
 			var format = new FormatModel();
 			var self = this;
+			console.log("file data:", file_data);
 			format.save({
 				available : false,
 				format_size: file_data.data.size,
@@ -197,12 +197,17 @@ var NodeModel = BaseModel.extend({
 						checksum: file_data.filename.split(".")[0],
 						extension: "." + file_data.filename.split(".")[1]
 					});
-					file.save({
-						  format: format.id,
-          			},
-		          	{
-		              	patch: true,
-		          	});
+
+					if(!file.get("format")){
+						file.save({
+							format: format.id,
+	          			},
+			          	{
+			              	patch: true,
+			          	});
+					}
+
+
 		        }
 			});
 		}
