@@ -187,7 +187,6 @@ var UploadItemView = BaseViews.BaseView.extend({
  	callback:null,
     close: function() {
         if (this.modal) {
-            console.log("MODAL: ", this.$(".modal"));
             this.$(".modal").modal('hide');
         }
         this.remove();

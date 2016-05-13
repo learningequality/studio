@@ -48,34 +48,57 @@ var NodeModel = BaseModel.extend({
     },
 
 	/*Used when copying items to clipboard*/
-    duplicate: function(target_parent){
-        var node_id = this.get("id");
+    duplicate: function(target_parent, options){
+        /*  var node_id = this.get("id");
         var sort_order = target_parent.get("children").length;
         var parent_id = target_parent.get("id");
         var data = {node_id: node_id,
                     sort_order: sort_order,
                     target_parent: parent_id};
         var new_node_data;
-        console.log("HERE");
         $.post({
             url: window.Urls.duplicate_node(),
             data: data,
             async: false,
             success: function(data) {
-            	console.log("SUCCESS!");
                 var data = JSON.parse(data);
                 new_node_data = new NodeModel(data);
-            },
-            error: function(err){
-            	console.log("ERROR!", err);
+                return new_node_data;
             }
         });
         new_node_data.fetch({cache: false});
         return new_node_data;
+		*/
+    	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
+		var node_data = new NodeModel();
+		var self = this;
+		node_data.set(data);
+
+		if(target_parent){
+			node_data.move(target_parent, true, target_parent.get("children").length);
+		}else{
+			node_data.save(data, options);
+		}
+		console.log("CALLED HERE!", this);
+
+		if(this.get("kind") == "topic"){
+			self.copy_children(node_data, self.get("children"));
+		}else{
+			/* Need data.size, data.type, filename */
+			//TODO-BLOCKER: this will need to change when multiple formats allowed
+			var first_format = this.get("formats")[0];
+			var first_file = first_format.files[0];
+			var type = window.mimetypes.findWhere({id: first_format.mimetype});
+			node_data.set("file_data", {
+				data: {"size" : first_format.format_size, "type": type.get("machine_name")},
+				filename: first_file.checksum + first_file.extension
+			});
+		}
+		console.log("CREATED NODE:", node_data);
+		return node_data;
 	},
 
 	move:function(target_parent, allow_duplicate, sort_order){
-		console.log("CALLED MOVE");
     	var start = new Date().getTime();
     	//var old_parent = new NodeModel({id: this.get("parent")});
     	//old_parent.fetch({async:false});
@@ -294,7 +317,14 @@ var FileCollection = BaseCollection.extend({
 });
 
 var FormatModel = BaseModel.extend({
-	root_list:"format-list"
+	root_list:"format-list",
+	duplicate: function(id){
+    	var data = this.pick("format_size", "quality", "available","mimetype", "files");
+    	data.contentmetadata = id;
+		var format_data = new FormatModel();
+		format_data.save(data, {async:false});
+		return format_data;
+	}
 });
 
 var FormatCollection = BaseCollection.extend({
