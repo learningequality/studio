@@ -485,25 +485,20 @@ var FileUploadView = UploadItemView.extend({
     acceptedFiles : "image/*,application/pdf,video/*,text/*,audio/*",
 
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded",  "close_file_uploader", "all_files_uploaded", "file_added", "file_removed", "go_to_formats", "go_to_upload");
+        _.bindAll(this, "file_uploaded",  "close_file_uploader", "all_files_uploaded", "file_added", "file_removed");
         this.callback = options.callback;
         this.modal = options.modal;
         this.parent_view = options.parent_view;
-        this.uploading = true;
         this.render();
     },
     events:{
-      "click .submit_uploaded_files" : "close_file_uploader",
-      "click .go_to_formats" : "go_to_formats",
-      "click .go_to_upload" : "go_to_upload"
+      "click .submit_uploaded_files" : "close_file_uploader"
     },
 
     render: function() {
         if (this.modal) {
             this.$el.html(this.modal_template());
-            this.$(".modal-body").append(this.template({
-                uploading: this.uploading
-            }));
+            this.$(".modal-body").append(this.template());
             $("body").append(this.el);
             this.$(".modal").modal({show: true});
             this.$(".modal").on("hide.bs.modal", this.close);
@@ -518,16 +513,16 @@ var FileUploadView = UploadItemView.extend({
             acceptedFiles: this.acceptedFiles,
             url: window.Urls.file_upload(),
             previewTemplate:this.file_upload_template(),
-  			parallelUploads: 20,
-  			//autoQueue: false, // Make sure the files aren't queued until manually added
-  			previewsContainer: "#dropzone", // Define the container to display the previews
+            parallelUploads: 20,
+            //autoQueue: false, // Make sure the files aren't queued until manually added
+            previewsContainer: "#dropzone", // Define the container to display the previews
             headers: {"X-CSRFToken": get_cookie("csrftoken")},
             addRemoveLinks: true
         });
         this.dropzone.on("success", this.file_uploaded);
 
         // Only enable the submit upload files button once all files have finished uploading.
-		this.dropzone.on("queuecomplete", this.all_files_uploaded);
+        this.dropzone.on("queuecomplete", this.all_files_uploaded);
 
         // Disable the submit upload files button if a new file is added to the queue.
         this.dropzone.on("addedfile", this.file_added);
@@ -537,12 +532,9 @@ var FileUploadView = UploadItemView.extend({
     file_uploaded: function(file) {
         console.log("FILE FOUND:", file);
         this.file_list.push({
-        	"data" : file,
-        	"filename": JSON.parse(file.xhr.response).filename
+            "data" : file,
+            "filename": JSON.parse(file.xhr.response).filename
         });
-        $(file.previewTemplate).find(".upload_cancel").css("display", "none");
-        $(file.previewTemplate).find(".remove_from_dz").css("display", "block");
-        $(file.previewTemplate).find(".upload_successful").css("display", "inline-block");
     },
     disable_submit: function() {
         this.$(".submit_uploaded_files").attr("disabled", "disabled");
@@ -550,34 +542,18 @@ var FileUploadView = UploadItemView.extend({
     enable_submit: function() {
         this.$(".submit_uploaded_files").removeAttr("disabled");
     },
-    disable_next:function(){
-        this.$(".go_to_formats").attr("disabled", "disabled");
-    },
-    enable_next:function(){
-        this.$(".go_to_formats").removeAttr("disabled");
-    },
     all_files_uploaded: function() {
-        this.enable_next();
+        this.enable_submit();
     },
     file_added: function() {
-        this.disable_next();
+        this.disable_submit();
     },
 
     file_removed: function(file) {
         this.file_list.splice(this.file_list.indexOf(file), 1);
         if (this.file_list.length === 0) {
-            this.disable_next();
+            this.disable_submit();
         }
-    },
-    go_to_formats:function(){
-        this.$("#formats_step_number").addClass("active_number");
-        this.$("#uploading_step_area").css("display", "none");
-        this.$("#formatting_step_area").css("display", "block");
-    },
-    go_to_upload:function(){
-        this.$("#formats_step_number").removeClass("active_number");
-        this.$("#uploading_step_area").css("display", "block");
-        this.$("#formatting_step_area").css("display", "none");
     }
 });
 

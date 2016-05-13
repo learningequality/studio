@@ -16,6 +16,33 @@
 	position:absolute;
 }
 
+.file-row{
+	width:100%;
+	padding: 0 25px;
+	.inline{
+		display:inline-block;
+		vertical-align: middle;
+		word-wrap:break-word;
+		.name{
+			margin-top:10px;
+		}
+	}
+	.file_upload_progress{
+		height:15px;
+	}
+	div .name {
+		font-weight: bold;
+	}
+}
+.dz-remove {
+	position: relative;
+	bottom: 18px;
+	margin-left: 25px;
+}
+.progress-bar-success {
+	background: @blue-200;
+}
+
 .upload-modal-content{
 	background-color: @body-background;
 	height: @uploader-height;
@@ -43,6 +70,10 @@
 	width: @uploader-width;
 }
 
+
+div#dropzone {
+	min-height: 150px;
+}
 
 #uploader{
 	width: @uploader-width;
@@ -459,219 +490,3 @@
 		}
 	}
 }
-
-#file_upload_modal{
-	padding:20px;
-
-	#upload_steps{
-		margin-top:10px;
-		.step_number {
-			border-radius:30px;
-			border:2px solid @blue-500;
-			color: @blue-500;
-			font-size:11pt;
-			padding: 5px 10px;
-		}
-		.active_number{
-			color:white;
-			background-color: @blue-500;
-		}
-		p{
-			margin-top: 10px;
-
-			color:@blue-500;
-			font-size:11pt;
-		}
-
-		.steps_divider{
-			border-top: dotted 3px @blue-500;
-		}
-	}
-
-	.file_upload_buttons{
-		margin-bottom:15px;
-	}
-
-	#uploading_step_area{
-	display:none;
-		div#dropzone {
-			margin-top:20px;
-			height: @uploader-height - 100px;
-			min-height:150px;
-			max-height: 400px;
-			overflow:hidden;
-			overflow-y:auto;
-			width:100%;
-			margin-bottom:20px;
-
-			.dz-remove{
-				display:none;
-			}
-
-			.file-row{
-				width:100%;
-				padding: 0 25px;
-				.inline{
-					display:inline-block;
-					vertical-align: middle;
-					word-wrap:break-word;
-					.name{
-						margin-top:10px;
-					}
-				}
-
-				.preview_section{
-					.data-dz-thumbnail{
-						width:auto;
-						min-height:70px;
-						display:block;
-					}
-					.progress_file_area{
-						margin-top: 10px;
-						width:100%;
-						display:block;
-
-						.file_upload_progress{
-							width:90%;
-							height:10px;
-						}
-
-						.progress-bar-success {
-							background: @blue-200;
-						}
-
-						.upload_option{
-							color: @blue-200;
-						}
-
-						.upload_successful{
-							display:none;
-						}
-
-						.upload_cancel{
-							cursor:pointer;
-						}
-					}
-
-				}
-
-				.name_section{
-					.name, .error{
-						overflow:hidden;
-						width:100%;
-					}
-					.name{
-						font-size:14pt;
-					}
-					.size{
-						font-size:12pt;
-						color:gray;
-						font-weight:normal;
-						font-style:italic;
-					}
-				}
-
-				.remove_from_dz{
-					cursor:pointer;
-					display:none;
-				}
-			}
-		}
-	}
-
-	#formatting_step_area{
-		display:block;
-
-		#format_list{
-			height: 400px;
-			overflow:hidden;
-			overflow-y:auto;
-
-			.format_item{
-				.preview_section{
-					img{
-						width:100%;
-						height:auto;
-					}
-				}
-
-				.format_section{
-					.name_content_input, .format_options_dropdown{
-						padding:2px 5px;
-						border:1px solid @gray-400;
-					}
-
-					.name_content_input{
-						width:100%;
-						margin-bottom: 10px;
-						font-size:14pt;
-					}
-
-					.init_format_area{
-						margin-bottom: 20px;
-						.format_options_dropdown{
-							width:30%;
-							font-size:11pt;
-						}
-
-						.init_format_name{
-							width:70%;
-							font-size:13pt;
-						}
-
-						.init_format_size{
-							color:@gray-400;
-							font-style:italic;
-						}
-					}
-
-					.format_editor_header{
-						font-size:13pt;
-						font-weight:bold;
-						.format_counter{
-							background-color:@blue-500;
-						}
-
-						.expand_format_editor{
-							font-size:10pt;
-							color:@blue-500;
-							cursor:pointer;
-						}
-					}
-
-					.format_editor_list{
-						margin-left:30px;
-
-						.format_editor_item{
-							font-size:12pt;
-							margin-bottom:5px;
-
-							.format_editor_format_name{
-								font-size: 12pt;
-								font-weight:bold;
-							}
-
-							.format_editor_file_name{
-								max-width:90%;
-							}
-
-							.format_editor_selected_size{
-								color:@gray-400;
-							}
-
-							.format_editor_remove{
-								cursor:pointer;
-							}
-						}
-					}
-				}
-
-				.remove_section{
-					font-size:14pt;
-				}
-			}
-
-		}
-	}
-}
-
