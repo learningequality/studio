@@ -169,6 +169,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 		console.log("exercises", exercise_list);
 	},
 	close: function() {
+        $(".modal-backdrop").remove();  //TODO: Might need to change this later, but remove any remaining modals
         this.delete_view();
     },
     import_content:function(){
@@ -186,6 +187,7 @@ var UploadItemView = BaseViews.BaseView.extend({
  	callback:null,
     close: function() {
         if (this.modal) {
+            console.log("MODAL: ", this.$(".modal"));
             this.$(".modal").modal('hide');
         }
         this.remove();
@@ -257,7 +259,7 @@ var ImportView = UploadItemView.extend({
         }
 
         if(file_count == 0){
-            this.$el.find("#import_file_count").html("");
+            this.$el.find("#import_file_count").html("<em>No files selected</em>");
             $("#import_content_submit").prop("disabled", true);
         }else{
             $("#import_content_submit").prop("disabled", false);
@@ -291,9 +293,9 @@ var ImportView = UploadItemView.extend({
                     self.import_children(view.model.get("children"), copyCollection);
                 }
             }
-            var addon = copyCollection.duplicate(null, {async:false});
-            self.parent_view.collection.add(addon.models);
+            self.parent_view.collection.add(copyCollection.duplicate(null, {async:false}).models);
             console.log("collection is now:",self.parent_view.collection);
+
             self.parent_view.render();
             self.close();
         });
@@ -483,20 +485,25 @@ var FileUploadView = UploadItemView.extend({
     acceptedFiles : "image/*,application/pdf,video/*,text/*,audio/*",
 
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded",  "close_file_uploader", "all_files_uploaded", "file_added", "file_removed");
+        _.bindAll(this, "file_uploaded",  "close_file_uploader", "all_files_uploaded", "file_added", "file_removed", "go_to_formats", "go_to_upload");
         this.callback = options.callback;
         this.modal = options.modal;
         this.parent_view = options.parent_view;
+        this.uploading = true;
         this.render();
     },
     events:{
-      "click .submit_uploaded_files" : "close_file_uploader"
+      "click .submit_uploaded_files" : "close_file_uploader",
+      "click .go_to_formats" : "go_to_formats",
+      "click .go_to_upload" : "go_to_upload"
     },
 
     render: function() {
         if (this.modal) {
             this.$el.html(this.modal_template());
-            this.$(".modal-body").append(this.template());
+            this.$(".modal-body").append(this.template({
+                uploading: this.uploading
+            }));
             $("body").append(this.el);
             this.$(".modal").modal({show: true});
             this.$(".modal").on("hide.bs.modal", this.close);
@@ -533,6 +540,9 @@ var FileUploadView = UploadItemView.extend({
         	"data" : file,
         	"filename": JSON.parse(file.xhr.response).filename
         });
+        $(file.previewTemplate).find(".upload_cancel").css("display", "none");
+        $(file.previewTemplate).find(".remove_from_dz").css("display", "block");
+        $(file.previewTemplate).find(".upload_successful").css("display", "inline-block");
     },
     disable_submit: function() {
         this.$(".submit_uploaded_files").attr("disabled", "disabled");
@@ -540,18 +550,34 @@ var FileUploadView = UploadItemView.extend({
     enable_submit: function() {
         this.$(".submit_uploaded_files").removeAttr("disabled");
     },
+    disable_next:function(){
+        this.$(".go_to_formats").attr("disabled", "disabled");
+    },
+    enable_next:function(){
+        this.$(".go_to_formats").removeAttr("disabled");
+    },
     all_files_uploaded: function() {
-        this.enable_submit();
+        this.enable_next();
     },
     file_added: function() {
-        this.disable_submit();
+        this.disable_next();
     },
 
     file_removed: function(file) {
         this.file_list.splice(this.file_list.indexOf(file), 1);
         if (this.file_list.length === 0) {
-            this.disable_submit();
+            this.disable_next();
         }
+    },
+    go_to_formats:function(){
+        this.$("#formats_step_number").addClass("active_number");
+        this.$("#uploading_step_area").css("display", "none");
+        this.$("#formatting_step_area").css("display", "block");
+    },
+    go_to_upload:function(){
+        this.$("#formats_step_number").removeClass("active_number");
+        this.$("#uploading_step_area").css("display", "block");
+        this.$("#formatting_step_area").css("display", "none");
     }
 });
 

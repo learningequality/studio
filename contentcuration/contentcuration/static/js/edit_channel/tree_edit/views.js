@@ -41,7 +41,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 			});
 			$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
 		});
-
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
