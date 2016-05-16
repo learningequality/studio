@@ -73,6 +73,8 @@ class CustomListSerializer(serializers.ListSerializer):
         update_nodes = {}
         ret = []
         tag_names = []
+        import pdb
+        pdb.set_trace()
         with transaction.atomic():
             for item in validated_data:
                 tag_names += item.pop('tags')
@@ -85,30 +87,37 @@ class CustomListSerializer(serializers.ListSerializer):
         # get all tags, if doesn't exist, create them.
         # this step is also needed for adding new tags to existing node.
         # in this case, we don't need the list of all_tags_pk, but we need to create the new tags.
-        all_tags_pk = []
+        new_tags = []
+        existing_tags = []
         tag_names = list(set(tag_names)) #get rid of repetitive tag_names
         for name in tag_names:
-            all_tags_pk.append(ContentTag.objects.get_or_create(tag_name=name)[0].pk)
+            tag_tuple = ContentTag.objects.get_or_create(tag_name=name)
+            if tag_tuple[1]:
+                new_tags.append(tag_tuple[0])
+            else:
+                existing_tags.append(tag_tuple[0])
+            # all_tags_pk.append(ContentTag.objects.get_or_create(tag_name=name)[0].pk)
 
         if ret:
             # new nodes and tags have been created, now add tags to them
             bulk_adding_list = []
             ThroughModel = Node.tags.through
-            for tag_pk in all_tags_pk:
+            all_tags = existing_tags + new_tags
+            for tag in all_tags:
                 for node in ret:
-                    bulk_adding_list.append(ThroughModel(node_id=node.pk, contenttag_id=tag_pk))
+                    bulk_adding_list.append(ThroughModel(node_id=node.pk, contenttag_id=tag.pk))
             ThroughModel.objects.bulk_create(bulk_adding_list)
 
         # Perform updates.
         if update_nodes:
-            import pdb
-            pdb.set_trace()
             for node_id, data in update_nodes.items():
                 node = node_mapping.get(node_id, None)
                 if node:
                     # potential optimization opportunity
                     for attr, value in data.items():
                         setattr(node, attr, value)
+                    if new_tags:
+                        setattr(node, 'tags', new_tags+existing_tags)
                     node.save()
                     ret.append(node)
 
