@@ -75,20 +75,23 @@ class CustomListSerializer(serializers.ListSerializer):
         tag_names = []
         with transaction.atomic():
             for item in validated_data:
+                tag_names += item.pop('tags')
                 if 'id' in item:
                     update_nodes[item['id']] = item
                 else:
                     # create new nodes
-                    tag_names += item.pop('tags')
                     ret.append(Node.objects.create(**item))
 
-        if ret:
-            # new nodes have been created, now add tags to them
-            all_tags_pk = []
-            tag_names = list(set(tag_names)) #get rid of repetitive tag_names
-            for name in tag_names:
-                all_tags_pk.append(ContentTag.objects.get_or_create(tag_name=name)[0].pk)
+        # get all tags, if doesn't exist, create them.
+        # this step is also needed for adding new tags to existing node.
+        # in this case, we don't need the list of all_tags_pk, but we need to create the new tags.
+        all_tags_pk = []
+        tag_names = list(set(tag_names)) #get rid of repetitive tag_names
+        for name in tag_names:
+            all_tags_pk.append(ContentTag.objects.get_or_create(tag_name=name)[0].pk)
 
+        if ret:
+            # new nodes and tags have been created, now add tags to them
             bulk_adding_list = []
             ThroughModel = Node.tags.through
             for tag_pk in all_tags_pk:
