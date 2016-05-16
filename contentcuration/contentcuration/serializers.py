@@ -96,7 +96,6 @@ class CustomListSerializer(serializers.ListSerializer):
                 new_tags.append(tag_tuple[0])
             else:
                 existing_tags.append(tag_tuple[0])
-            # all_tags_pk.append(ContentTag.objects.get_or_create(tag_name=name)[0].pk)
 
         if ret:
             # new nodes and tags have been created, now add tags to them
