@@ -338,6 +338,7 @@ var BaseEditorView = BaseListView.extend({
 		window.ccc = this.collection;
 		this.views.forEach(function(entry){
 			entry.model.set({tags: entry.tags});
+			console.log("TAGS ARE:",entry.model.get("tags"));
 	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();

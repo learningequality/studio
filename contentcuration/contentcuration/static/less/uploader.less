@@ -248,9 +248,13 @@ div#dropzone {
 			width: 15px;
 			height: 15px;
 		}
+
 		label {
 			margin-bottom: 0;
+			width:auto;
+			cursor:pointer;
 		}
+
 		.uploaded_list_item{
 			width: 90%;
 			height: 100%;
@@ -266,6 +270,10 @@ div#dropzone {
 				color: @annotation-gray;
 			}
 		}
+	}
+
+	.current_item{
+		background-color: @gray-200;
 	}
 	.uploaded:hover{
 		background-color: #E6E6E6;

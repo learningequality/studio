@@ -149,12 +149,13 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.render();
 
 		/* Animate sliding in from left */
-		this.$el.css('margin-left', -this.$el.find(".content-list").outerWidth());
-		$("#container_area").width(this.$el.find(".content-list").outerWidth() * (this.index));
+		this.$el.css('margin-left', -this.$el.find(".content-list").width());
+		$("#container_area").width(this.$el.find(".content-list").width() * (this.index));
 		this.$el.animate({'margin-left' : "0px"}, 500);
 	},
 	render: function() {
 		DragHelper.removeDragDrop(this);
+		this.model.fetch({async:false});
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();
 		this.$el.html(this.template({
