@@ -73,8 +73,6 @@ class CustomListSerializer(serializers.ListSerializer):
         update_nodes = {}
         ret = []
         tag_names = []
-        import pdb
-        pdb.set_trace()
         with transaction.atomic():
             for item in validated_data:
                 tag_names += item.pop('tags')
@@ -115,12 +113,15 @@ class CustomListSerializer(serializers.ListSerializer):
                     # potential optimization opportunity
                     for attr, value in data.items():
                         setattr(node, attr, value)
+
                     if new_tags:
                         setattr(node, 'tags', new_tags+existing_tags)
+                    elif not existing_tags:
+                        setattr(node, 'tags', [])
+
                     node.save()
                     ret.append(node)
 
-        # current implementation does not support deletions.
         return ret
 
 
