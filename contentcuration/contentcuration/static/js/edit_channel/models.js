@@ -263,6 +263,7 @@ var NodeCollection = BaseCollection.extend({
     	this.forEach(function(node){
     		copiedCollection.add(node.duplicate(target_parent, options));
     	});
+    	console.log("IMPORTING: RETURNING COLLECTION", copiedCollection);
     	return copiedCollection;
     }
 });
