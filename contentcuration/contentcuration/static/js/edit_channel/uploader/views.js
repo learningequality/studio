@@ -560,7 +560,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	add_tag: function(event){
 		if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").val().trim() != ""){
 			var tag = this.$el.find("#tag_box").val().trim();
-            var selector=tag.replace(" ","%20");
+            var selector=tag.replace(" ","__");
             if(this.$("#tag_area").find("#" + selector).length == 0){
                 this.append_tags([tag]);
                 if(this.multiple_selected){
@@ -576,7 +576,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		}
 	},
 	remove_tag:function(event){
-		var tagname = event.target.parentNode.id.replace("%20", " ");
+		var tagname = event.target.parentNode.id.replace("__", " ");
 		console.log("tag is now: ",tagname);
 		if(this.multiple_selected){
 			var list = this.$el.find('#uploaded_list input:checked').parent("li");
@@ -614,7 +614,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	},
 	append_tags:function(tags){
 		for(var i = 0; i < tags.length; i++){
-            var selector=tags[i].replace(" ","%20");
+            var selector=tags[i].replace(" ","__");
             this.$el.find("#tag_area").append("<div class='col-xs-4 tag' id='" + selector+ "'>" + tags[i] + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
 		}
 	}

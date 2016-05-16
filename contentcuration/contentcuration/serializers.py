@@ -73,8 +73,7 @@ class CustomListSerializer(serializers.ListSerializer):
         update_nodes = {}
         ret = []
         tag_names = []
-        import pdb
-        pdb.set_trace()
+
         with transaction.atomic():
             for item in validated_data:
                 tag_names += item.pop('tags')

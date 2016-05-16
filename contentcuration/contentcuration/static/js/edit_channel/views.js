@@ -343,6 +343,7 @@ var BaseEditorView = BaseListView.extend({
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
 		this.collection.save({async:false});
+		console.log("CALLED HERE");
 	},
 	check_nodes:function(){
 		var self = this;
