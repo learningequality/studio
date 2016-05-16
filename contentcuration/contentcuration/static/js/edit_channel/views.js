@@ -112,15 +112,17 @@ BaseListView = BaseView.extend({
 			entry.set({'sort_order' : ++index}, {validate: false});
 		});
 	},
-	copy_selected:function(){
+	copy_selected:function(target_parent){
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = [];
 		var clipboard_root = window.current_channel.get_tree("clipboard").get_root();
 		for(var i = 0; i < list.length; i++){
 			var newNode = new Models.NodeModel();
 			newNode = $(list[i]).data("data").model.duplicate(clipboard_root);
+			console.log("ADDING", newNode);
 			clipboard_list.push(newNode);
 		}
+		console.log("LIST IS", clipboard_list);
 		this.add_to_clipboard(clipboard_list);
 		return this.$el.find(".current_topic input:checked").length != 0;
 	},
@@ -206,6 +208,7 @@ BaseListView = BaseView.extend({
     	var start = new Date().getTime();
 		var self = this;
 		views.forEach(function(entry){
+			console.log("MODEL/ENTRY IS", entry);
 			var model = (entry.model) ? entry.model : entry;
 			model.move(self.model, allowDuplicates, ++startingIndex);
 			self.model.get("children").push(model.id);

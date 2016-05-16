@@ -56,24 +56,35 @@ var NodeModel = BaseModel.extend({
                     sort_order: sort_order,
                     target_parent: parent_id};
         var new_node_data;
+        console.log("FUNCTION START");
         $.post({
             url: window.Urls.duplicate_node(),
             data: data,
             async: false,
+            beforeSend:function(){
+            	console.log("SENDING");
+            },
             success: function(data) {
                 var data = JSON.parse(data);
                 new_node_data = new NodeModel(data);
+                console.log("SUCCESS", new_node_data);
+            },
+            error:function(err){
+            	console.log("ERROR: ", err);
             }
         });
+        console.log("FUNCTION END");
+/*
         if(new_node_data !== undefined) {
             new_node_data.fetch({cache: false});
+            console.log("NOT UNDEFINED", new_node_data);
             return new_node_data;
         }
+        */
 	},
 
 	move:function(target_parent, allow_duplicate, sort_order){
 		console.log("CALLED MOVE");
-    	var start = new Date().getTime();
     	//var old_parent = new NodeModel({id: this.get("parent")});
     	//old_parent.fetch({async:false});
     	var title = this.get("title");
