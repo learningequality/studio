@@ -335,7 +335,7 @@ var BaseEditorView = BaseListView.extend({
 			entry.model.set({tags: entry.tags});
 	        entry.set_edited(false);
 		});
-		this.collection.save();
+		this.collection.save({async:false});
 		this.errorsFound = this.errorsFound || !this.save_queued();
 	},
 	check_nodes:function(){
