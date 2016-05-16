@@ -424,13 +424,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
         }, 200);
 	},
-	save_and_finish: function(){
+	save_and_finish: function(event){
 		var self = this;
 		this.check_and_save_nodes(function(){
 			if(self.modal){
 				self.$el.find(".modal").modal("hide");
 			}else{
-				self.close_uploader();
+				self.close_uploader(event);
 			}
 		});
 
@@ -440,7 +440,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		if(this.modal){
 			this.$el.find(".modal").modal("hide");
 		}else{
-	        this.close_uploader();
+	        this.close_uploader(event);
 		}
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var content_view = new AddContentView({
@@ -551,16 +551,19 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	add_tag: function(event){
 		if((!event.keyCode || event.keyCode ==13) && this.$el.find("#tag_box").val().trim() != ""){
 			var tag = this.$el.find("#tag_box").val().trim();
-			this.append_tags([tag]);
-			this.$el.find("#tag_box").val("");
-			if(this.multiple_selected){
-				var list = this.$el.find('#uploaded_list input:checked').parent("li");
-				for(var i = 0; i < list.length; i++){
-					$(list[i]).data("data").add_tag(tag);
-				}
-			}else{
-				this.current_view.add_tag(tag);
-			}
+            var selector=tag.replace(" ","%20");
+            if(this.$("#tag_area").find("#" + selector).length == 0){
+                this.append_tags([tag]);
+                if(this.multiple_selected){
+                    var list = this.$el.find('#uploaded_list input:checked').parent("li");
+                    for(var i = 0; i < list.length; i++){
+                        $(list[i]).data("data").add_tag(tag);
+                    }
+                }else{
+                    this.current_view.add_tag(tag);
+                }
+            }
+            this.$el.find("#tag_box").val("");
 		}
 	},
 	remove_tag:function(event){
@@ -603,9 +606,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	append_tags:function(tags){
 		for(var i = 0; i < tags.length; i++){
             var selector=tags[i].replace(" ","%20");
-            if(this.$("#tag_area").find("#" + selector).length == 0){
-                this.$el.find("#tag_area").append("<div class='col-xs-4 tag' id='" + selector+ "'>" + tags[i] + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
-            }
+            this.$el.find("#tag_area").append("<div class='col-xs-4 tag' id='" + selector+ "'>" + tags[i] + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
 		}
 	}
 });
@@ -717,7 +718,6 @@ var UploadedItem = ContentItem.extend({
             this.containing_list_view.enqueue(this);
 		}
 		$("#item_" + this.model.cid + " .item_name").html(this.model.get("title") + ((edited) ? " <b>*</b>" : ""));
-
 	},
 
 	set_current_node:function(event){
@@ -730,11 +730,13 @@ var UploadedItem = ContentItem.extend({
             this.set({
                 title: $("#input_title").val().trim(),
                 description: $("#input_description").val().trim(),
-                license: this.license(),
-                //tags : taglist
+                tags: this.tags
+            });
+        }else{
+            this.set({
+                tags: this.tags
             });
         }
-
 	},
 	unset_node:function(){
 		this.save(this.originalData, {async:false, validate:false});
@@ -747,26 +749,11 @@ var UploadedItem = ContentItem.extend({
         if(this.tags.indexOf(tagname) < 0){
             this.tags.push(tagname);
         }
-        //var new_tags = this.model.get("tags");
-        //new_tags.push(tagname);
-        //this.model.set({tags: new_tags});
         this.set_edited(true);
 	},
 	remove_tag:function(tagname){
         this.tags.splice(this.tags.indexOf(tagname), 1);
-       // console.log("tags are now:",this.tags);
         this.set_edited(true);
-		/*var remove_at = 0;
-		for(remove_at; remove_at < this.tags.length; remove_at ++){
-            console.log("Found match? " +  this.tags[remove_at] + " " + tagname);
-			if(this.tags[remove_at].tag_name == tagname.tag_name){
-
-                console.log("FOUND MATCH AT " + remove_at);
-                this.tags.splice(remove_at, 1);
-                this.set_edited(true);
-				break;
-			}
-		}*/
 	}
 });
 

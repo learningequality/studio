@@ -68,7 +68,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class CustomListSerializer(serializers.ListSerializer):
-    def update(self, instance, validated_data):    
+    def update(self, instance, validated_data):
         node_mapping = {node.id: node for node in instance}
         update_nodes = {}
         ret = []
@@ -98,6 +98,8 @@ class CustomListSerializer(serializers.ListSerializer):
 
         # Perform updates.
         if update_nodes:
+            import pdb
+            pdb.set_trace()
             for node_id, data in update_nodes.items():
                 node = node_mapping.get(node_id, None)
                 if node:
@@ -124,9 +126,9 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         """
-        In order to be able to handle passing tag_name in array, 
-        we need to overwrite this method to bypass run_validation for tags 
-        """        
+        In order to be able to handle passing tag_name in array,
+        we need to overwrite this method to bypass run_validation for tags
+        """
         if not isinstance(data, dict):
             message = self.error_messages['invalid'].format(
                 datatype=type(data).__name__
@@ -214,7 +216,7 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         Since we are not doing anything crazy about the nested writable field(tags here),
         so just bypass the raise_errors_on_nested_writes().
         This may need to change in the future when we need to do crazy things on nested writable field.
-        """  
+        """
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()

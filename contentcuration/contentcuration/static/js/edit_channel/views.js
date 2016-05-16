@@ -304,7 +304,7 @@ var BaseEditorView = BaseListView.extend({
 	unsaved_queue: [], // Used to keep track of temporary model data
 	errorsFound : false,
 	parent_view : null,
-	close_uploader: function(){
+	close_uploader: function(event){
 		if(this.unsaved_queue.length == 0){
 			this.parent_view.render();
 			if (this.modal) {
@@ -322,7 +322,12 @@ var BaseEditorView = BaseListView.extend({
 			if (this.modal) {
 				this.$el.modal('hide');
 	        }
+	        this.unsaved_queue = [];
+	        this.views = [];
 	        this.remove();
+		}else{
+			event.stopPropagation();
+			event.preventDefault();
 		}
 	},
 	save_nodes: function(){
@@ -335,8 +340,8 @@ var BaseEditorView = BaseListView.extend({
 			entry.model.set({tags: entry.tags});
 	        entry.set_edited(false);
 		});
-		this.collection.save({async:false});
 		this.errorsFound = this.errorsFound || !this.save_queued();
+		this.collection.save({async:false});
 	},
 	check_nodes:function(){
 		var self = this;
