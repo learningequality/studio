@@ -80,7 +80,7 @@ var NodeModel = BaseModel.extend({
 					sort_order:sort_order
 				}, {validate:true});
 			}
-			this.save(this.attributes, {async:false, validate:false}); //Save any other values
+			this.save(this.attributes, {async:false, validate:false, patch:true}); //Save any other values
 			/*target_parent.get("children").push(this.id);
 
 			var new_children = old_parent.get("children");

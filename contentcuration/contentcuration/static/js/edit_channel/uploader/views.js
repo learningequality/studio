@@ -400,6 +400,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			self.$el.find("#validating_text").css("display", "none");
 			self.$el.find(".editmetadata_save").css("pointer", "cursor");
 
+            self.add_tag(null);
+
 			if(!self.errorsFound){
 				self.$el.css("visibility", "hidden");
 				self.display_load("Saving Content...", function(){
@@ -524,7 +526,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			$("#tag_area").html("");
             this.$el.find("#description_counter").html("Cannot edit for multiple items.");
 			var list = this.$el.find('#uploaded_list input:checked').parent("li");
-            this.$el.find('#uploaded_list input:checked').parent("li").addClass("current_item");
+            list.addClass("current_item");
 
 			var tagList = $(list[0]).data("data").tags;
 			/* Create list of nodes to edit */
@@ -556,7 +558,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
 	},
 	add_tag: function(event){
-		if((!event.keyCode || event.keyCode ==13) && this.$el.find("#tag_box").val().trim() != ""){
+		if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").val().trim() != ""){
 			var tag = this.$el.find("#tag_box").val().trim();
             var selector=tag.replace(" ","%20");
             if(this.$("#tag_area").find("#" + selector).length == 0){
