@@ -318,6 +318,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.gray_out(true);
 		this.$el.find(".tag_input").addClass("gray-out");
 		this.$el.find(".tag_input").prop("disabled", true);
+        this.$el.find("#description_counter").html("Select an item first.");
 		this.load_content();
 	},
 	events: {
@@ -326,7 +327,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		'click #upload_save_finish_button' : 'save_and_finish',
 		'click #add_more_button' : 'add_more',
 		'click #uploader' : 'finish_editing',
-		'click :checkbox' : 'check_item',
+		'click li' : 'check_item',
 		'keypress #tag_box' : 'add_tag',
 		'keyup .upload_input' : 'set_edited',
 		'click #metadata_details_btn' : 'render_details',
@@ -486,6 +487,9 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 		this.load_preview();
 		this.$el.find("#input_title").val(this.current_node.get("title"));
 		this.$el.find("#input_description").val(this.current_node.get("description"));
+        view.$el.addClass("current_item");
+        view.$el.find("input[type=checkbox]").prop("checked", true);
+
 		if(this.current_node.get("original_filename")){
 			this.$el.find("#original_filename_area").css("display", "block");
 			this.$el.find("#original_filename").html( this.current_node.get("original_filename"));
@@ -512,19 +516,20 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.gray_out(true);
 			this.$el.find(".tag_input").addClass("gray-out");
 			this.$el.find(".tag_input").prop("disabled", true);
+            this.$el.find("#description_counter").html("Select an item first.");
 			return;
 		}
 		if(this.multiple_selected) {
 			this.gray_out(true);
 			$("#tag_area").html("");
+            this.$el.find("#description_counter").html("Cannot edit for multiple items.");
 			var list = this.$el.find('#uploaded_list input:checked').parent("li");
+            this.$el.find('#uploaded_list input:checked').parent("li").addClass("current_item");
 
 			var tagList = $(list[0]).data("data").tags;
 			/* Create list of nodes to edit */
 			for(var i = 1; i < list.length; i++){
 				tagList = $(tagList).filter($(list[i]).data("data").tags);
-                $(list[i]).addClass("current_item");
-                console.log("LIST ITEM IS:", $(list[i]));
 			}
 			this.append_tags(tagList);
 		}
@@ -532,8 +537,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.gray_out(false);
 			this.set_current_node(this.$el.find("#uploaded_list :checked").parent("li").data("data"));
             this.$el.find("#uploaded_list :checked").parent("li").addClass("current_item");
+            this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
 		}
-        this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
 	},
 	gray_out:function(grayout){
 		if(grayout){
