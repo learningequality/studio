@@ -181,7 +181,6 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	load_content : function(){
-    	var start = new Date().getTime();
 		this.views = [];
 		var self = this;
 		var el = this.$el.find(".content-list");

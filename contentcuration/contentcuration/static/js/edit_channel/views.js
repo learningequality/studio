@@ -214,18 +214,15 @@ BaseListView = BaseView.extend({
 		view.delete_view();
 	},
 	add_nodes:function(views, startingIndex, allowDuplicates){
-		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
-    	var start = new Date().getTime();
 		var self = this;
 		views.forEach(function(entry){
 			var model = (entry.model) ? entry.model : entry;
 			model.move(self.model, allowDuplicates, ++startingIndex);
-			self.model.get("children").push(model.id);
+			//self.model.get("children").push(model.id);
 		});
 		this.list_index = startingIndex;
-
+		this.model.fetch({async:false});
 		this.render();
-		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
 	}
 });
 

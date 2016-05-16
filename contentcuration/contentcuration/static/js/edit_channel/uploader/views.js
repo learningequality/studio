@@ -519,6 +519,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 			this.$el.find(".tag_input").addClass("gray-out");
 			this.$el.find(".tag_input").prop("disabled", true);
             this.$el.find("#description_counter").html("Select an item first.");
+            $("#tag_area").html("");
 			return;
 		}
 		if(this.multiple_selected) {
