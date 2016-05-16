@@ -65,8 +65,10 @@ var NodeModel = BaseModel.extend({
                 new_node_data = new NodeModel(data);
             }
         });
-        new_node_data.fetch({cache: false});
-        return new_node_data;
+        if(new_node_data !== undefined) {
+            new_node_data.fetch({cache: false});
+            return new_node_data;
+        }
 	},
 
 	move:function(target_parent, allow_duplicate, sort_order){
