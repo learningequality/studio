@@ -187,13 +187,14 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.list_index = 0;
 		this.childrenCollection.forEach(function(entry){
 			var file_view = new ContentItem({
-				el: el.find("#" + entry.id),
+				//el: el.find("#" + entry.id),
 				model: entry,
 				edit_mode: self.edit_mode,
 				containing_list_view:self,
 				allow_edit: false,
 				index : self.list_index++
 			});
+			el.append(file_view.el);
 			if(self.current_node && entry.id == self.current_node)
 				file_view.set_opened(true, false);
 			self.views.push(file_view);

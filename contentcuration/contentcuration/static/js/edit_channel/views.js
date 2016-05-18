@@ -379,6 +379,8 @@ var BaseEditorView = BaseListView.extend({
 				self.unsaved_queue.splice(self.unsaved_queue.indexOf(entry), 1);
 			}
 		});
+
+		/*Make sure queue is cleared*/
 		if(success){
 			this.unsaved_queue.forEach(function(entry){
 				self.views.push(self.unsaved_queue.pop());

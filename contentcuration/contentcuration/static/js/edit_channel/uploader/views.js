@@ -276,7 +276,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     description_limit : 400,
 
 	initialize: function(options) {
-		console.log("called this");
 		_.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',
 						'add_tag','save_and_finish','add_more','set_edited',
 						'render_details', 'render_preview', 'remove_tag', 'update_count');
@@ -380,8 +379,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 	},
 
 	check_and_save_nodes: function(callback){
-		console.log("UPLOADING PERFORMANCE uploader/views.js: starting check_nodes...");
-		var start = new Date().getTime();
 		this.$el.find("#validating_text").css("display", "inline");
 		this.$el.find(".editmetadata_save").prop("disabled", true);
 		this.$el.find(".editmetadata_save").css("pointer", "not-allowed");
