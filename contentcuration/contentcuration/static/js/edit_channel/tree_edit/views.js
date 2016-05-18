@@ -15,7 +15,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	containers:[],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details', 'back_to_edit'/*,'undo_action', 'redo_action'*/);
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details', 'back_to_edit', 'handle_checked'/*,'undo_action', 'redo_action'*/);
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
@@ -40,7 +40,10 @@ var TreeEditView = BaseViews.BaseView.extend({
 				$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 			});
 			$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
+			self.$el.find(".disable-none-selected").prop("disabled",true);
+			self.$el.find(".disable-none-selected").css("cursor","not-allowed");
 		});
+
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
@@ -60,7 +63,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 		'click .delete_button' : 'delete_content',
 		'click .edit_button' : 'edit_content',
 		'click #hide_details_checkbox' :'toggle_details',
-		'click .back_to_edit_button' : 'back_to_edit'
+		'click .back_to_edit_button' : 'back_to_edit',
+		'change input[type=checkbox]' : 'handle_checked'
 	},
 	back_to_edit:function(){
 		window.location = window.location.href.replace("clipboard", "edit");
@@ -136,6 +140,11 @@ var TreeEditView = BaseViews.BaseView.extend({
 	add_to_clipboard:function(views){
 		console.log("clipboard views", views);
 		this.queue_view.add_to_clipboard(views);
+	},
+	handle_checked:function(event){
+		var checked_count = this.$el.find("input[type=checkbox]:checked").length;
+		this.$el.find(".disable-none-selected").prop("disabled", checked_count == 0);
+		this.$el.find(".disable-none-selected").css("cursor", (checked_count > 0)? "pointer" : "not-allowed");
 	}
 });
 
@@ -309,9 +318,12 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	edit_folder: function(event){
 		event.preventDefault();
 		event.stopPropagation();
+		this.open_edit();
+		/*
 		this.allow_edit = this.edit_mode;
 		this.render();
 		this.$el.addClass("editing");
+		*/
 	},
 	submit_edit: function(event){
 		event.preventDefault();

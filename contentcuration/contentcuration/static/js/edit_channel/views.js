@@ -276,6 +276,23 @@ var BaseListNodeItemView = BaseListItemView.extend({
     	}else{
     		this.model.set(data, options);
     	}
+	},
+	open_edit:function(){
+		var UploaderViews = require("edit_channel/uploader/views");
+		var edit_collection = new Models.NodeCollection();
+		edit_collection.add(this.model);
+
+		$("#main-content-area").append("<div id='dialog'></div>");
+
+		var metadata_view = new UploaderViews.EditMetadataView({
+			collection: edit_collection,
+			parent_view: this,
+			el: $("#dialog"),
+			allow_add : false,
+			main_collection: this.containing_list_view.collection,
+			modal:true,
+			model: this.model
+		});
 	}
 });
 

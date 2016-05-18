@@ -10,18 +10,18 @@
 		</div>
 		{{/if}}
 		<div class="nav-button-container">
-			<div class="nav-button edit_button disable-on-edit"><span class="glyphicon glyphicon-pencil"></span></div>
-			<a class="nav-label edit_button disable-on-edit">Edit</a>
+			<div class="nav-button edit_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-pencil"></span></div>
+			<a class="nav-label edit_button disable-on-edit disable-none-selected">Edit</a>
 		</div>
 		{{#unless is_clipboard}}
 		<div class="nav-button-container">
-			<div class="nav-button copy_button disable-on-edit"><span class="glyphicon glyphicon-duplicate"></span></div>
-			<a class="nav-label copy_button disable-on-edit">Copy</a>
+			<div class="nav-button copy_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-duplicate"></span></div>
+			<a class="nav-label copy_button disable-on-edit disable-none-selected">Copy</a>
 		</div>
 		{{/unless}}
 		<div class="nav-button-container">
-			<div class="nav-button delete_button disable-on-edit"><span class="glyphicon glyphicon-remove"></span></div>
-			<a class="nav-label delete_button disable-on-edit">Delete</a>
+			<div class="nav-button delete_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-remove"></span></div>
+			<a class="nav-label delete_button disable-on-edit disable-none-selected">Delete</a>
 		</div>
 
 		<!--<a class="btn btn-default undo_button disable-on-edit">Undo</a>
@@ -32,7 +32,7 @@
 		</div>
 	</nav>
 	{{else}}
-		<h1>Select content to preview. 
+		<h1>Select content to preview.
 			<input type="checkbox" id="hide_details_checkbox"/>
 			<label for="hide_details_checkbox">Hide details</label>
 		</h1>
@@ -44,7 +44,7 @@
 	  <li><a href="#">Library Library Library</a></li>
 	  <li class="active"><a href="#">Data</a></li>
 	</ol>-->
-	
+
 	<div id="container-wrapper">
 		<ul id="container_area" class="list-unstyled">
 		</ul>

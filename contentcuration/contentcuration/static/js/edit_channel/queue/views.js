@@ -286,8 +286,11 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	edit_item: function(){
 		event.stopPropagation();
 		event.preventDefault();
+		this.open_edit();
+		/*
 		this.allow_edit = true;
 		this.render();
+		*/
 	},
 	submit_item:function(event){
 		if(!event.keyCode || event.keyCode ==13){
