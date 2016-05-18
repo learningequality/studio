@@ -222,6 +222,7 @@ BaseListView = BaseView.extend({
 		});
 		this.list_index = startingIndex;
 		this.model.fetch({async:false});
+		console.log("MODEL AFTER SAVE IS:", this.model);
 		this.render();
 	}
 });
@@ -328,8 +329,6 @@ var BaseEditorView = BaseListView.extend({
 		}
 	},
 	save_nodes: function(){
-		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
-    	var start = new Date().getTime();
 		this.parent_view.set_editing(false);
 		var self = this;
 		window.ccc = this.collection;
@@ -340,7 +339,7 @@ var BaseEditorView = BaseListView.extend({
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
 		this.collection.save({async:false});
-		console.log("CALLED HERE");
+		console.log("collection is now:", this.collection);
 	},
 	check_nodes:function(){
 		var self = this;
