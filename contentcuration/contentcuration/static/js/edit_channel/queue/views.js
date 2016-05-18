@@ -21,7 +21,6 @@ var Queue = BaseViews.BaseView.extend({
 			el: this.$el.find("#clipboard-queue"),
 			is_clipboard: true,
 			add_controls : true,
-			indent:0,
 			container: this
 		});
 		this.trash_queue = new QueueList({
@@ -30,7 +29,6 @@ var Queue = BaseViews.BaseView.extend({
 			el: this.$el.find("#trash-queue"),
 			is_clipboard : false,
 			add_controls : true,
-			indent:0,
 			container: this
 		});
 	},
@@ -88,7 +86,6 @@ var QueueList = BaseViews.BaseListView.extend({
 		//this.set_sort_orders(this.childrenCollection);
 		this.add_controls = options.add_controls;
 		this.container = options.container;
-		this.indent = options.indent;
 		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_items', 'move_trash', 'search');
 		this.render();
 	},
@@ -137,9 +134,9 @@ var QueueList = BaseViews.BaseListView.extend({
 			var item_view = new QueueItem({
 				containing_list_view: self,
 				model: entry,
-				indent : self.indent,
 				index : self.list_index ++,
-				is_clipboard : self.is_clipboard
+				is_clipboard : self.is_clipboard,
+				container : self.container
 			});
 			self.$el.find("#list_for_" + self.model.id).append(item_view.el);
 			self.views.push(item_view);
@@ -208,7 +205,6 @@ var QueueList = BaseViews.BaseListView.extend({
 var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	template: require("./hbtemplates/queue_item.handlebars"),
 	tagName: "li",
-	indent: 0,
 	'id': function() {
 		return "queue_item_" + this.model.get("id");
 	},
@@ -217,9 +213,9 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		//console.log("loading", this.model);
 		this.containing_list_view = options.containing_list_view;
 		this.allow_edit = false;
-		this.indent = options.indent + 15;
 		this.is_clipboard = options.is_clipboard;
 		this.index = options.index;
+		this.container=options.container;
 		//console.log("model is now", this.model);
 		this.render();
 	},
@@ -237,7 +233,6 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			isfolder: this.model.get("kind").toLowerCase() == "topic",
 			allow_edit: this.allow_edit,
 			sub_list: this.model.get("children"),
-			indent: this.indent,
 			is_clipboard : this.is_clipboard,
 			index: this.index
 		}));
@@ -256,6 +251,9 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			this.$el.find("#" + this.id() +"_sub").slideUp();
 			el.removeClass("glyphicon-menu-down").addClass("glyphicon-menu-up");
 		}
+
+		var containing_element = this.container.$el.find((this.is_clipboard)? "#clipboard_list" : "#trash_list");
+		containing_element.scrollLeft(containing_element.width());
 	},
 	load_subfiles:function(){
 		//console.log("SUBFILES ", this.$el.find("#" + this.id() +"_sub"));
@@ -265,7 +263,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			is_clipboard : this.is_clipboard,
 			add_controls : false,
 			model: this.model,
-			indent: this.indent
+			container: this.container
 		});
 	},
 	delete_content:function(){

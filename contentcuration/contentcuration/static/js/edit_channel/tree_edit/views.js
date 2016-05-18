@@ -67,7 +67,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	},
 	remove_containers_from:function(index){
 		while(this.containers.length > index){
-			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.containers[0].$el.width());  //this.containers[this.containers.length-2].$el.outerWidth() * (this.containers.length-2));
+			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.containers[0].$el.outerWidth());  //this.containers[this.containers.length-2].$el.outerWidth() * (this.containers.length-2));
 			this.containers[this.containers.length-1].delete_view();
 			this.containers.splice(this.containers.length-1);
 		}
@@ -88,9 +88,9 @@ var TreeEditView = BaseViews.BaseView.extend({
 		});
 		this.containers.push(container_view);
 		this.$el.find("#container_area").append(container_view.el);
-		this.$el.find("#container_area").width(this.$el.find("#container_area").width() +this.containers[0].$el.width());
+		this.$el.find("#container_area").width(this.$el.find("#container_area").width() + this.containers[0].$el.outerWidth());
 		/* Animate sliding in from left */
-		container_view.$el.css('margin-left', -container_view.$el.width());
+		container_view.$el.css('margin-left', -container_view.$el.outerWidth());
 		container_view.$el.animate({
 			'margin-left' : "0px"
 		}, 500);
