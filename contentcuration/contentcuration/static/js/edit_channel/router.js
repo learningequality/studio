@@ -7,12 +7,12 @@ var ChannelManageView = require("edit_channel/new_channel/views");
 //var saveDispatcher = _.clone(Backbone.Events);
 
 ChannelEditRouter  = Backbone.Router.extend({
-	nodeCollection: new Models.NodeCollection(),
+	nodeCollection: new Models.ContentNodeCollection(),
     initialize: function(options) {
         _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page");
 		this.user = options.user;
 		this.model = options.model;
-		this.nodeCollection = new Models.NodeCollection();
+		this.nodeCollection = new Models.ContentNodeCollection();
 		this.nodeCollection.fetch();
 		window.licenses = new Models.LicenseCollection(window.license_list);
 		window.licenses.fetch();

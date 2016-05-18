@@ -30,7 +30,7 @@ var BaseCollection = Backbone.Collection.extend({
 });
 
 /**** CHANNEL AND CONTENT MODELS ****/
-var NodeModel = BaseModel.extend({
+var ContentNodeModel = BaseModel.extend({
 	root_list:"node-list",
 	defaults: {
 		title:"Untitled",
@@ -51,7 +51,7 @@ var NodeModel = BaseModel.extend({
 	},
 	getChildCount:function(includeParent, collection){
 		if(!collection){
-			collection = new NodeCollection();
+			collection = new ContentNodeCollection();
 		}
 		var count = (includeParent) ? 1:0;
 		var children = collection.get_all_fetch(this.get("children"));
@@ -67,8 +67,8 @@ var NodeModel = BaseModel.extend({
     	console.log("PERFORMANCE models.js: starting duplicate...");
     	var start = new Date().getTime();
     	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
-		var node_data = new NodeModel();
-		var nodeChildrenCollection = new NodeCollection();
+		var node_data = new ContentNodeModel();
+		var nodeChildrenCollection = new ContentNodeCollection();
 		var self = this;
 		node_data.set(data);
 		node_data.move(parent_id, index);
@@ -97,7 +97,7 @@ var NodeModel = BaseModel.extend({
 		}
 		if(old_parent){
 			this.save({title: title, parent: old_parent}, {async:false, validate:false}); //Save any other values
-			var old_parent_node = new NodeModel({id:old_parent});
+			var old_parent_node = new ContentNodeModel({id:old_parent});
 			old_parent_node.fetch({async:false});
 			old_parent_node.save({total_file_size: old_parent_node.get_size()});
 		}else{
@@ -105,13 +105,13 @@ var NodeModel = BaseModel.extend({
 		}
 
 		this.save({parent: parent_id, sort_order:index}, {async:false, validate:false}); //Save any other values
-		var new_parent = new NodeModel({id:parent_id});
+		var new_parent = new ContentNodeModel({id:parent_id});
 		new_parent.fetch({async:false});
 		new_parent.save({total_file_size: new_parent.get_size()});
 		console.log("PERFORMANCE models.js: move end (time = " + (new Date().getTime() - start) + ")");
 	},
 	get_size:function(){
-		var collection = new NodeCollection();
+		var collection = new ContentNodeCollection();
 		var size = 0;
 		var children = collection.get_all_fetch(this.get("children"));
 		children.forEach(function(entry){
@@ -141,7 +141,7 @@ var NodeModel = BaseModel.extend({
 		var start = new Date().getTime();
 		var self = this;
 		var parent_id = node.id;
-		var copied_collection = new NodeCollection();
+		var copied_collection = new ContentNodeCollection();
 		copied_collection = copied_collection.get_all_fetch(original_collection);
 		copied_collection.forEach(function(entry){
 			entry.duplicate(parent_id);
@@ -158,7 +158,7 @@ var NodeModel = BaseModel.extend({
 			return "Name is required.";
 		if(attrs.parent){
 			console.log("Checking if topic is descendant of itself..");
-			var parent = new NodeModel({'id': attrs.parent});
+			var parent = new ContentNodeModel({'id': attrs.parent});
 			parent.fetch({async:false});
 			if(attrs.kind == "topic"){
 				console.log("Checking if topic is descendant of itself..");
@@ -167,9 +167,9 @@ var NodeModel = BaseModel.extend({
 					return "Cannot place topic under itself."
 
 				//Case: is a child of its descendants
-				var temp = new NodeModel({'id': parent.get("parent")});
+				var temp = new ContentNodeModel({'id': parent.get("parent")});
 				while(temp.get("parent")){
-					temp = new NodeModel({'id': parent.get("parent")});
+					temp = new ContentNodeModel({'id': parent.get("parent")});
 					temp.fetch();
 					if(temp.id == self.id)
 						return "Cannot place topic under any of its subtopics."
@@ -179,7 +179,7 @@ var NodeModel = BaseModel.extend({
 			console.log("Checking if title already exists in topic..");
 			//Case: topic with same name exists in children
 			if(!this.siblings)
-				this.siblings = new NodeCollection();
+				this.siblings = new ContentNodeCollection();
 			if(!this.parent_children || parent.get("children") != this.parent_children){
 				this.parent_children = parent.get("children");
 				this.siblings = this.siblings.get_all_fetch(this.parent_children);
@@ -243,15 +243,15 @@ var NodeModel = BaseModel.extend({
 	}
 });
 
-var NodeCollection = BaseCollection.extend({
-	model: NodeModel,
+var ContentNodeCollection = BaseCollection.extend({
+	model: ContentNodeModel,
 	list_name:"node-list",
 
    /* TODO: would be better to fetch all values at once */
     get_all_fetch: function(ids){
     	console.log("PERFORMANCE models.js: starting get_all_fetch...", ids);
 		var start = new Date().getTime();
-    	var to_fetch = new NodeCollection();
+    	var to_fetch = new ContentNodeCollection();
     	for(var i = 0; i < ids.length; i++){
     		if(ids[i]){
     			var model = this.get({id: ids[i]});
@@ -322,7 +322,7 @@ var ChannelModel = BaseModel.extend({
     	console.log("PERFORMANCE models.js: starting create_tree " + tree_name + "...");
     	var start = new Date().getTime();
 
-    	var root_node = new NodeModel();
+    	var root_node = new ContentNodeModel();
     	var self = this;
 		return root_node.save({title: self.get("name"), description: "Root node for " + tree_name + " tree"}, {
 			async:false,
@@ -374,7 +374,7 @@ var TopicTreeModel = BaseModel.extend({
 		is_published: false
 	},
 	get_root: function(){
-		var root = new NodeModel({id: this.get("root_node")});
+		var root = new ContentNodeModel({id: this.get("root_node")});
 		root.fetch({async:false});
 		return root;
 	}
@@ -498,8 +498,8 @@ var TagCollection = BaseCollection.extend({
 });
 
 module.exports = {
-	NodeModel: NodeModel,
-	NodeCollection: NodeCollection,
+	ContentNodeModel: ContentNodeModel,
+	ContentNodeCollection: ContentNodeCollection,
 	TopicTreeModel:TopicTreeModel,
 	TopicTreeModelCollection: TopicTreeModelCollection,
 	ChannelModel: ChannelModel,

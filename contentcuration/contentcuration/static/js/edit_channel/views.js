@@ -20,7 +20,7 @@ var BaseView = Backbone.View.extend({
 	edit_selected:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var list = this.$el.find('input:checked').parent("li");
-		var edit_collection = new Models.NodeCollection();
+		var edit_collection = new Models.ContentNodeCollection();
 		/* Create list of nodes to edit */
 		for(var i = 0; i < list.length; i++){
 			var model = $(list[i]).data("data").model;
@@ -43,7 +43,7 @@ var BaseView = Backbone.View.extend({
 	add_to_view:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
-		var new_collection = new Models.NodeCollection();
+		var new_collection = new Models.ContentNodeCollection();
 		var add_view = new UploaderViews.AddContentView({
 			el : $("#dialog"),
 			collection: new_collection,
@@ -129,7 +129,7 @@ BaseListView = BaseView.extend({
 		var clipboard_list = [];
 		var clipboard_root = window.current_channel.get_tree("clipboard").get("root_node");
 		for(var i = 0; i < list.length; i++){
-			var newNode = new Models.NodeModel();
+			var newNode = new Models.ContentNodeModel();
 			newNode = $(list[i]).data("data").model.duplicate(clipboard_root, i);
 			console.log("add_node model is", newNode);
 			clipboard_list.push(newNode);
@@ -312,7 +312,7 @@ var BaseListItemView = BaseView.extend({
 				this.containing_list_view.collection.create_channel(data, $(".createprogress"));
 			}
 			else{
-				var node_data = new Models.NodeModel(data);
+				var node_data = new Models.ContentNodeModel(data);
 				node_data.fetch();
 				this.containing_list_view.collection.create(node_data, options);
 				if(this.model.get("kind").toLowerCase() != "topic"){

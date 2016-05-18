@@ -71,7 +71,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 		}
 	},
 	add_topic:function(){
-		var topic = new Models.NodeModel({
+		var topic = new Models.ContentNodeModel({
 			"kind":"topic",
 			"title": (this.counter > 0)? "Topic " + this.counter : "Topic",
 			"parent" : this.model.id
@@ -134,7 +134,7 @@ var AddContentView = BaseViews.BaseListView.extend({
 			else if(file.type.indexOf("video") >=0){
 				type="video";
 			}
-			var content_node = new Models.NodeModel({
+			var content_node = new Models.ContentNodeModel({
 				"kind":type,
 				"title": file.name.split(".")[0],
 				"parent" : self.model.id,
@@ -278,7 +278,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 						'add_tag','save_and_finish','add_more','set_edited',
 						'render_details', 'render_preview', 'remove_tag');
 		this.parent_view = options.parent_view;
-		this.collection = (options.collection)? options.collection : new Models.NodeCollection();
+		this.collection = (options.collection)? options.collection : new Models.ContentNodeCollection();
 		this.allow_add = options.allow_add;
 		this.modal = options.modal;
 		this.main_collection = options.main_collection;
