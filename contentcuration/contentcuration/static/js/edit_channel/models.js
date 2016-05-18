@@ -85,13 +85,19 @@ var NodeModel = BaseModel.extend({
 			self.copy_children(node_data, self.get("children"));
 		}else{
 			//TODO-BLOCKER: this will need to change when multiple formats allowed
-			var first_format = this.get("formats")[0];
+			for(var i = 0; i < this.get("formats").length; i++){
+				var newFormat = new FormatModel(this.get("formats")[0]);
+				newFormat.duplicate(node_data.id);
+			}
+
+
+			/*
 			var first_file = first_format.files[0];
 			var type = window.mimetypes.findWhere({id: first_format.mimetype});
-			node_data.set("file_data", {
+			/*node_data.set("file_data", {
 				data: {"size" : first_format.format_size, "type": type.get("machine_name")},
 				filename: first_file.checksum + first_file.extension
-			});
+			});*/
 		}
 		console.log("CREATED NODE:", node_data);
 		return node_data;
@@ -314,7 +320,15 @@ var TopicTreeModelCollection = BaseCollection.extend({
 
 /**** MODELS SPECIFIC TO FILE NODES ****/
 var FileModel = BaseModel.extend({
-	root_list:"file-list"
+	root_list:"file-list",
+	duplicate: function(id){
+    	var data = this.pick("checksum","extension","file_size","content_copy","available");
+    	data.format = id;
+    	console.log("DATA IS:", data);
+		var new_file = new FileModel();
+		new_file.save(data, {async:false});
+		return new_file;
+	}
 });
 
 var FileCollection = BaseCollection.extend({
@@ -329,6 +343,10 @@ var FormatModel = BaseModel.extend({
     	data.contentmetadata = id;
 		var format_data = new FormatModel();
 		format_data.save(data, {async:false});
+		for(var i = 0; i< this.get("files").length; i++){
+			var newFile = new FileModel(this.get("files")[i]);
+			newFile.duplicate(format_data.id);
+		}
 		return format_data;
 	}
 });
