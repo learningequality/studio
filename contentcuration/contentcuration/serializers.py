@@ -116,8 +116,8 @@ class CustomListSerializer(serializers.ListSerializer):
 
                     if new_tags:
                         setattr(node, 'tags', new_tags+existing_tags)
-                    elif not existing_tags:
-                        setattr(node, 'tags', [])
+                    else:
+                        setattr(node, 'tags', existing_tags)
 
                     node.save()
                     ret.append(node)
