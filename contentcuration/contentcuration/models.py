@@ -170,7 +170,6 @@ class File(models.Model):
     Things it can represent are, for example, mp4, avi, mov, html, css, jpeg, pdf, mp3...
     """
     checksum = models.CharField(max_length=400, blank=True)
-    available = models.BooleanField(default=False)
     file_size = models.IntegerField(blank=True, null=True)
     content_copy = models.FileField(upload_to=content_copy_name, storage=ContentCopyStorage(), max_length=500, blank=True)
     contentmetadata = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True)
@@ -201,7 +200,6 @@ class File(models.Model):
                 md5.update(chunk)
 
             self.checksum = md5.hexdigest()
-            self.available = True
             self.file_size = self.content_copy.size
             self.extension = os.path.splitext(self.content_copy.name)[1]
             # update ContentCopyTracking
@@ -224,7 +222,6 @@ class File(models.Model):
             except ContentCopyTracking.DoesNotExist:
                 pass
             self.checksum = None
-            self.available = False
             self.file_size = None
             self.extension = None
         super(File, self).save(*args, **kwargs)
