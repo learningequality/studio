@@ -67,7 +67,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	},
 	remove_containers_from:function(index){
 		while(this.containers.length > index){
-			$("#container_area").width(this.containers[this.containers.length-1].$el.outerWidth() * (this.containers.length-2));
+			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.containers[0].$el.width());  //this.containers[this.containers.length-2].$el.outerWidth() * (this.containers.length-2));
 			this.containers[this.containers.length-1].delete_view();
 			this.containers.splice(this.containers.length-1);
 		}
@@ -79,10 +79,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			this.remove_containers_from(index);
 		}
 		/* Create place for opened topic */
-		this.$el.find("#container_area").append("<li id='container_" + topic.id + "' class='container content-container "
-						+ "' name='" + (this.containers.length + 1) + "'></li>");
 		var container_view = new ContentList({
-			el: this.$el.find("#container_area #container_" + topic.id),
 			model: topic,
 			index: this.containers.length + 1,
 			edit_mode: this.is_edit_page,
@@ -90,6 +87,11 @@ var TreeEditView = BaseViews.BaseView.extend({
 			container : this
 		});
 		this.containers.push(container_view);
+		this.$el.find("#container_area").append(container_view.el);
+		this.$el.find("#container_area").width(this.$el.find("#container_area").width() +this.containers[0].$el.width());
+		/* Animate sliding in from left */
+		container_view.$el.css('margin-left', -container_view.$el.width());
+		container_view.$el.animate({'margin-left' : "0px"}, 500);
 	},
 
 	delete_content: function (event){
@@ -137,6 +139,12 @@ var ContentList = BaseViews.BaseListView.extend({
 	item_view: "node",
 	template: require("./hbtemplates/content_container.handlebars"),
 	current_node : null,
+	tagName: "li",
+	indent: 0,
+	'id': function() {
+		return "container_" + this.model.get("id");
+	},
+	className: "container content-container",
 	initialize: function(options) {
 		_.bindAll(this, 'add_content');
 		this.index = options.index;
@@ -148,10 +156,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.childrenCollection.sort_by_order();
 		this.render();
 
-		/* Animate sliding in from left */
-		this.$el.css('margin-left', -this.$el.find(".content-list").outerWidth());
-		$("#container_area").width(this.$el.find(".content-list").outerWidth() * (this.index));
-		this.$el.animate({'margin-left' : "0px"}, 500);
 	},
 	render: function() {
 		DragHelper.removeDragDrop(this);
