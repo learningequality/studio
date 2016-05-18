@@ -234,6 +234,12 @@ var ContentList = BaseViews.BaseListView.extend({
 /*folders, files, exercises listed*/
 var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
+	tagName: "li",
+	indent: 0,
+	'id': function() {
+		return this.model.get("id");
+	},
+	className: "content draggable to_publish",
 	initialize: function(options) {
 		_.bindAll(this, 'edit_folder','open_folder',/*'expand_or_collapse_folder', */
 					'submit_edit', 'cancel_edit','preview_node', 'cancel_open_folder');

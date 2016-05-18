@@ -129,7 +129,6 @@ class CustomListSerializer(serializers.ListSerializer):
 class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     formats = FormatSerializer(many=True, read_only=True)
-    tags = TagSerializer(many=True, required=False)
     id = serializers.IntegerField(required=False)
 
     resource_count = serializers.SerializerMethodField('count_resources')

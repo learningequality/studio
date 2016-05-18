@@ -143,6 +143,7 @@ BaseListView = BaseView.extend({
 		var to_delete = [];
 		for(var i = 0; i < list.length; i++){
 			var view = $("#" + list[i].id).data("data");
+			console.log("Checking element",  $("#" + list[i].id));
 			to_delete.push(view);
 		}
 		this.add_to_trash(to_delete);
@@ -215,6 +216,7 @@ BaseListView = BaseView.extend({
 	},
 	add_nodes:function(views, startingIndex, allowDuplicates){
 		var self = this;
+		console.log("views:", views);
 		views.forEach(function(entry){
 			var model = (entry.model) ? entry.model : entry;
 			model.move(self.model, allowDuplicates, ++startingIndex);
