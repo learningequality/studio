@@ -24,13 +24,13 @@ class FileSerializer(serializers.ModelSerializer):
          return super.get(*args, **kwargs)
     class Meta:
         model = File
-        fields = ('checksum', 'extension', 'file_size', 'content_copy', 'id', 'available', 'format')
+        fields = ('id', 'checksum', 'file_size', 'content_copy', 'contentmetadata', 'file_format', 'preset', 'lang')
 
 class FormatPresetSerializer(serializers.ModelSerializer):
    # files = FileSerializer(many=True, read_only=True)
 
    class Meta:
-        model = Format
+        model = FormatPreset
         fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats')
 
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
