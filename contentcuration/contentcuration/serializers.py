@@ -4,7 +4,7 @@ from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta: 
-        model = ContentLicense
+        model = License
         fields = ('license_name', 'exists', 'id')
 
 class ChannelSerializer(serializers.ModelSerializer):
@@ -26,27 +26,22 @@ class FileSerializer(serializers.ModelSerializer):
         model = File
         fields = ('checksum', 'extension', 'file_size', 'content_copy', 'id', 'available', 'format')
 
-class FormatSerializer(serializers.ModelSerializer):
-   files = FileSerializer(many=True, read_only=True)
+class FormatPresetSerializer(serializers.ModelSerializer):
+   # files = FileSerializer(many=True, read_only=True)
 
    class Meta:
         model = Format
-        fields = ('format_size', 'quality', 'contentmetadata', 'available', 'mimetype', 'id', 'files')
+        fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats')
 
-class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    formats = FormatSerializer(many=True, read_only=True)
+    preset = FormatPresetSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Node
+        model = ContentNode
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',
                   'sort_order', 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id',
-                  'formats', 'original_filename')
-   
-class MimeTypeSerializer(serializers.ModelSerializer):
-   class Meta:
-    model = MimeType
-    fields = ('readable_name', 'machine_name', 'id') 
+                  'preset', 'original_filename')
 
 class TagSerializer(serializers.ModelSerializer):
    class Meta:

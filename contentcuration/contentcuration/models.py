@@ -10,6 +10,7 @@ from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 from kolibri.content.models import *
+from constants import content_kinds, extensions, presets
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
@@ -17,10 +18,9 @@ class Channel(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     author = models.CharField(max_length=400, blank=True)
-    theme = models.CharField(max_length=400, blank=True)
-    subscribed = models.BooleanField(default=False)
     editors = models.ManyToManyField(
         'auth.User',
+        related_name='editable_channels',
         verbose_name=_("editors"),
         help_text=_("Users with edit rights"),
     )
@@ -29,6 +29,11 @@ class Channel(models.Model):
     deleted =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='deleted')
     clipboard =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='clipboard')
     draft =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='draft')
+    bookmarked_by = models.ManyToManyField(
+        'auth.User',
+        related_name='bookmarked_channels',
+        verbose_name=_("bookmarded by"),
+    )
 
     class Meta:
         verbose_name = _("Channel")
@@ -49,7 +54,7 @@ class TopicTree(models.Model):
         help_text=_("For different versions of the tree in the same channel (trash, edit, workspace)"),
     )
     root_node = models.ForeignKey(
-        'ContentMetadata',
+        'ContentNode',
         verbose_name=_("root node"),
         null=True,
         help_text=_(
@@ -74,7 +79,7 @@ class ContentTag(models.Model):
     def __str__(self):
         return self.tag_name
 
-class ContentMetadata(MPTTModel, models.Model):
+class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
@@ -84,7 +89,6 @@ class ContentMetadata(MPTTModel, models.Model):
     kind = models.ForeignKey('ContentKind', related_name='content_metadatas', blank=True, null=True)
     slug = models.CharField(max_length=100)
     total_file_size = models.IntegerField()
-    available = models.BooleanField(default=False)
     license = models.ForeignKey('License')
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
     is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship', symmetrical=False, blank=True)
@@ -169,7 +173,7 @@ class File(models.Model):
     available = models.BooleanField(default=False)
     file_size = models.IntegerField(blank=True, null=True)
     content_copy = models.FileField(upload_to=content_copy_name, storage=ContentCopyStorage(), max_length=500, blank=True)
-    contentmetadata = models.ForeignKey(ContentMetadata, related_name='files', blank=True, null=True)
+    contentmetadata = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
     lang = models.ForeignKey(Language, blank=True, null=True)
@@ -180,12 +184,57 @@ class File(models.Model):
     def __str__(self):
         return '{checksum}{extension}'.format(checksum=self.checksum, extension='.' + self.file_format.extension)
 
+    def save(self, *args, **kwargs):
+        """
+        Overrider the default save method.
+        If the content_copy FileField gets passed a content copy:
+            1. generate the MD5 from the content copy
+            2. fill the other fields accordingly
+            3. update tracking for this content copy
+        If None is passed to the content_copy FileField:
+            1. delete the content copy.
+            2. update tracking for this content copy
+        """
+        if self.content_copy:  # if content_copy is supplied, hash out the file
+            md5 = hashlib.md5()
+            for chunk in self.content_copy.chunks():
+                md5.update(chunk)
+
+            self.checksum = md5.hexdigest()
+            self.available = True
+            self.file_size = self.content_copy.size
+            self.extension = os.path.splitext(self.content_copy.name)[1]
+            # update ContentCopyTracking
+            try:
+                content_copy_track = ContentCopyTracking.objects.get(content_copy_id=self.checksum)
+                content_copy_track.referenced_count += 1
+                content_copy_track.save()
+            except ContentCopyTracking.DoesNotExist:
+                ContentCopyTracking.objects.create(referenced_count=1, content_copy_id=self.checksum)
+        else:
+            # update ContentCopyTracking, if referenced_count reach 0, delete the content copy on disk
+            try:
+                content_copy_track = ContentCopyTracking.objects.get(content_copy_id=self.checksum)
+                content_copy_track.referenced_count -= 1
+                content_copy_track.save()
+                if content_copy_track.referenced_count == 0:
+                    content_copy_path = os.path.join(settings.CONTENT_COPY_DIR, self.checksum[0:1], self.checksum[1:2], self.checksum + self.extension)
+                    if os.path.isfile(content_copy_path):
+                        os.remove(content_copy_path)
+            except ContentCopyTracking.DoesNotExist:
+                pass
+            self.checksum = None
+            self.available = False
+            self.file_size = None
+            self.extension = None
+        super(File, self).save(*args, **kwargs)
+
 class License(models.Model):
     """
-    Normalize the license of ContentMetadata model
+    Normalize the license of ContentNode model
     """
     license_name = models.CharField(max_length=50)
-     exists = models.BooleanField(
+    exists = models.BooleanField(
         default=False,
         verbose_name=_("license exists"),
         help_text=_("Tells whether or not a content item is licensed to share"),
@@ -196,10 +245,10 @@ class License(models.Model):
 
 class PrerequisiteContentRelationship(models.Model):
     """
-    Predefine the prerequisite relationship between two ContentMetadata objects.
+    Predefine the prerequisite relationship between two ContentNode objects.
     """
-    contentmetadata_1 = models.ForeignKey(ContentMetadata, related_name='%(app_label)s_%(class)s_1')
-    contentmetadata_2 = models.ForeignKey(ContentMetadata, related_name='%(app_label)s_%(class)s_2')
+    contentmetadata_1 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_1')
+    contentmetadata_2 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_2')
 
     class Meta:
         unique_together = ['contentmetadata_1', 'contentmetadata_2']
@@ -226,10 +275,10 @@ class PrerequisiteContentRelationship(models.Model):
 
 class RelatedContentRelationship(models.Model):
     """
-    Predefine the related relationship between two ContentMetadata objects.
+    Predefine the related relationship between two ContentNode objects.
     """
-    contentmetadata_1 = models.ForeignKey(ContentMetadata, related_name='%(app_label)s_%(class)s_1')
-    contentmetadata_2 = models.ForeignKey(ContentMetadata, related_name='%(app_label)s_%(class)s_2')
+    contentmetadata_1 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_1')
+    contentmetadata_2 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_2')
 
     class Meta:
         unique_together = ['contentmetadata_1', 'contentmetadata_2']
