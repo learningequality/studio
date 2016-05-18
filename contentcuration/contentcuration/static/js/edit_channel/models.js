@@ -2,8 +2,6 @@ var Backbone = require("backbone");
 var _= require("underscore");
 var presets = require("edit_channel/presets.json");
 
-var mimetype_list = presets["mimetypes"];
-
 var license_list = presets["licenses"];
 
 /**** BASE MODELS ****/
@@ -413,21 +411,6 @@ var FormatCollection = BaseCollection.extend({
 
 
 /**** PRESETS AUTOMATICALLY GENERATED UPON FIRST USE ****/
-var PresetCollection = BaseCollection.extend({
-	model: MimeTypeModel,
-	list_to_create:[],
-	list_name: null,
-
-    create_presets:function(){
-    	var self = this;
-    	this.list_to_create.forEach(function(entry){
-    	 	if(self.where(entry).length == 0){
-				self.create(entry, {async:false});
-    	 	}
-    	});
-    }
-});
-
 var MimeTypeModel = Backbone.Model.extend({
 	root_list: "mimetype-list",
 	defaults: {
@@ -436,10 +419,9 @@ var MimeTypeModel = Backbone.Model.extend({
     }
 });
 
-var MimeTypeCollection = PresetCollection.extend({
+var MimeTypeCollection = BaseCollection.extend({
 	model: MimeTypeModel,
 	list_name:"mimetype-list",
-	list_to_create:mimetype_list,
 
     create_mimetypes:function(){
     	this.create_presets();
@@ -454,10 +436,9 @@ var LicenseModel = BaseModel.extend({
     }
 });
 
-var LicenseCollection = PresetCollection.extend({
+var LicenseCollection = BaseCollection.extend({
 	model: LicenseModel,
 	list_name:"contentlicense-list",
-	list_to_create:license_list,
 
     create_licenses:function(){
     	this.create_presets();
