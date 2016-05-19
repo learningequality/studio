@@ -220,7 +220,7 @@ var ContentNodeModel = BaseModel.extend({
 		}
 	},
 	get_formats:function(){
-		var formats = new FormatCollection();
+		var formats = new FileFormatCollection();
 		formats.fetch({async:false});
 		return formats.where({contentmetadata : this.id});
 	},
