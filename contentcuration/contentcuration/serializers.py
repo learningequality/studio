@@ -12,7 +12,7 @@ from django.db import transaction
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ContentLicense
+        model = License
         fields = ('license_name', 'exists', 'id')
 
 class ChannelSerializer(serializers.ModelSerializer):
@@ -52,20 +52,19 @@ class FileSerializer(serializers.ModelSerializer):
          return super.get(*args, **kwargs)
     class Meta:
         model = File
-        fields = ('checksum', 'extension', 'file_size', 'content_copy', 'id', 'available', 'format')
+        fields = ('id', 'checksum', 'file_size', 'content_copy', 'contentmetadata', 'file_format', 'preset', 'lang')
 
-class FormatSerializer(serializers.ModelSerializer):
-   files = FileSerializer(many=True, read_only=True)
+class FileFormatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FileFormat
+        fields = ("__all__")
+
+class FormatPresetSerializer(serializers.ModelSerializer):
+   # files = FileSerializer(many=True, read_only=True)
 
    class Meta:
-        model = Format
-        fields = ('format_size', 'quality', 'contentmetadata', 'available', 'mimetype', 'id', 'files')
-
-class TagSerializer(serializers.ModelSerializer):
-   class Meta:
-    model = ContentTag
-    fields = ('tag_name', 'tag_type')
-
+        model = FormatPreset
+        fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats')
 
 class CustomListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
@@ -125,10 +124,9 @@ class CustomListSerializer(serializers.ListSerializer):
 
         return ret
 
-
-class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    formats = FormatSerializer(many=True, read_only=True)
+    preset = FormatPresetSerializer(many=True, read_only=True)
     id = serializers.IntegerField(required=False)
 
     resource_count = serializers.SerializerMethodField('count_resources')
@@ -245,15 +243,16 @@ class NodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     class Meta:
         list_serializer_class = CustomListSerializer
-        model = Node
+        model = ContentNode
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',  'sort_order',
-                 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id', 'formats',
+                 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
                  'original_filename', 'resource_count', 'resource_size', 'ancestors', 'tags')
 
-class MimeTypeSerializer(serializers.ModelSerializer):
+class TagSerializer(serializers.ModelSerializer):
    class Meta:
-    model = MimeType
-    fields = ('readable_name', 'machine_name', 'id')
+    model = ContentTag
+    fields = ('tag_name', 'tag_type')
+
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:

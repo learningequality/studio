@@ -1,10 +1,5 @@
 var Backbone = require("backbone");
 var _= require("underscore");
-var presets = require("edit_channel/presets.json");
-
-var mimetype_list = presets["mimetypes"];
-
-var license_list = presets["licenses"];
 
 /**** BASE MODELS ****/
 var BaseModel = Backbone.Model.extend({
@@ -36,8 +31,8 @@ var BaseCollection = Backbone.Collection.extend({
 });
 
 /**** CHANNEL AND CONTENT MODELS ****/
-var NodeModel = BaseModel.extend({
-	root_list:"node-list",
+var ContentNodeModel = BaseModel.extend({
+	root_list:"contentnode-list",
 	defaults: {
 		title:"Untitled",
 		parent: null,
@@ -52,8 +47,8 @@ var NodeModel = BaseModel.extend({
     duplicate: function(target_parent){
     	var start = new Date().getTime();
     	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
-		var node_data = new NodeModel();
-		var nodeChildrenCollection = new NodeCollection();
+		var node_data = new ContentNodeModel();
+		var nodeChildrenCollection = new ContentNodeCollection();
 		var self = this;
 		node_data.set(data);
 		node_data.move(target_parent, true, target_parent.get("children").length);
@@ -111,7 +106,7 @@ var NodeModel = BaseModel.extend({
 		console.log("PERFORMANCE models.js: starting copy_children...");
 		var start = new Date().getTime();
 		var self = this;
-		var copied_collection = new NodeCollection();
+		var copied_collection = new ContentNodeCollection();
 		copied_collection = copied_collection.get_all_fetch(original_collection);
 		copied_collection.forEach(function(entry){
 			entry.duplicate(node);
@@ -123,7 +118,7 @@ var NodeModel = BaseModel.extend({
 			return "Name is required.";
 
 		if(attrs.parent){
-			var parent = new NodeModel({'id': attrs.parent});
+			var parent = new ContentNodeModel({'id': attrs.parent});
 			parent.fetch({async:false});
 
 			if(parent.get("ancestors").indexOf(attrs.id) >= 0){
@@ -153,7 +148,7 @@ var NodeModel = BaseModel.extend({
 				format_size: file_data.data.size,
 				quality: "normal",
 				contentmetadata : this.id,
-				mimetype : this.get_mimetype(file_data.data.type).id
+				fileformat : this.get_fileformat(file_data.data.type).id
 			},{
 				success:function(){
 					var files = new FileCollection();
@@ -173,9 +168,13 @@ var NodeModel = BaseModel.extend({
 			});
 		}
 	},
-
-	get_mimetype:function(type){
-		return window.mimetypes.findWhere({machine_name: type});
+	get_formats:function(){
+		var formats = new FileFormatCollection();
+		formats.fetch({async:false});
+		return formats.where({contentmetadata : this.id});
+	},
+	get_fileformat:function(type){
+		return window.fileformats.findWhere({extension: type});
 	},
 	get_files: function(){
 		var formats = this.get("formats");
@@ -191,15 +190,15 @@ var NodeModel = BaseModel.extend({
 	}
 });
 
-var NodeCollection = BaseCollection.extend({
-	model: NodeModel,
-	list_name:"node-list",
+var ContentNodeCollection = BaseCollection.extend({
+	model: ContentNodeModel,
+	list_name:"contentnode-list",
 
    /* TODO: would be better to fetch all values at once */
     get_all_fetch: function(ids){
     	console.log("PERFORMANCE models.js: starting get_all_fetch...", ids);
 		var start = new Date().getTime();
-    	var to_fetch = new NodeCollection();
+    	var to_fetch = new ContentNodeCollection();
     	for(var i = 0; i < ids.length; i++){
     		if(ids[i]){
     			var model = this.get({id: ids[i]});
@@ -253,7 +252,7 @@ var TopicTreeModel = BaseModel.extend({
 		is_published: false
 	},
 	get_root: function(){
-		var root = new NodeModel({id: this.get("root_node")});
+		var root = new ContentNodeModel({id: this.get("root_node")});
 		root.fetch({async:false});
 		return root;
 	}
@@ -275,66 +274,47 @@ var FileCollection = BaseCollection.extend({
 	list_name:"file-list"
 });
 
-var FormatModel = BaseModel.extend({
-	root_list:"format-list"
+var FormatPresetModel = BaseModel.extend({
+	root_list:"formatpreset-list",
+	/*HARDCODED FOR NOW, NEED TO ASSIGN FORMATS*/
+	get_files : function(){
+		var files = new FileCollection();
+		files.fetch({async:false});
+		return files.where({format: this.id});
+	}
 });
 
-var FormatCollection = BaseCollection.extend({
-	model: FormatModel,
-	list_name:"format-list"
+var FormatPresetCollection = BaseCollection.extend({
+	model: FormatPresetModel,
+	list_name:"formatpreset-list"
 });
 
 
 /**** PRESETS AUTOMATICALLY GENERATED UPON FIRST USE ****/
-var PresetCollection = BaseCollection.extend({
-	model: MimeTypeModel,
-	list_to_create:[],
-	list_name: null,
-
-    create_presets:function(){
-    	var self = this;
-    	this.list_to_create.forEach(function(entry){
-    	 	if(self.where(entry).length == 0){
-				self.create(entry, {async:false});
-    	 	}
-    	});
-    }
-});
-
-var MimeTypeModel = Backbone.Model.extend({
-	root_list: "mimetype-list",
+var FileFormatModel = Backbone.Model.extend({
+	root_list: "fileformat-list",
 	defaults: {
-		readable_name:"invalid",
-		machine_name: "invalid"
+		extension:"invalid"
     }
 });
 
-var MimeTypeCollection = PresetCollection.extend({
-	model: MimeTypeModel,
-	list_name:"mimetype-list",
-	list_to_create:mimetype_list,
-
-    create_mimetypes:function(){
-    	this.create_presets();
-    }
+var FileFormatCollection = BaseCollection.extend({
+	model: FileFormatModel,
+	list_name:"fileformat-list",
 });
 
 var LicenseModel = BaseModel.extend({
-	root_list:"contentlicense-list",
+	root_list:"license-list",
 	defaults: {
 		license_name:"Unlicensed",
 		exists: false
     }
 });
 
-var LicenseCollection = PresetCollection.extend({
+var LicenseCollection = BaseCollection.extend({
 	model: LicenseModel,
-	list_name:"contentlicense-list",
-	list_to_create:license_list,
+	list_name:"license-list",
 
-    create_licenses:function(){
-    	this.create_presets();
-    },
     get_default:function(){
     	return this.findWhere({license_name:"CC-BY"});
     }
@@ -371,13 +351,13 @@ var TagCollection = BaseCollection.extend({
 });
 
 module.exports = {
-	NodeModel: NodeModel,
-	NodeCollection: NodeCollection,
+	ContentNodeModel: ContentNodeModel,
+	ContentNodeCollection: ContentNodeCollection,
 	TopicTreeModel:TopicTreeModel,
 	TopicTreeModelCollection: TopicTreeModelCollection,
 	ChannelModel: ChannelModel,
 	ChannelCollection: ChannelCollection,
-	MimeTypeCollection:MimeTypeCollection,
-	LicenseCollection:LicenseCollection,
-	TagModel: TagModel
+	TagModel: TagModel,
+	FileFormatCollection:FileFormatCollection,
+	LicenseCollection:LicenseCollection
 }

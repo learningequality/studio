@@ -1,0 +1,91 @@
+[
+  {
+    "model": "contentcuration.License",
+    "pk": 1,
+    "fields": {
+      "license_name": "CC-BY",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 2,
+    "fields": {
+      "license_name": "CC BY-SA",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 3,
+    "fields": {
+      "license_name": "CC BY-ND",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 4,
+    "fields": {
+      "license_name": "CC BY-NC",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 5,
+    "fields": {
+      "license_name": "CC BY-NC-SA",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 6,
+    "fields": {
+      "license_name": "CC BY-NC-ND",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 7,
+    "fields": {
+      "license_name": "All rights reserved",
+      "exists": true
+    }
+  },
+
+
+
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": ".mp4"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": ".vtt"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": ".srt"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": ".mp3"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": ".pdf"
+    }
+  }
+]

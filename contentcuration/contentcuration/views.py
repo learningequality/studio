@@ -12,8 +12,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, Node, TopicTree, MimeType, ContentLicense
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, NodeSerializer, TopicTreeSerializer, MimeTypeSerializer, LicenseSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, TopicTree, License, FileFormat
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicTreeSerializer, LicenseSerializer, FileFormatSerializer
 
 from kolibri.content.models import File
 
@@ -28,7 +28,7 @@ def channel_list(request):
     channel_list = Channel.objects.all() # Todo: only allow access to certain channels?
     channel_serializer = ChannelSerializer(channel_list, many=True)
 
-    licenses = ContentLicense.objects.all()
+    licenses = License.objects.all()
     license_serializer = LicenseSerializer(licenses, many=True)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data)})
@@ -37,16 +37,13 @@ def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id)
     channel_serializer =  ChannelSerializer(channel)
 
-    mimetypes = MimeType.objects.all()
-    mimetype_serializer = MimeTypeSerializer(mimetypes, many=True)
+    fileformats = FileFormat.objects.all()
+    fileformat_serializer = FileFormatSerializer(fileformats, many=True)
 
-    mimetypes = MimeType.objects.all()
-    mimetype_serializer = MimeTypeSerializer(mimetypes, many=True)
-
-    licenses = ContentLicense.objects.all()
+    licenses = License.objects.all()
     license_serializer = LicenseSerializer(licenses, many=True)
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
-                                                 "mimetypes" : JSONRenderer().render(mimetype_serializer.data),
+                                                "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data)})
 
 def exercise_list(request):

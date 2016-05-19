@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
-from contentcuration.models import Channel, TopicTree, ContentTag, Node, ContentLicense, Exercise, AssessmentItem, File, Format, MimeType
+from contentcuration.models import ContentNode, License, Channel, TopicTree, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem
 import serializers
 import views
 from contentcuration import api
@@ -28,7 +28,7 @@ from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
 
 class LicenseViewSet(viewsets.ModelViewSet):
-    queryset = ContentLicense.objects.all()
+    queryset = License.objects.all()
     serializer_class = serializers.LicenseSerializer
 
 
@@ -44,17 +44,17 @@ class FileViewSet(viewsets.ModelViewSet):
     queryset = File.objects.all()
     serializer_class = serializers.FileSerializer
 
-class FormatViewSet(viewsets.ModelViewSet):
-    queryset = Format.objects.all()
-    serializer_class = serializers.FormatSerializer
+class FileFormatViewSet(viewsets.ModelViewSet):
+    queryset = FileFormat.objects.all()
+    serializer_class = serializers.FileFormatSerializer
 
-class MimeTypeViewSet(viewsets.ModelViewSet):
-    queryset = MimeType.objects.all()
-    serializer_class = serializers.MimeTypeSerializer
+class FormatPresetViewSet(viewsets.ModelViewSet):
+    queryset = FormatPreset.objects.all()
+    serializer_class = serializers.FormatPresetSerializer
 
-class NodeViewSet(BulkModelViewSet):
-    queryset = Node.objects.all()
-    serializer_class = serializers.NodeSerializer
+class ContentNodeViewSet(BulkModelViewSet):
+    queryset = ContentNode.objects.all()
+    serializer_class = serializers.ContentNodeSerializer
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = ContentTag.objects.all()
@@ -74,11 +74,11 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'topictree', TopicTreeViewSet)
-# router.register(r'node', NodeViewSet)
+router.register(r'contentnode', ContentNodeViewSet)
 router.register(r'exercise', ExerciseViewSet)
 router.register(r'file', FileViewSet)
-router.register(r'format', FormatViewSet)
-router.register(r'mimetype', MimeTypeViewSet)
+router.register(r'fileformat', FileFormatViewSet)
+router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
 
 bulkrouter = BulkRouter(trailing_slash=False)
