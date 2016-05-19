@@ -10,8 +10,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, TopicTree, License
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicTreeSerializer, LicenseSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, TopicTree, License, FileFormat
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicTreeSerializer, LicenseSerializer, FileFormatSerializer
 
 from kolibri.content.models import File
 
@@ -35,9 +35,13 @@ def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id)
     channel_serializer =  ChannelSerializer(channel)
 
+    fileformats = FileFormat.objects.all()
+    fileformat_serializer = FileFormatSerializer(fileformats, many=True)
+
     licenses = License.objects.all()
     license_serializer = LicenseSerializer(licenses, many=True)
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
+                                                "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data)})
 
 def exercise_list(request):

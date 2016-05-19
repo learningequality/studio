@@ -26,6 +26,11 @@ class FileSerializer(serializers.ModelSerializer):
         model = File
         fields = ('id', 'checksum', 'file_size', 'content_copy', 'contentmetadata', 'file_format', 'preset', 'lang')
 
+class FileFormatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FileFormat
+        fields = ("__all__")
+
 class FormatPresetSerializer(serializers.ModelSerializer):
    # files = FileSerializer(many=True, read_only=True)
 

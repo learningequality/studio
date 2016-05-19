@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
-from contentcuration.models import ContentNode, License, Channel, TopicTree, File, FormatPreset, ContentTag, Exercise, AssessmentItem
+from contentcuration.models import ContentNode, License, Channel, TopicTree, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem
 import serializers
 import views
 
@@ -43,6 +43,10 @@ class TopicTreeViewSet(viewsets.ModelViewSet):
 class FileViewSet(viewsets.ModelViewSet):
     queryset = File.objects.all()
     serializer_class = serializers.FileSerializer
+
+class FileFormatViewSet(viewsets.ModelViewSet):
+    queryset = FileFormat.objects.all()
+    serializer_class = serializers.FileFormatSerializer
 
 class FormatPresetViewSet(viewsets.ModelViewSet):
     queryset = FormatPreset.objects.all()
@@ -73,6 +77,7 @@ router.register(r'topictree', TopicTreeViewSet)
 router.register(r'contentnode', ContentNodeViewSet)
 router.register(r'exercise', ExerciseViewSet)
 router.register(r'file', FileViewSet)
+router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
 
