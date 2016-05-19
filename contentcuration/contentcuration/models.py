@@ -39,6 +39,33 @@ class Channel(models.Model):
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
 
+def content_copy_name(instance, filename):
+    """
+    Create a name spaced file path from the File obejct's checksum property.
+    This path will be used to store the content copy
+
+    :param instance: File (content File model)
+    :param filename: str
+    :return: str
+    """
+    h = instance.checksum
+    basename, ext = os.path.splitext(filename)
+    return os.path.join(settings.CONTENT_COPY_DIR, h[0:1], h[1:2], h + ext.lower())
+
+class ContentCopyStorage(FileSystemStorage):
+    """
+    Overrider FileSystemStorage's default save method to ignore duplicated file.
+    """
+    def get_available_name(self, name):
+        return name
+
+    def _save(self, name, content):
+        if self.exists(name):
+            # if the file exists, do not call the superclasses _save method
+            logging.warn('Content copy "%s" already exists!' % name)
+            return name
+        return super(ContentCopyStorage, self)._save(name, content)
+
 class ContentCopyTracking(models.Model):
     """
     Record how many times a content copy are referenced by File objects.
