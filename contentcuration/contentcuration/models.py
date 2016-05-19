@@ -278,25 +278,25 @@ class PrerequisiteContentRelationship(models.Model):
     """
     Predefine the prerequisite relationship between two ContentNode objects.
     """
-    contentmetadata_1 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_1')
-    contentmetadata_2 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_2')
+    contentnode_1 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_1')
+    contentnode_2 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_2')
 
     class Meta:
-        unique_together = ['contentmetadata_1', 'contentmetadata_2']
+        unique_together = ['contentnode_1', 'contentnode_2']
 
     def clean(self, *args, **kwargs):
         # self reference exception
-        if self.contentmetadata_1 == self.contentmetadata_2:
+        if self.contentnode_1 == self.contentnode_2:
             raise IntegrityError('Cannot self reference as prerequisite.')
         # immediate cyclic exception
         elif PrerequisiteContentRelationship.objects.using(self._state.db)\
-                .filter(contentmetadata_1=self.contentmetadata_2, contentmetadata_2=self.contentmetadata_1):
+                .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
             raise IntegrityError(
                 'Note: Prerequisite relationship is directional! %s and %s cannot be prerequisite of each other!'
-                % (self.contentmetadata_1, self.contentmetadata_2))
+                % (self.contentnode_1, self.contentnode_2))
         # distant cyclic exception
         # elif <this is a nice to have exception, may implement in the future when the priority raises.>
-        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (self.contentmetadata_1, self.contentmetadata_2))
+        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (self.contentnode_1, self.contentnode_2))
         super(PrerequisiteContentRelationship, self).clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):
@@ -308,19 +308,19 @@ class RelatedContentRelationship(models.Model):
     """
     Predefine the related relationship between two ContentNode objects.
     """
-    contentmetadata_1 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_1')
-    contentmetadata_2 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_2')
+    contentnode_1 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_1')
+    contentnode_2 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_2')
 
     class Meta:
-        unique_together = ['contentmetadata_1', 'contentmetadata_2']
+        unique_together = ['contentnode_1', 'contentnode_2']
 
     def save(self, *args, **kwargs):
         # self reference exception
-        if self.contentmetadata_1 == self.contentmetadata_2:
+        if self.contentnode_1 == self.contentnode_2:
             raise IntegrityError('Cannot self reference as related.')
         # handle immediate cyclic
         elif RelatedContentRelationship.objects.using(self._state.db)\
-                .filter(contentmetadata_1=self.contentmetadata_2, contentmetadata_2=self.contentmetadata_1):
+                .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
             return  # silently cancel the save
         super(RelatedContentRelationship, self).save(*args, **kwargs)
 
