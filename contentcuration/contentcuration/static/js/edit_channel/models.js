@@ -1,8 +1,5 @@
 var Backbone = require("backbone");
 var _= require("underscore");
-var presets = require("edit_channel/presets.json");
-
-var license_list = presets["licenses"];
 
 /**** BASE MODELS ****/
 var BaseModel = Backbone.Model.extend({
@@ -29,7 +26,7 @@ var BaseCollection = Backbone.Collection.extend({
 
 /**** CHANNEL AND CONTENT MODELS ****/
 var ContentNodeModel = BaseModel.extend({
-	root_list:"node-list",
+	root_list:"contentnode-list",
 	defaults: {
 		title:"Untitled",
 		parent: null,
@@ -200,7 +197,7 @@ var ContentNodeModel = BaseModel.extend({
 				format_size: file_data.data.size,
 				quality: "normal",
 				contentmetadata : this.id,
-				mimetype : this.get_mimetype(file_data.data.type).id
+				fileformat : this.get_fileformat(file_data.data.type).id
 			},{
 				success:function(){
 					var files = new FileCollection();
@@ -227,8 +224,8 @@ var ContentNodeModel = BaseModel.extend({
 		formats.fetch({async:false});
 		return formats.where({contentmetadata : this.id});
 	},
-	get_mimetype:function(type){
-		return window.mimetypes.findWhere({machine_name: type});
+	get_fileformat:function(type){
+		return window.fileformats.findWhere({extension: type});
 	},
 	get_files: function(){
 		var formats = this.get_formats();
@@ -243,7 +240,7 @@ var ContentNodeModel = BaseModel.extend({
 
 var ContentNodeCollection = BaseCollection.extend({
 	model: ContentNodeModel,
-	list_name:"node-list",
+	list_name:"contentnode-list",
 
    /* TODO: would be better to fetch all values at once */
     get_all_fetch: function(ids){
@@ -394,8 +391,8 @@ var FileCollection = BaseCollection.extend({
 	list_name:"file-list"
 });
 
-var FormatModel = BaseModel.extend({
-	root_list:"format-list",
+var FormatPresetModel = BaseModel.extend({
+	root_list:"formatpreset-list",
 	/*HARDCODED FOR NOW, NEED TO ASSIGN FORMATS*/
 	get_files : function(){
 		var files = new FileCollection();
@@ -404,32 +401,27 @@ var FormatModel = BaseModel.extend({
 	}
 });
 
-var FormatCollection = BaseCollection.extend({
-	model: FormatModel,
-	list_name:"format-list"
+var FormatPresetCollection = BaseCollection.extend({
+	model: FormatPresetModel,
+	list_name:"formatpreset-list"
 });
 
 
 /**** PRESETS AUTOMATICALLY GENERATED UPON FIRST USE ****/
-var MimeTypeModel = Backbone.Model.extend({
-	root_list: "mimetype-list",
+var FileFormatModel = Backbone.Model.extend({
+	root_list: "fileformat-list",
 	defaults: {
-		readable_name:"invalid",
-		machine_name: "invalid"
+		extension:"invalid"
     }
 });
 
-var MimeTypeCollection = BaseCollection.extend({
-	model: MimeTypeModel,
-	list_name:"mimetype-list",
-
-    create_mimetypes:function(){
-    	this.create_presets();
-    }
+var FileFormatCollection = BaseCollection.extend({
+	model: FileFormatModel,
+	list_name:"fileformat-list",
 });
 
 var LicenseModel = BaseModel.extend({
-	root_list:"contentlicense-list",
+	root_list:"license-list",
 	defaults: {
 		license_name:"Unlicensed",
 		exists: false
@@ -438,11 +430,8 @@ var LicenseModel = BaseModel.extend({
 
 var LicenseCollection = BaseCollection.extend({
 	model: LicenseModel,
-	list_name:"contentlicense-list",
+	list_name:"license-list",
 
-    create_licenses:function(){
-    	this.create_presets();
-    },
     get_default:function(){
     	return this.findWhere({license_name:"CC-BY"});
     }
@@ -485,6 +474,6 @@ module.exports = {
 	TopicTreeModelCollection: TopicTreeModelCollection,
 	ChannelModel: ChannelModel,
 	ChannelCollection: ChannelCollection,
-	MimeTypeCollection:MimeTypeCollection,
+	FileFormatCollection:FileFormatCollection,
 	LicenseCollection:LicenseCollection
 }

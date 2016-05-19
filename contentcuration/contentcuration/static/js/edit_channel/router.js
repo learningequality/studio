@@ -16,7 +16,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 		this.nodeCollection.fetch();
 		window.licenses = new Models.LicenseCollection(window.license_list);
 		window.licenses.fetch();
-		window.licenses.create_licenses();
 		window.current_channel = new Models.ChannelModel(window.channel);
 		//this.listenTo(saveDispatcher, "save", this.save);
 		this.channelCollection = new Models.ChannelCollection();
@@ -51,9 +50,8 @@ ChannelEditRouter  = Backbone.Router.extend({
 	},
 
 	open_channel: function(edit_mode_on, is_clipboard, root){
-		window.mimetypes = new Models.MimeTypeCollection(window.mtypes);
-		window.mimetypes.fetch();
-		window.mimetypes.create_mimetypes();
+		window.fileformats = new Models.FileFormatCollection(window.mtypes);
+		window.fileformats.fetch();
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
