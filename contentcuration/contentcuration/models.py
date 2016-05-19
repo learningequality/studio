@@ -39,6 +39,14 @@ class Channel(models.Model):
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
 
+class ContentCopyTracking(models.Model):
+    """
+    Record how many times a content copy are referenced by File objects.
+    If it reaches 0, it's supposed to be deleted.
+    """
+    referenced_count = models.IntegerField(blank=True, null=True)
+    content_copy_id = models.CharField(max_length=400, unique=True)
+
 class TopicTree(models.Model):
     """Base model for all channels"""
 
