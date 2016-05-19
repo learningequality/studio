@@ -50,7 +50,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 	},
 
 	open_channel: function(edit_mode_on, is_clipboard, root){
-		window.fileformats = new Models.FileFormatCollection(window.mtypes);
+		window.fileformats = new Models.FileFormatCollection(window.fformats);
 		window.fileformats.fetch();
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
