@@ -142,8 +142,7 @@ class ContentNode(MPTTModel, models.Model):
     )
     original_filename = models.CharField(
         max_length=255,
-        blank=True,
-        null=True,
+        blank=True
     )
 
     @property
