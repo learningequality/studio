@@ -255,12 +255,14 @@ var BaseListNodeItemView = BaseListItemView.extend({
     		var node_data = new Models.ContentNodeModel(data);
 			this.containing_list_view.collection.create(node_data, options);
 			if(this.model.get("kind").toLowerCase() != "topic"){
+				console.log("CALLED FIRST");
 				node_data.create_file();
 			}
     	}
 		else{
 			this.model.save(data, options);
 			if(this.model.get("kind") && this.model.get("kind").toLowerCase() != "topic"){
+				console.log("CALLED SECOND");
 				this.model.create_file();
 			}
 		}
@@ -348,22 +350,19 @@ var BaseEditorView = BaseListView.extend({
 			event.preventDefault();
 		}
 	},
-	save_nodes: function(){
+	save_nodes: function(callback){
 		this.parent_view.set_editing(false);
 		var self = this;
 		window.ccc = this.collection;
 		this.views.forEach(function(entry){
 			entry.model.set({tags: entry.tags});
-			console.log("TAGS ARE:",entry.model.get("tags"));
 	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
-		this.collection.save(this.collection, {async:false,
-			success:function(){
-				console.log("success! collection is now:", self.collection);
-			}
+		this.collection.save(function(){
+			callback();
 		});
-		console.log("collection is now:", this.collection);
+
 	},
 	check_nodes:function(){
 		var self = this;

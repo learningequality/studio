@@ -1,6 +1,7 @@
 import logging
 import os
 from uuid import uuid4
+import hashlib
 
 from django.conf import settings
 from django.contrib import admin
@@ -10,7 +11,7 @@ from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 
-from kolibri.content.models import *
+#from kolibri.content.models import *
 from constants import content_kinds, extensions, presets
 
 class Channel(models.Model):
@@ -177,10 +178,6 @@ class ContentNode(MPTTModel, models.Model):
         verbose_name=_("Published"),
         help_text=_("If published, students can access this item"),
     )
-    original_filename = models.CharField(
-        max_length=255,
-        blank=True
-    )
 
     @property
     def has_draft(self):
@@ -262,6 +259,7 @@ class File(models.Model):
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
     lang = models.ForeignKey(Language, blank=True, null=True)
+    original_filename = models.CharField(max_length=255, blank=True)
 
     class Admin:
         pass

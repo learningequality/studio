@@ -19,11 +19,11 @@ var BaseCollection = Backbone.Collection.extend({
 	url: function() {
 		return window.Urls[this.list_name]();
 	},
-	save: function() {
-		var self = this;
+	save: function(callback) {
+		// var self = this;
 		// this.models.forEach(function(entry){
 		// 	if(entry.hasChanged()){
-		// 		entry.save();
+		// 		entry.save({async:false});
 		// 	}
 		// });
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
@@ -139,34 +139,21 @@ var ContentNodeModel = BaseModel.extend({
 		}
 	},
 	create_file:function(){
+		console.log("CALLED CREATE FILE", this);
 		if(this.attributes.file_data){
-			console.log("CREATING FILE");
 			var file_data = this.attributes.file_data;
-			var format = new FormatModel();
-			var self = this;
-			format.save({
-				available : false,
-				format_size: file_data.data.size,
-				quality: "normal",
-				contentmetadata : this.id,
-				fileformat : this.get_fileformat(file_data.data.type).id
-			},{
-				success:function(){
-					var files = new FileCollection();
-					files.fetch({async:false});
-
-					var file = files.findWhere({
-						checksum: file_data.filename.split(".")[0],
-						extension: "." + file_data.filename.split(".")[1]
-					});
-					file.save({
-						  format: format.id,
-          			},
-		          	{
-		              	patch: true,
-		          	});
-		        }
+			var files = new FileCollection();
+			files.fetch({async:false});
+			var file = files.findWhere({
+				checksum: file_data.filename.split(".")[0],
 			});
+			console.log("FOUND A FILE:", this);
+			console.log("ID IS: " + this.id);
+			file.save({
+				file_size : file_data.data.size,
+				contentmetadata : this.id,
+				original_filename : file_data.data.name
+			},{patch:true, async:false});
 		}
 	},
 	get_formats:function(){
@@ -194,6 +181,24 @@ var ContentNodeModel = BaseModel.extend({
 var ContentNodeCollection = BaseCollection.extend({
 	model: ContentNodeModel,
 	list_name:"contentnode-list",
+
+	save: function(callback) {
+		var self = this;
+		console.log("FILE BEFORE COLLECTION", this);
+        Backbone.sync("update", this, {
+        	url: this.model.prototype.urlRoot(),
+        	async:false,
+        	success: function(data){
+        		data.forEach(function(entry){
+        			var node = self.get_all_fetch([entry.id]).models[0];
+        			console.log("FILE NODE IS", node);
+        			node.create_file();
+				});
+        		callback();
+        	}
+
+        });
+	},
 
    /* TODO: would be better to fetch all values at once */
     get_all_fetch: function(ids){
@@ -277,7 +282,7 @@ var FileCollection = BaseCollection.extend({
 
 var FormatPresetModel = BaseModel.extend({
 	root_list:"formatpreset-list",
-	/*HARDCODED FOR NOW, NEED TO ASSIGN FORMATS*/
+
 	get_files : function(){
 		var files = new FileCollection();
 		files.fetch({async:false});

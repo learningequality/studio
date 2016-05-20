@@ -52,7 +52,7 @@ class FileSerializer(serializers.ModelSerializer):
          return super.get(*args, **kwargs)
     class Meta:
         model = File
-        fields = ('id', 'checksum', 'file_size', 'content_copy', 'contentmetadata', 'file_format', 'preset', 'lang')
+        fields = ('id', 'checksum', 'file_size', 'content_copy', 'contentmetadata', 'file_format', 'preset', 'lang','original_filename')
 
 class FileFormatSerializer(serializers.ModelSerializer):
     class Meta:
@@ -137,6 +137,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
+    files = FileSerializer(many=True, read_only=True)
 
 
     def to_internal_value(self, data):
@@ -251,7 +252,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         model = ContentNode
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',  'sort_order',
                  'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
-                 'original_filename', 'resource_count', 'resource_size', 'ancestors', 'tags')
+                 'resource_count', 'resource_size', 'ancestors', 'tags', 'files')
 
 class TagSerializer(serializers.ModelSerializer):
    class Meta:

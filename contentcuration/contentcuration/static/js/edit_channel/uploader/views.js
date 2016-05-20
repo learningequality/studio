@@ -116,7 +116,6 @@ var AddContentView = BaseViews.BaseListView.extend({
         var self = this.parent_view;
 
         file_list.forEach(function(entry){
-            console.log("this is now", self);
             var type = "";
             var file = entry.data;
             var filename = entry.filename;
@@ -141,7 +140,6 @@ var AddContentView = BaseViews.BaseListView.extend({
                 "parent" : self.model.id,
                 "total_file_size": file.size,
                 "created" : file.lastModifiedDate,
-                "original_filename" : file.name,
                 "sort_order": self.main_collection.length + self.collection.length
             });
             self.collection.add(content_node);
@@ -149,7 +147,9 @@ var AddContentView = BaseViews.BaseListView.extend({
                 containing_list_view: self,
                 model: content_node
             });
+
             content_node.attributes.file_data = {data:file, filename:entry.filename};
+           // console.log("ATTRIBUTES ARE : ", content_node);
             $("#upload_content_add_list").append(item_view.el);
             item_view.$el.data("file", entry);
             self.views.push(item_view);
@@ -352,7 +352,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.set_current(node_view);
         }else{
             this.collection.forEach(function(entry){
-                console.log("view = ", entry);
+               // console.log("view = ", entry);
                 var node_view = new UploadedItem({
                     model: entry,
                     el: self.$el.find("#uploaded_list #item_" + entry.cid),
@@ -402,22 +402,23 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             if(!self.errorsFound){
                 self.$el.css("visibility", "hidden");
                 self.display_load("Saving Content...", function(){
-                    self.save_nodes();
-                    if(!self.errorsFound){
-                        $(".uploaded").css("background-color", "white");
-                        self.$el.find("#title_error").html("");
-                        self.$el.find("#description_error").html("");
-                        if(self.multiple_selected){
-                            self.gray_out(true);
+                    self.save_nodes(function(){
+                        if(!self.errorsFound){
+                            $(".uploaded").css("background-color", "white");
+                            self.$el.find("#title_error").html("");
+                            self.$el.find("#description_error").html("");
+                            if(self.multiple_selected){
+                                self.gray_out(true);
+                            }
                         }
-                    }
-                    if(!self.errorsFound && self.allow_add){
-                        self.parent_view.add_nodes(self.views, self.main_collection.length, false);
-                    }
-                    self.$el.css("visibility", "visible");
-                    if(callback){
-                        callback();
-                    }
+                        if(!self.errorsFound && self.allow_add){
+                            self.parent_view.add_nodes(self.views, self.main_collection.length, false);
+                        }
+                        self.$el.css("visibility", "visible");
+                        if(callback){
+                            callback();
+                        }
+                    });
                 });
             }
 
@@ -802,13 +803,11 @@ var PreviewView = UploadItemView.extend({
                 default:
                     preview_template = require("./hbtemplates/preview_templates/default.handlebars");
             }
-
-            var options = {
+            this.$el.find("#preview_window").html(preview_template({
                 source: location,
                 extension:extension,
                 title: this.model.get("title")
-            };
-            this.$el.find("#preview_window").html(preview_template(options));
+            }));
         }
 
     },

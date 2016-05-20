@@ -1,5 +1,7 @@
 import copy
 import json
+import logging
+import os
 from rest_framework import status
 from django.http import Http404, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -12,10 +14,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, TopicTree, License, FileFormat
+from contentcuration.models import Exercise, AssessmentItem, Channel, TopicTree, License, FileFormat, File
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicTreeSerializer, LicenseSerializer, FileFormatSerializer
-
-from kolibri.content.models import File
 
 def base(request):
     return redirect('channels')    # redirect to the channel list page
@@ -86,7 +86,9 @@ def exercise(request, exercise_id):
 def file_upload(request):
 
     if request.method == 'POST':
-        file_object = File(content_copy=request.FILES.values()[0])
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1];
+        file_object = File(content_copy=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext))
+        logging.warning(file_object);
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
