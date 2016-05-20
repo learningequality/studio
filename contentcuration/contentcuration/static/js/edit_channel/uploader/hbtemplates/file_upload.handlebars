@@ -1,10 +1,28 @@
-<div id="dropzone">
+<div id="uploading_step_area">
+	<button class="btn btn-default fileinput-button dz-clickable action-button">
+	    <span>Add More Files</span>
+	</button>
+	<em>&nbsp; (or drag and drop files below)</em>
+	<div id="dropzone">
+
+	</div>
+	<div class="file_upload_buttons">
+		<button disabled class="action-button pull-right go_to_formats">
+			<span>NEXT</span>
+		</button>
+		<a class="action-text" data-dismiss="modal">
+			<span>CANCEL</span>
+		</a>
+	</div>
 </div>
-<button class="btn btn-default fileinput-button dz-clickable">
-    <i class="glyphicon glyphicon-plus"></i>
-    <span>Add Files</span>
-</button>
-<button disabled class="action-button pull-right submit_uploaded_files">
-	<i class="glyphicon glyphicon-ok" aria-hidden="true"></i>
-	<span>FINISH UPLOAD</span>
-</button>
+<div id="formatting_step_area">
+	<div id="format_list"></div>
+	<div class="file_upload_buttons">
+		<button disabled class="action-button pull-right submit_uploaded_files">
+			<span>FINISH UPLOAD</span>
+		</button>
+		<a class="action-text go_to_upload">
+			<span>BACK</span>
+		</a>
+	</div>
+</div>

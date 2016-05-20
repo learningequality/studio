@@ -59,7 +59,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 			edit: edit_mode_on,
 			model : root,
 			is_clipboard : is_clipboard,
-			channels : this.channelCollection
 		});
 
 	}

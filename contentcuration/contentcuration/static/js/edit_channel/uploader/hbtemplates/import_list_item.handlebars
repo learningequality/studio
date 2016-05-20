@@ -1,0 +1,20 @@
+<input type="checkbox" id="import_file_{{node.id}}" class="{{#if is_channel}}channel_checkbox {{/if}}import_checkbox"></input>
+
+<label for="import_file_{{node.id}}" class="{{#if is_channel}}import_channel_item{{else}}import_item{{/if}} {{#if isfolder}}tog_folder{{/if}}">
+	<span class="import_item_title truncate">{{node.attributes.title}}</span>
+	{{#if isfolder}}<span id="menu_toggle_{{node.id}}" class="toggler glyphicon {{#if is_channel}}glyphicon-menu-right{{else}}glyphicon-triangle-top{{/if}}"></span>{{/if}}
+	<em class="import_metadata">{{#format_file_size node.attributes.resource_size}}{{/format_file_size}}</em>
+	<i class="badge selected_counter">0</i>
+</label>
+
+{{#if isfolder}}
+	<div id="import_item_{{node.id}}_sub" style="margin-left: {{indent}}px;" class="subdirectory">
+	<!--<ul class="list-unstyled import-list">
+		{{#each sub_list}}
+			<li id="import_item_{{this}}" class="import_list_item"></li>
+		{{else}}
+			<li><em>No items found.</em></li>
+		{{/each}}
+	</ul>-->
+	</div>
+{{/if}}

@@ -14,6 +14,15 @@ from kolibri.content.api import *
 from django.db import transaction
 import models
 
+def count_files(node):
+    count = 0
+    if node.kind == "topic":
+        for n in node.children.all():
+            count += count_files(n)
+    else:
+        count += node.formats.count()
+    return count
+
 def count_children(node):
     count = node.children.count()
     for n in node.children.all():

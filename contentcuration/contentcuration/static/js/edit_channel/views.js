@@ -242,7 +242,6 @@ var BaseListNodeItemView = BaseListItemView.extend({
     	if(!this.model){
     		this.delete_view();
     	}
-
 		if(this.containing_list_view.item_view != "uploading_content"){
 			this.add_to_trash();
 		}
