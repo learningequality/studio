@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
-from contentcuration.models import ContentNode, License, Channel, TopicTree, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem
+from contentcuration.models import ContentNode, License, Channel, TopicTree, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem, ContentKind
 import serializers
 import views
 from contentcuration import api
@@ -52,6 +52,10 @@ class FormatPresetViewSet(viewsets.ModelViewSet):
     queryset = FormatPreset.objects.all()
     serializer_class = serializers.FormatPresetSerializer
 
+class ContentKindViewSet(viewsets.ModelViewSet):
+    queryset = ContentKind.objects.all()
+    serializer_class = serializers.ContentKindSerializer
+
 class ContentNodeViewSet(BulkModelViewSet):
     queryset = ContentNode.objects.all()
     serializer_class = serializers.ContentNodeSerializer
@@ -74,16 +78,16 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'topictree', TopicTreeViewSet)
-router.register(r'contentnode', ContentNodeViewSet)
 router.register(r'exercise', ExerciseViewSet)
 router.register(r'file', FileViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
+router.register(r'contentkind', ContentKindViewSet)
 
 bulkrouter = BulkRouter(trailing_slash=False)
 bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
-bulkrouter.register(r'node', NodeViewSet)
+bulkrouter.register(r'contentnode', ContentNodeViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),

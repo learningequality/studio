@@ -269,7 +269,7 @@ var BaseListNodeItemView = BaseListItemView.extend({
 	},
 	set:function(data, options){
 		if(!this.model){
-    		var node_data = new Models.NodeModel(data);
+    		var node_data = new Models.ContentNodeModel(data);
 			this.containing_list_view.collection.create(node_data, options);
 			if(this.model.get("kind").toLowerCase() != "topic"){
 				node_data.create_file();
@@ -280,7 +280,7 @@ var BaseListNodeItemView = BaseListItemView.extend({
 	},
 	open_edit:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
-		var edit_collection = new Models.NodeCollection();
+		var edit_collection = new Models.ContentNodeCollection();
 		edit_collection.add(this.model);
 
 		$("#main-content-area").append("<div id='dialog'></div>");
@@ -358,7 +358,11 @@ var BaseEditorView = BaseListView.extend({
 	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
-		this.collection.save({async:false});
+		this.collection.save(this.collection, {async:false,
+			success:function(){
+				console.log("success! collection is now:", self.collection);
+			}
+		});
 		console.log("collection is now:", this.collection);
 	},
 	check_nodes:function(){

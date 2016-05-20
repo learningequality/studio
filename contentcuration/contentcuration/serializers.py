@@ -1,5 +1,5 @@
 import logging
-from contentcuration.models import Channel, TopicTree, ContentTag, Node, ContentLicense, Exercise, AssessmentItem, File, Format, MimeType
+from contentcuration.models import *
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
 from contentcuration.api import count_children, get_total_size, get_node_siblings, get_node_ancestors, get_child_names
@@ -66,6 +66,11 @@ class FormatPresetSerializer(serializers.ModelSerializer):
         model = FormatPreset
         fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats')
 
+class ContentKindSerializer(serializers.ModelSerializer):
+   class Meta:
+        model = ContentKind
+        fields = ("__all__")
+
 class CustomListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
         node_mapping = {node.id: node for node in instance}
@@ -80,7 +85,7 @@ class CustomListSerializer(serializers.ListSerializer):
                     update_nodes[item['id']] = item
                 else:
                     # create new nodes
-                    ret.append(Node.objects.create(**item))
+                    ret.append(ContentNode.objects.create(**item))
 
         # get all tags, if doesn't exist, create them.
         # this step is also needed for adding new tags to existing node.
@@ -98,7 +103,7 @@ class CustomListSerializer(serializers.ListSerializer):
         if ret:
             # new nodes and tags have been created, now add tags to them
             bulk_adding_list = []
-            ThroughModel = Node.tags.through
+            ThroughModel = ContentNode.tags.through
             all_tags = existing_tags + new_tags
             for tag in all_tags:
                 for node in ret:

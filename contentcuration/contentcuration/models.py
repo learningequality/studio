@@ -48,13 +48,14 @@ class Channel(models.Model):
             self.deleted.save()
             self.save()
 
+    """
     def delete(self):
         logging.warning("Channel Delete")
         self.draft.delete()
         self.clipboard.delete()
         self.deleted.delete()
         super(Channel, self).delete()
-
+    """
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
@@ -129,16 +130,9 @@ class TopicTree(models.Model):
         isNew = not self.pk
         super(TopicTree, self).save(*args, **kwargs)
         if isNew:
-            self.root_node = Node.objects.create(title=self.channel.name, kind="topic", total_file_size = 0, license_id=ContentLicense.objects.first().id)
+            self.root_node = ContentNode.objects.create(title=self.channel.name, kind=ContentKind.objects.get(kind = content_kinds.TOPIC), total_file_size = 0, license=License.objects.first())
             self.root_node.save()
             self.save()
-
-    """
-    def delete(self):
-        logging.warning(self)
-        self.root_node.delete()
-        super(TopicTree, self).delete()
-    """
 
     class Meta:
         verbose_name = _("Topic tree")

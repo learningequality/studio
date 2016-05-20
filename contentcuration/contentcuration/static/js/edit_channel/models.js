@@ -140,6 +140,7 @@ var ContentNodeModel = BaseModel.extend({
 	},
 	create_file:function(){
 		if(this.attributes.file_data){
+			console.log("CREATING FILE");
 			var file_data = this.attributes.file_data;
 			var format = new FormatModel();
 			var self = this;

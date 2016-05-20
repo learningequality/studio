@@ -87,5 +87,42 @@
     "fields": {
       "extension": ".pdf"
     }
+  },
+
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "topic"
+    }
+  },
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "video"
+    }
+  },
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "audio"
+    }
+  },
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "image"
+    }
+  },
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "exercise"
+    }
+  },
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "document"
+    }
   }
 ]
