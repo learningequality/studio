@@ -14,8 +14,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, TopicTree, License, FileFormat, File
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicTreeSerializer, LicenseSerializer, FileFormatSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, TopicTree, License, FileFormat, File, FormatPreset, ContentKind
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicTreeSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer
 
 def base(request):
     return redirect('channels')    # redirect to the channel list page
@@ -42,9 +42,17 @@ def channel(request, channel_id):
 
     licenses = License.objects.all()
     license_serializer = LicenseSerializer(licenses, many=True)
+
+    formatpresets = FormatPreset.objects.all()
+    formatpreset_serializer = FormatPresetSerializer(formatpresets, many=True)
+
+    contentkinds = ContentKind.objects.all()
+    contentkind_serializer = ContentKindSerializer(contentkinds, many=True)
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
                                                 "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),
-                                                 "license_list" : JSONRenderer().render(license_serializer.data)})
+                                                 "license_list" : JSONRenderer().render(license_serializer.data),
+                                                 "fpreset_list" : JSONRenderer().render(formatpreset_serializer.data),
+                                                 "ckinds_list" : JSONRenderer().render(contentkind_serializer.data) })
 
 def exercise_list(request):
 
@@ -86,9 +94,9 @@ def exercise(request, exercise_id):
 def file_upload(request):
 
     if request.method == 'POST':
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1];
-        file_object = File(content_copy=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext))
-        logging.warning(file_object);
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
+        original_filename = os.path.splitext(request.FILES.values()[0]._name)[0]
+        file_object = File(content_copy=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,

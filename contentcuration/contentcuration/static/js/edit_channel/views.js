@@ -234,6 +234,9 @@ var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
 	set_editing: function(edit_mode_on){
 		this.containing_list_view.set_editing(edit_mode_on);
+	},
+	remove_item:function(){
+		this.containing_list_view.remove_view(this);
 	}
 });
 
@@ -410,10 +413,21 @@ var BaseEditorView = BaseListView.extend({
 	}
 });
 
+var BaseModalView = BaseView.extend({
+    callback:null,
+    close: function() {
+        if (this.modal) {
+            this.$(".modal").modal('hide');
+        }
+        this.remove();
+    }
+});
+
 module.exports = {
 	BaseView: BaseView,
 	BaseListView:BaseListView,
 	BaseListChannelItemView: BaseListChannelItemView,
 	BaseListNodeItemView:BaseListNodeItemView,
-	BaseEditorView:BaseEditorView
+	BaseEditorView:BaseEditorView,
+	BaseModalView:BaseModalView
 }

@@ -361,115 +361,6 @@
 	}
 }
 
-
-
-.import_modal_content{
-	@import-list-item-height: 30px;
-	@import-list-width: @uploader-width - 30px;
-	background-color:@gray-200;
-
-	#import_from_channel_box{
-		height: 400px;
-		width: @import-list-width;
-		background-color:white;
-		padding:0px;
-		margin-bottom: 20px;
-		display:inline-block;
-
-		.first_list{
-			max-height:400px;
-			max-width:@import-list-width;
-			overflow:auto;
-		}
-
-		.import-list{
-			list-style:none;
-			height:auto;
-			margin:0px;
-			padding:0px;
-
-			li{
-				input[type=checkbox]{
-					display:inline-block;
-					width:16px;
-					height:16px;
-					vertical-align:middle;
-					margin: 0px 4px;
-					cursor:pointer;
-				}
-				input[type=checkbox]:checked + label{
-					font-weight:bold;
-				}
-				.channel_checkbox{
-					display:none !important;
-				}
-				.import_channel_item{
-					/*background-color:#E7F2F4;*/
-					padding:10px 5px;
-					font-size:14pt;
-					margin:0px;
-
-					.import_item_title{
-						max-width:@uploader-width * 0.8;
-						font-size:15pt;
-					}
-				}
-
-				.import_item{
-					font-size:16px;
-					vertical-align:middle;
-					height:@import-list-item-height;
-					font-weight:normal;
-					.toggler{
-						font-size:8pt;
-					}
-					.import_item_title{
-						overflow:hidden;
-						max-width:@uploader-width / 4;
-						margin-right:15px;
-						font-size:13pt;
-					}
-				}
-
-				.toggler{
-					padding:0px 5px;
-					display:inline-block;
-				}
-
-				.tog_folder{
-					cursor:pointer;
-				}
-
-				.selected_counter{
-					margin-left:10px;
-					background-color: @blue-500;
-					visibility:hidden;
-				}
-
-				.subdirectory{
-					display:none;
-				}
-
-				.import_metadata{
-					font-size: 10pt;
-					color:gray;
-				}
-			}
-		}
-	}
-	#import_bottom_container{
-		height:50px;
-		#import_content_submit{
-			margin-right:20px;
-		}
-		#import_file_count{
-			margin-right:20px;
-			font-size:12pt;
-			margin-top:2px;
-		}
-	}
-}
-
 #file_upload_modal{
 	padding:20px;
 
@@ -503,7 +394,12 @@
 	}
 
 	#uploading_step_area{
-	display:none;
+		.formatting_only{
+			display:none;
+		}
+		.uploading_only{
+			display:block;
+		}
 		div#dropzone {
 			margin-top:20px;
 			height: @uploader-height - 100px;
@@ -514,9 +410,6 @@
 			width:100%;
 			margin-bottom:20px;
 
-			.dz-remove{
-				display:none;
-			}
 
 			.file-row{
 				width:100%;
@@ -554,10 +447,6 @@
 							color: @blue-200;
 						}
 
-						.upload_successful{
-							display:none;
-						}
-
 						.upload_cancel{
 							cursor:pointer;
 						}
@@ -565,7 +454,7 @@
 
 				}
 
-				.name_section{
+				.format_section{
 					.name, .error{
 						overflow:hidden;
 						width:100%;
@@ -583,14 +472,18 @@
 
 				.remove_from_dz{
 					cursor:pointer;
-					display:none;
 				}
 			}
 		}
 	}
 
 	#formatting_step_area{
-		display:block;
+		.formatting_only{
+			display:block;
+		}
+		.uploading_only{
+			display:none;
+		}
 
 		#format_list{
 			height: 400px;
@@ -620,18 +513,25 @@
 					.init_format_area{
 						margin-bottom: 20px;
 						.format_options_dropdown{
-							width:30%;
+							width:40%;
 							font-size:11pt;
 						}
 
 						.init_format_name{
-							width:70%;
+							width:60%;
 							font-size:13pt;
 						}
 
 						.init_format_size{
 							color:@gray-400;
 							font-style:italic;
+						}
+
+						.required_input{
+							color:red;
+							font-weight:bold;
+							font-size:13pt;
+							padding-right:10px;
 						}
 					}
 

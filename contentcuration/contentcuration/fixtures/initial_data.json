@@ -148,5 +148,53 @@
     "fields": {
       "kind": "document"
     }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "high_res_video",
+      "readable_name": "High Resolution",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 1,
+      "kind" : "video",
+      "allowed_formats" : ["mp4"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "low_res_video",
+      "readable_name": "Low Resolution",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 2,
+      "kind" : "video",
+      "allowed_formats" : ["mp4"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "thumbnail",
+      "readable_name": "Thumbnail",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 3,
+      "kind" : "image",
+      "allowed_formats" : ["png", "jpg"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "temp",
+      "readable_name": "Picture",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 4,
+      "kind" : "image",
+      "allowed_formats" : ["png", "jpg"]
+    }
   }
 ]

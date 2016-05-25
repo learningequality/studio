@@ -1,0 +1,29 @@
+<div id="{{#if uploading}}uploading_step_area{{else}}formatting_step_area{{/if}}">
+	<div class="uploading_only">
+		<button class="btn btn-default fileinput-button dz-clickable action-button">
+		    <span>Add More Files</span>
+		</button>
+		<em>&nbsp; (or drag and drop files below)</em>
+	</div>
+	<div id="{{#if uploading}}dropzone{{else}}format_list{{/if}}" class="file_list">
+
+	</div>
+	<div class="file_upload_buttons">
+		<div class="uploading_only">
+			<button disabled class="action-button pull-right go_to_formats">
+				<span>NEXT</span>
+			</button>
+			<a class="action-text" data-dismiss="modal">
+				<span>CANCEL</span>
+			</a>
+		</div>
+		<div class="formatting_only">
+			<button disabled class="action-button pull-right submit_uploaded_files">
+				<span>FINISH UPLOAD</span>
+			</button>
+			<a class="action-text go_to_upload">
+				<span>BACK</span>
+			</a>
+		</div>
+	</div>
+</div>

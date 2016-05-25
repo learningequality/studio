@@ -42,6 +42,7 @@ var ChannelList  = BaseListView.extend({
 	},
 	load_content:function(){
 		var containing_list_view = this;
+		$("#channel_selection_dropdown_list").html("");
 		this.collection.forEach(function(entry){
 			var view = new ChannelListItem({
 				el : containing_list_view.$el.find("#channel_list #" + entry.id),
@@ -95,7 +96,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	},
 
 	delete_channel: function(event){
-		if(this.model && (this.model.get("resource_count") == 0 || confirm("WARNING: All content under this channel will be permanently deleted."
+		if(this.model && (confirm("WARNING: All content under this channel will be permanently deleted."
 					+ "\nAre you sure you want to delete this channel?"))){
 			var self = this;
 			this.display_load("Deleting Channel...", function(){

@@ -20,7 +20,7 @@ def count_files(node):
         for n in node.children.all():
             count += count_files(n)
     else:
-        count += node.formats.count()
+        count += node.files.count()
     return count
 
 def count_children(node):

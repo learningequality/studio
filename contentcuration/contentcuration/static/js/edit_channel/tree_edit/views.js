@@ -36,6 +36,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 		 		$("#channel-preview-button").addClass("active");
 		 	}
 
+		 	$("#channel_selection_dropdown_list").html("");
+
 		 	window.channels.forEach(function (entry){
 				$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 			});

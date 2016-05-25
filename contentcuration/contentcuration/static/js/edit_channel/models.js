@@ -280,6 +280,34 @@ var TopicTreeModelCollection = BaseCollection.extend({
 	list_name:"topictree-list"
 });
 
+var TagModel = BaseModel.extend({
+	root_list : "tag-list",
+	defaults: {
+		tag_name: "Untagged"
+    }
+   /* get_or_create:function(){
+		var collection = new TagCollection();
+		collection.get_or_create(this.get("tag_name"), this.get("tag_type"));
+	}*/
+});
+
+var TagCollection = BaseCollection.extend({
+	model: TagModel,
+	list_name:"tag-list",
+	/*get_or_create:function(name, type){
+		var to_return = this.get({"tag_name" : name});
+		if(!to_return){
+			to_return.fetch({async:false});
+			if(!to_return){
+				to_return = this.create({
+					tag_name : name,
+					tag_type : type
+				}, {async:false});
+			}
+		}
+		return to_return;
+	}*/
+});
 
 /**** MODELS SPECIFIC TO FILE NODES ****/
 var FileModel = BaseModel.extend({
@@ -337,35 +365,26 @@ var LicenseCollection = BaseCollection.extend({
     }
 });
 
-
-var TagModel = BaseModel.extend({
-	root_list : "tag-list",
+var ContentKindModel = BaseModel.extend({
+	root_list:"contentkind-list",
 	defaults: {
-		tag_name: "Untagged"
+		kind:"topic"
+    },
+    get_presets:function(){
+    	return window.formatpresets.where({kind: this.get("kind")})
     }
-   /* get_or_create:function(){
-		var collection = new TagCollection();
-		collection.get_or_create(this.get("tag_name"), this.get("tag_type"));
-	}*/
 });
 
-var TagCollection = BaseCollection.extend({
-	model: TagModel,
-	list_name:"tag-list",
-	/*get_or_create:function(name, type){
-		var to_return = this.get({"tag_name" : name});
-		if(!to_return){
-			to_return.fetch({async:false});
-			if(!to_return){
-				to_return = this.create({
-					tag_name : name,
-					tag_type : type
-				}, {async:false});
-			}
-		}
-		return to_return;
-	}*/
+var ContentKindCollection = BaseCollection.extend({
+	model: ContentKindModel,
+	list_name:"contentkind-list",
+
+    get_default:function(){
+    	return this.findWhere({kind:"topic"});
+    }
 });
+
+
 
 module.exports = {
 	ContentNodeModel: ContentNodeModel,
@@ -376,5 +395,11 @@ module.exports = {
 	ChannelCollection: ChannelCollection,
 	TagModel: TagModel,
 	FileFormatCollection:FileFormatCollection,
-	LicenseCollection:LicenseCollection
+	LicenseCollection:LicenseCollection,
+	FileCollection: FileCollection,
+	FileModel: FileModel,
+	FormatPresetModel: FormatPresetModel,
+	FormatPresetCollection: FormatPresetCollection,
+	ContentKindModel: ContentKindModel,
+	ContentKindCollection : ContentKindCollection
 }

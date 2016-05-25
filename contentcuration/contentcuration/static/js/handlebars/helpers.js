@@ -58,6 +58,10 @@ Handlebars.registerHelper('check_is_topic', function(text){
   return text.toLowerCase() == "topic";
 });
 
+Handlebars.registerHelper('get_filename', function(text){
+  return text.split(".")[-1];
+});
+
 Handlebars.registerHelper('format_file_size', function(text){
   if (!text) {
     return "0B";

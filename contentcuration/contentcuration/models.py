@@ -238,7 +238,7 @@ class FormatPreset(models.Model):
     allowed_formats = models.ManyToManyField(FileFormat, blank=True)
 
     def __str__(self):
-        return self.name
+        return self.id
 
 class Language(models.Model):
     lang_code = models.CharField(primary_key=True, max_length=400)

@@ -20,6 +20,15 @@ ChannelEditRouter  = Backbone.Router.extend({
 		//this.listenTo(saveDispatcher, "save", this.save);
 		this.channelCollection = new Models.ChannelCollection();
 		this.channelCollection.fetch({async:false});
+
+		this.fileformats = new Models.FileFormatCollection(window.fformats);
+		this.fileformats.fetch({async:false, cache:true});
+
+		this.formatpresets = new Models.FormatPresetCollection(window.presets);
+		this.formatpresets.fetch({async:false, cache:true});
+
+		this.contentkinds = new Models.ContentKindCollection(window.kinds);
+		this.contentkinds.fetch({async:false, cache:true});
     },
 
     routes: {
@@ -50,8 +59,11 @@ ChannelEditRouter  = Backbone.Router.extend({
 	},
 
 	open_channel: function(edit_mode_on, is_clipboard, root){
-		window.fileformats = new Models.FileFormatCollection(window.fformats);
-		window.fileformats.fetch();
+		window.fileformats = this.fileformats ;
+		window.channels = this.channelCollection;
+		window.formatpresets = this.formatpresets;
+		window.contentkinds = this.contentkinds;
+
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
