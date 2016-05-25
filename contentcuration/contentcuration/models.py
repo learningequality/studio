@@ -16,7 +16,7 @@ from constants import content_kinds, extensions, presets
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
-    channel_id = models.UUIDField(primary_key=False, unique=True, default=uuid4, editable=True)
+    channel_id = models.UUIDField(primary_key=True, default=uuid4)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     author = models.CharField(max_length=400, blank=True)

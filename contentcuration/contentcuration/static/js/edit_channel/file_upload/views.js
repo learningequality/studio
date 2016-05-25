@@ -224,6 +224,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/file_upload_item.handlebars"),
     className: "format_item row",
     files: [],
+    format_views:[],
     indent: 0,
     'id': function() {
         return "format_item_" + this.model.filename;
@@ -266,13 +267,16 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
                     model: self.model,
                     file: preset.get("attached_format"),
                     containing_list_view: self.containing_list_view,
-                    acceptedFiles: acceptedFiles
+                    acceptedFiles: acceptedFiles,
+                    container:self
                 });
                 self.$(".format_editor_list").append(format_slot.el);
-                if(!preset.get("attached_format")){
+                self.format_views.push(format_slot);
+                if(!self.containing_list_view.uploading && !preset.get("attached_format")){
                     format_slot.create_dropzone();
                 }
             });
+            this.update_count();
         }
     },
     assign_default_format:function(event){
@@ -293,6 +297,15 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
             this.$el.find(".expand_format_editor").removeClass("glyphicon-triangle-top");
             this.$el.find(".expand_format_editor").addClass("glyphicon-triangle-bottom");
         }
+    },
+    update_count:function(){
+        var count = 0;
+        this.format_views.forEach(function(format){
+            if(format.file){
+                count++;
+            }
+        });
+        this.$(".format_counter").html(count);
     }
 });
 
@@ -304,15 +317,16 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     className:"row format_editor_item",
     initialize: function(options) {
-        _.bindAll(this, 'remove_item','file_uploaded','file_added');
+        _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed');
         this.preset = options.preset;
         this.containing_list_view = options.containing_list_view;
         this.file = options.file;
+        this.container = options.container;
         this.acceptedFiles = options.acceptedFiles;
         this.render();
     },
     events: {
-        'click .remove_from_dz ' : 'remove_item'
+        'click .format_editor_remove ' : 'remove_item'
     },
     render: function() {
         this.$el.html(this.template({
@@ -323,6 +337,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         }));
         this.$el.data("data", this);
         this.$el.attr("id", this.id() + "_" + this.preset.get("id"));
+        this.container.update_count();
     },
     create_dropzone:function(){
         var dz_selector="#" + this.id() + "_" + this.preset.get("id") + "_dropzone";
@@ -339,37 +354,40 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         });
         this.dropzone.on("success", this.file_uploaded);
 
-        // // Only enable the submit upload files button once all files have finished uploading.
-        // this.dropzone.on("queuecomplete", this.containing_list_view.all_files_uploaded);
-
-        // // Disable the submit upload files button if a new file is added to the queue.
-        // this.dropzone.on("addedfile", this.containing_list_view.file_added);
+        // Only enable the submit upload files button once all files have finished uploading.
+        //this.dropzone.on("queuecomplete", this.containing_list_view.all_files_uploaded);
         this.dropzone.on("addedfile", this.file_added);
-
-        // this.dropzone.on("removedfile", this.containing_list_view.file_removed);
+        this.dropzone.on("removedfile", this.file_removed);
     },
     file_uploaded:function(file){
         console.log("Successfully added file!", file);
-
         var new_file_data = {
             "data" : file,
             "filename": JSON.parse(file.xhr.response).filename
         }
 
-        // this.file = this.containing_list_view.collection.findWhere({
-        //     checksum: new_file_data.filename.split(".")[0],
-        //     contentmetadata : null
-        // });
+        this.file = this.containing_list_view.collection.findWhere({
+            checksum: new_file_data.filename.split(".")[0],
+            contentmetadata : null
+        });
 
-        // this.file.set({
-        //     file_size : new_file_data.data.size,
-        //     contentmetadata: this.model.id
-        // });
-        // this.render();
+        this.file.set({
+            file_size : new_file_data.data.size,
+            contentmetadata: this.model.id
+        });
+        this.render();
     },
     file_added: function(file) {
-        console.log("TEMPLATE:", file.previewTemplate);
+        this.$(".add_format_button").css("display", "none");
     },
+    file_removed: function(file) {
+        this.$(".add_format_button").css("display", "inline");
+    },
+    remove_item:function(){
+        this.file = null;
+        this.render();
+        this.create_dropzone();
+    }
 
 });
 

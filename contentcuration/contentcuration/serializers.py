@@ -19,6 +19,14 @@ class ChannelSerializer(serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
 
+    def update(self, instance, validated_data):
+        import pdb
+        pdb.set_trace()
+
+    def delete(self, instance, validated_data):
+        import pdb
+        pdb.set_trace()
+
     def count_resources(self, channel):
         if not channel.draft:
             return 0
@@ -33,7 +41,7 @@ class ChannelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('name', 'description', 'editors', 'id', 'draft', 'clipboard', 'deleted', 'published','channel_id', 'resource_count', 'resource_size')
+        fields = ('channel_id', 'name', 'description', 'editors', 'draft', 'clipboard', 'deleted', 'published','resource_count', 'resource_size')
 
 class TopicTreeSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField('get_channel_name')

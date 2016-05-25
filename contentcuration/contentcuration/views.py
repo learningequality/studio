@@ -34,7 +34,7 @@ def channel_list(request):
                                                  "license_list" : JSONRenderer().render(license_serializer.data)})
 
 def channel(request, channel_id):
-    channel = get_object_or_404(Channel, id=channel_id)
+    channel = get_object_or_404(Channel, channel_id=channel_id)
     channel_serializer =  ChannelSerializer(channel)
 
     fileformats = FileFormat.objects.all()

@@ -41,18 +41,18 @@ var ChannelList  = BaseListView.extend({
 		this.$el.find("#channel_list").append(new_channel.el);
 	},
 	load_content:function(){
-		var containing_list_view = this;
+		var self = this;
 		$("#channel_selection_dropdown_list").html("");
 		this.collection.forEach(function(entry){
 			var view = new ChannelListItem({
-				el : containing_list_view.$el.find("#channel_list #" + entry.id),
 				model: entry,
 				edit: false,
-				containing_list_view: containing_list_view,
-				channel_list: containing_list_view.collection.toJSON()
+				containing_list_view: self,
+				channel_list: self.collection.toJSON()
 			});
-			containing_list_view.views.push(view);
-        	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
+			self.$("#channel_list").append(view.el);
+			self.views.push(view);
+        	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.get("channel_id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 		});
 	}
 });
@@ -62,6 +62,10 @@ var ChannelList  = BaseListView.extend({
 */
 var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	tagName: "li",
+	id: function(){
+		return (this.model)? this.model.get("channel_id") : "new";
+	},
+	className:"channel_container container",
 	template: require("./hbtemplates/channel_container.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel');
@@ -78,7 +82,8 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			channel: (this.model) ? this.model.attributes : null,
 			total_file_size: (this.model)? this.model.get("resource_size") : 0,
 			resource_count: (this.model)? this.model.get("resource_count") : 0,
-			picture: "/static/img/unicef logo.jpg"
+			picture: "/static/img/unicef logo.jpg",
+			channel_link : (this.model) ? this.model.get("channel_id").replace(/-/gi,"") : null
 		}));
 		this.$el.addClass('channel_container');
 	},
@@ -100,7 +105,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 					+ "\nAre you sure you want to delete this channel?"))){
 			var self = this;
 			this.display_load("Deleting Channel...", function(){
-				self.delete(true);
+				self.delete();
 			});
 		}else if(!this.model){
 			this.containing_list_view.set_editing(false);
@@ -123,7 +128,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		var description = (self.$el.find("#new_channel_description").val() == "") ? " " : self.$el.find("#new_channel_description").val();
 		var data = {name: title, description: description};
 		this.display_load("Saving Channel...", function(){
-			self.save(data);
+			self.save(data, {async:false});
 			self.edit = false;
 			self.render();
 		});
