@@ -224,6 +224,7 @@ class ContentKind(models.Model):
 
 class FileFormat(models.Model):
     extension = models.CharField(primary_key=True, max_length=40, choices=extensions.choices)
+    mimetype = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return self.extension

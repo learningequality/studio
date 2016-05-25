@@ -61,57 +61,61 @@
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "mp4"
+      "extension": "mp4",
+      "mimetype" : "video/mp4"
     }
   },
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "vtt"
+      "extension": "vtt",
+      "mimetype" : "text/vtt"
     }
   },
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "srt"
+      "extension": "srt",
+      "mimetype" : "text/srt"
     }
   },
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "mp3"
+      "extension": "mp3",
+      "mimetype" : "audio/mpeg3"
     }
   },
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "pdf"
+      "extension": "pdf",
+      "mimetype" : "application/pdf"
     }
   },
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "jpg"
+      "extension": "jpg",
+      "mimetype" : "image/jpeg"
     }
   },
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "png"
+      "extension": "png",
+      "mimetype" : "image/png"
     }
   },
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "wav"
+      "extension": "wav",
+      "mimetype" : "audio/wav"
     }
   },
-  {
-    "model": "contentcuration.FileFormat",
-    "fields": {
-      "extension": "mp3"
-    }
-  },
+
+
 
   {
     "model": "contentcuration.ContentKind",

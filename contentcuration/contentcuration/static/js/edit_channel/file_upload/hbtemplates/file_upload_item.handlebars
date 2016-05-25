@@ -22,7 +22,6 @@
             {{/if}}
             </p>
             <p class="size" data-dz-size>{{#format_file_size file.attributes.file_size}}{{/format_file_size}}</p>
-            <strong class="error text-danger truncate" data-dz-errormessage></strong>
         </div>
         <div class="formatting_only">
             <input type="text" placeholder="Title *" class="name_content_input" value="{{node.attributes.title}}"/>
@@ -44,22 +43,7 @@
                     <span class="format_counter badge">0</span>
                     <span class="glyphicon glyphicon-triangle-bottom expand_format_editor" aria-hidden="true"></span>
                 </h4>
-                <div class="format_editor_list">
-                    {{#each presets}}
-                        <div class="row format_editor_item">
-                            <div class = "col-xs-3 format_editor_format_name" >{{readable_name}}</div>
-                            <div class = "col-xs-9" >
-                                {{#if attached_format}}
-                                    <span class="format_editor_file_name truncate">{{attached_format.attributes.original_filename}}</span>
-                                    <em class="format_editor_selected_size">({{#format_file_size attached_format.attributes.file_size}}{{/format_file_size}})</em>
-                                    <span class="glyphicon glyphicon-remove pull-right format_editor_remove" aria-hidden="true"></span>
-                                {{else}}
-                                    <a class="action-text add_format_button {{id}}">+ ADD</a>
-                                {{/if}}
-                            </div>
-                        </div>
-                    {{/each}}
-                </div>
+                <div class="format_editor_list"></div>
             {{/if}}
         </div>
     </div>

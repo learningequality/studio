@@ -1,0 +1,13 @@
+<div class = "col-xs-3 format_editor_format_name" >{{preset.attributes.readable_name}}</div>
+<div class = "col-xs-9">
+      {{#if file}}
+        <span class="format_editor_file_name truncate">{{file.attributes.original_filename}}</span>
+        <em class="format_editor_selected_size">({{#format_file_size file.attributes.file_size}}{{/format_file_size}})</em>
+        <span class="glyphicon glyphicon-remove pull-right format_editor_remove" aria-hidden="true"></span>
+      {{else}}
+      <a class="action-text add_format_button">+ ADD</a>
+        <div id="{{id}}_dropzone" class="format_dropzone">
+
+        </div>
+      {{/if}}
+</div>
