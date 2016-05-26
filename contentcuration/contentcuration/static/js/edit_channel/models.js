@@ -238,6 +238,7 @@ var ContentNodeCollection = BaseCollection.extend({
 });
 
 var ChannelModel = BaseModel.extend({
+    idAttribute: "channel_id",
 	root_list : "channel-list",
 	defaults: {
 		name: " ",
