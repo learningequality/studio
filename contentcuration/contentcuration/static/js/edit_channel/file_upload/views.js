@@ -52,7 +52,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.collection = new Models.FileCollection();
         this.collection.fetch();
         this.render();
-
     },
     events:{
       "click .submit_uploaded_files" : "close_file_uploader",
@@ -95,6 +94,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
         var self = this;
         list.html("");
         var items = this.views;
+        this.original_count = this.views.length;
         this.views = [];
         items.forEach(function(view){
             var new_format_item = new FormatItem({
@@ -180,6 +180,9 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.enable_next();
     },
     file_added: function(file) {
+        if(this.original_count > 0 && this.original_count == this.views.length){
+            $(file.previewTemplate).before("<hr/>");
+        }
         this.disable_next();
     },
 
@@ -231,7 +234,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
 
     initialize: function(options) {
-        _.bindAll(this, 'assign_default_format', 'toggle_formats', 'remove_item');
+        _.bindAll(this, 'assign_default_format', 'toggle_formats', 'remove_item','update_name');
         this.containing_list_view = options.containing_list_view;
         this.thumbnail = options.thumbnail;
         this.default_file = options.default_file;
@@ -243,7 +246,9 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     events: {
         'change .format_options_dropdown' : 'assign_default_format',
         'click .expand_format_editor' : 'toggle_formats',
-        'click .remove_from_dz ' : 'remove_item'
+        'click .remove_from_dz ' : 'remove_item',
+        'keyup .name_content_input': 'update_name',
+        'paste .name_content_input': 'update_name'
     },
     render: function() {
         this.$el.html(this.template({
@@ -268,13 +273,10 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
                     file: preset.get("attached_format"),
                     containing_list_view: self.containing_list_view,
                     acceptedFiles: acceptedFiles,
-                    container:self
+                    container:self,
+                    list: self.$(".format_editor_list")
                 });
-                self.$(".format_editor_list").append(format_slot.el);
                 self.format_views.push(format_slot);
-                if(!self.containing_list_view.uploading && !preset.get("attached_format")){
-                    format_slot.create_dropzone();
-                }
             });
             this.update_count();
         }
@@ -306,6 +308,13 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
             }
         });
         this.$(".format_counter").html(count);
+    },
+    add_format:function(formatModel, preset){
+        this.presets.get(preset).set("attached_format", formatModel);
+        console.log("Presets: ",this.presets);
+    },
+    update_name:function(event){
+        this.model.set("title", event.target.value);
     }
 });
 
@@ -323,6 +332,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.file = options.file;
         this.container = options.container;
         this.acceptedFiles = options.acceptedFiles;
+        this.list = options.list;
         this.render();
     },
     events: {
@@ -337,11 +347,15 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         }));
         this.$el.data("data", this);
         this.$el.attr("id", this.id() + "_" + this.preset.get("id"));
+        this.list.append(this.el);
         this.container.update_count();
+        if(!this.containing_list_view.uploading && !this.file){
+            this.create_dropzone();
+        }
     },
     create_dropzone:function(){
         var dz_selector="#" + this.id() + "_" + this.preset.get("id") + "_dropzone";
-        console.log("ITEM IS:",this.$(dz_selector));
+        console.log("DZ:", this.$(dz_selector));
 
         this.dropzone = new Dropzone(this.$(dz_selector).get(0), {
                clickable: ".add_format_button",
@@ -375,6 +389,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             file_size : new_file_data.data.size,
             contentmetadata: this.model.id
         });
+        this.container.add_format(this.file, this.preset);
         this.render();
     },
     file_added: function(file) {

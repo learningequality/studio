@@ -95,7 +95,7 @@ def file_upload(request):
 
     if request.method == 'POST':
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
-        original_filename = os.path.splitext(request.FILES.values()[0]._name)[0]
+        original_filename = request.FILES.values()[0]._name
         file_object = File(content_copy=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename)
         file_object.save()
         return HttpResponse(json.dumps({

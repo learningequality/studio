@@ -85,7 +85,6 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			picture: "/static/img/unicef logo.jpg",
 			channel_link : (this.model) ? this.model.get("channel_id").replace(/-/gi,"") : null
 		}));
-		this.$el.addClass('channel_container');
 	},
 	events: {
 		'click .edit_channel':'edit_channel',
