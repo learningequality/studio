@@ -19,14 +19,6 @@ class ChannelSerializer(serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
 
-    def update(self, instance, validated_data):
-        import pdb
-        pdb.set_trace()
-
-    def delete(self, instance, validated_data):
-        import pdb
-        pdb.set_trace()
-
     def count_resources(self, channel):
         if not channel.draft:
             return 0

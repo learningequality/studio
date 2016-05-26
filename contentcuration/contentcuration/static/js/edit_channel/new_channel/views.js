@@ -83,7 +83,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			total_file_size: (this.model)? this.model.get("resource_size") : 0,
 			resource_count: (this.model)? this.model.get("resource_count") : 0,
 			picture: "/static/img/unicef logo.jpg",
-			channel_link : (this.model) ? this.model.get("channel_id").replace(/-/gi,"") : null
+			channel_link : (this.model) ? this.model.get("channel_id") : null
 		}));
 	},
 	events: {
