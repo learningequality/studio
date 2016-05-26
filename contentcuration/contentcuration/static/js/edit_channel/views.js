@@ -307,13 +307,7 @@ var BaseListChannelItemView = BaseListItemView.extend({
     		this.delete_view();
 	    }else{
 	    	console.log("DELETING OLD CHANNEL");
-	    	this.model.destroy({async:false,
-	    		success:function(){
-	    			console.log("success!");
-	    		},
-	    		error:function(e){
-	    			console.log("Error: ", e);
-	    		}});
+	    	this.model.destroy({async:false});
 	    }
 	},
 	save: function(data, options){
