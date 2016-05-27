@@ -394,6 +394,7 @@
 	}
 
 	#uploading_step_area{
+		height: @uploader-height - 100;
 		.formatting_only{
 			display:none;
 		}
@@ -402,9 +403,7 @@
 		}
 		div#dropzone {
 			margin-top:20px;
-			height: @uploader-height - 100px;
-			min-height:150px;
-			max-height: 400px;
+			height: 400px;
 			overflow:hidden;
 			overflow-y:auto;
 			width:100%;
@@ -478,6 +477,7 @@
 	}
 
 	#formatting_step_area{
+		height: @uploader-height - 100;
 		.formatting_only{
 			display:block;
 		}
@@ -486,7 +486,7 @@
 		}
 
 		#format_list{
-			height: 400px;
+			height: 470px;
 			overflow:hidden;
 			overflow-y:auto;
 
@@ -515,6 +515,7 @@
 						.format_options_dropdown{
 							width:40%;
 							font-size:11pt;
+							padding:4px 2px;
 						}
 
 						.init_format_name{

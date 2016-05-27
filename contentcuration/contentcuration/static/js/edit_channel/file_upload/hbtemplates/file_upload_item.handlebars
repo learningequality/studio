@@ -40,7 +40,8 @@
             {{#if initial}}
                 <h5 class="init_format_area">
                     <span class="init_format_name truncate">{{file.attributes.original_filename}}</span>
-                    <span class="init_format_size">({{#format_file_size file.attributes.file_size}}{{/format_file_size}})</span>
+                    <span class="init_format_size" >({{#format_file_size file.attributes.file_size}}{{/format_file_size}})</span>
+                    <a class="btn action-button pull-right save_initial_format">SAVE</a>
                     <select class="format_options_dropdown pull-right text-center">
                         <option selected disabled>-- Select a Format --</option>
                         {{#each presets}}
@@ -59,7 +60,7 @@
             {{/if}}
         </div>
     </div>
-    <div class="inline col-xs-1 uploading_only">
+    <div class="inline col-xs-1">
         <span class="glyphicon glyphicon-remove remove_from_dz pull-right" aria-hidden="true"></span>
     </div>
 

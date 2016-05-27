@@ -332,7 +332,13 @@ var FormatPresetModel = BaseModel.extend({
 
 var FormatPresetCollection = BaseCollection.extend({
 	model: FormatPresetModel,
-	list_name:"formatpreset-list"
+	list_name:"formatpreset-list",
+	sort_by_order:function(){
+    	this.comparator = function(preset){
+    		return preset.get("order");
+    	};
+    	this.sort();
+    }
 });
 
 
