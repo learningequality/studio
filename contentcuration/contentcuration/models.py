@@ -38,9 +38,8 @@ class Channel(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        isNew = not self.pk
         super(Channel, self).save(*args, **kwargs)
-        if isNew:
+        if not self.draft:
             self.draft = TopicTree.objects.create(channel=self, name=self.name + " draft")
             self.draft.save()
             self.clipboard = TopicTree.objects.create(channel=self, name=self.name + " clipboard")
@@ -204,7 +203,7 @@ class ContentNode(MPTTModel, models.Model):
     def delete(self):
         for t in self.tags.all():
             t.delete()
-        super(Node, self).delete()
+        super(ContentNode, self).delete()
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']

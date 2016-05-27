@@ -144,21 +144,20 @@ var ContentNodeModel = BaseModel.extend({
 	},
 	create_file:function(){
 		console.log("CALLED CREATE FILE", this);
-		if(this.attributes.file_data){
-			var file_data = this.attributes.file_data;
-			var files = new FileCollection();
-			files.fetch({async:false});
-			var file = files.findWhere({
-				checksum: file_data.filename.split(".")[0],
-			});
-			console.log("FOUND A FILE:", this);
-			console.log("ID IS: " + this.id);
+		this.get("files").forEach(function(file){
+			console.log("files are", file.get("contentmetadata"));
 			file.save({
-				file_size : file_data.data.size,
-				contentmetadata : this.id,
-				original_filename : file_data.data.name
-			},{patch:true, async:false});
-		}
+				file_size : file.get("file_size"),
+				contentmetadata : file.get("contentmetadata")},
+				{patch:true, async:false}
+			);
+		});
+		// 	file.save({
+		// 		file_size : file_data.data.size,
+		// 		contentmetadata : this.id,
+		// 		original_filename : file_data.data.name
+		// 	},{patch:true, async:false});
+		// }
 	},
 	get_formats:function(){
 		var formats = new FileFormatCollection();

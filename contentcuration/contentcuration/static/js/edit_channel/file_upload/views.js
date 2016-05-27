@@ -226,6 +226,14 @@ var FileUploadView = BaseViews.BaseListView.extend({
     submit_files:function(){
         var self = this;
         this.views.forEach(function(view){
+            var files = [];
+            view.presets.forEach(function(preset){
+                if(preset.get("attached_format")){
+                    files.push(preset.get("attached_format"));
+                }
+            });
+            view.model.set("files", files);
+
             self.returnCollection.add(view.model);
         })
         this.close_file_uploader();

@@ -216,15 +216,15 @@ BaseListView = BaseView.extend({
 	},
 	add_nodes:function(views, startingIndex, allowDuplicates){
 		var self = this;
-		console.log("views:", views);
+		console.log("views:", this);
 		views.forEach(function(entry){
 			var model = (entry.model) ? entry.model : entry;
 			model.move(self.model, allowDuplicates, ++startingIndex);
 			//self.model.get("children").push(model.id);
 		});
 		this.list_index = startingIndex;
-		this.model.fetch({async:false});
-		console.log("MODEL AFTER SAVE IS:", this.model);
+		self.model.fetch({async:false});
+		console.log("MODEL AFTER SAVE IS:", self.model);
 		this.render();
 	}
 });

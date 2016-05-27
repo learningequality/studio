@@ -111,48 +111,19 @@ var AddContentView = BaseViews.BaseListView.extend({
     upload_files:function(collection){
         console.log("uploading files", collection);
         var self = this.parent_view;
-
-
-        // file_list.forEach(function(entry){
-        //     var type = "";
-        //     var file = entry.data;
-        //     var filename = entry.filename;
-        //     if(file.type.indexOf("image") >=0){
-        //         type = "image";
-        //     }
-        //     else if(file.type.indexOf("application/pdf") >=0){
-        //         type="pdf";
-        //     }
-        //     else if(file.type.indexOf("text") >=0){
-        //         type="text";
-        //     }
-        //     else if(file.type.indexOf("audio") >=0){
-        //         type="audio";
-        //     }
-        //     else if(file.type.indexOf("video") >=0){
-        //         type="video";
-        //     }
-        //     var content_node = new Models.ContentNodeModel({
-        //         "kind":type,
-        //         "title": file.name.split(".")[0],
-        //         "parent" : self.model.id,
-        //         "total_file_size": file.size,
-        //         "created" : file.lastModifiedDate,
-        //         "sort_order": self.main_collection.length + self.collection.length
-        //     });
-        //     self.collection.add(content_node);
-        //     var item_view = new NodeListItem({
-        //         containing_list_view: self,
-        //         model: content_node
-        //     });
-
-        //     content_node.attributes.file_data = {data:file, filename:entry.filename};
-        //    // console.log("ATTRIBUTES ARE : ", content_node);
-        //     $("#upload_content_add_list").append(item_view.el);
-        //     item_view.$el.data("file", entry);
-        //     self.views.push(item_view);
-        //     console.log("CREATED MODEL: ", content_node);
-        // });
+        collection.forEach(function(entry){
+            entry.set({
+                "parent" : self.model.id,
+                "sort_order": self.main_collection.length + self.collection.length
+            });
+            self.collection.add(entry);
+            var item_view = new NodeListItem({
+                containing_list_view: self,
+                model: entry
+            });
+            $("#upload_content_add_list").append(item_view.el);
+            self.views.push(item_view);
+        });
     },
     add_exercise:function(){
         var view = new ExerciseCreateView({

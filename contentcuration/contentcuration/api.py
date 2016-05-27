@@ -35,7 +35,7 @@ def get_total_size(node):
         for n in node.children.all():
             total_size += get_total_size(n)
     else:
-        for file in node.files.all():
+        for f in node.files.all():
             total_size += f.file_size
     return total_size
 
