@@ -146,18 +146,9 @@ var ContentNodeModel = BaseModel.extend({
 		console.log("CALLED CREATE FILE", this);
 		this.get("files").forEach(function(file){
 			console.log("files are", file.get("contentmetadata"));
-			file.save({
-				file_size : file.get("file_size"),
-				contentmetadata : file.get("contentmetadata")},
-				{patch:true, async:false}
-			);
+			var data = file.pick("file_size", "contentmetadata", "preset");
+			file.save(data,{patch:true, async:false});
 		});
-		// 	file.save({
-		// 		file_size : file_data.data.size,
-		// 		contentmetadata : this.id,
-		// 		original_filename : file_data.data.name
-		// 	},{patch:true, async:false});
-		// }
 	},
 	get_formats:function(){
 		var formats = new FileFormatCollection();
@@ -194,7 +185,6 @@ var ContentNodeCollection = BaseCollection.extend({
         	success: function(data){
         		data.forEach(function(entry){
         			var node = self.get_all_fetch([entry.id]).models[0];
-        			console.log("FILE NODE IS", node);
         			node.create_file();
 				});
         		callback();

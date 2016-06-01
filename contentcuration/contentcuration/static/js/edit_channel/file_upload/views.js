@@ -15,6 +15,11 @@ var FileModalView = BaseViews.BaseModalView.extend({
         this.callback = options.callback;
         this.parent_view = options.parent_view;
         this.render();
+        this.file_upload_view = new FileUploadView({
+            el: this.$(".modal-body"),
+            callback: this.callback,
+            container: this
+        });
     },
 
     render: function() {
@@ -22,14 +27,9 @@ var FileModalView = BaseViews.BaseModalView.extend({
         $("body").append(this.el);
         this.$(".modal").modal({show: true});
         this.$(".modal").on("hide.bs.modal", this.close);
-
-        this.file_upload_view = new FileUploadView({
-            el: this.$(".modal-body"),
-            callback: this.callback,
-            container: this
-        });
     },
     close_file_uploader:function(){
+        console.log("RETURN COLLECTION", this.file_upload_view.returnCollection);
       this.callback(this.file_upload_view.returnCollection);
       this.close();
     }
@@ -231,9 +231,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
                 if(preset.attached_format){
                     files.push(preset.attached_format);
                 }
-                // if(preset.get("attached_format")){
-                //     files.push(preset.get("attached_format"));
-                // }
             });
             view.model.set("files", files);
 
@@ -315,7 +312,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
             preset : preset.get("id")
         });
         preset.attached_format = this.default_file;
-
+        console.log("PRESETTING", preset);
         //this.set_format(this.default_file, );
         this.render();
         this.containing_list_view.check_completed();

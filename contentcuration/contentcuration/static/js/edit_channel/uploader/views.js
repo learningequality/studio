@@ -656,20 +656,18 @@ var PreviewView = BaseViews.BaseModalView.extend({
         }
     },
     set_preview:function(event){
-        console.log("EVENT", event.target.value);
         var self = this;
         var location = "/media/";
 
         this.model.get("files").forEach(function(file){
-            console.log("FILES CHECK:", file);
-            if(file.get("preset") == event.target.value){
-                self.current_preview = file;
+            var data = (file.attributes)? file.attributes : file;
+            if(data.preset == event.target.value){
+                self.current_preview = data;
             }
         });
         // TODO-BLOCKER: not sure if this is the best way to retrieve the file
-        location += this.current_preview.get("content_copy").split("/").slice(-3).join("/");
-        var extension = this.current_preview.get("file_format");
-        console.log("EXTENSION:", extension);
+        location += this.current_preview.content_copy.split("/").slice(-3).join("/");
+        var extension = this.current_preview.file_format;
         var preview_template;
         switch (extension){
             case "png":
@@ -718,12 +716,12 @@ var PreviewView = BaseViews.BaseModalView.extend({
             //
     },
 
-    load_preview:function(event){
-
+    load_preview:function(){
         if(this.model){
             var self = this;
             this.model.get("files").forEach(function(file){
-                self.presets.add(window.formatpresets.get(file.get("preset")));
+                console.log("FILE IS:", file);
+                self.presets.add(window.formatpresets.get((file.attributes)? file.get("preset") : file.preset));
             });
             this.render();
         }
