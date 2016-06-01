@@ -624,71 +624,109 @@ var UploadedItem = ContentItem.extend({
 });
 
 var PreviewView = BaseViews.BaseModalView.extend({
-    template: require("./hbtemplates/preview_dialog.handlebars"),
+    template: require("./hbtemplates/preview_templates/tabs.handlebars"),
     modal_template: require("./hbtemplates/preview_modal.handlebars"),
+    current_preview:null,
     initialize: function(options) {
+        _.bindAll(this, 'set_preview');
         this.modal = options.modal;
+        this.presets = new Models.FormatPresetCollection();
         this.render();
+    },
+    events: {
+        'click .preview_btn_tab' : 'set_preview'
     },
     render: function() {
         if(this.modal){
             this.$el.html(this.modal_template());
-            this.$(".modal-body").html(this.template({}));
+            this.$(".modal-body").html(this.template({
+                node: this.model,
+                presets: this.presets.toJSON(),
+                file: this.current_preview
+            }));
             this.$el.append(this.el);
             this.$(".modal").modal({show: true});
             this.$el.find(".modal").on("hide.bs.modal", this.close);
         }else{
             this.$el.html(this.template({
-                node: this.model
+                node: this.model,
+                presets: this.presets.toJSON(),
+                file: this.current_preview
             }));
         }
-        this.load_preview();
+    },
+    set_preview:function(event){
+        console.log("EVENT", event.target.value);
+        var self = this;
+        var location = "/media/";
+
+        this.model.get("files").forEach(function(file){
+            console.log("FILES CHECK:", file);
+            if(file.get("preset") == event.target.value){
+                self.current_preview = file;
+            }
+        });
+        // TODO-BLOCKER: not sure if this is the best way to retrieve the file
+        location += this.current_preview.get("content_copy").split("/").slice(-3).join("/");
+        var extension = this.current_preview.get("file_format");
+        console.log("EXTENSION:", extension);
+        var preview_template;
+        switch (extension){
+            case "png":
+            case "jpg":
+                preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+                break;
+            case "pdf":
+            case "vtt":
+            case "srt":
+                preview_template = require("./hbtemplates/preview_templates/document.handlebars");
+                break;
+            case "mp3":
+            case "wav":
+                preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
+                break;
+            case "mp4":
+                preview_template = require("./hbtemplates/preview_templates/video.handlebars");
+                break;
+            default:
+                preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+        }
+
+        this.$("#preview_window").html(preview_template({
+            source: location,
+            extension:extension,
+            title: this.model.get("title")
+        }));
+
+
+            // if(this.model.attributes.file_data){
+            //     console.log("PREVIEWING...", this.model);
+            //     location += this.model.attributes.file_data.filename.substring(0,1) + "/";
+            //     location += this.model.attributes.file_data.filename.substring(1,2) + "/";
+            //     location += this.model.attributes.file_data.filename;
+            //     extension = this.model.attributes.file_data.filename.split(".")[1];
+            // }else{
+            //     var previewed_file = this.model.get_files().models[0];
+            //     console.log("GOT FILE:", previewed_file);
+            //     if(previewed_file){
+            //         extension = previewed_file.get("extension").replace(".", "");
+            //         location +=
+            //     }
+            // }
+
+            //
+            //
     },
 
-    load_preview:function(){
-        var location = "/media/";
-        var extension = "";
-        if(this.model){
-            // TODO-BLOCKER: this whole if-else needs to be burned to the ground, once we fix the API
-            if(this.model.attributes.file_data){
-                console.log("PREVIEWING...", this.model);
-                location += this.model.attributes.file_data.filename.substring(0,1) + "/";
-                location += this.model.attributes.file_data.filename.substring(1,2) + "/";
-                location += this.model.attributes.file_data.filename;
-                extension = this.model.attributes.file_data.filename.split(".")[1];
-            }else{
-                var previewed_file = this.model.get_files().models[0];
-                console.log("GOT FILE:", previewed_file);
-                if(previewed_file){
-                    extension = previewed_file.get("extension").replace(".", "");
-                    location += previewed_file.get("content_copy").split("/").slice(-3).join("/");
-                }
-            }
-            var preview_template;
-            switch (this.model.get("kind")){
-                case "image":
-                    preview_template = require("./hbtemplates/preview_templates/image.handlebars");
-                    break;
-                case "pdf":
-                case "text":
-                    preview_template = require("./hbtemplates/preview_templates/pdf.handlebars");
-                    break;
-                case "audio":
-                    preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
-                    break;
-                case "video":
-                    preview_template = require("./hbtemplates/preview_templates/video.handlebars");
-                    break;
-                default:
-                    preview_template = require("./hbtemplates/preview_templates/default.handlebars");
-            }
-            this.$el.find("#preview_window").html(preview_template({
-                source: location,
-                extension:extension,
-                title: this.model.get("title")
-            }));
-        }
+    load_preview:function(event){
 
+        if(this.model){
+            var self = this;
+            this.model.get("files").forEach(function(file){
+                self.presets.add(window.formatpresets.get(file.get("preset")));
+            });
+            this.render();
+        }
     },
 
     switch_preview:function(model){

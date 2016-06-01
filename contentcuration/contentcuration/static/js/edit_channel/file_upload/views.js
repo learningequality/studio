@@ -134,7 +134,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
         window.formatpresets.forEach(function(preset){
             if(preset.get("allowed_formats").indexOf(fileModel.get("file_format")) >= 0){
                 var new_slot = preset.clone();
-                new_slot.set("attached_format", null);
+                //new_slot.set("attached_format", null);
                 presets.add(new_slot);
             }
         });
@@ -228,9 +228,12 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.views.forEach(function(view){
             var files = [];
             view.presets.forEach(function(preset){
-                if(preset.get("attached_format")){
-                    files.push(preset.get("attached_format"));
+                if(preset.attached_format){
+                    files.push(preset.attached_format);
                 }
+                // if(preset.get("attached_format")){
+                //     files.push(preset.get("attached_format"));
+                // }
             });
             view.model.set("files", files);
 
@@ -274,7 +277,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             file:this.default_file,
             initial: this.initial,
-            presets: this.presets.toJSON(),
+            presets: this.presets.models,
             thumbnail:this.thumbnail,
             node: this.model
         }));
@@ -289,7 +292,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
                 var format_slot = new FormatSlot({
                     preset:preset,
                     model: self.model,
-                    file: preset.get("attached_format"),
+                    file: preset.attached_format,// preset.get("attached_format"),
                     containing_list_view: self.containing_list_view,
                     acceptedFiles: acceptedFiles,
                     container:self,
@@ -306,7 +309,14 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
     assign_default_format:function(){
         this.initial = false;
-        this.set_format(this.default_file, this.presets.get(this.$(".format_options_dropdown").val()));
+        var preset = this.presets.get(this.$(".format_options_dropdown").val());
+        this.default_file.set({
+            contentmetadata: this.model.get("id"),
+            preset : preset.get("id")
+        });
+        preset.attached_format = this.default_file;
+
+        //this.set_format(this.default_file, );
         this.render();
         this.containing_list_view.check_completed();
     },
@@ -326,12 +336,12 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
     set_format:function(formatModel, preset){
         var assigned_preset = this.presets.get(preset);
-        assigned_preset.set("attached_format", formatModel);
+        assigned_preset.attached_format = formatModel;
+        // assigned_preset.set("attached_format", formatModel);
         if(formatModel){
             formatModel.set("preset", assigned_preset.id);
         }
-        console.log("CHECKING PRESET:", this.presets.get(preset));
-        console.log("Presets: ",this.presets);
+        console.log("Presets 1: ",this.presets);
     },
     update_name:function(event){
         this.model.set("title", event.target.value);
@@ -428,20 +438,23 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
 
         this.file.set({
             file_size : new_file_data.data.size,
-            contentmetadata: this.model.id
+            contentmetadata: this.model.get("id"),
+            preset : this.preset.get("id")
         });
-        this.container.set_format(this.file, this.preset);
+        this.preset.attached_format = this.file;
+        //this.container.set_format(this.file, this.preset);
         this.render();
+        console.log("Presets 3: ",this.container.presets);
     },
     file_added: function(file) {
         this.$(".add_format_button").css("display", "none");
         this.containing_list_view.disable_submit();
+        console.log("Presets 2: ",this.container.presets);
     },
     file_removed: function(file) {
         this.$(".add_format_button").css("display", "inline");
     },
     remove_item:function(){
-        console.log("CHECK HERE:", this);
         if(this.container.get_count() ===1){
             this.container.initial = true;
             this.container.render();
@@ -450,7 +463,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         }else{
             this.file = null;
         }
-        this.container.set_format(null, this.preset);
+        this.preset.attached_format = null;
         this.render();
     },
     enable_submit:function(){

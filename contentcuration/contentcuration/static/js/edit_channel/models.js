@@ -321,6 +321,7 @@ var FileCollection = BaseCollection.extend({
 
 var FormatPresetModel = BaseModel.extend({
 	root_list:"formatpreset-list",
+	attached_format: null,
 
 	get_files : function(){
 		var files = new FileCollection();
