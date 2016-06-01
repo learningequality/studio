@@ -395,10 +395,9 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         var self = this;
         setTimeout(function(){
             var dz_selector="#" + self.$el.attr("id") + "_dropzone";
-            console.log("DZ:", self.$(dz_selector));
 
-            self.dropzone = new Dropzone(self.$(dz_selector).get(0), {
-                   clickable: ".add_format_button",
+            var dropzone = new Dropzone(self.$(dz_selector).get(0), {
+                   clickable: dz_selector + " .add_format_button",
                    acceptedFiles: self.acceptedFiles,
                    url: window.Urls.file_upload(),
                    previewTemplate:self.dropzone_template(),
@@ -406,12 +405,12 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                    previewsContainer: dz_selector,
                    headers: {"X-CSRFToken": get_cookie("csrftoken")}
             });
-            self.dropzone.on("success", self.file_uploaded);
+            dropzone.on("success", self.file_uploaded);
 
             // Only enable the submit upload files button once all files have finished uploading.
-            self.dropzone.on("queuecomplete", self.all_files_uploaded);
-            self.dropzone.on("addedfile", self.file_added);
-            self.dropzone.on("removedfile", self.file_removed);
+            dropzone.on("queuecomplete", self.all_files_uploaded);
+            dropzone.on("addedfile", self.file_added);
+            dropzone.on("removedfile", self.file_removed);
         }, 1);
     },
     file_uploaded:function(file){

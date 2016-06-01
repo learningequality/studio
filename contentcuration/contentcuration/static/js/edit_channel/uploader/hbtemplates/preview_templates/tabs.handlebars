@@ -1,0 +1,14 @@
+<div class="btn-group btn-group-justified" role="group" aria-label="...">
+	{{#each presets}}
+	  <div class="btn-group" role="group">
+	    <button type="button" class="btn btn-default preview_btn_tab" value="{{attributes.id}}">{{attributes.readable_name}}</button>
+	  </div>
+	 {{else}}No files found.
+  	{{/each}}
+</div>
+
+<div id="preview_window">
+	<div class="default_preview container-fluid">
+		<h5 class="default_preview_text text-center"><em>Select a format to preview.</em></h5>
+	</div>
+</div>
