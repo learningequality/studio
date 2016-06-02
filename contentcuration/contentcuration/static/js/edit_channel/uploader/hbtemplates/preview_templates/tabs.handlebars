@@ -1,8 +1,8 @@
 <h3>{{node.attributes.title}}</h3>
 <div class="btn-group">
   <button class="btn btn-default btn-sm dropdown-toggle" id="preview_format_switch" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-  	{{#if presets}}
-  		{{preset_default.attributes.readable_name}} <span class="caret"></span>
+  	{{#if selected_preset}}
+  		{{selected_preset.attributes.readable_name}} <span class="caret"></span>
   	{{else}}No files found.
   	{{/if}}
   </button>

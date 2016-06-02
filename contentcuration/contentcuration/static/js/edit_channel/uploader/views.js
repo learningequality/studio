@@ -382,10 +382,11 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                     var new_slot = preset.clone();
                     new_slot.attached_format = null;
                     self.current_node.get("files").forEach(function(f){
-                        if(preset.get("id") == f.preset){
-                            var fmodel = new Models.FileModel({id:f.id});
-                            fmodel.fetch({async:false});
-                            new_slot.attached_format = fmodel;
+                        var file_data = (f.attributes) ? f.attributes : f;
+                        console.log("LOOKING AT", preset.get("id"), file_data.preset);
+                        if(preset.get("id") == file_data.preset){
+                            new_slot.attached_format = new Models.FileModel({id:file_data.id});
+                            new_slot.attached_format.fetch({async:false});
                         }
                     });
                     presets.add(new_slot);
@@ -401,7 +402,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                 el:$("#editmetadata_format_section")
             });
         }else{
-            console.log("CALLED HERE");
             $("#editmetadata_format_section").css("display", "none");
         }
 
@@ -687,7 +687,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
                 node: this.model,
                 presets: this.presets.toJSON(),
                 file: this.current_preview,
-                preset_default: (this.current_preview)? window.formatpresets.get(this.current_preview.preset) : null
+                selected_preset: (this.current_preview) ? window.formatpresets.get(this.current_preview.preset) : null
             }));
             this.$el.append(this.el);
             this.$(".modal").modal({show: true});
@@ -697,7 +697,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
                 node: this.model,
                 presets: this.presets.toJSON(),
                 file: this.current_preview,
-                preset_default: (this.current_preview)? window.formatpresets.get(this.current_preview.preset) : null
+                selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset) : null
             }));
         }
     },
@@ -705,8 +705,8 @@ var PreviewView = BaseViews.BaseModalView.extend({
         var self = this;
         this.model.get("files").forEach(function(file){
             var data = (file.attributes)? file.attributes : file;
-            if(data.preset == event.target.value){
-                self.current_preview = data;
+            if(data.preset == event.target.getAttribute("value")){
+                self.set_current_preview(data);
             }
         });
         this.generate_preview();
@@ -714,7 +714,6 @@ var PreviewView = BaseViews.BaseModalView.extend({
 
     generate_preview:function(){
         var location = "/media/";
-
         // TODO-BLOCKER: not sure if this is the best way to retrieve the file
         location += this.current_preview.content_copy.split("/").slice(-3).join("/");
         var extension = this.current_preview.file_format;
@@ -742,8 +741,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
 
         this.$("#preview_window").html(preview_template({
             source: location,
-            extension:extension,
-
+            extension:extension
         }));
     },
 
@@ -751,7 +749,9 @@ var PreviewView = BaseViews.BaseModalView.extend({
         if(this.model){
             var self = this;
             this.model.get("files").forEach(function(file){
-                self.current_preview = file;
+                if(!self.current_preview){
+                    self.set_current_preview(file);
+                }
                 self.presets.add(window.formatpresets.get((file.attributes)? file.get("preset") : file.preset));
             });
             this.render();
@@ -762,6 +762,12 @@ var PreviewView = BaseViews.BaseModalView.extend({
     switch_preview:function(model){
         this.model = model;
         this.load_preview();
+    },
+    set_current_preview:function(file){
+        this.current_preview = file;
+        if(this.current_preview.attributes){
+            this.current_preview = this.current_preview.attributes;
+        }
     }
 });
 
