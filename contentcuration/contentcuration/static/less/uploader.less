@@ -152,6 +152,11 @@
 		overflow:hidden;
 		overflow-y:auto;
 		max-height: @uploader-height * 0.7;
+
+		#editmetadata_format_section{
+			display:none;
+		}
+
 		h4 {
 			font-size: 13px;
 			color: @gray-800;
@@ -172,12 +177,101 @@
 			font-style:italic;
 			font-size:9pt;
 		}
+		.format_editor_header{
+			font-size:10pt;
+			font-weight:bold;
+			.format_counter{
+				background-color:@blue-500;
+			}
+
+			.expand_format_editor{
+				font-size:10pt;
+				color:@blue-500;
+				cursor:pointer;
+			}
+
+			.file_size_metadata{
+				font-size: 10pt;
+				margin-top:5px;
+			}
+		}
+		.format_editor_list{
+			margin-left:10px;
+			margin-bottom:10px;
+			display:none;
+
+			.format_dropzone{
+				width:auto;
+				.file_upload_progress{
+					height:10px;
+					max-width:70%;
+				}
+				.progress-bar-success {
+					background: @blue-200;
+				}
+				.upload_cancel{
+					color: @blue-200;
+					cursor:pointer;
+				}
+			}
+			.add_format_button{
+				margin-left: -15px;
+			}
+
+
+			.format_editor_item{
+				font-size:10pt;
+				margin-bottom:5px;
+
+				.format_editor_format_name{
+					font-weight:bold;
+					width:(@metadata-width / 2.5) * 0.25;
+				}
+
+				.format_editor_file_name{
+					max-width:(@metadata-width / 2.5) * 0.7;
+				}
+
+				.format_editor_selected_size{
+					color:@gray-400;
+				}
+
+				.format_editor_remove{
+					cursor:pointer;
+				}
+			}
+		}
 	}
 
 	#metadata_preview{
 		display:none;
 		overflow-y:auto;
-		max-height:@uploader-height * 0.6;
+		height:@uploader-height - 190px;
+		max-width:90%;
+
+		h3{
+			font-size:14pt;
+			font-weight:bold;
+			margin:0;
+			margin-bottom:5px;
+		}
+
+		.btn-group, .dropdown-menu{
+			width:100%;
+		}
+		.preview_btn_tab{
+			width:100%;
+			padding:5px;
+			font-size:10pt;
+		}
+
+		.dropdown-toggle{
+			font-size:11pt;
+		}
+
+		#preview_format_switch{
+			min-width:100%;
+		}
 	}
 
 	#metadata_edit_details{
@@ -189,10 +283,8 @@
 	}
 
 	#preview_window{
-		height: 100%;
-		min-height:400px;
+		height:@uploader-height * 0.6;
 		width:100%;
-		max-width: 500px;
 		overflow-y:auto;
 	}
 	#uploaded_list{
@@ -287,6 +379,8 @@
 	.metadata_save_buttons{
 		margin-right:30px;
 		width:100%;
+	    bottom: 0;
+	    left: 0;
 		div{
 			margin-right:30px;
 		}
@@ -309,7 +403,7 @@
 
 .default_preview{
 	background-color: @uploader-preview-bg-color;
-	min-height:370px;
+	min-height:300px;
 	.default_preview_text{
 		margin-top:30%;
 		color:white;
@@ -318,14 +412,14 @@
 
 .image_preview{
 	margin-top:20px;
-	width:100%;
-	height:auto;
+	max-width:100%;
+	max-height:90%;
 }
 
 .pdf_preview{
 	margin-top:20px;
-	width:100%;
-	height:100%;
+	max-width:100%;
+	max-height:100%;
 	min-height:370px;
 }
 
@@ -336,8 +430,8 @@
 
 .video_preview{
 	margin-top:20px;
-	width:100%;
-	height:auto;
+	max-width:100%;
+	max-height:90%;
 }
 
 .exercise-content{

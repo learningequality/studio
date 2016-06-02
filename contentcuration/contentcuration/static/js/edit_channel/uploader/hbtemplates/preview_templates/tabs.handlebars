@@ -1,15 +1,21 @@
-<div class="btn-group btn-group-justified" role="group" aria-label="...">
-	{{#each presets}}
-	  <div class="btn-group" role="group">
-	    <button type="button" class="btn btn-default preview_btn_tab" value="{{id}}">{{readable_name}}</button>
-	  </div>
-	 {{else}}No files found.
+<h3>{{node.attributes.title}}</h3>
+<div class="btn-group">
+  <button class="btn btn-default btn-sm dropdown-toggle" id="preview_format_switch" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  	{{#if presets}}
+  		{{preset_default.attributes.readable_name}} <span class="caret"></span>
+  	{{else}}No files found.
+  	{{/if}}
+  </button>
+  <ul class="dropdown-menu text-center">
+    {{#each presets}}
+	    <li class="btn preview_btn_tab" value="{{id}}">{{readable_name}}</li>
   	{{/each}}
+  </ul>
 </div>
 
 <div id="preview_window">
 	{{#unless file}}
-	<div class="default_preview container-fluid">
+	<div class="container-fluid">
 		<h5 class="default_preview_text text-center"><em>Select a format to preview.</em></h5>
 	</div>
 	{{/unless}}

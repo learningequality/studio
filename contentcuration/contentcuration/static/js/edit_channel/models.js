@@ -306,7 +306,45 @@ var FileModel = BaseModel.extend({
 
 var FileCollection = BaseCollection.extend({
 	model: FileModel,
-	list_name:"file-list"
+	list_name:"file-list",
+	get_or_fetch: function(data){
+		var newCollection = new FileCollection();
+		newCollection.fetch({
+			traditional:true,
+			data: data
+		});
+		console.log("COLLECTION RETURNED:", newCollection);
+
+		// this.fetch({async:false});
+		var file = newCollection.findWhere(data);
+    	// if(!file){
+    	// 	file = new FileModel(data);
+    	// 	var newCollection = new FileCollection();
+    	// 	newCollection.fetch({data:  $.param({ page: 1})});
+    	// 	console.log("collection", newCollection);
+    	// 	file.fetch({async:false});
+    	// }
+    	// console.log("RETURNING", file);
+    	return file;
+    },
+
+    get_all_fetch: function(ids){
+    	console.log("PERFORMANCE models.js: starting get_all_fetch...", ids);
+		var start = new Date().getTime();
+    	var to_fetch = new ContentNodeCollection();
+    	for(var i = 0; i < ids.length; i++){
+    		if(ids[i]){
+    			var model = this.get({id: ids[i]});
+	    		if(!model){
+	    			model = this.add({'id':ids[i]});
+	    			model.fetch({async:false});
+	    		}
+	    		to_fetch.add(model);
+    		}
+    	}
+    	console.log("PERFORMANCE models.js: get_all_fetch end (time = " + (new Date().getTime() - start) + ")");
+    	return to_fetch;
+    },
 });
 
 var FormatPresetModel = BaseModel.extend({

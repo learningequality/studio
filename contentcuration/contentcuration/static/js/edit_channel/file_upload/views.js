@@ -49,9 +49,8 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.container = options.container;
         this.uploading = true;
         this.file_list = [];
-        this.collection = new Models.FileCollection();
+        this.fileCollection = new Models.FileCollection();
         this.returnCollection = new Models.ContentNodeCollection();
-        this.collection.fetch();
         this.render();
     },
     events:{
@@ -121,13 +120,12 @@ var FileUploadView = BaseViews.BaseListView.extend({
             "data" : file,
             "filename": JSON.parse(file.xhr.response).filename
         }
+        console.log(JSON.parse(file.xhr.response).object_id);
         this.file_list.push(new_file_data);
-        this.collection.fetch({async:false});
+        var fileModel = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
 
-        var fileModel = this.collection.findWhere({
-            checksum: new_file_data.filename.split(".")[0],
-            contentmetadata : null
-        });
+        fileModel.fetch({async:false});
+        console.log("MODEL IS AT:", fileModel);
 
         var presets = new Models.FormatPresetCollection();
 
@@ -242,6 +240,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
 
 var FormatItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/file_upload_item.handlebars"),
+    inline_template: require("./hbtemplates/file_upload_inline_item.handlebars"),
     className: "format_item row",
     files: [],
     format_views:[],
@@ -258,6 +257,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         this.files.push(this.default_file);
         this.initial = options.initial;
         this.presets = options.presets;
+        this.inline = options.inline;
         this.render();
         this.$(".save_initial_format").attr("disabled", "disabled")
     },
@@ -271,13 +271,25 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
     render: function() {
         this.presets.sort_by_order();
-        this.$el.html(this.template({
-            file:this.default_file,
-            initial: this.initial,
-            presets: this.presets.models,
-            thumbnail:this.thumbnail,
-            node: this.model
-        }));
+        var size = 0;
+        this.model.get("files").forEach(function(file){
+            size += file.file_size;
+        });
+        if(this.inline){
+             this.$el.html(this.inline_template({
+                size: size
+             }));
+        }else{
+            this.$el.html(this.template({
+                file:this.default_file,
+                initial: this.initial,
+                presets: this.presets.models,
+                thumbnail:this.thumbnail,
+                node: this.model,
+                size: size
+            }));
+        }
+
         var self = this;
         if(!this.initial){
             self.format_views=[];
@@ -317,7 +329,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         this.render();
         this.containing_list_view.check_completed();
     },
-    toggle_formats:function(event){
+    toggle_formats:function(){
         if(this.$el.find(".expand_format_editor").hasClass("glyphicon-triangle-bottom")){
             this.$el.find(".format_editor_list").slideUp();
             this.$el.find(".expand_format_editor").removeClass("glyphicon-triangle-bottom");
@@ -422,16 +434,14 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     file_uploaded:function(file){
         console.log("Successfully added file!", file);
-        this.containing_list_view.collection.fetch({async:false});
         var new_file_data = {
             "data" : file,
             "filename": JSON.parse(file.xhr.response).filename
         }
 
-        this.file = this.containing_list_view.collection.findWhere({
-            checksum: new_file_data.filename.split(".")[0],
-            contentmetadata : null
-        });
+        this.file = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
+
+        this.file.fetch({async:false});
 
         this.file.set({
             file_size : new_file_data.data.size,
@@ -477,5 +487,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
 
 module.exports = {
     FileUploadView:FileUploadView,
-    FileModalView:FileModalView
+    FileModalView:FileModalView,
+    FormatItem:FormatItem
 }

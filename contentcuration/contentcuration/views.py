@@ -101,6 +101,7 @@ def file_upload(request):
         return HttpResponse(json.dumps({
             "success": True,
             "filename": str(file_object),
+            "object_id": file_object.pk
         }))
 
 

@@ -163,6 +163,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.allow_add = options.allow_add;
         this.modal = options.modal;
         this.main_collection = options.main_collection;
+        this.fileCollection = new Models.FileCollection();
         this.render();
         this.switchPanel(true);
     },
@@ -368,6 +369,41 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.$el.find("#input_description").val(this.current_node.get("description"));
         view.$el.addClass("current_item");
         view.$el.find("input[type=checkbox]").prop("checked", true);
+        this.$("#editmetadata_format_section").css("display", (this.current_node.get("kind") == "topic")? "none" : "block");
+        if(this.format_view){
+            this.format_view.$el.after("<div id='editmetadata_format_section'></div>");
+            this.format_view.delete_view();
+        }
+        if(!this.multiple_selected && this.current_node.get("kind") != "topic"){
+            var presets = new Models.FormatPresetCollection();
+            var self = this;
+            window.formatpresets.forEach(function(preset){
+                if(preset.get("kind") == self.current_node.get("kind")){
+                    var new_slot = preset.clone();
+                    new_slot.attached_format = null;
+                    self.current_node.get("files").forEach(function(f){
+                        if(preset.get("id") == f.preset){
+                            var fmodel = new Models.FileModel({id:f.id});
+                            fmodel.fetch({async:false});
+                            new_slot.attached_format = fmodel;
+                        }
+                    });
+                    presets.add(new_slot);
+                }
+            });
+            $("#editmetadata_format_section").css("display", "block");
+            this.format_view = new FileUploader.FormatItem({
+                containing_list_view : this,
+                initial:false,
+                presets: presets,
+                model: this.current_node,
+                inline:true,
+                el:$("#editmetadata_format_section")
+            });
+        }else{
+            console.log("CALLED HERE");
+            $("#editmetadata_format_section").css("display", "none");
+        }
 
         if(this.current_node.get("original_filename")){
             this.$el.find("#original_filename_area").css("display", "block");
@@ -379,10 +415,18 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.append_tags(this.current_view.tags);
 
         // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
-        var file_size = (((this.current_node.get("formats") || [])[0] || {}).format_size) || ((this.current_node.get("file_data") || {}).data || {}).size || "";
-        this.$("#display_file_size").text(file_size);
+        //var file_size = (((this.current_node.get("files") || [])[0] || {}).format_size) || ((this.current_node.get("files") || {}).data || {}).size || "";
+        this.$("#display_file_size").text(this.current_node.get("resource_size"));
         this.gray_out(false);
         this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
+    },
+    enable_submit:function(){
+        this.$("#upload_save_button").removeAttr("disabled");
+        this.$("#upload_save_finish_button").removeAttr("disabled");
+    },
+    disable_submit:function(){
+        this.$("#upload_save_button").attr("disabled", "disabled");
+        this.$("#upload_save_finish_button").attr("disabled", "disabled");
     },
     check_item: function(){
         this.$el.find("#uploaded_list .uploaded").removeClass("current_item");
@@ -642,7 +686,8 @@ var PreviewView = BaseViews.BaseModalView.extend({
             this.$(".modal-body").html(this.template({
                 node: this.model,
                 presets: this.presets.toJSON(),
-                file: this.current_preview
+                file: this.current_preview,
+                preset_default: (this.current_preview)? window.formatpresets.get(this.current_preview.preset) : null
             }));
             this.$el.append(this.el);
             this.$(".modal").modal({show: true});
@@ -651,20 +696,25 @@ var PreviewView = BaseViews.BaseModalView.extend({
             this.$el.html(this.template({
                 node: this.model,
                 presets: this.presets.toJSON(),
-                file: this.current_preview
+                file: this.current_preview,
+                preset_default: (this.current_preview)? window.formatpresets.get(this.current_preview.preset) : null
             }));
         }
     },
     set_preview:function(event){
         var self = this;
-        var location = "/media/";
-
         this.model.get("files").forEach(function(file){
             var data = (file.attributes)? file.attributes : file;
             if(data.preset == event.target.value){
                 self.current_preview = data;
             }
         });
+        this.generate_preview();
+    },
+
+    generate_preview:function(){
+        var location = "/media/";
+
         // TODO-BLOCKER: not sure if this is the best way to retrieve the file
         location += this.current_preview.content_copy.split("/").slice(-3).join("/");
         var extension = this.current_preview.file_format;
@@ -693,37 +743,19 @@ var PreviewView = BaseViews.BaseModalView.extend({
         this.$("#preview_window").html(preview_template({
             source: location,
             extension:extension,
-            title: this.model.get("title")
+
         }));
-
-
-            // if(this.model.attributes.file_data){
-            //     console.log("PREVIEWING...", this.model);
-            //     location += this.model.attributes.file_data.filename.substring(0,1) + "/";
-            //     location += this.model.attributes.file_data.filename.substring(1,2) + "/";
-            //     location += this.model.attributes.file_data.filename;
-            //     extension = this.model.attributes.file_data.filename.split(".")[1];
-            // }else{
-            //     var previewed_file = this.model.get_files().models[0];
-            //     console.log("GOT FILE:", previewed_file);
-            //     if(previewed_file){
-            //         extension = previewed_file.get("extension").replace(".", "");
-            //         location +=
-            //     }
-            // }
-
-            //
-            //
     },
 
     load_preview:function(){
         if(this.model){
             var self = this;
             this.model.get("files").forEach(function(file){
-                console.log("FILE IS:", file);
+                self.current_preview = file;
                 self.presets.add(window.formatpresets.get((file.attributes)? file.get("preset") : file.preset));
             });
             this.render();
+            this.generate_preview();
         }
     },
 
