@@ -20,12 +20,6 @@ var BaseCollection = Backbone.Collection.extend({
 		return window.Urls[this.list_name]();
 	},
 	save: function(callback) {
-		// var self = this;
-		// this.models.forEach(function(entry){
-		// 	if(entry.hasChanged()){
-		// 		entry.save({async:false});
-		// 	}
-		// });
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	}
 });
@@ -128,32 +122,18 @@ var ContentNodeModel = BaseModel.extend({
 			if(parent.get("ancestors").indexOf(attrs.id) >= 0){
 				return "Cannot place topic under itself."
 			}
-
-			/*If want to make items unique under same parent
-			var error = null;
-
-			parent.get("child_names").forEach(function(entry){
-				if(entry.title === attrs.title && entry.id != attrs.id){
-					error = "'" + attrs.title + "' already exists under this topic. Rename and try again.";
-				}
-			})
-
-			return error;
-			*/
 		}
 	},
 	create_file:function(){
-		console.log("CALLED CREATE FILE", this);
 		this.get("files").forEach(function(file){
-			console.log("files are", file.get("contentmetadata"));
-			var data = file.pick("file_size", "contentmetadata", "preset");
+			var data = file.pick("file_size", "contentnode", "preset");
 			file.save(data,{patch:true, async:false});
 		});
 	},
 	get_formats:function(){
 		var formats = new FileFormatCollection();
 		formats.fetch({async:false});
-		return formats.where({contentmetadata : this.id});
+		return formats.where({contentnode : this.id});
 	},
 	get_fileformat:function(type){
 		return window.fileformats.findWhere({extension: type});
@@ -178,12 +158,12 @@ var ContentNodeCollection = BaseCollection.extend({
 
 	save: function(callback) {
 		var self = this;
-		console.log("FILE BEFORE COLLECTION", this);
         Backbone.sync("update", this, {
         	url: this.model.prototype.urlRoot(),
         	async:false,
         	success: function(data){
         		data.forEach(function(entry){
+        			console.log("ENTRY IS:", entry);
         			var node = self.get_all_fetch([entry.id]).models[0];
         			node.create_file();
 				});
@@ -283,20 +263,7 @@ var TagModel = BaseModel.extend({
 
 var TagCollection = BaseCollection.extend({
 	model: TagModel,
-	list_name:"tag-list",
-	/*get_or_create:function(name, type){
-		var to_return = this.get({"tag_name" : name});
-		if(!to_return){
-			to_return.fetch({async:false});
-			if(!to_return){
-				to_return = this.create({
-					tag_name : name,
-					tag_type : type
-				}, {async:false});
-			}
-		}
-		return to_return;
-	}*/
+	list_name:"tag-list"
 });
 
 /**** MODELS SPECIFIC TO FILE NODES ****/
@@ -313,38 +280,9 @@ var FileCollection = BaseCollection.extend({
 			traditional:true,
 			data: data
 		});
-		console.log("COLLECTION RETURNED:", newCollection);
-
-		// this.fetch({async:false});
 		var file = newCollection.findWhere(data);
-    	// if(!file){
-    	// 	file = new FileModel(data);
-    	// 	var newCollection = new FileCollection();
-    	// 	newCollection.fetch({data:  $.param({ page: 1})});
-    	// 	console.log("collection", newCollection);
-    	// 	file.fetch({async:false});
-    	// }
-    	// console.log("RETURNING", file);
     	return file;
-    },
-
-    get_all_fetch: function(ids){
-    	console.log("PERFORMANCE models.js: starting get_all_fetch...", ids);
-		var start = new Date().getTime();
-    	var to_fetch = new ContentNodeCollection();
-    	for(var i = 0; i < ids.length; i++){
-    		if(ids[i]){
-    			var model = this.get({id: ids[i]});
-	    		if(!model){
-	    			model = this.add({'id':ids[i]});
-	    			model.fetch({async:false});
-	    		}
-	    		to_fetch.add(model);
-    		}
-    	}
-    	console.log("PERFORMANCE models.js: get_all_fetch end (time = " + (new Date().getTime() - start) + ")");
-    	return to_fetch;
-    },
+    }
 });
 
 var FormatPresetModel = BaseModel.extend({

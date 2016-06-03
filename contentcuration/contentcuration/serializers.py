@@ -52,7 +52,7 @@ class FileSerializer(serializers.ModelSerializer):
          return super.get(*args, **kwargs)
     class Meta:
         model = File
-        fields = ('id', 'checksum', 'file_size', 'content_copy', 'contentmetadata', 'file_format', 'preset', 'lang','original_filename')
+        fields = ('id', 'checksum', 'file_size', 'content_copy', 'contentnode', 'file_format', 'preset', 'lang','original_filename')
 
 class FileFormatSerializer(serializers.ModelSerializer):
     class Meta:

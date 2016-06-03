@@ -195,7 +195,7 @@ class ContentNode(MPTTModel, models.Model):
     def delete(self):
         logging.warning(self)
         for n in self.get_children():
-            #for format in Format.objects.filter(contentmetadata = self.pk):
+            #for format in Format.objects.filter(contentnode = self.pk):
             #    format.delete()
             n.delete()
         super(Node, self).delete()
@@ -255,7 +255,7 @@ class File(models.Model):
     checksum = models.CharField(max_length=400, blank=True)
     file_size = models.IntegerField(blank=True, null=True)
     content_copy = models.FileField(upload_to=content_copy_name, storage=ContentCopyStorage(), max_length=500, blank=True)
-    contentmetadata = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True)
+    contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
     lang = models.ForeignKey(Language, blank=True, null=True)

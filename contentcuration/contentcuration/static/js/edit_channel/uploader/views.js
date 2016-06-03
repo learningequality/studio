@@ -383,13 +383,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                     new_slot.attached_format = null;
                     self.current_node.get("files").forEach(function(f){
                         var file_data = (f.attributes) ? f.attributes : f;
-                        console.log("LOOKING AT", preset.get("id"), file_data.preset);
                         if(preset.get("id") == file_data.preset){
                             new_slot.attached_format = new Models.FileModel({id:file_data.id});
                             new_slot.attached_format.fetch({async:false});
+                            presets.add(new_slot);
                         }
                     });
-                    presets.add(new_slot);
+                    //presets.add(new_slot);
                 }
             });
             $("#editmetadata_format_section").css("display", "block");
@@ -709,6 +709,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
                 self.set_current_preview(data);
             }
         });
+        this.render();
         this.generate_preview();
     },
 
@@ -748,12 +749,15 @@ var PreviewView = BaseViews.BaseModalView.extend({
     load_preview:function(){
         if(this.model){
             var self = this;
-            this.model.get("files").forEach(function(file){
-                if(!self.current_preview){
-                    self.set_current_preview(file);
-                }
-                self.presets.add(window.formatpresets.get((file.attributes)? file.get("preset") : file.preset));
-            });
+            if(this.model.get("files")){
+                this.model.get("files").forEach(function(file){
+                    if(!self.current_preview){
+                        self.set_current_preview(file);
+                    }
+                    self.presets.add(window.formatpresets.get((file.attributes)? file.get("preset") : file.preset));
+                });
+            }
+
             this.render();
             this.generate_preview();
         }

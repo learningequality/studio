@@ -101,7 +101,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			'margin-left' : "0px"
 		}, 500);
 		this.$el.find("#container-wrapper").animate({
-			scrollLeft:this.$el.find("#container_area").width()
+			scrollLeft:this.$el.find("#container_area").width() - container_view.$el.outerWidth()
 		}, 250);
 	},
 

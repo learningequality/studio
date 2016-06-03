@@ -125,7 +125,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
         var fileModel = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
 
         fileModel.fetch({async:false});
-        console.log("MODEL IS AT:", fileModel);
 
         var presets = new Models.FormatPresetCollection();
 
@@ -149,7 +148,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.nodeCollection.create(node, {async:false});
         fileModel.set({
             file_size : new_file_data.data.size,
-            contentmetadata: node.id
+            contentnode: node.id
         });
 
         var new_format_item = new FormatItem({
@@ -231,10 +230,9 @@ var FileUploadView = BaseViews.BaseListView.extend({
                 }
             });
             view.model.set("files", files);
-
             self.returnCollection.add(view.model);
-        })
-        this.close_file_uploader();
+        });
+        this.container.close_file_uploader();
     }
 });
 
@@ -320,7 +318,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         this.initial = false;
         var preset = this.presets.get(this.$(".format_options_dropdown").val());
         this.default_file.set({
-            contentmetadata: this.model.get("id"),
+            contentnode: this.model.get("id"),
             preset : preset.get("id")
         });
         preset.attached_format = this.default_file;
@@ -350,7 +348,6 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         if(formatModel){
             formatModel.set("preset", assigned_preset.id);
         }
-        console.log("Presets 1: ",this.presets);
     },
     update_name:function(event){
         this.model.set("title", event.target.value);
@@ -389,6 +386,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.container = options.container;
         this.acceptedFiles = options.acceptedFiles;
         this.list = options.list;
+        this.initial = true;
         this.render();
     },
     events: {
@@ -401,7 +399,10 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             node: this.model,
             id:this.id() + "_" + this.preset.get("id")
         }));
-        this.list.append(this.el);
+        if(this.initial){
+            this.list.append(this.el);
+        }
+        this.initial = false;
         this.$el.data("data", this);
         this.$el.attr("id", this.id() + "_" + this.preset.get("id"));
 
@@ -434,32 +435,25 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     file_uploaded:function(file){
         console.log("Successfully added file!", file);
-        var new_file_data = {
-            "data" : file,
-            "filename": JSON.parse(file.xhr.response).filename
-        }
-
         this.file = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
-
         this.file.fetch({async:false});
 
         this.file.set({
-            file_size : new_file_data.data.size,
-            contentmetadata: this.model.get("id"),
+            file_size : file.size,
+            contentnode: this.model.get("id"),
             preset : this.preset.get("id")
         });
         this.preset.attached_format = this.file;
-        //this.container.set_format(this.file, this.preset);
         this.render();
-        console.log("Presets 3: ",this.container.presets);
     },
     file_added: function(file) {
         this.$(".add_format_button").css("display", "none");
         this.containing_list_view.disable_submit();
-        console.log("Presets 2: ",this.container.presets);
     },
     file_removed: function(file) {
         this.$(".add_format_button").css("display", "inline");
+        this.file.set("contentnode", null);
+        this.preset.attached_format = null;
     },
     remove_item:function(){
         if(this.container.get_count() ===1){
