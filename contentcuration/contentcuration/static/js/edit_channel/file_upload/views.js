@@ -31,6 +31,7 @@ var FileModalView = BaseViews.BaseModalView.extend({
     close_file_uploader:function(){
         console.log("RETURN COLLECTION", this.file_upload_view.returnCollection);
       this.callback(this.file_upload_view.returnCollection);
+      console.log("FILE LIST:", this.file_upload_view.file_list);
       this.close();
     }
 });
@@ -122,7 +123,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
             "data" : file,
             "filename": JSON.parse(file.xhr.response).filename
         }
-        console.log(JSON.parse(file.xhr.response).object_id);
         this.file_list.push(new_file_data);
         var fileModel = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
 
@@ -133,7 +133,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
         window.formatpresets.forEach(function(preset){
             if(preset.get("allowed_formats").indexOf(fileModel.get("file_format")) >= 0){
                 var new_slot = preset.clone();
-                //new_slot.set("attached_format", null);
                 presets.add(new_slot);
             }
         });
@@ -324,8 +323,6 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
             preset : preset.get("id")
         });
         preset.attached_format = this.default_file;
-        console.log("PRESETTING", preset);
-        //this.set_format(this.default_file, );
         this.render();
         this.containing_list_view.check_completed();
     },
@@ -370,6 +367,9 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
             }
         });
         return count;
+    },
+    save:function(){
+
     }
 });
 
@@ -450,7 +450,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     file_added: function(file) {
         this.$(".add_format_button").css("display", "none");
-        this.containing_list_view.disable_submit();
+        this.disable_submit();
     },
     file_removed: function(file) {
         this.$(".add_format_button").css("display", "inline");
@@ -461,7 +461,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         if(this.container.get_count() ===1){
             this.container.initial = true;
             this.container.render();
-            console.log(this.container.default_file.get("preset"));
             this.container.$(".format_options_dropdown").val(this.container.default_file.get("preset"));
         }else{
             this.file = null;

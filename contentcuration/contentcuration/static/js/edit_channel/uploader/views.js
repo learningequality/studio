@@ -375,31 +375,14 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.format_view.delete_view();
         }
         if(!this.multiple_selected && this.current_node.get("kind") != "topic"){
-            var presets = new Models.FormatPresetCollection();
-            var self = this;
-            window.formatpresets.forEach(function(preset){
-                if(preset.get("kind") == self.current_node.get("kind")){
-                    var new_slot = preset.clone();
-                    new_slot.attached_format = null;
-                    self.current_node.get("files").forEach(function(f){
-                        var file_data = (f.attributes) ? f.attributes : f;
-                        if(preset.get("id") == file_data.preset){
-                            new_slot.attached_format = new Models.FileModel({id:file_data.id});
-                            new_slot.attached_format.fetch({async:false});
-                            presets.add(new_slot);
-                        }
-                    });
-                    //presets.add(new_slot);
-                }
-            });
             $("#editmetadata_format_section").css("display", "block");
             this.format_view = new FileUploader.FormatItem({
-                containing_list_view : this,
                 initial:false,
-                presets: presets,
+                presets: this.current_view.presets,
                 model: this.current_node,
                 inline:true,
-                el:$("#editmetadata_format_section")
+                el:$("#editmetadata_format_section"),
+                containing_list_view:this.current_view
             });
         }else{
             $("#editmetadata_format_section").css("display", "none");
@@ -471,6 +454,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.$el.find("#input_title").val(" ");
             this.$el.find("#input_description").val(" ");
             this.$el.find(".gray-out").prop("disabled", true);
+            $("#editmetadata_format_section").css("display", "none");
         }else{
             this.$el.find(".tag_input").removeClass("gray-out");
             this.$el.find(".upload_input").removeClass("gray-out");
@@ -605,12 +589,14 @@ var UploadedItem = ContentItem.extend({
         this.edited = false;
         this.checked = false;
         this.file_data = options.file_data;
+        this.presets = new Models.FormatPresetCollection();
         this.originalData = {
             "title":this.model.get("title"),
             "description":this.model.get("description")
         };
         this.render();
         this.load_tags();
+        this.load_presets();
     },
     render: function() {
         this.$el.html(this.template({
@@ -632,6 +618,23 @@ var UploadedItem = ContentItem.extend({
                 self.tags.push((entry.tag_name) ? entry.tag_name : entry);
             });
         }
+    },
+    load_presets:function(){
+        var self = this;
+        window.formatpresets.forEach(function(preset){
+            if(preset.get("kind") == self.model.get("kind")){
+                var new_slot = preset.clone();
+                new_slot.attached_format = null;
+                self.model.get("files").forEach(function(f){
+                    var file_data = (f.attributes) ? f.attributes : f;
+                    if(preset.get("id") == file_data.preset){
+                        new_slot.attached_format = new Models.FileModel({id:file_data.id});
+                        new_slot.attached_format.fetch({async:false});
+                    }
+                });
+                self.presets.add(new_slot);
+            }
+        });
     },
     remove_topic: function(){
         this.delete_item();
@@ -663,6 +666,12 @@ var UploadedItem = ContentItem.extend({
     },
     remove_tag:function(tagname){
         this.tags.splice(this.tags.indexOf(tagname), 1);
+        this.set_edited(true);
+    },
+    enable_submit:function(){
+        this.set_edited(true);
+    },
+    disable_submit:function(){
         this.set_edited(true);
     }
 });

@@ -137,18 +137,6 @@ var ContentNodeModel = BaseModel.extend({
 	},
 	get_fileformat:function(type){
 		return window.fileformats.findWhere({extension: type});
-	},
-	get_files: function(){
-		var formats = this.get("formats");
-		var to_return = new FileCollection();
-		if(formats){
-			formats.forEach(function(entry){
-				entry.files.forEach(function(file){
-					to_return.add(new FileModel(file));
-				});
-			});
-		}
-		return to_return;
 	}
 });
 

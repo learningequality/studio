@@ -268,7 +268,6 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		this.allow_edit = options.allow_edit;
 		this.containing_list_view = options.containing_list_view;
 		this.index = options.index;
-		this.files = (this.model.get("title").trim() == "topic")?  null : this.model.get_files();
 		this.render();
 
 		//console.log(this.model.get("title") + " parent is " + this.model.get("parent") + " and has index " + this.index);
