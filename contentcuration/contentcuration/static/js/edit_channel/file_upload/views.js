@@ -49,9 +49,11 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.container = options.container;
         this.uploading = true;
         this.file_list = [];
+        this.views=[];
         this.fileCollection = new Models.FileCollection();
         this.returnCollection = new Models.ContentNodeCollection();
         this.render();
+
     },
     events:{
       "click .submit_uploaded_files" : "submit_files",

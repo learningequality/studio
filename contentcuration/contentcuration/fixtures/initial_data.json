@@ -200,5 +200,17 @@
       "kind" : "image",
       "allowed_formats" : ["png", "jpg"]
     }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "aud",
+      "readable_name": "Sound",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 5,
+      "kind" : "audio",
+      "allowed_formats" : ["wav", "mp3"]
+    }
   }
 ]
