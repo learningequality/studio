@@ -23,7 +23,7 @@ class ChannelSerializer(serializers.ModelSerializer):
         if not channel.draft:
             return 0
         else:
-            return count_children(channel.draft.root_node) + count_children(channel.clipboard.root_node)
+            return count_files(channel.draft.root_node) + count_files(channel.clipboard.root_node)
 
     def calculate_resources_size(self, channel):
         if not channel.draft:
@@ -138,7 +138,6 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
-    file_count = serializers.SerializerMethodField('count_file_numbers')
 
 
     def to_internal_value(self, data):
@@ -240,7 +239,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return instance
 
     def count_resources(self, node):
-        return count_children(node)
+        return count_files(node)
 
     def calculate_resources_size(self, node):
         return get_total_size(node)
@@ -248,15 +247,12 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def get_node_ancestors(self,node):
         return get_node_ancestors(node)
 
-    def count_file_numbers(self,node):
-        return count_files(node)
-
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',  'sort_order',
                  'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
-                 'resource_count', 'resource_size', 'ancestors', 'tags', 'files', 'file_count')
+                 'resource_count', 'resource_size', 'ancestors', 'tags', 'files')
 
 class TagSerializer(serializers.ModelSerializer):
    class Meta:

@@ -362,6 +362,9 @@ var BaseEditorView = BaseListView.extend({
 		window.ccc = this.collection;
 		this.views.forEach(function(entry){
 			entry.model.set({tags: entry.tags});
+			if(entry.format_view){
+				entry.format_view.update_file();
+			}
 	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();

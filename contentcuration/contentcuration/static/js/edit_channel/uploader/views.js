@@ -376,14 +376,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         }
         if(!this.multiple_selected && this.current_node.get("kind") != "topic"){
             $("#editmetadata_format_section").css("display", "block");
-            this.format_view = new FileUploader.FormatItem({
-                initial:false,
-                presets: this.current_view.presets,
-                model: this.current_node,
-                inline:true,
-                el:$("#editmetadata_format_section"),
-                containing_list_view:this.current_view
-            });
+            this.current_view.format_view.display_inline();
+            console.log("VIEW:", this.current_view);
         }else{
             $("#editmetadata_format_section").css("display", "none");
         }
@@ -583,6 +577,7 @@ var NodeListItem = ContentItem.extend({
 
 var UploadedItem = ContentItem.extend({
     template: require("./hbtemplates/uploaded_list_item.handlebars"),
+    format_view:null,
     initialize: function(options) {
         _.bindAll(this, 'remove_topic');
         this.containing_list_view = options.containing_list_view;
@@ -596,7 +591,7 @@ var UploadedItem = ContentItem.extend({
         };
         this.render();
         this.load_tags();
-        this.load_presets();
+
     },
     render: function() {
         this.$el.html(this.template({
@@ -606,6 +601,7 @@ var UploadedItem = ContentItem.extend({
         this.$el.find("input[type=checkbox]").prop("checked", this.checked);
         this.set_edited(this.edited);
         this.$el.data("data", this);
+        this.load_presets();
     },
     events: {
         'click .remove_topic' : 'remove_topic'
@@ -630,10 +626,23 @@ var UploadedItem = ContentItem.extend({
                     if(preset.get("id") == file_data.preset){
                         new_slot.attached_format = new Models.FileModel({id:file_data.id});
                         new_slot.attached_format.fetch({async:false});
+                        new_slot.set({
+                            file_size : file_data.file_size,
+                            contentnode: file_data.contentnode,
+                            preset : file_data.preset
+                        });
                     }
                 });
                 self.presets.add(new_slot);
             }
+        });
+        this.format_view = new FileUploader.FormatItem({
+            initial:false,
+            presets: this.presets,
+            model: this.model,
+            inline:true,
+            el:$("#editmetadata_format_section"),
+            containing_list_view:this
         });
     },
     remove_topic: function(){

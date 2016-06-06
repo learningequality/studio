@@ -16,11 +16,11 @@ import models
 
 def count_files(node):
     count = 0
-    if node.kind == "topic":
+    if node.kind_id == "topic":
         for n in node.children.all():
             count += count_files(n)
     else:
-        count += node.files.count()
+        count += models.File.objects.filter(contentnode=node).count()
     return count
 
 def count_children(node):
@@ -31,11 +31,12 @@ def count_children(node):
 
 def get_total_size(node):
     total_size = 0
-    if node.kind == "topic":
+    if node.kind_id == "topic":
         for n in node.children.all():
             total_size += get_total_size(n)
     else:
-        for f in node.files.all():
+        filelist = models.File.objects.filter(contentnode=node)
+        for f in filelist:
             total_size += f.file_size
     return total_size
 
