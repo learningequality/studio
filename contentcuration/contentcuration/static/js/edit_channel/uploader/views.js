@@ -223,11 +223,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         var self = this;
         this.views = [];
         if(this.collection.length <= 1 && !this.allow_add){
+            this.collection.add(this.model);
             var node_view = new UploadedItem({
                 model: this.model,
                 el: self.$el.find("#hidden_node"),
                 containing_list_view: self
             });
+
             self.views.push(node_view);
             this.set_current(node_view);
         }else{
@@ -243,7 +245,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                     self.set_current(node_view);
                 }
             });
-
         }
     },
     render_details:function(){
@@ -377,7 +378,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         if(!this.multiple_selected && this.current_node.get("kind") != "topic"){
             $("#editmetadata_format_section").css("display", "block");
             this.current_view.format_view.display_inline();
-            console.log("VIEW:", this.current_view);
         }else{
             $("#editmetadata_format_section").css("display", "none");
         }
@@ -642,7 +642,8 @@ var UploadedItem = ContentItem.extend({
             model: this.model,
             inline:true,
             el:$("#editmetadata_format_section"),
-            containing_list_view:this
+            containing_list_view:this,
+            update_models:!this.containing_list_view.allow_add
         });
     },
     remove_topic: function(){
@@ -732,36 +733,39 @@ var PreviewView = BaseViews.BaseModalView.extend({
     },
 
     generate_preview:function(){
-        var location = "/media/";
-        // TODO-BLOCKER: not sure if this is the best way to retrieve the file
-        location += this.current_preview.content_copy.split("/").slice(-3).join("/");
-        var extension = this.current_preview.file_format;
-        var preview_template;
-        switch (extension){
-            case "png":
-            case "jpg":
-                preview_template = require("./hbtemplates/preview_templates/image.handlebars");
-                break;
-            case "pdf":
-            case "vtt":
-            case "srt":
-                preview_template = require("./hbtemplates/preview_templates/document.handlebars");
-                break;
-            case "mp3":
-            case "wav":
-                preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
-                break;
-            case "mp4":
-                preview_template = require("./hbtemplates/preview_templates/video.handlebars");
-                break;
-            default:
-                preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+        if(this.current_preview){
+            var location = "/media/";
+             // TODO-BLOCKER: not sure if this is the best way to retrieve the file
+            location += this.current_preview.content_copy.split("/").slice(-3).join("/");
+            var extension = this.current_preview.file_format;
+            var preview_template;
+            switch (extension){
+                case "png":
+                case "jpg":
+                    preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+                    break;
+                case "pdf":
+                case "vtt":
+                case "srt":
+                    preview_template = require("./hbtemplates/preview_templates/document.handlebars");
+                    break;
+                case "mp3":
+                case "wav":
+                    preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
+                    break;
+                case "mp4":
+                    preview_template = require("./hbtemplates/preview_templates/video.handlebars");
+                    break;
+                default:
+                    preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+            }
+
+            this.$("#preview_window").html(preview_template({
+                source: location,
+                extension:extension
+            }));
         }
 
-        this.$("#preview_window").html(preview_template({
-            source: location,
-            extension:extension
-        }));
     },
 
     load_preview:function(){
@@ -792,7 +796,6 @@ var PreviewView = BaseViews.BaseModalView.extend({
         }
     }
 });
-
 
 module.exports = {
     AddContentView: AddContentView,

@@ -364,6 +364,7 @@ var BaseEditorView = BaseListView.extend({
 			entry.model.set({tags: entry.tags});
 			if(entry.format_view){
 				entry.format_view.update_file();
+				entry.format_view.clean_files();
 			}
 	        entry.set_edited(false);
 		});

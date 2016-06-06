@@ -97,7 +97,6 @@ var ContentNodeModel = BaseModel.extend({
 		}else{
 			new_title += " (Copy)";
 		}
-    	console.log("new title is " + new_title);
     	return new_title.slice(0, new_title.length);
 	},
 	copy_children:function(node, original_collection){
@@ -125,7 +124,9 @@ var ContentNodeModel = BaseModel.extend({
 		}
 	},
 	create_file:function(){
-		console.log("SAVING THIS", this);
+		console.log("SAVING THIS PREVIOUS", this.previousAttributes());
+		console.log("SAVING THIS NOW", this.attributes);
+
 		this.get("files").forEach(function(file){
 			var data = file.pick("file_size", "contentnode", "preset");
 			file.save(data,{patch:true, async:false});
@@ -151,9 +152,7 @@ var ContentNodeCollection = BaseCollection.extend({
         	url: this.model.prototype.urlRoot(),
         	async:false,
         	success: function(data){
-        		console.log("CALLED HERE", data);
         		data.forEach(function(entry){
-        			console.log("ENTRY IS:", entry);
         			var node = self.get_all_fetch([entry.id]).models[0];
         			node.create_file();
 				});

@@ -125,6 +125,16 @@
 	}
 }
 
+.dz_click{
+	margin-right:10px;
+	cursor:pointer;
+}
+
+.format_editor_file_name:hover{
+	font-weight:bold;
+	cursor:pointer;
+}
+
 #metadata{
 	width: @metadata-width;
 	.section{
@@ -607,13 +617,13 @@
 					.init_format_area{
 						margin-bottom: 20px;
 						.format_options_dropdown{
-							width:40%;
+							width:30%;
 							font-size:11pt;
 							padding:4px 2px;
 						}
 
 						.init_format_name{
-							width:60%;
+							width:70%;
 							font-size:13pt;
 						}
 
@@ -665,6 +675,10 @@
 							margin-left: -15px;
 						}
 
+						.format_editor_remove{
+							cursor:pointer;
+						}
+
 
 						.format_editor_item{
 							font-size:12pt;
@@ -683,9 +697,8 @@
 								color:@gray-400;
 							}
 
-							.format_editor_remove{
-								cursor:pointer;
-							}
+
+
 						}
 					}
 				}

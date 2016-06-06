@@ -108,12 +108,15 @@ var TreeEditView = BaseViews.BaseView.extend({
 	delete_content: function (event){
 		if(confirm("Are you sure you want to delete these selected items?")){
 			var self = this;
-			for(var i = 0; i < this.containers.length; i++){
-				if(this.containers[i].delete_selected()){
-					this.remove_containers_from(this.containers[i].index);
-					break;
+			this.display_load("Deleting Content...", function(){
+				for(var i = 0; i < self.containers.length; i++){
+					if(self.containers[i].delete_selected()){
+						self.remove_containers_from(self.containers[i].index);
+						break;
+					}
 				}
-			}
+			});
+
 		}
 	},
 	copy_content: function(event){
