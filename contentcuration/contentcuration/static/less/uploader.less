@@ -239,7 +239,7 @@
 				}
 
 				.format_editor_file_name{
-					max-width:(@metadata-width / 2.5) * 0.7;
+					max-width:(@metadata-width / 2.5) * 0.6;
 				}
 
 				.format_editor_selected_size{
@@ -617,14 +617,15 @@
 					.init_format_area{
 						margin-bottom: 20px;
 						.format_options_dropdown{
-							width:30%;
+							width:@uploader-width * 0.2;
 							font-size:11pt;
 							padding:4px 2px;
 						}
 
 						.init_format_name{
-							width:70%;
 							font-size:13pt;
+							width:100px !important;
+							overflow:hidden;
 						}
 
 						.init_format_size{

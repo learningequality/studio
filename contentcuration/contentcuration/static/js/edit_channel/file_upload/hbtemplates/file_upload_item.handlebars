@@ -14,7 +14,7 @@
 
     <div class="inline col-xs-8 format_section">
         <div class="uploading_only">
-            <p class="name truncate">
+            <p class="name truncate" title="{{node.attributes.title}}">
             {{#if initial}}
                 {{node.attributes.title}}
             {{else}}
@@ -39,7 +39,7 @@
             <input type="text" placeholder="Title *" class="name_content_input" value="{{node.attributes.title}}"/>
             {{#if initial}}
                 <h5 class="init_format_area">
-                    <span class="init_format_name truncate">{{file.attributes.original_filename}}</span>
+                    <p class="init_format_name truncate">{{file.attributes.original_filename}}</p>
                     <span class="init_format_size" >({{#format_file_size file.attributes.file_size}}{{/format_file_size}})</span>
                     <a class="btn action-button pull-right save_initial_format">SAVE</a>
                     <select class="format_options_dropdown pull-right text-center">

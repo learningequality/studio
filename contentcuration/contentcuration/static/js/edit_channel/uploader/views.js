@@ -155,7 +155,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     description_limit : 400,
 
     initialize: function(options) {
-        _.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',
+        _.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',"select_item",
                         'add_tag','save_and_finish','add_more','set_edited',
                         'render_details', 'render_preview', 'remove_tag', 'update_count');
         this.parent_view = options.parent_view;
@@ -206,7 +206,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         'click #upload_save_finish_button' : 'save_and_finish',
         'click #add_more_button' : 'add_more',
         'click #uploader' : 'finish_editing',
-        'click li' : 'check_item',
+        'click .upload_item_checkbox' : 'check_item',
+        'click .uploaded_list_item' : 'select_item',
         'keypress #tag_box' : 'add_tag',
         'keyup .upload_input' : 'set_edited',
         'click #metadata_details_btn' : 'render_details',
@@ -405,7 +406,12 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.$("#upload_save_button").attr("disabled", "disabled");
         this.$("#upload_save_finish_button").attr("disabled", "disabled");
     },
-    check_item: function(){
+    select_item:function(event){
+        this.$(".upload_item_checkbox").prop("checked", false);
+        console.log($(event.target).parent("li").find(".upload_item_checkbox"));
+       // this.$(event.target).find(".upload_item_checkbox").prop("checked", true);
+    },
+    check_item: function(event){
         this.$el.find("#uploaded_list .uploaded").removeClass("current_item");
         this.multiple_selected = this.$el.find("#uploaded_list :checked").length > 1;
         this.parent_view.set_editing(this.multiple_selected);
@@ -449,11 +455,14 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.$el.find("#input_description").val(" ");
             this.$el.find(".gray-out").prop("disabled", true);
             $("#editmetadata_format_section").css("display", "none");
+            this.$("#metadata_preview_btn").attr("disabled", "disabled");
+            this.switchPanel(true);
         }else{
             this.$el.find(".tag_input").removeClass("gray-out");
             this.$el.find(".upload_input").removeClass("gray-out");
             this.$el.find(".upload_input").prop("disabled", false);
             this.$el.find(".tag_input").prop("disabled", false);
+            this.$("#metadata_preview_btn").removeAttr("disabled");
         }
 
     },
@@ -726,6 +735,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
             var data = (file.attributes)? file.attributes : file;
             if(data.preset == event.target.getAttribute("value")){
                 self.set_current_preview(data);
+                return;
             }
         });
         this.render();
@@ -733,39 +743,41 @@ var PreviewView = BaseViews.BaseModalView.extend({
     },
 
     generate_preview:function(){
+        var location = "/content/";
+        var extension = "";
         if(this.current_preview){
-            var location = "/media/";
-             // TODO-BLOCKER: not sure if this is the best way to retrieve the file
+            // TODO-BLOCKER: not sure if this is the best way to retrieve the file
             location += this.current_preview.content_copy.split("/").slice(-3).join("/");
-            var extension = this.current_preview.file_format;
-            var preview_template;
-            switch (extension){
-                case "png":
-                case "jpg":
-                    preview_template = require("./hbtemplates/preview_templates/image.handlebars");
-                    break;
-                case "pdf":
-                case "vtt":
-                case "srt":
-                    preview_template = require("./hbtemplates/preview_templates/document.handlebars");
-                    break;
-                case "mp3":
-                case "wav":
-                    preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
-                    break;
-                case "mp4":
-                    preview_template = require("./hbtemplates/preview_templates/video.handlebars");
-                    break;
-                default:
-                    preview_template = require("./hbtemplates/preview_templates/default.handlebars");
-            }
-
-            this.$("#preview_window").html(preview_template({
-                source: location,
-                extension:extension
-            }));
+            extension = this.current_preview.file_format;
+        }
+        console.log("GENERATING>>>", this.current_preview);
+        var preview_template;
+        switch (extension){
+            case "png":
+            case "jpg":
+                preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+                break;
+            case "pdf":
+            case "vtt":
+            case "srt":
+                preview_template = require("./hbtemplates/preview_templates/document.handlebars");
+                break;
+            case "mp3":
+            case "wav":
+                preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
+                break;
+            case "mp4":
+                preview_template = require("./hbtemplates/preview_templates/video.handlebars");
+                break;
+            default:
+                preview_template = require("./hbtemplates/preview_templates/default.handlebars");
         }
 
+
+        this.$("#preview_window").html(preview_template({
+            source: location,
+            extension:extension
+        }));
     },
 
     load_preview:function(){
@@ -784,7 +796,6 @@ var PreviewView = BaseViews.BaseModalView.extend({
             this.generate_preview();
         }
     },
-
     switch_preview:function(model){
         this.model = model;
         this.load_preview();

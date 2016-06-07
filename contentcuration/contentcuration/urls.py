@@ -112,5 +112,5 @@ urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js
 if settings.DEBUG:
     # static files (images, css, javascript, etc.)
     urlpatterns += [
-        url(r'^media/(?P<path>.*)$', 'django.views.static.serve', {
+        url(r'^content/(?P<path>.*)$', 'django.views.static.serve', {
         'document_root': settings.MEDIA_ROOT})]

@@ -27,6 +27,7 @@ var BaseView = Backbone.View.extend({
 		/* Create list of nodes to edit */
 		for(var i = 0; i < list.length; i++){
 			var model = $(list[i]).data("data").model;
+			model.view = $(list[i]).data("data");
 			edit_collection.add(model);
 		}
 		$("#main-content-area").append("<div id='dialog'></div>");
@@ -61,7 +62,7 @@ var BaseView = Backbone.View.extend({
 	display_load:function(message, callback){
     	console.log("displaying load");
     	var self = this;
-		var load = '<div id="loading_modal" class="text-center">' +
+		var load = '<div id="loading_modal" class="text-center fade">' +
             '<div id="kolibri_load_gif"></div>' +
             '<h4 id="kolibri_load_text" class="text-center">' + message + '</h4>' +
             '</div>';
@@ -332,10 +333,16 @@ var BaseEditorView = BaseListView.extend({
 	parent_view : null,
 	close_uploader: function(event){
 		if(this.unsaved_queue.length == 0){
-			this.parent_view.render();
 			if (this.modal) {
 				this.$el.modal('hide');
 	        }
+	        if(!this.allow_add){
+		        this.views.forEach(function(entry){
+					if(entry.model.view){
+						entry.model.view.render();
+					}
+				});
+		    }
 	        this.remove();
 		}else if(confirm("Unsaved Metadata Detected! Exiting now will"
 			+ " undo any new changes. \n\nAre you sure you want to exit?")){
@@ -344,7 +351,6 @@ var BaseEditorView = BaseListView.extend({
 					entry.unset_node();
 				});
 			}
-			this.parent_view.render();
 			if (this.modal) {
 				this.$el.modal('hide');
 	        }

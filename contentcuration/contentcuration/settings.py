@@ -15,7 +15,7 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-MEDIA_ROOT = BASE_DIR
+MEDIA_ROOT = os.path.join(BASE_DIR, "content")
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
@@ -115,6 +115,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+MEDIA_URL = '/content/'
 
 DEFAULT_FILE_STORAGE = 'kolibri.content.models.ContentCopyStorage'
 

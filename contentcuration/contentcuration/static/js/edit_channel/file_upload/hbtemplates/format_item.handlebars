@@ -3,7 +3,7 @@
       {{#if file}}
       	<div id="{{id}}_dropzone_swap" class="format_dropzone">
 	        <div class="format_metadata">
-	      		<span class="format_editor_file_name truncate">{{file.attributes.original_filename}}</span>
+	      		<span class="format_editor_file_name truncate" title="{{file.attributes.original_filename}}">{{file.attributes.original_filename}}</span>
 		        <em class="format_editor_selected_size">({{#format_file_size file.attributes.file_size}}{{/format_file_size}})</em>
 		        <span class="glyphicon glyphicon-remove pull-right format_editor_remove" aria-hidden="true"></span>
 		        <span id="{{id}}_dropzone" class="pull-right format_editor_replace">
