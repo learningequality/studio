@@ -71,7 +71,7 @@ def content_copy_name(instance, filename):
     """
     h = instance.checksum
     basename, ext = os.path.splitext(filename)
-    return os.path.join(settings.CONTENT_COPY_DIR, h[0:1], h[1:2], h + ext.lower())
+    return os.path.join(h[0:1], h[1:2], h + ext.lower())
 
 class ContentCopyStorage(FileSystemStorage):
     """
