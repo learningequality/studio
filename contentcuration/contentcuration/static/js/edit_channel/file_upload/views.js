@@ -169,15 +169,19 @@ var FileUploadView = BaseViews.BaseListView.extend({
     },
     disable_submit: function() {
         this.$(".submit_uploaded_files").attr("disabled", "disabled");
+        this.$(".submit_uploaded_files").text((this.check_completed()) ? "Upload in progress..." : "Assign formats to continue");
     },
     enable_submit: function() {
         this.$(".submit_uploaded_files").removeAttr("disabled");
+        this.$(".submit_uploaded_files").text("FINISH UPLOAD");
     },
     disable_next:function(){
         this.$(".go_to_formats").attr("disabled", "disabled");
+        this.$(".go_to_formats").text((this.file_list.length === 0)? "Add files to continue" : "Upload in progress...");
     },
     enable_next:function(){
         this.$(".go_to_formats").removeAttr("disabled");
+        this.$(".go_to_formats").text("NEXT");
     },
     all_files_uploaded: function() {
         this.enable_next();
@@ -187,6 +191,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
             $(file.previewTemplate).before("<hr/>");
         }
         this.disable_next();
+        this.$(".go_to_formats").text("Upload in progress...");
     },
 
     file_removed: function(file) {
@@ -216,13 +221,11 @@ var FileUploadView = BaseViews.BaseListView.extend({
         }
     },
     check_completed:function(){
-        var self = this;
-        this.enable_submit();
+        var is_completed = true;
         this.views.forEach(function(view){
-            if(view.initial){
-                self.disable_submit();
-            }
+            is_completed = is_completed && !view.initial;
         });
+        return is_completed;
     },
     submit_files:function(){
         var self = this;
@@ -343,7 +346,11 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         });
         preset.attached_format = this.default_file;
         this.render();
-        this.containing_list_view.check_completed();
+        if(this.containing_list_view.check_completed()){
+            this.containing_list_view.enable_submit();
+        }else{
+            this.containing_list_view.disable_submit();
+        }
     },
     toggle_formats:function(){
         if(this.$el.find(".expand_format_editor").hasClass("glyphicon-triangle-bottom")){
@@ -517,7 +524,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                 this.container.$(".format_options_dropdown").val(this.container.default_file.get("preset"));
             }
         }else{
-            console.log("removing file...");
             this.container.files_to_delete.add(this.file);
             this.file.set({contentnode: null});
             this.file = null;

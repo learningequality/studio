@@ -615,30 +615,37 @@
 					}
 
 					.init_format_area{
-						margin-bottom: 20px;
-						.format_options_dropdown{
-							width:@uploader-width * 0.2;
-							font-size:11pt;
-							padding:4px 2px;
+						.init_format_name_wrapper{
+							display:inline;
+							.init_format_name{
+								font-size:13pt;
+								display:inline-block;
+								overflow:hidden;
+								width:@uploader-width * 0.32;
+							}
 						}
-
-						.init_format_name{
-							font-size:13pt;
-							width:100px !important;
-							overflow:hidden;
+						.init_dropdown_wrapper{
+							display:inline-block;
+							*{
+								display:inline;
+							}
+							.required_input{
+								color:red;
+								font-weight:bold;
+								font-size:13pt;
+							}
+							.format_options_dropdown{
+								width:@uploader-width * 0.2;
+								font-size:11pt;
+								padding:4px 2px;
+								margin-right:-4px;
+							}
 						}
-
-						.init_format_size{
-							color:@gray-400;
-							font-style:italic;
-						}
-
-						.required_input{
-							color:red;
-							font-weight:bold;
-							font-size:13pt;
-							padding-right:10px;
-						}
+					}
+					.init_format_size{
+						color:@gray-400;
+						font-style:italic;
+						margin-right:10px;
 					}
 
 					.format_editor_header{

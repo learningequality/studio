@@ -39,17 +39,22 @@
             <input type="text" placeholder="Title *" class="name_content_input" value="{{node.attributes.title}}"/>
             {{#if initial}}
                 <h5 class="init_format_area">
-                    <p class="init_format_name truncate">{{file.attributes.original_filename}}</p>
-                    <span class="init_format_size" >({{#format_file_size file.attributes.file_size}}{{/format_file_size}})</span>
-                    <a class="btn action-button pull-right save_initial_format">SAVE</a>
-                    <select class="format_options_dropdown pull-right text-center">
-                        <option selected disabled>-- Select a Format --</option>
-                        {{#each presets}}
-                            <option value="{{id}}">{{this.attributes.readable_name}}</option>
-                        {{/each}}
-                    </select>
-                    <span class="pull-right required_input">*</span>
+                    <div class="init_dropdown_wrapper pull-right">
+                        <span class="required_input">*</span>
+                        <select class="format_options_dropdown text-center">
+                            <option selected disabled>-- Select a Format --</option>
+                            {{#each presets}}
+                                <option value="{{id}}">{{this.attributes.readable_name}}</option>
+                            {{/each}}
+                        </select>
+                         <a class="btn action-button save_initial_format">SAVE</a>
+                     </div>
+                    <div class="init_format_name_wrapper">
+                        <p class="init_format_name truncate">{{file.attributes.original_filename}}</p>
+                    </div>
+
                 </h5>
+                <p class="init_format_size" >({{#format_file_size file.attributes.file_size}}{{/format_file_size}})</p>
             {{else}}
                 <h4 class="format_editor_header">
                     Formats
