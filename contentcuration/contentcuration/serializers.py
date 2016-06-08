@@ -9,6 +9,7 @@ from rest_framework.fields import set_value, SkipField
 from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.conf import settings
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:

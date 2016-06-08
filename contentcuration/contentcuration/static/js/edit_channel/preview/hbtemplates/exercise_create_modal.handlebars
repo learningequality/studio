@@ -1,0 +1,38 @@
+<div class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Adding Exercise to "{{title}}"</h4>
+      </div>
+      <div class="modal-body exercise-content container">
+        <a class="back_to_add">< Back to adding content</a>
+        <input type="text" placeholder="Exercise Title" class="exercise_title_box"/>
+        <hr/>
+        <h5>QUESTIONS</h5>
+        <div class="row">
+          <div class="col-xs-4">
+            <p>Create New Question</p>
+            <select id="exercise_type">
+              <option>Multiple Choice - Single Answer</option>
+              <option>Multiple Choice - Multi Answer</option>
+              <option>True/False</option>
+              <option>Free Response</option>
+            </select>
+            <a class="btn btn-default create_question">Create</a>
+          </div>
+          <div class="col-xs-4">
+            <p>Upload Question (under construction)</p>
+            <p>Choose a .QTI file from your computer</p>
+            <a class="btn btn-default construction">Browse</a>
+          </div>
+        </div>
+        <a class="btn btn-default">Undo</a>
+        <a class="btn btn-default">Redo</a>
+
+        <ol id="exercise-list">
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>

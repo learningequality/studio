@@ -6,6 +6,7 @@ var BaseViews = require("./../views");
 var QueueView = require("edit_channel/queue/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var UploaderViews = require("edit_channel/uploader/views");
+var Previewer = require("edit_channel/preview/views");
 //var UndoManager = require("backbone-undo");
 var Models = require("./../models");
 
@@ -370,7 +371,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 				parent_view : this
 			});
 		}else{
-			var preview_view = new UploaderViews.PreviewView({
+			var preview_view = new Previewer.PreviewView({
 				modal:true,
 				model: this.model,
 				el : $("#dialog")

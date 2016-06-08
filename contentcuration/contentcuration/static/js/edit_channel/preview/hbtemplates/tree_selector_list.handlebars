@@ -1,0 +1,12 @@
+<div class="section">
+	<ul class="list-unstyled" id="uploaded_list">
+	{{#each node_list}}
+		<li id="item_{{cid}}" class="uploaded disable_on_error"><li>
+	{{else}}
+		<li><h5>&nbsp;No items listed</h5></li>
+	{{/each}}
+	</ul>
+	{{#if allow_add}}
+		<a class="btn" id="add_more_button">Add more to Channel</a>
+	{{/if}}
+</div>
