@@ -47,13 +47,17 @@ class TopicTreeSerializer(serializers.ModelSerializer):
         fields = ('name', 'channel', 'root_node', 'id')
 
 class FileSerializer(serializers.ModelSerializer):
-    content_copy = serializers.FileField(use_url=False)
+    # content_copy = serializers.FileField(use_url=True).url
+    content_copy = serializers.SerializerMethodField('get_file_url')
 
     def get(*args, **kwargs):
          return super.get(*args, **kwargs)
     class Meta:
         model = File
         fields = ('id', 'checksum', 'file_size', 'content_copy', 'contentnode', 'file_format', 'preset', 'lang','original_filename')
+
+    def get_file_url(self, obj):
+        return obj.content_copy.url
 
 class FileFormatSerializer(serializers.ModelSerializer):
     class Meta:
