@@ -653,7 +653,8 @@ var UploadedItem = ContentItem.extend({
             inline:true,
             el:$("#editmetadata_format_section"),
             containing_list_view:this,
-            update_models:!this.containing_list_view.allow_add
+            update_models:!this.containing_list_view.allow_add,
+            preview : this.containing_list_view.preview_view
         });
     },
     remove_topic: function(){

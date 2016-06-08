@@ -55,7 +55,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
         var location ="";
         var extension = "";
         if(this.current_preview){
-            location += this.current_preview.content_copy;
+            location = this.current_preview.content_copy;
             extension = this.current_preview.file_format;
         }
 
@@ -89,18 +89,16 @@ var PreviewView = BaseViews.BaseModalView.extend({
     },
 
     load_preview:function(){
-        console.log("LOADING PREVIEW", this.model);
         if(this.model){
             var self = this;
             if(this.model.get("files")){
                 this.model.get("files").forEach(function(file){
-                    if(!self.current_preview){
+                    if(!self.current_preview || self.model.get("files").length === 1){
                         self.set_current_preview(file);
                     }
                     self.presets.add(window.formatpresets.get((file.attributes)? file.get("preset") : file.preset));
                 });
             }
-
             this.render();
             this.generate_preview();
         }

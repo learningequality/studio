@@ -6,6 +6,7 @@ var Dropzone = require("dropzone");
 var get_cookie = require("utils/get_cookie");
 require("uploader.less");
 require("dropzone/dist/dropzone.css");
+var stringHelper = require("edit_channel/utils/string_helper");
 
 var FileModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/file_upload_modal.handlebars"),
@@ -250,6 +251,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         this.thumbnail = options.thumbnail;
         this.default_file = options.default_file;
         this.update_models = options.update_models;
+        this.preview = options.preview;
         if(this.default_file){
             this.files.push(this.default_file);
         }
@@ -330,7 +332,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         this.format_views.forEach(function(view){
             size +=  (view.file)? view.file.get("file_size") : 0;
         });
-        this.$(".format_size_text").html(this.format_size(size));
+        this.$(".format_size_text").html(stringHelper.format_size(size));
     },
     assign_default_format:function(){
         this.initial = false;
@@ -397,11 +399,13 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
             }
         });
         this.model.set("files", files);
+        if(this.preview){
+            this.preview.load_preview();
+        }
         return this.model;
     },
     update_file:function(){
         if(this.update_models){
-            console.log("UPDATING>>", this);
             this.submit_file();
         }
     },
@@ -409,21 +413,6 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         this.files_to_delete.forEach(function(file){
             file.destroy();
         });
-        console.log(this.files_to_delete);
-    },
-    format_size:function(text){
-      if (!text) {
-        return "0B";
-      }
-      var value = Number(text);
-      if(value > 999999999)
-        return parseInt(value/1000000000) + "GB";
-      else if(value > 999999)
-        return parseInt(value/1000000) + "MB";
-      else if(value > 999)
-        return parseInt(value/1000) + "KB";
-      else
-        return parseInt(value) + "B";
     }
 });
 
