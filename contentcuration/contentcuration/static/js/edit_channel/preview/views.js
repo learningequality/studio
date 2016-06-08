@@ -55,13 +55,10 @@ var PreviewView = BaseViews.BaseModalView.extend({
         var location ="";
         var extension = "";
         if(this.current_preview){
-            // TODO-BLOCKER: not sure if this is the best way to retrieve the file
             location += this.current_preview.content_copy;
-            window.contenturl = this.current_preview.content_copy;
-            console.log(this.current_preview.content_copy.url)
             extension = this.current_preview.file_format;
         }
-        console.log("GENERATING>>>", this.current_preview);
+
         var preview_template;
         switch (extension){
             case "png":
