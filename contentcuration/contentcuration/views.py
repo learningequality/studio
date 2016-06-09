@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from rest_framework import status
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -106,33 +106,38 @@ def file_upload(request):
 
 
 @csrf_exempt
-def copy_node(request):
+def duplicate_node(request):
+    logging.debug("Entering the copy_node endpoint")
+
     if request.method != 'POST':
-        pass
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
-        data = json.loads(request.body)
+        data = request.POST
 
         try:
             node_id = data["node_id"]
+            sort_order = data["sort_order"]
+            target_parent = data["target_parent"]
         except KeyError:
-            # return error that no node_id in json was found
-            raise ObjectDoesNotExist("Node id %s not given.".format(node_id))
+            raise ObjectDoesNotExist("Missing attribute from data: %s".format(data))
 
-        new_node = _copy_node(node_id)
+        logging.info("Copying node id %s", node_id)
+        new_node = _duplicate_node(node_id, parent=target_parent)
 
-        return HttpResponse(json.dumps({"node_id": new_node.id}))
+        serialized_node = NodeSerializer(new_node)
+        return HttpResponse(JSONRenderer().render(serialized_node.data))
 
 
-def _copy_node(node):
-    if isinstance(node, int):
+def _duplicate_node(node, parent=None):
+    if isinstance(node, int) or isinstance(node, basestring):
         node = Node.objects.get(pk=node)
 
     node = copy.copy(node)
     node.id = node.pk = None
-    node.parent = None
+    node.parent = Node.objects.get(pk=parent) if parent else node.parent
     node.published = False
 
-    node.children = [_copy_node(c) for c in node.children.all()]
+    node.children = [_duplicate_node(c, parent=None) for c in node.children.all()]
     node.save()
 
     return node

@@ -39,12 +39,12 @@ var ContentNodeModel = BaseModel.extend({
 
 	/*Used when copying items to clipboard*/
     duplicate: function(target_parent, options){
-    	var start = new Date().getTime();
     	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
 		var node_data = new ContentNodeModel();
 		var nodeChildrenCollection = new ContentNodeCollection();
 		var self = this;
 		node_data.set(data);
+
 		if(target_parent){
 			node_data.move(target_parent, true, target_parent.get("children").length);
 		}else{
@@ -67,7 +67,6 @@ var ContentNodeModel = BaseModel.extend({
 	},
 
 	move:function(target_parent, allow_duplicate, sort_order){
-		console.log("CALLED MOVE");
     	var start = new Date().getTime();
     	//var old_parent = new NodeModel({id: this.get("parent")});
     	//old_parent.fetch({async:false});
@@ -134,9 +133,6 @@ var ContentNodeModel = BaseModel.extend({
 		}
 	},
 	create_file:function(){
-		console.log("SAVING THIS PREVIOUS", this.previousAttributes());
-		console.log("SAVING THIS NOW", this.attributes);
-
 		this.get("files").forEach(function(file){
 			var data = file.pick("file_size", "contentnode", "preset");
 			file.save(data,{async:false});
@@ -197,10 +193,11 @@ var ContentNodeCollection = BaseCollection.extend({
     	this.sort();
     },
     duplicate:function(target_parent, options){
-    	var copiedCollection = new NodeCollection();
+    	var copiedCollection = new ContentNodeCollection();
     	this.forEach(function(node){
     		copiedCollection.add(node.duplicate(target_parent, options));
     	});
+    	console.log("IMPORTING: RETURNING COLLECTION", copiedCollection);
     	return copiedCollection;
     }
 });
@@ -267,7 +264,15 @@ var TagCollection = BaseCollection.extend({
 
 /**** MODELS SPECIFIC TO FILE NODES ****/
 var FileModel = BaseModel.extend({
-	root_list:"file-list"
+	root_list:"file-list",
+	duplicate: function(id){
+    	var data = this.pick("checksum","extension","file_size","content_copy","available");
+    	data.format = id;
+    	console.log("DATA IS:", data);
+		var new_file = new FileModel();
+		new_file.save(data, {async:false});
+		return new_file;
+	}
 });
 
 var FileCollection = BaseCollection.extend({
@@ -287,7 +292,6 @@ var FileCollection = BaseCollection.extend({
 var FormatPresetModel = BaseModel.extend({
 	root_list:"formatpreset-list",
 	attached_format: null,
-
 	get_files : function(){
 		var files = new FileCollection();
 		files.fetch({async:false});

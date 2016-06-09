@@ -8,38 +8,49 @@
 
 {% block content %}
 
-<div class="container">
-	<img id="login-image" src="{% static 'img/kolibri_login.png' %}"/>
-{% if form.errors %}
-<p>{% trans "Your username and password didn't match. Please try again." %}</p>
-{% endif %}
+<div id="login-container">
+	<div id="login-overlay" class="text-center">
+		<br/>
+		<div id="login-form" class="container">
+			<div id="login-title-area">
+				<img id="login-image" class="pull-left" src="{% static 'img/kolibri_login.png' %}"/>
+				<h1 id="login-title">Kolibri</h1>
+				<p id="login-subheading">Content Curation</p>
+			</div>
+			
 
-{% if next %}
-    {% if user.is_authenticated %}
-    <p>{% trans "Your account doesn't have access to this page. To proceed, please login with an account that has access." %}</p>
-    {% else %}
-    <p>{% trans "Please login to see this page." %}</p>
-    {% endif %}
-{% endif %}
+			{% if form.errors %}
+			<p>{% trans "Your username and password didn't match. Please try again." %}</p>
+			{% endif %}
 
-<form method="post" action="{% url 'django.contrib.auth.views.login' %}">
-{% csrf_token %}
-<div class="form-group">
-    {{ form.username.label_tag }}
-    {{ form.username }}
-</div>
-<div class="form-group">
-    {{ form.password.label_tag }}
-    {{ form.password }}
-</div>
+			{% if next %}
+			    {% if user.is_authenticated %}
+			    <p>{% trans "Your account doesn't have access to this page. To proceed, please login with an account that has access." %}</p>
+			    {% else %}
+			    <p>{% trans "Please login to see this page." %}</p>
+			    {% endif %}
+			{% endif %}
 
-<input class="btn btn-success" type="submit" value="login" />
-<input type="hidden" name="next" value="{{ next }}" />
-</form>
+			<form method="post" action="{% url 'django.contrib.auth.views.login' %}">
+			{% csrf_token %}
+			<div class="form-group">
+			    {{ form.username.label_tag }}
+			    {{ form.username }}
+			</div>
+			<div class="form-group">
+			    {{ form.password.label_tag }}
+			    {{ form.password }}
+			</div>
 
-{# Assumes you setup the password_reset view in your URLconf #}
-<p><a href="{% url 'password_reset' %}">{% trans "Lost password?" %}</a></p>
+			<input class="btn btn-login" type="submit" value="Login" />
+			<input type="hidden" name="next" value="{{ next }}" />
+			</form>
 
+			{# Assumes you setup the password_reset view in your URLconf #}
+			<p><a  class="action-text login-action-text" href="{% url 'password_reset' %}">{% trans "Lost password?" %}</a></p>
+		</div>
+		<a id="login_le" href="https://learningequality.org/" target="_blank"><img src="{% static 'img/le.png' %}" id="le_img"> Learning Equality</a>
+	</div>
 </div>
 
 {% endblock %}

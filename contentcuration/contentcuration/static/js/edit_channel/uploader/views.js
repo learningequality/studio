@@ -3,6 +3,7 @@ var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var FileUploader = require("edit_channel/file_upload/views");
+var Import = require("edit_channel/import/views");
 var Previewer = require("edit_channel/preview/views");
 require("uploader.less");
 //var ExerciseViews = require("edit_channel/exercise_creation/views");
@@ -142,7 +143,7 @@ var AddContentView = BaseViews.BaseListView.extend({
         this.delete_view();
     },
     import_content:function(){
-        var import_view = new ImportView({
+        var import_view = new Import.ImportView({
             modal: true,
             parent_view: this
         });
@@ -402,14 +403,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     enable_submit:function(){
         this.$("#upload_save_button").removeAttr("disabled");
         this.$("#upload_save_finish_button").removeAttr("disabled");
-        this.$("#validating_text").css("display", "none");
-        this.$("#validating_text").html("Validating...");
     },
     disable_submit:function(){
         this.$("#upload_save_button").attr("disabled", "disabled");
         this.$("#upload_save_finish_button").attr("disabled", "disabled");
-        this.$("#validating_text").html("Upload in progress...");
-        this.$("#validating_text").css("display", "inline");
     },
     select_item:function(event){
         this.$(".upload_item_checkbox").prop("checked", false);
@@ -695,11 +692,9 @@ var UploadedItem = ContentItem.extend({
     },
     enable_submit:function(){
         this.set_edited(true);
-        this.containing_list_view.enable_submit();
     },
     disable_submit:function(){
         this.set_edited(true);
-        this.containing_list_view.disable_submit();
     }
 });
 
