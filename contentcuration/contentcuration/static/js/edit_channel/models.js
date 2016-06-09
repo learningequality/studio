@@ -51,6 +51,16 @@ var ContentNodeModel = BaseModel.extend({
 			node_data.save(data, options);
 		}
 		self.copy_children(node_data, self.get("children"));
+		var fileCollection = new FileCollection();
+		this.get("files").forEach(function(file){
+			var file_data = file;
+			file_data.contentnode = self.id;
+			console.log("GOT FILE:", file_data);
+			fileCollection.create(file_data, {async:true});
+
+		});
+		node_data.save("files", fileCollection);
+		console.log("NEW MODEL:",node_data);
 
 		//var node_data = new NodeModel(window.Urls.copy_node());
 		return node_data;
@@ -73,7 +83,7 @@ var ContentNodeModel = BaseModel.extend({
 					sort_order:sort_order
 				}, {validate:true});
 			}
-			this.save(this.attributes, {async:false, validate:false, patch:true}); //Save any other values
+			this.save(this.attributes, {async:false, validate:false}); //Save any other values
 			/*target_parent.get("children").push(this.id);
 
 			var new_children = old_parent.get("children");
@@ -129,7 +139,7 @@ var ContentNodeModel = BaseModel.extend({
 
 		this.get("files").forEach(function(file){
 			var data = file.pick("file_size", "contentnode", "preset");
-			file.save(data,{patch:true, async:false});
+			file.save(data,{async:false});
 		});
 	},
 	get_formats:function(){

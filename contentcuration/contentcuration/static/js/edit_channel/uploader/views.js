@@ -402,10 +402,14 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     enable_submit:function(){
         this.$("#upload_save_button").removeAttr("disabled");
         this.$("#upload_save_finish_button").removeAttr("disabled");
+        this.$("#validating_text").css("display", "none");
+        this.$("#validating_text").html("Validating...");
     },
     disable_submit:function(){
         this.$("#upload_save_button").attr("disabled", "disabled");
         this.$("#upload_save_finish_button").attr("disabled", "disabled");
+        this.$("#validating_text").html("Upload in progress...");
+        this.$("#validating_text").css("display", "inline");
     },
     select_item:function(event){
         this.$(".upload_item_checkbox").prop("checked", false);
@@ -691,9 +695,11 @@ var UploadedItem = ContentItem.extend({
     },
     enable_submit:function(){
         this.set_edited(true);
+        this.containing_list_view.enable_submit();
     },
     disable_submit:function(){
         this.set_edited(true);
+        this.containing_list_view.disable_submit();
     }
 });
 
