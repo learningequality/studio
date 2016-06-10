@@ -41,29 +41,61 @@ var ContentNodeModel = BaseModel.extend({
     duplicate: function(target_parent, options){
     	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
 		var node_data = new ContentNodeModel();
-		var nodeChildrenCollection = new ContentNodeCollection();
-		var self = this;
-		node_data.set(data);
+		// var nodeChildrenCollection = new ContentNodeCollection();
+		// var self = this;
+		// node_data.set(data);
 
-		if(target_parent){
-			node_data.move(target_parent, true, target_parent.get("children").length);
-		}else{
-			node_data.save(data, options);
-		}
-		self.copy_children(node_data, self.get("children"));
-		var fileCollection = new FileCollection();
-		this.get("files").forEach(function(file){
-			var file_data = file;
-			file_data.contentnode = self.id;
-			console.log("GOT FILE:", file_data);
-			fileCollection.create(file_data, {async:true});
+		// if(target_parent){
+		// 	node_data.move(target_parent, true, target_parent.get("children").length);
+		// }else{
+		// 	node_data.save(data, options);
+		// }
+		// self.copy_children(node_data, self.get("children"));
+		// var files = [];
+		// this.get("files").forEach(function(file){
+		// 	var data = _.pick(file,'checksum','content_copy', 'file_format', 'file_size', 'lang', 'original_filename', 'preset');
+		// 	var file_data = new FileModel();
+		// 	file_data.set({
+		// 		'checksum': file.checksum,
+		// 		'content_copy': file.content_copy,
+		// 		'file_format': file.file_format,
+		// 		'file_size' : file.file_size,
+		// 		'lang' : file.lang,
+		// 		'original_filename': file.original_filename,
+		// 		'preset' : file.preset,
+		// 		'contentnode' : node_data.id
+		// 	});
+		// 	console.log("GOT FILE:", file_data);
+		// 	file_data.save(file_data.attributes,{async:false});
+		// 	files.push(file_data);
+		// });
+		// node_data.save({"files": files}, {async:false});
+		//return node_data;
 
-		});
-		node_data.save("files", fileCollection);
-		console.log("NEW MODEL:",node_data);
+		var node_id = this.get("id");
+        var sort_order = target_parent.get("children").length;
+        var parent_id = target_parent.get("id");
+        var data = {node_id: node_id,
+                    sort_order: sort_order,
+                    target_parent: parent_id};
+        var new_node_data;
+        var jqxhr = $.post({
+            url: window.Urls.duplicate_node(),
+            data: data,
+            async: false,
+            success: function(data) {
+            	alert("CALLED SUCCESS");
+                var data = JSON.parse(data);
+                new_node_data = new ContentNodeModel(data);
+            },
+            error:function(e){
+            	alert("ERROR!");
+            }
 
-		//var node_data = new NodeModel(window.Urls.copy_node());
-		return node_data;
+        });
+        new_node_data.fetch({cache: false});
+        return new_node_data;
+
 	},
 
 	move:function(target_parent, allow_duplicate, sort_order){
@@ -267,9 +299,9 @@ var TagCollection = BaseCollection.extend({
 /**** MODELS SPECIFIC TO FILE NODES ****/
 var FileModel = BaseModel.extend({
 	root_list:"file-list",
-	duplicate: function(id){
+	duplicate: function(contentnode){
     	var data = this.pick("checksum","extension","file_size","content_copy","available");
-    	data.format = id;
+    	data.contentnode = contentnode;
     	console.log("DATA IS:", data);
 		var new_file = new FileModel();
 		new_file.save(data, {async:false});

@@ -503,7 +503,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         if(this.preset.attached_format){
             this.preset.attached_format.set({
                 contentnode:null
-            })
+            });
+            this.container.files_to_delete.add(this.preset.attached_format);
         }
         this.preset.attached_format = this.file;
         this.render();
