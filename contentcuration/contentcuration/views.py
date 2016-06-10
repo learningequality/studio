@@ -112,7 +112,7 @@ def duplicate_node(request):
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
-        data = json.loads(request.body)
+        data = request.POST
 
         try:
             node_id = data["node_id"]
@@ -134,9 +134,8 @@ def _duplicate_node(node, parent=None):
 
     node = copy.copy(node)
     node.id = node.pk = None
-    node.parent = ContentNode.objects.get(pk=parent) if parent else node.parent
+    node.parent = Node.objects.get(pk=parent) if parent else node.parent
     node.published = False
-    node.save()
 
     node.children = [_duplicate_node(c, parent=None) for c in node.children.all()]
     node.save()

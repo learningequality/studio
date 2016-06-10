@@ -132,7 +132,7 @@ BaseListView = BaseView.extend({
 		var clipboard_root = window.current_channel.get_tree("clipboard").get_root();
 		for(var i = 0; i < list.length; i++){
 			var newNode = new Models.ContentNodeModel();
-			newNode = $(list[i]).data("data").model.duplicate(clipboard_root);
+			newNode = $(list[i]).data("data").model.duplicate(clipboard_root, null);
 			clipboard_list.push(newNode);
 		}
 		this.add_to_clipboard(clipboard_list);
