@@ -232,7 +232,7 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.selected_size = 0;
 
         if(!this.subfile_view && this.selected){
-            this.selected_count = this.model.get("file_count");
+            this.selected_count = this.model.get("resource_count");
             this.selected_size = this.model.get("resource_size");
             console.log("before render, count is", this.selected_count);
         }else{

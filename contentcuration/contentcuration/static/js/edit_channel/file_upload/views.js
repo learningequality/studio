@@ -411,11 +411,6 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         return this.model;
     },
     unset_model:function(){
-        // this.format_views.forEach(function(view){
-        //     if(view.file){
-        //         view.file.unset();
-        //     }
-        // });
         this.model.unset();
     },
     update_file:function(){
@@ -505,6 +500,11 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             contentnode: this.model.get("id"),
             preset : this.preset.get("id")
         });
+        if(this.preset.attached_format){
+            this.preset.attached_format.set({
+                contentnode:null
+            })
+        }
         this.preset.attached_format = this.file;
         this.render();
         this.container.update_size();
@@ -522,6 +522,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.$(".add_format_button").css("display", "inline");
         this.file.set("contentnode", null);
         this.preset.attached_format = null;
+        this.render();
     },
     remove_item:function(){
         if(this.container.get_count() ===1){

@@ -284,7 +284,8 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 			isfolder: this.model.get("kind").toLowerCase() == "topic",
 			edit_mode: this.edit_mode,
 			allow_edit: this.allow_edit,
-			resource_count : this.model.get("resource_count")
+			resource_count : this.model.get("resource_count"),
+			resource_size:this.model.get("resource_size")
 		}));
 		this.$el.data("data", this);
 		if($("#hide_details_checkbox").attr("checked"))
@@ -325,11 +326,6 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		event.preventDefault();
 		event.stopPropagation();
 		this.open_edit();
-		/*
-		this.allow_edit = this.edit_mode;
-		this.render();
-		this.$el.addClass("editing");
-		*/
 	},
 	submit_edit: function(event){
 		event.preventDefault();
