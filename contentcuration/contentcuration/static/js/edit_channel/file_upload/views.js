@@ -55,7 +55,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.fileCollection = new Models.FileCollection();
         this.returnCollection = new Models.ContentNodeCollection();
         this.render();
-
     },
     events:{
       "click .submit_uploaded_files" : "submit_files",
@@ -410,6 +409,14 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
             this.preview.load_preview();
         }
         return this.model;
+    },
+    unset_model:function(){
+        // this.format_views.forEach(function(view){
+        //     if(view.file){
+        //         view.file.unset();
+        //     }
+        // });
+        this.model.unset();
     },
     update_file:function(){
         if(this.update_models){

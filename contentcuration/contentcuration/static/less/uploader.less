@@ -259,6 +259,9 @@ div#dropzone {
 				margin-left: -15px;
 			}
 
+			.format_editor_file_name_wrapper{
+				display:inline;
+			}
 
 			.format_editor_item{
 				font-size:10pt;
@@ -271,14 +274,22 @@ div#dropzone {
 
 				.format_editor_file_name{
 					max-width:(@metadata-width / 2.5) * 0.6;
+					width:auto;
+					max-width:55%;
+					overflow:hidden;
+					display:inline-block;
+				}
+				.format_editor_options_wrapper{
+					width:40px;
+					.glyphicon{
+						cursor:pointer;
+					}
 				}
 
 				.format_editor_selected_size{
 					color:@gray-400;
-				}
-
-				.format_editor_remove{
-					cursor:pointer;
+					font-size:10pt;
+					display:inline;
 				}
 			}
 		}
@@ -544,7 +555,6 @@ div#dropzone {
 			width:100%;
 			margin-bottom:20px;
 
-
 			.file-row{
 				width:100%;
 				padding: 0 25px;
@@ -649,14 +659,14 @@ div#dropzone {
 						.init_format_name_wrapper{
 							display:inline;
 							.init_format_name{
-								font-size:13pt;
-								display:inline-block;
+								font-size:12pt;
 								overflow:hidden;
-								width:@uploader-width * 0.32;
+								width:@uploader-width * 0.28;
 							}
 						}
 						.init_dropdown_wrapper{
 							display:inline-block;
+							margin-top:-2px;
 							*{
 								display:inline;
 							}
@@ -670,6 +680,9 @@ div#dropzone {
 								font-size:11pt;
 								padding:4px 2px;
 								margin-right:-4px;
+							}
+							.save_initial_format{
+								padding:6px 4px;
 							}
 						}
 					}
@@ -695,7 +708,6 @@ div#dropzone {
 
 					.format_editor_list{
 						margin-left:30px;
-
 						.format_dropzone{
 							width:auto;
 							.file_upload_progress{
@@ -710,38 +722,44 @@ div#dropzone {
 								cursor:pointer;
 							}
 						}
+						.format_editor_file_name_wrapper{
+							display:inline;
+						}
 						.add_format_button{
 							margin-left: -15px;
 						}
-
 						.format_editor_remove{
 							cursor:pointer;
 						}
-
-
 						.format_editor_item{
-							font-size:12pt;
+							font-size:11pt;
 							margin-bottom:5px;
 
 							.format_editor_format_name{
-								font-size: 12pt;
+								font-size: 11pt;
 								font-weight:bold;
 							}
 
 							.format_editor_file_name{
-								max-width:90%;
+								overflow:hidden;
+								display:inline-block;
+								width:auto;
+								max-width:80%;
+								.format_editor_selected_size{
+									display:inline-block;
+									margin-top:-20px;
+								}
+							}
+							.format_editor_options_wrapper{
+								width:50px;
 							}
 
 							.format_editor_selected_size{
 								color:@gray-400;
 							}
-
-
-
 						}
 					}
 				}
-
 				.remove_section{
 					font-size:14pt;
 				}

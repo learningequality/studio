@@ -134,8 +134,10 @@ var ContentNodeModel = BaseModel.extend({
 	},
 	create_file:function(){
 		this.get("files").forEach(function(file){
-			var data = file.pick("file_size", "contentnode", "preset");
-			file.save(data,{async:false});
+			if(file.attributes){
+				var data = file.pick("file_size", "contentnode", "preset");
+				file.save(data,{async:false});
+			}
 		});
 	},
 	get_formats:function(){

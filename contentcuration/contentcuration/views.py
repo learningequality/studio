@@ -14,8 +14,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, TopicTree, License, FileFormat, File, FormatPreset, ContentKind
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicTreeSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, TopicTree, License, FileFormat, File, FormatPreset, ContentKind, ContentNode
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicTreeSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer
 
 def base(request):
     return redirect('channels')    # redirect to the channel list page
@@ -112,30 +112,31 @@ def duplicate_node(request):
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
-        data = request.POST
+        data = json.loads(request.body)
 
         try:
             node_id = data["node_id"]
             sort_order = data["sort_order"]
             target_parent = data["target_parent"]
         except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: %s".format(data))
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
         logging.info("Copying node id %s", node_id)
         new_node = _duplicate_node(node_id, parent=target_parent)
 
-        serialized_node = NodeSerializer(new_node)
+        serialized_node = ContentNodeSerializer(new_node)
         return HttpResponse(JSONRenderer().render(serialized_node.data))
 
 
 def _duplicate_node(node, parent=None):
     if isinstance(node, int) or isinstance(node, basestring):
-        node = Node.objects.get(pk=node)
+        node = ContentNode.objects.get(pk=node)
 
     node = copy.copy(node)
     node.id = node.pk = None
-    node.parent = Node.objects.get(pk=parent) if parent else node.parent
+    node.parent = ContentNode.objects.get(pk=parent) if parent else node.parent
     node.published = False
+    node.save()
 
     node.children = [_duplicate_node(c, parent=None) for c in node.children.all()]
     node.save()

@@ -679,6 +679,9 @@ var UploadedItem = ContentItem.extend({
     },
     unset_node:function(){
         this.save(this.originalData, {async:false, validate:false});
+         console.log("Before", this.format_view);
+        this.format_view.unset_model();
+        console.log("After", this.format_view);
     },
     add_tag:function(tagname){
         if(this.tags.indexOf(tagname) < 0){

@@ -278,6 +278,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	},
 
 	render:function(){
+		this.model.fetch({async:false});
 		this.$el.html(this.template({
 			node: this.model,
 			isfolder: this.model.get("kind").toLowerCase() == "topic",
