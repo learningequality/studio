@@ -27,7 +27,7 @@ var AddContentView = BaseViews.BaseListView.extend({
         if(this.modal){
             this.$el.html(this.modal_template());
             this.$(".modal-title").prepend(this.header_template({
-                title:this.model.get("title"),
+                title: (this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name"),
                 is_root: this.model.get("parent") == null
             }));
             this.$(".modal-body").html(this.template({

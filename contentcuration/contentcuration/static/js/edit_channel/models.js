@@ -39,52 +39,58 @@ var ContentNodeModel = BaseModel.extend({
 
 	/*Used when copying items to clipboard*/
     duplicate: function(target_parent, options){
-    	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
-		var node_data = new ContentNodeModel();
-		node_data.set(data);
+  //   	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
+		// var node_data = new ContentNodeModel();
+		// node_data.set(data);
 
+		// if(target_parent){
+		// 	node_data.move(target_parent, true, target_parent.get("children").length);
+		// }else{
+		// 	node_data.save(data, options);
+		// }
+		// this.copy_children(node_data, this.get("children"));
+		// var files = [];
+		// this.get("files").forEach(function(file){
+		// 	var file_data = new FileModel({id:file.id});
+		// 	file_data.fetch({async:false});
+		// 	files.push(file_data.duplicate(node_data.id));
+		// });
+		// node_data.save({"files": files}, {async:false});
+		// return node_data;
+
+		var node_id = this.get("id");
+		var sort_order = 1;
+        var parent_id = null;
 		if(target_parent){
-			node_data.move(target_parent, true, target_parent.get("children").length);
-		}else{
-			node_data.save(data, options);
+			parent_id = target_parent.get("id");
+			sort_order = target_parent.get("children").length;
+
 		}
-		this.copy_children(node_data, this.get("children"));
-		var files = [];
-		this.get("files").forEach(function(file){
-			var file_data = new FileModel({id:file.id});
-			file_data.fetch({async:false});
-			files.push(file_data.duplicate(node_data.id));
-		});
-		node_data.save({"files": files}, {async:false});
-		return node_data;
 
-		// var node_id = this.get("id");
-  //       var sort_order = target_parent.get("children").length;
-  //       var parent_id = target_parent.get("id");
-  //       var data = {node_id: node_id,
-  //                   sort_order: sort_order,
-  //                   target_parent: parent_id};
-  //       var new_node_data;
-  //       $.post({
-  //           url: window.Urls.duplicate_node(),
-  //           data: data,
-  //           async: false,
-  //           success: function(data) {
-  //           	alert("CALLED SUCCESS");
-  //               var data = JSON.parse(data);
-  //               new_node_data = new ContentNodeModel(data);
-  //           },
-  //           error:function(e){
-  //           	alert("ERROR!");
-  //           }
+        var data = {node_id: node_id,
+                    sort_order: sort_order,
+                    target_parent: parent_id};
+        var new_node_data;
+        $.post({
+            url: window.Urls.duplicate_node(),
+            data: data,
+            async: false,
+            success: function(data) {
+            	alert("CALLED SUCCESS");
+                var data = JSON.parse(data);
+                new_node_data = new ContentNodeModel(data);
+            },
+            error:function(e){
+            	alert("ERROR!");
+            }
 
-  //       }).success(function(data, data1, data2){
-  //       	console.log("SUCCESS WITH",data1.xhr);
-  //       });
-  //       if(new_node_data !== undefined) {
-  //           new_node_data.fetch({cache: false});
-  //           return new_node_data;
-  //       }
+        }).success(function(data, data1, data2){
+        	console.log("SUCCESS WITH",data);
+        });
+        if(new_node_data !== undefined) {
+            new_node_data.fetch({cache: false});
+            return new_node_data;
+        }
 
 	},
 
@@ -294,7 +300,6 @@ var FileModel = BaseModel.extend({
 		new_file.set({
 			contentnode : contentnode
 		});
-    	console.log("DATA IS:", new_file);
 
 		new_file.save(new_file.attributes, {async:false});
 		return new_file;

@@ -12,7 +12,12 @@ var PreviewView = BaseViews.BaseModalView.extend({
         _.bindAll(this, 'set_preview');
         this.modal = options.modal;
         this.presets = new Models.FormatPresetCollection();
-        this.render();
+        if(this.modal){
+            this.load_preview();
+        }else{
+           this.render();
+        }
+
     },
     events: {
         'click .preview_btn_tab' : 'set_preview'

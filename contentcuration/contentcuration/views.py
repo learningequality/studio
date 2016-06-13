@@ -112,7 +112,7 @@ def duplicate_node(request):
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
-        data = request.POST
+        data = json.loads(request.body)
 
         try:
             node_id = data["node_id"]
@@ -132,12 +132,30 @@ def _duplicate_node(node, parent=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
-    node = copy.copy(node)
-    node.id = node.pk = None
-    node.parent = Node.objects.get(pk=parent) if parent else node.parent
-    node.published = False
+    new_node = ContentNode.objects.create(
+        title=node.title,
+        description=node.description,
+        kind=node.kind,
+        slug=node.slug,
+        total_file_size=node.total_file_size,
+        license=node.license,
+        parent=ContentNode.objects.get(pk=parent) if parent else node.parent,
+        sort_order=node.sort_order,
+        license_owner=node.license_owner,
+        published=False
+    )
 
-    node.children = [_duplicate_node(c, parent=None) for c in node.children.all()]
-    node.save()
+    # add tags now
+    new_node.tags.add(*node.tags.all())
 
-    return node
+    # copy file object too
+    for fobj in node.files.all():
+        fobj_copy = copy.copy(fobj)
+        fobj_copy.id = None
+        fobj_copy.contentnode = new_node
+        fobj_copy.save()
+
+    new_node.children = [_duplicate_node(c, parent=None) for c in node.children.all()]
+    new_node.save()
+
+    return new_node
