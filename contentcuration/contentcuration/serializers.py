@@ -2,7 +2,7 @@ import logging
 from contentcuration.models import *
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
-from contentcuration.api import get_total_size, get_node_siblings, get_node_ancestors, get_child_names, count_files
+from contentcuration.api import get_total_size, get_node_siblings, get_node_ancestors, get_child_names, count_files, count_all_children
 from rest_framework.utils import model_meta
 from collections import OrderedDict
 from rest_framework.fields import set_value, SkipField
@@ -24,13 +24,13 @@ class ChannelSerializer(serializers.ModelSerializer):
         if not channel.draft:
             return 0
         else:
-            return count_files(channel.draft.root_node) + count_files(channel.clipboard.root_node)
+            return count_files(channel.draft.root_node)
 
     def calculate_resources_size(self, channel):
         if not channel.draft:
             return 0
         else:
-            return get_total_size(channel.draft.root_node) + get_total_size(channel.clipboard.root_node)
+            return get_total_size(channel.draft.root_node)
 
     class Meta:
         model = Channel
@@ -253,8 +253,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return get_node_ancestors(node)
 
     def count_all(self,node):
-        return node.get_descendant_count()
-
+        return count_all_children(node)
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode

@@ -17,6 +17,13 @@ import models
 def count_files(node):
     return node.get_descendants().exclude(kind_id="topic").count()
 
+def count_all_children(node):
+    count = node.children.count()
+    if node.kind_id == "topic":
+        for n in node.children.all():
+            count += count_all_children(n)
+    return count
+
 def get_total_size(node):
     total_size = 0
     if node.kind_id == "topic":
