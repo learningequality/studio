@@ -108,13 +108,8 @@ var QueueList = BaseViews.BaseListView.extend({
 		}));
 
 		this.load_content();
-		console.log("COUNT IS:", this.model.get("total_count"));
 		if(this.add_controls){
-			var count = this.views.length;
-			this.views.forEach(function(entry){
-				count += entry.model.get("total_count");
-			});
-			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(count);
+			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("total_count"));
 		}
 
 		this.$el.data("container", this);

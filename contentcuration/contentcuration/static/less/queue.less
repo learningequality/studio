@@ -134,8 +134,13 @@
 			#queue_content{
 				width:@queue-width - 30px;
 				height: @queue-height * 0.75;
-				.list_content{
+				#trash_list{
+					height:100%;
+				}
+				#clipboard_list{
 					height:@queue-height * 0.75 - @manage-clipboard-btn-height;
+				}
+				.list_content{
 					width: 100%;
 					padding-top:10px;
 					position:relative;
