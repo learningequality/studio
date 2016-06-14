@@ -21,19 +21,18 @@
                 <strong>{{node.attributes.title}}</strong>
             {{/if}}
             </p>
-                {{#if initial}}
-                    <p class="size">{{#format_file_size file.attributes.file_size}}{{/format_file_size}}</p>
-                {{else}}
-                    {{#each presets}}
-                        {{#if attached_format}}
-                            <p class="size">
-                                {{attributes.readable_name}}
-                                ({{#format_file_size attached_format.attributes.file_size}}{{/format_file_size}})
-                            </p>
-                        {{/if}}
-                    {{/each}}
-                {{/if}}
-            </p>
+            {{#if initial}}
+                <p class="size">{{#format_file_size file.attributes.file_size}}{{/format_file_size}}</p>
+            {{else}}
+                {{#each presets}}
+                    {{#if attached_format}}
+                        <p class="size">
+                            {{attributes.readable_name}}
+                            ({{#format_file_size attached_format.attributes.file_size}}{{/format_file_size}})
+                        </p>
+                    {{/if}}
+                {{/each}}
+            {{/if}}
         </div>
         <div class="formatting_only">
             <input type="text" placeholder="Title *" class="name_content_input" value="{{node.attributes.title}}"/>

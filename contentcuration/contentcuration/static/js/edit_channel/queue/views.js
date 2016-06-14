@@ -182,7 +182,6 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.add_to_view();
 	},
 	add_to_list:function(collection){
-		console.log("VIEWS ARE:", collection);
 		this.add_nodes(collection, this.childrenCollection.length + 1);
 		this.model.fetch({async:false});
 	},

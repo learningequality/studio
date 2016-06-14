@@ -60,7 +60,6 @@ var BaseView = Backbone.View.extend({
 		});
 	},
 	display_load:function(message, callback){
-    	console.log("displaying load");
     	var self = this;
 		var load = '<div id="loading_modal" class="text-center fade">' +
             '<div id="kolibri_load_gif"></div>' +
