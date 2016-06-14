@@ -99,6 +99,17 @@ var BaseView = Backbone.View.extend({
 		}
 	    counter.html(char_length + ((char_length  == 1) ? " char left" : " chars left"));
 	    counter.css("color", (char_length == 0)? "red" : "gray");
+	},
+	reload_listed:function(collection){
+		var list_to_reload = [];
+        collection.forEach(function(entry){
+        	$.merge(list_to_reload, entry.get("ancestors"));
+		});
+		$.unique(list_to_reload).forEach(function(id){
+			if($("#" + id) && $("#" + id).data("data")){
+        		$("#" + id).data("data").reload();
+        	}
+		});
 	}
 });
 
@@ -215,11 +226,12 @@ BaseListView = BaseView.extend({
 		this.views.splice(this.views.indexOf(this), 1);
 		view.delete_view();
 	},
-	add_nodes:function(collection, startingIndex, allowDuplicates){
+	add_nodes:function(collection, startingIndex){
 		var self = this;
 		collection.move(this.model, startingIndex, function(){
 			self.list_index = startingIndex;
-			self.model.fetch({async:false});
+			collection.add(self.model);
+			self.reload_listed(collection);
 			self.render();
 		});
 	}
@@ -246,9 +258,6 @@ var BaseListNodeItemView = BaseListItemView.extend({
 		}
 	},
 	save: function(data, options){
-		console.log("PERFORMANCE views.js: starting save " + ((data && data.title) ? data.title : "") + "...");
-    	var start = new Date().getTime();
-
     	if(!this.model){
     		var node_data = new Models.ContentNodeModel(data);
 			this.containing_list_view.collection.create(node_data, options);
@@ -262,8 +271,6 @@ var BaseListNodeItemView = BaseListItemView.extend({
 				this.model.create_file();
 			}
 		}
-
-		console.log("PERFORMANCE views.js: save " + ((data && data.title) ? data.title : "") + " end (time = " +((new Date().getTime() - start)/1000) + "s)");
 	},
 	set:function(data, options){
 		if(!this.model){
@@ -326,11 +333,11 @@ var BaseEditorView = BaseListView.extend({
 				this.$el.modal('hide');
 	        }
 	        if(!this.allow_add){
+	        	var reload_collection = new Models.ContentNodeCollection();
 		        this.views.forEach(function(entry){
-					if(entry.model.view){
-						entry.model.view.render();
-					}
+		        	reload_collection.add(entry.model);
 				});
+				this.reload_listed(reload_collection);
 		    }
 	        this.remove();
 		}else if(confirm("Unsaved Metadata Detected! Exiting now will"

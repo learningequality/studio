@@ -13,6 +13,41 @@ from django.utils.translation import ugettext as _
 
 from constants import content_kinds, extensions, presets
 
+def content_copy_name(instance, filename):
+    """
+    Create a name spaced file path from the File obejct's checksum property.
+    This path will be used to store the content copy
+
+    :param instance: File (content File model)
+    :param filename: str
+    :return: str
+    """
+    h = instance.checksum
+    basename, ext = os.path.splitext(filename)
+    return os.path.join(h[0:1], h[1:2], h + ext.lower())
+
+class ContentCopyStorage(FileSystemStorage):
+    """
+    Overrider FileSystemStorage's default save method to ignore duplicated file.
+    """
+    def get_available_name(self, name):
+        return name
+
+    def _save(self, name, content):
+        if self.exists(name):
+            # if the file exists, do not call the superclasses _save method
+            logging.warn('Content copy "%s" already exists!' % name)
+            return name
+        return super(ContentCopyStorage, self)._save(name, content)
+
+class ContentCopyTracking(models.Model):
+    """
+    Record how many times a content copy are referenced by File objects.
+    If it reaches 0, it's supposed to be deleted.
+    """
+    referenced_count = models.IntegerField(blank=True, null=True)
+    content_copy_id = models.CharField(max_length=400, unique=True)
+
 class Channel(models.Model):
     """ Permissions come from association with organizations """
     channel_id = models.UUIDField(primary_key=True, default=uuid4)
@@ -20,6 +55,7 @@ class Channel(models.Model):
     description = models.CharField(max_length=400, blank=True)
     author = models.CharField(max_length=400, blank=True)
     version = models.CharField(max_length=15, default='v0.01')
+    thumbnail = models.ImageField(upload_to=content_copy_name, storage=ContentCopyStorage(), max_length=500, blank=True)
     editors = models.ManyToManyField(
         'auth.User',
         related_name='editable_channels',
@@ -59,41 +95,6 @@ class Channel(models.Model):
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
-
-def content_copy_name(instance, filename):
-    """
-    Create a name spaced file path from the File obejct's checksum property.
-    This path will be used to store the content copy
-
-    :param instance: File (content File model)
-    :param filename: str
-    :return: str
-    """
-    h = instance.checksum
-    basename, ext = os.path.splitext(filename)
-    return os.path.join(h[0:1], h[1:2], h + ext.lower())
-
-class ContentCopyStorage(FileSystemStorage):
-    """
-    Overrider FileSystemStorage's default save method to ignore duplicated file.
-    """
-    def get_available_name(self, name):
-        return name
-
-    def _save(self, name, content):
-        if self.exists(name):
-            # if the file exists, do not call the superclasses _save method
-            logging.warn('Content copy "%s" already exists!' % name)
-            return name
-        return super(ContentCopyStorage, self)._save(name, content)
-
-class ContentCopyTracking(models.Model):
-    """
-    Record how many times a content copy are referenced by File objects.
-    If it reaches 0, it's supposed to be deleted.
-    """
-    referenced_count = models.IntegerField(blank=True, null=True)
-    content_copy_id = models.CharField(max_length=400, unique=True)
 
 class TopicTree(models.Model):
     """Base model for all channels"""

@@ -112,7 +112,6 @@ var ContentNodeModel = BaseModel.extend({
 		}
 	},
 	create_file:function(){
-		console.log("CREATING FILE...");
 		this.get("files").forEach(function(file){
 			if(file.attributes){
 				var data = file.pick("file_size", "contentnode", "preset");

@@ -200,13 +200,11 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	},
 	initialize: function(options) {
 		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item');
-		//console.log("loading", this.model);
 		this.containing_list_view = options.containing_list_view;
 		this.allow_edit = false;
 		this.is_clipboard = options.is_clipboard;
 		this.index = options.index;
 		this.container=options.container;
-		//console.log("model is now", this.model);
 		this.render();
 	},
 	events: {
@@ -216,6 +214,10 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		'click .submit_content' : "submit_item",
 		'keydown .queue_title_input' : "submit_item",
 		'dblclick .queue_item_title' : 'edit_item'
+	},
+	reload:function(){
+		this.model.fetch({async:false});
+		this.render();
 	},
 	render: function() {
 		this.$el.html(this.template({
