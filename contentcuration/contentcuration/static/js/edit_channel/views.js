@@ -217,10 +217,11 @@ BaseListView = BaseView.extend({
 	},
 	add_nodes:function(collection, startingIndex, allowDuplicates){
 		var self = this;
-		console.log("collection:", this);
+		console.log("COLLECTION IS 4 >>", collection);
 		collection.move(this.model, startingIndex, function(){
 			self.list_index = startingIndex;
 			self.model.fetch({async:false});
+			console.log("COLLECTION IS 10 >>", collection);
 			self.render();
 		});
 	}
@@ -364,6 +365,7 @@ var BaseEditorView = BaseListView.extend({
 	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
+		console.log("COLLECTION IS 1 >>", this.collection);
 		this.collection.save(function(){
 			callback();
 		});
@@ -372,7 +374,7 @@ var BaseEditorView = BaseListView.extend({
 	check_nodes:function(){
 		var self = this;
 		self.errorsFound = false;
-
+console.log("COLLECTION IS 2 >>", this.collection);
 		this.views.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
 			if(entry.model.validationError){

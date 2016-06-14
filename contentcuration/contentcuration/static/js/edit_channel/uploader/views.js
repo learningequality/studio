@@ -71,13 +71,11 @@ var AddContentView = BaseViews.BaseListView.extend({
         }
     },
     add_topic:function(){
-        var topic = new Models.ContentNodeModel({
+        var topic = this.collection.create({
             "kind":"topic",
             "title": (this.counter > 0)? "Topic " + this.counter : "Topic",
-            "parent" : this.model.id,
             "sort_order" : this.main_collection.length + this.collection.length
-        });
-        this.collection.add(topic);
+        }, {async:false});
         this.counter++;
         var item_view = new NodeListItem({
             containing_list_view: this,
@@ -270,6 +268,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.$el.find("#validating_text").css("display", "inline");
         this.$el.find(".editmetadata_save").prop("disabled", true);
         this.$el.find(".editmetadata_save").css("pointer", "not-allowed");
+console.log("COLLECTION IS 3 >>", this.collection);
 
         var self = this;
         setTimeout(function() {

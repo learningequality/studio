@@ -112,6 +112,7 @@ var ContentNodeModel = BaseModel.extend({
 		}
 	},
 	create_file:function(){
+		console.log("CREATING FILE...");
 		this.get("files").forEach(function(file){
 			if(file.attributes){
 				var data = file.pick("file_size", "contentnode", "preset");
@@ -135,18 +136,27 @@ var ContentNodeCollection = BaseCollection.extend({
 
 	save: function(callback) {
 		var self = this;
+		console.log("COLLECTION IS 5 >>", this);
         Backbone.sync("update", this, {
         	url: this.model.prototype.urlRoot(),
         	async:false,
         	success: function(data){
         		var fetch_list = [];
+        		console.log("COLLECTION IS 6 >>", self);
+        		console.log("DATAAAAAAA >>", data);
         		data.forEach(function(entry){
-        			fetch_list.push(entry.id);
+        			if(entry.kind != "topic"){
+        				fetch_list.push(entry.id);
+        			}
 				});
+				console.log("COLLECTION IS 8 >>", self);
 				self.get_all_fetch(fetch_list).forEach(function(node){
 					node.create_file();
 				});
+				console.log("COLLECTION IS 7 >>", self);
         		callback();
+        		console.trace();
+        		console.log("COLLECTION IS 9 >>", self);
         	}
         });
 	},
@@ -158,14 +168,12 @@ var ContentNodeCollection = BaseCollection.extend({
     	var to_fetch = new ContentNodeCollection();
     	var self = this;
     	ids.forEach(function(id){
-    		if(id){
-    			var model = self.get({'id': id});
-	    		if(!model){
-	    			model = self.add({'id':id});
-	    			model.fetch({async:false});
-	    		}
-	    		to_fetch.add(model);
+			var model = self.get({'id': id});
+    		if(!model){
+    			model = self.add({'id':id});
+    			model.fetch({async:false});
     		}
+    		to_fetch.add(model);
     	});
     	console.log("PERFORMANCE models.js: get_all_fetch end (time = " + (new Date().getTime() - start) + ")");
     	return to_fetch;
