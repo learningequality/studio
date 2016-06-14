@@ -301,18 +301,14 @@ var BaseListChannelItemView = BaseListItemView.extend({
 		if(!this.model){
     		this.delete_view();
 	    }else{
-	    	console.log("DELETING OLD CHANNEL");
 	    	this.model.destroy({async:false});
 	    }
 	},
 	save: function(data, options){
-		console.log("SAVING CHANNEL");
     	if(!this.model){
-    		console.log("SAVING NEW CHANNEL");
     		this.model = new Models.ChannelModel(data);
     		this.containing_list_view.collection.create_channel(this.model);
     	}else{
-    		console.log("SAVING OLD CHANNEL");
     		this.model.save(data, options);
     	}
 	}

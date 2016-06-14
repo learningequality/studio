@@ -108,10 +108,11 @@ var QueueList = BaseViews.BaseListView.extend({
 		}));
 
 		this.load_content();
+		console.log("COUNT IS:", this.model.get("total_count"));
 		if(this.add_controls){
 			var count = this.views.length;
 			this.views.forEach(function(entry){
-				count += entry.model.get("resource_count");
+				count += entry.model.get("total_count");
 			});
 			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(count);
 		}
@@ -184,7 +185,7 @@ var QueueList = BaseViews.BaseListView.extend({
 	},
 	add_to_list:function(collection){
 		console.log("VIEWS ARE:", collection);
-		this.add_nodes(collection, this.childrenCollection.length);
+		this.add_nodes(collection, this.childrenCollection.length + 1);
 		this.model.fetch({async:false});
 	},
 	add_to_trash:function(collection){
@@ -302,13 +303,13 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	},
 	add_to_trash:function(){
 		var individualCollection = new Models.ContentNodeCollection();
-		individualCollection.add(this);
+		individualCollection.add(this.model);
 		this.containing_list_view.add_to_trash(individualCollection);
 		this.delete_view();
 	},
 	add_to_clipboard:function(){
 		var individualCollection = new Models.ContentNodeCollection();
-		individualCollection.add(this);
+		individualCollection.add(this.model);
 		this.containing_list_view.add_to_clipboard(individualCollection);
 	}
 });

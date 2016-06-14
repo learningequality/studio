@@ -179,7 +179,6 @@ var ContentNodeCollection = BaseCollection.extend({
     	});
     	var copiedCollection = new ContentNodeCollection();
     	copiedCollection.get_all_fetch(copied_list);
-    	console.log("COPIED", copiedCollection);
     	return copiedCollection;
     },
     move:function(target_parent, sort_order, callback){

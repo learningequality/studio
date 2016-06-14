@@ -266,7 +266,6 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
     events: {
         'change .format_options_dropdown' : 'enable_save',
-        'click .expand_format_editor' : 'toggle_formats',
         'click .remove_from_dz ' : 'remove_item',
         'keyup .name_content_input': 'update_name',
         'paste .name_content_input': 'update_name',
@@ -289,6 +288,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
             }
         }
         this.$el.data("data", this);
+        this.$(".expand_format_editor").click(this.toggle_formats);
 
     },
     display_inline:function(){
@@ -298,6 +298,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
          }));
         this.load_slots();
         this.render_slots();
+        this.$(".expand_format_editor").click(this.toggle_formats);
     },
     load_slots:function(){
         var self = this;
@@ -352,6 +353,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         }
     },
     toggle_formats:function(){
+        console.log("TOGGLING...");
         if(this.$el.find(".expand_format_editor").hasClass("glyphicon-triangle-bottom")){
             this.$el.find(".format_editor_list").slideUp();
             this.$el.find(".expand_format_editor").removeClass("glyphicon-triangle-bottom");

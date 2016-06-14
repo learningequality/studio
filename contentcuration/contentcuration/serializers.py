@@ -2,7 +2,7 @@ import logging
 from contentcuration.models import *
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
-from contentcuration.api import count_children, get_total_size, get_node_siblings, get_node_ancestors, get_child_names, count_files
+from contentcuration.api import get_total_size, get_node_siblings, get_node_ancestors, get_child_names, count_files
 from rest_framework.utils import model_meta
 from collections import OrderedDict
 from rest_framework.fields import set_value, SkipField
@@ -140,6 +140,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
+    total_count = serializers.SerializerMethodField('count_all')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
 
@@ -251,12 +252,15 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def get_node_ancestors(self,node):
         return get_node_ancestors(node)
 
+    def count_all(self,node):
+        return node.get_descendant_count()
+
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',  'sort_order',
                  'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
-                 'resource_count', 'resource_size', 'ancestors', 'tags', 'files')
+                 'resource_count', 'resource_size', 'ancestors', 'tags', 'files', 'total_count')
 
 class TagSerializer(serializers.ModelSerializer):
    class Meta:
