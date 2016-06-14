@@ -15,13 +15,7 @@ from django.db import transaction
 import models
 
 def count_files(node):
-    count = 0
-    if node.kind_id == "topic":
-        for n in node.children.all():
-            count += count_files(n)
-    else:
-        count += models.File.objects.filter(contentnode=node).count()
-    return count
+    return node.get_descendants().exclude(kind_id="topic").count()
 
 def count_children(node):
     count = node.children.count()

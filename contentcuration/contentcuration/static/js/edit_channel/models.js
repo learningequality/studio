@@ -54,13 +54,11 @@ var ContentNodeModel = BaseModel.extend({
             async: false,
             success: function(data) {
                 copied_id = JSON.parse(data).node_id;
-                console.log("SUCCESS");
             },
             error:function(e){
             	console.log("ERROR: " + e.responseText);
             }
         });
-        console.log("END of function");
         return copied_id;
 	},
 
