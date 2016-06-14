@@ -268,7 +268,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.$el.find("#validating_text").css("display", "inline");
         this.$el.find(".editmetadata_save").prop("disabled", true);
         this.$el.find(".editmetadata_save").css("pointer", "not-allowed");
-console.log("COLLECTION IS 3 >>", this.collection);
 
         var self = this;
         setTimeout(function() {
@@ -299,7 +298,6 @@ console.log("COLLECTION IS 3 >>", this.collection);
                             }
                         }
                         if(!self.errorsFound && self.allow_add){
-                            console.log("ADDING COLLECTION", self.collection);
                             self.parent_view.add_nodes(self.collection, self.main_collection.length);
                         }
                         self.$el.css("visibility", "visible");

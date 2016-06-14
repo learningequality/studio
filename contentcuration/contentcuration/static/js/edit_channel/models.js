@@ -136,27 +136,20 @@ var ContentNodeCollection = BaseCollection.extend({
 
 	save: function(callback) {
 		var self = this;
-		console.log("COLLECTION IS 5 >>", this);
         Backbone.sync("update", this, {
         	url: this.model.prototype.urlRoot(),
         	async:false,
         	success: function(data){
         		var fetch_list = [];
-        		console.log("COLLECTION IS 6 >>", self);
-        		console.log("DATAAAAAAA >>", data);
         		data.forEach(function(entry){
         			if(entry.kind != "topic"){
         				fetch_list.push(entry.id);
         			}
 				});
-				console.log("COLLECTION IS 8 >>", self);
 				self.get_all_fetch(fetch_list).forEach(function(node){
 					node.create_file();
 				});
-				console.log("COLLECTION IS 7 >>", self);
         		callback();
-        		console.trace();
-        		console.log("COLLECTION IS 9 >>", self);
         	}
         });
 	},

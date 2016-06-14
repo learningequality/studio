@@ -201,7 +201,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	template: require("./hbtemplates/queue_item.handlebars"),
 	tagName: "li",
 	'id': function() {
-		return "queue_item_" + this.model.get("id");
+		return this.model.get("id");
 	},
 	initialize: function(options) {
 		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item');
@@ -260,6 +260,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			model: this.model,
 			container: this.container
 		});
+		this.$el.find("#" + this.id() +"_sub").append(this.subfile_view.el);
 	},
 	delete_content:function(){
 		event.stopPropagation();

@@ -11,7 +11,6 @@ from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 
-#from kolibri.content.models import *
 from constants import content_kinds, extensions, presets
 
 class Channel(models.Model):
@@ -20,6 +19,7 @@ class Channel(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     author = models.CharField(max_length=400, blank=True)
+    version = models.CharField(max_length=15, default='v0.01')
     editors = models.ManyToManyField(
         'auth.User',
         related_name='editable_channels',

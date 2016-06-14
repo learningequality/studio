@@ -34,7 +34,7 @@ class ChannelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('channel_id', 'name', 'description', 'editors', 'draft', 'clipboard', 'deleted', 'published','resource_count', 'resource_size')
+        fields = ('channel_id', 'name', 'description', 'editors', 'draft', 'clipboard', 'deleted', 'published','resource_count', 'resource_size', 'version')
 
 class TopicTreeSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField('get_channel_name')
