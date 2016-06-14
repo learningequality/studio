@@ -346,11 +346,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.unbind();
     },
     set_current_node:function(view){
-        /* TODO implement once allow multi file editing
-        if(this.current_node){
-            this.current_node.set_edited(true);
-            to_save.push(this.current_node);
-        }*/
         this.$el.find("#title_error").html("");
         this.$el.find(".disable_on_error").css("cursor", "pointer");
         if(!this.current_view && !this.multiple_selected){
@@ -463,6 +458,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.$el.find(".gray-out").prop("disabled", true);
             $("#editmetadata_format_section").css("display", "none");
             this.$("#metadata_preview_btn").attr("disabled", "disabled");
+            this.$("#metadata_preview_btn").prop("disabled", true);
             this.switchPanel(true);
         }else{
             this.$el.find(".tag_input").removeClass("gray-out");
@@ -470,6 +466,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.$el.find(".upload_input").prop("disabled", false);
             this.$el.find(".tag_input").prop("disabled", false);
             this.$("#metadata_preview_btn").removeAttr("disabled");
+             this.$("#metadata_preview_btn").prop("disabled", false);
         }
 
     },
