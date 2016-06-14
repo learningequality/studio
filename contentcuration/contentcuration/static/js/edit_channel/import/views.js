@@ -15,6 +15,7 @@ var ImportView = BaseViews.BaseModalView.extend({
         this.other_channels = window.channels.clone();
         this.other_channels.remove(window.current_channel);
         this.mainCollection = new Models.ContentNodeCollection();
+        this.callback = options.callback;
         this.render();
     },
     events: {
@@ -83,10 +84,8 @@ var ImportView = BaseViews.BaseModalView.extend({
                     self.import_children(view.model.get("children"), copyCollection);
                 }
             }
-            var newCopiedCollection = copyCollection.duplicate(null, {async:false});
-            console.log("GOT NEW COLLECTION:", newCopiedCollection);
-            self.parent_view.collection.add(newCopiedCollection.models);
-            self.parent_view.render();
+            console.log("IMPORTING COLLECTION:", copyCollection);
+            self.callback(copyCollection.duplicate(null, {async:false}));
             self.close();
         });
     },

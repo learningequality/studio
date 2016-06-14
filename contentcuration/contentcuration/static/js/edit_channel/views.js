@@ -141,7 +141,7 @@ BaseListView = BaseView.extend({
 	delete_selected:function(){
 		var list = this.$el.find('input:checked').parent("li");
 		var stopLoop = this.$el.find(".current_topic input").is(":checked");
-		var deleteCollection = Models.ContentNodeCollection();
+		var deleteCollection = new Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
 			var view = $("#" + list[i].id).data("data");
 			deleteCollection.add(view.model);
@@ -254,14 +254,12 @@ var BaseListNodeItemView = BaseListItemView.extend({
     		var node_data = new Models.ContentNodeModel(data);
 			this.containing_list_view.collection.create(node_data, options);
 			if(this.model.get("kind").toLowerCase() != "topic"){
-				console.log("CALLED FIRST");
 				node_data.create_file();
 			}
     	}
 		else{
 			this.model.save(data, options);
 			if(this.model.get("kind") && this.model.get("kind").toLowerCase() != "topic"){
-				console.log("CALLED SECOND");
 				this.model.create_file();
 			}
 		}
@@ -361,7 +359,6 @@ var BaseEditorView = BaseListView.extend({
 	save_nodes: function(callback){
 		this.parent_view.set_editing(false);
 		var self = this;
-		window.ccc = this.collection;
 		this.views.forEach(function(entry){
 			entry.model.set({tags: entry.tags});
 			if(entry.format_view){

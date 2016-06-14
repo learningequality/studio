@@ -16,7 +16,7 @@ var AddContentView = BaseViews.BaseListView.extend({
     item_view:"uploading_content",
     counter:0,
     initialize: function(options) {
-        _.bindAll(this, 'add_topic', 'edit_metadata','add_file','close', 'add_exercise', 'import_content');
+        _.bindAll(this, 'add_topic', 'edit_metadata','add_file','close', 'add_exercise', 'import_content', 'import_nodes');
         this.collection = options.collection;
         this.main_collection = options.main_collection;
         this.parent_view = options.parent_view;
@@ -81,8 +81,7 @@ var AddContentView = BaseViews.BaseListView.extend({
         this.counter++;
         var item_view = new NodeListItem({
             containing_list_view: this,
-            model: topic,
-            root: this.model
+            model: topic
         });
         $("#upload_content_add_list").append(item_view.el);
         this.views.push(item_view);
@@ -145,8 +144,13 @@ var AddContentView = BaseViews.BaseListView.extend({
     import_content:function(){
         var import_view = new Import.ImportView({
             modal: true,
-            parent_view: this
+            parent_view: this,
+            callback: this.import_nodes
         });
+    },
+    import_nodes:function(collection){
+        this.collection.add(collection.models);
+        this.render();
     }
 });
 
@@ -296,6 +300,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                             }
                         }
                         if(!self.errorsFound && self.allow_add){
+                            console.log("ADDING COLLECTION", self.collection);
                             self.parent_view.add_nodes(self.collection, self.main_collection.length);
                         }
                         self.$el.css("visibility", "visible");
