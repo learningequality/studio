@@ -139,9 +139,12 @@ var ContentNodeCollection = BaseCollection.extend({
         	url: this.model.prototype.urlRoot(),
         	async:false,
         	success: function(data){
+        		var fetch_list = [];
         		data.forEach(function(entry){
-        			var node = self.get_all_fetch([entry.id]).models[0];
-        			node.create_file();
+        			fetch_list.push(entry.id);
+				});
+				self.get_all_fetch(fetch_list).forEach(function(node){
+					node.create_file();
 				});
         		callback();
         	}
@@ -153,16 +156,17 @@ var ContentNodeCollection = BaseCollection.extend({
     	console.log("PERFORMANCE models.js: starting get_all_fetch...", ids);
 		var start = new Date().getTime();
     	var to_fetch = new ContentNodeCollection();
-    	for(var i = 0; i < ids.length; i++){
-    		if(ids[i]){
-    			var model = this.get({id: ids[i]});
+    	var self = this;
+    	ids.forEach(function(id){
+    		if(id){
+    			var model = self.get({'id': id});
 	    		if(!model){
-	    			model = this.add({'id':ids[i]});
+	    			model = self.add({'id':id});
 	    			model.fetch({async:false});
 	    		}
 	    		to_fetch.add(model);
     		}
-    	}
+    	});
     	console.log("PERFORMANCE models.js: get_all_fetch end (time = " + (new Date().getTime() - start) + ")");
     	return to_fetch;
     },
