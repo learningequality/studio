@@ -148,7 +148,10 @@ var QueueList = BaseViews.BaseListView.extend({
 				var self = this;
 				this.display_load("Deleting Content...", function(){
 					for(var i = 0; i < list.length; i++){
-						$("#" + list[i].id).data("data").remove_item();
+						if($("#" + list[i].id).data("data")){
+							$("#" + list[i].id).data("data").remove_item();
+						}
+
 					}
 					self.render();
 				});
