@@ -83,7 +83,9 @@ var ImportView = BaseViews.BaseModalView.extend({
                     self.import_children(view.model.get("children"), copyCollection);
                 }
             }
-            self.parent_view.collection.add(copyCollection.duplicate(null, {async:false}).models);
+            var newCopiedCollection = copyCollection.duplicate(null, {async:false});
+            console.log("GOT NEW COLLECTION:", newCopiedCollection);
+            self.parent_view.collection.add(newCopiedCollection.models);
             self.parent_view.render();
             self.close();
         });

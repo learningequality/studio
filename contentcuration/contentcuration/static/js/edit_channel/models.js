@@ -54,18 +54,18 @@ var ContentNodeModel = BaseModel.extend({
             async: false,
             success: function(data) {
                 copied_id = JSON.parse(data).node_id;
+                console.log("SUCCESS");
             },
             error:function(e){
             	console.log("ERROR: " + e.responseText);
             }
         });
+        console.log("END of function");
         return copied_id;
 	},
 
 	move:function(target_parent, allow_duplicate, sort_order){
     	var start = new Date().getTime();
-    	//var old_parent = new NodeModel({id: this.get("parent")});
-    	//old_parent.fetch({async:false});
     	var title = this.get("title");
 		this.set({parent: target_parent.id,sort_order:sort_order}, {validate:true});
 
@@ -79,10 +79,6 @@ var ContentNodeModel = BaseModel.extend({
 				}, {validate:true});
 			}
 			this.save(this.attributes, {async:false, validate:false}); //Save any other values
-			/*target_parent.get("children").push(this.id);
-
-			var new_children = old_parent.get("children");
-			old_parent.get("children").splice(old_parent.get("children").indexOf(this.id), 1);*/
 		}else{
 			return this.validationError;
 		}
@@ -103,17 +99,6 @@ var ContentNodeModel = BaseModel.extend({
 			new_title += " (Copy)";
 		}
     	return new_title.slice(0, new_title.length);
-	},
-	copy_children:function(node, original_collection){
-		console.log("PERFORMANCE models.js: starting copy_children...");
-		var start = new Date().getTime();
-		var self = this;
-		var copied_collection = new ContentNodeCollection();
-		copied_collection = copied_collection.get_all_fetch(original_collection);
-		copied_collection.forEach(function(entry){
-			entry.duplicate(node);
-		});
-		console.log("PERFORMANCE models.js: copy_children end (time = " + (new Date().getTime() - start) + ")");
 	},
 	validate:function (attrs, options){
 		if(attrs.title == "")
@@ -190,12 +175,13 @@ var ContentNodeCollection = BaseCollection.extend({
     	this.sort();
     },
     duplicate:function(target_parent, options){
-    	var copiedCollection = new ContentNodeCollection();
     	var copied_list = [];
     	this.forEach(function(node){
     		copied_list.push(node.duplicate(target_parent, options));
     	});
+    	var copiedCollection = new ContentNodeCollection();
     	copiedCollection.get_all_fetch(copied_list);
+    	console.log("COPIED", copiedCollection);
     	return copiedCollection;
     },
     move:function(target_parent, sort_order, callback){

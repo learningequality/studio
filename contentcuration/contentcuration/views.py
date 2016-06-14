@@ -122,10 +122,8 @@ def duplicate_node(request):
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
         logging.info("Copying node id %s", node_id)
-        new_node = _duplicate_node(node_id, parent=target_parent)
 
-        serialized_node = ContentNodeSerializer(new_node)
-        logging.warning(new_node.pk)
+        new_node = _duplicate_node(node_id, parent=target_parent)
         return HttpResponse(json.dumps({
             "success": True,
             "node_id": new_node.pk
@@ -134,7 +132,6 @@ def duplicate_node(request):
 def _duplicate_node(node, parent=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
-
     new_node = ContentNode.objects.create(
         title=node.title,
         description=node.description,
@@ -142,7 +139,7 @@ def _duplicate_node(node, parent=None):
         slug=node.slug,
         total_file_size=node.total_file_size,
         license=node.license,
-        parent=ContentNode.objects.get(pk=parent) if parent else node.parent,
+        parent=ContentNode.objects.get(pk=parent) if parent else None,
         sort_order=node.sort_order,
         license_owner=node.license_owner,
         published=False
