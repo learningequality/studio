@@ -47,16 +47,14 @@ var Queue = BaseViews.BaseView.extend({
 		else
 			this.$el.find("#queue").animate({marginRight: -this.$el.find("#main-queue").outerWidth()}, 500);
 	},
-	add_to_clipboard:function(views){
-		this.clipboard_queue.add_to_list(views);
+	add_to_clipboard:function(collection){
+		this.clipboard_queue.add_to_list(collection);
 		this.trash_queue.model.fetch({async:false});
-		//console.log("queue model trash is now", this.trash_queue.model.get("children"));
 		this.trash_queue.render();
 	},
-	add_to_trash:function(views){
-		this.trash_queue.add_to_list(views);
+	add_to_trash:function(collection){
+		this.trash_queue.add_to_list(collection);
 		this.clipboard_queue.model.fetch({async:false});
-		//console.log("queue model clipboard is now", this.clipboard_queue.model.get("children"));
 		this.clipboard_queue.render();
 	},
 	switch_to_queue:function(){
@@ -170,14 +168,11 @@ var QueueList = BaseViews.BaseListView.extend({
 		if(list.length == 0){
 			alert("No items selected.");
 		}else{
-			var to_move = [];
+			var moveCollection = new Models.ContentNodeCollection();
 			for(var i =0 ;i < list.length; i++){
-				var view = $("#" + list[i].id).data("data");
-				to_move.push(view);
+				moveCollection.add($("#" + list[i].id).data("data").model);
 			}
-			this.container.add_to_clipboard(to_move);
-			//var element = $((this.is_clipboard)? ".queue-badge" : ".trash-badge");
-			//element.html(Number(element.text()) - 1);
+			this.container.add_to_clipboard(moveCollection);
 		}
 	},
 	search:function(){
@@ -187,17 +182,16 @@ var QueueList = BaseViews.BaseListView.extend({
 	add_items:function(){
 		this.add_to_view();
 	},
-	add_to_list:function(views){
-		//console.log("queue model calling!");
-		this.add_nodes(views, this.childrenCollection.length, true);
+	add_to_list:function(collection){
+		console.log("VIEWS ARE:", collection);
+		this.add_nodes(collection, this.childrenCollection.length);
 		this.model.fetch({async:false});
-		//console.log("queue model check against", this.model.get("children"));
 	},
-	add_to_trash:function(views){
-		this.container.add_to_trash(views);
+	add_to_trash:function(collection){
+		this.container.add_to_trash(collection);
 	},
-	add_to_clipboard:function(views){
-		this.container.add_to_clipboard(views);
+	add_to_clipboard:function(collection){
+		this.container.add_to_clipboard(collection);
 	}
 });
 
@@ -307,11 +301,15 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		}
 	},
 	add_to_trash:function(){
-		this.containing_list_view.add_to_trash([this]);
+		var individualCollection = new Models.ContentNodeCollection();
+		individualCollection.add(this);
+		this.containing_list_view.add_to_trash(individualCollection);
 		this.delete_view();
 	},
 	add_to_clipboard:function(){
-		this.containing_list_view.add_to_clipboard([this]);
+		var individualCollection = new Models.ContentNodeCollection();
+		individualCollection.add(this);
+		this.containing_list_view.add_to_clipboard(individualCollection);
 	}
 });
 

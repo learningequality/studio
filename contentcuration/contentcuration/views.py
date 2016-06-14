@@ -125,8 +125,11 @@ def duplicate_node(request):
         new_node = _duplicate_node(node_id, parent=target_parent)
 
         serialized_node = ContentNodeSerializer(new_node)
-        return HttpResponse(JSONRenderer().render(serialized_node.data))
-
+        logging.warning(new_node.pk)
+        return HttpResponse(json.dumps({
+            "success": True,
+            "node_id": new_node.pk
+        }))
 
 def _duplicate_node(node, parent=None):
     if isinstance(node, int) or isinstance(node, basestring):

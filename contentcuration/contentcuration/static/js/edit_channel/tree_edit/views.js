@@ -137,15 +137,11 @@ var TreeEditView = BaseViews.BaseView.extend({
 		/*TODO: Debug more with editing and opening folders*/
 		this.$el.find("#container_area").toggleClass("hidden_details");
 	},
-	add_to_trash:function(views){
-		this.queue_view.add_to_trash(views);
-		views.forEach(function(entry){
-			entry.delete_view();
-		});
+	add_to_trash:function(collection){
+		this.queue_view.add_to_trash(collection);
 	},
-	add_to_clipboard:function(views){
-		console.log("clipboard views", views);
-		this.queue_view.add_to_clipboard(views);
+	add_to_clipboard:function(collection){
+		this.queue_view.add_to_clipboard(collection);
 	},
 	handle_checked:function(event){
 		var checked_count = this.$el.find("input[type=checkbox]:checked").length;
@@ -239,13 +235,13 @@ var ContentList = BaseViews.BaseListView.extend({
 			entry.set_opened(false);
 		});
 	},
-	add_to_trash:function(views){
+	add_to_trash:function(collection){
 		var self = this;
-		this.container.add_to_trash(views);
+		this.container.add_to_trash(collection);
 		this.model.fetch({async:false});
 	},
-	add_to_clipboard:function(views){
-		this.container.add_to_clipboard(views);
+	add_to_clipboard:function(collection){
+		this.container.add_to_clipboard(collection);
 	},
 	close_container:function(views){
 		var self = this;

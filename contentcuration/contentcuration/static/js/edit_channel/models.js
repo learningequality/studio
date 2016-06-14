@@ -39,59 +39,27 @@ var ContentNodeModel = BaseModel.extend({
 
 	/*Used when copying items to clipboard*/
     duplicate: function(target_parent, options){
-  //   	var data = this.pick('title', 'created', 'modified', 'description', 'sort_order', 'license_owner', 'license','kind');
-		// var node_data = new ContentNodeModel();
-		// node_data.set(data);
-
-		// if(target_parent){
-		// 	node_data.move(target_parent, true, target_parent.get("children").length);
-		// }else{
-		// 	node_data.save(data, options);
-		// }
-		// this.copy_children(node_data, this.get("children"));
-		// var files = [];
-		// this.get("files").forEach(function(file){
-		// 	var file_data = new FileModel({id:file.id});
-		// 	file_data.fetch({async:false});
-		// 	files.push(file_data.duplicate(node_data.id));
-		// });
-		// node_data.save({"files": files}, {async:false});
-		// return node_data;
-
 		var node_id = this.get("id");
-		var sort_order = 1;
-        var parent_id = null;
-		if(target_parent){
-			parent_id = target_parent.get("id");
-			sort_order = target_parent.get("children").length;
+		var sort_order =(target_parent) ? target_parent.get("children").length : 1;
+        var parent_id = (target_parent) ? target_parent.get("id") : null;
 
-		}
-
-        var data = {node_id: node_id,
-                    sort_order: sort_order,
-                    target_parent: parent_id};
-        var new_node_data;
-        $.post({
+        var data = {"node_id": node_id,
+                    "sort_order": sort_order,
+                    "target_parent": parent_id};
+        var copied_id;
+        $.ajax({
+        	method:"POST",
             url: window.Urls.duplicate_node(),
-            data: data,
+            data:  JSON.stringify(data),
             async: false,
             success: function(data) {
-            	alert("CALLED SUCCESS");
-                var data = JSON.parse(data);
-                new_node_data = new ContentNodeModel(data);
+                copied_id = JSON.parse(data).node_id;
             },
             error:function(e){
-            	alert("ERROR!");
+            	console.log("ERROR: " + e.responseText);
             }
-
-        }).success(function(data, data1, data2){
-        	console.log("SUCCESS WITH",data);
         });
-        if(new_node_data !== undefined) {
-            new_node_data.fetch({cache: false});
-            return new_node_data;
-        }
-
+        return copied_id;
 	},
 
 	move:function(target_parent, allow_duplicate, sort_order){
@@ -194,7 +162,6 @@ var ContentNodeCollection = BaseCollection.extend({
 				});
         		callback();
         	}
-
         });
 	},
 
@@ -224,12 +191,24 @@ var ContentNodeCollection = BaseCollection.extend({
     },
     duplicate:function(target_parent, options){
     	var copiedCollection = new ContentNodeCollection();
+    	var copied_list = [];
     	this.forEach(function(node){
-    		copiedCollection.add(node.duplicate(target_parent, options));
+    		copied_list.push(node.duplicate(target_parent, options));
     	});
-    	console.log("IMPORTING: RETURNING COLLECTION", copiedCollection);
+    	copiedCollection.get_all_fetch(copied_list);
     	return copiedCollection;
-    }
+    },
+    move:function(target_parent, sort_order, callback){
+    	this.forEach(function(model){
+			model.set({
+				parent: target_parent.id,
+				sort_order:++sort_order
+			});
+    	});
+    	this.save(function(){
+			callback();
+		});
+	}
 });
 
 var ChannelModel = BaseModel.extend({

@@ -77,10 +77,10 @@ var BaseView = Backbone.View.extend({
     		$("#loading_modal").remove();
     	}
     },
-	add_to_trash:function(views){
+	add_to_trash:function(collection){
 		//OVERWRITE IN SUBCLASSES
 	},
-	add_to_clipboard:function(views){
+	add_to_clipboard:function(collection){
 		//OVERWRITE IN SUBCLASSES
 	},
 	undo: function() {
@@ -130,24 +130,24 @@ BaseListView = BaseView.extend({
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = [];
 		var clipboard_root = window.current_channel.get_tree("clipboard").get_root();
+		var copyCollection = new Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
-			var newNode = new Models.ContentNodeModel();
-			newNode = $(list[i]).data("data").model.duplicate(clipboard_root, null);
-			clipboard_list.push(newNode);
+			copyCollection.add($(list[i]).data("data").model);//.duplicate(clipboard_root, null);
 		}
-		this.add_to_clipboard(clipboard_list);
+		var copiedCollection = copyCollection.duplicate(clipboard_root, null);
+		this.add_to_clipboard(copiedCollection);
 		return this.$el.find(".current_topic input:checked").length != 0;
 	},
 	delete_selected:function(){
 		var list = this.$el.find('input:checked').parent("li");
 		var stopLoop = this.$el.find(".current_topic input").is(":checked");
-		var to_delete = [];
+		var deleteCollection = Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
 			var view = $("#" + list[i].id).data("data");
-			console.log("Checking element",  $("#" + list[i].id));
-			to_delete.push(view);
+			deleteCollection.add(view.model);
+			view.delete_view();
 		}
-		this.add_to_trash(to_delete);
+		this.add_to_trash(deleteCollection);
 		return stopLoop;
 	},
 	drop_in_container:function(transfer, target){
@@ -215,18 +215,14 @@ BaseListView = BaseView.extend({
 		this.views.splice(this.views.indexOf(this), 1);
 		view.delete_view();
 	},
-	add_nodes:function(views, startingIndex, allowDuplicates){
+	add_nodes:function(collection, startingIndex, allowDuplicates){
 		var self = this;
-		console.log("views:", this);
-		views.forEach(function(entry){
-			var model = (entry.model) ? entry.model : entry;
-			model.move(self.model, allowDuplicates, ++startingIndex);
-			//self.model.get("children").push(model.id);
+		console.log("collection:", this);
+		collection.move(this.model, startingIndex, function(){
+			self.list_index = startingIndex;
+			self.model.fetch({async:false});
+			self.render();
 		});
-		this.list_index = startingIndex;
-		self.model.fetch({async:false});
-		console.log("MODEL AFTER SAVE IS:", self.model);
-		this.render();
 	}
 });
 
