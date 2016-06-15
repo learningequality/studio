@@ -5,7 +5,6 @@
 	@queue-width:400px;
 	@queue-height: 600px;
 	@queue-button-width: 110px;
-	@badge-color: #55777D;
 	@queue-border-color: #8DA9DB;
 	@queue-list-item-height: 40px;
 	@highlight-color: #E6E6E6;
@@ -14,9 +13,14 @@
 	right:0em;
 	top: 6.7em;
 	position:absolute;
-	z-index:999999;
+	pointer-events:none;
+	z-index:999;
 
-	*{margin:0;padding:0;}
+	*{
+		margin:0;
+		padding:0;
+		pointer-events:auto;
+	}
 	//width:@queue-button-width + @queue-width;
 	overflow:hidden;
 	padding:0;
@@ -39,7 +43,7 @@
 		display:inline;
 		box-shadow: @box-shadow;
 		.badge{
-			background-color: @badge-color;
+			background-color: @blue-500;
 			color:white;
 			padding: 2px 10px !important;
 		}
@@ -130,8 +134,13 @@
 			#queue_content{
 				width:@queue-width - 30px;
 				height: @queue-height * 0.75;
-				.list_content{
+				#trash_list{
+					height:100%;
+				}
+				#clipboard_list{
 					height:@queue-height * 0.75 - @manage-clipboard-btn-height;
+				}
+				.list_content{
 					width: 100%;
 					padding-top:10px;
 					position:relative;
@@ -186,6 +195,7 @@
 					}
 					.subdirectory{
 						display:none;
+						margin-left:20px;
 					}
 
 					li label:hover{

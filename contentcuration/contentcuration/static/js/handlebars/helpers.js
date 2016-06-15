@@ -1,6 +1,7 @@
-
 var Handlebars = require("hbsfy/runtime");
 var marked = require("marked");
+var stringHelper = require("edit_channel/utils/string_helper");
+
 marked.setOptions({
   renderer: new marked.Renderer(),
   gfm: true,
@@ -58,17 +59,10 @@ Handlebars.registerHelper('check_is_topic', function(text){
   return text.toLowerCase() == "topic";
 });
 
+Handlebars.registerHelper('get_filename', function(text){
+  return text.split(".")[-1];
+});
+
 Handlebars.registerHelper('format_file_size', function(text){
-  if (!text) {
-    return "0B";
-  }
-  var value = Number(text);
-  if(value > 999999999)
-    return parseInt(value/1000000000) + "GB";
-  else if(value > 999999)
-    return parseInt(value/1000000) + "MB";
-  else if(value > 999)
-    return parseInt(value/1000) + "KB";
-  else
-    return parseInt(value) + "B";
+  return stringHelper.format_size(text);
 });

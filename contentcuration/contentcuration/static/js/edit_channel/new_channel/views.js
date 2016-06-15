@@ -1,9 +1,12 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 require("channel_create.less");
-var Dropzone = require("dropzone");    //For later when images are added to channels
-require("dropzone/dist/dropzone.css"); //For later when images are added to channels
-var BaseViews = require("./../views");
+var Dropzone = require("dropzone");
+require("dropzone/dist/dropzone.css");
+var Models = require("edit_channel/models");
+var BaseViews = require("edit_channel/views");
+var get_cookie = require("utils/get_cookie");
+var urlizer = require("edit_channel/utils/data_url");
 
 var ChannelList  = BaseListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
@@ -41,17 +44,18 @@ var ChannelList  = BaseListView.extend({
 		this.$el.find("#channel_list").append(new_channel.el);
 	},
 	load_content:function(){
-		var containing_list_view = this;
+		var self = this;
+		$("#channel_selection_dropdown_list").html("");
 		this.collection.forEach(function(entry){
 			var view = new ChannelListItem({
-				el : containing_list_view.$el.find("#channel_list #" + entry.id),
 				model: entry,
 				edit: false,
-				containing_list_view: containing_list_view,
-				channel_list: containing_list_view.collection.toJSON()
+				containing_list_view: self,
+				channel_list: self.collection.toJSON()
 			});
-			containing_list_view.views.push(view);
-        	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
+			self.$("#channel_list").append(view.el);
+			self.views.push(view);
+        	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.get("channel_id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 		});
 	}
 });
@@ -61,14 +65,21 @@ var ChannelList  = BaseListView.extend({
 */
 var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	tagName: "li",
+	id: function(){
+		return (this.model)? this.model.get("channel_id") : "new";
+	},
+	className:"channel_container container",
 	template: require("./hbtemplates/channel_container.handlebars"),
+	dropzone_template: require("./hbtemplates/channel_profile_dropzone.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel');
+		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded','thumbnail_added','thumbnail_removed','create_dropzone');
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = options.edit;
 		this.containing_list_view = options.containing_list_view;
 		this.default_license = options.default_license;
+		this.thumbnail = (this.model)? this.model.get("thumbnail") : "/static/img/unicef logo.jpg";
 		this.render();
+		//this.dropzone = null;
 	},
 
 	render: function() {
@@ -77,9 +88,12 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			channel: (this.model) ? this.model.attributes : null,
 			total_file_size: (this.model)? this.model.get("resource_size") : 0,
 			resource_count: (this.model)? this.model.get("resource_count") : 0,
-			picture: "/static/img/unicef logo.jpg"
+			channel_link : (this.model) ? this.model.get("channel_id") : null,
+			picture : this.thumbnail
 		}));
-		this.$el.addClass('channel_container');
+		if(this.edit){
+			//this.create_dropzone();
+        }
 	},
 	events: {
 		'click .edit_channel':'edit_channel',
@@ -87,19 +101,39 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		'click .channel_toggle': 'toggle_channel',
 		'click .save_channel': 'save_channel'
 	},
-
 	edit_channel: function(event){
 		this.containing_list_view.set_editing(true);
 		this.edit = true;
 		this.render();
 	},
-
+	thumbnail_uploaded:function(thumbnail){
+		this.thumbnail = $("#urlize_me")[0].src;
+		$(".preview_section").css("display", "none");
+		$("#dz-placeholder").css("display", "block");
+		$("#finished_area").css("display", "block");
+		this.enable_submit();
+	},
+	thumbnail_added:function(thumbnail){
+		$("#dz-placeholder").css("display", "none");
+		$("#progress_area").css("display", "block");
+		this.disable_submit();
+	},
+	thumbnail_removed:function(thumbnail){
+		$("#dz-placeholder").css("display", "block");
+		this.enable_submit();
+	},
+	enable_submit:function(){
+		this.$(".save_channel").removeAttr("disabled");
+	},
+	disable_submit:function(){
+		this.$(".save_channel").attr("disabled", "disabled");
+	},
 	delete_channel: function(event){
-		if(this.model && (this.model.get("resource_count") == 0 || confirm("WARNING: All content under this channel will be permanently deleted."
+		if(this.model && (confirm("WARNING: All content under this channel will be permanently deleted."
 					+ "\nAre you sure you want to delete this channel?"))){
 			var self = this;
 			this.display_load("Deleting Channel...", function(){
-				self.delete(true);
+				self.delete();
 			});
 		}else if(!this.model){
 			this.containing_list_view.set_editing(false);
@@ -120,12 +154,32 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		self.containing_list_view.set_editing(false);
 		var title = (self.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : self.$el.find("#new_channel_name").val().trim();
 		var description = (self.$el.find("#new_channel_description").val() == "") ? " " : self.$el.find("#new_channel_description").val();
-		var data = {name: title, description: description};
+		var data = {
+			name: title,
+			description: description,
+			//thumbnail : this.thumbnail
+		};
+
 		this.display_load("Saving Channel...", function(){
-			self.save(data);
 			self.edit = false;
+			self.save(data, {async:false});
+			console.log(self.model);
 			self.render();
 		});
+	},
+	create_dropzone:function(){
+		this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
+			maxFiles: 1,
+			clickable: ["#dz-placeholder", "#swap-thumbnail"],
+			acceptedFiles: "image/*",
+			url: window.Urls.thumbnail_upload(),
+			previewTemplate:this.dropzone_template(),
+			previewsContainer: "#dropzone",
+			headers: {"X-CSRFToken": get_cookie("csrftoken")}
+		});
+    	this.dropzone.on("queuecomplete", this.thumbnail_uploaded);
+    	this.dropzone.on("addedfile", this.thumbnail_added);
+    	this.dropzone.on("removedfile", this.thumbnail_removed);
 	}
 });
 

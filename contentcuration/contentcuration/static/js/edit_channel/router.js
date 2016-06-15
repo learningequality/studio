@@ -7,20 +7,28 @@ var ChannelManageView = require("edit_channel/new_channel/views");
 //var saveDispatcher = _.clone(Backbone.Events);
 
 ChannelEditRouter  = Backbone.Router.extend({
-	nodeCollection: new Models.NodeCollection(),
+	nodeCollection: new Models.ContentNodeCollection(),
     initialize: function(options) {
         _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page");
 		this.user = options.user;
 		this.model = options.model;
-		this.nodeCollection = new Models.NodeCollection();
+		this.nodeCollection = new Models.ContentNodeCollection();
 		this.nodeCollection.fetch();
 		window.licenses = new Models.LicenseCollection(window.license_list);
 		window.licenses.fetch();
-		window.licenses.create_licenses();
 		window.current_channel = new Models.ChannelModel(window.channel);
 		//this.listenTo(saveDispatcher, "save", this.save);
 		this.channelCollection = new Models.ChannelCollection();
 		this.channelCollection.fetch({async:false});
+
+		this.fileformats = new Models.FileFormatCollection(window.fformats);
+		this.fileformats.fetch({async:false, cache:true});
+
+		this.formatpresets = new Models.FormatPresetCollection(window.presets);
+		this.formatpresets.fetch({async:false, cache:true});
+
+		this.contentkinds = new Models.ContentKindCollection(window.kinds);
+		this.contentkinds.fetch({async:false, cache:true});
     },
 
     routes: {
@@ -51,9 +59,11 @@ ChannelEditRouter  = Backbone.Router.extend({
 	},
 
 	open_channel: function(edit_mode_on, is_clipboard, root){
-		window.mimetypes = new Models.MimeTypeCollection(window.mtypes);
-		window.mimetypes.fetch();
-		window.mimetypes.create_mimetypes();
+		window.fileformats = this.fileformats ;
+		window.channels = this.channelCollection;
+		window.formatpresets = this.formatpresets;
+		window.contentkinds = this.contentkinds;
+
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
@@ -61,7 +71,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 			edit: edit_mode_on,
 			model : root,
 			is_clipboard : is_clipboard,
-			channels : this.channelCollection
 		});
 
 	}

@@ -1,0 +1,27 @@
+<div class = "col-xs-3 format_editor_format_name" >{{preset.attributes.readable_name}}</div>
+<div class = "col-xs-9">
+      {{#if file}}
+      	<div id="{{id}}_dropzone_swap" class="format_dropzone">
+	        <div class="format_metadata">
+	        	<div class="format_editor_options_wrapper pull-right">
+			        <span class="glyphicon glyphicon-remove pull-right format_editor_remove" aria-hidden="true"></span>
+			        <span id="{{id}}_dropzone" class="pull-right format_editor_replace">
+			        	<i class="glyphicon glyphicon-file dz_click" aria-hidden="true"></i>
+			        </span>
+			    </div>
+	        	<div class="format_editor_file_name_wrapper">
+	      			<div class="format_editor_file_name truncate" title="{{file.attributes.original_filename}}">
+	      				{{file.attributes.original_filename}}
+	      			</div>
+	      			<i class="format_editor_selected_size">
+	      				({{#format_file_size file.attributes.file_size}}{{/format_file_size}})
+	      			</i>
+	      		</div>
+	      	</div>
+	    </div>
+      {{else}}
+        <div id="{{id}}_dropzone" class="format_dropzone">
+          <a class="action-text add_format_button dz_click">+ ADD</a>
+        </div>
+      {{/if}}
+</div>

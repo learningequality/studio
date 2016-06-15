@@ -10,6 +10,9 @@ var BaseView = Backbone.View.extend({
 	delete_view: function(){
 		//this.undelegateEvents();
 		//this.unbind();
+		/*if(this.containing_list_view){
+			this.containing_list_view.views.splice(this.containing_list_view.views.indexOf(this),1);
+		}*/
 		this.remove();
 	},
 	set_editing: function(edit_mode_on){
@@ -20,16 +23,19 @@ var BaseView = Backbone.View.extend({
 	edit_selected:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var list = this.$el.find('input:checked').parent("li");
-		var edit_collection = new Models.NodeCollection();
+		var edit_collection = new Models.ContentNodeCollection();
 		/* Create list of nodes to edit */
 		for(var i = 0; i < list.length; i++){
 			var model = $(list[i]).data("data").model;
+			model.view = $(list[i]).data("data");
 			edit_collection.add(model);
 		}
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var content = null;
-		if(edit_collection.length ==1)
+		if(edit_collection.length ==1){
 			content = edit_collection.models[0];
+		}
+
 		var metadata_view = new UploaderViews.EditMetadataView({
 			collection: edit_collection,
 			parent_view: this,
@@ -43,7 +49,7 @@ var BaseView = Backbone.View.extend({
 	add_to_view:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
-		var new_collection = new Models.NodeCollection();
+		var new_collection = new Models.ContentNodeCollection();
 		var add_view = new UploaderViews.AddContentView({
 			el : $("#dialog"),
 			collection: new_collection,
@@ -54,9 +60,8 @@ var BaseView = Backbone.View.extend({
 		});
 	},
 	display_load:function(message, callback){
-    	console.log("displaying load");
     	var self = this;
-		var load = '<div id="loading_modal" class="text-center">' +
+		var load = '<div id="loading_modal" class="text-center fade">' +
             '<div id="kolibri_load_gif"></div>' +
             '<h4 id="kolibri_load_text" class="text-center">' + message + '</h4>' +
             '</div>';
@@ -71,10 +76,10 @@ var BaseView = Backbone.View.extend({
     		$("#loading_modal").remove();
     	}
     },
-	add_to_trash:function(views){
+	add_to_trash:function(collection){
 		//OVERWRITE IN SUBCLASSES
 	},
-	add_to_clipboard:function(views){
+	add_to_clipboard:function(collection){
 		//OVERWRITE IN SUBCLASSES
 	},
 	undo: function() {
@@ -85,6 +90,31 @@ var BaseView = Backbone.View.extend({
     },
     save:function(){
 		this.collection.save();
+	},
+	update_word_count:function(input, counter, limit){
+		var char_length = limit - input.val().length;
+		if(input.val().trim() == ""){
+			char_length = limit;
+		}
+	    counter.html(char_length + ((char_length  == 1) ? " char left" : " chars left"));
+	    counter.css("color", (char_length == 0)? "red" : "gray");
+	},
+	reload_listed:function(collection){
+		var list_to_reload = [];
+        collection.forEach(function(entry){
+        	$.merge(list_to_reload, entry.get("ancestors"));
+		});
+		$.unique(list_to_reload).forEach(function(id){
+			if($("#" + id) && $("#" + id).data("data")){
+        		$("#" + id).data("data").reload();
+        	}
+		});
+	},
+	publish:function(){
+		$("#main-content-area").find(".to_publish").each(function(){
+			console.log("Publishing...");
+			$("#" + this.id).data("data").publish();
+		});
 	}
 });
 
@@ -116,23 +146,24 @@ BaseListView = BaseView.extend({
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = [];
 		var clipboard_root = window.current_channel.get_tree("clipboard").get_root();
+		var copyCollection = new Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
-			var newNode = new Models.NodeModel();
-			newNode = $(list[i]).data("data").model.duplicate(clipboard_root);
-			clipboard_list.push(newNode);
+			copyCollection.add($(list[i]).data("data").model);//.duplicate(clipboard_root, null);
 		}
-		this.add_to_clipboard(clipboard_list);
+		var copiedCollection = copyCollection.duplicate(clipboard_root, null);
+		this.add_to_clipboard(copiedCollection);
 		return this.$el.find(".current_topic input:checked").length != 0;
 	},
 	delete_selected:function(){
 		var list = this.$el.find('input:checked').parent("li");
 		var stopLoop = this.$el.find(".current_topic input").is(":checked");
-		var to_delete = [];
+		var deleteCollection = new Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
 			var view = $("#" + list[i].id).data("data");
-			to_delete.push(view);
+			deleteCollection.add(view.model);
+			view.delete_view();
 		}
-		this.add_to_trash(to_delete);
+		this.add_to_trash(deleteCollection);
 		return stopLoop;
 	},
 	drop_in_container:function(transfer, target){
@@ -152,11 +183,10 @@ BaseListView = BaseView.extend({
 				transfer.model.set({parent: old_parent.id});
 				transfer.containing_list_view.render();
 			}else{
-				this.model.get("children").push(transfer.model.id);
 				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
-				var new_children = old_parent.get("children");
-				old_parent.get("children").splice(old_parent.get("children").indexOf(transfer.model.id), 1);
-
+				this.model.fetch({async:false});
+				old_parent.fetch({async:false});
+				transfer.containing_list_view.render();
 			}
 		}else{
 			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false});
@@ -201,19 +231,14 @@ BaseListView = BaseView.extend({
 		this.views.splice(this.views.indexOf(this), 1);
 		view.delete_view();
 	},
-	add_nodes:function(views, startingIndex, allowDuplicates){
-		console.log("PERFORMANCE tree_edit/views.js: starting add_nodes ...");
-    	var start = new Date().getTime();
+	add_nodes:function(collection, startingIndex){
 		var self = this;
-		views.forEach(function(entry){
-			var model = (entry.model) ? entry.model : entry;
-			model.move(self.model, allowDuplicates, ++startingIndex);
-			self.model.get("children").push(model.id);
+		collection.move(this.model, startingIndex, function(){
+			self.list_index = startingIndex;
+			collection.add(self.model);
+			self.reload_listed(collection);
+			self.render();
 		});
-		this.list_index = startingIndex;
-
-		this.render();
-		console.log("PERFORMANCE tree_edit/views.js: add_nodes end (time = " + (new Date().getTime() - start) + ")");
 	}
 });
 
@@ -222,6 +247,9 @@ var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
 	set_editing: function(edit_mode_on){
 		this.containing_list_view.set_editing(edit_mode_on);
+	},
+	remove_item:function(){
+		this.containing_list_view.remove_view(this);
 	}
 });
 
@@ -230,16 +258,13 @@ var BaseListNodeItemView = BaseListItemView.extend({
     	if(!this.model){
     		this.delete_view();
     	}
-
 		if(this.containing_list_view.item_view != "uploading_content"){
 			this.add_to_trash();
 		}
 	},
 	save: function(data, options){
-		console.log("PERFORMANCE views.js: starting save " + ((data && data.title) ? data.title : "") + "...");
-    	var start = new Date().getTime();
     	if(!this.model){
-    		var node_data = new Models.NodeModel(data);
+    		var node_data = new Models.ContentNodeModel(data);
 			this.containing_list_view.collection.create(node_data, options);
 			if(this.model.get("kind").toLowerCase() != "topic"){
 				node_data.create_file();
@@ -251,11 +276,10 @@ var BaseListNodeItemView = BaseListItemView.extend({
 				this.model.create_file();
 			}
 		}
-		console.log("PERFORMANCE views.js: save " + ((data && data.title) ? data.title : "") + " end (time = " +((new Date().getTime() - start)/1000) + "s)");
 	},
 	set:function(data, options){
 		if(!this.model){
-    		var node_data = new Models.NodeModel(data);
+    		var node_data = new Models.ContentNodeModel(data);
 			this.containing_list_view.collection.create(node_data, options);
 			if(this.model.get("kind").toLowerCase() != "topic"){
 				node_data.create_file();
@@ -263,6 +287,23 @@ var BaseListNodeItemView = BaseListItemView.extend({
     	}else{
     		this.model.set(data, options);
     	}
+	},
+	open_edit:function(){
+		var UploaderViews = require("edit_channel/uploader/views");
+		var edit_collection = new Models.ContentNodeCollection();
+		edit_collection.add(this.model);
+
+		$("#main-content-area").append("<div id='dialog'></div>");
+
+		var metadata_view = new UploaderViews.EditMetadataView({
+			collection: edit_collection,
+			parent_view: this,
+			el: $("#dialog"),
+			allow_add : false,
+			main_collection: this.containing_list_view.collection,
+			modal:true,
+			model: this.model
+		});
 	}
 });
 
@@ -271,7 +312,7 @@ var BaseListChannelItemView = BaseListItemView.extend({
 		if(!this.model){
     		this.delete_view();
 	    }else{
-	    	this.model.destroy();
+	    	this.model.destroy({async:false});
 	    }
 	},
 	save: function(data, options){
@@ -285,18 +326,24 @@ var BaseListChannelItemView = BaseListItemView.extend({
 });
 
 var BaseEditorView = BaseListView.extend({
-	disable: false,
+	multiple_selected: false,
 	current_node: null,
 	item_view:"uploading_content",
 	unsaved_queue: [], // Used to keep track of temporary model data
 	errorsFound : false,
 	parent_view : null,
-	close_uploader: function(){
+	close_uploader: function(event){
 		if(this.unsaved_queue.length == 0){
-			this.parent_view.render();
 			if (this.modal) {
 				this.$el.modal('hide');
 	        }
+	        if(!this.allow_add){
+	        	var reload_collection = new Models.ContentNodeCollection();
+		        this.views.forEach(function(entry){
+		        	reload_collection.add(entry.model);
+				});
+				this.reload_listed(reload_collection);
+		    }
 	        this.remove();
 		}else if(confirm("Unsaved Metadata Detected! Exiting now will"
 			+ " undo any new changes. \n\nAre you sure you want to exit?")){
@@ -305,28 +352,37 @@ var BaseEditorView = BaseListView.extend({
 					entry.unset_node();
 				});
 			}
-			this.parent_view.render();
 			if (this.modal) {
 				this.$el.modal('hide');
 	        }
+	        this.unsaved_queue = [];
+	        this.views = [];
 	        this.remove();
+		}else{
+			event.stopPropagation();
+			event.preventDefault();
 		}
 	},
-	save_nodes: function(){
-		console.log("PERFORMANCE uploader/views.js: starting save_nodes...");
-    	var start = new Date().getTime();
+	save_nodes: function(callback){
 		this.parent_view.set_editing(false);
 		var self = this;
 		this.views.forEach(function(entry){
-	        entry.save(entry.model.attributes, {async:false, validate:false});
+			entry.model.set({tags: entry.tags});
+			if(entry.format_view){
+				entry.format_view.update_file();
+				entry.format_view.clean_files();
+			}
 	        entry.set_edited(false);
 		});
 		this.errorsFound = this.errorsFound || !this.save_queued();
+		this.collection.save(function(){
+			callback();
+		});
+
 	},
 	check_nodes:function(){
 		var self = this;
 		self.errorsFound = false;
-
 		this.views.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
 			if(entry.model.validationError){
@@ -359,6 +415,8 @@ var BaseEditorView = BaseListView.extend({
 				self.unsaved_queue.splice(self.unsaved_queue.indexOf(entry), 1);
 			}
 		});
+
+		/*Make sure queue is cleared*/
 		if(success){
 			this.unsaved_queue.forEach(function(entry){
 				self.views.push(self.unsaved_queue.pop());
@@ -368,10 +426,21 @@ var BaseEditorView = BaseListView.extend({
 	}
 });
 
+var BaseModalView = BaseView.extend({
+    callback:null,
+    close: function() {
+        if (this.modal) {
+            this.$(".modal").modal('hide');
+        }
+        this.remove();
+    }
+});
+
 module.exports = {
 	BaseView: BaseView,
 	BaseListView:BaseListView,
 	BaseListChannelItemView: BaseListChannelItemView,
 	BaseListNodeItemView:BaseListNodeItemView,
-	BaseEditorView:BaseEditorView
+	BaseEditorView:BaseEditorView,
+	BaseModalView:BaseModalView
 }

@@ -3,10 +3,7 @@
 	{{title}}
 </h2>
 <ul class="content-list sortable list-unstyled" id="container_list_{{topic.id}}">
-	{{#each content_list}}
-		<li class="content draggable to_publish" id="{{id}}"></li>
-	{{else}}<li id="default_item_{{topic.id}}" class="default-item"><h5>No items found.</h5></li>
-	{{/each}}
+	{{#unless content_list}}<li id="default_item_{{topic.id}}" class="default-item"><h5>No items found.</h5></li>{{/unless}}
 </ul>
 {{#if edit_mode}}
 	<div>

@@ -6,6 +6,7 @@ var BaseViews = require("./../views");
 var QueueView = require("edit_channel/queue/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var UploaderViews = require("edit_channel/uploader/views");
+var Previewer = require("edit_channel/preview/views");
 //var UndoManager = require("backbone-undo");
 var Models = require("./../models");
 
@@ -15,7 +16,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	containers:[],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details', 'back_to_edit'/*,'undo_action', 'redo_action'*/);
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details', 'back_to_edit', 'handle_checked'/*,'undo_action', 'redo_action'*/);
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
@@ -36,11 +37,16 @@ var TreeEditView = BaseViews.BaseView.extend({
 		 		$("#channel-preview-button").addClass("active");
 		 	}
 
-		 	options.channels.forEach(function (entry){
-				$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.id + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
+		 	$("#channel_selection_dropdown_list").html("");
+
+		 	window.channels.forEach(function (entry){
+				$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.get("channel_id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 			});
 			$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
+			self.$el.find(".disable-none-selected").prop("disabled",true);
+			self.$el.find(".disable-none-selected").css("cursor","not-allowed");
 		});
+
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
@@ -54,19 +60,22 @@ var TreeEditView = BaseViews.BaseView.extend({
 			is_clipboard : this.is_clipboard
 		}));
 		this.add_container(this.containers.length, this.model);
+		$("#channel-edit-content-wrapper").data("data", this);
 	},
 	events: {
 		'click .copy_button' : 'copy_content',
 		'click .delete_button' : 'delete_content',
 		'click .edit_button' : 'edit_content',
 		'click #hide_details_checkbox' :'toggle_details',
-		'click .back_to_edit_button' : 'back_to_edit'
+		'click .back_to_edit_button' : 'back_to_edit',
+		'change input[type=checkbox]' : 'handle_checked'
 	},
 	back_to_edit:function(){
 		window.location = window.location.href.replace("clipboard", "edit");
 	},
 	remove_containers_from:function(index){
 		while(this.containers.length > index){
+			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.containers[0].$el.outerWidth());  //this.containers[this.containers.length-2].$el.outerWidth() * (this.containers.length-2));
 			this.containers[this.containers.length-1].delete_view();
 			this.containers.splice(this.containers.length-1);
 		}
@@ -78,10 +87,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			this.remove_containers_from(index);
 		}
 		/* Create place for opened topic */
-		this.$el.find("#container_area").append("<li id='container_" + topic.id + "' class='container content-container "
-						+ "' name='" + (this.containers.length + 1) + "'></li>");
 		var container_view = new ContentList({
-			el: this.$el.find("#container_area #container_" + topic.id),
 			model: topic,
 			index: this.containers.length + 1,
 			edit_mode: this.is_edit_page,
@@ -89,17 +95,30 @@ var TreeEditView = BaseViews.BaseView.extend({
 			container : this
 		});
 		this.containers.push(container_view);
+		this.$el.find("#container_area").append(container_view.el);
+		this.$el.find("#container_area").width(this.$el.find("#container_area").width() + this.containers[0].$el.outerWidth());
+		/* Animate sliding in from left */
+		container_view.$el.css('margin-left', -container_view.$el.outerWidth());
+		container_view.$el.animate({
+			'margin-left' : "0px"
+		}, 500);
+		this.$el.find("#container-wrapper").animate({
+			scrollLeft:this.$el.find("#container_area").width() - container_view.$el.outerWidth()
+		}, 250);
 	},
 
 	delete_content: function (event){
 		if(confirm("Are you sure you want to delete these selected items?")){
 			var self = this;
-			for(var i = 0; i < this.containers.length; i++){
-				if(this.containers[i].delete_selected()){
-					this.remove_containers_from(this.containers[i].index);
-					break;
+			this.display_load("Deleting Content...", function(){
+				for(var i = 0; i < self.containers.length; i++){
+					if(self.containers[i].delete_selected()){
+						self.remove_containers_from(self.containers[i].index);
+						break;
+					}
 				}
-			}
+			});
+
 		}
 	},
 	copy_content: function(event){
@@ -119,15 +138,16 @@ var TreeEditView = BaseViews.BaseView.extend({
 		/*TODO: Debug more with editing and opening folders*/
 		this.$el.find("#container_area").toggleClass("hidden_details");
 	},
-	add_to_trash:function(views){
-		this.queue_view.add_to_trash(views);
-		views.forEach(function(entry){
-			entry.delete_view();
-		});
+	add_to_trash:function(collection){
+		this.queue_view.add_to_trash(collection);
 	},
-	add_to_clipboard:function(views){
-		console.log("clipboard views", views);
-		this.queue_view.add_to_clipboard(views);
+	add_to_clipboard:function(collection){
+		this.queue_view.add_to_clipboard(collection);
+	},
+	handle_checked:function(event){
+		var checked_count = this.$el.find("input[type=checkbox]:checked").length;
+		this.$el.find(".disable-none-selected").prop("disabled", checked_count == 0);
+		this.$el.find(".disable-none-selected").css("cursor", (checked_count > 0)? "pointer" : "not-allowed");
 	}
 });
 
@@ -136,6 +156,12 @@ var ContentList = BaseViews.BaseListView.extend({
 	item_view: "node",
 	template: require("./hbtemplates/content_container.handlebars"),
 	current_node : null,
+	tagName: "li",
+	indent: 0,
+	'id': function() {
+		return "container_" + this.model.get("id");
+	},
+	className: "container content-container",
 	initialize: function(options) {
 		_.bindAll(this, 'add_content');
 		this.index = options.index;
@@ -147,18 +173,15 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.childrenCollection.sort_by_order();
 		this.render();
 
-		/* Animate sliding in from left */
-		this.$el.css('margin-left', -this.$el.find(".content-list").outerWidth());
-		$("#container_area").width(this.$el.find(".content-list").outerWidth() * (this.index));
-		this.$el.animate({'margin-left' : "0px"}, 500);
 	},
 	render: function() {
 		DragHelper.removeDragDrop(this);
+		this.model.fetch({async:false});
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();
 		this.$el.html(this.template({
 			topic: this.model,
-			title: (this.model.parent)? this.model.get("title") : window.current_channel.get("name"),
+			title: (this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name"),
 			edit_mode: this.edit_mode,
 			index: this.index,
 			content_list: this.childrenCollection.toJSON()
@@ -179,20 +202,20 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	load_content : function(){
-    	var start = new Date().getTime();
 		this.views = [];
 		var self = this;
 		var el = this.$el.find(".content-list");
 		this.list_index = 0;
 		this.childrenCollection.forEach(function(entry){
 			var file_view = new ContentItem({
-				el: el.find("#" + entry.id),
+				//el: el.find("#" + entry.id),
 				model: entry,
 				edit_mode: self.edit_mode,
 				containing_list_view:self,
 				allow_edit: false,
 				index : self.list_index++
 			});
+			el.append(file_view.el);
 			if(self.current_node && entry.id == self.current_node)
 				file_view.set_opened(true, false);
 			self.views.push(file_view);
@@ -213,11 +236,13 @@ var ContentList = BaseViews.BaseListView.extend({
 			entry.set_opened(false);
 		});
 	},
-	add_to_trash:function(views){
-		this.container.add_to_trash(views);
+	add_to_trash:function(collection){
+		var self = this;
+		this.container.add_to_trash(collection);
+		this.model.fetch({async:false});
 	},
-	add_to_clipboard:function(views){
-		this.container.add_to_clipboard(views);
+	add_to_clipboard:function(collection){
+		this.container.add_to_clipboard(collection);
 	},
 	close_container:function(views){
 		var self = this;
@@ -231,6 +256,12 @@ var ContentList = BaseViews.BaseListView.extend({
 /*folders, files, exercises listed*/
 var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
+	tagName: "li",
+	indent: 0,
+	'id': function() {
+		return this.model.get("id");
+	},
+	className: "content draggable to_publish",
 	initialize: function(options) {
 		_.bindAll(this, 'edit_folder','open_folder',/*'expand_or_collapse_folder', */
 					'submit_edit', 'cancel_edit','preview_node', 'cancel_open_folder');
@@ -238,10 +269,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		this.allow_edit = options.allow_edit;
 		this.containing_list_view = options.containing_list_view;
 		this.index = options.index;
-		this.files = (this.model.get("title").trim() == "topic")?  null : this.model.get_files();
 		this.render();
-
-		console.log(this.model.get("title") + " parent is " + this.model.get("parent") + " and has index " + this.index);
 	},
 
 	render:function(){
@@ -249,12 +277,15 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 			node: this.model,
 			isfolder: this.model.get("kind").toLowerCase() == "topic",
 			edit_mode: this.edit_mode,
-			allow_edit: this.allow_edit,
-			resource_count : this.model.get("resource_count")
+			allow_edit: this.allow_edit
 		}));
 		this.$el.data("data", this);
 		if($("#hide_details_checkbox").attr("checked"))
 			this.$el.find("label").addClass("hidden_details");
+	},
+	reload:function(){
+		this.model.fetch({async:false});
+		this.render();
 	},
 	events: {
 		'click .edit_folder_button': 'edit_folder',
@@ -290,9 +321,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	edit_folder: function(event){
 		event.preventDefault();
 		event.stopPropagation();
-		this.allow_edit = this.edit_mode;
-		this.render();
-		this.$el.addClass("editing");
+		this.open_edit();
 	},
 	submit_edit: function(event){
 		event.preventDefault();
@@ -335,7 +364,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 				parent_view : this
 			});
 		}else{
-			var preview_view = new UploaderViews.PreviewView({
+			var preview_view = new Previewer.PreviewView({
 				modal:true,
 				model: this.model,
 				el : $("#dialog")

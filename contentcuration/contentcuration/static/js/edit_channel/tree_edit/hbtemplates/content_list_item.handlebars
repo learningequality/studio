@@ -31,8 +31,8 @@
 		{{to_upper_case node.attributes.kind}}
 		<span class="metadata_to_hide">
 			{{#if time}}&nbsp<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
-			{{#if isfolder}}&nbsp{{resource_count}} Resources{{/if}}
-			&nbsp<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.attributes.total_file_size}}{{/format_file_size}}
+			{{#if isfolder}}&nbsp{{node.attributes.resource_count}} Resources{{/if}}
+			&nbsp<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.attributes.resource_size}}{{/format_file_size}}
 			&nbsp
 			{{#if node.attributes.published}}
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>

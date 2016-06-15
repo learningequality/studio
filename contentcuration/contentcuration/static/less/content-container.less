@@ -70,6 +70,10 @@
 		width:90vw;
 	}
 
+	#container_area{
+		width:@container-last-width; /* will be added to as containers are added- extra padding for clipboard*/
+	}
+
 	#container_area_title{
 		margin-top: 0px;
 		color: @channel-edit-font-color;
@@ -140,8 +144,6 @@
 		}
 	}
 
-
-
 	.content-container{
 		padding:2px;
 		margin:0;
@@ -158,8 +160,7 @@
 		h2{
 			color:@container-title-color;
 			font-size: @title-size;
-			margin-top:15px;
-			margin-bottom:15px;
+			padding-bottom:5px;
 		}
 
 
@@ -186,6 +187,7 @@
 				label{
 					padding:5px;
 					vertical-align: middle;
+					cursor:pointer;
 					h3, p, h6{
 						color : @item-font-color;
 						margin:0;

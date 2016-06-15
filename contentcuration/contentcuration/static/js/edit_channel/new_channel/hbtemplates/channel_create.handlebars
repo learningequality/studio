@@ -15,7 +15,7 @@
 			<div class="col-xs-1 search_section">
 				<a class="btn btn-filter">Audio</a>
 			</div>
-			<div class="col-xs-1 search_section"> 
+			<div class="col-xs-1 search_section">
 				<a class="btn btn-filter">Exercises</a>
 			</div>
 			<div class="col-xs-1 search_section">
@@ -49,10 +49,9 @@
 	<div id="channel-list-area">
 		<h3>My Channels</h3>
 		<ul id="channel_list" class="list-unstyled">
-			{{#each channel_list}}
-			    <li class="channel_container container" id={{id}}></li>
-			    {{else}} <li><h5 class="default-item">No channels found.</h5></li>
-			{{/each}}
+			{{#unless channel_list}}
+			    <li><h5 class="default-item">No channels found.</h5></li>
+			{{/unless}}
 		</ul>
 		<div class="new_channel_button round-plus disable-on-edit">+</div>
 		<h3 class="new_channel_button disable-on-edit new-channel">New Channel</h3>

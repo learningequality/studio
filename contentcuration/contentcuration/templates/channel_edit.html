@@ -9,16 +9,18 @@
 	<script>
 		var channel = JSON.parse("{{ channel|escapejs}}");
 		var license_list = JSON.parse("{{ license_list|escapejs}}");
-		var mtypes = JSON.parse("{{ mimetypes|escapejs }}");
+		var fformats = JSON.parse("{{ fileformat_list|escapejs }}");
+		var presets = JSON.parse("{{ fpreset_list|escapejs }}");
+		var kinds = JSON.parse("{{ ckinds_list |escapejs }}");
 	</script>
-	<script type="text/javascript">		
+	<script type="text/javascript">
 		var bundle = require("channel_edit");
 		bundle.$(function() {
             window.channel_router = new bundle.ChannelEditRouter({user: "current_user"});
 			bundle.Backbone.history.start({pushState: true, root: "{% url 'channels' %}"});
         });
     </script>
-	
+
 	<nav class="navbar collapse navbar-collapse" id="secondary-nav">
 		<ul class="nav navbar-nav navbar-left">
 			<a href="edit"><li id="channel-edit-button" class="text-center pull-left">Edit</li></a>
@@ -29,7 +31,7 @@
 			<!--<li id="channel-publish-button" class="text-center">Unpublish Selected</li>-->
 			<li id="channel-publish-button" class="text-center">PUBLISH</li>
 		</ul>
-	</nav>	
+	</nav>
 	<div id="channel-edit-content-wrapper">
 		<div id="main-content-area" class="container-fluid"></div>
 		<div id="previewer-area" class="container pull-right"></div>

@@ -19,15 +19,16 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
-from contentcuration.models import Channel, TopicTree, ContentTag, Node, ContentLicense, Exercise, AssessmentItem, File, Format, MimeType
+from contentcuration.models import ContentNode, License, Channel, TopicTree, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem, ContentKind
 import serializers
 import views
+from contentcuration import api
 
 from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
 
 class LicenseViewSet(viewsets.ModelViewSet):
-    queryset = ContentLicense.objects.all()
+    queryset = License.objects.all()
     serializer_class = serializers.LicenseSerializer
 
 
@@ -43,17 +44,21 @@ class FileViewSet(viewsets.ModelViewSet):
     queryset = File.objects.all()
     serializer_class = serializers.FileSerializer
 
-class FormatViewSet(viewsets.ModelViewSet):
-    queryset = Format.objects.all()
-    serializer_class = serializers.FormatSerializer
+class FileFormatViewSet(viewsets.ModelViewSet):
+    queryset = FileFormat.objects.all()
+    serializer_class = serializers.FileFormatSerializer
 
-class MimeTypeViewSet(viewsets.ModelViewSet):
-    queryset = MimeType.objects.all()
-    serializer_class = serializers.MimeTypeSerializer
+class FormatPresetViewSet(viewsets.ModelViewSet):
+    queryset = FormatPreset.objects.all()
+    serializer_class = serializers.FormatPresetSerializer
 
-class NodeViewSet(BulkModelViewSet):
-    queryset = Node.objects.all()
-    serializer_class = serializers.NodeSerializer
+class ContentKindViewSet(viewsets.ModelViewSet):
+    queryset = ContentKind.objects.all()
+    serializer_class = serializers.ContentKindSerializer
+
+class ContentNodeViewSet(BulkModelViewSet):
+    queryset = ContentNode.objects.all()
+    serializer_class = serializers.ContentNodeSerializer
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = ContentTag.objects.all()
@@ -73,15 +78,16 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'topictree', TopicTreeViewSet)
-router.register(r'node', NodeViewSet)
 router.register(r'exercise', ExerciseViewSet)
 router.register(r'file', FileViewSet)
-router.register(r'format', FormatViewSet)
-router.register(r'mimetype', MimeTypeViewSet)
+router.register(r'fileformat', FileFormatViewSet)
+router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
+router.register(r'contentkind', ContentKindViewSet)
 
 bulkrouter = BulkRouter(trailing_slash=False)
 bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
+bulkrouter.register(r'contentnode', ContentNodeViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
@@ -89,7 +95,7 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
-    url(r'^api/copy_node/$', views.copy_node, name='copy_node'),
+    url(r'^api/duplicate_node/$', views.duplicate_node, name='duplicate_node'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),
@@ -97,7 +103,8 @@ urlpatterns = [
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^channels/$', views.channel_list, name='channels'),
-    url(r'^channels/(?P<channel_id>\w+)', views.channel, name='channel'),
+    url(r'^channels/(?P<channel_id>[^/]+)', views.channel, name='channel'),
+    url(r'^thumbnail_upload/', views.thumbnail_upload, name="thumbnail_upload"),
 ]
 
 
@@ -106,5 +113,5 @@ urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js
 if settings.DEBUG:
     # static files (images, css, javascript, etc.)
     urlpatterns += [
-        url(r'^media/(?P<path>.*)$', 'django.views.static.serve', {
+        url(r'^' + settings.MEDIA_URL[1:-1] + '(?P<path>.*)$', 'django.views.static.serve', {
         'document_root': settings.MEDIA_ROOT})]

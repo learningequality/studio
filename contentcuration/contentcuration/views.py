@@ -1,7 +1,9 @@
 import copy
 import json
+import logging
+import os
 from rest_framework import status
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -12,10 +14,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, Node, TopicTree, MimeType, ContentLicense
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, NodeSerializer, TopicTreeSerializer, MimeTypeSerializer, LicenseSerializer
-
-from kolibri.content.models import File
+from contentcuration.models import Exercise, AssessmentItem, Channel, TopicTree, License, FileFormat, File, FormatPreset, ContentKind, ContentNode
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicTreeSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer
 
 def base(request):
     return redirect('channels')    # redirect to the channel list page
@@ -28,26 +28,31 @@ def channel_list(request):
     channel_list = Channel.objects.all() # Todo: only allow access to certain channels?
     channel_serializer = ChannelSerializer(channel_list, many=True)
 
-    licenses = ContentLicense.objects.all()
+    licenses = License.objects.all()
     license_serializer = LicenseSerializer(licenses, many=True)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data)})
 
 def channel(request, channel_id):
-    channel = get_object_or_404(Channel, id=channel_id)
+    channel = get_object_or_404(Channel, channel_id=channel_id)
     channel_serializer =  ChannelSerializer(channel)
 
-    mimetypes = MimeType.objects.all()
-    mimetype_serializer = MimeTypeSerializer(mimetypes, many=True)
+    fileformats = FileFormat.objects.all()
+    fileformat_serializer = FileFormatSerializer(fileformats, many=True)
 
-    mimetypes = MimeType.objects.all()
-    mimetype_serializer = MimeTypeSerializer(mimetypes, many=True)
-
-    licenses = ContentLicense.objects.all()
+    licenses = License.objects.all()
     license_serializer = LicenseSerializer(licenses, many=True)
+
+    formatpresets = FormatPreset.objects.all()
+    formatpreset_serializer = FormatPresetSerializer(formatpresets, many=True)
+
+    contentkinds = ContentKind.objects.all()
+    contentkind_serializer = ContentKindSerializer(contentkinds, many=True)
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
-                                                 "mimetypes" : JSONRenderer().render(mimetype_serializer.data),
-                                                 "license_list" : JSONRenderer().render(license_serializer.data)})
+                                                "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),
+                                                 "license_list" : JSONRenderer().render(license_serializer.data),
+                                                 "fpreset_list" : JSONRenderer().render(formatpreset_serializer.data),
+                                                 "ckinds_list" : JSONRenderer().render(contentkind_serializer.data) })
 
 def exercise_list(request):
 
@@ -89,42 +94,73 @@ def exercise(request, exercise_id):
 def file_upload(request):
 
     if request.method == 'POST':
-        file_object = File(content_copy=request.FILES.values()[0])
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
+        original_filename = request.FILES.values()[0]._name
+        file_object = File(content_copy=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
             "filename": str(file_object),
+            "object_id": file_object.pk
         }))
 
+@csrf_exempt
+def thumbnail_upload(request):
+    return HttpResponse(json.dumps({
+        "success": True
+    }))
 
 @csrf_exempt
-def copy_node(request):
+def duplicate_node(request):
+    logging.debug("Entering the copy_node endpoint")
+
     if request.method != 'POST':
-        pass
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
         try:
             node_id = data["node_id"]
+            sort_order = data["sort_order"]
+            target_parent = data["target_parent"]
         except KeyError:
-            # return error that no node_id in json was found
-            raise ObjectDoesNotExist("Node id %s not given.".format(node_id))
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        new_node = _copy_node(node_id)
+        logging.info("Copying node id %s", node_id)
 
-        return HttpResponse(json.dumps({"node_id": new_node.id}))
+        new_node = _duplicate_node(node_id, parent=target_parent)
+        return HttpResponse(json.dumps({
+            "success": True,
+            "node_id": new_node.pk
+        }))
 
+def _duplicate_node(node, parent=None):
+    if isinstance(node, int) or isinstance(node, basestring):
+        node = ContentNode.objects.get(pk=node)
+    new_node = ContentNode.objects.create(
+        title=node.title,
+        description=node.description,
+        kind=node.kind,
+        slug=node.slug,
+        total_file_size=node.total_file_size,
+        license=node.license,
+        parent=ContentNode.objects.get(pk=parent) if parent else None,
+        sort_order=node.sort_order,
+        license_owner=node.license_owner,
+        published=False
+    )
 
-def _copy_node(node):
-    if isinstance(node, int):
-        node = Node.objects.get(pk=node)
+    # add tags now
+    new_node.tags.add(*node.tags.all())
 
-    node = copy.copy(node)
-    node.id = node.pk = None
-    node.parent = None
-    node.published = False
+    # copy file object too
+    for fobj in node.files.all():
+        fobj_copy = copy.copy(fobj)
+        fobj_copy.id = None
+        fobj_copy.contentnode = new_node
+        fobj_copy.save()
 
-    node.children = [_copy_node(c) for c in node.children.all()]
-    node.save()
+    new_node.children = [_duplicate_node(c, parent=None) for c in node.children.all()]
+    new_node.save()
 
-    return node
+    return new_node

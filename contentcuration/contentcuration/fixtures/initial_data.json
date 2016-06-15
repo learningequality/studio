@@ -1,0 +1,216 @@
+[
+  {
+    "model": "contentcuration.License",
+    "pk": 1,
+    "fields": {
+      "license_name": "CC-BY",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 2,
+    "fields": {
+      "license_name": "CC BY-SA",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 3,
+    "fields": {
+      "license_name": "CC BY-ND",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 4,
+    "fields": {
+      "license_name": "CC BY-NC",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 5,
+    "fields": {
+      "license_name": "CC BY-NC-SA",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 6,
+    "fields": {
+      "license_name": "CC BY-NC-ND",
+      "exists": true
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 7,
+    "fields": {
+      "license_name": "All rights reserved",
+      "exists": true
+    }
+  },
+
+
+
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "mp4",
+      "mimetype" : "video/mp4"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "vtt",
+      "mimetype" : "text/vtt"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "srt",
+      "mimetype" : "text/srt"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "mp3",
+      "mimetype" : "audio/mpeg3"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "pdf",
+      "mimetype" : "application/pdf"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "jpg",
+      "mimetype" : "image/jpeg"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "png",
+      "mimetype" : "image/png"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "wav",
+      "mimetype" : "audio/wav"
+    }
+  },
+
+
+
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "topic"
+    }
+  },
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "video"
+    }
+  },
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "audio"
+    }
+  },
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "image"
+    }
+  },
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "exercise"
+    }
+  },
+  {
+    "model": "contentcuration.ContentKind",
+    "fields": {
+      "kind": "document"
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "high_res_video",
+      "readable_name": "High Resolution",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 1,
+      "kind" : "video",
+      "allowed_formats" : ["mp4"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "low_res_video",
+      "readable_name": "Low Resolution",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 2,
+      "kind" : "video",
+      "allowed_formats" : ["mp4"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "thumbnail",
+      "readable_name": "Thumbnail",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 3,
+      "kind" : "image",
+      "allowed_formats" : ["png", "jpg"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "temp",
+      "readable_name": "Picture",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 4,
+      "kind" : "image",
+      "allowed_formats" : ["png", "jpg"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "aud",
+      "readable_name": "Sound",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 5,
+      "kind" : "audio",
+      "allowed_formats" : ["wav", "mp3"]
+    }
+  }
+]
