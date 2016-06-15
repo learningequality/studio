@@ -62,7 +62,6 @@ class Channel(models.Model):
         verbose_name=_("editors"),
         help_text=_("Users with edit rights"),
     )
-
     published = models.ForeignKey('TopicTree', null=True, blank=True, related_name='published')
     deleted =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='deleted')
     clipboard =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='clipboard')
