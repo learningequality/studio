@@ -109,6 +109,12 @@ var BaseView = Backbone.View.extend({
         		$("#" + id).data("data").reload();
         	}
 		});
+	},
+	publish:function(){
+		$("#main-content-area").find(".to_publish").each(function(){
+			console.log("Publishing...");
+			$("#" + this.id).data("data").publish();
+		});
 	}
 });
 

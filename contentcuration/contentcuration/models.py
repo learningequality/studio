@@ -55,7 +55,7 @@ class Channel(models.Model):
     description = models.CharField(max_length=400, blank=True)
     author = models.CharField(max_length=400, blank=True)
     version = models.CharField(max_length=15, default='v0.01')
-    thumbnail = models.ImageField(upload_to=content_copy_name, storage=ContentCopyStorage(), max_length=500, blank=True)
+    thumbnail = models.TextField(blank=True)
     editors = models.ManyToManyField(
         'auth.User',
         related_name='editable_channels',

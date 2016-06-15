@@ -60,6 +60,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			is_clipboard : this.is_clipboard
 		}));
 		this.add_container(this.containers.length, this.model);
+		$("#channel-edit-content-wrapper").data("data", this);
 	},
 	events: {
 		'click .copy_button' : 'copy_content',

@@ -201,6 +201,9 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.container.$("#formats_step_number").addClass("active_number");
         this.uploading = false;
         this.render();
+        if(this.check_completed()){
+            this.enable_submit();
+        }
     },
     go_to_upload:function(){
         this.container.$("#formats_step_number").removeClass("active_number");

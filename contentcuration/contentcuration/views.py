@@ -104,6 +104,11 @@ def file_upload(request):
             "object_id": file_object.pk
         }))
 
+@csrf_exempt
+def thumbnail_upload(request):
+    return HttpResponse(json.dumps({
+        "success": True
+    }))
 
 @csrf_exempt
 def duplicate_node(request):

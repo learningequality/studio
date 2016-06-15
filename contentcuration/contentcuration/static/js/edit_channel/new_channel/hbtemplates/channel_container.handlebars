@@ -1,8 +1,15 @@
 <div class="profile pull-left text-center">
 	{{#if edit}}
-		<img class="new_channel_pic construction" alt="Drag picture here (under construction)"></img>
+		<!--<div class="new_channel_pic" id="dropzone">
+			<div id="finished_area">
+		        <a id="swap-thumbnail">Change Thumbnail</a>
+		    </div>
+		    <div id="dz-overlay">Click or drop picture here.</div>
+			<img id="dz-placeholder" alt="No thumbnail found." src="{{picture}}"/>
+		</div>-->
+
 	{{else}}
-		<img id="channel_pic" alt="No picture found." src="{{picture}}"/>
+		<img id="channel_pic" alt="No picture found." src="{{channel.thumbnail}}"/>
 	{{/if}}
 </div>
 {{#if edit}}
@@ -15,7 +22,7 @@
 			DELETE</a>
 		<a class="channel_toggle action-text">CANCEL</a>
 		<a class="save_channel btn pull-right">
-			{{#if edit}}SAVE{{else}}CREATE CHANNEL{{/if}}
+			SAVE
 		</a>
 	</div>
 {{else}}
