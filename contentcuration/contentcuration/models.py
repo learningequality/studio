@@ -14,6 +14,9 @@ from django.dispatch import receiver
 
 from constants import content_kinds, extensions, presets
 
+def hyphenless_uuid():
+    return str(uuid4()).replace("-", "")
+
 def file_on_disk_name(instance, filename):
     """
     Create a name spaced file path from the File obejct's checksum property.
@@ -43,7 +46,7 @@ class FileOnDiskStorage(FileSystemStorage):
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
-    channel_id = models.UUIDField(primary_key=True, default=uuid4)
+    channel_id = models.UUIDField(primary_key=True, default=hyphenless_uuid)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     author = models.CharField(max_length=400, blank=True)
@@ -151,7 +154,7 @@ class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
-    content_id = models.UUIDField(primary_key=False, default=uuid4, editable=False)
+    content_id = models.UUIDField(primary_key=False, default=hyphenless_uuid, editable=False)
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     kind = models.ForeignKey('ContentKind', related_name='content_metadatas', blank=True, null=True)
