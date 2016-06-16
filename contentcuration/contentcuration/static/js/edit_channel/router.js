@@ -18,15 +18,12 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.licenses.fetch();
 		window.current_channel = new Models.ChannelModel(window.channel);
 		//this.listenTo(saveDispatcher, "save", this.save);
-		this.channelCollection = new Models.ChannelCollection();
-		this.channelCollection.fetch({async:false});
+		this.channelCollection = new Models.ChannelCollection(window.channels);
 
 		this.fileformats = new Models.FileFormatCollection(window.fformats);
 		this.fileformats.fetch({async:false, cache:true});
-
 		this.formatpresets = new Models.FormatPresetCollection(window.presets);
 		this.formatpresets.fetch({async:false, cache:true});
-
 		this.contentkinds = new Models.ContentKindCollection(window.kinds);
 		this.contentkinds.fetch({async:false, cache:true});
     },
@@ -49,13 +46,13 @@ ChannelEditRouter  = Backbone.Router.extend({
     },
 
 	edit_page : function(){
-		this.open_channel(true, false, window.current_channel.get_tree("draft").get_root());
+		this.open_channel(true, false, window.current_channel.get_root("main_tree"));
 	},
 	preview_page : function(){
-		this.open_channel(false, false, window.current_channel.get_tree("draft").get_root());
+		this.open_channel(false, false, window.current_channel.get_root("main_tree"));
 	},
 	clipboard_page:function(){
-		this.open_channel(true, true, window.current_channel.get_tree("clipboard").get_root());
+		this.open_channel(true, true, window.current_channel.get_root("clipboard_tree"));
 	},
 
 	open_channel: function(edit_mode_on, is_clipboard, root){

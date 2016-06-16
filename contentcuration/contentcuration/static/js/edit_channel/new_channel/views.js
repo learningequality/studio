@@ -55,7 +55,7 @@ var ChannelList  = BaseListView.extend({
 			});
 			self.$("#channel_list").append(view.el);
 			self.views.push(view);
-        	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.get("channel_id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
+        	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.get("id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 		});
 	}
 });
@@ -66,7 +66,7 @@ var ChannelList  = BaseListView.extend({
 var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	tagName: "li",
 	id: function(){
-		return (this.model)? this.model.get("channel_id") : "new";
+		return (this.model)? this.model.get("id") : "new";
 	},
 	className:"channel_container container",
 	template: require("./hbtemplates/channel_container.handlebars"),
@@ -88,7 +88,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			channel: (this.model) ? this.model.attributes : null,
 			total_file_size: (this.model)? this.model.get("resource_size") : 0,
 			resource_count: (this.model)? this.model.get("resource_count") : 0,
-			channel_link : (this.model) ? this.model.get("channel_id") : null,
+			channel_link : (this.model) ? this.model.get("id") : null,
 			picture : this.thumbnail
 		}));
 		if(this.edit){

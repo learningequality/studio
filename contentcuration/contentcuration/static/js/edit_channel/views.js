@@ -145,7 +145,7 @@ BaseListView = BaseView.extend({
 	copy_selected:function(){
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = [];
-		var clipboard_root = window.current_channel.get_tree("clipboard").get_root();
+		var clipboard_root = window.current_channel.get_root("clipboard_tree");
 		var copyCollection = new Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
 			copyCollection.add($(list[i]).data("data").model);//.duplicate(clipboard_root, null);
@@ -312,7 +312,8 @@ var BaseListChannelItemView = BaseListItemView.extend({
 		if(!this.model){
     		this.delete_view();
 	    }else{
-	    	this.model.destroy({async:false});
+	    	this.model.save({"deleted":true}, {async:false});
+	    	this.delete_view();
 	    }
 	},
 	save: function(data, options){

@@ -31,9 +31,7 @@ var ContentNodeModel = BaseModel.extend({
 		title:"Untitled",
 		parent: null,
 		children:[],
-		kind: "topic",
 		license:1,
-		total_file_size:0,
 		tags:[]
     },
 
@@ -199,7 +197,7 @@ var ContentNodeCollection = BaseCollection.extend({
 });
 
 var ChannelModel = BaseModel.extend({
-    idAttribute: "channel_id",
+    //idAttribute: "channel_id",
 	root_list : "channel-list",
 	defaults: {
 		name: " ",
@@ -209,10 +207,10 @@ var ChannelModel = BaseModel.extend({
 		description:" "
     },
 
-    get_tree:function(tree_name){
-    	var tree = new TopicTreeModel({id : this.get(tree_name)});
-    	tree.fetch({async:false});
-    	return tree;
+    get_root:function(tree_name){
+    	var root = new ContentNodeModel({id : this.get(tree_name)});
+    	root.fetch({async:false});
+    	return root;
     }
 });
 
@@ -222,24 +220,6 @@ var ChannelCollection = BaseCollection.extend({
 	create_channel:function(data){
 		this.create(data, {async:false});
     }
-});
-
-var TopicTreeModel = BaseModel.extend({
-	root_list:"topictree-list",
-	defaults: {
-		name: "Untitled Tree",
-		is_published: false
-	},
-	get_root: function(){
-		var root = new ContentNodeModel({id: this.get("root_node")});
-		root.fetch({async:false});
-		return root;
-	}
-});
-
-var TopicTreeModelCollection = BaseCollection.extend({
-	model: TopicTreeModel,
-	list_name:"topictree-list"
 });
 
 var TagModel = BaseModel.extend({
@@ -362,8 +342,6 @@ var ContentKindCollection = BaseCollection.extend({
 module.exports = {
 	ContentNodeModel: ContentNodeModel,
 	ContentNodeCollection: ContentNodeCollection,
-	TopicTreeModel:TopicTreeModel,
-	TopicTreeModelCollection: TopicTreeModelCollection,
 	ChannelModel: ChannelModel,
 	ChannelCollection: ChannelCollection,
 	TagModel: TagModel,

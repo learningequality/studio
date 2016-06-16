@@ -597,7 +597,8 @@ var UploadedItem = ContentItem.extend({
         this.presets = new Models.FormatPresetCollection();
         this.originalData = {
             "title":this.model.get("title"),
-            "description":this.model.get("description")
+            "description":this.model.get("description"),
+            "changed" : this.model.get("changed")
         };
         this.render();
         this.load_tags();
@@ -662,6 +663,7 @@ var UploadedItem = ContentItem.extend({
     },
     set_edited:function(edited){
         this.edited = edited;
+        this.model.set("changed", true);
         if(edited){
             this.set_node();
             this.containing_list_view.enqueue(this);

@@ -21,30 +21,22 @@ class ChannelSerializer(serializers.ModelSerializer):
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
 
     def count_resources(self, channel):
-        if not channel.draft:
+        if not channel.main_tree:
             return 0
         else:
-            return count_files(channel.draft.root_node)
+            return count_files(channel.main_tree)
 
     def calculate_resources_size(self, channel):
-        if not channel.draft:
+        if not channel.main_tree:
             return 0
         else:
-            return get_total_size(channel.draft.root_node)
+            return get_total_size(channel.main_tree)
 
     class Meta:
         model = Channel
-        fields = ('channel_id', 'name', 'description', 'editors', 'draft', 'clipboard', 'deleted', 'published','resource_count', 'resource_size', 'version', 'thumbnail')
-
-class TopicTreeSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField('get_channel_name')
-
-    def get_channel_name(self, tree):
-        return tree.channel.name
-
-    class Meta:
-        model = TopicTree
-        fields = ('name', 'channel', 'root_node', 'id')
+        fields = ('id', 'name', 'description', 'editors', 'main_tree',
+                    'clipboard_tree', 'trash_tree','resource_count', 'resource_size',
+                    'version', 'thumbnail', 'deleted')
 
 class FileSerializer(serializers.ModelSerializer):
     content_copy = serializers.SerializerMethodField('get_file_url')
@@ -257,7 +249,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
-        fields = ('title', 'published', 'total_file_size', 'id', 'description', 'published',  'sort_order',
+        fields = ('title', 'changed', 'id', 'description', 'sort_order','author',
                  'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
                  'resource_count', 'resource_size', 'ancestors', 'tags', 'files', 'total_count')
 

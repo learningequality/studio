@@ -13,8 +13,8 @@ var Queue = BaseViews.BaseView.extend({
 		_.bindAll(this, 'toggle_queue', 'switch_to_queue', 'switch_to_trash');
 		this.render();
 		this.$el.find("#queue").css("margin-right", -this.$el.find("#main-queue").outerWidth());
-		this.clipboard_root = window.current_channel.get_tree("clipboard").get_root();
-		this.trash_root = window.current_channel.get_tree("deleted").get_root();
+		this.clipboard_root = window.current_channel.get_root("clipboard_tree");
+		this.trash_root = window.current_channel.get_root("trash_tree");
 		this.clipboard_queue = new QueueList({
 			collection: this.collection,
 			model: this.clipboard_root,

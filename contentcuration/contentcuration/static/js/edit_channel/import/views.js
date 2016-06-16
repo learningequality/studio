@@ -35,7 +35,7 @@ var ImportView = BaseViews.BaseModalView.extend({
 
         var channel_collection = new Models.ContentNodeCollection();
         this.other_channels.forEach(function(channel){
-            var node = channel.get_tree("draft").get_root();
+            var node = channel.get_root("main_tree");
             node.set({title:channel.get("name")});
             channel_collection.add(node);
         });

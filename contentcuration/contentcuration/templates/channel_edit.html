@@ -8,6 +8,7 @@
 
 	<script>
 		var channel = JSON.parse("{{ channel|escapejs}}");
+		var channels = JSON.parse("{{ channels |escapejs }}");
 		var license_list = JSON.parse("{{ license_list|escapejs}}");
 		var fformats = JSON.parse("{{ fileformat_list|escapejs }}");
 		var presets = JSON.parse("{{ fpreset_list|escapejs }}");
