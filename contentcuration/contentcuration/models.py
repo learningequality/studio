@@ -10,6 +10,7 @@ from django.db import IntegrityError, connections, models
 from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
+from django.dispatch import receiver
 
 from constants import content_kinds, extensions, presets
 
@@ -39,14 +40,6 @@ class FileOnDiskStorage(FileSystemStorage):
             logging.warn('Content copy "%s" already exists!' % name)
             return name
         return super(ContentCopyStorage, self)._save(name, content)
-
-class ContentCopyTracking(models.Model):
-    """
-    Record how many times a content copy are referenced by File objects.
-    If it reaches 0, it's supposed to be deleted.
-    """
-    referenced_count = models.IntegerField(blank=True, null=True)
-    content_copy_id = models.CharField(max_length=400, unique=True)
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
@@ -276,10 +269,6 @@ class File(models.Model):
         If the file_on_disk FileField gets passed a content copy:
             1. generate the MD5 from the content copy
             2. fill the other fields accordingly
-            3. update tracking for this content copy
-        If None is passed to the file_on_disk FileField:
-            1. delete the content copy.
-            2. update tracking for this content copy
         """
         if self.file_on_disk:  # if file_on_disk is supplied, hash out the file
             md5 = hashlib.md5()
@@ -290,21 +279,22 @@ class File(models.Model):
             self.file_size = self.file_on_disk.size
             self.extension = os.path.splitext(self.file_on_disk.name)[1]
         else:
-            # update ContentCopyTracking, if referenced_count reach 0, delete the content copy on disk
-            try:
-                content_copy_track = ContentCopyTracking.objects.get(content_copy_id=self.checksum)
-                content_copy_track.referenced_count -= 1
-                content_copy_track.save()
-                if content_copy_track.referenced_count == 0:
-                    content_copy_path = os.path.join(settings.CONTENT_COPY_DIR, self.checksum[0:1], self.checksum[1:2], self.checksum + self.extension)
-                    if os.path.isfile(content_copy_path):
-                        os.remove(content_copy_path)
-            except ContentCopyTracking.DoesNotExist:
-                pass
             self.checksum = None
             self.file_size = None
             self.extension = None
         super(File, self).save(*args, **kwargs)
+
+@receiver(models.signals.post_delete, sender=File)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """
+    Deletes file from filesystem if no other File objects are referencing the same file on disk
+    when corresponding `File` object is deleted.
+    Be careful! we don't know if this will work when perform bash delete on File obejcts.
+    """
+    if not File.objects.filter(file_on_disk=instance.file_on_disk.url):
+        content_copy_path = os.path.join(settings.STORAGE_ROOT, instance.checksum[0:1], instance.checksum[1:2], instance.checksum + instance.extension)
+        if os.path.isfile(content_copy_path):
+            os.remove(content_copy_path)
 
 class License(models.Model):
     """
