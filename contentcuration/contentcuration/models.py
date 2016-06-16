@@ -14,6 +14,9 @@ from django.dispatch import receiver
 
 from constants import content_kinds, extensions, presets
 
+def hyphenless_uuid():
+    return str(uuid4()).replace("-", "")
+
 def file_on_disk_name(instance, filename):
     """
     Create a name spaced file path from the File obejct's checksum property.
@@ -25,7 +28,7 @@ def file_on_disk_name(instance, filename):
     """
     h = instance.checksum
     basename, ext = os.path.splitext(filename)
-    return os.path.join(h[0], h[1], h + ext.lower())
+    return os.path.join(settings.STORAGE_ROOT, h[0], h[1], h + ext.lower())
 
 class FileOnDiskStorage(FileSystemStorage):
     """
@@ -43,7 +46,7 @@ class FileOnDiskStorage(FileSystemStorage):
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
-    channel_id = models.UUIDField(primary_key=True, default=uuid4)
+    channel_id = models.UUIDField(primary_key=True, default=hyphenless_uuid)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     author = models.CharField(max_length=400, blank=True)
@@ -151,7 +154,7 @@ class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
-    content_id = models.UUIDField(primary_key=False, default=uuid4, editable=False)
+    content_id = models.UUIDField(primary_key=False, default=hyphenless_uuid, editable=False)
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     kind = models.ForeignKey('ContentKind', related_name='content_metadatas', blank=True, null=True)
@@ -164,6 +167,8 @@ class ContentNode(MPTTModel, models.Model):
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
     sort_order = models.FloatField(max_length=50, default=0, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
     license_owner = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
+    cloned_source = TreeForeignKey('self', null=True, blank=True, models.SET_NULL, related_name='clones')
+    original_ndoe = TreeForeignKey('self', null=True, blank=True, models.SET_NULL, related_name='descendants')
 
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
@@ -292,15 +297,17 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     Be careful! we don't know if this will work when perform bash delete on File obejcts.
     """
     if not File.objects.filter(file_on_disk=instance.file_on_disk.url):
-        content_copy_path = os.path.join(settings.STORAGE_ROOT, instance.checksum[0:1], instance.checksum[1:2], instance.checksum + instance.extension)
-        if os.path.isfile(content_copy_path):
-            os.remove(content_copy_path)
+        file_on_disk_path = os.path.join(settings.STORAGE_ROOT, instance.checksum[0:1], instance.checksum[1:2], instance.checksum + instance.extension)
+        if os.path.isfile(file_on_disk_path):
+            os.remove(file_on_disk_path)
 
 class License(models.Model):
     """
     Normalize the license of ContentNode model
     """
     license_name = models.CharField(max_length=50)
+    license_url = models.URLField(blank=True)
+    license_description = models.TextField(blank=True)
     exists = models.BooleanField(
         default=False,
         verbose_name=_("license exists"),
