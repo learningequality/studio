@@ -304,6 +304,8 @@ class License(models.Model):
     Normalize the license of ContentNode model
     """
     license_name = models.CharField(max_length=50)
+    license_url = models.URLField(blank=True)
+    license_description = models.TextField(blank=True)
     exists = models.BooleanField(
         default=False,
         verbose_name=_("license exists"),
