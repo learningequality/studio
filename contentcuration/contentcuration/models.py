@@ -164,11 +164,14 @@ class FormatPreset(models.Model):
         return self.id
 
 class Language(models.Model):
-    lang_code = models.CharField(primary_key=True, max_length=400)
-    lang_name = models.CharField(max_length=400)
+    lang_code = models.CharField(max_length=2, db_index=True)
+    lang_subcode = models.CharField(max_length=2, db_index=True)
+    
+    def ietf_name(self):
+        return "{code}-{subcode}".format(code=self.lang_code, subcode=self.lang_subcode)
 
     def __str__(self):
-        return self.lang_name
+        return self.ietf_name
 
 class File(models.Model):
     """
