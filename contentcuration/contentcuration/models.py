@@ -139,8 +139,8 @@ class TopicTree(models.Model):
         verbose_name_plural = _("Topic trees")
 
 class ContentTag(models.Model):
-    tag_name = models.CharField(primary_key=True, max_length=30, unique=True)
-    tag_type = models.CharField(max_length=30, blank=True)
+    tag_name = models.CharField(max_length=30)
+    channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True)
     """
     def delete(self):
         # No other nodes except for node about to be deleted use tag
@@ -150,6 +150,9 @@ class ContentTag(models.Model):
 
     def __str__(self):
         return self.tag_name
+
+    class Meta:
+        unique_together = ['tag_name', 'channel']
 
 class ContentNode(MPTTModel, models.Model):
     """
