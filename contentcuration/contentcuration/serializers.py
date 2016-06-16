@@ -98,7 +98,7 @@ class CustomListSerializer(serializers.ListSerializer):
         existing_tags = []
         tag_names = list(set(tag_names)) #get rid of repetitive tag_names
         for name in tag_names:
-            tag_tuple = ContentTag.objects.get_or_create(tag_name=name)
+            tag_tuple = ContentTag.objects.get_or_create(tag_name=name, channel=instance[0].get_root().channel_main.all()[0].id)
             if tag_tuple[1]:
                 new_tags.append(tag_tuple[0])
             else:
