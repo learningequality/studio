@@ -19,8 +19,6 @@ var ChannelList  = BaseListView.extend({
 		this.user = options.user;
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(this.collection, "sync", this.render);
-
-        var self = this;
 	},
 	render: function() {
 		this.set_editing(false);
@@ -72,14 +70,17 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	template: require("./hbtemplates/channel_container.handlebars"),
 	dropzone_template: require("./hbtemplates/channel_profile_dropzone.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded','thumbnail_added','thumbnail_removed','create_dropzone');
+		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded',
+						'thumbnail_added','thumbnail_removed','create_dropzone', 'thumbnail_completed','thumbnail_failed');
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = options.edit;
 		this.containing_list_view = options.containing_list_view;
 		this.default_license = options.default_license;
-		this.thumbnail = (this.model)? this.model.get("thumbnail") : "/static/img/unicef logo.jpg";
+		this.original_thumbnail = (this.model && this.model.get("thumbnail"))? this.model.get("thumbnail") : "/static/img/unicef logo.jpg";
+		this.thumbnail = this.original_thumbnail;
 		this.render();
-		//this.dropzone = null;
+		this.dropzone = null;
+		this.thumbnail_success = true;
 	},
 
 	render: function() {
@@ -92,7 +93,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			picture : this.thumbnail
 		}));
 		if(this.edit){
-			//this.create_dropzone();
+			this.create_dropzone();
         }
 	},
 	events: {
@@ -107,18 +108,27 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		this.render();
 	},
 	thumbnail_uploaded:function(thumbnail){
-		this.thumbnail = $("#urlize_me")[0].src;
-		$(".preview_section").css("display", "none");
-		$("#dz-placeholder").css("display", "block");
-		$("#finished_area").css("display", "block");
+		this.thumbnail_error = null;
+	},
+	thumbnail_completed:function(){
+		if(!this.thumbnail_error){
+			this.thumbnail = $("#urlize_me")[0].src;
+		}else{
+			alert(this.thumbnail_error);
+		}
+		this.render();
 		this.enable_submit();
 	},
+	thumbnail_failed:function(data, error){
+		this.thumbnail_error = error;
+	},
 	thumbnail_added:function(thumbnail){
+		this.thumbnail_error = "Error uploading file: connection interrupted";
 		$("#dz-placeholder").css("display", "none");
-		$("#progress_area").css("display", "block");
 		this.disable_submit();
 	},
 	thumbnail_removed:function(thumbnail){
+		this.thumbnail_error = null;
 		$("#dz-placeholder").css("display", "block");
 		this.enable_submit();
 	},
@@ -141,6 +151,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		}
 	},
 	toggle_channel: function(event){
+		this.thumbnail = this.original_thumbnail;
 		this.containing_list_view.set_editing(false);
 		if(this.model){
 			this.edit = false;
@@ -157,29 +168,33 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		var data = {
 			name: title,
 			description: description,
-			//thumbnail : this.thumbnail
+			thumbnail : this.thumbnail
 		};
+		this.original_thumbnail = this.thumbnail;
 
 		this.display_load("Saving Channel...", function(){
 			self.edit = false;
 			self.save(data, {async:false});
-			console.log(self.model);
 			self.render();
 		});
 	},
+
 	create_dropzone:function(){
 		this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
 			maxFiles: 1,
 			clickable: ["#dz-placeholder", "#swap-thumbnail"],
-			acceptedFiles: "image/*",
+			acceptedFiles: "image/jpeg,image/png",
 			url: window.Urls.thumbnail_upload(),
 			previewTemplate:this.dropzone_template(),
 			previewsContainer: "#dropzone",
 			headers: {"X-CSRFToken": get_cookie("csrftoken")}
 		});
-    	this.dropzone.on("queuecomplete", this.thumbnail_uploaded);
+    	this.dropzone.on("success", this.thumbnail_uploaded);
     	this.dropzone.on("addedfile", this.thumbnail_added);
     	this.dropzone.on("removedfile", this.thumbnail_removed);
+    	this.dropzone.on("queuecomplete", this.thumbnail_completed);
+    	this.dropzone.on("error", this.thumbnail_failed);
+
 	}
 });
 

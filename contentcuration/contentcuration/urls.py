@@ -99,7 +99,7 @@ urlpatterns = [
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^channels/(?P<channel_id>[^/]+)', views.channel, name='channel'),
-    url(r'^thumbnail_upload/', views.thumbnail_upload, name="thumbnail_upload"),
+    url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
 ]
 
 

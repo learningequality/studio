@@ -123,15 +123,6 @@
 						cursor:pointer;
 						border:4px dashed @gray-400;
 						font-style:italic;
-					}
-
-					#dz-overlay{
-						position:absolute;
-						z-index:100;
-						width:@channel-profile-width * .9;
-						height:@channel-profile-width * .9;
-						background-color:gray;
-						padding-top:@channel-profile-width * .9 / 3;
 						opacity:0.8;
 					}
 
@@ -162,6 +153,12 @@
 							cursor:pointer;
 							font-weight:bold;
 						}
+					}
+					#dz-overlay{
+						position:absolute;
+						z-index:100;
+						width:@channel-profile-width * .9;
+						margin-top:- @channel-profile-width * .9 / 3;
 					}
 
 				}
