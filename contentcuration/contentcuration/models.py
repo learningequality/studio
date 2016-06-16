@@ -13,7 +13,7 @@ from django.utils.translation import ugettext as _
 
 from constants import content_kinds, extensions, presets
 
-def content_copy_name(instance, filename):
+def file_on_disk_name(instance, filename):
     """
     Create a name spaced file path from the File obejct's checksum property.
     This path will be used to store the content copy
@@ -26,7 +26,7 @@ def content_copy_name(instance, filename):
     basename, ext = os.path.splitext(filename)
     return os.path.join(h[0], h[1], h + ext.lower())
 
-class ContentCopyStorage(FileSystemStorage):
+class FileOnDiskStorage(FileSystemStorage):
     """
     Overrider FileSystemStorage's default save method to ignore duplicated file.
     """
@@ -257,7 +257,7 @@ class File(models.Model):
     """
     checksum = models.CharField(max_length=400, blank=True)
     file_size = models.IntegerField(blank=True, null=True)
-    content_copy = models.FileField(upload_to=content_copy_name, storage=ContentCopyStorage(), max_length=500, blank=True)
+    file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500, blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
@@ -273,29 +273,22 @@ class File(models.Model):
     def save(self, *args, **kwargs):
         """
         Overrider the default save method.
-        If the content_copy FileField gets passed a content copy:
+        If the file_on_disk FileField gets passed a content copy:
             1. generate the MD5 from the content copy
             2. fill the other fields accordingly
             3. update tracking for this content copy
-        If None is passed to the content_copy FileField:
+        If None is passed to the file_on_disk FileField:
             1. delete the content copy.
             2. update tracking for this content copy
         """
-        if self.content_copy:  # if content_copy is supplied, hash out the file
+        if self.file_on_disk:  # if file_on_disk is supplied, hash out the file
             md5 = hashlib.md5()
-            for chunk in self.content_copy.chunks():
+            for chunk in self.file_on_disk.chunks():
                 md5.update(chunk)
 
             self.checksum = md5.hexdigest()
-            self.file_size = self.content_copy.size
-            self.extension = os.path.splitext(self.content_copy.name)[1]
-            # update ContentCopyTracking
-            try:
-                content_copy_track = ContentCopyTracking.objects.get(content_copy_id=self.checksum)
-                content_copy_track.referenced_count += 1
-                content_copy_track.save()
-            except ContentCopyTracking.DoesNotExist:
-                ContentCopyTracking.objects.create(referenced_count=1, content_copy_id=self.checksum)
+            self.file_size = self.file_on_disk.size
+            self.extension = os.path.splitext(self.file_on_disk.name)[1]
         else:
             # update ContentCopyTracking, if referenced_count reach 0, delete the content copy on disk
             try:
