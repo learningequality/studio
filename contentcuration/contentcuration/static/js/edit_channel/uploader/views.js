@@ -76,6 +76,11 @@ var AddContentView = BaseViews.BaseListView.extend({
             "title": (this.counter > 0)? "Topic " + this.counter : "Topic",
             "sort_order" : this.main_collection.length + this.collection.length
         }, {async:false});
+        topic.set({
+            "original_node" : topic.get("id"),
+            "cloned_source" : topic.get("id")
+        });
+        console.log("current",topic)
         this.counter++;
         var item_view = new NodeListItem({
             containing_list_view: this,
@@ -558,7 +563,6 @@ var NodeListItem = ContentItem.extend({
         this.containing_list_view = options.containing_list_view;
         this.file_data = options.file_data;
         this.render();
-        console.log("Model us:", this.model);
     },
     render: function() {
         this.$el.html(this.template({
@@ -628,7 +632,6 @@ var UploadedItem = ContentItem.extend({
         }
     },
     load_presets:function(){
-        console.log("now",this.model);
         var self = this;
         window.formatpresets.forEach(function(preset){
             if(preset.get("kind") == self.model.get("kind")){
@@ -658,7 +661,6 @@ var UploadedItem = ContentItem.extend({
             update_models:!this.containing_list_view.allow_add,
             preview : this.containing_list_view.preview_view
         });
-        console.log("NOw",this.model);
     },
     remove_topic: function(){
         this.delete_item();

@@ -52,6 +52,9 @@ def channel(request, channel_id):
     contentkinds = ContentKind.objects.all()
     contentkind_serializer = ContentKindSerializer(contentkinds, many=True)
 
+    channel_tags = ContentTag.objects.all()
+    channel_tags_serializer = TagSerializer(channel_tags, many=True)
+
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
                                                 "channels" : JSONRenderer().render(channel_list_serializer.data),
                                                 "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),
@@ -150,7 +153,9 @@ def _duplicate_node(node, parent=None):
         parent=ContentNode.objects.get(pk=parent) if parent else None,
         sort_order=node.sort_order,
         license_owner=node.license_owner,
-        changed=True
+        changed=True,
+        original_node=node.original_node,
+        cloned_source=node
     )
 
     # add tags now

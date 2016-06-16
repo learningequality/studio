@@ -135,7 +135,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
             }
         });
 
-        var node = new Models.ContentNodeModel({
+        var node = this.nodeCollection.create({
             title : new_file_data.data.name.split(".")[0],
             parent : null,
             children : [],
@@ -143,8 +143,13 @@ var FileUploadView = BaseViews.BaseListView.extend({
             license: 1,
             total_file_size : 0,
             tags : []
+        }, {async:false});
+
+        node.set({
+            original_node : node.get("id"),
+            cloned_source : node.get("id")
         });
-        this.nodeCollection.create(node, {async:false});
+
         fileModel.set({
             file_size : new_file_data.data.size,
             contentnode: node.id
