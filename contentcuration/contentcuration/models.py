@@ -167,6 +167,7 @@ class ContentNode(MPTTModel, models.Model):
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
     sort_order = models.FloatField(max_length=50, default=0, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
     license_owner = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
+    cloned_source = TreeForeignKey('self', null=True, blank=True, models.SET_NULL, related_name='clones')
 
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
