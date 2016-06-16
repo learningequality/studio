@@ -10,10 +10,11 @@ from django.db import IntegrityError, connections, models
 from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
+from django.dispatch import receiver
 
 from constants import content_kinds, extensions, presets
 
-def content_copy_name(instance, filename):
+def file_on_disk_name(instance, filename):
     """
     Create a name spaced file path from the File obejct's checksum property.
     This path will be used to store the content copy
@@ -24,9 +25,9 @@ def content_copy_name(instance, filename):
     """
     h = instance.checksum
     basename, ext = os.path.splitext(filename)
-    return os.path.join(h[0:1], h[1:2], h + ext.lower())
+    return os.path.join(h[0], h[1], h + ext.lower())
 
-class ContentCopyStorage(FileSystemStorage):
+class FileOnDiskStorage(FileSystemStorage):
     """
     Overrider FileSystemStorage's default save method to ignore duplicated file.
     """
@@ -39,28 +40,6 @@ class ContentCopyStorage(FileSystemStorage):
             logging.warn('Content copy "%s" already exists!' % name)
             return name
         return super(ContentCopyStorage, self)._save(name, content)
-
-class ContentCopyTracking(models.Model):
-    """
-    Record how many times a content copy are referenced by File objects.
-    If it reaches 0, it's supposed to be deleted.
-    """
-    referenced_count = models.IntegerField(blank=True, null=True)
-    content_copy_id = models.CharField(max_length=400, unique=True)
-
-class License(models.Model):
-    """
-    Normalize the license of ContentNode model
-    """
-    license_name = models.CharField(max_length=50)
-    exists = models.BooleanField(
-        default=False,
-        verbose_name=_("license exists"),
-        help_text=_("Tells whether or not a content item is licensed to share"),
-    )
-
-    def __str__(self):
-        return self.license_name
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
@@ -100,11 +79,14 @@ class Channel(models.Model):
         verbose_name_plural = _("Channels")
 
 class ContentTag(models.Model):
-    tag_name = models.CharField(primary_key=True, max_length=30, unique=True)
-    tag_type = models.CharField(max_length=30, blank=True)
+    tag_name = models.CharField(max_length=30)
+    channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True)
 
     def __str__(self):
         return self.tag_name
+
+    class Meta:
+        unique_together = ['tag_name', 'channel']
 
 class ContentNode(MPTTModel, models.Model):
     """
@@ -166,7 +148,7 @@ class FormatPreset(models.Model):
 class Language(models.Model):
     lang_code = models.CharField(max_length=2, db_index=True)
     lang_subcode = models.CharField(max_length=2, db_index=True)
-    
+
     def ietf_name(self):
         return "{code}-{subcode}".format(code=self.lang_code, subcode=self.lang_subcode)
 
@@ -180,7 +162,7 @@ class File(models.Model):
     """
     checksum = models.CharField(max_length=400, blank=True)
     file_size = models.IntegerField(blank=True, null=True)
-    content_copy = models.FileField(upload_to=content_copy_name, storage=ContentCopyStorage(), max_length=500, blank=True)
+    file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500, blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
@@ -196,74 +178,79 @@ class File(models.Model):
     def save(self, *args, **kwargs):
         """
         Overrider the default save method.
-        If the content_copy FileField gets passed a content copy:
+        If the file_on_disk FileField gets passed a content copy:
             1. generate the MD5 from the content copy
             2. fill the other fields accordingly
-            3. update tracking for this content copy
-        If None is passed to the content_copy FileField:
-            1. delete the content copy.
-            2. update tracking for this content copy
         """
-        if self.content_copy:  # if content_copy is supplied, hash out the file
+        if self.file_on_disk:  # if file_on_disk is supplied, hash out the file
             md5 = hashlib.md5()
-            for chunk in self.content_copy.chunks():
+            for chunk in self.file_on_disk.chunks():
                 md5.update(chunk)
 
             self.checksum = md5.hexdigest()
-            self.file_size = self.content_copy.size
-            self.extension = os.path.splitext(self.content_copy.name)[1]
-            # update ContentCopyTracking
-            try:
-                content_copy_track = ContentCopyTracking.objects.get(content_copy_id=self.checksum)
-                content_copy_track.referenced_count += 1
-                content_copy_track.save()
-            except ContentCopyTracking.DoesNotExist:
-                ContentCopyTracking.objects.create(referenced_count=1, content_copy_id=self.checksum)
+            self.file_size = self.file_on_disk.size
+            self.extension = os.path.splitext(self.file_on_disk.name)[1]
         else:
-            # update ContentCopyTracking, if referenced_count reach 0, delete the content copy on disk
-            try:
-                content_copy_track = ContentCopyTracking.objects.get(content_copy_id=self.checksum)
-                content_copy_track.referenced_count -= 1
-                content_copy_track.save()
-                if content_copy_track.referenced_count == 0:
-                    content_copy_path = os.path.join(settings.CONTENT_COPY_DIR, self.checksum[0:1], self.checksum[1:2], self.checksum + self.extension)
-                    if os.path.isfile(content_copy_path):
-                        os.remove(content_copy_path)
-            except ContentCopyTracking.DoesNotExist:
-                pass
             self.checksum = None
             self.file_size = None
             self.extension = None
         super(File, self).save(*args, **kwargs)
 
+@receiver(models.signals.post_delete, sender=File)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """
+    Deletes file from filesystem if no other File objects are referencing the same file on disk
+    when corresponding `File` object is deleted.
+    Be careful! we don't know if this will work when perform bash delete on File obejcts.
+    """
+    if not File.objects.filter(file_on_disk=instance.file_on_disk.url):
+        content_copy_path = os.path.join(settings.STORAGE_ROOT, instance.checksum[0:1], instance.checksum[1:2], instance.checksum + instance.extension)
+        if os.path.isfile(content_copy_path):
+            os.remove(content_copy_path)
+
+class License(models.Model):
+    """
+    Normalize the license of ContentNode model
+    """
+    license_name = models.CharField(max_length=50)
+    exists = models.BooleanField(
+        default=False,
+        verbose_name=_("license exists"),
+        help_text=_("Tells whether or not a content item is licensed to share"),
+    )
+
+    def __str__(self):
+        return self.license_name
+
 class PrerequisiteContentRelationship(models.Model):
     """
     Predefine the prerequisite relationship between two ContentNode objects.
     """
-    contentnode_1 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_1')
-    contentnode_2 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_2')
+    target_node = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_target_node')
+    prerequisite = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_prerequisite')
 
     class Meta:
-        unique_together = ['contentnode_1', 'contentnode_2']
+        unique_together = ['target_node', 'prerequisite']
 
     def clean(self, *args, **kwargs):
         # self reference exception
-        if self.contentnode_1 == self.contentnode_2:
+        if self.target_node == self.prerequisite:
             raise IntegrityError('Cannot self reference as prerequisite.')
         # immediate cyclic exception
         elif PrerequisiteContentRelationship.objects.using(self._state.db)\
-                .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
+                .filter(target_node=self.prerequisite, prerequisite=self.target_node):
             raise IntegrityError(
                 'Note: Prerequisite relationship is directional! %s and %s cannot be prerequisite of each other!'
-                % (self.contentnode_1, self.contentnode_2))
+                % (self.target_node, self.prerequisite))
         # distant cyclic exception
         # elif <this is a nice to have exception, may implement in the future when the priority raises.>
-        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (self.contentnode_1, self.contentnode_2))
+        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (self.target_node, self.prerequisite))
         super(PrerequisiteContentRelationship, self).clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         self.full_clean()
         super(PrerequisiteContentRelationship, self).save(*args, **kwargs)
+
 
 
 class RelatedContentRelationship(models.Model):
