@@ -409,6 +409,11 @@ var BaseEditorView = BaseListView.extend({
 		var success = true;
 		this.unsaved_queue.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
+			if(entry.format_view){
+				console.log("PREVIEW", entry.format_view);
+				entry.model.set("files", entry.format_view.model.get("files"));
+				console.log("SETTING:", entry.model)
+			}
 			if(entry.model.validationError){
 				self.handle_error(entry);
 				success = false;

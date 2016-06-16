@@ -371,7 +371,6 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     set_format:function(formatModel, preset){
         var assigned_preset = this.presets.get(preset);
         assigned_preset.attached_format = formatModel;
-        // assigned_preset.set("attached_format", formatModel);
         if(formatModel){
             formatModel.set("preset", assigned_preset.id);
         }
@@ -509,10 +508,10 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             this.container.files_to_delete.add(this.preset.attached_format);
         }
         this.preset.attached_format = this.file;
-        this.render();
         this.container.update_size();
         this.container.update_count();
         this.container.set_model();
+        this.render();
     },
     file_added: function(file) {
         if(this.file){

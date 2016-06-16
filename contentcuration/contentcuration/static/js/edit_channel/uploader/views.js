@@ -160,7 +160,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
     initialize: function(options) {
         _.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',"select_item",
-                        'add_tag','save_and_finish','add_more','set_edited',
+                        'add_tag','save_and_finish','add_more','set_edited','enable_submit', 'disable_submit',
                         'render_details', 'render_preview', 'remove_tag', 'update_count');
         this.parent_view = options.parent_view;
         this.collection = (options.collection)? options.collection : new Models.ContentNodeCollection();
@@ -400,15 +400,15 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     enable_submit:function(){
         this.$("#upload_save_button").removeAttr("disabled");
         this.$("#upload_save_finish_button").removeAttr("disabled");
+        this.$("#add_more_button").removeAttr("disabled");
     },
     disable_submit:function(){
-        this.$("#upload_save_button").attr("disabled", "disabled");
+       this.$("#upload_save_button").attr("disabled", "disabled");
         this.$("#upload_save_finish_button").attr("disabled", "disabled");
+        this.$("#add_more_button").attr("disabled", "disabled");
     },
     select_item:function(event){
         this.$(".upload_item_checkbox").prop("checked", false);
-        console.log($(event.target).parent("li").find(".upload_item_checkbox"));
-       // this.$(event.target).find(".upload_item_checkbox").prop("checked", true);
     },
     check_item: function(event){
         this.$el.find("#uploaded_list .uploaded").removeClass("current_item");
@@ -558,6 +558,7 @@ var NodeListItem = ContentItem.extend({
         this.containing_list_view = options.containing_list_view;
         this.file_data = options.file_data;
         this.render();
+        console.log("Model us:", this.model);
     },
     render: function() {
         this.$el.html(this.template({
@@ -589,7 +590,7 @@ var UploadedItem = ContentItem.extend({
     template: require("./hbtemplates/uploaded_list_item.handlebars"),
     format_view:null,
     initialize: function(options) {
-        _.bindAll(this, 'remove_topic');
+        _.bindAll(this, 'remove_topic', 'enable_submit', 'disable_submit');
         this.containing_list_view = options.containing_list_view;
         this.edited = false;
         this.checked = false;
@@ -627,6 +628,7 @@ var UploadedItem = ContentItem.extend({
         }
     },
     load_presets:function(){
+        console.log("now",this.model);
         var self = this;
         window.formatpresets.forEach(function(preset){
             if(preset.get("kind") == self.model.get("kind")){
@@ -635,8 +637,7 @@ var UploadedItem = ContentItem.extend({
                 self.model.get("files").forEach(function(f){
                     var file_data = (f.attributes) ? f.attributes : f;
                     if(preset.get("id") == file_data.preset){
-                        new_slot.attached_format = new Models.FileModel({id:file_data.id});
-                        new_slot.attached_format.fetch({async:false});
+                        new_slot.attached_format = new Models.FileModel(file_data);
                         new_slot.set({
                             file_size : file_data.file_size,
                             contentnode: file_data.contentnode,
@@ -657,6 +658,7 @@ var UploadedItem = ContentItem.extend({
             update_models:!this.containing_list_view.allow_add,
             preview : this.containing_list_view.preview_view
         });
+        console.log("NOw",this.model);
     },
     remove_topic: function(){
         this.delete_item();
@@ -693,10 +695,14 @@ var UploadedItem = ContentItem.extend({
         this.set_edited(true);
     },
     enable_submit:function(){
+        this.$el.off('click');
         this.set_edited(true);
     },
     disable_submit:function(){
-        this.set_edited(true);
+        this.$el.on('click', function(event) {
+          event.preventDefault();
+        });
+        this.$el.css("pointer", "not-allowed");
     }
 });
 
