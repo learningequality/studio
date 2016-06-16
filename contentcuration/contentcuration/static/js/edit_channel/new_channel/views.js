@@ -93,7 +93,10 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			picture : this.thumbnail
 		}));
 		if(this.edit){
-			this.create_dropzone();
+			var self = this;
+			setTimeout(function(){
+				self.create_dropzone();
+			}, 100);
         }
 	},
 	events: {

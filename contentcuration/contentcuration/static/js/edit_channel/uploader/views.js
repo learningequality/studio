@@ -620,10 +620,10 @@ var UploadedItem = ContentItem.extend({
     },
     load_tags:function(){
         this.tags = [];
-        var self = this;
         if(this.model.get("tags")){
+            var self = this;
             this.model.get("tags").forEach(function(entry){
-                self.tags.push((entry.tag_name) ? entry.tag_name : entry);
+                self.tags.push(window.contenttags.get_or_fetch(entry).get("tag_name"));
             });
         }
     },

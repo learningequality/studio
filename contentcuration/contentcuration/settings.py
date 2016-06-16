@@ -15,7 +15,7 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "content")
+STORAGE_ROOT = os.path.join(BASE_DIR, "storage")
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
@@ -116,10 +116,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-MEDIA_URL = '/content/'
+STORAGE_URL = '/storage/'
 
 DEFAULT_FILE_STORAGE = 'kolibri.content.models.ContentCopyStorage'
 
 LOGIN_REDIRECT_URL = '/exercises/'
-
-CONTENT_COPY_DIR = MEDIA_ROOT

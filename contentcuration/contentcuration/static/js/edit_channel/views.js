@@ -8,11 +8,6 @@ var BaseView = Backbone.View.extend({
 	undo_manager: null,
 	queue_view: null,
 	delete_view: function(){
-		//this.undelegateEvents();
-		//this.unbind();
-		/*if(this.containing_list_view){
-			this.containing_list_view.views.splice(this.containing_list_view.views.indexOf(this),1);
-		}*/
 		this.remove();
 	},
 	set_editing: function(edit_mode_on){
@@ -410,9 +405,7 @@ var BaseEditorView = BaseListView.extend({
 		this.unsaved_queue.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
 			if(entry.format_view){
-				console.log("PREVIEW", entry.format_view);
 				entry.model.set("files", entry.format_view.model.get("files"));
-				console.log("SETTING:", entry.model)
 			}
 			if(entry.model.validationError){
 				self.handle_error(entry);

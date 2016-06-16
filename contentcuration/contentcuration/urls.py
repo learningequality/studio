@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
-from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem, ContentKind
+from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem, ContentKind, Language
 import serializers
 import views
 from contentcuration import api
@@ -31,6 +31,9 @@ class LicenseViewSet(viewsets.ModelViewSet):
     queryset = License.objects.all()
     serializer_class = serializers.LicenseSerializer
 
+class LanguageViewSet(viewsets.ModelViewSet):
+    queryset = Language.objects.all()
+    serializer_class = serializers.LanguageSerializer
 
 class ChannelViewSet(viewsets.ModelViewSet):
     queryset = Channel.objects.all()
@@ -72,6 +75,7 @@ class AssessmentItemViewSet(BulkModelViewSet):
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
+router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'exercise', ExerciseViewSet)
 router.register(r'file', FileViewSet)
@@ -108,5 +112,5 @@ urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js
 if settings.DEBUG:
     # static files (images, css, javascript, etc.)
     urlpatterns += [
-        url(r'^' + settings.MEDIA_URL[1:-1] + '(?P<path>.*)$', 'django.views.static.serve', {
-        'document_root': settings.MEDIA_ROOT})]
+        url(r'^' + settings.STORAGE_URL[1:-1] + '(?P<path>.*)$', 'django.views.static.serve', {
+        'document_root': settings.STORAGE_ROOT})]

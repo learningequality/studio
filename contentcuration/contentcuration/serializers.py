@@ -14,7 +14,12 @@ from django.conf import settings
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = License
-        fields = ('license_name', 'exists', 'id')
+        fields = ('license_name', 'exists', 'id', 'license_url', 'license_description')
+
+class LanguageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Language
+        fields = ('lang_code', 'lang_subcode', 'id')
 
 class ChannelSerializer(serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
@@ -39,16 +44,16 @@ class ChannelSerializer(serializers.ModelSerializer):
                     'version', 'thumbnail', 'deleted')
 
 class FileSerializer(serializers.ModelSerializer):
-    content_copy = serializers.SerializerMethodField('get_file_url')
+    file_on_disk = serializers.SerializerMethodField('get_file_url')
 
     def get(*args, **kwargs):
          return super.get(*args, **kwargs)
     class Meta:
         model = File
-        fields = ('id', 'checksum', 'file_size', 'content_copy', 'contentnode', 'file_format', 'preset', 'lang','original_filename')
+        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'lang','original_filename')
 
     def get_file_url(self, obj):
-        return obj.content_copy.url
+        return obj.file_on_disk.url
 
 class FileFormatSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,14 +76,17 @@ class CustomListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
         node_mapping = {node.id: node for node in instance}
         update_nodes = {}
+        tag_mapping = {}
         ret = []
         tag_names = []
 
         with transaction.atomic():
             for item in validated_data:
+                item_tags = item.get('tags')
                 tag_names += item.pop('tags')
                 if 'id' in item:
                     update_nodes[item['id']] = item
+                    tag_mapping[item['id']] = item_tags
                 else:
                     # create new nodes
                     ret.append(ContentNode.objects.create(**item))
@@ -90,7 +98,7 @@ class CustomListSerializer(serializers.ListSerializer):
         existing_tags = []
         tag_names = list(set(tag_names)) #get rid of repetitive tag_names
         for name in tag_names:
-            tag_tuple = ContentTag.objects.get_or_create(tag_name=name, channel=instance[0].get_root().channel_main.all()[0].id)
+            tag_tuple = ContentTag.objects.get_or_create(tag_name=name, channel_id=instance[0].get_root().channel_main.all()[0].id)
             if tag_tuple[1]:
                 new_tags.append(tag_tuple[0])
             else:
@@ -106,6 +114,7 @@ class CustomListSerializer(serializers.ListSerializer):
                     bulk_adding_list.append(ThroughModel(node_id=node.pk, contenttag_id=tag.pk))
             ThroughModel.objects.bulk_create(bulk_adding_list)
 
+        channel_tags = new_tags+existing_tags
         # Perform updates.
         if update_nodes:
             for node_id, data in update_nodes.items():
@@ -114,11 +123,10 @@ class CustomListSerializer(serializers.ListSerializer):
                     # potential optimization opportunity
                     for attr, value in data.items():
                         setattr(node, attr, value)
-
-                    if new_tags:
-                        setattr(node, 'tags', new_tags+existing_tags)
-                    else:
-                        setattr(node, 'tags', existing_tags)
+                    taglist = []
+                    for tagstr in tag_mapping.get(node_id, None):
+                        taglist.append(next(tag_itm for tag_itm in channel_tags if tag_itm.tag_name==tagstr))
+                    setattr(node, 'tags', taglist)
 
                     node.save()
                     ret.append(node)
@@ -256,7 +264,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
    class Meta:
     model = ContentTag
-    fields = ('tag_name', 'tag_type')
+    fields = ('tag_name', 'channel', 'id')
 
 
 class ExerciseSerializer(serializers.ModelSerializer):

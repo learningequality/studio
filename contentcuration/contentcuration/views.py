@@ -14,8 +14,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer
 
 def base(request):
     return redirect('channels')    # redirect to the channel list page
@@ -51,12 +51,14 @@ def channel(request, channel_id):
 
     contentkinds = ContentKind.objects.all()
     contentkind_serializer = ContentKindSerializer(contentkinds, many=True)
+
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
                                                 "channels" : JSONRenderer().render(channel_list_serializer.data),
                                                 "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data),
                                                  "fpreset_list" : JSONRenderer().render(formatpreset_serializer.data),
-                                                 "ckinds_list" : JSONRenderer().render(contentkind_serializer.data) })
+                                                 "ckinds_list" : JSONRenderer().render(contentkind_serializer.data),
+                                                 "ctags": JSONRenderer().render(channel_tags_serializer.data)})
 
 def exercise_list(request):
 
@@ -100,7 +102,7 @@ def file_upload(request):
     if request.method == 'POST':
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
         original_filename = request.FILES.values()[0]._name
-        file_object = File(content_copy=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename)
+        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,

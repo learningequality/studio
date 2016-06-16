@@ -60,6 +60,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.channels = this.channelCollection;
 		window.formatpresets = this.formatpresets;
 		window.contentkinds = this.contentkinds;
+		window.contenttags = new Models.TagCollection(window.channel_tags);
 
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({

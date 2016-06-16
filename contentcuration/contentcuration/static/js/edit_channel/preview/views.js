@@ -60,7 +60,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
         var location ="";
         var extension = "";
         if(this.current_preview){
-            location = this.current_preview.content_copy;
+            location = this.current_preview.file_on_disk;
             extension = this.current_preview.file_format;
         }
 

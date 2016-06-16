@@ -223,19 +223,26 @@ var ChannelCollection = BaseCollection.extend({
 });
 
 var TagModel = BaseModel.extend({
-	root_list : "tag-list",
+	root_list : "contenttag-list",
 	defaults: {
 		tag_name: "Untagged"
     }
-   /* get_or_create:function(){
-		var collection = new TagCollection();
-		collection.get_or_create(this.get("tag_name"), this.get("tag_type"));
-	}*/
 });
 
 var TagCollection = BaseCollection.extend({
 	model: TagModel,
-	list_name:"tag-list"
+	list_name:"contenttag-list",
+	get_or_fetch:function(id){
+		var tag = this.get(id);
+		if(!tag){
+			tag = new TagModel({id:id});
+			tag.fetch({async:false});
+			if(tag){
+				this.add(tag);
+			}
+		}
+		return tag;
+	}
 });
 
 /**** MODELS SPECIFIC TO FILE NODES ****/
@@ -345,6 +352,7 @@ module.exports = {
 	ChannelModel: ChannelModel,
 	ChannelCollection: ChannelCollection,
 	TagModel: TagModel,
+	TagCollection:TagCollection,
 	FileFormatCollection:FileFormatCollection,
 	LicenseCollection:LicenseCollection,
 	FileCollection: FileCollection,
