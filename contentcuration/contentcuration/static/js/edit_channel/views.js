@@ -363,7 +363,11 @@ var BaseEditorView = BaseListView.extend({
 		this.parent_view.set_editing(false);
 		var self = this;
 		this.views.forEach(function(entry){
-			entry.model.set({tags: entry.tags});
+			var tags = [];
+			entry.tags.forEach(function(tag){
+				tags.push("{\"name\" : \"" + tag + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
+			})
+			entry.model.set({tags: tags});
 			if(entry.format_view){
 				entry.format_view.update_file();
 				entry.format_view.clean_files();

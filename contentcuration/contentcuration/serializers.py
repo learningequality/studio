@@ -1,4 +1,5 @@
 import logging
+import json
 from contentcuration.models import *
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
@@ -97,8 +98,11 @@ class CustomListSerializer(serializers.ListSerializer):
         new_tags = []
         existing_tags = []
         tag_names = list(set(tag_names)) #get rid of repetitive tag_names
+
         for name in tag_names:
-            tag_tuple = ContentTag.objects.get_or_create(tag_name=name, channel_id=instance[0].get_root().channel_main.all()[0].id)
+            tag_data = json.loads(name)
+            tag_tuple = ContentTag.objects.get_or_create(tag_name=tag_data['name'], channel_id=tag_data['channel'])
+
             if tag_tuple[1]:
                 new_tags.append(tag_tuple[0])
             else:
@@ -115,6 +119,7 @@ class CustomListSerializer(serializers.ListSerializer):
             ThroughModel.objects.bulk_create(bulk_adding_list)
 
         channel_tags = new_tags+existing_tags
+
         # Perform updates.
         if update_nodes:
             for node_id, data in update_nodes.items():
@@ -125,7 +130,9 @@ class CustomListSerializer(serializers.ListSerializer):
                         setattr(node, attr, value)
                     taglist = []
                     for tagstr in tag_mapping.get(node_id, None):
-                        taglist.append(next(tag_itm for tag_itm in channel_tags if tag_itm.tag_name==tagstr))
+                        tag_data = json.loads(tagstr)
+                        logging.warning(tag_data['channel'] )
+                        taglist.append(next(tag_itm for tag_itm in channel_tags if all( [ tag_itm.tag_name==tag_data['name'],  tag_itm.channel_id==tag_data['channel']] ) ))
                     setattr(node, 'tags', taglist)
 
                     node.save()

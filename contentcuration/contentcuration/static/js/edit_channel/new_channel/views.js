@@ -17,8 +17,7 @@ var ChannelList  = BaseListView.extend({
 		this.collection = options.channels;
 		this.render();
 		this.user = options.user;
-        this.listenTo(this.collection, "remove", this.render);
-        this.listenTo(this.collection, "sync", this.render);
+        //this.listenTo(this.collection, "sync", this.render);
 	},
 	render: function() {
 		this.set_editing(false);
@@ -76,7 +75,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		this.edit = options.edit;
 		this.containing_list_view = options.containing_list_view;
 		this.default_license = options.default_license;
-		this.original_thumbnail = (this.model && this.model.get("thumbnail"))? this.model.get("thumbnail") : "/static/img/unicef logo.jpg";
+		this.original_thumbnail = (this.model && this.model.get("thumbnail"))? this.model.get("thumbnail") : "/static/img/kolibri_placeholder.png";
 		this.thumbnail = this.original_thumbnail;
 		this.render();
 		this.dropzone = null;
@@ -95,7 +94,9 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		if(this.edit){
 			var self = this;
 			setTimeout(function(){
-				self.create_dropzone();
+				if(!(self.model && self.model.get("deleted"))){
+					self.create_dropzone();
+				}
 			}, 100);
         }
 	},
@@ -147,6 +148,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			var self = this;
 			this.display_load("Deleting Channel...", function(){
 				self.delete();
+				self.delete_view();
 			});
 		}else if(!this.model){
 			this.containing_list_view.set_editing(false);
