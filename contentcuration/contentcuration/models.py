@@ -117,8 +117,8 @@ class ContentNode(MPTTModel, models.Model):
     sort_order = models.FloatField(max_length=50, default=0, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
     license_owner = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
     author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"))
-    cloned_source = TreeForeignKey('self', models.SET_NULL, null=True, blank=True, related_name='clones')
-    original_node = TreeForeignKey('self', models.SET_NULL, null=True, blank=True, related_name='duplicates')
+    cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
+    original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
 
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
