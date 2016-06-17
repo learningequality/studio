@@ -130,6 +130,7 @@ var ContentNodeModel = BaseModel.extend({
 var ContentNodeCollection = BaseCollection.extend({
 	model: ContentNodeModel,
 	list_name:"contentnode-list",
+	highest_sort_order: 1,
 
 	save: function(callback) {
 		var self = this;
@@ -173,6 +174,7 @@ var ContentNodeCollection = BaseCollection.extend({
     		return node.get("sort_order");
     	};
     	this.sort();
+    	this.highest_sort_order = (this.length > 0)? this.at(this.length - 1).get("sort_order") : 1;
     },
     duplicate:function(target_parent, options){
     	var copied_list = [];

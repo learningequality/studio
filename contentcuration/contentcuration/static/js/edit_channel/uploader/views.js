@@ -303,7 +303,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                             }
                         }
                         if(!self.errorsFound && self.allow_add){
-                            self.parent_view.add_nodes(self.collection, self.main_collection.length);
+                            self.parent_view.add_nodes(self.collection, self.main_collection.highest_sort_order);
                         }
                         self.$el.css("visibility", "visible");
                         if(callback){
