@@ -1,6 +1,6 @@
 import logging
 import os
-from uuid import uuid4
+import uuid
 import hashlib
 
 from django.conf import settings
@@ -18,17 +18,14 @@ class UUIDField(models.CharField):
 
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = 32
-        self.random = kwargs.pop("random", False)
+        self.hyphenless = kwargs.pop("hyphenless", False)
         super(UUIDField, self).__init__(*args, **kwargs)
 
     def get_default(self):
-        if self.random:
-            return uuid.uuid4().hex
+        if self.hyphenless:
+            return self.default().hex
         else:
             return super(UUIDField, self).get_default()
-
-def hyphenless_uuid():
-    return str(uuid4()).replace("-", "")
 
 def file_on_disk_name(instance, filename):
     """
@@ -59,7 +56,7 @@ class FileOnDiskStorage(FileSystemStorage):
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
-    id = UUIDField(primary_key=True, default=hyphenless_uuid)
+    id = UUIDField(primary_key=True, hyphenless=True, default=uuid.uuid4)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     version = models.IntegerField(default=0)
@@ -108,7 +105,7 @@ class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
-    content_id = UUIDField(primary_key=False, default=hyphenless_uuid, editable=False)
+    content_id = UUIDField(primary_key=False, hyphenless=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
@@ -120,8 +117,8 @@ class ContentNode(MPTTModel, models.Model):
     sort_order = models.FloatField(max_length=50, default=0, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
     license_owner = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
     author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"))
-    cloned_source = TreeForeignKey('self', models.SET_NULL, null=True, blank=True, related_name='clones')
-    original_node = TreeForeignKey('self', models.SET_NULL, null=True, blank=True, related_name='duplicates')
+    cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
+    original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
 
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
