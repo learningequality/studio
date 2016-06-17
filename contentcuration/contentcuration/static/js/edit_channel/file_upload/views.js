@@ -182,8 +182,10 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.$(".go_to_formats").text((this.file_list.length === 0)? "Add files to continue" : "Upload in progress...");
     },
     enable_next:function(){
-        this.$(".go_to_formats").removeAttr("disabled");
-        this.$(".go_to_formats").text("NEXT");
+        if(this.file_list.length > 0){
+            this.$(".go_to_formats").removeAttr("disabled");
+            this.$(".go_to_formats").text("NEXT");
+        }
     },
     all_files_uploaded: function() {
         this.enable_next();

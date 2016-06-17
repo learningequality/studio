@@ -403,14 +403,12 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
     },
     enable_submit:function(){
-        this.$("#upload_save_button").removeAttr("disabled");
-        this.$("#upload_save_finish_button").removeAttr("disabled");
-        this.$("#add_more_button").removeAttr("disabled");
+        this.$("#upload_save_button, #upload_save_finish_button, #add_more_button").removeAttr("disabled");
+        this.$("#upload_save_button, #upload_save_finish_button, #add_more_button").prop("disabled", false);
     },
     disable_submit:function(){
-       this.$("#upload_save_button").attr("disabled", "disabled");
-        this.$("#upload_save_finish_button").attr("disabled", "disabled");
-        this.$("#add_more_button").attr("disabled", "disabled");
+       this.$("#upload_save_button, #upload_save_finish_button, #add_more_button").attr("disabled", "disabled");
+        this.$("#upload_save_button, #upload_save_finish_button, #add_more_button").prop("disabled", true);
     },
     select_item:function(event){
         this.$(".upload_item_checkbox").prop("checked", false);
