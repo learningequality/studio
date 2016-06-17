@@ -1,6 +1,6 @@
 import logging
 import os
-from uuid import uuid4
+import uuid
 import hashlib
 
 from django.conf import settings
@@ -18,17 +18,14 @@ class UUIDField(models.CharField):
 
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = 32
-        self.random = kwargs.pop("random", False)
+        self.hyphenless = kwargs.pop("hyphenless", False)
         super(UUIDField, self).__init__(*args, **kwargs)
 
     def get_default(self):
-        if self.random:
-            return uuid.uuid4().hex
+        if self.hyphenless:
+            return self.default().hex
         else:
             return super(UUIDField, self).get_default()
-
-def hyphenless_uuid():
-    return str(uuid4()).replace("-", "")
 
 def file_on_disk_name(instance, filename):
     """
@@ -59,7 +56,7 @@ class FileOnDiskStorage(FileSystemStorage):
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
-    id = UUIDField(primary_key=True, default=hyphenless_uuid)
+    id = UUIDField(primary_key=True, hyphenless=True, default=uuid.uuid4)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     version = models.IntegerField(default=0)
@@ -108,7 +105,7 @@ class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
-    content_id = UUIDField(primary_key=False, default=hyphenless_uuid, editable=False)
+    content_id = UUIDField(primary_key=False, hyphenless=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
