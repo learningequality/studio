@@ -97,7 +97,6 @@ class CustomListSerializer(serializers.ListSerializer):
         # in this case, we don't need the list of all_tags_pk, but we need to create the new tags.
         new_tags = []
         existing_tags = []
-        tag_names = list(set(tag_names)) #get rid of repetitive tag_names
 
         for name in tag_names:
             tag_data = json.loads(name)
