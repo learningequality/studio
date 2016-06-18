@@ -140,6 +140,11 @@ class CustomListSerializer(serializers.ListSerializer):
 
         return ret
 
+class TagSerializer(serializers.ModelSerializer):
+   class Meta:
+    model = ContentTag
+    fields = ('tag_name', 'channel', 'id')
+
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     preset = FormatPresetSerializer(many=True, read_only=True)
@@ -150,6 +155,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     total_count = serializers.SerializerMethodField('count_all')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True)
 
 
     def to_internal_value(self, data):
@@ -267,12 +273,6 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
                  'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
                  'resource_count', 'resource_size', 'ancestors', 'tags', 'files', 'total_count')
-
-class TagSerializer(serializers.ModelSerializer):
-   class Meta:
-    model = ContentTag
-    fields = ('tag_name', 'channel', 'id')
-
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
