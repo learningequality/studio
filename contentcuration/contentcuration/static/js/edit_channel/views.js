@@ -365,7 +365,7 @@ var BaseEditorView = BaseListView.extend({
 		this.views.forEach(function(entry){
 			var tags = [];
 			entry.tags.forEach(function(tag){
-				tags.push("{\"name\" : \"" + tag + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
+				tags.push("{\"tag_name\" : \"" + tag + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
 			})
 			entry.model.set({tags: tags});
 			if(entry.format_view){
