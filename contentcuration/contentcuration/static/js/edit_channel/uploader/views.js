@@ -76,6 +76,11 @@ var AddContentView = BaseViews.BaseListView.extend({
             "title": (this.counter > 0)? "Topic " + this.counter : "Topic",
             "sort_order" : this.main_collection.length + this.collection.length
         }, {async:false});
+        topic.set({
+            "original_node" : topic.get("id"),
+            "cloned_source" : topic.get("id")
+        });
+        console.log("current",topic)
         this.counter++;
         var item_view = new NodeListItem({
             containing_list_view: this,
@@ -160,7 +165,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
     initialize: function(options) {
         _.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',"select_item",
-                        'add_tag','save_and_finish','add_more','set_edited',
+                        'add_tag','save_and_finish','add_more','set_edited','enable_submit', 'disable_submit',
                         'render_details', 'render_preview', 'remove_tag', 'update_count');
         this.parent_view = options.parent_view;
         this.collection = (options.collection)? options.collection : new Models.ContentNodeCollection();
@@ -298,7 +303,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                             }
                         }
                         if(!self.errorsFound && self.allow_add){
-                            self.parent_view.add_nodes(self.collection, self.main_collection.length);
+                            self.parent_view.add_nodes(self.collection, self.main_collection.highest_sort_order);
                         }
                         self.$el.css("visibility", "visible");
                         if(callback){
@@ -398,17 +403,15 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
     },
     enable_submit:function(){
-        this.$("#upload_save_button").removeAttr("disabled");
-        this.$("#upload_save_finish_button").removeAttr("disabled");
+        this.$("#upload_save_button, #upload_save_finish_button, #add_more_button").removeAttr("disabled");
+        this.$("#upload_save_button, #upload_save_finish_button, #add_more_button").prop("disabled", false);
     },
     disable_submit:function(){
-        this.$("#upload_save_button").attr("disabled", "disabled");
-        this.$("#upload_save_finish_button").attr("disabled", "disabled");
+       this.$("#upload_save_button, #upload_save_finish_button, #add_more_button").attr("disabled", "disabled");
+        this.$("#upload_save_button, #upload_save_finish_button, #add_more_button").prop("disabled", true);
     },
     select_item:function(event){
         this.$(".upload_item_checkbox").prop("checked", false);
-        console.log($(event.target).parent("li").find(".upload_item_checkbox"));
-       // this.$(event.target).find(".upload_item_checkbox").prop("checked", true);
     },
     check_item: function(event){
         this.$el.find("#uploaded_list .uploaded").removeClass("current_item");
@@ -589,7 +592,7 @@ var UploadedItem = ContentItem.extend({
     template: require("./hbtemplates/uploaded_list_item.handlebars"),
     format_view:null,
     initialize: function(options) {
-        _.bindAll(this, 'remove_topic');
+        _.bindAll(this, 'remove_topic', 'enable_submit', 'disable_submit');
         this.containing_list_view = options.containing_list_view;
         this.edited = false;
         this.checked = false;
@@ -597,7 +600,8 @@ var UploadedItem = ContentItem.extend({
         this.presets = new Models.FormatPresetCollection();
         this.originalData = {
             "title":this.model.get("title"),
-            "description":this.model.get("description")
+            "description":this.model.get("description"),
+            "changed" : this.model.get("changed")
         };
         this.render();
         this.load_tags();
@@ -618,10 +622,10 @@ var UploadedItem = ContentItem.extend({
     },
     load_tags:function(){
         this.tags = [];
-        var self = this;
         if(this.model.get("tags")){
+            var self = this;
             this.model.get("tags").forEach(function(entry){
-                self.tags.push((entry.tag_name) ? entry.tag_name : entry);
+                self.tags.push(window.contenttags.get_or_fetch(entry).get("tag_name"));
             });
         }
     },
@@ -634,8 +638,7 @@ var UploadedItem = ContentItem.extend({
                 self.model.get("files").forEach(function(f){
                     var file_data = (f.attributes) ? f.attributes : f;
                     if(preset.get("id") == file_data.preset){
-                        new_slot.attached_format = new Models.FileModel({id:file_data.id});
-                        new_slot.attached_format.fetch({async:false});
+                        new_slot.attached_format = new Models.FileModel(file_data);
                         new_slot.set({
                             file_size : file_data.file_size,
                             contentnode: file_data.contentnode,
@@ -662,6 +665,7 @@ var UploadedItem = ContentItem.extend({
     },
     set_edited:function(edited){
         this.edited = edited;
+        this.model.set("changed", true);
         if(edited){
             this.set_node();
             this.containing_list_view.enqueue(this);
@@ -691,10 +695,14 @@ var UploadedItem = ContentItem.extend({
         this.set_edited(true);
     },
     enable_submit:function(){
+        this.$el.off('click');
         this.set_edited(true);
     },
     disable_submit:function(){
-        this.set_edited(true);
+        this.$el.on('click', function(event) {
+          event.preventDefault();
+        });
+        this.$el.css("pointer", "not-allowed");
     }
 });
 

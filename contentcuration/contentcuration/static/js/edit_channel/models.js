@@ -31,9 +31,7 @@ var ContentNodeModel = BaseModel.extend({
 		title:"Untitled",
 		parent: null,
 		children:[],
-		kind: "topic",
 		license:1,
-		total_file_size:0,
 		tags:[]
     },
 
@@ -132,6 +130,7 @@ var ContentNodeModel = BaseModel.extend({
 var ContentNodeCollection = BaseCollection.extend({
 	model: ContentNodeModel,
 	list_name:"contentnode-list",
+	highest_sort_order: 1,
 
 	save: function(callback) {
 		var self = this;
@@ -175,6 +174,7 @@ var ContentNodeCollection = BaseCollection.extend({
     		return node.get("sort_order");
     	};
     	this.sort();
+    	this.highest_sort_order = (this.length > 0)? this.at(this.length - 1).get("sort_order") : 1;
     },
     duplicate:function(target_parent, options){
     	var copied_list = [];
@@ -199,7 +199,7 @@ var ContentNodeCollection = BaseCollection.extend({
 });
 
 var ChannelModel = BaseModel.extend({
-    idAttribute: "channel_id",
+    //idAttribute: "channel_id",
 	root_list : "channel-list",
 	defaults: {
 		name: " ",
@@ -209,10 +209,10 @@ var ChannelModel = BaseModel.extend({
 		description:" "
     },
 
-    get_tree:function(tree_name){
-    	var tree = new TopicTreeModel({id : this.get(tree_name)});
-    	tree.fetch({async:false});
-    	return tree;
+    get_root:function(tree_name){
+    	var root = new ContentNodeModel({id : this.get(tree_name)});
+    	root.fetch({async:false});
+    	return root;
     }
 });
 
@@ -224,38 +224,27 @@ var ChannelCollection = BaseCollection.extend({
     }
 });
 
-var TopicTreeModel = BaseModel.extend({
-	root_list:"topictree-list",
-	defaults: {
-		name: "Untitled Tree",
-		is_published: false
-	},
-	get_root: function(){
-		var root = new ContentNodeModel({id: this.get("root_node")});
-		root.fetch({async:false});
-		return root;
-	}
-});
-
-var TopicTreeModelCollection = BaseCollection.extend({
-	model: TopicTreeModel,
-	list_name:"topictree-list"
-});
-
 var TagModel = BaseModel.extend({
-	root_list : "tag-list",
+	root_list : "contenttag-list",
 	defaults: {
 		tag_name: "Untagged"
     }
-   /* get_or_create:function(){
-		var collection = new TagCollection();
-		collection.get_or_create(this.get("tag_name"), this.get("tag_type"));
-	}*/
 });
 
 var TagCollection = BaseCollection.extend({
 	model: TagModel,
-	list_name:"tag-list"
+	list_name:"contenttag-list",
+	get_or_fetch:function(id){
+		var tag = this.get(id);
+		if(!tag){
+			tag = new TagModel({id:id});
+			tag.fetch({async:false});
+			if(tag){
+				this.add(tag);
+			}
+		}
+		return tag;
+	}
 });
 
 /**** MODELS SPECIFIC TO FILE NODES ****/
@@ -362,11 +351,10 @@ var ContentKindCollection = BaseCollection.extend({
 module.exports = {
 	ContentNodeModel: ContentNodeModel,
 	ContentNodeCollection: ContentNodeCollection,
-	TopicTreeModel:TopicTreeModel,
-	TopicTreeModelCollection: TopicTreeModelCollection,
 	ChannelModel: ChannelModel,
 	ChannelCollection: ChannelCollection,
 	TagModel: TagModel,
+	TagCollection:TagCollection,
 	FileFormatCollection:FileFormatCollection,
 	LicenseCollection:LicenseCollection,
 	FileCollection: FileCollection,

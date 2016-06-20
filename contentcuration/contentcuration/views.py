@@ -14,8 +14,8 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, TopicTree, License, FileFormat, File, FormatPreset, ContentKind, ContentNode
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, TopicTreeSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer
 
 def base(request):
     return redirect('channels')    # redirect to the channel list page
@@ -25,7 +25,7 @@ def testpage(request):
     return render(request, 'test.html')
 
 def channel_list(request):
-    channel_list = Channel.objects.all() # Todo: only allow access to certain channels?
+    channel_list = Channel.objects.filter(deleted=False) # Todo: only allow access to certain channels?
     channel_serializer = ChannelSerializer(channel_list, many=True)
 
     licenses = License.objects.all()
@@ -34,8 +34,11 @@ def channel_list(request):
                                                  "license_list" : JSONRenderer().render(license_serializer.data)})
 
 def channel(request, channel_id):
-    channel = get_object_or_404(Channel, channel_id=channel_id)
+    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
     channel_serializer =  ChannelSerializer(channel)
+
+    channel_list = Channel.objects.filter(deleted=False) # Todo: only allow access to certain channels?
+    channel_list_serializer = ChannelSerializer(channel_list, many=True)
 
     fileformats = FileFormat.objects.all()
     fileformat_serializer = FileFormatSerializer(fileformats, many=True)
@@ -48,11 +51,17 @@ def channel(request, channel_id):
 
     contentkinds = ContentKind.objects.all()
     contentkind_serializer = ContentKindSerializer(contentkinds, many=True)
+
+    channel_tags = ContentTag.objects.all()
+    channel_tags_serializer = TagSerializer(channel_tags, many=True)
+
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
+                                                "channels" : JSONRenderer().render(channel_list_serializer.data),
                                                 "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data),
                                                  "fpreset_list" : JSONRenderer().render(formatpreset_serializer.data),
-                                                 "ckinds_list" : JSONRenderer().render(contentkind_serializer.data) })
+                                                 "ckinds_list" : JSONRenderer().render(contentkind_serializer.data),
+                                                 "ctags": JSONRenderer().render(channel_tags_serializer.data)})
 
 def exercise_list(request):
 
@@ -104,7 +113,6 @@ def file_upload(request):
             "object_id": file_object.pk
         }))
 
-@csrf_exempt
 def thumbnail_upload(request):
     return HttpResponse(json.dumps({
         "success": True
@@ -141,13 +149,13 @@ def _duplicate_node(node, parent=None):
         title=node.title,
         description=node.description,
         kind=node.kind,
-        slug=node.slug,
-        total_file_size=node.total_file_size,
         license=node.license,
         parent=ContentNode.objects.get(pk=parent) if parent else None,
         sort_order=node.sort_order,
         license_owner=node.license_owner,
-        published=False
+        changed=True,
+        original_node=node.original_node,
+        cloned_source=node
     )
 
     # add tags now

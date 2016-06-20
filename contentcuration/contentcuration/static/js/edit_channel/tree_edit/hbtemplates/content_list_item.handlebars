@@ -34,13 +34,15 @@
 			{{#if isfolder}}&nbsp{{node.attributes.resource_count}} Resources{{/if}}
 			&nbsp<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.attributes.resource_size}}{{/format_file_size}}
 			&nbsp
-			{{#if node.attributes.published}}
+			{{#if node.attributes.changed}}
+				<em class="unpublished">Updated</em>
+			{{else}}
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
-			{{else}}<em class="unpublished">Draft</em>{{/if}}
+			{{/if}}
 		</span>
 	</h6>
 	<h3 class = "title truncate">{{#if node}}{{node.attributes.title}}{{else}}<em>[Untitled]</em>{{/if}}</h3>

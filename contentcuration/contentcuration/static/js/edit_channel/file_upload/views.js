@@ -135,7 +135,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
             }
         });
 
-        var node = new Models.ContentNodeModel({
+        var node = this.nodeCollection.create({
             title : new_file_data.data.name.split(".")[0],
             parent : null,
             children : [],
@@ -143,8 +143,13 @@ var FileUploadView = BaseViews.BaseListView.extend({
             license: 1,
             total_file_size : 0,
             tags : []
+        }, {async:false});
+
+        node.set({
+            original_node : node.get("id"),
+            cloned_source : node.get("id")
         });
-        this.nodeCollection.create(node, {async:false});
+
         fileModel.set({
             file_size : new_file_data.data.size,
             contentnode: node.id
@@ -177,8 +182,10 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.$(".go_to_formats").text((this.file_list.length === 0)? "Add files to continue" : "Upload in progress...");
     },
     enable_next:function(){
-        this.$(".go_to_formats").removeAttr("disabled");
-        this.$(".go_to_formats").text("NEXT");
+        if(this.file_list.length > 0){
+            this.$(".go_to_formats").removeAttr("disabled");
+            this.$(".go_to_formats").text("NEXT");
+        }
     },
     all_files_uploaded: function() {
         this.enable_next();
@@ -371,7 +378,6 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     set_format:function(formatModel, preset){
         var assigned_preset = this.presets.get(preset);
         assigned_preset.attached_format = formatModel;
-        // assigned_preset.set("attached_format", formatModel);
         if(formatModel){
             formatModel.set("preset", assigned_preset.id);
         }
@@ -509,10 +515,10 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             this.container.files_to_delete.add(this.preset.attached_format);
         }
         this.preset.attached_format = this.file;
-        this.render();
         this.container.update_size();
         this.container.update_count();
         this.container.set_model();
+        this.render();
     },
     file_added: function(file) {
         if(this.file){

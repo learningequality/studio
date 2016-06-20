@@ -8,11 +8,6 @@ var BaseView = Backbone.View.extend({
 	undo_manager: null,
 	queue_view: null,
 	delete_view: function(){
-		//this.undelegateEvents();
-		//this.unbind();
-		/*if(this.containing_list_view){
-			this.containing_list_view.views.splice(this.containing_list_view.views.indexOf(this),1);
-		}*/
 		this.remove();
 	},
 	set_editing: function(edit_mode_on){
@@ -145,7 +140,7 @@ BaseListView = BaseView.extend({
 	copy_selected:function(){
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = [];
-		var clipboard_root = window.current_channel.get_tree("clipboard").get_root();
+		var clipboard_root = window.current_channel.get_root("clipboard_tree");
 		var copyCollection = new Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
 			copyCollection.add($(list[i]).data("data").model);//.duplicate(clipboard_root, null);
@@ -312,7 +307,8 @@ var BaseListChannelItemView = BaseListItemView.extend({
 		if(!this.model){
     		this.delete_view();
 	    }else{
-	    	this.model.destroy({async:false});
+	    	this.model.save({"deleted":true}, {async:false});
+	    	this.delete_view();
 	    }
 	},
 	save: function(data, options){
@@ -367,7 +363,11 @@ var BaseEditorView = BaseListView.extend({
 		this.parent_view.set_editing(false);
 		var self = this;
 		this.views.forEach(function(entry){
-			entry.model.set({tags: entry.tags});
+			var tags = [];
+			entry.tags.forEach(function(tag){
+				tags.push("{\"tag_name\" : \"" + tag + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
+			})
+			entry.model.set({tags: tags});
 			if(entry.format_view){
 				entry.format_view.update_file();
 				entry.format_view.clean_files();
@@ -408,6 +408,9 @@ var BaseEditorView = BaseListView.extend({
 		var success = true;
 		this.unsaved_queue.forEach(function(entry){
 			entry.model.set(entry.model.attributes, {validate:true});
+			if(entry.format_view){
+				entry.model.set("files", entry.format_view.model.get("files"));
+			}
 			if(entry.model.validationError){
 				self.handle_error(entry);
 				success = false;

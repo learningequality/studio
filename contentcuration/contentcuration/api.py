@@ -52,11 +52,6 @@ def get_child_names(node):
         names.append({"title": n.title, "id" : n.id})
     return names
 
-def delete_children(node):
-    for n in node.get_children():
-        delete_children(n)
-    node.delete()
-
 def batch_add_tags(request):
     # check existing tag and subtract them from bulk_create
     insert_list = []

@@ -40,7 +40,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 		 	$("#channel_selection_dropdown_list").html("");
 
 		 	window.channels.forEach(function (entry){
-				$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.get("channel_id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
+				$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.get("id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 			});
 			$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
 			self.$el.find(".disable-none-selected").prop("disabled",true);
@@ -376,7 +376,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	publish:function(){
 		var self = this;
 		this.display_load("Publishing Content...", function(){
-			self.save({"published": true},{validate:false});
+			self.save({"changed": false},{validate:false});
 			self.publish_children(self.model, self.containing_list_view.collection);
 			self.render();
 		});
@@ -388,7 +388,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 			var children = collection.get_all_fetch(model.get("children"));
 			children.forEach(function(entry){
 				if(!entry.get("published")){
-					entry.save({"published":true},{validate:false});
+					entry.save({"changed":false},{validate:false});
 				}
 				self.publish_children(this, collection);
 			});

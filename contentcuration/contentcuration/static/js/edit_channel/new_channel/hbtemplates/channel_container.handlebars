@@ -1,24 +1,21 @@
 <div class="profile pull-left text-center">
 	{{#if edit}}
-		<!--<div class="new_channel_pic" id="dropzone">
+		<div class="new_channel_pic" id="dropzone">
 			<div id="finished_area">
 		        <a id="swap-thumbnail">Change Thumbnail</a>
 		    </div>
-		    <div id="dz-overlay">Click or drop picture here.</div>
-			<img id="dz-placeholder" alt="No thumbnail found." src="{{picture}}"/>
-		</div>-->
+			<img id="dz-placeholder" src="{{picture}}"/>
+		</div>
 
 	{{else}}
-		<img id="channel_pic" alt="No picture found." src="{{channel.thumbnail}}"/>
+		<img id="channel_pic" alt="No picture found." src="{{picture}}"/>
 	{{/if}}
 </div>
 {{#if edit}}
-	<!--<span class="channel_toggle pull-right glyphicon glyphicon-remove"></span>-->
 	<input type="text" id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}" maxlength="200"></input>
 	<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}"  maxlength="400">{{channel.description}}</textarea>
 	<div class="channel_options">
-		<a class="delete_channel <!--btn btn-default-->">
-			<!--<span class="glyphicon glyphicon-trash"></span>-->
+		<a class="delete_channel">
 			DELETE</a>
 		<a class="channel_toggle action-text">CANCEL</a>
 		<a class="save_channel btn pull-right">
@@ -29,8 +26,6 @@
 
 	<span class="channel_metadata">
 		<span class="resource_count">{{resource_count}}</span> Resource(s)
-		<!--<span class="exercise_count">0</span> Exercises
-		<span class="exercise_count">0</span>-->
 		<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size total_file_size}}{{/format_file_size}}
 	</span>
 	<h4>

@@ -1,6 +1,6 @@
 import logging
 import os
-from uuid import uuid4
+import uuid
 import hashlib
 
 from django.conf import settings
@@ -14,8 +14,14 @@ from django.dispatch import receiver
 
 from constants import content_kinds, extensions, presets
 
-def hyphenless_uuid():
-    return str(uuid4()).replace("-", "")
+class UUIDField(models.CharField):
+
+    def __init__(self, *args, **kwargs):
+        kwargs['max_length'] = 32
+        super(UUIDField, self).__init__(*args, **kwargs)
+
+    def get_prep_value(self, value):
+        return value.hex if isinstance(value, uuid.UUID) else value
 
 def file_on_disk_name(instance, filename):
     """
@@ -28,7 +34,7 @@ def file_on_disk_name(instance, filename):
     """
     h = instance.checksum
     basename, ext = os.path.splitext(filename)
-    return os.path.join(settings.STORAGE_ROOT, h[0], h[1], h + ext.lower())
+    return os.path.join(settings.STORAGE_URL[1:-1], h[0], h[1], h + ext.lower())
 
 class FileOnDiskStorage(FileSystemStorage):
     """
@@ -42,15 +48,14 @@ class FileOnDiskStorage(FileSystemStorage):
             # if the file exists, do not call the superclasses _save method
             logging.warn('Content copy "%s" already exists!' % name)
             return name
-        return super(ContentCopyStorage, self)._save(name, content)
+        return super(FileOnDiskStorage, self)._save(name, content)
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
-    channel_id = models.UUIDField(primary_key=True, default=hyphenless_uuid)
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
-    author = models.CharField(max_length=400, blank=True)
-    version = models.CharField(max_length=15, default='v0.01')
+    version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True)
     editors = models.ManyToManyField(
         'auth.User',
@@ -58,91 +63,33 @@ class Channel(models.Model):
         verbose_name=_("editors"),
         help_text=_("Users with edit rights"),
     )
-    published = models.ForeignKey('TopicTree', null=True, blank=True, related_name='published')
-    deleted =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='deleted')
-    clipboard =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='clipboard')
-    draft =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='draft')
+    trash_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_trash')
+    clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
+    main_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
     bookmarked_by = models.ManyToManyField(
         'auth.User',
         related_name='bookmarked_channels',
-        verbose_name=_("bookmarded by"),
+        verbose_name=_("bookmarked by"),
     )
+    deleted = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         super(Channel, self).save(*args, **kwargs)
-        if not self.draft:
-            self.draft = TopicTree.objects.create(channel=self, name=self.name + " draft")
-            self.draft.save()
-            self.clipboard = TopicTree.objects.create(channel=self, name=self.name + " clipboard")
-            self.clipboard.save()
-            self.deleted = TopicTree.objects.create(channel=self, name=self.name + " deleted")
-            self.deleted.save()
+        if not self.main_tree:
+            self.main_tree = ContentNode.objects.create(title=self.name + " main root", kind_id="topic", sort_order=0)
+            self.main_tree.save()
+            self.clipboard_tree = ContentNode.objects.create(title=self.name + " clipboard root", kind_id="topic", sort_order=0)
+            self.clipboard_tree.save()
+            self.trash_tree = ContentNode.objects.create(title=self.name + " trash root", kind_id="topic", sort_order=0)
+            self.trash_tree.save()
             self.save()
-
-    """
-    def delete(self):
-        logging.warning("Channel Delete")
-        self.draft.delete()
-        self.clipboard.delete()
-        self.deleted.delete()
-        super(Channel, self).delete()
-    """
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
 
-class TopicTree(models.Model):
-    """Base model for all channels"""
-
-    name = models.CharField(
-        max_length=255,
-        verbose_name=_("topic tree name"),
-        help_text=_("Displayed to the user"),
-        default = "tree"
-    )
-
-    channel = models.ForeignKey(
-        'Channel',
-        verbose_name=_("channel"),
-        null=True,
-        help_text=_("For different versions of the tree in the same channel (trash, edit, workspace)"),
-    )
-    root_node = models.ForeignKey(
-        'ContentNode',
-        verbose_name=_("root node"),
-        null=True,
-        help_text=_(
-            "The starting point for the tree, the title of it is the "
-            "title shown in the menu"
-        ),
-    )
-    is_published = models.BooleanField(
-        default=False,
-        verbose_name=_("Published"),
-        help_text=_("If published, students can access this channel"),
-    )
-
-    def save(self, *args, **kwargs):
-        isNew = not self.pk
-        super(TopicTree, self).save(*args, **kwargs)
-        if isNew:
-            self.root_node = ContentNode.objects.create(title=self.channel.name, kind=ContentKind.objects.get(kind = content_kinds.TOPIC), total_file_size = 0, license=License.objects.first())
-            self.root_node.save()
-            self.save()
-
-    class Meta:
-        verbose_name = _("Topic tree")
-        verbose_name_plural = _("Topic trees")
-
 class ContentTag(models.Model):
     tag_name = models.CharField(max_length=30)
     channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True)
-    """
-    def delete(self):
-        # No other nodes except for node about to be deleted use tag
-        if len(Node.objects.filter(tags__tag_name__contains = self.tag_name)) <= 1:
-            super(ContentTag, self).delete()
-    """
 
     def __str__(self):
         return self.tag_name
@@ -154,57 +101,25 @@ class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
-    content_id = models.UUIDField(primary_key=False, default=hyphenless_uuid, editable=False)
+    content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
-    kind = models.ForeignKey('ContentKind', related_name='content_metadatas', blank=True, null=True)
-    slug = models.CharField(max_length=100)
-    total_file_size = models.IntegerField()
-    license = models.ForeignKey('License')
+    kind = models.ForeignKey('ContentKind', related_name='contentnodes')
+    license = models.ForeignKey('License', null=True)
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
     is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship', symmetrical=False, blank=True)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
     sort_order = models.FloatField(max_length=50, default=0, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
     license_owner = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
-    cloned_source = TreeForeignKey('self', null=True, blank=True, models.SET_NULL, related_name='clones')
-    original_ndoe = TreeForeignKey('self', null=True, blank=True, models.SET_NULL, related_name='descendants')
+    author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"))
+    cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
+    original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
 
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
 
-    published = models.BooleanField(
-        default=False,
-        verbose_name=_("Published"),
-        help_text=_("If published, students can access this item"),
-    )
-
-    @property
-    def has_draft(self):
-        return self.draft_set.all().exists()
-
-    @property
-    def get_draft(self):
-        """
-        NB! By contract, only one draft should always exist per node, this is
-        enforced by the OneToOneField relation.
-        :raises: Draft.DoesNotExist and Draft.MultipleObjectsReturned
-        """
-        return Draft.objects.get(publish_in=self)
-    """
-    # If deleting all children
-    def delete(self):
-        logging.warning(self)
-        for n in self.get_children():
-            #for format in Format.objects.filter(contentnode = self.pk):
-            #    format.delete()
-            n.delete()
-        super(Node, self).delete()
-    """
-    def delete(self):
-        for t in self.tags.all():
-            t.delete()
-        super(ContentNode, self).delete()
+    changed = models.BooleanField(default=True)
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
@@ -242,11 +157,14 @@ class FormatPreset(models.Model):
         return self.id
 
 class Language(models.Model):
-    lang_code = models.CharField(primary_key=True, max_length=400)
-    lang_name = models.CharField(max_length=400)
+    lang_code = models.CharField(max_length=2, db_index=True)
+    lang_subcode = models.CharField(max_length=2, db_index=True)
+
+    def ietf_name(self):
+        return "{code}-{subcode}".format(code=self.lang_code, subcode=self.lang_subcode)
 
     def __str__(self):
-        return self.lang_name
+        return self.ietf_name
 
 class File(models.Model):
     """
