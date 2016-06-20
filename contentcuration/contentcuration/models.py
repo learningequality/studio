@@ -18,14 +18,10 @@ class UUIDField(models.CharField):
 
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = 32
-        self.hyphenless = kwargs.pop("hyphenless", False)
         super(UUIDField, self).__init__(*args, **kwargs)
 
-    def get_default(self):
-        if self.hyphenless:
-            return self.default().hex
-        else:
-            return super(UUIDField, self).get_default()
+    def get_prep_value(self, value):
+        return value.hex if isinstance(value, uuid.UUID) else value
 
 def file_on_disk_name(instance, filename):
     """
@@ -56,7 +52,7 @@ class FileOnDiskStorage(FileSystemStorage):
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
-    id = UUIDField(primary_key=True, hyphenless=True, default=uuid.uuid4)
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     version = models.IntegerField(default=0)
@@ -105,7 +101,7 @@ class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
-    content_id = UUIDField(primary_key=False, hyphenless=True, default=uuid.uuid4, editable=False)
+    content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
