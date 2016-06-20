@@ -79,12 +79,12 @@ class CustomListSerializer(serializers.ListSerializer):
         update_nodes = {}
         tag_mapping = {}
         ret = []
-        tag_names = []
+        unformatted_input_tags = []
 
         with transaction.atomic():
             for item in validated_data:
                 item_tags = item.get('tags')
-                tag_names += item.pop('tags')
+                unformatted_input_tags += item.pop('tags')
                 if 'id' in item:
                     update_nodes[item['id']] = item
                     tag_mapping[item['id']] = item_tags
@@ -92,33 +92,24 @@ class CustomListSerializer(serializers.ListSerializer):
                     # create new nodes
                     ret.append(ContentNode.objects.create(**item))
 
-        # get all tags, if doesn't exist, create them.
-        # this step is also needed for adding new tags to existing node.
-        # in this case, we don't need the list of all_tags_pk, but we need to create the new tags.
-        new_tags = []
-        existing_tags = []
-        tag_names = list(set(tag_names)) #get rid of repetitive tag_names
+        # get all ContentTag objects, if doesn't exist, create them.
+        all_tags = []
 
-        for name in tag_names:
-            tag_data = json.loads(name)
-            tag_tuple = ContentTag.objects.get_or_create(tag_name=tag_data['name'], channel_id=tag_data['channel'])
-
-            if tag_tuple[1]:
-                new_tags.append(tag_tuple[0])
-            else:
-                existing_tags.append(tag_tuple[0])
+        for tag_data in unformatted_input_tags:
+            # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
+            if isinstance(tag_data, unicode): 
+                tag_data = json.loads(tag_data)
+            tag_tuple = ContentTag.objects.get_or_create(tag_name=tag_data['tag_name'], channel_id=tag_data['channel'])
+            all_tags.append(tag_tuple[0])
 
         if ret:
             # new nodes and tags have been created, now add tags to them
             bulk_adding_list = []
             ThroughModel = ContentNode.tags.through
-            all_tags = existing_tags + new_tags
             for tag in all_tags:
                 for node in ret:
                     bulk_adding_list.append(ThroughModel(node_id=node.pk, contenttag_id=tag.pk))
             ThroughModel.objects.bulk_create(bulk_adding_list)
-
-        channel_tags = new_tags+existing_tags
 
         # Perform updates.
         if update_nodes:
@@ -129,16 +120,22 @@ class CustomListSerializer(serializers.ListSerializer):
                     for attr, value in data.items():
                         setattr(node, attr, value)
                     taglist = []
-                    for tagstr in tag_mapping.get(node_id, None):
-                        tag_data = json.loads(tagstr)
-                        logging.warning(tag_data['channel'] )
-                        taglist.append(next(tag_itm for tag_itm in channel_tags if all( [ tag_itm.tag_name==tag_data['name'],  tag_itm.channel_id==tag_data['channel']] ) ))
+                    for tag_data in tag_mapping.get(node_id, None):
+                        # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
+                        if isinstance(tag_data, unicode):
+                            tag_data = json.loads(tag_data)
+                        taglist.append(next(tag_itm for tag_itm in all_tags if all( [ tag_itm.tag_name==tag_data['tag_name'],  tag_itm.channel_id==tag_data['channel']] ) ))
                     setattr(node, 'tags', taglist)
 
                     node.save()
                     ret.append(node)
 
         return ret
+
+class TagSerializer(serializers.ModelSerializer):
+   class Meta:
+    model = ContentTag
+    fields = ('tag_name', 'channel', 'id')
 
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -150,6 +147,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     total_count = serializers.SerializerMethodField('count_all')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True)
 
 
     def to_internal_value(self, data):
@@ -267,12 +265,6 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
                  'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
                  'resource_count', 'resource_size', 'ancestors', 'tags', 'files', 'total_count')
-
-class TagSerializer(serializers.ModelSerializer):
-   class Meta:
-    model = ContentTag
-    fields = ('tag_name', 'channel', 'id')
-
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
