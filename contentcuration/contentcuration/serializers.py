@@ -79,12 +79,12 @@ class CustomListSerializer(serializers.ListSerializer):
         update_nodes = {}
         tag_mapping = {}
         ret = []
-        unformated_input_tags = []
+        unformatted_input_tags = []
 
         with transaction.atomic():
             for item in validated_data:
                 item_tags = item.get('tags')
-                unformated_input_tags += item.pop('tags')
+                unformatted_input_tags += item.pop('tags')
                 if 'id' in item:
                     update_nodes[item['id']] = item
                     tag_mapping[item['id']] = item_tags
@@ -95,7 +95,7 @@ class CustomListSerializer(serializers.ListSerializer):
         # get all ContentTag objects, if doesn't exist, create them.
         all_tags = []
 
-        for tag_data in unformated_input_tags:
+        for tag_data in unformatted_input_tags:
             # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
             if isinstance(tag_data, unicode): 
                 tag_data = json.loads(tag_data)
