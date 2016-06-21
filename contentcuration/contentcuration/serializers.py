@@ -25,7 +25,6 @@ class LanguageSerializer(serializers.ModelSerializer):
 class ChannelSerializer(serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
-    id = serializers.SerializerMethodField('remove_hyphen')
 
     def count_resources(self, channel):
         if not channel.main_tree:
@@ -38,9 +37,6 @@ class ChannelSerializer(serializers.ModelSerializer):
             return 0
         else:
             return get_total_size(channel.main_tree)
-
-    def remove_hyphen(self, channel):
-        return channel.id.hex
 
     class Meta:
         model = Channel
@@ -128,7 +124,12 @@ class CustomListSerializer(serializers.ListSerializer):
                         # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
                         if isinstance(tag_data, unicode):
                             tag_data = json.loads(tag_data)
-                        taglist.append(next(tag_itm for tag_itm in all_tags if all( [ tag_itm.tag_name==tag_data['tag_name'],  tag_itm.channel_id==tag_data['channel']] ) ))
+                        
+                        # this requires optimization
+                        for tag_itm in all_tags:
+                            if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
+                                taglist.append(tag_itm)
+
                     setattr(node, 'tags', taglist)
 
                     node.save()
@@ -145,7 +146,6 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     preset = FormatPresetSerializer(many=True, read_only=True)
     id = serializers.IntegerField(required=False)
-    content_id = serializers.SerializerMethodField('remove_hyphen')
 
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
@@ -153,10 +153,6 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
-
-
-    def remove_hyphen(self, contentnode):
-        return contentnode.content_id.hex
 
     def to_internal_value(self, data):
         """
