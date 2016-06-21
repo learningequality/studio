@@ -25,6 +25,7 @@ class LanguageSerializer(serializers.ModelSerializer):
 class ChannelSerializer(serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
+    id = serializers.SerializerMethodField('remove_hyphen')
 
     def count_resources(self, channel):
         if not channel.main_tree:
@@ -37,6 +38,9 @@ class ChannelSerializer(serializers.ModelSerializer):
             return 0
         else:
             return get_total_size(channel.main_tree)
+
+    def remove_hyphen(self, channel):
+        return channel.id.hex
 
     class Meta:
         model = Channel
@@ -141,6 +145,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     preset = FormatPresetSerializer(many=True, read_only=True)
     id = serializers.IntegerField(required=False)
+    content_id = serializers.SerializerMethodField('remove_hyphen')
 
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
@@ -149,6 +154,9 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     files = FileSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
 
+
+    def remove_hyphen(self, contentnode):
+        return contentnode.content_id.hex
 
     def to_internal_value(self, data):
         """

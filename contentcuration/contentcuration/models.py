@@ -1,6 +1,6 @@
 import logging
 import os
-import uuid
+from uuid import uuid4
 import hashlib
 
 from django.conf import settings
@@ -13,15 +13,6 @@ from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 
 from constants import content_kinds, extensions, presets
-
-class UUIDField(models.CharField):
-
-    def __init__(self, *args, **kwargs):
-        kwargs['max_length'] = 32
-        super(UUIDField, self).__init__(*args, **kwargs)
-
-    def get_prep_value(self, value):
-        return value.hex if isinstance(value, uuid.UUID) else value
 
 def file_on_disk_name(instance, filename):
     """
@@ -52,7 +43,7 @@ class FileOnDiskStorage(FileSystemStorage):
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
-    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    id = models.UUIDField(primary_key=True, default=uuid4)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     version = models.IntegerField(default=0)
@@ -101,7 +92,7 @@ class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
-    content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
+    content_id = models.UUIDField(primary_key=False, default=uuid4, editable=False)
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
