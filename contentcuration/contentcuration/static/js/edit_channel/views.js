@@ -106,10 +106,8 @@ var BaseView = Backbone.View.extend({
 		});
 	},
 	publish:function(){
-		$("#main-content-area").find(".to_publish").each(function(){
-			console.log("Publishing...");
-			$("#" + this.id).data("data").publish();
-		});
+		var Exporter = require("edit_channel/export/views");
+		var exporter = new Exporter.ExportModalView();
 	}
 });
 

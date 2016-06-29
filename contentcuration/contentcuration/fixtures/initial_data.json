@@ -4,7 +4,9 @@
     "pk": 1,
     "fields": {
       "license_name": "CC-BY",
-      "exists": true
+      "exists": true,
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_description": "This license lets others distribute, remix, tweak, and build upon your work, even commercially, as long as they credit you for the original creation. This is the most accommodating of licenses offered. Recommended for maximum dissemination and use of licensed materials."
     }
   },
   {
@@ -12,7 +14,9 @@
     "pk": 2,
     "fields": {
       "license_name": "CC BY-SA",
-      "exists": true
+      "exists": true,
+       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "license_description": "This license lets others remix, tweak, and build upon your work even for commercial purposes, as long as they credit you and license their new creations under the identical terms. This license is often compared to “copyleft” free and open source software licenses. All new works based on yours will carry the same license, so any derivatives will also allow commercial use. This is the license used by Wikipedia, and is recommended for materials that would benefit from incorporating content from Wikipedia and similarly licensed projects."
     }
   },
   {
@@ -20,7 +24,9 @@
     "pk": 3,
     "fields": {
       "license_name": "CC BY-ND",
-      "exists": true
+      "exists": true,
+      "license_url": "https://creativecommons.org/licenses/by-nd/4.0/",
+      "license_description": "This license allows for redistribution, commercial and non-commercial, as long as it is passed along unchanged and in whole, with credit to you."
     }
   },
   {
@@ -28,7 +34,9 @@
     "pk": 4,
     "fields": {
       "license_name": "CC BY-NC",
-      "exists": true
+      "exists": true,
+      "license_url": "https://creativecommons.org/licenses/by-nc/4.0",
+      "license_description": "This license lets others remix, tweak, and build upon your work non-commercially, and although their new works must also acknowledge you and be non-commercial, they don’t have to license their derivative works on the same terms."
     }
   },
   {
@@ -36,7 +44,9 @@
     "pk": 5,
     "fields": {
       "license_name": "CC BY-NC-SA",
-      "exists": true
+      "exists": true,
+      "license_url": "https://creativecommons.org/licenses/by-nc-sa/4.0",
+      "license_description": "This license lets others remix, tweak, and build upon your work non-commercially, as long as they credit you and license their new creations under the identical terms."
     }
   },
   {
@@ -44,7 +54,9 @@
     "pk": 6,
     "fields": {
       "license_name": "CC BY-NC-ND",
-      "exists": true
+      "exists": true,
+      "license_url": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+      "license_description": "This license is the most restrictive of our six main licenses, only allowing others to download your works and share them with others as long as they credit you, but they can’t change them in any way or use them commercially."
     }
   },
   {
@@ -52,7 +64,9 @@
     "pk": 7,
     "fields": {
       "license_name": "All rights reserved",
-      "exists": true
+      "exists": true,
+      "license_url": "http://www.allrights-reserved.com/",
+      "license_description": "This license indicates that the copyright holder reserves, or holds for their own use, all the rights provided by copyright law under one specific copyright treaty."
     }
   },
 
