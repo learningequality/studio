@@ -21,9 +21,24 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
 
+		this.render();
+
+	 	/*
+	 	this.undo_manager = new UndoManager({
+            track: true,
+            register: [this.collection]
+        });*/
+	},
+	render: function() {
 		var self=this;
 		this.display_load("Loading Content...", function(){
-			self.render();
+			self.$el.html(self.template({
+				edit: self.is_edit_page,
+				channel : window.current_channel,
+				is_clipboard : self.is_clipboard
+			}));
+			self.add_container(self.containers.length, self.model);
+			$("#channel-edit-content-wrapper").data("data", self);
 			self.queue_view = new QueueView.Queue({
 		 		el: $("#queue-area"),
 		 		collection: self.collection
@@ -47,20 +62,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 			self.$el.find(".disable-none-selected").css("cursor","not-allowed");
 		});
 
-	 	/*
-	 	this.undo_manager = new UndoManager({
-            track: true,
-            register: [this.collection]
-        });*/
-	},
-	render: function() {
-		this.$el.html(this.template({
-			edit: this.is_edit_page,
-			channel : window.current_channel,
-			is_clipboard : this.is_clipboard
-		}));
-		this.add_container(this.containers.length, this.model);
-		$("#channel-edit-content-wrapper").data("data", this);
 	},
 	events: {
 		'click .copy_button' : 'copy_content',

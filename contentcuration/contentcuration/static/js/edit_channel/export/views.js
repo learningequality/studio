@@ -56,9 +56,11 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     publish:function(){
         var self = this;
         this.display_load("Publishing...", function(){
-            window.current_channel.publish(self.select_license);
-            self.callback();
-            self.close_exporter();
+            window.current_channel.publish(self.select_license, function(){
+                self.callback();
+                self.close_exporter();
+            });
+
         });
     }
 });
