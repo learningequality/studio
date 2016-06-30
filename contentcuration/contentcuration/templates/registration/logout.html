@@ -8,11 +8,12 @@
 
 {% block content %}
 
-<div class="container">
-<p>{% trans "Logged out" %}</p>
+<div class="container" id="logout_container">
+	<img id="logout-image" class="pull-left" src="{% static 'img/kolibri_login.png' %}"/>
+	<h2>{% trans "You have successfully logged out." %}</h2>
 
-{# Assumes you setup the password_reset view in your URLconf #}
-<p><a href="{% url 'login' %}">{% trans "Click here to log back in again." %}</a></p>
+	{# Assumes you setup the password_reset view in your URLconf #}
+	<p><a href="{% url 'login' %}">{% trans "Click here to log back in again." %}</a></p>
 
 </div>
 

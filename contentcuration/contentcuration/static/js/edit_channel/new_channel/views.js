@@ -54,6 +54,10 @@ var ChannelList  = BaseListView.extend({
 			self.views.push(view);
         	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.get("id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 		});
+
+		if(this.collection.length == 0){
+			$("#channel_selection_dropdown_list").append("<li class='default-channel-item'><em>No channels found.</em></li>");
+		}
 	}
 });
 

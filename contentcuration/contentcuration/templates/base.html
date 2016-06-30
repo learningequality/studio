@@ -6,14 +6,14 @@
     <head>
 
         {% block head %}
-        <!--[if lt IE 9]> 
+        <!--[if lt IE 9]>
             <script src="{% static "js/html5shiv.js" %}"></script>
         <![endif] -->
 		<link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
 
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        
+
         <title>Kolibri</title>
         <!-- TODO work out why debug is not working here and use the static version -->
         <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
@@ -50,30 +50,29 @@
                       <input type="text" placeholder="Search for content in your channels..." aria-describedby="basic-addon2">
                       <span class="glyphicon glyphicon-search" id="main-search-button" aria-hidden="true"></span>
                 </li>-->
-                 <li class="dropdown">
+                 <li class="dropdown" id="channel_select_dd_wrapper">
                     <a href="#" id="channel_selection_dropdown" class="dropdown-toggle truncate" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Select a Channel... <span class="caret"></span></a>
-                    <ul class="dropdown-menu" id="channel_selection_dropdown_list">
-                    </ul>
+                    <ul class="dropdown-menu" id="channel_selection_dropdown_list"></ul>
                 </li>
               </ul>
-              <!--
+
               <ul class="nav navbar-nav navbar-right">
-                <li> <a class="btn btn-main">Discover</a></li>
-                <li class="dropdown">
+                <!-- <li> <a class="btn btn-main">Discover</a></li> -->
+                <li class="dropdown" id="settings-dd-wrapper">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></a>
                   <ul class="dropdown-menu">
-                    <li><a href="#">Settings</a></li>
-                    <li><a href="#">Log Out</a></li>
+                    <!-- <li><a href="#">Settings</a></li> -->
+                    <li><a href="{% url 'django.contrib.auth.views.logout' %}">Log Out</a></li>
                   </ul>
                 </li>
               </ul>
-            -->
+
             </div><!-- /.navbar-collapse -->
           </div><!-- /.container-fluid -->
         </nav>
 
         {% endblock nav %}
-		
+
         <!-- Site content gets injected here -->
 		{% block content %}
             <a href="channels" class="btn btn-default text-center" id="temp_splash">
