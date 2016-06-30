@@ -75,9 +75,8 @@ def batch_add_tags(request):
 
     return HttpResponse("Tags are successfully saved.", status=200)
 
-def publish_node(node, license):
-    setattr(node, "changed", False)
-    setattr(node, "license", license)
-    node.save()
+def assign_license_to_node(node, license):
+    node.license = license
     for n in node.get_children():
-        publish_node(n, license)
+        assign_license_to_node(n, license)
+    node.save()

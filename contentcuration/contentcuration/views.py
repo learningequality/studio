@@ -14,7 +14,7 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import publish_node
+from contentcuration.api import assign_license_to_node
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer
 
@@ -193,11 +193,10 @@ def publish_channel(request):
 
         channel = get_object_or_404(Channel, id=channel_id, deleted=False)
         license = get_object_or_404(License, id=license_id)
-        setattr(channel, "version", channel.version + 1)
-        channel.save()
 
-        publish_node(channel.main_tree, license)
+        assign_license_to_node(channel.main_tree, license)
 
-        return HttpResponse(json.dumps({
-            "success": True
-        }))
+        dbpath = call_command("exportchannel")
+
+        with open(dbpath) as f:
+            return f.read()
