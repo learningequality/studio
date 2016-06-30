@@ -147,6 +147,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 					+ "\nAre you sure you want to delete this channel?"))){
 			var self = this;
 			this.display_load("Deleting Channel...", function(){
+				self.containing_list_view.set_editing(false);
 				self.delete();
 				self.delete_view();
 			});
