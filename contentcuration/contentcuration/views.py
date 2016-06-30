@@ -24,6 +24,7 @@ def base(request):
 def testpage(request):
     return render(request, 'test.html')
 
+@login_required
 def channel_list(request):
     channel_list = Channel.objects.filter(deleted=False) # Todo: only allow access to certain channels?
     channel_serializer = ChannelSerializer(channel_list, many=True)

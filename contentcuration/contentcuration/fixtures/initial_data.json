@@ -153,6 +153,9 @@
       "kind": "document"
     }
   },
+
+
+
   {
     "model": "contentcuration.FormatPreset",
     "fields": {
@@ -211,6 +214,24 @@
       "order" : 5,
       "kind" : "audio",
       "allowed_formats" : ["wav", "mp3"]
+    }
+  },
+
+
+  {
+    "model": "contentcuration.Language",
+    "fields": {
+      "lang_code" : "EN",
+      "lang_subcode" : "US",
+      "readable_name": "English"
+    }
+  },
+  {
+    "model": "contentcuration.Language",
+    "fields": {
+      "lang_code" : "ES",
+      "lang_subcode" : "US",
+      "readable_name": "Spanish"
     }
   }
 ]

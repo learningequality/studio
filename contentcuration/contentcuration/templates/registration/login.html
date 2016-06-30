@@ -17,7 +17,7 @@
 				<h1 id="login-title">Kolibri</h1>
 				<p id="login-subheading">Content Curation</p>
 			</div>
-			
+
 
 			{% if form.errors %}
 			<p>{% trans "Your username and password didn't match. Please try again." %}</p>
@@ -49,7 +49,7 @@
 			{# Assumes you setup the password_reset view in your URLconf #}
 			<p><a  class="action-text login-action-text" href="{% url 'password_reset' %}">{% trans "Lost password?" %}</a></p>
 		</div>
-		<a id="login_le" href="https://learningequality.org/" target="_blank"><img src="{% static 'img/le.png' %}" id="le_img"> Learning Equality</a>
+		<a id="login_le" href="https://learningequality.org/" target="_blank"><img src="{% static 'img/le_logo.png' %}" id="le_img">Learning Equality</a>
 	</div>
 </div>
 
