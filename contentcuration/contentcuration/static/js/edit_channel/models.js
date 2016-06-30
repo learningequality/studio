@@ -213,6 +213,17 @@ var ChannelModel = BaseModel.extend({
     	var root = new ContentNodeModel({id : this.get(tree_name)});
     	root.fetch({async:false});
     	return root;
+    },
+
+    publish:function(license){
+        var data = {"channel_id": this.get("id"),
+                    "license_id": license.get("id")};
+        $.ajax({
+        	method:"POST",
+            url: window.Urls.publish_channel(),
+            data:  JSON.stringify(data),
+            async: false
+        });
     }
 });
 

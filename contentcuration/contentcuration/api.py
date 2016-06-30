@@ -74,3 +74,10 @@ def batch_add_tags(request):
     ThroughModel.objects.bulk_create(bulk_list)
 
     return HttpResponse("Tags are successfully saved.", status=200)
+
+def publish_node(node, license):
+    setattr(node, "changed", False)
+    setattr(node, "license", license)
+    node.save()
+    for n in node.get_children():
+        publish_node(n, license)

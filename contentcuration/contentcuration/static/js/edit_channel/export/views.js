@@ -9,17 +9,21 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     license_template: require("./hbtemplates/export_license.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, "close_exporter", "load_license", "select_license");
+        _.bindAll(this, "close_exporter", "load_license", "select_license", "publish");
         this.render();
+        this.modal = true;
+        this.callback = options.callback;
         this.export_view = new ExportListView({
             el: this.$("#export_preview"),
             container: this,
-            model: window.current_channel.get_root("main_tree")
+            model: this.model
         });
+        this.select_license = null;
     },
     events:{
       "change #export_license_select" : "select_license",
-      "click #license_about": "load_license"
+      "click #license_about": "load_license",
+      "click #publish_btn" : "publish"
     },
 
     render: function() {
@@ -27,7 +31,8 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             channel: window.current_channel.toJSON(),
             licenses: window.licenses.toJSON(),
             version: window.current_channel.get("version") + 1,
-            node: window.current_channel.get_root("main_tree").toJSON()
+            node: this.model.toJSON(),
+            count: this.model.get("resource_count") + ((this.model.get("resource_count") === 1)? " Resource" : " Resources")
         }));
         $("body").append(this.el);
         this.$("#export_modal").modal({show: true, backdrop: 'static', keyboard: false});
@@ -38,14 +43,23 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     },
     load_license:function(){
         this.$("#license_modal").html(this.license_template({
-            license: window.licenses.get($("#export_license_select").val()).toJSON()
+            license: this.select_license.toJSON()
         }));
         this.$("#license_modal").modal({show: true});
     },
     select_license:function(){
+        this.select_license = window.licenses.get($("#export_license_select").val());
         this.$("#publish_btn").removeAttr("disabled");
         this.$("#publish_btn").text("PUBLISH");
         this.$("#license_about").css("display", "inline");
+    },
+    publish:function(){
+        var self = this;
+        this.display_load("Publishing...", function(){
+            window.current_channel.publish(self.select_license);
+            self.callback();
+            self.close_exporter();
+        });
     }
 });
 
@@ -53,14 +67,10 @@ var ExportListView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/export_list.handlebars"),
     views:[],
     initialize: function(options) {
-        _.bindAll(this, "publish");
         this.container = options.container;
         this.collection = new Models.ContentNodeCollection();
         this.collection.get_all_fetch(this.model.get("children"));
         this.render();
-    },
-    events:{
-      "click #publish_btn" : "publish"
     },
 
     render: function() {
@@ -80,14 +90,6 @@ var ExportListView = BaseViews.BaseListView.extend({
         if(this.collection.length ==0){
             this.$("#export_list_" + self.model.get("id")).append("<em>No files found.</em>");
         }
-    },
-    publish:function(){
-        // var self = this;
-        // this.views.forEach(function(view){
-        //     self.returnCollection.add(view.submit_file());
-        // });
-        // this.container.close_file_uploader();
-        //window.current_channel.get_root("main_tree")
     }
 });
 

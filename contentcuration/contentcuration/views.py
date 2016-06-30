@@ -14,6 +14,7 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
+from contentcuration.api import publish_node
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer
 
@@ -172,3 +173,31 @@ def _duplicate_node(node, parent=None):
     new_node.save()
 
     return new_node
+
+
+@csrf_exempt
+def publish_channel(request):
+    logging.debug("Entering the publish_channel endpoint")
+
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+
+        try:
+            channel_id = data["channel_id"]
+            license_id = data["license_id"]
+
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+        channel = get_object_or_404(Channel, id=channel_id, deleted=False)
+        license = get_object_or_404(License, id=license_id)
+        setattr(channel, "version", channel.version + 1)
+        channel.save()
+
+        publish_node(channel.main_tree, license)
+
+        return HttpResponse(json.dumps({
+            "success": True
+        }))

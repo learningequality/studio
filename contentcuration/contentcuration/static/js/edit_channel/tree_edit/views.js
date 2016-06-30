@@ -377,22 +377,9 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		var self = this;
 		this.display_load("Publishing Content...", function(){
 			self.save({"changed": false},{validate:false});
-			self.publish_children(self.model, self.containing_list_view.collection);
 			self.render();
 		});
 
-	},
-	publish_children:function(model, collection){
-		var self = this;
-		if(model.attributes){
-			var children = collection.get_all_fetch(model.get("children"));
-			children.forEach(function(entry){
-				if(!entry.get("published")){
-					entry.save({"changed":false},{validate:false});
-				}
-				self.publish_children(this, collection);
-			});
-		}
 	},
 	add_to_trash:function(){
 		this.containing_list_view.add_to_trash([this]);

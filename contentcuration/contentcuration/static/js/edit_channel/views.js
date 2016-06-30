@@ -107,7 +107,12 @@ var BaseView = Backbone.View.extend({
 	},
 	publish:function(){
 		var Exporter = require("edit_channel/export/views");
-		var exporter = new Exporter.ExportModalView();
+		var exporter = new Exporter.ExportModalView({
+			model: window.current_channel.get_root("main_tree"),
+			callback: function(){
+				$("#channel-edit-content-wrapper").data("data").render();
+			}
+		});
 	}
 });
 
