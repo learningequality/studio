@@ -6,6 +6,7 @@ Markdown==2.6.2
 Pillow==2.8.1
 psutil==3.1.1
 django-js-reverse==0.6.1
+django-registration==2.1.2
 django-hashedfilenamestorage==1.0.0
 djangorestframework-bulk==0.2.1
 -e git+https://github.com/jayoshih/kolibri.git@553ed6f20ea1d3236614deceaa7519a302b083d5#egg=kolibri-master

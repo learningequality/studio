@@ -11,8 +11,39 @@ from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
+from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 
 from constants import content_kinds, extensions, presets
+
+class UserManager(BaseUserManager):
+    def create_user(self, email, first_name, last_name, password=None):
+        if not email:
+            raise ValueError('Email address not specified')
+
+        new_user = self.model(
+            email=self.normalize_email(email),
+        )
+
+        new_user.set_password(password)
+        new_user.first_name = first_name
+        new_user.last_name = last_name
+        new_user.save(using=self._db)
+        return new_user
+
+    def create_superuser(self, email, first_name, last_name, password=None):
+        new_user = self.create_user(email, first_name, last_name, password=password)
+        new_user.is_admin = True
+        new_user.save(using=self._db)
+        return new_user
+
+class User(AbstractBaseUser):
+    email = models.EmailField(max_length=100, unique=True)
+    first_name = models.CharField(max_length=100, default="first")
+    last_name = models.CharField(max_length=100, default="last")
+    objects = UserManager()
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
+
 
 class UUIDField(models.CharField):
 
@@ -61,7 +92,7 @@ class Channel(models.Model):
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True)
     editors = models.ManyToManyField(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         related_name='editable_channels',
         verbose_name=_("editors"),
         help_text=_("Users with edit rights"),
@@ -70,7 +101,7 @@ class Channel(models.Model):
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
     main_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
     bookmarked_by = models.ManyToManyField(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         related_name='bookmarked_channels',
         verbose_name=_("bookmarked by"),
     )

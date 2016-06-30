@@ -121,3 +121,5 @@ STORAGE_URL = '/storage/'
 DEFAULT_FILE_STORAGE = 'kolibri.content.models.ContentCopyStorage'
 
 LOGIN_REDIRECT_URL = '/exercises/'
+
+AUTH_USER_MODEL = 'contentcuration.User'

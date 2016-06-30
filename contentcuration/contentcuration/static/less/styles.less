@@ -150,6 +150,11 @@ body {
 		height:100vh;
 		width:100vw;
 
+		.login-error{
+			color:red;
+			font-weight:bold;
+		}
+
 		#login-form{
 			margin-top:10%;
 			padding:30px;
@@ -195,14 +200,22 @@ body {
 			.btn-login{
 				width:50%;
 				background-color:@login-btn-color;
-				margin-bottom:15px;
+				margin-bottom:10px;
 				margin-top: 20px;
 				font-size:15pt;
 				color:white;
 			}
 
+			#lost_password_prompt{
+				margin-left:-50px;
+			}
+
 			.login-action-text{
 				color:@login-btn-color;
+			}
+
+			#register_prompt{
+				font-size:14pt;
 			}
 		}
 	}

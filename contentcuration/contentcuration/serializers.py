@@ -22,6 +22,11 @@ class LanguageSerializer(serializers.ModelSerializer):
         model = Language
         fields = ('lang_code', 'lang_subcode', 'id')
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'is_active')
+
 class ChannelSerializer(serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
@@ -97,7 +102,7 @@ class CustomListSerializer(serializers.ListSerializer):
 
         for tag_data in unformatted_input_tags:
             # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
-            if isinstance(tag_data, unicode): 
+            if isinstance(tag_data, unicode):
                 tag_data = json.loads(tag_data)
             tag_tuple = ContentTag.objects.get_or_create(tag_name=tag_data['tag_name'], channel_id=tag_data['channel'])
             all_tags.append(tag_tuple[0])
@@ -124,7 +129,7 @@ class CustomListSerializer(serializers.ListSerializer):
                         # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
                         if isinstance(tag_data, unicode):
                             tag_data = json.loads(tag_data)
-                        
+
                         # this requires optimization
                         for tag_itm in all_tags:
                             if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:

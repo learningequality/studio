@@ -20,14 +20,14 @@
 
 
 			{% if form.errors %}
-			<p>{% trans "Your username and password didn't match. Please try again." %}</p>
+			<p class="login-error">{% trans "Your username and password didn't match. Please try again." %}</p>
 			{% endif %}
 
 			{% if next %}
 			    {% if user.is_authenticated %}
-			    <p>{% trans "Your account doesn't have access to this page. To proceed, please login with an account that has access." %}</p>
+			    <p class="login-error">{% trans "Your account doesn't have access to this page. To proceed, please login with an account that has access." %}</p>
 			    {% else %}
-			    <p>{% trans "Please login to see this page." %}</p>
+			    <p class="login-error">{% trans "Please login to see this page." %}</p>
 			    {% endif %}
 			{% endif %}
 
@@ -40,14 +40,17 @@
 			<div class="form-group">
 			    {{ form.password.label_tag }}
 			    {{ form.password }}
+			    {# Assumes you setup the password_reset view in your URLconf #}
+				<p id="lost_password_prompt"><a  class="action-text login-action-text" href="{% url 'password_reset' %}">{% trans "Lost password?" %}</a></p>
 			</div>
+
 
 			<input class="btn btn-login" type="submit" value="Login" />
 			<input type="hidden" name="next" value="{{ next }}" />
 			</form>
+			<a  class="action-text login-action-text" id="register_prompt">Create an Account</a>
 
-			{# Assumes you setup the password_reset view in your URLconf #}
-			<p><a  class="action-text login-action-text" href="{% url 'password_reset' %}">{% trans "Lost password?" %}</a></p>
+
 		</div>
 		<a id="login_le" href="https://learningequality.org/" target="_blank"><img src="{% static 'img/le_logo.png' %}" id="le_img">Learning Equality</a>
 	</div>
