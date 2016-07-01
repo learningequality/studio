@@ -1,8 +1,10 @@
 {% extends "base.html" %}
+{% load staticfiles %}
 {% load i18n %}
-
+{% block nav %}{% endblock nav %}
 {% block content %}
-
-<p>{% trans "Account activation failed" %}</p>
-
+<div class="message-page">
+	<img class="pull-left message-logo" src="{% static 'img/kolibri_login.png' %}"/>
+	<h2>{% trans "Failed to activate account. Please try again." %}</h2>
+</div>
 {% endblock %}

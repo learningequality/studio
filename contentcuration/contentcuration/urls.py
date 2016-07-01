@@ -106,14 +106,16 @@ urlpatterns = [
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),
     url(r'^file_upload/', views.file_upload, name="file_upload"),
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
+    url(r'^accounts/password/reset/$', auth_views.password_reset, {'post_reset_redirect' : '/accounts/password/reset/done/', 'template_name' : 'registration/reset_password_form.html'}, name="password_reset"),
+    url(r'^accounts/password/reset/done/$', auth_views.password_reset_done, {'template_name' : 'registration/reset_password_done.html'}),
+    url(r'^accounts/password/reset/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$', auth_views.password_reset_confirm, {'post_reset_redirect' : '/accounts/password/done/', 'template_name' : 'registration/reset_password_confirm.html'}),
+    url(r'^accounts/password/done/$', auth_views.password_reset_complete, {'template_name' : 'registration/reset_password_complete.html'}),
     url(r'^accounts/register/$', views.register, name='register'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
-     # url(r'^accounts/register/complete/$', views.registration_complete, name='registration_complete'),
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^channels/(?P<channel_id>[^/]+)', views.channel, name='channel'),
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
 ]
-
 
 urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]
 

@@ -25,8 +25,9 @@
 				{% if form.last_name.errors %}
 					<li>{% trans "Last name is required." %}</li>
 				{% endif %}
+
 				{% if form.email.errors %}
-					<li>{% trans "Email is required." %}</li>
+					<li>{% trans "Invalid email." %}</li>
 				{% endif %}
 				{% if form.password1.errors %}
 					<li>{% trans "Password is required." %}</li>

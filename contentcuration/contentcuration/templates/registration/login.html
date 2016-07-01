@@ -44,7 +44,7 @@
 						    {{ form.password.label_tag }}
 						    {{ form.password }}
 						    {# Assumes you setup the password_reset view in your URLconf #}
-							<p id="lost_password_prompt"><a  class="action-text login-action-text" href="{% url 'django.contrib.auth.views.password_reset' %}">{% trans "Lost password?" %}</a></p>
+							<p id="lost_password_prompt"><a  class="action-text login-action-text" href="{% url 'auth_password_reset' %}">{% trans "Lost password?" %}</a></p>
 						</div>
 					</div>
 

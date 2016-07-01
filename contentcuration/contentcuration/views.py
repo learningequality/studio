@@ -15,7 +15,7 @@ from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer
 from contentcuration.forms import RegistrationForm
 
@@ -181,6 +181,7 @@ def register(request):
         form = RegistrationForm(request.POST)
         if form.is_valid():
             form.save()
+            # User.objects.create_inactive_user(site=Site.objects.get_current(), **self.user_info)
             return HttpResponseRedirect('/accounts/register/complete')
     else:
         form = RegistrationForm()
@@ -202,15 +203,3 @@ def auth_view(request):
      return HttpResponseRedirect('/')
    else:
      return HttpResponseRedirect('/invalid/')
-
-def register_user(request):
-   if request.method == 'POST':
-      form = RegistrationForm(request.POST)
-      if form.is_valid():
-         print "Form is valid"
-         form.save()
-         return HttpResponseRedirect('/register_success/')
-   args = {}
-   args.update(csrf(request))
-   args['form'] = RegistrationForm()
-   return render_to_response('register.html', args, context_instance=RequestContext(request))

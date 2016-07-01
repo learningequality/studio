@@ -123,3 +123,12 @@ DEFAULT_FILE_STORAGE = 'kolibri.content.models.ContentCopyStorage'
 LOGIN_REDIRECT_URL = '/channels/'
 
 AUTH_USER_MODEL = 'contentcuration.User'
+
+ACCOUNT_ACTIVATION_DAYS=7
+
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 8000
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_USE_TLS = False
+DEFAULT_FROM_EMAIL = 'testing@example.com'

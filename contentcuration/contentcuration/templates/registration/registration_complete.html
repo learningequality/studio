@@ -1,6 +1,11 @@
 {% extends "base.html" %}
+{% load staticfiles %}
 {% load i18n %}
+{% block nav %}{% endblock nav %}
 
 {% block content %}
-<p>{% trans "You are now registered. Activation email sent." %}</p>
+<div class="message-page">
+	<img class="pull-left message-logo" src="{% static 'img/kolibri_login.png' %}"/>
+	<h2>{% trans "You are now registered. Check email for activation link." %}</h2>
+</div>
 {% endblock %}
