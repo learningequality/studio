@@ -23,6 +23,7 @@ from contentcuration.models import ContentNode, License, Channel, File, FileForm
 import serializers
 import views
 from contentcuration import api
+from contentcuration.forms import RegistrationForm
 
 from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
@@ -105,7 +106,9 @@ urlpatterns = [
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),
     url(r'^file_upload/', views.file_upload, name="file_upload"),
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
-    url(r'^accounts/', include('django.contrib.auth.urls')),
+    url(r'^accounts/register/$', views.register, name='register'),
+    url(r'^accounts/', include('registration.backends.hmac.urls')),
+     # url(r'^accounts/register/complete/$', views.registration_complete, name='registration_complete'),
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^channels/(?P<channel_id>[^/]+)', views.channel, name='channel'),
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),

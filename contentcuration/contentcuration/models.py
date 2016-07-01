@@ -38,12 +38,20 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
     email = models.EmailField(max_length=100, unique=True)
-    first_name = models.CharField(max_length=100, default="first")
-    last_name = models.CharField(max_length=100, default="last")
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    is_admin = models.BooleanField(default=False)
+
     objects = UserManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
+    def __unicode__(self):
+        return self.email
+
+    class Meta:
+        verbose_name = _("User")
+        verbose_name_plural = _("Users")
 
 class UUIDField(models.CharField):
 

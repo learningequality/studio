@@ -169,10 +169,16 @@ body {
 		background:@login-background;
 		height:100vh;
 		width:100vw;
+		ul{
+			list-style:none;
+		}
 
-		.login-error{
+		li{
 			color:red;
 			font-weight:bold;
+		}
+		.required_asterisk {
+			color:red;
 		}
 
 		#login-form{
@@ -207,14 +213,22 @@ body {
 					margin:0;
 				}
 			}
-
-
-			#id_password, #id_username{
+			input{
 				outline-color: #55AA93;
 				border:none;
 				background-color:@login-text-bg-color;
 				padding:5px;
 				font-size:14pt;
+			}
+
+			#id_last_name{
+				margin-bottom:30px;
+			}
+
+			#form-wrapper{
+				text-align:right;
+				margin-right:25%;
+
 			}
 
 			.btn-login{
@@ -227,7 +241,7 @@ body {
 			}
 
 			#lost_password_prompt{
-				margin-left:-50px;
+				margin-right:-10px;
 			}
 
 			.login-action-text{

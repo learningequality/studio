@@ -3,19 +3,21 @@ import json
 import logging
 import os
 from rest_framework import status
-from django.http import Http404, HttpResponse, HttpResponseBadRequest
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, render_to_response
 from django.contrib.auth.decorators import login_required
 from django.core import paginator
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import get_storage_class
+from django.core.context_processors import csrf
 from django.template import RequestContext
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer
+from contentcuration.forms import RegistrationForm
 
 def base(request):
     return redirect('channels')    # redirect to the channel list page
@@ -33,7 +35,7 @@ def channel_list(request):
     license_serializer = LicenseSerializer(licenses, many=True)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data)})
-
+@login_required
 def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
     channel_serializer =  ChannelSerializer(channel)
@@ -173,3 +175,42 @@ def _duplicate_node(node, parent=None):
     new_node.save()
 
     return new_node
+
+def register(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect('/accounts/register/complete')
+    else:
+        form = RegistrationForm()
+    token = {}
+    token.update(csrf(request))
+    token['form'] = form
+    return render_to_response('registration/registration_form.html', token)
+
+ # def registration_complete(request):
+ #     return render_to_response('registration/registration_complete.html')
+
+def auth_view(request):
+   username = request.POST.get('username', '')
+   password = request.POST.get('password', '')
+   user = auth.authenticate(username=username, password=password)
+
+   if user is not None:
+     auth.login(request, user)
+     return HttpResponseRedirect('/')
+   else:
+     return HttpResponseRedirect('/invalid/')
+
+def register_user(request):
+   if request.method == 'POST':
+      form = RegistrationForm(request.POST)
+      if form.is_valid():
+         print "Form is valid"
+         form.save()
+         return HttpResponseRedirect('/register_success/')
+   args = {}
+   args.update(csrf(request))
+   args['form'] = RegistrationForm()
+   return render_to_response('register.html', args, context_instance=RequestContext(request))

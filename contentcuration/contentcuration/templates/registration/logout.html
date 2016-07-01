@@ -13,7 +13,7 @@
 	<h2>{% trans "You have successfully logged out." %}</h2>
 
 	{# Assumes you setup the password_reset view in your URLconf #}
-	<p><a href="{% url 'login' %}">{% trans "Click here to log back in again." %}</a></p>
+	<p><a href="{% url 'django.contrib.auth.views.login' %}">{% trans "Click here to log back in again." %}</a></p>
 
 </div>
 
