@@ -12,6 +12,7 @@ from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.core.mail import send_mail
 
 from constants import content_kinds, extensions, presets
 
@@ -49,6 +50,24 @@ class User(AbstractBaseUser):
 
     def __unicode__(self):
         return self.email
+
+    def email_user(self, subject, message, from_email=None, **kwargs):
+        send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    def clean(self):
+        super(User, self).clean()
+        self.email = self.__class__.objects.normalize_email(self.email)
+
+    def get_full_name(self):
+        """
+        Returns the first_name plus the last_name, with a space in between.
+        """
+        full_name = '%s %s' % (self.first_name, self.last_name)
+        return full_name.strip()
+
+    def get_short_name(self):
+        "Returns the short name for the user."
+        return self.first_name
 
     class Meta:
         verbose_name = _("User")

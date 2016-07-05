@@ -5,11 +5,8 @@ import logging
 DEBUG = True
 ALLOWED_HOSTS = []
 
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 8000
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_USE_TLS = False
+ACCOUNT_ACTIVATION_DAYS=7
 DEFAULT_FROM_EMAIL = 'testing@example.com'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 logging.basicConfig(level='DEBUG')

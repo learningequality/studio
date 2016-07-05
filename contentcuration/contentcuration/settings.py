@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sites',
     'contentcuration',
     'django.contrib.staticfiles',
     'rest_framework',
@@ -125,10 +126,11 @@ LOGIN_REDIRECT_URL = '/channels/'
 AUTH_USER_MODEL = 'contentcuration.User'
 
 ACCOUNT_ACTIVATION_DAYS=7
+REGISTRATION_OPEN = True
 
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 8000
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_USE_TLS = False
-DEFAULT_FROM_EMAIL = 'testing@example.com'
+# EMAIL_HOST = 'localhost'
+# EMAIL_PORT = 8000
+# EMAIL_HOST_USER = ''
+# EMAIL_HOST_PASSWORD = ''
+# EMAIL_USE_TLS = False
+# DEFAULT_FROM_EMAIL = 'testing@example.com'

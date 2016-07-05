@@ -17,25 +17,13 @@
 				<h1 id="login-title">Kolibri</h1>
 				<p id="login-subheading">Content Curation</p>
 			</div>
-			{% if form.errors %}
 			<ul>
-				{% if form.first_name.errors %}
-					<li>{% trans "First name is required." %}</li>
-				{% endif %}
-				{% if form.last_name.errors %}
-					<li>{% trans "Last name is required." %}</li>
-				{% endif %}
-
-				{% if form.email.errors %}
-					<li>{% trans "Invalid email." %}</li>
-				{% endif %}
-				{% if form.password1.errors %}
-					<li>{% trans "Password is required." %}</li>
-				{% elif form.password2.errors %}
-					<li>{% trans "Passwords don't match." %}</li>
-				{% endif %}
+				 {% for field in form %}
+			        {% for error in field.errors %}
+			            <li>{{ error|escape }}</li>
+			        {% endfor %}
+			    {% endfor %}
 			</ul>
-			{% endif %}
 			<form action="/accounts/register/" method="post">
 				<div id="form-wrapper">
 					{% csrf_token %}

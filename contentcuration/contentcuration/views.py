@@ -18,6 +18,7 @@ from rest_framework.renderers import JSONRenderer
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer
 from contentcuration.forms import RegistrationForm
+from registration.backends.hmac.views import RegistrationView
 
 def base(request):
     return redirect('channels')    # redirect to the channel list page
@@ -203,3 +204,24 @@ def auth_view(request):
      return HttpResponseRedirect('/')
    else:
      return HttpResponseRedirect('/invalid/')
+
+# class RegisterView(RegistrationView):
+
+#     def send_activation_email(self, user):
+#         """
+#         Send the activation email. The activation key is simply the
+#         username, signed using TimestampSigner.
+#         """
+#         activation_key = self.get_activation_key(user)
+#         context = self.get_email_context(activation_key)
+#         context.update({
+#             'user': user
+#         })
+#         subject = render_to_string(self.email_subject_template,
+#                                    context)
+#         # Force subject to a single line to avoid header-injection
+#         # issues.
+#         subject = ''.join(subject.splitlines())
+#         message = render_to_string(self.email_body_template,
+#                                    context)
+#         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
