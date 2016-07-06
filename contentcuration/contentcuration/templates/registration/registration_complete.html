@@ -5,7 +5,13 @@
 
 {% block content %}
 <div class="message-page">
-	<img class="pull-left message-logo" src="{% static 'img/kolibri_login.png' %}"/>
-	<h2>{% trans "You are now registered. Check email for activation link." %}</h2>
+	<div class="pull-left message-img-wrapper">
+		<img class="message-logo" src="{% static 'img/kolibri_login.png' %}"/>
+	</div>
+	<div class="message-wrapper">
+		<br/>
+		<br/>
+		<h2>{% trans "You are now registered. Check email for activation link." %}</h2>
+	</div>
 </div>
 {% endblock %}

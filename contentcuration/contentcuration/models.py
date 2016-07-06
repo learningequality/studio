@@ -134,6 +134,7 @@ class Channel(models.Model):
         verbose_name=_("bookmarked by"),
     )
     deleted = models.BooleanField(default=False)
+    public = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         super(Channel, self).save(*args, **kwargs)

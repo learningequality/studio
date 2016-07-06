@@ -5,8 +5,12 @@
 
 {% block content %}
 <div class="message-page">
-	<img class="pull-left message-logo" src="{% static 'img/kolibri_login.png' %}"/>
-	<h2>{% trans "Your account is now activated." %}</h2>
-	<a href="/" class="btn message-btn">Continue to home...</a>
+	<div class="pull-left message-img-wrapper">
+		<img class="message-logo" src="{% static 'img/kolibri_login.png' %}"/>
+	</div>
+	<div class="message-wrapper">
+		<h2>{% trans "Your account is now activated." %}</h2>
+		<a href="/" class="btn message-btn">Continue to home...</a>
+	</div>
 </div>
 {% endblock %}

@@ -4,7 +4,11 @@
 {% block nav %}{% endblock nav %}
 {% block content %}
 <div class="message-page">
-	<img class="pull-left message-logo" src="{% static 'img/kolibri_login.png' %}"/>
-	<h2>{% trans "Registration is temporarily closed. Please check back later." %}</h2>
+	<div class="pull-left message-img-wrapper">
+		<img class="message-logo" src="{% static 'img/kolibri_login.png' %}"/>
+	</div>
+	<div class="message-wrapper">
+		<h2>{% trans "Registration is temporarily closed. Please check back later." %}</h2>
+	</div>
 </div>
 {% endblock %}

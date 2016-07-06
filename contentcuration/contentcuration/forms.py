@@ -43,14 +43,6 @@ class RegistrationForm(UserCreationForm):
             return False
         return True
 
-    # def save(self, commit=True):
-    #     print self
-    #     user = super(RegistrationForm, self).save(commit=False)
-    #     # user.set_password(self.cleaned_data['password1'])
-    #     if commit:
-    #         get_user_model().objects.create_user(user.objects, user.email, user.first_name, user.last_name, password=self.cleaned_data['password1'])
-    #     return user
-
 # class PassworResetForm(forms.Form):
 #     error_messages = {
 #         'unknown': ("That email address doesn't have an associated "

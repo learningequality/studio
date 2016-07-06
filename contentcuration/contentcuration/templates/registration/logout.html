@@ -8,12 +8,17 @@
 
 {% block content %}
 
-<div class="container" id="logout_container">
-	<img id="logout-image" class="pull-left" src="{% static 'img/kolibri_login.png' %}"/>
-	<h2>{% trans "You have successfully logged out." %}</h2>
+<div class="message-page">
+	<div class="pull-left message-img-wrapper">
+		<img class="message-logo" src="{% static 'img/kolibri_login.png' %}"/>
+	</div>
+	<div class="message-wrapper">
+		<br/>
+		<h2>{% trans "You have successfully logged out." %}</h2>
 
-	{# Assumes you setup the password_reset view in your URLconf #}
-	<p><a href="{% url 'django.contrib.auth.views.login' %}">{% trans "Click here to log back in again." %}</a></p>
+		{# Assumes you setup the password_reset view in your URLconf #}
+		<p><a class="btn message-btn" href="{% url 'django.contrib.auth.views.login' %}">{% trans "Login" %}</a></p>
+	</div>
 
 </div>
 

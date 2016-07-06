@@ -178,7 +178,8 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		var data = {
 			name: title,
 			description: description,
-			thumbnail : this.thumbnail
+			thumbnail : this.thumbnail,
+			editors: [window.current_user.id]
 		};
 		this.original_thumbnail = this.thumbnail;
 

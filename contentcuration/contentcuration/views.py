@@ -16,7 +16,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer
+from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
 from contentcuration.forms import RegistrationForm
 from registration.backends.hmac.views import RegistrationView
 
@@ -29,20 +29,24 @@ def testpage(request):
 
 @login_required
 def channel_list(request):
-    channel_list = Channel.objects.filter(deleted=False) # Todo: only allow access to certain channels?
+    channel_list = Channel.objects.filter(deleted=False, editors__email__contains= request.user)
     channel_serializer = ChannelSerializer(channel_list, many=True)
 
     licenses = License.objects.all()
     license_serializer = LicenseSerializer(licenses, many=True)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
-                                                 "license_list" : JSONRenderer().render(license_serializer.data)})
+                                                 "license_list" : JSONRenderer().render(license_serializer.data),
+                                                 "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
 @login_required
 def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
     channel_serializer =  ChannelSerializer(channel)
 
-    channel_list = Channel.objects.filter(deleted=False) # Todo: only allow access to certain channels?
+    channel_list = Channel.objects.filter(deleted=False, editors__email__contains= request.user)
     channel_list_serializer = ChannelSerializer(channel_list, many=True)
+
+    accessible_channel_list = Channel.objects.filter(deleted=False, public=True) # Todo: only allow access to certain channels
+    accessible_channel_list_serializer = ChannelSerializer(accessible_channel_list, many=True)
 
     fileformats = FileFormat.objects.all()
     fileformat_serializer = FileFormatSerializer(fileformats, many=True)
@@ -60,12 +64,14 @@ def channel(request, channel_id):
     channel_tags_serializer = TagSerializer(channel_tags, many=True)
 
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
+                                                "accessible_channels" : JSONRenderer().render(accessible_channel_list_serializer.data),
                                                 "channels" : JSONRenderer().render(channel_list_serializer.data),
                                                 "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data),
                                                  "fpreset_list" : JSONRenderer().render(formatpreset_serializer.data),
                                                  "ckinds_list" : JSONRenderer().render(contentkind_serializer.data),
-                                                 "ctags": JSONRenderer().render(channel_tags_serializer.data)})
+                                                 "ctags": JSONRenderer().render(channel_tags_serializer.data),
+                                                 "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
 
 def exercise_list(request):
 
@@ -177,23 +183,6 @@ def _duplicate_node(node, parent=None):
 
     return new_node
 
-def register(request):
-    if request.method == 'POST':
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            # User.objects.create_inactive_user(site=Site.objects.get_current(), **self.user_info)
-            return HttpResponseRedirect('/accounts/register/complete')
-    else:
-        form = RegistrationForm()
-    token = {}
-    token.update(csrf(request))
-    token['form'] = form
-    return render_to_response('registration/registration_form.html', token)
-
- # def registration_complete(request):
- #     return render_to_response('registration/registration_complete.html')
-
 def auth_view(request):
    username = request.POST.get('username', '')
    password = request.POST.get('password', '')
@@ -204,24 +193,3 @@ def auth_view(request):
      return HttpResponseRedirect('/')
    else:
      return HttpResponseRedirect('/invalid/')
-
-# class RegisterView(RegistrationView):
-
-#     def send_activation_email(self, user):
-#         """
-#         Send the activation email. The activation key is simply the
-#         username, signed using TimestampSigner.
-#         """
-#         activation_key = self.get_activation_key(user)
-#         context = self.get_email_context(activation_key)
-#         context.update({
-#             'user': user
-#         })
-#         subject = render_to_string(self.email_subject_template,
-#                                    context)
-#         # Force subject to a single line to avoid header-injection
-#         # issues.
-#         subject = ''.join(subject.splitlines())
-#         message = render_to_string(self.email_body_template,
-#                                    context)
-#         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)

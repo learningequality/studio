@@ -47,7 +47,7 @@ class ChannelSerializer(serializers.ModelSerializer):
         model = Channel
         fields = ('id', 'name', 'description', 'editors', 'main_tree',
                     'clipboard_tree', 'trash_tree','resource_count', 'resource_size',
-                    'version', 'thumbnail', 'deleted')
+                    'version', 'thumbnail', 'deleted', 'public')
 
 class FileSerializer(serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
