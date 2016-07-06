@@ -104,15 +104,8 @@ class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
-    # the instance_id is used for mapping a node between kolibri and the
-    # content curation server. We can't use the raw id, since ids aren't
-    # guaranteed to be consistent across different content curation servers
-    # (once we have a distributed content curation server), and content ids may
-    # be the same across different nodes within the same channel (for student
-    # logging and analytics purposes.) Apart from generating the instance_id
-    # upon node creation, we also change the instance_id whenever we move or
-    # copy a node).
-    instance_id = UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    # The id should be the same between the content curation server and Kolibri.
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
 
     # the content_id is used for tracking a user's interaction with a piece of
     # content, in the face of possibly many copies of that content. When a user
@@ -191,6 +184,7 @@ class File(models.Model):
     The bottom layer of the contentDB schema, defines the basic building brick for content.
     Things it can represent are, for example, mp4, avi, mov, html, css, jpeg, pdf, mp3...
     """
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
     checksum = models.CharField(max_length=400, blank=True)
     file_size = models.IntegerField(blank=True, null=True)
     file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500, blank=True)
