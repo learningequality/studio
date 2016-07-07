@@ -6,6 +6,7 @@ var BaseViews = require("./../views");
 var QueueView = require("edit_channel/queue/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var UploaderViews = require("edit_channel/uploader/views");
+var ShareViews = require("edit_channel/share/views");
 var Previewer = require("edit_channel/preview/views");
 //var UndoManager = require("backbone-undo");
 var Models = require("./../models");
@@ -46,7 +47,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 			self.$el.find(".disable-none-selected").prop("disabled",true);
 			self.$el.find(".disable-none-selected").css("cursor","not-allowed");
 		});
-
 	 	/*
 	 	this.undo_manager = new UndoManager({
             track: true,
@@ -151,7 +151,10 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.$el.find(".disable-none-selected").css("cursor", (checked_count > 0)? "pointer" : "not-allowed");
 	},
 	edit_permissions:function(){
-		alert("EDITING PERMISSIONS")
+		var share_view = new ShareViews.ShareModalView({
+			model:window.current_channel,
+			current_user: window.current_user
+		});
 	}
 });
 

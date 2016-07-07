@@ -2,7 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-require("uploader.less");
+require("import.less");
 var stringHelper = require("edit_channel/utils/string_helper");
 
 var ImportView = BaseViews.BaseModalView.extend({

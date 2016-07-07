@@ -43,6 +43,20 @@ class RegistrationForm(UserCreationForm):
             return False
         return True
 
+# class InvitationForm(forms.Form):
+#     email = forms.EmailField(max_length=100)
+
+#     def clean(self):
+#         cleaned_data = super(InvitationForm, self).clean()
+
+#         self.add_error('email', 'test worked!')
+
+#         return self.cleaned_data
+
+#     class Meta:
+#         model = User
+#         fields = ('email')
+
 # class PassworResetForm(forms.Form):
 #     error_messages = {
 #         'unknown': ("That email address doesn't have an associated "

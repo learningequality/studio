@@ -133,6 +133,11 @@ class Channel(models.Model):
         related_name='bookmarked_channels',
         verbose_name=_("bookmarked by"),
     )
+    pending_editors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='pending_editors',
+        verbose_name=_("pending"),
+    )
     deleted = models.BooleanField(default=False)
     public = models.BooleanField(default=False)
 

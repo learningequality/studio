@@ -3,10 +3,12 @@ import json
 import logging
 import os
 from rest_framework import status
+from django.core.mail import send_mail
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 from django.core import paginator
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import get_storage_class
@@ -17,8 +19,6 @@ from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
-from contentcuration.forms import RegistrationForm
-from registration.backends.hmac.views import RegistrationView
 
 def base(request):
     return redirect('channels')    # redirect to the channel list page
@@ -193,3 +193,32 @@ def auth_view(request):
      return HttpResponseRedirect('/')
    else:
      return HttpResponseRedirect('/invalid/')
+
+def send_invitation_email(request):
+    print "Sending email..."
+
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+
+        message_template = open(os.path.join(settings.PERMISSION_TEMPLATE_ROOT, "permissions_email.txt"))
+        subject_template = open(os.path.join(settings.PERMISSION_TEMPLATE_ROOT, "permissions_email_subject.txt"))
+
+        try:
+            user_id = data["user_id"]
+            user_email = data["user_email"]
+            channel_id = data["channel_id"]
+            sender_name = data["sender_name"]
+            subject = "Temp Subject" #subject_template.read()
+            message = message_template.read()
+            if user_id < 0:
+                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user_email], fail_silently=False,)
+            else:
+                user = User.objects.filter(id=user_id)[0]
+                user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+        return HttpResponse(json.dumps({"success": True}))

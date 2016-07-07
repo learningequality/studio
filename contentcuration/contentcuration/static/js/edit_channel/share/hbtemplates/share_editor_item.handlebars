@@ -1,0 +1,10 @@
+<span class="editor_name truncate">{{editor.first_name}} {{editor.last_name}}</span>
+<span class="editor_email">&nbsp;({{editor.email}})</span>
+<div class="pull-right">
+	{{#if pending}}
+		<span class="pending_indicator">Pending...</span>
+		<span class="reinvite_editor glyphicon glyphicon-envelope" title="Resend Invitation"></span>
+	{{else}}
+		<span class="remove_editor glyphicon glyphicon-remove" title="Remove Editor"></span>
+	{{/if}}
+</div>

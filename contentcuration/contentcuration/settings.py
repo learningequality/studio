@@ -19,6 +19,8 @@ STORAGE_ROOT = os.path.join(BASE_DIR, "storage")
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
+PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 

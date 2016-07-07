@@ -1,0 +1,109 @@
+@import "global-variables.less";
+
+@uploader-width: 850px;
+@metadata-width: 850px;
+@uploader-background-color:#D8D8D8;
+@uploader-height: 600px;
+@uploader-header-color:#848484;
+@uploader-option-size: (@uploader-width - 100px) /2;
+@uploader-list-height: 200px;
+@uploader-preview-bg-color: #585858;
+@uploader-grayed-out-color: #BDBDBD;
+
+.modal{
+	padding-top:20px;
+	z-index: 99999;
+	position:absolute;
+}
+
+.file-row{
+	width:100%;
+	padding: 0 25px;
+	.inline{
+		display:inline-block;
+		vertical-align: middle;
+		word-wrap:break-word;
+		.name{
+			margin-top:10px;
+		}
+	}
+	.file_upload_progress{
+		height:15px;
+	}
+	div .name {
+		font-weight: bold;
+	}
+}
+.dz-remove {
+	position: relative;
+	bottom: 18px;
+	margin-left: 25px;
+}
+.progress-bar-success {
+	background: @blue-200;
+}
+
+.modal-body{
+	width:auto;
+}
+
+.modal-header{
+	border: none;
+	padding-bottom: 5px;
+	.glyphicon{
+		margin-right:15px;
+	}
+}
+
+.modal-title{
+	max-width:80%;
+}
+
+.modal-dialog{
+	width: @uploader-width;
+}
+
+
+div#dropzone {
+	min-height: 150px;
+}
+
+
+.dz_click{
+	margin-right:10px;
+	cursor:pointer;
+}
+
+
+.default_preview{
+	background-color: @uploader-preview-bg-color;
+	min-height:300px;
+	.default_preview_text{
+		margin-top:30%;
+		color:white;
+	}
+}
+
+.image_preview{
+	margin-top:20px;
+	max-width:100%;
+	max-height:90%;
+}
+
+.pdf_preview{
+	margin-top:20px;
+	max-width:100%;
+	max-height:100%;
+	min-height:370px;
+}
+
+.audio_preview{
+	width:100%;
+	margin-top:20%;
+}
+
+.video_preview{
+	margin-top:20px;
+	max-width:100%;
+	max-height:90%;
+}

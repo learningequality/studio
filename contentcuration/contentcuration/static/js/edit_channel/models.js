@@ -24,6 +24,56 @@ var BaseCollection = Backbone.Collection.extend({
 	}
 });
 
+/**** USER MODEL ****/
+var UserModel = BaseModel.extend({
+	root_list : "user-list",
+	defaults: {
+		first_name: "No Account Yet"
+    },
+    fetch_by_email:function(email){
+		/* TODO-BLOCKER: Better to only fetch email looking for */
+    	var collection = new UserCollection();
+    	collection.fetch({async:false});
+    	return collection.findWhere({email: email});
+    },
+    send_invitation_email:function(channel, sender, callback){
+        var data = {
+        	"user_id": this.get("id"),
+        	"channel_id": channel.get("id"),
+        	"user_email": this.get("email"),
+        	"sender_name": sender.first_name + " " + sender.last_name
+        };
+        $.ajax({
+        	method:"POST",
+            url: window.Urls.send_invitation_email(),
+            data:  JSON.stringify(data),
+            async: false
+        });
+    	callback();
+    }
+});
+
+var UserCollection = BaseCollection.extend({
+	model: UserModel,
+	list_name:"user-list",
+
+	/* TODO: would be better to fetch all values at once */
+    get_all_fetch: function(ids){
+    	var to_fetch = new UserCollection();
+    	var self = this;
+    	ids.forEach(function(id){
+			var model = self.get({'id': id});
+    		if(!model){
+    			model = self.add({'id':id});
+    			model.fetch({async:false});
+    		}
+    		to_fetch.add(model);
+    	});
+    	return to_fetch;
+    }
+
+});
+
 /**** CHANNEL AND CONTENT MODELS ****/
 var ContentNodeModel = BaseModel.extend({
 	root_list:"contentnode-list",
@@ -362,5 +412,7 @@ module.exports = {
 	FormatPresetModel: FormatPresetModel,
 	FormatPresetCollection: FormatPresetCollection,
 	ContentKindModel: ContentKindModel,
-	ContentKindCollection : ContentKindCollection
+	ContentKindCollection : ContentKindCollection,
+	UserModel:UserModel,
+	UserCollection:UserCollection
 }
