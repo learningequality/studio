@@ -30,6 +30,7 @@ class Command(BaseCommand):
             raise_if_nodes_are_all_unchanged(channel)
             mark_all_nodes_as_changed(channel)
             assign_license_to_contentcuration_nodes(channel, options['license_id'])
+            increment_channel_version(channel)
             prepare_export_database()
             # TODO: increment channel version numbers when we mark nodes as changed as well
             map_content_tags(channel)
@@ -44,6 +45,11 @@ class Command(BaseCommand):
                 message=e.message))
             self.stdout.write("You can find your database in {path}".format(
                 path=e.db_path))
+
+
+def increment_channel_version(channel):
+    channel.version += 1
+    channel.save()
 
 
 def assign_license_to_contentcuration_nodes(channel, license_id):

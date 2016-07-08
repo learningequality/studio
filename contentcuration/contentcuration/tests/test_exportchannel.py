@@ -78,3 +78,11 @@ def test_assigns_license(channel, license_wtfpl):
 
     for n in root_kolibrinode.get_family():
         assert n.license_id == license_wtfpl.pk
+
+
+@pytest.mark.django_db
+def test_increments_version(channel, license_wtfpl):
+    old_version = channel.version
+    call_command('exportchannel', channel.pk, str(license_wtfpl.pk))
+    channel.refresh_from_db()
+    assert channel.version > old_version
