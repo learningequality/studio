@@ -21,7 +21,7 @@ class EarlyExit(BaseException):
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('channel_id', type=str)
-        parser.add_argument('license_id', type=int)
+        parser.add_argument('license_id', type=str)
 
     def handle(self, *args, **options):
         try:
@@ -34,7 +34,7 @@ class Command(BaseCommand):
             # TODO: increment channel version numbers when we mark nodes as changed as well
             map_content_tags(channel)
 
-            kolibri_channel = map_channel_to_kolibri_channel(channel)
+            map_channel_to_kolibri_channel(channel)
             map_content_nodes(channel.main_tree)
             # use SQLite backup API to put DB into archives folder.
             # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
@@ -44,6 +44,10 @@ class Command(BaseCommand):
                 message=e.message))
             self.stdout.write("You can find your database in {path}".format(
                 path=e.db_path))
+
+
+def assign_license_to_contentcuration_nodes(channel, license_id):
+    channel.main_tree.get_family().update(license_id=license_id)
 
 
 def map_content_tags(channel):
@@ -145,7 +149,9 @@ def map_channel_to_kolibri_channel(channel):
         name=channel.name,
         description=channel.description,
         version=channel.version,
-        thumbnail=channel.thumbnail, )
+        thumbnail=channel.thumbnail,
+        root_pk=channel.main_tree_id,
+    )
     logging.info("Generated the channel metadata.")
 
     return kolibri_channel

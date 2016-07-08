@@ -26,7 +26,12 @@ def fileformat_mp4():
 
 
 @pytest.fixture
-def channel(topic, video, preset_video, fileformat_mp4):
+def license_wtfpl():
+    return mixer.blend('contentcuration.License', license_name="WTF License")
+
+
+@pytest.fixture
+def channel(topic, video, preset_video, fileformat_mp4, license_wtfpl):
     with cc.ContentNode.objects.delay_mptt_updates():
         root = mixer.blend('contentcuration.ContentNode', title="root", parent=None, kind=topic)
         level1 = mixer.blend('contentcuration.ContentNode', parent=root, kind=topic)
@@ -41,9 +46,9 @@ def channel(topic, video, preset_video, fileformat_mp4):
 
 
 @pytest.mark.django_db
-def test_things_work(channel, settings):
+def test_things_work(channel, license_wtfpl):
     # TODO (aron): split different gets/asserts into their own tests
-    call_command('exportchannel', channel.pk, "1")
+    call_command('exportchannel', channel.pk, str(license_wtfpl.pk))
 
     k.ChannelMetadata.objects.get(name=channel.name)
 
@@ -53,3 +58,23 @@ def test_things_work(channel, settings):
         kolibrinode = k.ContentNode.objects.get(pk=ccnode.pk)
 
         assert ccnode.parent_id == kolibrinode.parent_id
+
+
+@pytest.mark.django_db
+def test_assigns_channel_root_pk(channel, license_wtfpl):
+    call_command('exportchannel', channel.pk, str(license_wtfpl.pk))
+
+    kolibrichannel = k.ChannelMetadata.objects.get(pk=channel.pk)
+
+    assert kolibrichannel.root_pk == channel.main_tree_id
+
+
+@pytest.mark.django_db
+def test_assigns_license(channel, license_wtfpl):
+    call_command('exportchannel', channel.pk, str(license_wtfpl.pk))
+
+    kolibrichannel = k.ChannelMetadata.objects.get(pk=channel.pk)
+    root_kolibrinode = k.ContentNode.objects.get(pk=kolibrichannel.root_pk)
+
+    for n in root_kolibrinode.get_family():
+        assert n.license_id == license_wtfpl.pk
