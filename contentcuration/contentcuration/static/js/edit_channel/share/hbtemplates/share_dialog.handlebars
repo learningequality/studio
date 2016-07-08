@@ -3,15 +3,15 @@
 		<h4>Access Options</h4>
 		<p>
 			<input type="radio" id="share_public_channel" name="share_option" {{#if channel.public}}checked{{/if}}>
-			<label for="share_public_channel">Public <em>Anyone can import content from this channel</em></label>
+			<label for="share_public_channel"><span class="glyphicon glyphicon-globe" aria-hidden="true"></span> Public <em>Anyone can import content from this channel</em></label>
 		</p>
 		<!-- <p>
 			<input type="radio" id="share_organization_channel" name="share_option">
-			<label for="share_organization_channel">Organization <em>Anyone from your organization can import from this channel</em></label>
+			<label for="share_organization_channel"><span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span> Organization <em>Anyone from your organization can import from this channel</em></label>
 		</p> -->
 		<p>
 			<input type="radio" id="share_private_channel" name="share_option" {{#unless channel.public}}checked{{/unless}}>
-			<label for="share_private_channel">Private <em>Only people with editing permission can import content from this channel</em></label>
+			<label for="share_private_channel"><span class="glyphicon glyphicon-lock" aria-hidden="true"></span> Private <em>Only people with editing permission can import content from this channel</em></label>
 		</p>
 	</div>
 	<div id="editor_list_area">
@@ -22,11 +22,7 @@
 			<input type="submit" class="action-button" value="Invite" id="share_invite_button">
 		</div>
 		<div id="editor_list_wrapper">
-			<ul id="share_list" class="list-unstyled">
-				{{#if is_empty}}
-					<li class="default-item">You are currently the only editor for this channel.</li>
-				{{/if}}
-			</ul>
+			<ul id="share_list" class="list-unstyled"></ul>
 		</div>
 	</div>
 	<br/>

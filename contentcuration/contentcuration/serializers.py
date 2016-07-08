@@ -287,3 +287,8 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
         model = AssessmentItem
         fields = ('question', 'type', 'answers', 'id', 'exercise')
         list_serializer_class = BulkListSerializer
+
+class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = Invitation
+        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name')

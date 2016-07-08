@@ -2,11 +2,14 @@ import copy
 import json
 import logging
 import os
+import urlparse
 from rest_framework import status
 from django.core.mail import send_mail
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.edit import FormView
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
+from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core import paginator
@@ -14,11 +17,13 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import get_storage_class
 from django.core.context_processors import csrf
 from django.template import RequestContext
+from django.template.loader import render_to_string
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
+from contentcuration.forms import InvitationForm
 
 def base(request):
     return redirect('channels')    # redirect to the channel list page
@@ -195,30 +200,124 @@ def auth_view(request):
      return HttpResponseRedirect('/invalid/')
 
 def send_invitation_email(request):
-    print "Sending email..."
-
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
-        message_template = open(os.path.join(settings.PERMISSION_TEMPLATE_ROOT, "permissions_email.txt"))
-        subject_template = open(os.path.join(settings.PERMISSION_TEMPLATE_ROOT, "permissions_email_subject.txt"))
-
         try:
-            user_id = data["user_id"]
             user_email = data["user_email"]
             channel_id = data["channel_id"]
-            sender_name = data["sender_name"]
-            subject = "Temp Subject" #subject_template.read()
-            message = message_template.read()
-            if user_id < 0:
-                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user_email], fail_silently=False,)
-            else:
-                user = User.objects.filter(id=user_id)[0]
-                user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+            recipient = User.objects.get_or_create(email = user_email)[0]
+            invitation = Invitation.objects.get_or_create(invited = recipient,
+                                                        email = user_email,
+                                                        sender=request.user,
+                                                        channel_id = channel_id,
+                                                        first_name=recipient.first_name if recipient.is_active else "Guest",
+                                                        last_name=recipient.last_name)[0]
+
+            subject = render_to_string('permissions/permissions_email_subject.txt', {'site' : get_current_site(request)})
+            message = render_to_string('permissions/permissions_email.txt', {
+                                            'sender' : request.user,
+                                            'site' : get_current_site(request),
+                                            'user' : recipient,
+                                            'channel_id' : channel_id,
+                                            'invitation_key': invitation.id,
+                                            'is_new': recipient.is_active is False
+                                        })
+            recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
 
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        return HttpResponse(json.dumps({"success": True}))
+        return HttpResponse(json.dumps({
+                "success": True,
+                "invitation_id": invitation.id
+            }))
+
+def accept_invitation(request, user_id, invitation_link, channel_id):
+    is_valid = False
+
+    try:
+        invitation = Invitation.objects.get(id = invitation_link)
+        is_valid = True
+        channel = Channel.objects.filter(id=channel_id)[0]
+        channel.editors.add(user_id)
+        channel.save()
+        invitation.delete()
+    except ObjectDoesNotExist:
+        logging.debug("No invitation found.")
+
+    return render(request, 'permissions/permissions_confirm.html', {
+                                                 "validlink" : is_valid,
+                                                 "channel_id" : channel_id})
+
+def accept_invitation_and_registration(request, user_id, invitation_link, channel_id):
+
+
+    return render(request, 'permissions/permissions_register.html', {
+                                                 "validlink" : is_valid,
+                                                 "channel_id" : channel_id,
+                                                 "user_id": user_id,
+                                                 "user": user,
+                                                 "invitation_link": invitation_link,
+                                                 "form" : InvitationForm
+                                            })
+
+class InvitationRegisterView(FormView):
+    """
+    Base class for user registration views.
+    """
+    disallowed_url = 'registration_disallowed'
+    form_class = InvitationForm
+    success_url = None
+    template_name = 'permissions/permissions_register.html'
+    invitation = None
+
+    def dispatch(self, *args, **kwargs):
+        try:
+            invitation = Invitation.objects.get(id = self.kwargs['invitation_link'])
+            user = User.objects.get(id=self.kwargs['user_id'])
+        except ObjectDoesNotExist:
+            logging.debug("No invitation found.")
+            return redirect("/invitation_fail")
+
+        if not getattr(settings, 'REGISTRATION_OPEN', True):
+            return redirect(self.disallowed_url)
+
+        if user.is_active:
+            return redirect("/accept_invitation/" + '/'.join({self.kwargs["user_id"], self.kwargs["invitation_link"], self.kwargs["channel_id"]}))
+
+        return super(InvitationRegisterView, self).dispatch(*args, **kwargs)
+
+    def form_valid(self, form):
+        new_user = self.register(form)
+        success_url = self.get_success_url(new_user)
+        try:
+            to, args, kwargs = success_url
+            return redirect(to, *args, **kwargs)
+        except ValueError:
+            return redirect(success_url)
+
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def register(self, form):
+        """
+        Implement user-registration logic here. Access to both the
+        request and the registration form is available here.
+        """
+        raise NotImplementedError
+
+def decline_invitation(request, invitation_link):
+    try:
+        invitation = Invitation.objects.get(id = invitation_link)
+        invitation.delete()
+
+    except ObjectDoesNotExist:
+        logging.debug("No invitation found.")
+
+    return render(request, 'permissions/permissions_decline.html')
+
+def fail_invitation(request):
+    return render(request, 'permissions/permissions_fail.html')

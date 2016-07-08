@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+{% block nav %}{% endblock nav %}
+
+{% block content %}
+<div class="message-page">
+	<div class="pull-left message-img-wrapper">
+		<img class="message-logo" src="{% static 'img/kolibri_login.png' %}"/>
+	</div>
+	<div class="message-wrapper">
+		{% if validlink %}
+			<br/>
+			<h2>{% trans "You have successfully accepted your invitation to edit this channel" %}</h2>
+			<a class="btn message-btn" href="/channels/{{channel_id}}/edit">{% trans "Go to Channel" %}</a>
+		{% else %}
+			<h2>{% trans "Accepting invitation to edit failed." %}</h2>
+			<p>{% trans "This link is no longer valid. You may need to contact the person who invited you to send you a new invitation." %}</p>
+			<p>{% trans "We apologize for the inconvenience." %}</p>
+			<a class="btn message-btn" href="/">{% trans "Go Home" %}</a>
+		{% endif %}
+	</div>
+</div>
+
+{% endblock %}

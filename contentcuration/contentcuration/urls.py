@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
-from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem, ContentKind, Language, User
+from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem, ContentKind, Language, User, Invitation
 import serializers
 import views
 from contentcuration import api
@@ -69,6 +69,10 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
 
+class InvitationViewSet(viewsets.ModelViewSet):
+    queryset = Invitation.objects.all()
+    serializer_class = serializers.InvitationSerializer
+
 class ExerciseViewSet(viewsets.ModelViewSet):
     queryset = Exercise.objects.all()
     serializer_class = serializers.ExerciseSerializer
@@ -90,6 +94,7 @@ router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
 router.register(r'contentkind', ContentKindViewSet)
 router.register(r'user', UserViewSet)
+router.register(r'invitation', InvitationViewSet)
 
 bulkrouter = BulkRouter(trailing_slash=False)
 bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
@@ -113,6 +118,10 @@ urlpatterns = [
     url(r'^channels/(?P<channel_id>[^/]+)', views.channel, name='channel'),
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^api/send_invitation_email/$', views.send_invitation_email, name='send_invitation_email'),
+    url(r'^accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)/(?P<channel_id>[^/]+)$', views.accept_invitation, name="accept_invitation"),
+    url(r'^new/accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)/(?P<channel_id>[^/]+)$', views.InvitationRegisterView.as_view(), name="accept_invitation_and_registration"),
+    url(r'^decline_invitation/(?P<invitation_link>[^/]+)$', views.decline_invitation, name="decline_invitation"),
+    url(r'^invitation_fail$', views.fail_invitation, name="fail_invitation"),
 ]
 
 urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]

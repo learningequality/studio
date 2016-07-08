@@ -133,11 +133,6 @@ class Channel(models.Model):
         related_name='bookmarked_channels',
         verbose_name=_("bookmarked by"),
     )
-    pending_editors = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name='pending_editors',
-        verbose_name=_("pending"),
-    )
     deleted = models.BooleanField(default=False)
     public = models.BooleanField(default=False)
 
@@ -376,3 +371,17 @@ class AssessmentItem(models.Model):
     question = models.TextField(blank=True)
     answers = models.TextField(default="[]")
     exercise = models.ForeignKey('Exercise', related_name="all_assessment_items")
+
+class Invitation(models.Model):
+    """ Invitation to edit channel """
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    invited = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name='sent_to')
+    email = models.EmailField(max_length=100)
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_by')
+    channel = models.ForeignKey('Channel', null=True, related_name='pending_editors')
+    first_name = models.CharField(max_length=100, default='Guest')
+    last_name = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _("Invitation")
+        verbose_name_plural = _("Invitations")

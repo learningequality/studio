@@ -42,12 +42,13 @@ var ShareView = BaseViews.BaseListView.extend({
         this.container = options.container;
         this.current_user = options.current_user;
         this.originalData = this.model.toJSON();
+        this.model.fetch({async:false});
         this.editor_list = this.model.get("editors");
-        // this.editor_list.splice(this.editor_list.indexOf(this.current_user.id), 1);
+        this.editor_list.splice(this.editor_list.indexOf(this.current_user.id), 1);
         this.collection = new Models.UserCollection();
         this.collection.get_all_fetch(this.editor_list);
 
-        this.pending_collection = new Models.UserCollection();
+        this.pending_collection = new Models.InvitationCollection();
         this.pending_collection.get_all_fetch(this.model.get("pending_editors"));
 
         this.render();
@@ -63,6 +64,14 @@ var ShareView = BaseViews.BaseListView.extend({
             channel:this.model.toJSON(),
             is_empty: this.collection.length == 0
         }));
+
+        var share_item = new ShareItem({
+            model: new Models.UserModel(this.current_user),
+            containing_list_view:self,
+            pending:false
+        });
+        this.$("#share_list").append(share_item.el);
+        this.views.push(share_item);
 
         this.load_collection(this.collection, false);
         this.load_collection(this.pending_collection, true);
@@ -97,56 +106,52 @@ var ShareView = BaseViews.BaseListView.extend({
                $('#editor_list_wrapper').animate({
                     scrollTop : this.$("#share_item_" + result.get("id")).position().top,
                 }, 100);
+            }else{
+                result = new Models.UserModel().fetch_by_email(email);
+                this.send_mail(result, email);
             }
 
-            /* Successfully found user with email who is not already on list */
-            else if(result = new Models.UserModel().fetch_by_email(email)){
-                this.send_mail(result);
-            }
 
-            else{
-                // this.$("#share_error").text("No found user with this email.");
-                result = new Models.UserModel({
-                    email:email,
-                    id:-1
-                });
-                this.send_mail(result);
-            }
         }
     },
-    send_mail:function(user){
+    send_mail:function(user, email){
         this.$("#share_email_address").val("");
         this.$("#share_invite_button").val("Sending...");
+
+        if(!user){
+            user = new Models.UserModel();
+        }
         var self = this;
-        user.send_invitation_email(this.model, this.current_user, function(){
-            self.add_to_pending_collection(user, function(){
+        user.send_invitation_email(email, this.model, function(invitation_id){
+            var invitation = new Models.InvitationModel({id:invitation_id});
+            invitation.fetch({async:false});
+
+            self.add_to_pending_collection(invitation, function(){
                 self.$("#share_invite_button").val("Invite");
-                self.$("#share_item_" + user.get("id")).addClass("added_to_list");
-                self.$("#share_item_" + user.get("id") + " .pending_indicator").text("Invitation Sent!");
+                self.$("#share_item_" + invitation.get("id")).addClass("added_to_list");
+                self.$("#share_item_" + invitation.get("id") + " .pending_indicator").text("Invitation Sent!");
                 $('#editor_list_wrapper').animate({
-                    scrollTop : self.$("#share_item_" + user.get("id")).position().top,
+                    scrollTop : self.$("#share_item_" + invitation.get("id")).position().top,
                 }, 100);
                 setTimeout(function(){
-                    $("#share_item_" + user.get("id")).animate({"background-color" : "transparent"}, 500);
-                    $("#share_item_" + user.get("id") + " .pending_indicator").text("Pending...");
-                    $("#share_item_" + user.get("id")).removeClass("added_to_list");
+                    $("#share_item_" + invitation.get("id")).animate({"background-color" : "transparent"}, 500);
+                    $("#share_item_" + invitation.get("id")).removeClass("added_to_list");
                 }, 2500);
            });
         });
     },
     add_to_pending_collection:function(user, callback){
         var self = this;
+        this.model.fetch({async:false});
         this.pending_collection.forEach(function(editor){
             self.$("#share_item_" + editor.get("id")).data("data").remove();
-        })
-        this.pending_collection.add(user);
+        });
+        this.pending_collection = this.pending_collection.get_all_fetch(this.model.get("pending_editors"));
         this.load_collection(this.pending_collection, true);
-        this.save_permissions(false);
         callback();
     },
     remove_editor:function(editor){
         this.collection.remove(editor);
-        this.pending_collection.remove(editor);
         this.save_permissions(false);
     },
     save_content:function(){
@@ -156,17 +161,24 @@ var ShareView = BaseViews.BaseListView.extend({
         var self = this;
         this.model.save({
             "editors": this.collection.pluck("id"),
-            "pending_editors": this.pending_collection.pluck("id"),
             "public": this.$("#share_public_channel").is(':checked')
         }, {
             async:false,
             success:function(){
+                self.$("#share_change_indicator").text("Changes Saved");
                 if(show_indicator){
                     self.$("#share_change_indicator").css("display", "inline");
                     setTimeout(function(){
                         self.$("#share_change_indicator").fadeOut(200);
                     }, 2000)
                 }
+            },
+            error:function(){
+                self.$("#share_change_indicator").text("Error saving changes...");
+                self.$("#share_change_indicator").css("display", "inline");
+                setTimeout(function(){
+                    self.$("#share_change_indicator").fadeOut(200);
+                }, 2000)
             }
         });
         this.container.originalData = this.model.toJSON();
@@ -194,24 +206,31 @@ var ShareItem = BaseViews.BaseListItemView.extend({
     render: function() {
         this.$el.html(this.template({
             editor:this.model.toJSON(),
-            pending:this.pending
+            pending:this.pending,
+            is_self: this.containing_list_view.current_user.id === this.model.get("id")
         }));
         this.$el.data("data", this);
     },
     remove_editor:function(){
-        if(confirm("Are you sure you want to remove " + this.model.get("first_name") + " " + this.model.get("last_name") + " from the list?")){
-            this.containing_list_view.remove_editor(this.model);
-            this.remove();
+        /* Person has not accepted the invite yet */
+        if(this.model.get("invited")){
+            if(confirm("Are you sure you want to uninvite " + this.model.get("email") + "?")){
+                this.model.destroy();
+                this.remove();
+                this.containing_list_view.model.fetch({async:false});
+            }
+        }else{
+            if(confirm("Are you sure you want to remove " + this.model.get("first_name") + " " + this.model.get("last_name") + " from the list?")){
+                this.containing_list_view.remove_editor(this.model);
+                this.remove();
+            }
         }
     },
     reinvite_editor:function(){
         if(confirm("Send invitation to edit to " + this.model.get("first_name") + " " + this.model.get("last_name") + " again?")){
             var el = this.$(".pending_indicator");
-            this.model.send_invitation_email(this.containing_list_view.model, this.containing_list_view.current_user,  function(){
+            this.model.resend_invitation_email(this.containing_list_view.model, function(){
                 el.text("Invitation Sent!");
-                setTimeout(function(){
-                   el.text("Pending...");
-                }, 2000);
             });
         }
     }
