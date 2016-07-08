@@ -191,12 +191,8 @@ def publish_channel(request):
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        channel = get_object_or_404(Channel, id=channel_id, deleted=False)
-        license = get_object_or_404(License, id=license_id)
+        call_command("exportchannel", channel_id, license_id)
 
-        assign_license_to_node(channel.main_tree, license)
-
-        dbpath = call_command("exportchannel")
-
-        with open(dbpath) as f:
-            return f.read()
+        return HttpResponse(json.dumps({
+            "success": True
+        }))
