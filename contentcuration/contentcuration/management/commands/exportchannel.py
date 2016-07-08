@@ -141,7 +141,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             available=False,
             file_size=ccfilemodel.file_size,
             contentnode=kolibrinode,
-            preset=preset,
+            preset=preset.pk,
             supplementary=preset.supplementary,
             lang=None,          # TODO: same, fix this once we've implemented lang importing.
             thumbnail=False,    # TODO: maybe set to true or false once we bundle in more stuff than just the content db
