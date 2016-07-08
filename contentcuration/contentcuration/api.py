@@ -10,7 +10,6 @@ from django.db.models import Q
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
 from kolibri.content.utils import validate
-from kolibri.content.api import *
 from django.db import transaction
 import models
 
