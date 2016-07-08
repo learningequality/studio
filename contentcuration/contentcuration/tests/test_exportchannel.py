@@ -43,7 +43,7 @@ def channel(topic, video, preset_video, fileformat_mp4):
 @pytest.mark.django_db
 def test_things_work(channel, settings):
     # TODO (aron): split different gets/asserts into their own tests
-    call_command('exportchannel', channel.name)
+    call_command('exportchannel', channel.pk, "1")
 
     k.ChannelMetadata.objects.get(name=channel.name)
 

@@ -20,15 +20,16 @@ class EarlyExit(BaseException):
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
-        parser.add_argument('channel_id', type=int)
-        parser.add_argument('license_id', type=int)
+        parser.add_argument('channel_id', type=str)
+        parser.add_argument('license_id', type=str)
 
     def handle(self, *args, **options):
         try:
-            channel = ccmodels.Channel.get(pk=options["channel_name"])
+            channel = ccmodels.Channel.objects.get(pk=options["channel_id"])
             # increment the channel version
             raise_if_nodes_are_all_unchanged(channel)
             mark_all_nodes_as_changed(channel)
+            assign_license_to_contentcuration_nodes(channel, options['license_id'])
             prepare_export_database()
             # TODO: increment channel version numbers when we mark nodes as changed as well
             map_content_tags(channel)
@@ -165,7 +166,7 @@ def raise_if_nodes_are_all_unchanged(channel):
 
     logging.debug("Checking if we have any changed nodes.")
 
-    changed_models = channel.get_all_main_tree_nodes().filter(changed=True)
+    changed_models = channel.main_tree.get_family().filter(changed=True)
 
     if changed_models.count() == 0:
         logging.debug("No nodes have been changed!")
