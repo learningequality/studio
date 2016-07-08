@@ -7,10 +7,10 @@ from contentcuration.constants import content_kinds
 
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
-from kolibri.content.content_db_router import set_active_content_database
 
 import logging as logmodule
 logging = logmodule.getLogger(__name__)
+
 
 class EarlyExit(BaseException):
     def __init__(self, message, db_path):
@@ -20,12 +20,12 @@ class EarlyExit(BaseException):
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
-        parser.add_argument('channel_name', type=str)
+        parser.add_argument('channel_id', type=int)
+        parser.add_argument('license_id', type=int)
 
     def handle(self, *args, **options):
         try:
-            channel = get_channel_for_name(options["channel_name"])
-            set_active_content_database('export_staging')
+            channel = ccmodels.Channel.get(pk=options["channel_name"])
             # increment the channel version
             raise_if_nodes_are_all_unchanged(channel)
             mark_all_nodes_as_changed(channel)
@@ -159,9 +159,6 @@ def prepare_export_database():
                  noinput=True)
     logging.info("Prepared the export database.")
 
-
-def get_channel_for_name(name):
-    return ccmodels.Channel.objects.get(name=name)
 
 
 def raise_if_nodes_are_all_unchanged(channel):
