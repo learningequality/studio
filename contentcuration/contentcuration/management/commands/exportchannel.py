@@ -21,7 +21,7 @@ class EarlyExit(BaseException):
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('channel_id', type=str)
-        parser.add_argument('license_id', type=str)
+        parser.add_argument('license_id', type=int)
 
     def handle(self, *args, **options):
         try:
