@@ -24,19 +24,24 @@ class Command(BaseCommand):
         parser.add_argument('license_id', type=str)
 
     def handle(self, *args, **options):
+        license_id = options['license_id']
+        channel_id = options['channel_id']
+
+        license = ccmodels.License.objects.get(pk=license_id)
         try:
-            channel = ccmodels.Channel.objects.get(pk=options["channel_id"])
+            channel = ccmodels.Channel.objects.get(pk=channel_id)
             # increment the channel version
             raise_if_nodes_are_all_unchanged(channel)
             mark_all_nodes_as_changed(channel)
-            assign_license_to_contentcuration_nodes(channel, options['license_id'])
+            assign_license_to_contentcuration_nodes(channel, license)
+            create_kolibri_license_object(license)
             increment_channel_version(channel)
             prepare_export_database()
             # TODO: increment channel version numbers when we mark nodes as changed as well
             map_content_tags(channel)
 
             map_channel_to_kolibri_channel(channel)
-            map_content_nodes(channel.main_tree)
+            map_content_nodes(channel.main_tree, license)
             # use SQLite backup API to put DB into archives folder.
             # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -47,13 +52,19 @@ class Command(BaseCommand):
                 path=e.db_path))
 
 
+def create_kolibri_license_object(license):
+    return kolibrimodels.License.objects.get_or_create(
+        license_name=license.license_name
+    )
+
+
 def increment_channel_version(channel):
     channel.version += 1
     channel.save()
 
 
-def assign_license_to_contentcuration_nodes(channel, license_id):
-    channel.main_tree.get_family().update(license_id=license_id)
+def assign_license_to_contentcuration_nodes(channel, license):
+    channel.main_tree.get_family().update(license_id=license.pk)
 
 
 def map_content_tags(channel):
@@ -67,7 +78,7 @@ def map_content_tags(channel):
     logging.info("Finished creating the Kolibri content tags.")
 
 
-def map_content_nodes(root_node):
+def map_content_nodes(root_node, license):
 
     # make sure we process nodes higher up in the tree first, or else when we
     # make mappings the parent nodes might not be there
@@ -81,6 +92,9 @@ def map_content_nodes(root_node):
         except IndexError:
             return None
 
+
+    kolibri_license = kolibrimodels.License.objects.get(license_name=license.license_name)
+
     with ccmodels.ContentNode.objects.delay_mptt_updates():
         for node in iter(queue_get_return_none_when_empty, None):
             logging.debug("Mapping node with id {id}".format(
@@ -91,13 +105,13 @@ def map_content_nodes(root_node):
                         all())
             node_queue.extend(children)
 
-            kolibrinode = create_bare_contentnode(node)
+            kolibrinode = create_bare_contentnode(node, kolibri_license)
 
             if node.kind.kind != content_kinds.TOPIC:
                 create_associated_file_objects(kolibrinode, node)
 
 
-def create_bare_contentnode(ccnode):
+def create_bare_contentnode(ccnode, kolibri_license):
     logging.debug("Creating a Kolibri node for instance id {}".format(
         ccnode.pk))
 
@@ -109,7 +123,7 @@ def create_bare_contentnode(ccnode):
         sort_order=ccnode.sort_order,
         license_owner=ccnode.license_owner,
         kind=ccnode.kind.kind,
-        license_id=1,
+        license_id=kolibri_license.pk,
         available=False,
     )
 
