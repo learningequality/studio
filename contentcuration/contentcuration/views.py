@@ -208,7 +208,8 @@ def send_invitation_email(request):
         try:
             user_email = data["user_email"]
             channel_id = data["channel_id"]
-            recipient = User.objects.get_or_create(email = user_email)[0]
+            retrieved_user = User.objects.get_or_create(email = user_email)
+            recipient = retrieved_user[0]
             invitation = Invitation.objects.get_or_create(invited = recipient,
                                                         email = user_email,
                                                         sender=request.user,
@@ -252,17 +253,6 @@ def accept_invitation(request, user_id, invitation_link, channel_id):
                                                  "validlink" : is_valid,
                                                  "channel_id" : channel_id})
 
-def accept_invitation_and_registration(request, user_id, invitation_link, channel_id):
-
-
-    return render(request, 'permissions/permissions_register.html', {
-                                                 "validlink" : is_valid,
-                                                 "channel_id" : channel_id,
-                                                 "user_id": user_id,
-                                                 "user": user,
-                                                 "invitation_link": invitation_link,
-                                                 "form" : InvitationForm
-                                            })
 
 class InvitationRegisterView(FormView):
     """
@@ -273,6 +263,9 @@ class InvitationRegisterView(FormView):
     success_url = None
     template_name = 'permissions/permissions_register.html'
     invitation = None
+
+    def get_success_url(self, user):
+        return ("/accept_invitation/" + '/'.join({self.kwargs["user_id"], self.kwargs["invitation_link"], self.kwargs["channel_id"]}), (), {})
 
     def dispatch(self, *args, **kwargs):
         try:
@@ -286,7 +279,7 @@ class InvitationRegisterView(FormView):
             return redirect(self.disallowed_url)
 
         if user.is_active:
-            return redirect("/accept_invitation/" + '/'.join({self.kwargs["user_id"], self.kwargs["invitation_link"], self.kwargs["channel_id"]}))
+            return redirect(self.get_success_url())
 
         return super(InvitationRegisterView, self).dispatch(*args, **kwargs)
 
@@ -303,11 +296,19 @@ class InvitationRegisterView(FormView):
         return self.render_to_response(self.get_context_data(form=form))
 
     def register(self, form):
-        """
-        Implement user-registration logic here. Access to both the
-        request and the registration form is available here.
-        """
-        raise NotImplementedError
+        new_user = form.save(self.user()[0])
+        # signals.user_registered.send(sender=self.__class__,
+        #                              user=new_user,
+        #                              request=self.request)
+        return new_user
+
+    def user(self):
+        return User.objects.get_or_create(id=self.kwargs["user_id"])
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(InvitationRegisterView, self).get_context_data(**kwargs)
+        return context
 
 def decline_invitation(request, invitation_link):
     try:

@@ -381,6 +381,7 @@ class Invitation(models.Model):
     channel = models.ForeignKey('Channel', null=True, related_name='pending_editors')
     first_name = models.CharField(max_length=100, default='Guest')
     last_name = models.CharField(max_length=100, blank=True, null=True)
+    registered = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = _("Invitation")

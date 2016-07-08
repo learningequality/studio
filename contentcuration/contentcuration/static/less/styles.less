@@ -261,6 +261,8 @@ body {
 
 .message-page{
 	@reset-btn-color:  #067C7B;
+	@invitation_register-width: 360px;
+
 	padding-top:15vw;
 	padding-left:10vw;
 	.message-img-wrapper{
@@ -297,11 +299,29 @@ body {
 			font-weight:bold;
 		}
 	}
+	#email_area{
+		margin-left:40px;
+		width: @invitation_register-width;
+		padding-top:10px;
+		#invited_email{
+			margin:2px;
+			margin-bottom:20px;
+		}
+		#invited_email_hint{
+			margin:2px;
+		}
+	}
+
+	#invitation_error_list{
+		width:@invitation_register-width;
+		text-align:center;
+		margin-left:40px;
+	}
 
 	#invitation_register_form{
 		margin-left:40px;
-		margin-top:20px;
-		width:360px;
+		margin-top:10px;
+		width:@invitation_register-width;
 		text-align:right;
 
 		.required_asterisk{
@@ -319,7 +339,7 @@ body {
 			color:@reset-btn-color;
 			margin-right:40%;
 			font-size:12pt;
-
 		}
+
 	}
 }

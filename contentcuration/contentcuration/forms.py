@@ -73,3 +73,12 @@ class InvitationForm(UserCreationForm):
             self.add_error(field, error)
             return False
         return True
+
+    def save(self, user):
+        user.set_password(self.cleaned_data["password1"])
+        user.first_name = self.cleaned_data["first_name"]
+        user.last_name = self.cleaned_data["last_name"]
+        user.is_active=True
+
+        user.save()
+        return user
