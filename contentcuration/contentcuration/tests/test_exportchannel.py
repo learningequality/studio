@@ -3,25 +3,37 @@ from mixer.backend.django import mixer
 from contentcuration import models as cc
 from kolibri.content import models as k
 from django.core.management import call_command
-from django.test.utils import override_settings
 
 
 @pytest.fixture
-def channel():
-    ext = mixer.blend('contentcuration.FileFormat', extension='mp4', mimetype='application/video')
+def video():
+    return mixer.blend('contentcuration.ContentKind', kind='video')
 
-    topic = mixer.blend('contentcuration.ContentKind', kind='topic')
-    video = mixer.blend('contentcuration.ContentKind', kind='video')
 
-    videopreset = mixer.blend('contentcuration.FormatPreset', id='mp4', kind=video)
+@pytest.fixture
+def preset_video(video):
+    return mixer.blend('contentcuration.FormatPreset', id='mp4', kind=video)
 
+
+@pytest.fixture
+def topic():
+    return mixer.blend('contentcuration.ContentKind', kind='topic')
+
+
+@pytest.fixture
+def fileformat_mp4():
+    return mixer.blend('contentcuration.FileFormat', extension='mp4', mimetype='application/video')
+
+
+@pytest.fixture
+def channel(topic, video, preset_video, fileformat_mp4):
     with cc.ContentNode.objects.delay_mptt_updates():
         root = mixer.blend('contentcuration.ContentNode', title="root", parent=None, kind=topic)
         level1 = mixer.blend('contentcuration.ContentNode', parent=root, kind=topic)
         level2 = mixer.blend('contentcuration.ContentNode', parent=level1, kind=topic)
         leaf = mixer.blend('contentcuration.ContentNode', parent=level2, kind=video)
 
-    fileobj = mixer.blend('contentcuration.File', contentnode=leaf, file_format=ext, preset=videopreset)
+    fileobj = mixer.blend('contentcuration.File', contentnode=leaf, file_format=fileformat_mp4, preset=preset_video)
 
     channel = mixer.blend('contentcuration.Channel', main_tree=root, name='testchannel')
 
