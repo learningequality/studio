@@ -1,0 +1,40 @@
+<div class="modal fade" id="export_modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Publishing {{channel.name}}</h4>
+            </div>
+            <div class="modal-body">
+                <div id="export_area">
+                    <em class="pull-right" id="version_number">Version: {{version}}</em>
+                    <label><i class="required">*</i> License:</label>
+                    <select id="export_license_select">
+                        <option selected disabled>-- Select a License --</option>
+                        {{#each licenses}}
+                            <option value={{id}}>{{license_name}}</option>
+                        {{/each}}
+                    </select>
+                    <span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about"></span>
+                    <hr/>
+                    <h4>The following content will be published:</h4>
+                    <div id="export_preview"></div>
+                    <div id="export_buttons">
+                        <button disabled class="action-button pull-right" id="publish_btn">
+                            <span>Select a License</span>
+                        </button>
+                        <span id="export_totals" class="pull-right">
+                            {{count}}
+                            <em class="annotation">({{#format_file_size node.resource_size}}{{/format_file_size}})</em>
+                        </span>
+                        <a class="action-text" data-dismiss="modal">
+                            <span>CANCEL</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="license_modal"></div>

@@ -15,7 +15,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 		this.nodeCollection = new Models.ContentNodeCollection();
 		this.nodeCollection.fetch();
 		window.licenses = new Models.LicenseCollection(window.license_list);
-		window.licenses.fetch();
 		window.current_channel = new Models.ChannelModel(window.channel);
 		//this.listenTo(saveDispatcher, "save", this.save);
 		this.channelCollection = new Models.ChannelCollection(window.channels);

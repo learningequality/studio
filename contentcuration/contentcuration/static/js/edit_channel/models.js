@@ -213,6 +213,20 @@ var ChannelModel = BaseModel.extend({
     	var root = new ContentNodeModel({id : this.get(tree_name)});
     	root.fetch({async:false});
     	return root;
+    },
+
+    publish:function(license, callback){
+        var data = {"channel_id": this.get("id"),
+                    "license_id": license.get("id")};
+        $.ajax({
+        	method:"POST",
+            url: window.Urls.publish_channel(),
+            data:  JSON.stringify(data),
+            async: false,
+            success:function(){
+            	callback();
+            }
+        });
     }
 });
 
@@ -237,11 +251,13 @@ var TagCollection = BaseCollection.extend({
 	get_or_fetch:function(id){
 		var tag = this.get(id);
 		if(!tag){
-			tag = new TagModel({id:id});
+			tag = new TagModel({"id":id});
 			tag.fetch({async:false});
 			if(tag){
 				this.add(tag);
 			}
+			this.fetch({async:false})
+			console.log("Got tag:",this);
 		}
 		return tag;
 	}
