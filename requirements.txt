@@ -1,11 +1,15 @@
-Django==1.8.1
+Django==1.9.7
 django-filter==0.9.2
 django-mptt==0.7.3
 djangorestframework==3.3.3
+factory-boy==2.7.0
+pytest==2.9.2
+pytest-django==2.9.1
+pytest-logging
+mixer==5.5.7
 Markdown==2.6.2
 Pillow==2.8.1
 psutil==3.1.1
 django-js-reverse==0.6.1
 django-hashedfilenamestorage==1.0.0
 djangorestframework-bulk==0.2.1
--e git+https://github.com/jayoshih/kolibri.git@553ed6f20ea1d3236614deceaa7519a302b083d5#egg=kolibri-master
