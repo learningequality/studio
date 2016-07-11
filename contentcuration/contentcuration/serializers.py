@@ -291,4 +291,4 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Invitation
-        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'registered')
+        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name')

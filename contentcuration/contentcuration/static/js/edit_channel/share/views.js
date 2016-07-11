@@ -116,8 +116,6 @@ var ShareView = BaseViews.BaseListView.extend({
     },
     send_mail:function(user, email){
         this.$("#share_email_address").val("");
-        this.$("#share_invite_button").val("Sending...");
-
         if(!user){
             user = new Models.UserModel();
         }

@@ -2,7 +2,7 @@ from contentcuration.models import User
 from django import forms
 from django.utils.translation import ugettext as _
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
 class RegistrationForm(UserCreationForm):
     password1 = forms.CharField(widget=forms.PasswordInput, label='Password', required=True)
@@ -52,6 +52,10 @@ class InvitationForm(UserCreationForm):
         model = User
         fields = ('first_name', 'last_name', 'password1', 'password2')
 
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip()
+        return email
+
     def clean(self):
         cleaned_data = super(InvitationForm, self).clean()
 
@@ -79,6 +83,29 @@ class InvitationForm(UserCreationForm):
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
         user.is_active=True
-
         user.save()
         return user
+
+
+class InvitationAcceptForm(AuthenticationForm):
+    user=None
+    password = forms.CharField(widget=forms.PasswordInput, label='Password', required=True)
+
+    class Meta:
+        model = User
+        fields = ('password',)
+
+    def __init__(self, *args, **kwargs):
+        self.user =kwargs.pop('user')
+        super(InvitationAcceptForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        if 'password' not in self.cleaned_data:
+            self.errors['password'] = self.error_class()
+            self.add_error('password', 'Password is required.')
+        elif not self.user.check_password(self.cleaned_data["password"]):
+            self.errors['password'] = self.error_class()
+            self.add_error('password', 'Password is incorrect.')
+        else:
+            self.confirm_login_allowed(self.user)
+        return self.cleaned_data

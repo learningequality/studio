@@ -12,7 +12,7 @@
 		<h3>{% trans "You must create an account before you can access this channel." %}</h3>
 		<div id="email_area">
 			<p class="text-center" id="invited_email_hint">Creating account for email:</p>
-			<h4 class="text-center" id="invited_email"><strong>{% trans view.user[0].email %}</strong></h4>
+			<h4 class="text-center" id="invited_email"><strong>{% trans view.user.email %}</strong></h4>
 		</div>
 		<ul id="invitation_error_list">
 			 {% for field in form %}
@@ -23,11 +23,11 @@
 		</ul>
 		<form method="post" id="invitation_register_form">
 			<div id="form-wrapper">
-				<input type="hidden" name="channel" id="channel_field" value="{{request.resolver_match.kwargs.channel_id}}"/>
+				<input type="hidden" value="{% trans view.user.email %}" name="email"/>
 				{% csrf_token %}
 				{% for field in form %}
 				<p>
-				 <label>{% if field.field.required %}<i class="required_asterisk">*</i>{% endif %} {{field.label}}</label>
+				 {% if field.field.required %}<label><i class="required_asterisk">*</i> {{field.label}}</label>{% endif %}
 				 {{field}}
 				 </p>
 				{% endfor %}

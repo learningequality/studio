@@ -261,7 +261,7 @@ body {
 
 .message-page{
 	@reset-btn-color:  #067C7B;
-	@invitation_register-width: 360px;
+	@invitation_register-width: 380px;
 
 	padding-top:15vw;
 	padding-left:10vw;
@@ -274,6 +274,9 @@ body {
 			margin-right:20px;
 			margin-top:25px;
 		}
+	}
+	input{
+		padding:2px;
 	}
 
 	.message-wrapper{
@@ -339,6 +342,34 @@ body {
 			color:@reset-btn-color;
 			margin-right:40%;
 			font-size:12pt;
+		}
+	}
+	.invitation-action-text{
+		padding:0;
+		color:@reset-btn-color;
+	}
+	#invitation_accept_form{
+		margin-top:20px;
+		.required_asterisk{
+			color:red;
+			font-weight:bold;
+		}
+		#invitation_accept_button{
+			padding:5px 10px;
+			font-size:12pt;
+		}
+		#invitation_accept_button:hover{
+			font-weight:bold;
+		}
+		#invitation-action-text{
+			color:@reset-btn-color;
+			font-size:12pt;
+		}
+		#accept-error{
+			display:inline;
+			font-weight:bold;
+			color:red;
+			margin-left:10px;
 		}
 
 	}

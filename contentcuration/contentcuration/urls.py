@@ -17,14 +17,13 @@ from django.conf.urls import include, url
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
+from django.core.urlresolvers import reverse_lazy
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
 from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem, ContentKind, Language, User, Invitation
 import serializers
 import views
 from contentcuration import api
-from contentcuration.forms import RegistrationForm
-from registration.backends.hmac.views import RegistrationView
 
 from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
@@ -112,13 +111,14 @@ urlpatterns = [
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),
     url(r'^file_upload/', views.file_upload, name="file_upload"),
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
-    url(r'^accounts/register/$', RegistrationView.as_view(form_class=RegistrationForm), name='registration_register'),
+    url(r'^accounts/password/reset/$',auth_views.password_reset,{'post_reset_redirect': reverse_lazy('auth_password_reset_done'),'html_email_template_name': 'registration/password_reset_email.html'}, name='auth_password_reset'),
+    url(r'^accounts/register/$', views.UserRegistrationView.as_view(), name='registration_register'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^channels/(?P<channel_id>[^/]+)', views.channel, name='channel'),
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^api/send_invitation_email/$', views.send_invitation_email, name='send_invitation_email'),
-    url(r'^accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)/(?P<channel_id>[^/]+)$', views.accept_invitation, name="accept_invitation"),
+    url(r'^accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)/(?P<channel_id>[^/]+)$', views.InvitationAcceptView.as_view(), name="accept_invitation"),
     url(r'^new/accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)/(?P<channel_id>[^/]+)$', views.InvitationRegisterView.as_view(), name="accept_invitation_and_registration"),
     url(r'^decline_invitation/(?P<invitation_link>[^/]+)$', views.decline_invitation, name="decline_invitation"),
     url(r'^invitation_fail$', views.fail_invitation, name="fail_invitation"),

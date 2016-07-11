@@ -12,7 +12,8 @@ from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 from constants import content_kinds, extensions, presets
 
@@ -381,7 +382,6 @@ class Invitation(models.Model):
     channel = models.ForeignKey('Channel', null=True, related_name='pending_editors')
     first_name = models.CharField(max_length=100, default='Guest')
     last_name = models.CharField(max_length=100, blank=True, null=True)
-    registered = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = _("Invitation")
