@@ -186,12 +186,11 @@ def publish_channel(request):
 
         try:
             channel_id = data["channel_id"]
-            license_id = data["license_id"]
 
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        call_command("exportchannel", channel_id, license_id)
+        call_command("exportchannel", channel_id, 1)
 
         return HttpResponse(json.dumps({
             "success": True

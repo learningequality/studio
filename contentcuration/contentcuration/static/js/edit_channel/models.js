@@ -215,9 +215,8 @@ var ChannelModel = BaseModel.extend({
     	return root;
     },
 
-    publish:function(license, callback){
-        var data = {"channel_id": this.get("id"),
-                    "license_id": license.get("id")};
+    publish:function(callback){
+        var data = {"channel_id": this.get("id")};
         $.ajax({
         	method:"POST",
             url: window.Urls.publish_channel(),

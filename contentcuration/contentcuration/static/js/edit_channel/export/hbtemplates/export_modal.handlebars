@@ -8,7 +8,7 @@
             <div class="modal-body">
                 <div id="export_area">
                     <em class="pull-right" id="version_number">Version: {{version}}</em>
-                    <label><i class="required">*</i> License:</label>
+                    <!-- <label><i class="required">*</i> License:</label>
                     <select id="export_license_select">
                         <option selected disabled>-- Select a License --</option>
                         {{#each licenses}}
@@ -16,12 +16,12 @@
                         {{/each}}
                     </select>
                     <span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about"></span>
-                    <hr/>
+                    <hr/> -->
                     <h4>The following content will be published:</h4>
                     <div id="export_preview"></div>
                     <div id="export_buttons">
-                        <button disabled class="action-button pull-right" id="publish_btn">
-                            <span>Select a License</span>
+                        <button class="action-button pull-right" id="publish_btn">
+                            <span>PUBLISH</span>
                         </button>
                         <span id="export_totals" class="pull-right">
                             {{count}}
@@ -36,5 +36,5 @@
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="license_modal"></div>
+<!--
+<div class="modal fade" id="license_modal"></div> -->

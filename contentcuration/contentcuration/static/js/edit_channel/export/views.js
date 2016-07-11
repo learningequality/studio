@@ -9,7 +9,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     license_template: require("./hbtemplates/export_license.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, "close_exporter", "load_license", "select_license", "publish");
+        _.bindAll(this, "close_exporter", "publish");
         this.render();
         this.modal = true;
         this.callback = options.callback;
@@ -21,8 +21,8 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         this.select_license = null;
     },
     events:{
-      "change #export_license_select" : "select_license",
-      "click #license_about": "load_license",
+      // "change #export_license_select" : "select_license",
+      // "click #license_about": "load_license",
       "click #publish_btn" : "publish"
     },
 
@@ -41,22 +41,22 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     close_exporter:function(){
       this.close();
     },
-    load_license:function(){
-        this.$("#license_modal").html(this.license_template({
-            license: this.select_license.toJSON()
-        }));
-        this.$("#license_modal").modal({show: true});
-    },
-    select_license:function(){
-        this.select_license = window.licenses.get($("#export_license_select").val());
-        this.$("#publish_btn").removeAttr("disabled");
-        this.$("#publish_btn").text("PUBLISH");
-        this.$("#license_about").css("display", "inline");
-    },
+    // load_license:function(){
+    //     this.$("#license_modal").html(this.license_template({
+    //         license: this.select_license.toJSON()
+    //     }));
+    //     this.$("#license_modal").modal({show: true});
+    // },
+    // select_license:function(){
+    //     this.select_license = window.licenses.get($("#export_license_select").val());
+    //     this.$("#publish_btn").removeAttr("disabled");
+    //     this.$("#publish_btn").text("PUBLISH");
+    //     this.$("#license_about").css("display", "inline");
+    // },
     publish:function(){
         var self = this;
         this.display_load("Publishing...", function(){
-            window.current_channel.publish(self.select_license, function(){
+            window.current_channel.publish(function(){
                 self.callback();
                 self.close_exporter();
             });
