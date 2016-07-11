@@ -91,6 +91,7 @@ class Channel(models.Model):
         verbose_name_plural = _("Channels")
 
 class ContentTag(models.Model):
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
     tag_name = models.CharField(max_length=30)
     channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True)
 
