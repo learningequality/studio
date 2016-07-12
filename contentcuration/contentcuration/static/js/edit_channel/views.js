@@ -173,6 +173,7 @@ BaseListView = BaseView.extend({
 		if(this.model.id != transfer.model.get("parent")){
 			var old_parent = transfer.containing_list_view.model;
 			transfer.model.set({
+				changed:true,
 				parent: this.model.id
 			}, {validate:true});
 
@@ -183,7 +184,13 @@ BaseListView = BaseView.extend({
 			}else{
 				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
 				this.model.fetch({async:false});
+				if(this.model.get("parent")){
+					$("#" + this.model.get("id")).data("data").render();
+				}
 				old_parent.fetch({async:false});
+				if(old_parent.get("parent")){
+					$("#" + old_parent.id).data("data").render();
+				}
 				transfer.containing_list_view.render();
 			}
 		}else{

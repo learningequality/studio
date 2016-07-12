@@ -266,7 +266,11 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return get_node_ancestors(node)
 
     def count_all(self,node):
-        return count_all_children(node)
+        return node.get_descendant_count()
+
+    def get_all_resources(self, node):
+        return show_resources(node)
+
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode

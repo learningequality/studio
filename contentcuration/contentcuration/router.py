@@ -14,7 +14,7 @@ class Router(object):
             db = None
 
         model_label = model._meta.label
-        logging.debug("Reading {0} from {1}".format(model_label, db))
+        # logging.debug("Reading {0} from {1}".format(model_label, db))
         return db
 
     def db_for_write(self, model, **hints):

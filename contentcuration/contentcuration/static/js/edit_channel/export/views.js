@@ -31,8 +31,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             channel: window.current_channel.toJSON(),
             licenses: window.licenses.toJSON(),
             version: window.current_channel.get("version") + 1,
-            node: this.model.toJSON(),
-            count: this.model.get("resource_count") + ((this.model.get("resource_count") === 1)? " Resource" : " Resources")
+            node: this.model.toJSON()
         }));
         $("body").append(this.el);
         this.$("#export_modal").modal({show: true, backdrop: 'static', keyboard: false});

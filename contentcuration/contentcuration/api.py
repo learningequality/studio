@@ -14,7 +14,15 @@ from django.db import transaction
 import models
 
 def count_files(node):
-    return node.get_descendants().exclude(kind_id="topic").count()
+    if node.kind_id == "topic":
+        count = 0
+        for n in node.children.all():
+            count += count_files(n)
+        return count
+    return 1
+
+    # For some reason, this returns sibling desendants too
+    # return node.get_descendants(include_self=False).exclude(kind_id="topic").count()
 
 def count_all_children(node):
     count = node.children.count()
@@ -73,9 +81,3 @@ def batch_add_tags(request):
     ThroughModel.objects.bulk_create(bulk_list)
 
     return HttpResponse("Tags are successfully saved.", status=200)
-
-def assign_license_to_node(node, license):
-    node.license = license
-    for n in node.get_children():
-        assign_license_to_node(n, license)
-    node.save()

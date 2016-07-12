@@ -23,7 +23,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 		this.formatpresets.fetch({async:false, cache:true});
 		this.contentkinds = new Models.ContentKindCollection(window.kinds);
 		this.contentkinds.fetch({async:false, cache:true});
-		console.log("USER:", window.current_user)
     },
 
     routes: {

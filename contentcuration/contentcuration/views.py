@@ -18,12 +18,12 @@ from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import get_storage_class
 from django.core.context_processors import csrf
+from django.db.models import Q
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import assign_license_to_node
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
@@ -54,7 +54,7 @@ def channel(request, channel_id):
     channel_list = Channel.objects.filter(deleted=False, editors__email__contains= request.user)
     channel_list_serializer = ChannelSerializer(channel_list, many=True)
 
-    accessible_channel_list = Channel.objects.filter(deleted=False, public=True) # Todo: only allow access to certain channels
+    accessible_channel_list = Channel.objects.filter( Q(deleted=False, public=True) | Q(deleted=False, editors__email__contains= request.user))
     accessible_channel_list_serializer = ChannelSerializer(accessible_channel_list, many=True)
 
     fileformats = FileFormat.objects.all()
@@ -132,10 +132,12 @@ def file_upload(request):
             "object_id": file_object.pk
         }))
 
+@csrf_exempt
 def thumbnail_upload(request):
-    return HttpResponse(json.dumps({
-        "success": True
-    }))
+    if request.method == 'POST':
+        return HttpResponse(json.dumps({
+            "success": True
+        }))
 
 @csrf_exempt
 def duplicate_node(request):

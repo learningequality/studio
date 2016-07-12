@@ -66,3 +66,10 @@ Handlebars.registerHelper('get_filename', function(text){
 Handlebars.registerHelper('format_file_size', function(text){
   return stringHelper.format_size(text);
 });
+
+Handlebars.registerHelper('format_count', function(text, count){
+  if(Number(count) === 1){
+    return count + " " + text;
+  }
+  return count + " " + text + "s";
+});

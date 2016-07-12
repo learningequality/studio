@@ -222,8 +222,8 @@ var ContentNodeCollection = BaseCollection.extend({
 
    /* TODO: would be better to fetch all values at once */
     get_all_fetch: function(ids){
-    	console.log("PERFORMANCE models.js: starting get_all_fetch...", ids);
-		var start = new Date().getTime();
+  //   	console.log("PERFORMANCE models.js: starting get_all_fetch...", ids);
+		// var start = new Date().getTime();
     	var to_fetch = new ContentNodeCollection();
     	var self = this;
     	ids.forEach(function(id){
@@ -234,7 +234,7 @@ var ContentNodeCollection = BaseCollection.extend({
     		}
     		to_fetch.add(model);
     	});
-    	console.log("PERFORMANCE models.js: get_all_fetch end (time = " + (new Date().getTime() - start) + ")");
+    	// console.log("PERFORMANCE models.js: get_all_fetch end (time = " + (new Date().getTime() - start) + ")");
     	return to_fetch;
     },
     sort_by_order:function(){
@@ -279,9 +279,7 @@ var ChannelModel = BaseModel.extend({
     },
 
     get_root:function(tree_name){
-    	console.log(this.get(tree_name));
     	var root = new ContentNodeModel({'id' : this.get(tree_name)});
-    	console.log(root);
     	root.fetch({async:false});
     	return root;
     },

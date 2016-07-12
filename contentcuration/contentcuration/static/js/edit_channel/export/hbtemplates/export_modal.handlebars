@@ -24,7 +24,7 @@
                             <span>PUBLISH</span>
                         </button>
                         <span id="export_totals" class="pull-right">
-                            {{count}}
+                            {{#format_count "Resource" node.resource_count}}{{/format_count}}
                             <em class="annotation">({{#format_file_size node.resource_size}}{{/format_file_size}})</em>
                         </span>
                         <a class="action-text" data-dismiss="modal">
