@@ -91,6 +91,7 @@ class Channel(models.Model):
         verbose_name_plural = _("Channels")
 
 class ContentTag(models.Model):
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
     tag_name = models.CharField(max_length=30)
     channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True)
 
@@ -104,7 +105,17 @@ class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
+    # The id should be the same between the content curation server and Kolibri.
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+
+    # the content_id is used for tracking a user's interaction with a piece of
+    # content, in the face of possibly many copies of that content. When a user
+    # interacts with a piece of content, all substantially similar pieces of
+    # content should be marked as such as well. We track these "substantially
+    # similar" types of content by having them have the same content_id.
     content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
+
+
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
@@ -174,6 +185,7 @@ class File(models.Model):
     The bottom layer of the contentDB schema, defines the basic building brick for content.
     Things it can represent are, for example, mp4, avi, mov, html, css, jpeg, pdf, mp3...
     """
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
     checksum = models.CharField(max_length=400, blank=True)
     file_size = models.IntegerField(blank=True, null=True)
     file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500, blank=True)

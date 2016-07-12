@@ -93,8 +93,17 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    },
+    'export_staging': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'export_staging.sqlite3')
     }
 }
+
+
+DATABASE_ROUTERS = [
+    "contentcuration.router.Router"
+]
 
 
 # Internationalization

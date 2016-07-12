@@ -190,6 +190,9 @@ BaseListView = BaseView.extend({
 			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false});
 		}
 		this.render();
+		if(transfer.$el.hasClass("current_topic")){
+			transfer.$el.removeClass("current_topic");
+		}
 	},
 	get_new_sort_order: function(transfer, target){
 		var new_sort_order = 1;
