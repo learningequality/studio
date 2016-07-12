@@ -50,7 +50,7 @@ def channel(topic, video, preset_video, fileformat_mp4, license_wtfpl):
 
 def test_things_work(channel, license_wtfpl):
     # TODO (aron): split different gets/asserts into their own tests
-    call_command('exportchannel', channel.pk, str(license_wtfpl.pk))
+    call_command('exportchannel', channel.pk)
 
     k.ChannelMetadata.objects.get(name=channel.name)
 
@@ -63,7 +63,7 @@ def test_things_work(channel, license_wtfpl):
 
 
 def test_assigns_channel_root_pk(channel, license_wtfpl):
-    call_command('exportchannel', channel.pk, str(license_wtfpl.pk))
+    call_command('exportchannel', channel.pk)
 
     kolibrichannel = k.ChannelMetadata.objects.get(pk=channel.pk)
 
@@ -71,26 +71,17 @@ def test_assigns_channel_root_pk(channel, license_wtfpl):
 
 
 def test_assigns_license(channel, license_wtfpl):
-    call_command('exportchannel', channel.pk, str(license_wtfpl.pk))
-
-    for n in channel.main_tree.get_family():
-        assert n.license_id == license_wtfpl.pk
+    call_command('exportchannel', channel.pk)
 
     kolibrichannel = k.ChannelMetadata.objects.get(pk=channel.pk)
     root_kolibrinode = k.ContentNode.objects.get(pk=kolibrichannel.root_pk)
 
     for n in root_kolibrinode.get_family():
-        assert n.license.license_name == license_wtfpl.license_name
-
-
-def test_creates_corresponding_license_model(channel, license_wtfpl):
-    call_command('exportchannel', channel.pk, str(license_wtfpl.pk))
-
-    k.License.objects.get(license_name=license_wtfpl.license_name)
+        assert n.license.license_name == cc.ContentNode.objects.get(pk=n.pk).license.license_name
 
 
 def test_increments_version(channel, license_wtfpl):
     old_version = channel.version
-    call_command('exportchannel', channel.pk, str(license_wtfpl.pk))
+    call_command('exportchannel', channel.pk)
     channel.refresh_from_db()
     assert channel.version > old_version
