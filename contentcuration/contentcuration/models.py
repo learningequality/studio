@@ -11,8 +11,68 @@ from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
+from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 from constants import content_kinds, extensions, presets
+
+class UserManager(BaseUserManager):
+    def create_user(self, email, first_name, last_name, password=None):
+        if not email:
+            raise ValueError('Email address not specified')
+
+        new_user = self.model(
+            email=self.normalize_email(email),
+        )
+
+        new_user.set_password(password)
+        new_user.first_name = first_name
+        new_user.last_name = last_name
+        new_user.save(using=self._db)
+        return new_user
+
+    def create_superuser(self, email, first_name, last_name, password=None):
+        new_user = self.create_user(email, first_name, last_name, password=password)
+        new_user.is_admin = True
+        new_user.save(using=self._db)
+        return new_user
+
+class User(AbstractBaseUser):
+    email = models.EmailField(max_length=100, unique=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    is_admin = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)
+
+    objects = UserManager()
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
+
+    def __unicode__(self):
+        return self.email
+
+    def email_user(self, subject, message, from_email=None, **kwargs):
+        send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    def clean(self):
+        super(User, self).clean()
+        self.email = self.__class__.objects.normalize_email(self.email)
+
+    def get_full_name(self):
+        """
+        Returns the first_name plus the last_name, with a space in between.
+        """
+        full_name = '%s %s' % (self.first_name, self.last_name)
+        return full_name.strip()
+
+    def get_short_name(self):
+        "Returns the short name for the user."
+        return self.first_name
+
+    class Meta:
+        verbose_name = _("User")
+        verbose_name_plural = _("Users")
 
 class UUIDField(models.CharField):
 
@@ -61,7 +121,7 @@ class Channel(models.Model):
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True)
     editors = models.ManyToManyField(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         related_name='editable_channels',
         verbose_name=_("editors"),
         help_text=_("Users with edit rights"),
@@ -70,11 +130,12 @@ class Channel(models.Model):
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
     main_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
     bookmarked_by = models.ManyToManyField(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         related_name='bookmarked_channels',
         verbose_name=_("bookmarked by"),
     )
     deleted = models.BooleanField(default=False)
+    public = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         super(Channel, self).save(*args, **kwargs)
@@ -173,6 +234,7 @@ class FormatPreset(models.Model):
 class Language(models.Model):
     lang_code = models.CharField(max_length=2, db_index=True)
     lang_subcode = models.CharField(max_length=2, db_index=True)
+    readable_name = models.CharField(max_length=50, blank=True)
 
     def ietf_name(self):
         return "{code}-{subcode}".format(code=self.lang_code, subcode=self.lang_subcode)
@@ -323,3 +385,17 @@ class AssessmentItem(models.Model):
     question = models.TextField(blank=True)
     answers = models.TextField(default="[]")
     exercise = models.ForeignKey('Exercise', related_name="all_assessment_items")
+
+class Invitation(models.Model):
+    """ Invitation to edit channel """
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    invited = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name='sent_to')
+    email = models.EmailField(max_length=100)
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_by')
+    channel = models.ForeignKey('Channel', null=True, related_name='pending_editors')
+    first_name = models.CharField(max_length=100, default='Guest')
+    last_name = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _("Invitation")
+        verbose_name_plural = _("Invitations")

@@ -22,6 +22,11 @@ class LanguageSerializer(serializers.ModelSerializer):
         model = Language
         fields = ('lang_code', 'lang_subcode', 'id')
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id')
+
 class ChannelSerializer(serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
@@ -42,7 +47,7 @@ class ChannelSerializer(serializers.ModelSerializer):
         model = Channel
         fields = ('id', 'name', 'description', 'editors', 'main_tree',
                     'clipboard_tree', 'trash_tree','resource_count', 'resource_size',
-                    'version', 'thumbnail', 'deleted')
+                    'version', 'thumbnail', 'deleted', 'public', 'pending_editors')
 
 class FileSerializer(serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
@@ -281,3 +286,8 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
         model = AssessmentItem
         fields = ('question', 'type', 'answers', 'id', 'exercise')
         list_serializer_class = BulkListSerializer
+
+class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = Invitation
+        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name')

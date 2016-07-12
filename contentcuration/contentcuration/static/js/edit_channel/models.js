@@ -1,5 +1,6 @@
 var Backbone = require("backbone");
 var _= require("underscore");
+var mail_helper = require("edit_channel/utils/mail");
 
 /**** BASE MODELS ****/
 var BaseModel = Backbone.Model.extend({
@@ -22,6 +23,75 @@ var BaseCollection = Backbone.Collection.extend({
 	save: function(callback) {
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	}
+});
+
+/**** USER-CENTERED MODELS ****/
+var UserModel = BaseModel.extend({
+	root_list : "user-list",
+	defaults: {
+		first_name: "Guest"
+    },
+    fetch_by_email:function(email){
+		/* TODO-BLOCKER: Better to only fetch email looking for */
+    	var collection = new UserCollection();
+    	collection.fetch({async:false});
+    	return collection.findWhere({email: email});
+    },
+    send_invitation_email:function(email, channel, callback){
+    	mail_helper.send_mail(channel, email, callback);
+    }
+});
+
+var UserCollection = BaseCollection.extend({
+	model: UserModel,
+	list_name:"user-list",
+
+	/* TODO: would be better to fetch all values at once */
+    get_all_fetch: function(ids){
+    	var to_fetch = new UserCollection();
+    	var self = this;
+    	ids.forEach(function(id){
+			var model = self.get({'id': id});
+    		if(!model){
+    			model = self.add({'id':id});
+    			model.fetch({async:false});
+    		}
+    		to_fetch.add(model);
+    	});
+    	return to_fetch;
+    }
+
+});
+
+var InvitationModel = BaseModel.extend({
+	root_list : "invitation-list",
+	defaults: {
+		first_name: "Guest"
+    },
+    resend_invitation_email:function(channel, callback){
+    	mail_helper.send_mail(channel, this.get("email"), callback);
+    }
+});
+
+var InvitationCollection = BaseCollection.extend({
+	model: InvitationModel,
+	list_name:"invitation-list",
+
+	/* TODO: would be better to fetch all values at once */
+    get_all_fetch: function(ids){
+    	var to_fetch = new InvitationCollection();
+    	var self = this;
+    	ids.forEach(function(id){
+			var model = self.get({'id': id});
+    		if(!model){
+    			model = self.add({'id':id});
+    			model.fetch({async:false});
+    		}
+    		to_fetch.add(model);
+    	});
+    	return to_fetch;
+    }
+
 });
 
 /**** CHANNEL AND CONTENT MODELS ****/
@@ -201,7 +271,8 @@ var ChannelModel = BaseModel.extend({
 	root_list : "channel-list",
 	defaults: {
 		name: " ",
-		editors: [1],
+		editors: [],
+		pending_editors: [],
 		author: "Anonymous",
 		license_owner: "No license found",
 		description:" "
@@ -361,6 +432,9 @@ var ContentKindCollection = BaseCollection.extend({
     }
 });
 
+function send_mail(data){
+
+}
 
 
 module.exports = {
@@ -377,5 +451,9 @@ module.exports = {
 	FormatPresetModel: FormatPresetModel,
 	FormatPresetCollection: FormatPresetCollection,
 	ContentKindModel: ContentKindModel,
-	ContentKindCollection : ContentKindCollection
+	ContentKindCollection : ContentKindCollection,
+	UserModel:UserModel,
+	UserCollection:UserCollection,
+	InvitationModel: InvitationModel,
+	InvitationCollection: InvitationCollection
 }

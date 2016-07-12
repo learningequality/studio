@@ -1,0 +1,16 @@
+{% load i18n %}
+
+{% autoescape off %}
+Hello {{ user.first_name }},
+
+Here is your activation link for {{ site.name }}:
+
+http://{{ site.domain }}{% url 'registration_activate' activation_key %}
+
+{% blocktrans %}This link is valid for {{ expiration_days }} days.{% endblocktrans %}
+
+Thanks for using our site!
+
+The Learning Equality Team
+
+{% endautoescape %}

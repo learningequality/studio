@@ -6,6 +6,7 @@ var BaseViews = require("./../views");
 var QueueView = require("edit_channel/queue/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var UploaderViews = require("edit_channel/uploader/views");
+var ShareViews = require("edit_channel/share/views");
 var Previewer = require("edit_channel/preview/views");
 //var UndoManager = require("backbone-undo");
 var Models = require("./../models");
@@ -16,7 +17,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	containers:[],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details', 'back_to_edit', 'handle_checked'/*,'undo_action', 'redo_action'*/);
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details', 'back_to_edit', 'handle_checked', 'edit_permissions' /*,'undo_action', 'redo_action'*/);
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
@@ -61,7 +62,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 			self.$el.find(".disable-none-selected").prop("disabled",true);
 			self.$el.find(".disable-none-selected").css("cursor","not-allowed");
 		});
-
 	},
 	events: {
 		'click .copy_button' : 'copy_content',
@@ -69,7 +69,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 		'click .edit_button' : 'edit_content',
 		'click #hide_details_checkbox' :'toggle_details',
 		'click .back_to_edit_button' : 'back_to_edit',
-		'change input[type=checkbox]' : 'handle_checked'
+		'change input[type=checkbox]' : 'handle_checked',
+		'click .permissions_button' : 'edit_permissions'
 	},
 	back_to_edit:function(){
 		window.location = window.location.href.replace("clipboard", "edit");
@@ -149,6 +150,12 @@ var TreeEditView = BaseViews.BaseView.extend({
 		var checked_count = this.$el.find("input[type=checkbox]:checked").length;
 		this.$el.find(".disable-none-selected").prop("disabled", checked_count == 0);
 		this.$el.find(".disable-none-selected").css("cursor", (checked_count > 0)? "pointer" : "not-allowed");
+	},
+	edit_permissions:function(){
+		var share_view = new ShareViews.ShareModalView({
+			model:window.current_channel,
+			current_user: window.current_user
+		});
 	}
 });
 

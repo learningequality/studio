@@ -2,7 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-require("uploader.less");
+require("import.less");
 var stringHelper = require("edit_channel/utils/string_helper");
 
 var ImportView = BaseViews.BaseModalView.extend({
@@ -12,7 +12,7 @@ var ImportView = BaseViews.BaseModalView.extend({
         _.bindAll(this, 'import_content');
         this.modal = options.modal;
         this.parent_view = options.parent_view;
-        this.other_channels = window.channels.clone();
+        this.other_channels = window.access_channels.clone();
         this.other_channels.remove(window.current_channel);
         this.mainCollection = new Models.ContentNodeCollection();
         this.callback = options.callback;

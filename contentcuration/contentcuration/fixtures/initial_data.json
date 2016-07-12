@@ -1,5 +1,22 @@
 [
   {
+      "model" : "sites.site",
+      "pk" : 1,
+      "fields": {
+          "name"  : "Kolibri - Content Curation",
+          "domain" : "192.237.179.50"
+      }
+  },
+  {
+      "model" : "sites.site",
+      "pk" : 2,
+      "fields": {
+          "name"  : "Kolibri - Content Curation (Debug Mode)",
+          "domain" : "127.0.0.1:8000"
+      }
+  },
+
+  {
     "model": "contentcuration.License",
     "pk": 1,
     "fields": {
@@ -89,6 +106,20 @@
   {
     "model": "contentcuration.FileFormat",
     "fields": {
+      "extension": "pdf",
+      "mimetype" : "application/pdf"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "PDF",
+      "mimetype" : "application/pdf"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
       "extension": "srt",
       "mimetype" : "text/srt"
     }
@@ -103,14 +134,14 @@
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "pdf",
-      "mimetype" : "application/pdf"
+      "extension": "jpg",
+      "mimetype" : "image/jpeg"
     }
   },
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "jpg",
+      "extension": "jpeg",
       "mimetype" : "image/jpeg"
     }
   },
@@ -203,7 +234,7 @@
       "supplementary" : false,
       "order" : 3,
       "kind" : "image",
-      "allowed_formats" : ["png", "jpg"]
+      "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },
   {
@@ -215,7 +246,7 @@
       "supplementary" : false,
       "order" : 4,
       "kind" : "image",
-      "allowed_formats" : ["png", "jpg"]
+      "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },
   {
@@ -228,6 +259,36 @@
       "order" : 5,
       "kind" : "audio",
       "allowed_formats" : ["wav", "mp3"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "doc",
+      "readable_name": "Document",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 6,
+      "kind" : "document",
+      "allowed_formats" : ["vtt", "srt", "pdf", "PDF"]
+    }
+  },
+
+
+  {
+    "model": "contentcuration.Language",
+    "fields": {
+      "lang_code" : "EN",
+      "lang_subcode" : "US",
+      "readable_name": "English"
+    }
+  },
+  {
+    "model": "contentcuration.Language",
+    "fields": {
+      "lang_code" : "ES",
+      "lang_subcode" : "US",
+      "readable_name": "Spanish"
     }
   }
 ]

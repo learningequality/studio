@@ -19,6 +19,8 @@ STORAGE_ROOT = os.path.join(BASE_DIR, "storage")
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
+PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -34,12 +36,13 @@ ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this 
 # Application definition
 
 INSTALLED_APPS = (
+    'contentcuration',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'contentcuration',
+    'django.contrib.sites',
     'django.contrib.staticfiles',
     'rest_framework',
     'django_js_reverse',
@@ -129,4 +132,17 @@ STORAGE_URL = '/storage/'
 
 DEFAULT_FILE_STORAGE = 'kolibri.content.models.ContentCopyStorage'
 
-LOGIN_REDIRECT_URL = '/exercises/'
+LOGIN_REDIRECT_URL = '/channels/'
+
+AUTH_USER_MODEL = 'contentcuration.User'
+
+ACCOUNT_ACTIVATION_DAYS=7
+REGISTRATION_OPEN = True
+SITE_ID = 1
+
+# EMAIL_HOST = 'localhost'
+# EMAIL_PORT = 8000
+# EMAIL_HOST_USER = ''
+# EMAIL_HOST_PASSWORD = ''
+# EMAIL_USE_TLS = False
+# DEFAULT_FROM_EMAIL = 'testing@example.com'

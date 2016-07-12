@@ -448,6 +448,7 @@ var BaseModalView = BaseView.extend({
 module.exports = {
 	BaseView: BaseView,
 	BaseListView:BaseListView,
+	BaseListItemView:BaseListItemView,
 	BaseListChannelItemView: BaseListChannelItemView,
 	BaseListNodeItemView:BaseListNodeItemView,
 	BaseEditorView:BaseEditorView,
