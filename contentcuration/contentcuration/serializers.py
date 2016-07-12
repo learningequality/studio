@@ -145,7 +145,7 @@ class TagSerializer(serializers.ModelSerializer):
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     preset = FormatPresetSerializer(many=True, read_only=True)
-    id = serializers.IntegerField(required=False)
+    id = serializers.CharField(required=False)
 
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')

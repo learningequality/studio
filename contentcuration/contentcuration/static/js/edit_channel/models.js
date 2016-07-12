@@ -29,9 +29,7 @@ var ContentNodeModel = BaseModel.extend({
 	root_list:"contentnode-list",
 	defaults: {
 		title:"Untitled",
-		parent: null,
 		children:[],
-		license:1,
 		tags:[]
     },
 
@@ -210,14 +208,15 @@ var ChannelModel = BaseModel.extend({
     },
 
     get_root:function(tree_name){
-    	var root = new ContentNodeModel({id : this.get(tree_name)});
+    	console.log(this.get(tree_name));
+    	var root = new ContentNodeModel({'id' : this.get(tree_name)});
+    	console.log(root);
     	root.fetch({async:false});
     	return root;
     },
 
-    publish:function(license, callback){
-        var data = {"channel_id": this.get("id"),
-                    "license_id": license.get("id")};
+    publish:function(callback){
+        var data = {"channel_id": this.get("id")};
         $.ajax({
         	method:"POST",
             url: window.Urls.publish_channel(),

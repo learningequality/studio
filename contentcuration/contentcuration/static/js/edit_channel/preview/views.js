@@ -33,7 +33,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
             }));
             this.$el.append(this.el);
             this.$(".modal").modal({show: true});
-            this.$el.find(".modal").on("hide.bs.modal", this.close);
+            this.$el.find(".modal").on("hide.bs.modal", this.closePreview);
         }else{
             this.$el.html(this.template({
                 node: this.model,
@@ -42,6 +42,9 @@ var PreviewView = BaseViews.BaseModalView.extend({
                 selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset) : null
             }));
         }
+    },
+    closePreview:function(event){
+        $(".modal").remove();
     },
     set_preview:function(event){
         var self = this;

@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.core import paginator
+from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import get_storage_class
 from django.template import RequestContext
@@ -186,12 +187,10 @@ def publish_channel(request):
 
         try:
             channel_id = data["channel_id"]
-            license_id = data["license_id"]
-
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        call_command("exportchannel", channel_id, license_id)
+        call_command("exportchannel", channel_id)
 
         return HttpResponse(json.dumps({
             "success": True
