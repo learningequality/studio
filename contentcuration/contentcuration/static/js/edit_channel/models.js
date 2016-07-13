@@ -255,7 +255,6 @@ var ContentNodeCollection = BaseCollection.extend({
         var data = {"node_ids": copied_list.join(" "),
                     "sort_order": sort_order,
                     "target_parent": parent_id};
-          console.log("SENDING DATA:", data)
         $.ajax({
         	method:"POST",
             url: window.Urls.duplicate_nodes(),
@@ -263,7 +262,6 @@ var ContentNodeCollection = BaseCollection.extend({
             async: false,
             success: function(data) {
                 copied_list = JSON.parse(data).node_ids.split(" ");
-                console.log("COPYING:", copied_list);
             },
             error:function(e){
             	console.log("ERROR: " + e.responseText);
@@ -272,7 +270,6 @@ var ContentNodeCollection = BaseCollection.extend({
 
     	var copiedCollection = new ContentNodeCollection();
     	copiedCollection.get_all_fetch(copied_list);
-    	console.log("retrieved collection:", copiedCollection)
     	return copiedCollection;
     },
     move:function(target_parent, sort_order, callback){
@@ -348,7 +345,6 @@ var TagCollection = BaseCollection.extend({
 				this.add(tag);
 			}
 			this.fetch({async:false})
-			console.log("Got tag:",this);
 		}
 		return tag;
 	}

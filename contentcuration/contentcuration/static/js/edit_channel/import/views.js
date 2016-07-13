@@ -55,17 +55,13 @@ var ImportView = BaseViews.BaseModalView.extend({
             $("#import_content_submit").text("IMPORT");
             $("#import_content_submit").removeAttr("disabled");
         }
-        // var size = 0;
-        // var count = 0;
-        // console.log("LIST IS", list);
-        // list.each(function(index, entry){
-        //     console.log("ENTRY IS", entry);
-        //     var model = $(entry).data("data").model;
-        //     size += model.get("resource_size");
-        //     count += model.get("resource_count");
-        // });
+        var totalCount = 0;
+        list.each(function(index, entry){
+            totalCount += $(entry).data("data").model.get("total_count") + 1;
+        });
         var data = this.importList.get_metadata();
-        this.$("#import_file_count").html(data.count + " file" + ((data.count == 1)? "   " : "s   ") + stringHelper.format_size(data.size));
+        totalCount -= data.count;
+        this.$("#import_file_count").html(totalCount + " Topic" + ((totalCount == 1)? ", " : "s, ") + data.count + " Resource" + ((data.count == 1)? "   " : "s   ") + stringHelper.format_size(data.size));
     },
     import_content:function(){
         var self = this;
@@ -75,7 +71,7 @@ var ImportView = BaseViews.BaseModalView.extend({
             for(var i = 0; i < checked_items.length; i++){
                 copyCollection.add($(checked_items[i]).data("data").model);
             }
-            console.log("IMPORTING COLLECTION:", copyCollection);
+            // console.log("IMPORTING COLLECTION:", copyCollection);
             self.callback(copyCollection.duplicate(self.model, {async:false}));
             self.close();
         });
@@ -159,7 +155,6 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
 
         this.metadata = {"count": 0, "size": 0};
         this.render();
-        console.log("METADATA INIT", this.metadata);
     },
     events: {
         'click .tog_folder' : 'toggle',
@@ -169,8 +164,7 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             node:this.model.toJSON(),
             isfolder: this.model.get("kind").toLowerCase() == "topic",
-            sub_list: this.model.get("children"),
-            is_channel:this.is_channel,
+            is_channel:this.is_channel
         }));
         this.$el.data("data", this);
         this.$el.find(".import_checkbox").prop("checked", this.selected);

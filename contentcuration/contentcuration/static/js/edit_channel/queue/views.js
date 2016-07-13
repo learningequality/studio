@@ -109,7 +109,7 @@ var QueueList = BaseViews.BaseListView.extend({
 
 		this.load_content();
 		if(this.add_controls){
-			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("resource_count"));
+			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("total_count"));
 		}
 
 		this.$el.data("container", this);
