@@ -206,6 +206,7 @@
 						font-weight:bold;
 						margin-top: 5px;
 						height: 21px;
+						// width: 357px !important;
 					}
 				}
 			}
@@ -385,13 +386,14 @@
 
 			.add_content_button{
 				cursor:pointer;
-				width: @container-width - 5px;
-				background-color: @edit-new-button-color;
+				width: @container-width - 10px;
 				margin-top:0px;
 				padding:5px;
-				border:1px solid @container-border-color;
 				font-size: 12pt;
-				border-radius:5px;
+				border-radius:3px;
+				&:hover {
+					color: white;
+				}
 			}
 			.add_content_dropdown{
 				font-size:12pt;
@@ -441,6 +443,11 @@
 
 		h1{
 			font-size:12pt;
+			margin-top: 0;
+
+			input[type="checkbox"] {
+				margin: 4px 0 0 10px;
+			}
 		}
 		.content-container{
 			background-color: @preview-container-color;
