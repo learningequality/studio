@@ -472,25 +472,30 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
     },
     add_tag: function(event){
+        $("#tag_error").css("display", "none");
         if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").val().trim() != ""){
             var tag = this.$el.find("#tag_box").val().trim();
-            var selector=tag.replace(" ","__");
-            if(this.$("#tag_area").find("#" + selector).length == 0){
-                this.append_tags([tag]);
-                if(this.multiple_selected){
-                    var list = this.$el.find('#uploaded_list input:checked').parent("li");
-                    for(var i = 0; i < list.length; i++){
-                        $(list[i]).data("data").add_tag(tag);
+            if(/^([a-z\d\s.,:\+)(/\-\\&-)]*)$/.test(tag)){
+                var selector=this.encode_tag(tag);
+                if(this.$("#tag_area").find("#" + selector).length == 0){
+                    this.append_tags([tag]);
+                    if(this.multiple_selected){
+                        var list = this.$el.find('#uploaded_list input:checked').parent("li");
+                        for(var i = 0; i < list.length; i++){
+                            $(list[i]).data("data").add_tag(tag);
+                        }
+                    }else{
+                        this.current_view.add_tag(tag);
                     }
-                }else{
-                    this.current_view.add_tag(tag);
                 }
+                this.$el.find("#tag_box").val("");
+            }else{
+                $("#tag_error").css("display", "inline");
             }
-            this.$el.find("#tag_box").val("");
         }
     },
     remove_tag:function(event){
-        var tagname = event.target.parentNode.id.replace("__", " ");
+        var tagname = this.decode_tag(event.target.parentNode.id);
         if(this.multiple_selected){
             var list = this.$el.find('#uploaded_list input:checked').parent("li");
             for(var i = 0; i < list.length; i++){
@@ -527,9 +532,21 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     },
     append_tags:function(tags){
         for(var i = 0; i < tags.length; i++){
-            var selector=tags[i].replace(" ","__");
+            var selector=this.encode_tag(tags[i]);
             this.$el.find("#tag_area").append("<div class='col-xs-4 tag' id='" + selector+ "'>" + tags[i] + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
         }
+    },
+    encode_tag:function(tag){
+        return tag.replace(" ", "_s_").replace(")","_pr_")
+                .replace("(","_pl_").replace("&","_a_").replace("-","_d_")
+                .replace(":","_c_").replace("+","_p_").replace("/","_bs_")
+                .replace(",","_co_").replace(".","_pe_");
+    },
+    decode_tag:function(tag){
+        return tag.replace("_s_", " ").replace("_pr_",")")
+                .replace("_pl_","(").replace("_a_", "&").replace("_d_","-")
+                .replace("_c_",":").replace("_p_","+").replace("_bs_","/")
+                .replace("_co_",",").replace("_pe_",".");
     }
 });
 
