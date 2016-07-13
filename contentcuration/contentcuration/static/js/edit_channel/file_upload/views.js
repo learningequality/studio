@@ -127,7 +127,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
 
     },
     file_uploaded: function(file) {
-        console.log("FILE FOUND:", file);
+        // console.log("FILE FOUND:", file);
         var new_file_data = {
             "data" : file,
             "filename": JSON.parse(file.xhr.response).filename
