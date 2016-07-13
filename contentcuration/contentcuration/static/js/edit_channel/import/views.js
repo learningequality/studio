@@ -58,7 +58,6 @@ var ImportView = BaseViews.BaseModalView.extend({
         var totalCount = 0;
         list.each(function(index, entry){
             totalCount += $(entry).data("data").model.get("total_count") + 1;
-            console.log(totalCount)
         });
         var data = this.importList.get_metadata();
         totalCount -= data.count;
@@ -72,7 +71,7 @@ var ImportView = BaseViews.BaseModalView.extend({
             for(var i = 0; i < checked_items.length; i++){
                 copyCollection.add($(checked_items[i]).data("data").model);
             }
-            console.log("IMPORTING COLLECTION:", copyCollection);
+            // console.log("IMPORTING COLLECTION:", copyCollection);
             self.callback(copyCollection.duplicate(self.model, {async:false}));
             self.close();
         });
@@ -156,7 +155,6 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
 
         this.metadata = {"count": 0, "size": 0};
         this.render();
-        console.log("METADATA INIT", this.metadata);
     },
     events: {
         'click .tog_folder' : 'toggle',
@@ -166,8 +164,7 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             node:this.model.toJSON(),
             isfolder: this.model.get("kind").toLowerCase() == "topic",
-            sub_list: this.model.get("children"),
-            is_channel:this.is_channel,
+            is_channel:this.is_channel
         }));
         this.$el.data("data", this);
         this.$el.find(".import_checkbox").prop("checked", this.selected);

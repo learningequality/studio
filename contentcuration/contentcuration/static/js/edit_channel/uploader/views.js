@@ -80,7 +80,6 @@ var AddContentView = BaseViews.BaseListView.extend({
             "original_node" : topic.get("id"),
             "cloned_source" : topic.get("id")
         });
-        console.log("current",topic)
         this.counter++;
         var item_view = new NodeListItem({
             containing_list_view: this,
@@ -113,7 +112,7 @@ var AddContentView = BaseViews.BaseListView.extend({
         });
     },
     upload_files:function(collection){
-        console.log("uploading files", collection);
+        // console.log("uploading files", collection);
         var self = this.parent_view;
         collection.forEach(function(entry){
             entry.set({
@@ -492,7 +491,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     },
     remove_tag:function(event){
         var tagname = event.target.parentNode.id.replace("__", " ");
-        console.log("tag is now: ",tagname);
         if(this.multiple_selected){
             var list = this.$el.find('#uploaded_list input:checked').parent("li");
             for(var i = 0; i < list.length; i++){

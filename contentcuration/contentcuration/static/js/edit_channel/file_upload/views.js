@@ -68,7 +68,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
                 });
             }
         });
-        console.log(list)
         return list.join(",");
     },
     render: function() {

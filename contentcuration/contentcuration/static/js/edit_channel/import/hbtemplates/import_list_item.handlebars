@@ -6,9 +6,13 @@
 	{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
 	<div class="import_item_title truncate">{{node.title}}</div>
 	{{#if isfolder}}
-		<div id="menu_toggle_{{node.id}}" class="toggler glyphicon {{#if is_channel}}glyphicon-menu-right{{else}}glyphicon-triangle-top{{/if}}"></div>
+		{{#if node.children}}
+			<div id="menu_toggle_{{node.id}}" class="toggler glyphicon {{#if is_channel}}glyphicon-menu-right{{else}}glyphicon-triangle-top{{/if}}"></div>
+			<em class="import_metadata">{{#format_file_size node.resource_size}}{{/format_file_size}}</em>
+		{{else}}
+			<em class="import_metadata">(empty)</em>
+		{{/if}}
 	{{/if}}
-	<em class="import_metadata">{{#format_file_size node.resource_size}}{{/format_file_size}}</em>
 	{{#if isfolder}}<i class="badge selected_counter" id="import_item_{{node.id}}_count">{{node.resource_count}}</i>{{/if}}
 	{{#if is_channel}}<i class="badge selected_counter" id="import_item_{{node.id}}_count">{{node.resource_count}}</i>{{/if}}
 </label>
