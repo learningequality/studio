@@ -9,13 +9,14 @@ var ImportView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/import_dialog.handlebars"),
     modal_template: require("./hbtemplates/import_modal.handlebars"),
     initialize: function(options) {
-        // _.bindAll(this, 'import_content');
+        _.bindAll(this, 'import_content');
         this.modal = options.modal;
         // this.parent_view = options.parent_view;
         this.other_channels = window.access_channels.clone();
         this.other_channels.remove(window.current_channel);
         // this.mainCollection = new Models.ContentNodeCollection();
         this.callback = options.callback;
+        console.log("MODEL IS", this.model)
         this.render();
     },
     events: {
@@ -47,7 +48,27 @@ var ImportView = BaseViews.BaseModalView.extend({
         });
     },
     update_count:function(){
-
+        console.log("UPDATING CONTAINER:", this.$el.find(".to_import"));
+        if($(".to_import").length ===0){
+            $("#import_content_submit").text("Select content to import...");
+            $("#import_content_submit").attr("disabled", "disabled");
+        }else{
+            $("#import_content_submit").text("IMPORT");
+            $("#import_content_submit").removeAttr("disabled");
+        }
+    },
+    import_content:function(){
+        var self = this;
+        this.display_load("Importing Content...", function(){
+            var checked_items = self.$el.find(".to_import");
+            var copyCollection = new Models.ContentNodeCollection();
+            for(var i = 0; i < checked_items.length; i++){
+                copyCollection.add($(checked_items[i]).data("data").model);
+            }
+            console.log("IMPORTING COLLECTION:", copyCollection);
+            self.callback(copyCollection.duplicate(self.model, {async:false}));
+            self.close();
+        });
     }
 });
 
@@ -92,6 +113,7 @@ var ImportList = BaseViews.BaseListView.extend({
         });
     },
     update_count:function(count){
+        console.log("CAlling update on ", this.parent_node_view);
         if(this.parent_node_view){
             this.parent_node_view.update_count(count);
         }else{
@@ -116,7 +138,6 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.collection = new Models.ContentNodeCollection();
         this.selected = options.selected;
         this.count = 0;
-        this.to_import = false;
         this.render();
     },
     events: {
@@ -153,10 +174,10 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
     handle_check:function(){
         this.selected =  this.$("#" + this.id() + "_check").is(":checked");
         if(this.selected){
-            this.to_import = true;
+            this.$el.addClass("to_import");
             this.count = 0;
         }else{
-            this.to_import = false;
+            this.$el.removeClass("to_import");
         }
         if(this.subfile_view){
             this.subfile_view.check_all_items(this.selected);
@@ -164,7 +185,7 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.update_count((this.selected)? this.model.get("resource_count") : -this.model.get("resource_count"), true);
     },
     check_item:function(checked){
-        this.to_import = false;
+        this.$el.removeClass("to_import");
         this.$("#" + this.id() + "_check").prop("checked", checked);
         this.$("#" + this.id() + "_count").text(this.model.get("resource_count"));
         this.$("#" + this.id() + "_count").css("visibility", (checked)?"visible" : "hidden" );

@@ -106,7 +106,7 @@ var ContentNodeModel = BaseModel.extend({
 	/*Used when copying items to clipboard*/
     duplicate: function(target_parent, options){
 		var node_id = this.get("id");
-		var sort_order =(target_parent) ? target_parent.get("children").length : 1;
+		var sort_order =(target_parent) ? target_parent.get("max_sort_order") + 1 : 1;
         var parent_id = (target_parent) ? target_parent.get("id") : null;
 
         var data = {"node_id": node_id,
@@ -247,10 +247,32 @@ var ContentNodeCollection = BaseCollection.extend({
     duplicate:function(target_parent, options){
     	var copied_list = [];
     	this.forEach(function(node){
-    		copied_list.push(node.duplicate(target_parent, options));
+    		copied_list.push(node.get("id"));
     	});
+		var sort_order =(target_parent) ? target_parent.get("max_sort_order") + 1 : 1;
+        var parent_id = (target_parent) ? target_parent.get("id") : null;
+
+        var data = {"node_ids": copied_list.join(" "),
+                    "sort_order": sort_order,
+                    "target_parent": parent_id};
+          console.log("SENDING DATA:", data)
+        $.ajax({
+        	method:"POST",
+            url: window.Urls.duplicate_nodes(),
+            data:  JSON.stringify(data),
+            async: false,
+            success: function(data) {
+                copied_list = JSON.parse(data).node_ids.split(" ");
+                console.log("COPYING:", copied_list);
+            },
+            error:function(e){
+            	console.log("ERROR: " + e.responseText);
+            }
+        });
+
     	var copiedCollection = new ContentNodeCollection();
     	copiedCollection.get_all_fetch(copied_list);
+    	console.log("retrieved collection:", copiedCollection)
     	return copiedCollection;
     },
     move:function(target_parent, sort_order, callback){
@@ -259,6 +281,7 @@ var ContentNodeCollection = BaseCollection.extend({
 				parent: target_parent.id,
 				sort_order:++sort_order
 			});
+			console.log("MODEL:", model)
     	});
     	this.save(function(){
 			callback();

@@ -157,6 +157,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     total_count = serializers.SerializerMethodField('count_all')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
+    max_sort_order = serializers.SerializerMethodField('calculate_max_sort_order')
 
     def to_internal_value(self, data):
         """
@@ -266,16 +267,23 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return get_node_ancestors(node)
 
     def count_all(self,node):
-        return node.get_descendant_count()
+        return count_all_children(node)
 
     def get_all_resources(self, node):
         return show_resources(node)
+
+    def calculate_max_sort_order(self, node):
+        maximum = 1
+        for n in node.children.all():
+            if maximum < n.sort_order:
+                maximum = n.sort_order
+        return maximum
 
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
-                 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
+                 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset', 'max_sort_order',
                  'resource_count', 'resource_size', 'ancestors', 'tags', 'files', 'total_count')
 
 class ExerciseSerializer(serializers.ModelSerializer):

@@ -139,6 +139,38 @@ def thumbnail_upload(request):
             "success": True
         }))
 
+def duplicate_nodes(request):
+    logging.debug("Entering the copy_node endpoint")
+
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+
+        try:
+            node_ids = data["node_ids"]
+            sort_order = data["sort_order"]
+            target_parent = data["target_parent"]
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+        logging.info("Copying node id %s", node_ids)
+
+        nodes = node_ids.split()
+        new_nodes = []
+
+        for node_id in nodes:
+            print node_id
+            new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent)
+            new_nodes.append(new_node.pk)
+            sort_order+=1
+
+        print " ".join(new_nodes)
+        return HttpResponse(json.dumps({
+            "success": True,
+            "node_ids": " ".join(new_nodes)
+        }))
+
 @csrf_exempt
 def duplicate_node(request):
     logging.debug("Entering the copy_node endpoint")
@@ -157,13 +189,13 @@ def duplicate_node(request):
 
         logging.info("Copying node id %s", node_id)
 
-        new_node = _duplicate_node(node_id, parent=target_parent)
+        new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent)
         return HttpResponse(json.dumps({
             "success": True,
             "node_id": new_node.pk
         }))
 
-def _duplicate_node(node, parent=None):
+def _duplicate_node(node, sort_order=1, parent=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
     new_node = ContentNode.objects.create(
@@ -172,7 +204,7 @@ def _duplicate_node(node, parent=None):
         kind=node.kind,
         license=node.license,
         parent=ContentNode.objects.get(pk=parent) if parent else None,
-        sort_order=node.sort_order,
+        sort_order=sort_order,
         license_owner=node.license_owner,
         changed=True,
         original_node=node.original_node,
