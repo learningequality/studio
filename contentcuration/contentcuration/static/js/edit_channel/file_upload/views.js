@@ -41,7 +41,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
     callback:null,
     file_list : [],
     returnCollection: null,
-    acceptedFiles : "image/*,application/pdf,video/*,text/*,audio/*",
+
 
     initialize: function(options) {
         _.bindAll(this, "file_uploaded",  "submit_files", "all_files_uploaded", "file_added", "file_removed", "go_to_formats", "go_to_upload");
@@ -53,13 +53,25 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.fileCollection = new Models.FileCollection();
         this.returnCollection = new Models.ContentNodeCollection();
         this.render();
+        acceptedFiles = this.get_accepted_files();
     },
     events:{
       "click .submit_uploaded_files" : "submit_files",
       "click .go_to_formats" : "go_to_formats",
       "click .go_to_upload" : "go_to_upload"
     },
-
+    get_accepted_files:function(){
+        var list = [];
+        window.formatpresets.forEach(function(preset){
+            console.log(preset)
+            if(!preset.get("supplementary")){
+                preset.get("allowed_formats").forEach(function(format){
+                    list.push(window.fileformats.findWhere({"extension": format}).get("mimetype"));
+                });
+            }
+        });
+        return list.join(",");
+    },
     render: function() {
         this.nodeCollection = new Models.ContentNodeCollection();
         this.$el.html(this.template({

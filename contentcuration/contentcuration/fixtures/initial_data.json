@@ -183,12 +183,6 @@
   {
     "model": "contentcuration.ContentKind",
     "fields": {
-      "kind": "image"
-    }
-  },
-  {
-    "model": "contentcuration.ContentKind",
-    "fields": {
       "kind": "exercise"
     }
   },
@@ -231,21 +225,9 @@
       "id" : "thumbnail",
       "readable_name": "Thumbnail",
       "multi_language" : false,
-      "supplementary" : false,
+      "supplementary" : true,
       "order" : 3,
-      "kind" : "image",
-      "allowed_formats" : ["png", "jpg", "jpeg"]
-    }
-  },
-  {
-    "model": "contentcuration.FormatPreset",
-    "fields": {
-      "id" : "temp",
-      "readable_name": "Picture",
-      "multi_language" : false,
-      "supplementary" : false,
-      "order" : 4,
-      "kind" : "image",
+      "kind" : "video",
       "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },

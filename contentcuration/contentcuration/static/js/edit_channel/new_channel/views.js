@@ -86,7 +86,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		this.default_license = options.default_license;
 		this.original_thumbnail = this.model.get("thumbnail");
 		this.thumbnail = this.original_thumbnail;
-		var originalData = (this.model)? this.model.toJSON() : null;
+		this.originalData = (this.model)? this.model.toJSON() : null;
 		this.render();
 		this.dropzone = null;
 		this.thumbnail_success = true;
@@ -123,6 +123,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	},
 	thumbnail_uploaded:function(thumbnail){
 		this.thumbnail_error = null;
+		this.thumbnail = JSON.parse(thumbnail.xhr.response).filename;
 	},
 	thumbnail_completed:function(){
 		if(!this.thumbnail_error){
@@ -170,10 +171,9 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	toggle_channel: function(event){
 		this.thumbnail = this.original_thumbnail;
 		this.containing_list_view.set_editing(false);
-		console.log(this.model.isNew())
+		this.unset_channel();
 		if(!this.model.isNew()){
 			this.edit = false;
-			this.unset_channel();
 			this.render();
 		}else{
 			this.delete_view();
@@ -210,6 +210,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			previewsContainer: "#dropzone",
 			headers: {"X-CSRFToken": get_cookie("csrftoken")}
 		});
+
     	this.dropzone.on("success", this.thumbnail_uploaded);
     	this.dropzone.on("addedfile", this.thumbnail_added);
     	this.dropzone.on("removedfile", this.thumbnail_removed);
@@ -227,7 +228,6 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 				thumbnail : this.thumbnail
 			});
 		}
-
 	},
 	unset_channel:function(){
 		this.model.set(this.originalData);

@@ -3,6 +3,8 @@ import json
 import logging
 import os
 import urlparse
+import base64
+import zlib
 from rest_framework import status
 from django.core.mail import send_mail
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
@@ -135,8 +137,10 @@ def file_upload(request):
 @csrf_exempt
 def thumbnail_upload(request):
     if request.method == 'POST':
+        filename = request.FILES.values()[0]._name
         return HttpResponse(json.dumps({
-            "success": True
+            "success": True,
+            "filename": filename
         }))
 
 def duplicate_nodes(request):
@@ -160,7 +164,6 @@ def duplicate_nodes(request):
         new_nodes = []
 
         for node_id in nodes:
-            print node_id
             new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent)
             new_nodes.append(new_node.pk)
             sort_order+=1

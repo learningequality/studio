@@ -382,8 +382,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         if(!this.multiple_selected && this.current_node.get("kind") != "topic"){
             $("#editmetadata_format_section").css("display", "block");
             this.current_view.format_view.display_inline();
+            $("#metadata_preview_btn").css("visibility", "visible");
         }else{
             $("#editmetadata_format_section").css("display", "none");
+            $("#metadata_preview_btn").css("visibility", "hidden");
         }
 
         if(this.current_node.get("original_filename")){
@@ -459,13 +461,14 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.$("#metadata_preview_btn").attr("disabled", "disabled");
             this.$("#metadata_preview_btn").prop("disabled", true);
             this.switchPanel(true);
+            $("#metadata_preview_btn").css("visibility", "hidden");
         }else{
             this.$el.find(".tag_input").removeClass("gray-out");
             this.$el.find(".upload_input").removeClass("gray-out");
             this.$el.find(".upload_input").prop("disabled", false);
             this.$el.find(".tag_input").prop("disabled", false);
             this.$("#metadata_preview_btn").removeAttr("disabled");
-             this.$("#metadata_preview_btn").prop("disabled", false);
+            this.$("#metadata_preview_btn").prop("disabled", false);
         }
 
     },
