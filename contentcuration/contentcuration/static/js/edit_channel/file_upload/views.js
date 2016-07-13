@@ -41,8 +41,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
     callback:null,
     file_list : [],
     returnCollection: null,
-
-
     initialize: function(options) {
         _.bindAll(this, "file_uploaded",  "submit_files", "all_files_uploaded", "file_added", "file_removed", "go_to_formats", "go_to_upload");
         this.callback = options.callback;
@@ -52,8 +50,9 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.views=[];
         this.fileCollection = new Models.FileCollection();
         this.returnCollection = new Models.ContentNodeCollection();
+        this.acceptedFiles = this.get_accepted_files();
         this.render();
-        acceptedFiles = this.get_accepted_files();
+
     },
     events:{
       "click .submit_uploaded_files" : "submit_files",
@@ -63,13 +62,13 @@ var FileUploadView = BaseViews.BaseListView.extend({
     get_accepted_files:function(){
         var list = [];
         window.formatpresets.forEach(function(preset){
-            console.log(preset)
             if(!preset.get("supplementary")){
                 preset.get("allowed_formats").forEach(function(format){
                     list.push(window.fileformats.findWhere({"extension": format}).get("mimetype"));
                 });
             }
         });
+        console.log(list)
         return list.join(",");
     },
     render: function() {
