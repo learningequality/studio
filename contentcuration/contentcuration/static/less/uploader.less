@@ -98,7 +98,6 @@
 		    border-bottom: 2px solid @body-font-color;
 		    border-radius: 0;
 		    padding: 1px 2px;
-		    margin: 0 13px;
 		}
 	nav a {
 		color: @body-font-color;
@@ -110,7 +109,7 @@
 
 	.metadata_panel {
 		height: 100%;
-		padding: 10px;
+		padding: 10px 0;
 		overflow:hidden;
 		max-height: @uploader-height * 0.7;
 
@@ -210,12 +209,15 @@
 					color:@gray-400;
 					font-size:10pt;
 					display:inline;
+					position: relative;
+					bottom: 5px;
 				}
 			}
 		}
 	}
 	#metadata_edit_details{
 		overflow-y:auto;
+		padding-left: 3px;
 	}
 
 	#metadata_preview{
@@ -353,7 +355,8 @@
 	.metadata_save_buttons{
 		margin-right:30px;
 		width:100%;
-	    bottom: 0;
+		position: absolute;
+	    bottom: 10px;
 	    left: 0;
 		div{
 			margin-right:30px;
