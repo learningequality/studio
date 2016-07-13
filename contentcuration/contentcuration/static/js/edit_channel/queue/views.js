@@ -44,9 +44,9 @@ var Queue = BaseViews.BaseView.extend({
 	},
 	toggle_queue: function(){
 		if(this.$el.find("#queue").css("margin-right") != "0px")
-			this.$el.find("#queue").animate({marginRight:0}, 500);
+			this.$el.find("#queue").animate({marginRight:0}, 200);
 		else
-			this.$el.find("#queue").animate({marginRight: -this.$el.find("#main-queue").outerWidth()}, 500);
+			this.$el.find("#queue").animate({marginRight: -this.$el.find("#main-queue").outerWidth()}, 200);
 	},
 	add_to_clipboard:function(collection){
 		this.clipboard_queue.add_to_list(collection);

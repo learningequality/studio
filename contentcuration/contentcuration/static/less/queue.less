@@ -66,7 +66,7 @@
 		width: @queue-width;
 		background-color: @queue-background-color;
 		div ul {
-			border-bottom: 1px solid @blue-500;
+			// border-bottom: 1px solid @blue-500;
 			.trash-badge {
 				padding: 2px 10px !important;
 				position: relative;
@@ -134,13 +134,18 @@
 
 			label{
 				font-weight:normal;
+
+				h6 {
+					color: @annotation-gray;
+				}
 			}
 			.manage_clipboard{
-				width:100%;
-				padding:10px;
-				text-align:center;
-				bottom:   0;
+				width: 100%;
+				padding: 13px;
+				text-align: center;
+				bottom: 0;
 				height: @manage-clipboard-btn-height;
+				font-size: 16px;
 			}
 			#queue_content{
 				width:@queue-width - 30px;
@@ -156,11 +161,11 @@
 					padding-top:10px;
 					position:relative;
 					margin-top: 5px;
-					overflow-y:auto;
+					// overflow-y:auto;
 					.select_all{
 						width:16px;
 						height:16px;
-						margin-left:10px;
+						margin-left:7px;
 					}
 
 					.select_all+label{
@@ -190,7 +195,7 @@
 							width:@queue-width - 70px;
 							.edit_content, .delete_content{
 								visibility:hidden;
-								margin-right:15px;
+								margin: 15px 10px 0 0;
 							}
 							.queue_item_title{
 								overflow:hidden;
@@ -199,8 +204,7 @@
 								width:90%;
 							}
 							.tog_folder{
-								padding-left:10px;
-								padding-right:10px;
+								padding: 8px 10px;
 							}
 						}
 					}
