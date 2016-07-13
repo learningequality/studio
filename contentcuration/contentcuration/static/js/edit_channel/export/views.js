@@ -113,28 +113,9 @@ var ExportItem = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             node: this.model.toJSON(),
             isfolder: this.model.get("kind") === "topic",
-            isempty:this.model.get("children").length ===0,
-            icon:this.get_icon()
+            isempty:this.model.get("children").length ===0
         }));
         this.$el.data("data", this);
-    },
-    get_icon:function(){
-        switch (this.model.get("kind")){
-            case "topic":
-                return "folder-close";
-            case "video":
-                return "film";
-            case "audio":
-                return "headphones";
-            case "image":
-                return "picture";
-            case "exercise":
-                return "star";
-            case "document":
-                return "file";
-            default:
-                return "fire"; //TODO: Change this later if necessary
-        }
     },
     toggle_subfiles:function(event){
         event.stopPropagation();

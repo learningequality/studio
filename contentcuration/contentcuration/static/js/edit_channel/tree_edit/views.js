@@ -8,6 +8,7 @@ var DragHelper = require("edit_channel/utils/drag_drop");
 var UploaderViews = require("edit_channel/uploader/views");
 var ShareViews = require("edit_channel/share/views");
 var Previewer = require("edit_channel/preview/views");
+var Import = require("edit_channel/import/views");
 //var UndoManager = require("backbone-undo");
 var Models = require("./../models");
 
@@ -23,12 +24,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.is_clipboard = options.is_clipboard;
 
 		this.render();
-
-	 	/*
-	 	this.undo_manager = new UndoManager({
-            track: true,
-            register: [this.collection]
-        });*/
 	},
 	render: function() {
 		var self=this;
@@ -144,7 +139,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.queue_view.add_to_trash(collection);
 	},
 	add_to_clipboard:function(collection){
-		this.queue_view.add_to_clipboard(collection);
+		this.queue_view.render();
+		//this.queue_view.add_to_clipboard(collection);
 	},
 	handle_checked:function(event){
 		var checked_count = this.$el.find("input[type=checkbox]:checked").length;
@@ -171,7 +167,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 	className: "container content-container",
 	initialize: function(options) {
-		_.bindAll(this, 'add_content');
+		_.bindAll(this, 'add_content','import_content','close_container','import_nodes');
 		this.index = options.index;
 		this.lock = true;
 		this.edit_mode = options.edit_mode;
@@ -205,7 +201,8 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	events: {
-		'click .add_content_button':'add_content',
+		'click .create_new_button':'add_content',
+		'click .import_button':'import_content',
 		'click .back_button' :'close_container'
 	},
 
@@ -257,7 +254,18 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.$el.animate({'margin-left' : -this.$el.outerWidth()}, 100,function(){
 			self.container.remove_containers_from(self.index - 1);
 		});
-	}
+	},
+	import_content:function(){
+        var import_view = new Import.ImportView({
+            modal: true,
+            callback: this.import_nodes,
+            model: this.model
+        });
+    },
+    import_nodes:function(collection){
+        this.reload_listed(collection);
+        this.render();
+    }
 });
 
 

@@ -385,12 +385,18 @@
 
 			.add_content_button{
 				cursor:pointer;
-				width: 100%;
-				margin-top: 0px;
-				padding: 6px;
+				width: @container-width - 10px;
+				background-color: @edit-new-button-color;
+				margin-top:0px;
+				padding:5px;
+				border:1px solid @container-border-color;
 				font-size: 12pt;
-				&:hover {
-					color: white;
+				border-radius:5px;
+			}
+			.add_content_dropdown{
+				font-size:12pt;
+				a{
+					padding:5px 10px;
 				}
 			}
 			.placeholder{
@@ -418,8 +424,8 @@
 				height: @expanded-height;
 			}
 			.add_content_button{
-				padding: 6px 20px;
-				width: 150px;
+				padding:5px 20px;
+				width:150px;
 				margin-left:@container-last-width - 160px;
 			}
 		}

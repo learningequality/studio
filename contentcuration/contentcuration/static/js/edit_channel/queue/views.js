@@ -13,6 +13,9 @@ var Queue = BaseViews.BaseView.extend({
 		_.bindAll(this, 'toggle_queue', 'switch_to_queue', 'switch_to_trash');
 		this.render();
 		this.$el.find("#queue").css("margin-right", -this.$el.find("#main-queue").outerWidth());
+	},
+	render: function() {
+		this.$el.html(this.template());
 		this.clipboard_root = window.current_channel.get_root("clipboard_tree");
 		this.trash_root = window.current_channel.get_root("trash_tree");
 		this.clipboard_queue = new QueueList({
@@ -31,9 +34,6 @@ var Queue = BaseViews.BaseView.extend({
 			add_controls : true,
 			container: this
 		});
-	},
-	render: function() {
-		this.$el.html(this.template({}));
 		this.switch_tab("clipboard");
 	},
 	events: {
@@ -109,7 +109,7 @@ var QueueList = BaseViews.BaseListView.extend({
 
 		this.load_content();
 		if(this.add_controls){
-			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("total_count"));
+			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("resource_count"));
 		}
 
 		this.$el.data("container", this);

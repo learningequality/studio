@@ -26,9 +26,8 @@ def count_files(node):
 
 def count_all_children(node):
     count = node.children.count()
-    if node.kind_id == "topic":
-        for n in node.children.all():
-            count += count_all_children(n)
+    for n in node.children.all():
+        count += count_all_children(n)
     return count
 
 def get_total_size(node):
