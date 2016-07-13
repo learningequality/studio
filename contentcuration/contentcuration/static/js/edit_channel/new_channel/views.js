@@ -154,7 +154,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		this.$(".save_channel").attr("disabled", "disabled");
 	},
 	delete_channel: function(event){
-		if(this.model.isNew() && (confirm("WARNING: All content under this channel will be permanently deleted."
+		if(!this.model.isNew() && (confirm("WARNING: All content under this channel will be permanently deleted."
 					+ "\nAre you sure you want to delete this channel?"))){
 			var self = this;
 			this.display_load("Deleting Channel...", function(){

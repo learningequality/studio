@@ -147,7 +147,6 @@ var AddContentView = BaseViews.BaseListView.extend({
     import_content:function(){
         var import_view = new Import.ImportView({
             modal: true,
-            parent_view: this,
             callback: this.import_nodes
         });
     },

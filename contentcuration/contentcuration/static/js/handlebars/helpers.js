@@ -73,3 +73,21 @@ Handlebars.registerHelper('format_count', function(text, count){
   }
   return count + " " + text + "s";
 });
+Handlebars.registerHelper('get_icon', function(kind){
+  switch (kind){
+      case "topic":
+          return "folder-close";
+      case "video":
+          return "film";
+      case "audio":
+          return "headphones";
+      case "image":
+          return "picture";
+      case "exercise":
+          return "star";
+      case "document":
+          return "file";
+      default:
+          return "exclamation-sign";
+  }
+});

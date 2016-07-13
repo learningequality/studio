@@ -8,24 +8,19 @@
 
 	#import_from_channel_box{
 		height: 400px;
+		overflow:auto;
 		width: @import-list-width;
 		background-color:white;
 		padding:0px;
 		margin-bottom: 20px;
 		display:inline-block;
 
-		.first_list{
-			max-height:400px;
-			max-width:@import-list-width;
-			overflow:auto;
-		}
-
 		.import-list{
 			list-style:none;
 			height:auto;
 			margin:0px;
 			padding:0px;
-
+			border-left:2px solid @blue-500;
 			li{
 				input[type=checkbox]{
 					display:inline-block;
@@ -34,12 +29,20 @@
 					vertical-align:middle;
 					margin: 0px 4px;
 					cursor:pointer;
+					margin-left:20px;
 				}
 				input[type=checkbox]:checked + label{
 					font-weight:bold;
+					.selected_counter{
+						visibility:visible !important;
+					}
 				}
 				.channel_checkbox{
 					display:none !important;
+				}
+				label *{
+					display:inline-block;
+					vertical-align:middle;
 				}
 				.import_channel_item{
 					/*background-color:#E7F2F4;*/
@@ -48,7 +51,7 @@
 					margin:0px;
 
 					.import_item_title{
-						max-width:@uploader-width * 0.8;
+						max-width:@uploader-width * 0.7;
 						font-size:15pt;
 					}
 				}
@@ -62,13 +65,15 @@
 						font-size:8pt;
 					}
 					.import_item_title{
-						overflow:hidden;
-						max-width:@uploader-width / 4;
+						max-width:@uploader-width * 0.5;
 						margin-right:15px;
 						font-size:13pt;
 					}
-				}
 
+				}
+				.import_item_title{
+					overflow:hidden;
+				}
 				.toggler{
 					padding:0px 5px;
 					display:inline-block;
@@ -92,6 +97,18 @@
 					font-size: 10pt;
 					color:gray;
 				}
+			}
+		}
+		.topic_list{
+			margin-left:30px;
+		}
+		.disabled{
+			color:@gray-700;
+			input[type=checkbox]{
+				cursor:not-allowed !important;
+			}
+			.selected_counter{
+				background-color:@gray-400 !important;
 			}
 		}
 	}
