@@ -475,8 +475,9 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         $("#tag_error").css("display", "none");
         if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").val().trim() != ""){
             var tag = this.$el.find("#tag_box").val().trim();
-            if(/^([a-z\d\s.,:\+)(/\-\\&-)]*)$/.test(tag)){
+            if(/^([A-z\d\s.,:\+)(\-&-)]*)$/.test(tag)){
                 var selector=this.encode_tag(tag);
+                console.log(selector);
                 if(this.$("#tag_area").find("#" + selector).length == 0){
                     this.append_tags([tag]);
                     if(this.multiple_selected){
@@ -537,16 +538,15 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         }
     },
     encode_tag:function(tag){
-        return tag.replace(" ", "_s_").replace(")","_pr_")
-                .replace("(","_pl_").replace("&","_a_").replace("-","_d_")
-                .replace(":","_c_").replace("+","_p_").replace("/","_bs_")
-                .replace(",","_co_").replace(".","_pe_");
+        return tag.replace(/\s/g, "_s_").replace(/\)/g,"_pr_").replace(/,/g,"_co_")
+                .replace(/\(/g,"_pl_").replace(/&/g,"_a_").replace(/\-/g,"_d_")
+                .replace(/:/g,"_c_").replace(/\+/g,"_p_").replace(/\./g,"_pe_");
     },
     decode_tag:function(tag){
-        return tag.replace("_s_", " ").replace("_pr_",")")
+        return tag.replace("_s_", " ").replace("_pr_",")").replace("_co_",",")
                 .replace("_pl_","(").replace("_a_", "&").replace("_d_","-")
-                .replace("_c_",":").replace("_p_","+").replace("_bs_","/")
-                .replace("_co_",",").replace("_pe_",".");
+                .replace("_c_",":").replace("_p_","+").replace("_pe_",".");
+
     }
 });
 

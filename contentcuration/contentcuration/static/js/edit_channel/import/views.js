@@ -5,16 +5,44 @@ var Models = require("edit_channel/models");
 require("import.less");
 var stringHelper = require("edit_channel/utils/string_helper");
 
-var ImportView = BaseViews.BaseModalView.extend({
+var ImportModalView = BaseViews.BaseModalView.extend({
+    template: require("./hbtemplates/import_modal.handlebars"),
+
+    initialize: function(options) {
+        _.bindAll(this, "close_importer");
+        this.callback = options.callback;
+        this.parent_view = options.parent_view;
+        this.modal = true;
+        this.render();
+        this.import_view = new ImportView({
+            el: this.$(".modal-body"),
+            callback: this.callback,
+            modal : this,
+            model:this.model
+        });
+    },
+
+    render: function() {
+        this.$el.html(this.template());
+        $("body").append(this.el);
+        this.$(".modal").modal({show: true, backdrop: 'static', keyboard: false});
+        this.$(".modal").on("hide.bs.modal", this.close);
+    },
+    close_importer:function(collection){
+      this.callback(collection);
+      this.close();
+    }
+});
+
+
+var ImportView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/import_dialog.handlebars"),
-    modal_template: require("./hbtemplates/import_modal.handlebars"),
+    callback:null,
     initialize: function(options) {
         _.bindAll(this, 'import_content');
         this.modal = options.modal;
-        // this.parent_view = options.parent_view;
         this.other_channels = window.access_channels.clone();
         this.other_channels.remove(window.current_channel);
-        // this.mainCollection = new Models.ContentNodeCollection();
         this.callback = options.callback;
         this.render();
     },
@@ -22,15 +50,7 @@ var ImportView = BaseViews.BaseModalView.extend({
       "click #import_content_submit" : "import_content"
     },
     render: function() {
-        if (this.modal) {
-            this.$el.html(this.modal_template());
-            this.$(".modal-body").append(this.template());
-            $("body").append(this.el);
-            this.$(".modal").modal({show: true, backdrop: 'static', keyboard: false});
-            this.$(".modal").on("hide.bs.modal", this.close);
-        } else {
-            this.$el.html(this.template());
-        }
+        this.$el.html(this.template({is_empty:this.other_channels.length===0}));
         var channel_collection = new Models.ContentNodeCollection();
         this.other_channels.forEach(function(channel){
             var node = channel.get_root("main_tree");
@@ -72,9 +92,17 @@ var ImportView = BaseViews.BaseModalView.extend({
                 copyCollection.add($(checked_items[i]).data("data").model);
             }
             // console.log("IMPORTING COLLECTION:", copyCollection);
-            self.callback(copyCollection.duplicate(self.model, {async:false}));
-            self.close();
+
+            self.close_importer(copyCollection.duplicate(self.model, {async:false}));
         });
+    },
+    close_importer:function(collection){
+        if(this.modal){
+            this.modal.close_importer(collection);
+        }else{
+            this.callback(collection);
+            this.remove();
+        }
     }
 });
 
@@ -246,5 +274,6 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
 });
 
 module.exports = {
-    ImportView: ImportView
+    ImportModalView: ImportModalView,
+    ImportView:ImportView
 }

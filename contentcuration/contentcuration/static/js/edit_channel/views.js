@@ -346,13 +346,7 @@ var BaseEditorView = BaseListView.extend({
 			if (this.modal) {
 				this.$el.modal('hide');
 	        }
-	        if(!this.allow_add){
-	        	var reload_collection = new Models.ContentNodeCollection();
-		        this.views.forEach(function(entry){
-		        	reload_collection.add(entry.model);
-				});
-				this.reload_listed(reload_collection);
-		    }
+
 	        this.remove();
 		}else if(confirm("Unsaved Metadata Detected! Exiting now will"
 			+ " undo any new changes. \n\nAre you sure you want to exit?")){
@@ -371,6 +365,13 @@ var BaseEditorView = BaseListView.extend({
 			event.stopPropagation();
 			event.preventDefault();
 		}
+		if(!this.allow_add){
+        	var reload_collection = new Models.ContentNodeCollection();
+	        this.views.forEach(function(entry){
+	        	reload_collection.add(entry.model);
+			});
+			this.reload_listed(reload_collection);
+	    }
 	},
 	save_nodes: function(callback){
 		this.parent_view.set_editing(false);
@@ -445,9 +446,10 @@ var BaseEditorView = BaseListView.extend({
 var BaseModalView = BaseView.extend({
     callback:null,
     close: function() {
-        if (this.modal) {
-            this.$(".modal").modal('hide');
-        }
+    	if(this.modal){
+    		this.$(".modal").modal('hide');
+    	}
+
         this.remove();
     }
 });

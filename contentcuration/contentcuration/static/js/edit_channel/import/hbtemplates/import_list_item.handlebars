@@ -2,7 +2,7 @@
 	<input type="checkbox" id="import_item_{{node.id}}_check" class="import_checkbox"></input>
 {{/unless}}
 
-<label for="import_file_{{node.id}}" class="{{#if is_channel}}import_channel_item{{else}}import_item{{/if}} {{#if isfolder}}tog_folder{{/if}}">
+<label for="import_item_{{node.id}}_check" class="{{#if is_channel}}import_channel_item{{else}}import_item{{/if}} {{#if node.children}}tog_folder{{/if}}">
 	{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
 	<div class="import_item_title truncate">{{node.title}}</div>
 	{{#if isfolder}}

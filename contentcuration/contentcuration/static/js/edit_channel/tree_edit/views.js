@@ -256,7 +256,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		});
 	},
 	import_content:function(){
-        var import_view = new Import.ImportView({
+        var import_view = new Import.ImportModalView({
             modal: true,
             callback: this.import_nodes,
             model: this.model

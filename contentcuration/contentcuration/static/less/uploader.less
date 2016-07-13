@@ -219,9 +219,6 @@
 			}
 		}
 	}
-	#metadata_edit_details{
-		overflow-y:auto;
-	}
 
 	#metadata_preview{
 		display:none;
@@ -255,6 +252,7 @@
 	}
 
 	#metadata_edit_details{
+		height:@uploader-height * 0.5;
 		overflow-y:auto;
 	}
 
@@ -336,6 +334,10 @@
 		max-width: @metadata-width / 3.2;
 		word-wrap:break-word;
 		border-radius:5px;
+		cursor:default;
+	}
+	.delete_tag{
+		cursor:pointer;
 	}
 
 	.required{
