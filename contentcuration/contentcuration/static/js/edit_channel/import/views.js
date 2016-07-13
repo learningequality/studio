@@ -16,7 +16,6 @@ var ImportView = BaseViews.BaseModalView.extend({
         this.other_channels.remove(window.current_channel);
         // this.mainCollection = new Models.ContentNodeCollection();
         this.callback = options.callback;
-        console.log("MODEL IS", this.model)
         this.render();
     },
     events: {
@@ -38,7 +37,7 @@ var ImportView = BaseViews.BaseModalView.extend({
             node.set({title:channel.get("name")});
             channel_collection.add(node);
         });
-        var importList = new ImportList({
+        this.importList = new ImportList({
             model : null,
             el:$("#import_from_channel_box"),
             is_channel: true,
@@ -48,14 +47,25 @@ var ImportView = BaseViews.BaseModalView.extend({
         });
     },
     update_count:function(){
-        console.log("UPDATING CONTAINER:", this.$el.find(".to_import"));
-        if($(".to_import").length ===0){
+        var list = this.$el.find(".to_import");
+        if(list.length ===0){
             $("#import_content_submit").text("Select content to import...");
             $("#import_content_submit").attr("disabled", "disabled");
         }else{
             $("#import_content_submit").text("IMPORT");
             $("#import_content_submit").removeAttr("disabled");
         }
+        // var size = 0;
+        // var count = 0;
+        // console.log("LIST IS", list);
+        // list.each(function(index, entry){
+        //     console.log("ENTRY IS", entry);
+        //     var model = $(entry).data("data").model;
+        //     size += model.get("resource_size");
+        //     count += model.get("resource_count");
+        // });
+        var data = this.importList.get_metadata();
+        this.$("#import_file_count").html(data.count + " file" + ((data.count == 1)? "   " : "s   ") + stringHelper.format_size(data.size));
     },
     import_content:function(){
         var self = this;
@@ -78,6 +88,7 @@ var ImportList = BaseViews.BaseListView.extend({
         this.is_channel = options.is_channel;
         this.collection = options.collection;
         this.container = options.container;
+        this.metadata = {"count": 0, "size": 0};
         this.parent_node_view = options.parent_node_view;
         this.render();
     },
@@ -112,13 +123,21 @@ var ImportList = BaseViews.BaseListView.extend({
 
         });
     },
-    update_count:function(count){
-        console.log("CAlling update on ", this.parent_node_view);
+    update_count:function(){
         if(this.parent_node_view){
-            this.parent_node_view.update_count(count);
+            this.parent_node_view.update_count();
         }else{
             this.container.update_count();
         }
+    },
+    get_metadata:function(){
+        var self = this;
+        this.metadata = {"count" : 0, "size":0};
+        this.views.forEach(function(entry){
+            self.metadata.count += entry.metadata.count;
+            self.metadata.size += entry.metadata.size;
+        });
+        return this.metadata;
     }
 });
 
@@ -137,8 +156,10 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.is_channel = options.is_channel;
         this.collection = new Models.ContentNodeCollection();
         this.selected = options.selected;
-        this.count = 0;
+
+        this.metadata = {"count": 0, "size": 0};
         this.render();
+        console.log("METADATA INIT", this.metadata);
     },
     events: {
         'click .tog_folder' : 'toggle',
@@ -175,17 +196,23 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.selected =  this.$("#" + this.id() + "_check").is(":checked");
         if(this.selected){
             this.$el.addClass("to_import");
-            this.count = 0;
+            this.metadata = {"count" : this.model.get("resource_count"), "size": this.model.get("resource_size")};
         }else{
             this.$el.removeClass("to_import");
+            this.metadata = {"count" : 0, "size": 0};
         }
         if(this.subfile_view){
             this.subfile_view.check_all_items(this.selected);
         }
-        this.update_count((this.selected)? this.model.get("resource_count") : -this.model.get("resource_count"), true);
+        this.update_count();
     },
     check_item:function(checked){
-        this.$el.removeClass("to_import");
+        if(this.$el.hasClass("to_import")){
+            this.$el.removeClass("to_import");
+        }
+        this.metadata = (checked)?
+                        {"count": this.model.get("resource_count"), "size": this.model.get("resource_size")}
+                        : {"count": 0, "size": 0}
         this.$("#" + this.id() + "_check").prop("checked", checked);
         this.$("#" + this.id() + "_count").text(this.model.get("resource_count"));
         this.$("#" + this.id() + "_count").css("visibility", (checked)?"visible" : "hidden" );
@@ -214,11 +241,13 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
             this.$("#" + this.id() + "_check").removeAttr("disabled");
         }
     },
-    update_count:function(count){
-        this.count += count;
-        this.$("#" + this.id() + "_count").css("visibility", (this.count === 0)? "hidden" : "visible");
-        this.$("#" + this.id() + "_count").text(this.count);
-        this.containing_list_view.update_count(count);
+    update_count:function(){
+        if(this.subfile_view){
+            this.metadata = this.subfile_view.get_metadata();
+        }
+        this.$("#" + this.id() + "_count").css("visibility", (this.metadata.count === 0)? "hidden" : "visible");
+        this.$("#" + this.id() + "_count").text(this.metadata.count);
+        this.containing_list_view.update_count();
     }
 });
 
