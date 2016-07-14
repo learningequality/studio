@@ -1,4 +1,4 @@
-<h3>{{node.attributes.title}}</h3>
+{{#unless is_modal}}<h3>{{node.attributes.title}}</h3>{{/unless}}
 <div class="btn-group">
   <button class="btn btn-default btn-sm dropdown-toggle" id="preview_format_switch" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
   	{{#if selected_preset}}

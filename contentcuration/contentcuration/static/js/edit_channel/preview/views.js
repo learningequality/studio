@@ -2,7 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-require("uploader.less");
+require("modal-styles.less");
 
 var PreviewView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/preview_templates/tabs.handlebars"),
@@ -24,12 +24,13 @@ var PreviewView = BaseViews.BaseModalView.extend({
     },
     render: function() {
         if(this.modal){
-            this.$el.html(this.modal_template());
+            this.$el.html(this.modal_template({node:this.model.toJSON()}));
             this.$(".modal-body").html(this.template({
                 node: this.model,
                 presets: this.presets.toJSON(),
                 file: this.current_preview,
-                selected_preset: (this.current_preview) ? window.formatpresets.get(this.current_preview.preset) : null
+                selected_preset: (this.current_preview) ? window.formatpresets.get(this.current_preview.preset) : null,
+                is_modal:true
             }));
             this.$el.append(this.el);
             this.$(".modal").modal({show: true});
@@ -39,7 +40,8 @@ var PreviewView = BaseViews.BaseModalView.extend({
                 node: this.model,
                 presets: this.presets.toJSON(),
                 file: this.current_preview,
-                selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset) : null
+                selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset) : null,
+                is_modal:false
             }));
         }
     },
@@ -71,9 +73,11 @@ var PreviewView = BaseViews.BaseModalView.extend({
         switch (extension){
             case "png":
             case "jpg":
+            case "jpeg":
                 preview_template = require("./hbtemplates/preview_templates/image.handlebars");
                 break;
             case "pdf":
+            case "PDF":
             case "vtt":
             case "srt":
                 preview_template = require("./hbtemplates/preview_templates/document.handlebars");
