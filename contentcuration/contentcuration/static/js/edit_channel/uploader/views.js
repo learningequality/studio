@@ -398,7 +398,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
         // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
         //var file_size = (((this.current_node.get("files") || [])[0] || {}).format_size) || ((this.current_node.get("files") || {}).data || {}).size || "";
-        this.$("#display_file_size").text(this.current_node.get("resource_size"));
+        this.$("#display_file_size").text(this.current_node.get("metadata").resource_size);
         this.gray_out(false);
         this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
     },

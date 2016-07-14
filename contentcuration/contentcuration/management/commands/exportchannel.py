@@ -225,6 +225,8 @@ def hack_hack_hack_zip_actual_files():
         filepaths = [f for f in ccmodels.File.objects.filter(id__in=channel_file_ids)]
 
         logging.debug("Writing {count} files to the zip".format(count=len(filepaths)))
+
         for f in filepaths:
-            full_path = os.path.join(settings.STORAGE_ROOT, str(f.file_on_disk))
+            locations = str(f.file_on_disk).split('/') #os.path.sep)
+            full_path = os.path.join(settings.STORAGE_ROOT, os.path.sep.join(locations[1:len(locations)]))
             zf.write(full_path, str(f))

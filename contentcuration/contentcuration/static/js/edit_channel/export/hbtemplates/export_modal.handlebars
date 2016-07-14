@@ -7,7 +7,7 @@
             </div>
             <div class="modal-body">
                 <div id="export_area">
-                    <em class="pull-right" id="version_number">Version: {{version}}</em>
+                    <em class="pull-right" id="version_number">Current Version: {{version}}</em>
                     <!-- <label><i class="required">*</i> License:</label>
                     <select id="export_license_select">
                         <option selected disabled>-- Select a License --</option>
@@ -24,8 +24,8 @@
                             <span>PUBLISH</span>
                         </button>
                         <span id="export_totals" class="pull-right">
-                            {{#format_count "Resource" node.resource_count}}{{/format_count}}
-                            <em class="annotation">({{#format_file_size node.resource_size}}{{/format_file_size}})</em>
+                            {{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}
+                            <em class="annotation">({{#format_file_size node.metadata.resource_size}}{{/format_file_size}})</em>
                         </span>
                         <a class="action-text" data-dismiss="modal">
                             <span>CANCEL</span>

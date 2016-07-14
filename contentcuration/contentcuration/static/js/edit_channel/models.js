@@ -106,7 +106,7 @@ var ContentNodeModel = BaseModel.extend({
 	/*Used when copying items to clipboard*/
     duplicate: function(target_parent, options){
 		var node_id = this.get("id");
-		var sort_order =(target_parent) ? target_parent.get("max_sort_order") + 1 : 1;
+		var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
         var parent_id = (target_parent) ? target_parent.get("id") : null;
 
         var data = {"node_id": node_id,
@@ -249,7 +249,7 @@ var ContentNodeCollection = BaseCollection.extend({
     	this.forEach(function(node){
     		copied_list.push(node.get("id"));
     	});
-		var sort_order =(target_parent) ? target_parent.get("max_sort_order") + 1 : 1;
+		var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
         var parent_id = (target_parent) ? target_parent.get("id") : null;
 
         var data = {"node_ids": copied_list.join(" "),

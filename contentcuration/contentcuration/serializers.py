@@ -3,7 +3,7 @@ import json
 from contentcuration.models import *
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
-from contentcuration.api import get_total_size, get_node_siblings, get_node_ancestors, get_child_names, count_files, count_all_children
+from contentcuration.api import get_total_size, get_node_ancestors, count_files, calculate_node_metadata
 from rest_framework.utils import model_meta
 from collections import OrderedDict
 from rest_framework.fields import set_value, SkipField
@@ -152,12 +152,9 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     preset = FormatPresetSerializer(many=True, read_only=True)
     id = serializers.CharField(required=False)
 
-    resource_count = serializers.SerializerMethodField('count_resources')
-    resource_size = serializers.SerializerMethodField('calculate_resources_size')
-    total_count = serializers.SerializerMethodField('count_all')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
-    max_sort_order = serializers.SerializerMethodField('calculate_max_sort_order')
+    metadata = serializers.SerializerMethodField('calculate_metadata')
 
     def to_internal_value(self, data):
         """
@@ -257,27 +254,9 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         instance.save()
         return instance
 
-    def count_resources(self, node):
-        return count_files(node)
-
-    def calculate_resources_size(self, node):
-        return get_total_size(node)
-
     def get_node_ancestors(self,node):
         return get_node_ancestors(node)
 
-    def count_all(self,node):
-        return count_all_children(node)
-
-    def get_all_resources(self, node):
-        return show_resources(node)
-
-    def calculate_max_sort_order(self, node):
-        maximum = 1
-        for n in node.children.all():
-            if maximum < n.sort_order:
-                maximum = n.sort_order
-        return maximum
     def calculate_metadata(self, node):
         return calculate_node_metadata(node)
 
@@ -285,8 +264,8 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
-                 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset', 'max_sort_order',
-                 'resource_count', 'resource_size', 'ancestors', 'tags', 'files', 'total_count')
+                 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
+                 'ancestors', 'tags', 'files', 'metadata')
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:

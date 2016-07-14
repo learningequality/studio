@@ -8,7 +8,7 @@
             <span id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-menu-right"></span>
         {{/if}}
     {{else}}
-        <em class="annotation">({{#format_file_size node.resource_size}}{{/format_file_size}})</em>
+        <em class="annotation">({{#format_file_size node.metadata.resource_size}}{{/format_file_size}})</em>
     {{/if}}
 </div>
 

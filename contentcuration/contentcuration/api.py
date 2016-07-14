@@ -13,6 +13,28 @@ from kolibri.content.utils import validate
 from django.db import transaction
 import models
 
+def calculate_node_metadata(node):
+    metadata = {
+        "total_count" : node.children.count(),
+        "resource_count" : 0,
+        "max_sort_order" : 1,
+        "resource_size" : 0
+    }
+
+    if node.kind_id == "topic":
+        for n in node.children.all():
+            metadata['max_sort_order'] = max(n.sort_order, metadata['max_sort_order'])
+            child_metadata = calculate_node_metadata(n)
+            metadata['total_count'] += child_metadata['total_count']
+            metadata['resource_size'] += child_metadata['resource_size']
+            metadata['resource_count'] += child_metadata['resource_count']
+    else:
+        metadata['resource_count'] = 1
+        for f in node.files.all():
+            metadata['resource_size'] += f.file_size
+        metadata['max_sort_order'] = node.sort_order
+    return metadata
+
 def count_files(node):
     if node.kind_id == "topic":
         count = 0

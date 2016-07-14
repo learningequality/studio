@@ -77,7 +77,7 @@ var ImportView = BaseViews.BaseListView.extend({
         }
         var totalCount = 0;
         list.each(function(index, entry){
-            totalCount += $(entry).data("data").model.get("total_count") + 1;
+            totalCount += $(entry).data("data").model.get("metadata").total_count + 1;
         });
         var data = this.importList.get_metadata();
         totalCount -= data.count;
@@ -218,7 +218,7 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.selected =  this.$("#" + this.id() + "_check").is(":checked");
         if(this.selected){
             this.$el.addClass("to_import");
-            this.metadata = {"count" : this.model.get("resource_count"), "size": this.model.get("resource_size")};
+            this.metadata = {"count" : this.model.get("metadata").resource_count, "size": this.model.get("metadata").resource_size};
         }else{
             this.$el.removeClass("to_import");
             this.metadata = {"count" : 0, "size": 0};
@@ -233,10 +233,10 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
             this.$el.removeClass("to_import");
         }
         this.metadata = (checked)?
-                        {"count": this.model.get("resource_count"), "size": this.model.get("resource_size")}
+                        {"count": this.model.get("metadata").resource_count, "size": this.model.get("metadata").resource_size}
                         : {"count": 0, "size": 0}
         this.$("#" + this.id() + "_check").prop("checked", checked);
-        this.$("#" + this.id() + "_count").text(this.model.get("resource_count"));
+        this.$("#" + this.id() + "_count").text(this.model.get("metadata").resource_count);
         this.$("#" + this.id() + "_count").css("visibility", (checked)?"visible" : "hidden" );
         this.selected = checked;
     },
