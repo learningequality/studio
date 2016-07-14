@@ -267,7 +267,7 @@ def send_invitation_email(request):
                                                         sender=request.user,
                                                         channel_id = channel_id,
                                                         first_name=recipient.first_name if recipient.is_active else "Guest",
-                                                        last_name=recipient.last_name)[0]
+                                                        last_name=recipient.last_name if recipient.is_active else " ")[0]
             ctx_dict = {    'sender' : request.user,
                             'site' : get_current_site(request),
                             'user' : recipient,

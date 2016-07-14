@@ -146,6 +146,6 @@ SITE_ID = 1
 # EMAIL_HOST_USER = ''
 # EMAIL_HOST_PASSWORD = ''
 # EMAIL_USE_TLS = False
-# DEFAULT_FROM_EMAIL = 'testing@example.com'
+DEFAULT_FROM_EMAIL = 'kolibri-no-reply@learningequality.org'
 
 HACK_HACK_HACK_UNICEF_CONTENT_ZIP_PATH = os.path.join(BASE_DIR, "unicef.zip")
