@@ -1,5 +1,8 @@
 import collections
+import os
+import zipfile
 
+from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
@@ -41,6 +44,7 @@ class Command(BaseCommand):
 
             map_channel_to_kolibri_channel(channel)
             map_content_nodes(channel.main_tree,)
+            hack_hack_hack_zip_actual_files()
             # use SQLite backup API to put DB into archives folder.
             # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -209,3 +213,18 @@ def mark_all_nodes_as_changed(channel):
     channel.main_tree.get_family().update(changed=False)
 
     logging.info("Marked all nodes as changed.")
+
+
+def hack_hack_hack_zip_actual_files():
+    # TODO: remove once we deliver UNICEF MMVP
+
+    zippath = settings.HACK_HACK_HACK_UNICEF_CONTENT_ZIP_PATH
+
+    with zipfile.ZipFile(zippath, "w") as zf:
+        channel_file_ids = [k.pk for k in kolibrimodels.File.objects.all()]
+        filepaths = [f for f in ccmodels.File.objects.filter(id__in=channel_file_ids)]
+
+        logging.debug("Writing {count} files to the zip".format(count=len(filepaths)))
+        for f in filepaths:
+            full_path = os.path.join(settings.STORAGE_ROOT, str(f.file_on_disk))
+            zf.write(full_path, str(f))
