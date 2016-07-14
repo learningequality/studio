@@ -30,7 +30,7 @@ class Command(BaseCommand):
         try:
             channel = ccmodels.Channel.objects.get(pk=channel_id)
             # increment the channel version
-            # raise_if_nodes_are_all_unchanged(channel)
+            raise_if_nodes_are_all_unchanged(channel)
             mark_all_nodes_as_changed(channel)
             # assign_license_to_contentcuration_nodes(channel, license)
             # create_kolibri_license_object(license)

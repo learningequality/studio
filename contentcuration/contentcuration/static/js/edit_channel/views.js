@@ -106,11 +106,15 @@ var BaseView = Backbone.View.extend({
 		});
 	},
 	publish:function(){
+		var self = this;
 		var Exporter = require("edit_channel/export/views");
 		var exporter = new Exporter.ExportModalView({
 			model: window.current_channel.get_root("main_tree"),
 			callback: function(){
-				$("#channel-edit-content-wrapper").data("data").render();
+				var list = $(".to_publish");
+				list.each(function(index, entry){
+					$(entry).data("data").reload();
+				});
 			}
 		});
 	}
@@ -173,7 +177,6 @@ BaseListView = BaseView.extend({
 		if(this.model.id != transfer.model.get("parent")){
 			var old_parent = transfer.containing_list_view.model;
 			transfer.model.set({
-				changed:true,
 				parent: this.model.id
 			}, {validate:true});
 
@@ -182,7 +185,11 @@ BaseListView = BaseView.extend({
 				transfer.model.set({parent: old_parent.id});
 				transfer.containing_list_view.render();
 			}else{
-				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
+				transfer.model.save({
+					parent: this.model.id,
+					sort_order:new_sort_order,
+					changed:true
+				}, {async:false, validate:false});
 				this.model.fetch({async:false});
 				if(this.model.get("parent")){
 					$("#" + this.model.get("id")).data("data").render();
@@ -194,7 +201,10 @@ BaseListView = BaseView.extend({
 				transfer.containing_list_view.render();
 			}
 		}else{
-			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false});
+			transfer.model.save({
+				sort_order:new_sort_order,
+				changed:true
+			}, {async:false, validate:false});
 		}
 		this.render();
 		if(transfer.$el.hasClass("current_topic")){

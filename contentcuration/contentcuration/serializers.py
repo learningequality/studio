@@ -278,6 +278,8 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
             if maximum < n.sort_order:
                 maximum = n.sort_order
         return maximum
+    def calculate_metadata(self, node):
+        return calculate_node_metadata(node)
 
     class Meta:
         list_serializer_class = CustomListSerializer
