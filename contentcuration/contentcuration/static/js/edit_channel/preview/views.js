@@ -52,6 +52,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
         var self = this;
         this.model.get("files").forEach(function(file){
             var data = (file.attributes)? file.attributes : file;
+
             if(data.preset == event.target.getAttribute("value")){
                 self.set_current_preview(data);
                 return;

@@ -212,6 +212,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.file_list.splice(this.file_list.indexOf(file), 1);
         if (this.file_list.length === 0) {
             this.disable_next();
+            this.$(".go_to_formats").text("Add files to continue");
         }
     },
     go_to_formats:function(){
