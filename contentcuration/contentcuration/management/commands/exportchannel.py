@@ -70,7 +70,7 @@ def map_content_tags(channel):
     logging.debug("Creating the Kolibri content tags.")
 
     cctags = ccmodels.ContentTag.objects.filter(
-        channel=channel).values("tag_name")
+        channel=channel).values("tag_name", "id")
     kolibrimodels.ContentTag.objects.bulk_create(
         [kolibrimodels.ContentTag(**vals) for vals in cctags])
 
