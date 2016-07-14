@@ -1,0 +1,22 @@
+{% load i18n %}
+
+{% autoescape off %}
+Hello {% if is_new %}{{ user.email }}{% else %}{{ user.first_name }}{% endif %},
+
+{{ sender.first_name }} {{ sender.last_name }} has invited you to edit a channel at {{ site.name }}.
+
+Please follow this link to accept the invitation:
+{% if is_new %}
+http://{{ site.domain }}{% url 'accept_invitation_and_registration' user.id invitation_key channel_id %}
+{% else %}
+http://{{ site.domain }}{% url 'accept_invitation' user.id invitation_key channel_id %}
+{% endif %}
+
+or decline it here:
+http://{{ site.domain }}{% url 'decline_invitation' invitation_key %}
+
+Thanks for using our site!
+
+The Learning Equality Team
+
+{% endautoescape %}

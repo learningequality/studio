@@ -26,8 +26,17 @@
 		{{#if is_clipboard}}
 			<div class="row clipboard_options text-center">
 				<div class="toolbar-button">
-					<div class="add_items"><span class="glyphicon glyphicon-plus-sign"></span></div>
-					<a class="add_items">Add</a>
+					<div class="dropdown" id="clipboard_dropdown">
+						<div data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" >
+							<div class="add_items"><span class="glyphicon glyphicon-plus-sign" id="clipboard_add_dd"></span></div>
+							<a class="add_items">Add</a>
+						</div>
+					  <ul class="dropdown-menu clipboard_add_options" aria-labelledby="clipboard_add_dd">
+					    <li><a class="create_new_content">Create New</a></li>
+					    <li><a class="import_content">Import Content</a></li>
+					  </ul>
+					</div>
+
 				</div>
 				<div class="toolbar-button">
 					<div class="edit_items"><span class="glyphicon glyphicon-pencil"></span></div>
@@ -53,19 +62,23 @@
 			</div>
 			<div id = "trash_list" class="list_content">
 		{{/if}}
-			<input type="checkbox" class="select_all" id="select_all_check"/>
-			<label for="select_all_check">Select All</label>
+			<div class="select_all_fixed">
+				{{#if is_clipboard}}
+					<a class="action-text pull-right manage_clipboard" href="clipboard">MANAGE</a>
+				{{/if}}
+				<input type="checkbox" class="select_all select_all_component" id="select_all_check_{{id}}"/>
+				<label for="select_all_check_{{id}}">Select All</label>
+			</div>
+		<div class="queue-list-wrapper">
 	{{/if}}
-
 			<ul class="list-unstyled content-list" id="list_for_{{id}}">
 				{{#unless content_list}}
 					<li class="default-item"><h5>No items found.</h5></li>
 				{{/unless}}
 			</ul>
 	{{#if add_controls}}
+			</div>
 		</div>
-		{{#if is_clipboard}}
-			<a class="btn btn-default manage_clipboard text-center" href="clipboard">Manage Clipboard</a>
-		{{/if}}
+
 	{{/if}}
 </div>

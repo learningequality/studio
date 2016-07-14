@@ -10,18 +10,46 @@ from django.db.models import Q
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
 from kolibri.content.utils import validate
-from kolibri.content.api import *
 from django.db import transaction
 import models
 
+def calculate_node_metadata(node):
+    metadata = {
+        "total_count" : node.children.count(),
+        "resource_count" : 0,
+        "max_sort_order" : 1,
+        "resource_size" : 0
+    }
+
+    if node.kind_id == "topic":
+        for n in node.children.all():
+            metadata['max_sort_order'] = max(n.sort_order, metadata['max_sort_order'])
+            child_metadata = calculate_node_metadata(n)
+            metadata['total_count'] += child_metadata['total_count']
+            metadata['resource_size'] += child_metadata['resource_size']
+            metadata['resource_count'] += child_metadata['resource_count']
+    else:
+        metadata['resource_count'] = 1
+        for f in node.files.all():
+            metadata['resource_size'] += f.file_size
+        metadata['max_sort_order'] = node.sort_order
+    return metadata
+
 def count_files(node):
-    return node.get_descendants().exclude(kind_id="topic").count()
+    if node.kind_id == "topic":
+        count = 0
+        for n in node.children.all():
+            count += count_files(n)
+        return count
+    return 1
+
+    # For some reason, this returns sibling desendants too
+    # return node.get_descendants(include_self=False).exclude(kind_id="topic").count()
 
 def count_all_children(node):
     count = node.children.count()
-    if node.kind_id == "topic":
-        for n in node.children.all():
-            count += count_all_children(n)
+    for n in node.children.all():
+        count += count_all_children(n)
     return count
 
 def get_total_size(node):

@@ -4,6 +4,7 @@ require("queue.less");
 var BaseViews = require("./../views");
 var Models = require("./../models");
 var DragHelper = require("edit_channel/utils/drag_drop");
+var Import = require("edit_channel/import/views");
 
 /* Loaded when user clicks clipboard button below navigation bar */
 var Queue = BaseViews.BaseView.extend({
@@ -13,6 +14,9 @@ var Queue = BaseViews.BaseView.extend({
 		_.bindAll(this, 'toggle_queue', 'switch_to_queue', 'switch_to_trash');
 		this.render();
 		this.$el.find("#queue").css("margin-right", -this.$el.find("#main-queue").outerWidth());
+	},
+	render: function() {
+		this.$el.html(this.template());
 		this.clipboard_root = window.current_channel.get_root("clipboard_tree");
 		this.trash_root = window.current_channel.get_root("trash_tree");
 		this.clipboard_queue = new QueueList({
@@ -31,9 +35,6 @@ var Queue = BaseViews.BaseView.extend({
 			add_controls : true,
 			container: this
 		});
-	},
-	render: function() {
-		this.$el.html(this.template({}));
 		this.switch_tab("clipboard");
 	},
 	events: {
@@ -43,9 +44,9 @@ var Queue = BaseViews.BaseView.extend({
 	},
 	toggle_queue: function(){
 		if(this.$el.find("#queue").css("margin-right") != "0px")
-			this.$el.find("#queue").animate({marginRight:0}, 500);
+			this.$el.find("#queue").animate({marginRight:0}, 200);
 		else
-			this.$el.find("#queue").animate({marginRight: -this.$el.find("#main-queue").outerWidth()}, 500);
+			this.$el.find("#queue").animate({marginRight: -this.$el.find("#main-queue").outerWidth()}, 200);
 	},
 	add_to_clipboard:function(collection){
 		this.clipboard_queue.add_to_list(collection);
@@ -84,16 +85,17 @@ var QueueList = BaseViews.BaseListView.extend({
 		//this.set_sort_orders(this.childrenCollection);
 		this.add_controls = options.add_controls;
 		this.container = options.container;
-		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_items', 'move_trash', 'search');
+		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_items', 'import_content', 'move_trash', 'search', 'import_nodes');
 		this.render();
 	},
 	events: {
-		'click #select_all_check' : 'check_all',
+		'change .select_all' : 'check_all',
 		'click .delete_items' : 'delete_items',
 		'click .edit_items' : 'edit_items',
-		'click .add_items' : 'add_items',
+		'click .create_new_content' : 'add_items',
 		'click .move_trash' : 'move_trash',
-		'keydown .search_queue' : 'search'
+		'keydown .search_queue' : 'search',
+		'click .import_content' : 'import_content'
 	},
 	render: function() {
 		DragHelper.removeDragDrop(this);
@@ -109,7 +111,7 @@ var QueueList = BaseViews.BaseListView.extend({
 
 		this.load_content();
 		if(this.add_controls){
-			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("total_count"));
+			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("metadata").total_count);
 		}
 
 		this.$el.data("container", this);
@@ -137,7 +139,7 @@ var QueueList = BaseViews.BaseListView.extend({
 		});
 	},
 	check_all :function(){
-		this.$el.find(":checkbox").prop("checked", this.$el.find("#select_all_check").prop('checked'));
+		this.$el.find(":checkbox").prop("checked", this.$el.find("#select_all_check_" + this.model.id).prop('checked'));
 	},
 	delete_items:function(){
 		var list = this.$el.find('input:checked').parent("li");
@@ -151,7 +153,6 @@ var QueueList = BaseViews.BaseListView.extend({
 						if($("#" + list[i].id).data("data")){
 							$("#" + list[i].id).data("data").remove_item();
 						}
-
 					}
 					self.render();
 				});
@@ -160,7 +161,12 @@ var QueueList = BaseViews.BaseListView.extend({
 		}
 	},
 	edit_items:function(){
-		this.edit_selected();
+		var list = this.$el.find('input:checked').parent("li");
+		if(list.length == 0){
+			alert("No items selected.");
+		}else{
+			this.edit_selected();
+		}
 	},
 	move_trash:function(){
 		var list = this.$el.find('input:checked').parent("li");
@@ -168,8 +174,14 @@ var QueueList = BaseViews.BaseListView.extend({
 			alert("No items selected.");
 		}else{
 			var moveCollection = new Models.ContentNodeCollection();
+			var ancestor_list = [];
 			for(var i =0 ;i < list.length; i++){
-				moveCollection.add($("#" + list[i].id).data("data").model);
+				var node = $("#" + list[i].id).data("data").model;
+				if(ancestor_list.length === 0 || $(node.get("ancestors")).filter(ancestor_list).length === 1){
+					moveCollection.add(node);
+					ancestor_list.push(node.get("id"));
+				}
+
 			}
 			this.container.add_to_clipboard(moveCollection);
 		}
@@ -190,7 +202,17 @@ var QueueList = BaseViews.BaseListView.extend({
 	},
 	add_to_clipboard:function(collection){
 		this.container.add_to_clipboard(collection);
-	}
+	},
+	import_content:function(){
+        var import_view = new Import.ImportModalView({
+            callback: this.import_nodes,
+            model: this.model
+        });
+    },
+    import_nodes:function(collection){
+        this.reload_listed(collection);
+        this.render();
+    }
 });
 
 /* Loaded when user clicks clipboard button below navigation bar */
@@ -272,6 +294,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 				this.add_to_trash();
 			}else{
 				this.model.destroy({async:false});
+				this.$el.remove();
 			}
 			if(prompt){
 				this.containing_list_view.render();

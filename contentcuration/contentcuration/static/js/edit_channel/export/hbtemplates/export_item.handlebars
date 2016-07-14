@@ -1,0 +1,17 @@
+<div class="{{#if isfolder}} folder_item {{#unless isempty}}export_folder"{{/unless}}{{/if}}">
+    {{#unless isfolder}}<span class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></span>{{/unless}}
+    <span class="export_item_title truncate">{{node.title}}</span>
+    {{#if isfolder}}
+        {{#if isempty}}
+            <em class="annotation">(empty)</em>
+        {{else}}
+            <span id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-menu-right"></span>
+        {{/if}}
+    {{else}}
+        <em class="annotation">({{#format_file_size node.metadata.resource_size}}{{/format_file_size}})</em>
+    {{/if}}
+</div>
+
+{{#if isfolder}}
+    <div id="export_item_{{node.id}}_sub" class="subdirectory"> </div>
+{{/if}}

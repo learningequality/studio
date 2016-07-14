@@ -1,7 +1,9 @@
 <div class="table table-striped files format_item">
   <div class="file-row row">
     <div class="inline col-xs-3 preview_section text-center">
-        <img class="thumbnail_img" data-dz-thumbnail alt="No Preview Available" src="{{thumbnail}}"/>
+        <object class="thumbnail_fallback" data="/static/img/{{node.attributes.kind}}_placeholder.png" type="image/png" width=130 height=130>
+            <img class="thumbnail_img" data-dz-thumbnail alt="No Preview Available" src="{{thumbnail}}"/>
+        </object>
         {{#if initial}}
         <div class="progress_file_area uploading_only">
             <span class="glyphicon glyphicon-ok upload_successful pull-right upload_option" aria-hidden="true"></span>

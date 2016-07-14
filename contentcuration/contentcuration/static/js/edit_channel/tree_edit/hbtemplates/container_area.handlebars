@@ -1,5 +1,6 @@
-<div id={{#if edit}}"edit"{{else}}"preview"{{/if}} class="container-fluid">
+<div id={{#if is_clipboard}}"clipboard"{{else}}{{#if edit}}"edit"{{else}}"preview"{{/if}}{{/if}} class="container-fluid">
 	<!--<h3 id="container_area_title">{{#if is_clipboard}}Clipboard{{else}}{{channel.attributes.name}}{{/if}}</h3>-->
+	<!-- <span class="glyphicon glyphicon-star" style="font-size:500pt; background-color:lightgray;padding:100px; color:gray"></span> -->
 	{{#if edit}}
 	<nav id="button_bar">
 		<!--{{#if is_clipboard}}<a class="btn btn-default disable-on-edit construction">Import to Channel</a>{{/if}}-->
@@ -24,12 +25,22 @@
 			<a class="nav-label delete_button disable-on-edit disable-none-selected">Delete</a>
 		</div>
 
+		{{#unless is_clipboard}}
+		<div class="nav-button-container">
+			<div class="nav-button permissions_button disable-on-edit"><span class="glyphicon glyphicon-user"></span></div>
+			<a class="nav-label permissions_button disable-on-edit">Share</a>
+		</div>
+		{{/unless}}
+
 		<!--<a class="btn btn-default undo_button disable-on-edit">Undo</a>
 		<a class="btn btn-default redo_button disable-on-edit">Redo</a>-->
 		<div class="hide-details-container">
 			<input type="checkbox" id="hide_details_checkbox"/>
 			<label for="hide_details_checkbox">Hide details</label>
 		</div>
+		{{#if is_clipboard}}
+			<span class="glyphicon glyphicon-remove pull-right back_to_edit_button close_clipboard"></span>
+		{{/if}}
 	</nav>
 	{{else}}
 		<h1>Select content to preview.
@@ -46,8 +57,10 @@
 	</ol>-->
 
 	<div id="container-wrapper">
+		{{#if is_clipboard}}
+			<h1 id="clipboard_header">{{channel.name}} Clipboard</h1>
+		{{/if}}
 		<ul id="container_area" class="list-unstyled">
 		</ul>
 	</div>
-
 </div>

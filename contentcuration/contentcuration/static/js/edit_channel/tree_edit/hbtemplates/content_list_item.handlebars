@@ -30,18 +30,20 @@
 	<h6 class="content_metadata_summary">
 		{{to_upper_case node.attributes.kind}}
 		<span class="metadata_to_hide">
-			{{#if time}}&nbsp<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
-			{{#if isfolder}}&nbsp{{node.attributes.resource_count}} Resources{{/if}}
-			&nbsp<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.attributes.resource_size}}{{/format_file_size}}
-			&nbsp
+			{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
+			{{#if isfolder}}&nbsp;{{#format_count "Resource" node.attributes.metadata.resource_count}}{{/format_count}}{{/if}}
+			&nbsp;<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.attributes.metadata.resource_size}}{{/format_file_size}}
+			&nbsp;
 			{{#if node.attributes.changed}}
 				<em class="unpublished">Updated</em>
-			{{else}}
+			 {{else}}
+			 	<!--
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
 				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+				-->
 			{{/if}}
 		</span>
 	</h6>

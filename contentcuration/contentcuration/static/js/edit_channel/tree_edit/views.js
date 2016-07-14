@@ -6,7 +6,9 @@ var BaseViews = require("./../views");
 var QueueView = require("edit_channel/queue/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var UploaderViews = require("edit_channel/uploader/views");
+var ShareViews = require("edit_channel/share/views");
 var Previewer = require("edit_channel/preview/views");
+var Import = require("edit_channel/import/views");
 //var UndoManager = require("backbone-undo");
 var Models = require("./../models");
 
@@ -16,14 +18,27 @@ var TreeEditView = BaseViews.BaseView.extend({
 	containers:[],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details', 'back_to_edit', 'handle_checked'/*,'undo_action', 'redo_action'*/);
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details', 'back_to_edit', 'handle_checked', 'edit_permissions' /*,'undo_action', 'redo_action'*/);
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
 
+		this.render();
+	},
+	render: function() {
 		var self=this;
 		this.display_load("Loading Content...", function(){
-			self.render();
+			self.$el.html(self.template({
+				edit: self.is_edit_page,
+				channel : window.current_channel.toJSON(),
+				is_clipboard : self.is_clipboard
+			}));
+			if(self.is_clipboard){
+				$("#secondary-nav").css("display","none");
+				$("#channel-edit-content-wrapper").css("background-color", "#EDDEED");
+			}
+			self.add_container(self.containers.length, self.model);
+			$("#channel-edit-content-wrapper").data("data", self);
 			self.queue_view = new QueueView.Queue({
 		 		el: $("#queue-area"),
 		 		collection: self.collection
@@ -46,21 +61,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 			self.$el.find(".disable-none-selected").prop("disabled",true);
 			self.$el.find(".disable-none-selected").css("cursor","not-allowed");
 		});
-
-	 	/*
-	 	this.undo_manager = new UndoManager({
-            track: true,
-            register: [this.collection]
-        });*/
-	},
-	render: function() {
-		this.$el.html(this.template({
-			edit: this.is_edit_page,
-			channel : window.current_channel,
-			is_clipboard : this.is_clipboard
-		}));
-		this.add_container(this.containers.length, this.model);
-		$("#channel-edit-content-wrapper").data("data", this);
 	},
 	events: {
 		'click .copy_button' : 'copy_content',
@@ -68,7 +68,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 		'click .edit_button' : 'edit_content',
 		'click #hide_details_checkbox' :'toggle_details',
 		'click .back_to_edit_button' : 'back_to_edit',
-		'change input[type=checkbox]' : 'handle_checked'
+		'change input[type=checkbox]' : 'handle_checked',
+		'click .permissions_button' : 'edit_permissions'
 	},
 	back_to_edit:function(){
 		window.location = window.location.href.replace("clipboard", "edit");
@@ -142,12 +143,19 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.queue_view.add_to_trash(collection);
 	},
 	add_to_clipboard:function(collection){
-		this.queue_view.add_to_clipboard(collection);
+		this.queue_view.render();
+		//this.queue_view.add_to_clipboard(collection);
 	},
 	handle_checked:function(event){
 		var checked_count = this.$el.find("input[type=checkbox]:checked").length;
 		this.$el.find(".disable-none-selected").prop("disabled", checked_count == 0);
 		this.$el.find(".disable-none-selected").css("cursor", (checked_count > 0)? "pointer" : "not-allowed");
+	},
+	edit_permissions:function(){
+		var share_view = new ShareViews.ShareModalView({
+			model:window.current_channel,
+			current_user: window.current_user
+		});
 	}
 });
 
@@ -163,7 +171,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 	className: "container content-container",
 	initialize: function(options) {
-		_.bindAll(this, 'add_content');
+		_.bindAll(this, 'add_content','import_content','close_container','import_nodes');
 		this.index = options.index;
 		this.lock = true;
 		this.edit_mode = options.edit_mode;
@@ -197,7 +205,8 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	events: {
-		'click .add_content_button':'add_content',
+		'click .create_new_button':'add_content',
+		'click .import_button':'import_content',
 		'click .back_button' :'close_container'
 	},
 
@@ -249,7 +258,18 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.$el.animate({'margin-left' : -this.$el.outerWidth()}, 100,function(){
 			self.container.remove_containers_from(self.index - 1);
 		});
-	}
+	},
+	import_content:function(){
+        var import_view = new Import.ImportModalView({
+            modal: true,
+            callback: this.import_nodes,
+            model: this.model
+        });
+    },
+    import_nodes:function(collection){
+        this.reload_listed(collection);
+        this.render();
+    }
 });
 
 
@@ -377,22 +397,9 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		var self = this;
 		this.display_load("Publishing Content...", function(){
 			self.save({"changed": false},{validate:false});
-			self.publish_children(self.model, self.containing_list_view.collection);
 			self.render();
 		});
 
-	},
-	publish_children:function(model, collection){
-		var self = this;
-		if(model.attributes){
-			var children = collection.get_all_fetch(model.get("children"));
-			children.forEach(function(entry){
-				if(!entry.get("published")){
-					entry.save({"changed":false},{validate:false});
-				}
-				self.publish_children(this, collection);
-			});
-		}
 	},
 	add_to_trash:function(){
 		this.containing_list_view.add_to_trash([this]);

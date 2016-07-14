@@ -4,7 +4,7 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var Dropzone = require("dropzone");
 var get_cookie = require("utils/get_cookie");
-require("uploader.less");
+require("file-uploader.less");
 require("dropzone/dist/dropzone.css");
 var stringHelper = require("edit_channel/utils/string_helper");
 
@@ -41,8 +41,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
     callback:null,
     file_list : [],
     returnCollection: null,
-    acceptedFiles : "image/*,application/pdf,video/*,text/*,audio/*",
-
     initialize: function(options) {
         _.bindAll(this, "file_uploaded",  "submit_files", "all_files_uploaded", "file_added", "file_removed", "go_to_formats", "go_to_upload");
         this.callback = options.callback;
@@ -52,14 +50,26 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.views=[];
         this.fileCollection = new Models.FileCollection();
         this.returnCollection = new Models.ContentNodeCollection();
+        this.acceptedFiles = this.get_accepted_files();
         this.render();
+
     },
     events:{
       "click .submit_uploaded_files" : "submit_files",
       "click .go_to_formats" : "go_to_formats",
       "click .go_to_upload" : "go_to_upload"
     },
-
+    get_accepted_files:function(){
+        var list = [];
+        window.formatpresets.forEach(function(preset){
+            if(!preset.get("supplementary")){
+                preset.get("allowed_formats").forEach(function(format){
+                    list.push(window.fileformats.findWhere({"extension": format}).get("mimetype"));
+                });
+            }
+        });
+        return list.join(",");
+    },
     render: function() {
         this.nodeCollection = new Models.ContentNodeCollection();
         this.$el.html(this.template({
@@ -116,7 +126,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
 
     },
     file_uploaded: function(file) {
-        console.log("FILE FOUND:", file);
+        // console.log("FILE FOUND:", file);
         var new_file_data = {
             "data" : file,
             "filename": JSON.parse(file.xhr.response).filename
@@ -178,8 +188,13 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.$(".submit_uploaded_files").text("FINISH UPLOAD");
     },
     disable_next:function(){
+        console.log(this.file_list)
+
         this.$(".go_to_formats").attr("disabled", "disabled");
         this.$(".go_to_formats").text((this.file_list.length === 0)? "Add files to continue" : "Upload in progress...");
+        if (this.file_list.length === 0) {
+                        $("#new-files-separator").remove();
+        }
     },
     enable_next:function(){
         if(this.file_list.length > 0){
@@ -192,7 +207,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
     },
     file_added: function(file) {
         if(this.original_count > 0 && this.original_count == this.views.length){
-            $(file.previewTemplate).before("<hr/>");
+            $(file.previewTemplate).before("<hr id='new-files-separator'/>");
         }
         this.disable_next();
         this.$(".go_to_formats").text("Upload in progress...");

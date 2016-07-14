@@ -20,8 +20,9 @@ body {
 #top-navigation {
 	background: @topnav-bg-color;
 	border: none;
-	margin-bottom: 10px;
+	margin-bottom: 0px;
 	color: @top-nav-font-color;
+	border-radius: 0;
 	* {
 		vertical-align:middle;
 		font-size:12pt;
@@ -80,39 +81,67 @@ body {
 			padding-left:10px;
 		}
 	}
-	.dropdown-menu{
-		background-color: @body-background;
-		max-width:300px;
-		margin-top: -3px;
-		border: none;
-		li a {
-			min-width: 300px;
+
+	#username_label{
+		padding-top:15px;
+	}
+
+
+	#channel_select_dd_wrapper{
+		.dropdown-menu{
+			background-color: @body-background;
+			max-width:300px;
+			margin-top: -3px;
+			border: none;
+			li a {
+				min-width: 300px;
+				font-weight: bold;
+				padding: 3px 16px;
+			}
+		}
+		.dropdown-toggle{
+			padding: 10px 25px 10px 16px;
+			margin-top: 6px;
+			width: 300px;
+			background-color: @body-background;
+			border-radius: 5px;
 			font-weight: bold;
-			padding: 3px 16px;
+			.caret {
+				color: gray;
+				height: 25px;
+				margin: 8px 15px 0 0;
+				position: absolute;
+				right: 0;
+				top: 10px;
+			}
 		}
 	}
-	.dropdown-toggle{
-		padding: 2px 15px;
-		margin-top: 6px;
-		width: 300px;
-		background-color: @body-background;
-		border-radius: 5px;
-		font-weight: bold;
-		.caret {
-			color: gray;
-			height: 25px;
-			margin: 5px;
-			position: relative;
-			left: 40px;
-			top: 10px;
+
+	#settings-dd-wrapper{
+		.dropdown-menu{
+			background-color: @body-background;
+			border: none;
+			li a {
+				padding: 3px 16px;
+			}
+		}
+		.dropdown-toggle{
+			.glyphicon{
+				font-size:18pt;
+			}
 		}
 	}
+
+}
+
+#secondary-nav .spacing{
+   height:10px;
 }
 
 /* LOGIN STYLING */
 #login-container{
 	@login-background: rgba(145,81,148,.8); /*#915194*/
-	@login-secondary-color: rgba(222,237,233,.7); /*#DEEDE9*/
+	@login-secondary-color: rgba(255,255,255,.85); /*#DEEDE9*/
 	@login-text-bg-color: rgba(85,170,147,.5); /*#55AA93*/
 	@login-btn-color:  #067C7B;
 
@@ -128,10 +157,19 @@ body {
 		color:white;
 		margin-top:10px;
 		font-size:12pt;
+		text-decoration:none;
 		#le_img{
 			width:32px;
 			height:32px;
-			background:transparent;
+			margin-right:5px;
+		}
+	}
+
+	#login_le:hover{
+		font-weight:bold;
+		#le_img{
+			width:36px;
+			height:36px;
 		}
 	}
 
@@ -140,6 +178,17 @@ body {
 		background:@login-background;
 		height:100vh;
 		width:100vw;
+		ul{
+			list-style:none;
+		}
+
+		li{
+			color:@red-error-color;
+			font-weight:bold;
+		}
+		.required_asterisk {
+			color:@red-error-color;
+		}
 
 		#login-form{
 			margin-top:10%;
@@ -173,9 +222,7 @@ body {
 					margin:0;
 				}
 			}
-
-
-			#id_password, #id_username{
+			input{
 				outline-color: #55AA93;
 				border:none;
 				background-color:@login-text-bg-color;
@@ -183,18 +230,152 @@ body {
 				font-size:14pt;
 			}
 
+			#id_last_name{
+				margin-bottom:30px;
+			}
+
+			#form-wrapper{
+				text-align:right;
+				margin-right:25%;
+
+			}
+
 			.btn-login{
 				width:50%;
 				background-color:@login-btn-color;
-				margin-bottom:15px;
+				margin-bottom:10px;
 				margin-top: 20px;
 				font-size:15pt;
 				color:white;
 			}
 
+			#lost_password_prompt{
+				margin-right:-10px;
+			}
+
 			.login-action-text{
 				color:@login-btn-color;
 			}
+
+			#register_prompt{
+				font-size:14pt;
+			}
 		}
+	}
+}
+
+.message-page{
+	@reset-btn-color:  #067C7B;
+	@invitation_register-width: 380px;
+
+	padding-top:15vw;
+	padding-left:10vw;
+	.message-img-wrapper{
+		vertical-align:middle;
+		display:inline-block;
+		.message-logo{
+			width:160px;
+			height:130px;
+			margin-right:20px;
+			margin-top:25px;
+		}
+	}
+	input{
+		padding:2px;
+	}
+
+	.message-wrapper{
+		vertical-align:middle;
+		display:inline-block;
+		width:65vw;
+		p{
+			font-size:12pt;
+		}
+
+		.message-btn{
+			padding:2px 10px;
+			background-color:@reset-btn-color;
+			color:white;
+			font-size:12pt;
+		}
+		ul{
+			list-style:none;
+		}
+
+		li{
+			color:@red-error-color;
+			font-weight:bold;
+		}
+	}
+	#email_area{
+		margin-left:40px;
+		width: @invitation_register-width;
+		padding-top:10px;
+		#invited_email{
+			margin:2px;
+			margin-bottom:20px;
+		}
+		#invited_email_hint{
+			margin:2px;
+		}
+	}
+
+	#invitation_error_list{
+		width:@invitation_register-width;
+		text-align:center;
+		margin-left:40px;
+	}
+
+	#invitation_register_form{
+		margin-left:40px;
+		margin-top:10px;
+		width:@invitation_register-width;
+		text-align:right;
+
+		.required_asterisk{
+			color:@red-error-color;
+			font-weight:bold;
+		}
+		#invitation_register_button{
+			margin-top:10px;
+			width:100%;
+			text-align:center;
+			padding:5px;
+			margin-bottom:20px;
+		}
+		#invitation-action-text{
+			color:@reset-btn-color;
+			margin-right:40%;
+			font-size:12pt;
+		}
+	}
+	.invitation-action-text{
+		padding:0;
+		color:@reset-btn-color;
+	}
+	#invitation_accept_form{
+		margin-top:20px;
+		.required_asterisk{
+			color:@red-error-color;
+			font-weight:bold;
+		}
+		#invitation_accept_button{
+			padding:5px 10px;
+			font-size:12pt;
+		}
+		#invitation_accept_button:hover{
+			font-weight:bold;
+		}
+		#invitation-action-text{
+			color:@reset-btn-color;
+			font-size:12pt;
+		}
+		#accept-error{
+			display:inline;
+			font-weight:bold;
+			color:@red-error-color;
+			margin-left:10px;
+		}
+
 	}
 }

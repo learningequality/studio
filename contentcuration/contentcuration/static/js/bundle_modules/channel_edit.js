@@ -12,9 +12,7 @@ $(function() {
 });
 
 function publish_nodes(){
-	if(confirm("Are you sure you would like to publish?")){
-		$("#channel-edit-content-wrapper").data("data").publish();
-	}
+	$("#channel-edit-content-wrapper").data("data").publish();
 }
 
 module.exports = {

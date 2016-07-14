@@ -1,5 +1,6 @@
 var Backbone = require("backbone");
 var _= require("underscore");
+var mail_helper = require("edit_channel/utils/mail");
 
 /**** BASE MODELS ****/
 var BaseModel = Backbone.Model.extend({
@@ -24,21 +25,88 @@ var BaseCollection = Backbone.Collection.extend({
 	}
 });
 
+/**** USER-CENTERED MODELS ****/
+var UserModel = BaseModel.extend({
+	root_list : "user-list",
+	defaults: {
+		first_name: "Guest"
+    },
+    fetch_by_email:function(email){
+		/* TODO-BLOCKER: Better to only fetch email looking for */
+    	var collection = new UserCollection();
+    	collection.fetch({async:false});
+    	return collection.findWhere({email: email});
+    },
+    send_invitation_email:function(email, channel, callback){
+    	mail_helper.send_mail(channel, email, callback);
+    }
+});
+
+var UserCollection = BaseCollection.extend({
+	model: UserModel,
+	list_name:"user-list",
+
+	/* TODO: would be better to fetch all values at once */
+    get_all_fetch: function(ids){
+    	var to_fetch = new UserCollection();
+    	var self = this;
+    	ids.forEach(function(id){
+			var model = self.get({'id': id});
+    		if(!model){
+    			model = self.add({'id':id});
+    			model.fetch({async:false});
+    		}
+    		to_fetch.add(model);
+    	});
+    	return to_fetch;
+    }
+
+});
+
+var InvitationModel = BaseModel.extend({
+	root_list : "invitation-list",
+	defaults: {
+		first_name: "Guest"
+    },
+    resend_invitation_email:function(channel, callback){
+    	mail_helper.send_mail(channel, this.get("email"), callback);
+    }
+});
+
+var InvitationCollection = BaseCollection.extend({
+	model: InvitationModel,
+	list_name:"invitation-list",
+
+	/* TODO: would be better to fetch all values at once */
+    get_all_fetch: function(ids){
+    	var to_fetch = new InvitationCollection();
+    	var self = this;
+    	ids.forEach(function(id){
+			var model = self.get({'id': id});
+    		if(!model){
+    			model = self.add({'id':id});
+    			model.fetch({async:false});
+    		}
+    		to_fetch.add(model);
+    	});
+    	return to_fetch;
+    }
+
+});
+
 /**** CHANNEL AND CONTENT MODELS ****/
 var ContentNodeModel = BaseModel.extend({
 	root_list:"contentnode-list",
 	defaults: {
 		title:"Untitled",
-		parent: null,
 		children:[],
-		license:1,
 		tags:[]
     },
 
 	/*Used when copying items to clipboard*/
     duplicate: function(target_parent, options){
 		var node_id = this.get("id");
-		var sort_order =(target_parent) ? target_parent.get("children").length : 1;
+		var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
         var parent_id = (target_parent) ? target_parent.get("id") : null;
 
         var data = {"node_id": node_id,
@@ -154,8 +222,8 @@ var ContentNodeCollection = BaseCollection.extend({
 
    /* TODO: would be better to fetch all values at once */
     get_all_fetch: function(ids){
-    	console.log("PERFORMANCE models.js: starting get_all_fetch...", ids);
-		var start = new Date().getTime();
+  //   	console.log("PERFORMANCE models.js: starting get_all_fetch...", ids);
+		// var start = new Date().getTime();
     	var to_fetch = new ContentNodeCollection();
     	var self = this;
     	ids.forEach(function(id){
@@ -166,7 +234,7 @@ var ContentNodeCollection = BaseCollection.extend({
     		}
     		to_fetch.add(model);
     	});
-    	console.log("PERFORMANCE models.js: get_all_fetch end (time = " + (new Date().getTime() - start) + ")");
+    	// console.log("PERFORMANCE models.js: get_all_fetch end (time = " + (new Date().getTime() - start) + ")");
     	return to_fetch;
     },
     sort_by_order:function(){
@@ -179,8 +247,27 @@ var ContentNodeCollection = BaseCollection.extend({
     duplicate:function(target_parent, options){
     	var copied_list = [];
     	this.forEach(function(node){
-    		copied_list.push(node.duplicate(target_parent, options));
+    		copied_list.push(node.get("id"));
     	});
+		var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
+        var parent_id = (target_parent) ? target_parent.get("id") : null;
+
+        var data = {"node_ids": copied_list.join(" "),
+                    "sort_order": sort_order,
+                    "target_parent": parent_id};
+        $.ajax({
+        	method:"POST",
+            url: window.Urls.duplicate_nodes(),
+            data:  JSON.stringify(data),
+            async: false,
+            success: function(data) {
+                copied_list = JSON.parse(data).node_ids.split(" ");
+            },
+            error:function(e){
+            	console.log("ERROR: " + e.responseText);
+            }
+        });
+
     	var copiedCollection = new ContentNodeCollection();
     	copiedCollection.get_all_fetch(copied_list);
     	return copiedCollection;
@@ -191,6 +278,7 @@ var ContentNodeCollection = BaseCollection.extend({
 				parent: target_parent.id,
 				sort_order:++sort_order
 			});
+			// console.log("MODEL:", model)
     	});
     	this.save(function(){
 			callback();
@@ -203,16 +291,30 @@ var ChannelModel = BaseModel.extend({
 	root_list : "channel-list",
 	defaults: {
 		name: " ",
-		editors: [1],
+		editors: [],
+		pending_editors: [],
 		author: "Anonymous",
 		license_owner: "No license found",
 		description:" "
     },
 
     get_root:function(tree_name){
-    	var root = new ContentNodeModel({id : this.get(tree_name)});
+    	var root = new ContentNodeModel({'id' : this.get(tree_name)});
     	root.fetch({async:false});
     	return root;
+    },
+
+    publish:function(callback){
+        var data = {"channel_id": this.get("id")};
+        $.ajax({
+        	method:"POST",
+            url: window.Urls.publish_channel(),
+            data:  JSON.stringify(data),
+            async: false,
+            success:function(){
+            	callback();
+            }
+        });
     }
 });
 
@@ -237,11 +339,12 @@ var TagCollection = BaseCollection.extend({
 	get_or_fetch:function(id){
 		var tag = this.get(id);
 		if(!tag){
-			tag = new TagModel(id);
+			tag = new TagModel({"id":id});
 			tag.fetch({async:false});
 			if(tag){
 				this.add(tag);
 			}
+			this.fetch({async:false})
 		}
 		return tag;
 	}
@@ -346,6 +449,9 @@ var ContentKindCollection = BaseCollection.extend({
     }
 });
 
+function send_mail(data){
+
+}
 
 
 module.exports = {
@@ -362,5 +468,9 @@ module.exports = {
 	FormatPresetModel: FormatPresetModel,
 	FormatPresetCollection: FormatPresetCollection,
 	ContentKindModel: ContentKindModel,
-	ContentKindCollection : ContentKindCollection
+	ContentKindCollection : ContentKindCollection,
+	UserModel:UserModel,
+	UserCollection:UserCollection,
+	InvitationModel: InvitationModel,
+	InvitationCollection: InvitationCollection
 }

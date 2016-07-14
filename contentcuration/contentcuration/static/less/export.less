@@ -1,0 +1,127 @@
+@import "global-variables.less";
+
+@exporter-width: 600px;
+@exporter-background-color:white;
+@exporter-height: 600px;
+@exporter-list-height: 375px;
+
+#export_modal{
+	cursor:default;
+	.modal-header{
+		border: none;
+		padding-bottom: 5px;
+	}
+
+	.modal-title{
+		max-width:80%;
+		font-size:16pt;
+	}
+
+	.required{
+		margin-left:5px;
+		color:#EF2121;
+	}
+
+	.modal-content{
+		width: @exporter-width;
+		height:@exporter-height;
+		background-color:@exporter-background-color;
+
+		label, #export_license_select{
+			font-size: 14pt;
+		}
+		#export_license_select{
+			padding: 0px 2px;
+		}
+		#license_about{
+			display:none;
+			font-size:14pt;
+			margin-left:5px;
+			cursor:pointer;
+			color: @blue-500;
+		}
+		#version_number{
+			color:gray;
+			padding-right:10px;
+		}
+
+		#export_totals{
+			margin-right:10px;
+		}
+
+		.annotation{
+			color:@gray-400;
+			font-weight:normal;
+		}
+
+		#export_buttons{
+			margin-top:40px;
+			margin-bottom:30px;
+			*{
+				display:inline-block;
+				vertical-align:middle;
+			}
+		}
+
+		#export_preview{
+			margin: 10px;
+			height: @exporter-list-height;
+			overflow-y:auto;
+			.export_list{
+				margin-left:10px;
+				border-left:2px solid @blue-500;
+				.export_item{
+					padding:5px;
+					.export_item_title{
+						font-size:13pt;
+					}
+
+					.export_folder{
+						cursor:pointer;
+					}
+
+					.folder_item{
+						font-weight:bold;
+					}
+
+					.subdirectory{
+						display:none;
+					}
+				}
+			}
+		}
+
+
+	}
+}
+
+#license_modal{
+	padding:10px 5px;
+	overflow-y:auto;
+	.modal-content{
+		width:@exporter-width * 0.7;
+		height: @exporter-height * 0.6;
+		margin-top:15%;
+		margin-left: 15%;
+		.modal-header{
+			background-color:@gray-200;
+		}
+		h4{
+			font-size:15pt;
+			font-weight:bold;
+		}
+
+		#license_description_wrapper{
+			height:@exporter-height * 0.4 ;
+			overflow-y:auto;
+			margin-bottom:20px;
+			padding:5px;
+		}
+
+		p{
+			font-size:12pt;
+			font-style:italic;
+			color:gray;
+		}
+	}
+}

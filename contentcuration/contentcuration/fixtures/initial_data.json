@@ -1,10 +1,29 @@
 [
   {
+      "model" : "sites.site",
+      "pk" : 1,
+      "fields": {
+          "name"  : "Kolibri - Content Curation",
+          "domain" : "192.237.179.50"
+      }
+  },
+  {
+      "model" : "sites.site",
+      "pk" : 2,
+      "fields": {
+          "name"  : "Kolibri - Content Curation (Debug Mode)",
+          "domain" : "127.0.0.1:8000"
+      }
+  },
+
+  {
     "model": "contentcuration.License",
     "pk": 1,
     "fields": {
       "license_name": "CC-BY",
-      "exists": true
+      "exists": true,
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_description": "The Attribution License lets others distribute, remix, tweak, and build upon your work, even commercially, as long as they credit you for the original creation. This is the most accommodating of licenses offered. Recommended for maximum dissemination and use of licensed materials."
     }
   },
   {
@@ -12,7 +31,9 @@
     "pk": 2,
     "fields": {
       "license_name": "CC BY-SA",
-      "exists": true
+      "exists": true,
+       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "license_description": "The Attribution-ShareAlike License lets others remix, tweak, and build upon your work even for commercial purposes, as long as they credit you and license their new creations under the identical terms. This license is often compared to “copyleft” free and open source software licenses. All new works based on yours will carry the same license, so any derivatives will also allow commercial use. This is the license used by Wikipedia, and is recommended for materials that would benefit from incorporating content from Wikipedia and similarly licensed projects."
     }
   },
   {
@@ -20,7 +41,9 @@
     "pk": 3,
     "fields": {
       "license_name": "CC BY-ND",
-      "exists": true
+      "exists": true,
+      "license_url": "https://creativecommons.org/licenses/by-nd/4.0/",
+      "license_description": "The Attribution-NoDerivs License allows for redistribution, commercial and non-commercial, as long as it is passed along unchanged and in whole, with credit to you."
     }
   },
   {
@@ -28,7 +51,9 @@
     "pk": 4,
     "fields": {
       "license_name": "CC BY-NC",
-      "exists": true
+      "exists": true,
+      "license_url": "https://creativecommons.org/licenses/by-nc/4.0",
+      "license_description": "The Attribution-NonCommercial License lets others remix, tweak, and build upon your work non-commercially, and although their new works must also acknowledge you and be non-commercial, they don’t have to license their derivative works on the same terms."
     }
   },
   {
@@ -36,7 +61,9 @@
     "pk": 5,
     "fields": {
       "license_name": "CC BY-NC-SA",
-      "exists": true
+      "exists": true,
+      "license_url": "https://creativecommons.org/licenses/by-nc-sa/4.0",
+      "license_description": "The Attribution-NonCommercial-ShareAlike License lets others remix, tweak, and build upon your work non-commercially, as long as they credit you and license their new creations under the identical terms."
     }
   },
   {
@@ -44,15 +71,19 @@
     "pk": 6,
     "fields": {
       "license_name": "CC BY-NC-ND",
-      "exists": true
+      "exists": true,
+      "license_url": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+      "license_description": "The Attribution-NonCommercial-NoDerivs License is the most restrictive of our six main licenses, only allowing others to download your works and share them with others as long as they credit you, but they can’t change them in any way or use them commercially."
     }
   },
   {
     "model": "contentcuration.License",
     "pk": 7,
     "fields": {
-      "license_name": "All rights reserved",
-      "exists": true
+      "license_name": "All Rights Reserved",
+      "exists": true,
+      "license_url": "http://www.allrights-reserved.com/",
+      "license_description": "The All Rights Reserved License indicates that the copyright holder reserves, or holds for their own use, all the rights provided by copyright law under one specific copyright treaty."
     }
   },
 
@@ -75,8 +106,29 @@
   {
     "model": "contentcuration.FileFormat",
     "fields": {
+      "extension": "pdf",
+      "mimetype" : "application/pdf"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "PDF",
+      "mimetype" : "application/pdf"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
       "extension": "srt",
       "mimetype" : "text/srt"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "mp3",
+      "mimetype" : "audio/mp3"
     }
   },
   {
@@ -89,14 +141,14 @@
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "pdf",
-      "mimetype" : "application/pdf"
+      "extension": "jpg",
+      "mimetype" : "image/jpeg"
     }
   },
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "jpg",
+      "extension": "jpeg",
       "mimetype" : "image/jpeg"
     }
   },
@@ -138,12 +190,6 @@
   {
     "model": "contentcuration.ContentKind",
     "fields": {
-      "kind": "image"
-    }
-  },
-  {
-    "model": "contentcuration.ContentKind",
-    "fields": {
       "kind": "exercise"
     }
   },
@@ -153,6 +199,9 @@
       "kind": "document"
     }
   },
+
+
+
   {
     "model": "contentcuration.FormatPreset",
     "fields": {
@@ -183,34 +232,52 @@
       "id" : "thumbnail",
       "readable_name": "Thumbnail",
       "multi_language" : false,
-      "supplementary" : false,
+      "supplementary" : true,
       "order" : 3,
-      "kind" : "image",
-      "allowed_formats" : ["png", "jpg"]
-    }
-  },
-  {
-    "model": "contentcuration.FormatPreset",
-    "fields": {
-      "id" : "temp",
-      "readable_name": "Picture",
-      "multi_language" : false,
-      "supplementary" : false,
-      "order" : 4,
-      "kind" : "image",
-      "allowed_formats" : ["png", "jpg"]
+      "kind" : "video",
+      "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },
   {
     "model": "contentcuration.FormatPreset",
     "fields": {
       "id" : "aud",
-      "readable_name": "Sound",
+      "readable_name": "Audio",
       "multi_language" : false,
       "supplementary" : false,
       "order" : 5,
       "kind" : "audio",
       "allowed_formats" : ["wav", "mp3"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "doc",
+      "readable_name": "Document",
+      "multi_language" : false,
+      "supplementary" : false,
+      "order" : 6,
+      "kind" : "document",
+      "allowed_formats" : ["vtt", "srt", "pdf", "PDF"]
+    }
+  },
+
+
+  {
+    "model": "contentcuration.Language",
+    "fields": {
+      "lang_code" : "EN",
+      "lang_subcode" : "US",
+      "readable_name": "English"
+    }
+  },
+  {
+    "model": "contentcuration.Language",
+    "fields": {
+      "lang_code" : "ES",
+      "lang_subcode" : "US",
+      "readable_name": "Spanish"
     }
   }
 ]

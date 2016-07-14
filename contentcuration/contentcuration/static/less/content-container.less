@@ -37,7 +37,7 @@
 
 #channel-edit-content-wrapper {
 	@container-width: 230px;
-	@container-height: 60vh;
+	@container-height: 75vh;
 	@container-min-height:400px;
 	@container-border-color: #BCBCBC;
 	@container-title-color: #30302F;
@@ -46,7 +46,7 @@
 	@folder-gap-width: 0px;
 	@item-color: white;
 	@expanded-height: 80px;
-	@title-size: 16pt;
+	@title-size: 15pt;
 	@channel-edit-font-color:black;
 	@highlighted-file: #E8E8E8;
 	@collapsed-height:61px;
@@ -70,6 +70,13 @@
 		width:90vw;
 	}
 
+	.close_clipboard{
+		margin-top:10px;
+		font-size: 20pt;
+		color:gray;
+		cursor:pointer;
+	}
+
 	#container_area{
 		width:@container-last-width; /* will be added to as containers are added- extra padding for clipboard*/
 	}
@@ -79,11 +86,15 @@
 		color: @channel-edit-font-color;
 		margin-bottom: 10px;
 	}
+	#hide_details_checkbox{
+		cursor:pointer;
+	}
 
 	#hide_details_checkbox + label{
 		color:@channel-edit-font-color;
 		font-size:10pt;
 		font-weight:normal;
+		cusor:pointer;
 	}
 
 	#container-breadcrumb{
@@ -161,6 +172,7 @@
 			color:@container-title-color;
 			font-size: @title-size;
 			padding-bottom:5px;
+			margin: 15px 10px 0 10px;
 		}
 
 
@@ -168,7 +180,7 @@
 			width: inherit - 25px;
 			overflow-y: auto;
 			overflow-x:hidden;
-			padding:0;
+			padding: 0 0 5px 0;
 			background-color:white;
 			margin-bottom:0px;
 			border:1px solid @container-border-color;
@@ -203,6 +215,9 @@
 				.folder{
 					h3{
 						font-weight:bold;
+						margin-top: 5px;
+						height: 21px;
+						// width: 357px !important;
 					}
 				}
 			}
@@ -213,7 +228,7 @@
 
 				.error_msg{
 					font-style:italic;
-					color:red;
+					color:@red-error-color;
 					font-size: 10px;
 				}
 			}
@@ -235,6 +250,7 @@
 						font-weight:normal;
 						max-height:@description-font-size * 4;
 						overflow-y:auto;
+						color: @annotation-gray;
 					}
 					h3, p, h6{
 						color : @item-last-font-color;
@@ -247,8 +263,8 @@
 				padding: 1px 10px;
 			}
 			.content_metadata_summary{
-				color:@container-title-color;
-				margin-bottom:2px;
+				color: @annotation-gray;
+				margin: 8px 0 2px 0;
 				.glyphicon{
 					font-size: 10px;
 					padding:0px;
@@ -257,9 +273,9 @@
 			}
 		}
 	}
-	#edit {
+	#edit,#clipboard {
 		@edit-new-button-color: #C9C9C9;
-		@edit-container-color: #E8E8E8;
+		@edit-container-color: #F2F2F3;
 		@edit-new-content-color: #89C0B1;
 		@edit-current-folder-color:#666666;
 
@@ -314,8 +330,8 @@
 				background-color: @edit-container-color;
 			}
 			.content-list{
-				height:@container-height * 0.78;
-				min-height: @container-min-height * 0.78;
+				height: @container-height * 0.81;
+				min-height: @container-min-height * 0.70;
 				margin: 5px 0px;
 
 				li{
@@ -326,7 +342,7 @@
 					width:20px;
 					height:20px;
 					vertical-align:middle;
-					margin-left:2px;
+					margin: 6px 0 0 10px
 				}
 				label{
 					.options{
@@ -374,19 +390,27 @@
 					}
 				}
 				.current_topic{
-					background-color: @edit-container-color;
+					background-color: @highlighted-file;
 					border-left:4px solid @edit-current-folder-color;
 				}
 			}
 
 			.add_content_button{
 				cursor:pointer;
-				width: 100%;
-				background-color: @edit-new-button-color;
+				width: @container-width - 10px;
 				margin-top:0px;
-				padding:3px;
-				border:1px solid @container-border-color;
+				padding:5px;
 				font-size: 12pt;
+				border-radius:3px;
+				&:hover {
+					color: white;
+				}
+			}
+			.add_content_dropdown{
+				font-size:12pt;
+				a{
+					padding:10px 30px;
+				}
 			}
 			.placeholder{
 				width: 100%;
@@ -413,7 +437,7 @@
 				height: @expanded-height;
 			}
 			.add_content_button{
-				padding:3px 20px;
+				padding:5px 20px;
 				width:150px;
 				margin-left:@container-last-width - 160px;
 			}
@@ -425,11 +449,16 @@
 	}
 
 	#preview{
-		@preview-container-color:#DAE8EA;
+		@preview-container-color:#DEEDE9;
 		@preview-selected-folder:#6B959C;
 
 		h1{
 			font-size:12pt;
+			margin-top: 0;
+
+			input[type="checkbox"] {
+				margin: 4px 0 0 10px;
+			}
 		}
 		.content-container{
 			background-color: @preview-container-color;
@@ -451,7 +480,7 @@
 					cursor:pointer;
 				}
 				.current_topic{
-					background-color: @preview-container-color;
+					background-color: @highlighted-file;
 					border-left:4px solid @preview-selected-folder;
 				}
 				label{
@@ -481,9 +510,31 @@
 		}
 	}
 
+
+
 	.hidden_details{
 		.metadata_to_hide, .description, .filler{
 			display:none !important;
 		}
+	}
+}
+#clipboard{
+	@clipboard-button-color: #915194;
+	@clipboard-background-color: #EDDEED;
+	#channel-edit-content-wrapper{
+		background-color: @clipboard-background-color !important;
+	}
+	#button_bar .nav-button-container .nav-button span{
+		color:@clipboard-button-color !important;
+	}
+	#clipboard_header{
+		margin:0;
+		font-size:18pt;
+		font-style:italic;
+		color:gray;
+		position:fixed;
+	}
+	#container_area{
+		margin-top:40px;
 	}
 }

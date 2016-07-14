@@ -3,7 +3,7 @@ import json
 from contentcuration.models import *
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
-from contentcuration.api import get_total_size, get_node_siblings, get_node_ancestors, get_child_names, count_files, count_all_children
+from contentcuration.api import get_total_size, get_node_ancestors, count_files, calculate_node_metadata
 from rest_framework.utils import model_meta
 from collections import OrderedDict
 from rest_framework.fields import set_value, SkipField
@@ -21,6 +21,11 @@ class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Language
         fields = ('lang_code', 'lang_subcode', 'id')
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id')
 
 class ChannelSerializer(serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
@@ -42,7 +47,7 @@ class ChannelSerializer(serializers.ModelSerializer):
         model = Channel
         fields = ('id', 'name', 'description', 'editors', 'main_tree',
                     'clipboard_tree', 'trash_tree','resource_count', 'resource_size',
-                    'version', 'thumbnail', 'deleted')
+                    'version', 'thumbnail', 'deleted', 'public', 'pending_editors')
 
 class FileSerializer(serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
@@ -97,7 +102,7 @@ class CustomListSerializer(serializers.ListSerializer):
 
         for tag_data in unformatted_input_tags:
             # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
-            if isinstance(tag_data, unicode): 
+            if isinstance(tag_data, unicode):
                 tag_data = json.loads(tag_data)
             tag_tuple = ContentTag.objects.get_or_create(tag_name=tag_data['tag_name'], channel_id=tag_data['channel'])
             all_tags.append(tag_tuple[0])
@@ -124,7 +129,7 @@ class CustomListSerializer(serializers.ListSerializer):
                         # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
                         if isinstance(tag_data, unicode):
                             tag_data = json.loads(tag_data)
-                        
+
                         # this requires optimization
                         for tag_itm in all_tags:
                             if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
@@ -145,14 +150,11 @@ class TagSerializer(serializers.ModelSerializer):
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     preset = FormatPresetSerializer(many=True, read_only=True)
-    id = serializers.IntegerField(required=False)
+    id = serializers.CharField(required=False)
 
-    resource_count = serializers.SerializerMethodField('count_resources')
-    resource_size = serializers.SerializerMethodField('calculate_resources_size')
-    total_count = serializers.SerializerMethodField('count_all')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
-    tags = TagSerializer(many=True)
+    metadata = serializers.SerializerMethodField('calculate_metadata')
 
     def to_internal_value(self, data):
         """
@@ -252,23 +254,18 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         instance.save()
         return instance
 
-    def count_resources(self, node):
-        return count_files(node)
-
-    def calculate_resources_size(self, node):
-        return get_total_size(node)
-
     def get_node_ancestors(self,node):
         return get_node_ancestors(node)
 
-    def count_all(self,node):
-        return count_all_children(node)
+    def calculate_metadata(self, node):
+        return calculate_node_metadata(node)
+
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
                  'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
-                 'resource_count', 'resource_size', 'ancestors', 'tags', 'files', 'total_count')
+                 'ancestors', 'tags', 'files', 'metadata')
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -282,3 +279,8 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
         model = AssessmentItem
         fields = ('question', 'type', 'answers', 'id', 'exercise')
         list_serializer_class = BulkListSerializer
+
+class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = Invitation
+        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name')

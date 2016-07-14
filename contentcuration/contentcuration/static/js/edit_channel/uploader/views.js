@@ -80,7 +80,6 @@ var AddContentView = BaseViews.BaseListView.extend({
             "original_node" : topic.get("id"),
             "cloned_source" : topic.get("id")
         });
-        console.log("current",topic)
         this.counter++;
         var item_view = new NodeListItem({
             containing_list_view: this,
@@ -113,7 +112,7 @@ var AddContentView = BaseViews.BaseListView.extend({
         });
     },
     upload_files:function(collection){
-        console.log("uploading files", collection);
+        // console.log("uploading files", collection);
         var self = this.parent_view;
         collection.forEach(function(entry){
             entry.set({
@@ -147,7 +146,6 @@ var AddContentView = BaseViews.BaseListView.extend({
     import_content:function(){
         var import_view = new Import.ImportView({
             modal: true,
-            parent_view: this,
             callback: this.import_nodes
         });
     },
@@ -383,8 +381,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         if(!this.multiple_selected && this.current_node.get("kind") != "topic"){
             $("#editmetadata_format_section").css("display", "block");
             this.current_view.format_view.display_inline();
+            $("#metadata_preview_btn").css("visibility", "visible");
         }else{
             $("#editmetadata_format_section").css("display", "none");
+            $("#metadata_preview_btn").css("visibility", "hidden");
         }
 
         if(this.current_node.get("original_filename")){
@@ -398,7 +398,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
         // Allows us to read either a node with nested metadata from the server, or an instantiated but unsaved node on the client side.
         //var file_size = (((this.current_node.get("files") || [])[0] || {}).format_size) || ((this.current_node.get("files") || {}).data || {}).size || "";
-        this.$("#display_file_size").text(this.current_node.get("resource_size"));
+        this.$("#display_file_size").text(this.current_node.get("metadata").resource_size);
         this.gray_out(false);
         this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
     },
@@ -460,37 +460,42 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.$("#metadata_preview_btn").attr("disabled", "disabled");
             this.$("#metadata_preview_btn").prop("disabled", true);
             this.switchPanel(true);
+            $("#metadata_preview_btn").css("visibility", "hidden");
         }else{
             this.$el.find(".tag_input").removeClass("gray-out");
             this.$el.find(".upload_input").removeClass("gray-out");
             this.$el.find(".upload_input").prop("disabled", false);
             this.$el.find(".tag_input").prop("disabled", false);
             this.$("#metadata_preview_btn").removeAttr("disabled");
-             this.$("#metadata_preview_btn").prop("disabled", false);
+            this.$("#metadata_preview_btn").prop("disabled", false);
         }
 
     },
     add_tag: function(event){
+        $("#tag_error").css("display", "none");
         if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").val().trim() != ""){
             var tag = this.$el.find("#tag_box").val().trim();
-            var selector=tag.replace(" ","__");
-            if(this.$("#tag_area").find("#" + selector).length == 0){
-                this.append_tags([tag]);
-                if(this.multiple_selected){
-                    var list = this.$el.find('#uploaded_list input:checked').parent("li");
-                    for(var i = 0; i < list.length; i++){
-                        $(list[i]).data("data").add_tag(tag);
+            if(/^([A-z\d\s.,:\+)(\-&-)]*)$/.test(tag)){
+                var selector=this.encode_tag(tag);
+                if(this.$("#tag_area").find("#" + selector).length == 0){
+                    this.append_tags([tag]);
+                    if(this.multiple_selected){
+                        var list = this.$el.find('#uploaded_list input:checked').parent("li");
+                        for(var i = 0; i < list.length; i++){
+                            $(list[i]).data("data").add_tag(tag);
+                        }
+                    }else{
+                        this.current_view.add_tag(tag);
                     }
-                }else{
-                    this.current_view.add_tag(tag);
                 }
+                this.$el.find("#tag_box").val("");
+            }else{
+                $("#tag_error").css("display", "inline");
             }
-            this.$el.find("#tag_box").val("");
         }
     },
     remove_tag:function(event){
-        var tagname = event.target.parentNode.id.replace("__", " ");
-        console.log("tag is now: ",tagname);
+        var tagname = this.decode_tag(event.target.parentNode.id);
         if(this.multiple_selected){
             var list = this.$el.find('#uploaded_list input:checked').parent("li");
             for(var i = 0; i < list.length; i++){
@@ -527,9 +532,20 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     },
     append_tags:function(tags){
         for(var i = 0; i < tags.length; i++){
-            var selector=tags[i].replace(" ","__");
+            var selector=this.encode_tag(tags[i]);
             this.$el.find("#tag_area").append("<div class='col-xs-4 tag' id='" + selector+ "'>" + tags[i] + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
         }
+    },
+    encode_tag:function(tag){
+        return tag.replace(/\s/g, "_s_").replace(/\)/g,"_pr_").replace(/,/g,"_co_")
+                .replace(/\(/g,"_pl_").replace(/&/g,"_a_").replace(/\-/g,"_d_")
+                .replace(/:/g,"_c_").replace(/\+/g,"_p_").replace(/\./g,"_pe_");
+    },
+    decode_tag:function(tag){
+        return tag.replace("_s_", " ").replace("_pr_",")").replace("_co_",",")
+                .replace("_pl_","(").replace("_a_", "&").replace("_d_","-")
+                .replace("_c_",":").replace("_p_","+").replace("_pe_",".");
+
     }
 });
 

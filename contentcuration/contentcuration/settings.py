@@ -19,6 +19,8 @@ STORAGE_ROOT = os.path.join(BASE_DIR, "storage")
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
+PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -34,16 +36,18 @@ ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this 
 # Application definition
 
 INSTALLED_APPS = (
+    'contentcuration',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'contentcuration',
+    'django.contrib.sites',
     'django.contrib.staticfiles',
     'rest_framework',
     'django_js_reverse',
     'kolibri.content',
+    'email_extras',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -93,8 +97,17 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    },
+    'export_staging': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'export_staging.sqlite3')
     }
 }
+
+
+DATABASE_ROUTERS = [
+    "contentcuration.router.Router"
+]
 
 
 # Internationalization
@@ -120,4 +133,19 @@ STORAGE_URL = '/storage/'
 
 DEFAULT_FILE_STORAGE = 'kolibri.content.models.ContentCopyStorage'
 
-LOGIN_REDIRECT_URL = '/exercises/'
+LOGIN_REDIRECT_URL = '/channels/'
+
+AUTH_USER_MODEL = 'contentcuration.User'
+
+ACCOUNT_ACTIVATION_DAYS=7
+REGISTRATION_OPEN = True
+SITE_ID = 1
+
+# EMAIL_HOST = 'localhost'
+# EMAIL_PORT = 8000
+# EMAIL_HOST_USER = ''
+# EMAIL_HOST_PASSWORD = ''
+# EMAIL_USE_TLS = False
+DEFAULT_FROM_EMAIL = 'kolibri-no-reply@learningequality.org'
+
+HACK_HACK_HACK_UNICEF_CONTENT_ZIP_PATH = os.path.join(BASE_DIR, "unicef.zip")

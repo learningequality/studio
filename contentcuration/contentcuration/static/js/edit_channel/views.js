@@ -106,9 +106,16 @@ var BaseView = Backbone.View.extend({
 		});
 	},
 	publish:function(){
-		$("#main-content-area").find(".to_publish").each(function(){
-			console.log("Publishing...");
-			$("#" + this.id).data("data").publish();
+		var self = this;
+		var Exporter = require("edit_channel/export/views");
+		var exporter = new Exporter.ExportModalView({
+			model: window.current_channel.get_root("main_tree"),
+			callback: function(){
+				var list = $(".to_publish");
+				list.each(function(index, entry){
+					$(entry).data("data").reload();
+				});
+			}
 		});
 	}
 });
@@ -178,15 +185,31 @@ BaseListView = BaseView.extend({
 				transfer.model.set({parent: old_parent.id});
 				transfer.containing_list_view.render();
 			}else{
-				transfer.model.save({parent: this.model.id, sort_order:new_sort_order}, {async:false, validate:false});
+				transfer.model.save({
+					parent: this.model.id,
+					sort_order:new_sort_order,
+					changed:true
+				}, {async:false, validate:false});
 				this.model.fetch({async:false});
+				if(this.model.get("parent")){
+					$("#" + this.model.get("id")).data("data").render();
+				}
 				old_parent.fetch({async:false});
+				if(old_parent.get("parent")){
+					$("#" + old_parent.id).data("data").render();
+				}
 				transfer.containing_list_view.render();
 			}
 		}else{
-			transfer.model.save({sort_order:new_sort_order}, {async:false, validate:false});
+			transfer.model.save({
+				sort_order:new_sort_order,
+				changed:true
+			}, {async:false, validate:false});
 		}
 		this.render();
+		if(transfer.$el.hasClass("current_topic")){
+			transfer.$el.removeClass("current_topic");
+		}
 	},
 	get_new_sort_order: function(transfer, target){
 		var new_sort_order = 1;
@@ -333,13 +356,7 @@ var BaseEditorView = BaseListView.extend({
 			if (this.modal) {
 				this.$el.modal('hide');
 	        }
-	        if(!this.allow_add){
-	        	var reload_collection = new Models.ContentNodeCollection();
-		        this.views.forEach(function(entry){
-		        	reload_collection.add(entry.model);
-				});
-				this.reload_listed(reload_collection);
-		    }
+
 	        this.remove();
 		}else if(confirm("Unsaved Metadata Detected! Exiting now will"
 			+ " undo any new changes. \n\nAre you sure you want to exit?")){
@@ -358,6 +375,13 @@ var BaseEditorView = BaseListView.extend({
 			event.stopPropagation();
 			event.preventDefault();
 		}
+		if(!this.allow_add){
+        	var reload_collection = new Models.ContentNodeCollection();
+	        this.views.forEach(function(entry){
+	        	reload_collection.add(entry.model);
+			});
+			this.reload_listed(reload_collection);
+	    }
 	},
 	save_nodes: function(callback){
 		this.parent_view.set_editing(false);
@@ -432,9 +456,10 @@ var BaseEditorView = BaseListView.extend({
 var BaseModalView = BaseView.extend({
     callback:null,
     close: function() {
-        if (this.modal) {
-            this.$(".modal").modal('hide');
-        }
+    	if(this.modal){
+    		this.$(".modal").modal('hide');
+    	}
+
         this.remove();
     }
 });
@@ -442,6 +467,7 @@ var BaseModalView = BaseView.extend({
 module.exports = {
 	BaseView: BaseView,
 	BaseListView:BaseListView,
+	BaseListItemView:BaseListItemView,
 	BaseListChannelItemView: BaseListChannelItemView,
 	BaseListNodeItemView:BaseListNodeItemView,
 	BaseEditorView:BaseEditorView,

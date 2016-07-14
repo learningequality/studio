@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+{% extends "base.html" %}
+
+{% load staticfiles %}
+{% load i18n %}
+
+{% block nav %}{% endblock nav %}
+
+{% block content %}
+
+<div id="login-container">
+	<div id="login-overlay" class="text-center">
+		<br/>
+		<div id="login-form" class="container">
+			<div id="login-title-area">
+				<img id="login-image" class="pull-left" src="{% static 'img/kolibri_login.png' %}"/>
+				<h1 id="login-title">Kolibri</h1>
+				<p id="login-subheading">Content Curation</p>
+			</div>
+			<ul>
+				 {% for field in form %}
+			        {% for error in field.errors %}
+			            <li>{{ error|escape }}</li>
+			        {% endfor %}
+			    {% endfor %}
+			</ul>
+			<form action="/accounts/register/" method="post">
+				<div id="form-wrapper">
+					{% csrf_token %}
+					{% for field in form %}
+					<p>
+					 <label>{% if field.field.required %}<i class="required_asterisk">*</i>{% endif %} {{field.label}}</label>
+					 {{field}}
+					 </p>
+					{% endfor %}
+				</div>
+				<input class="btn btn-login" type="submit" value="Register" />
+			</form>
+			<a href="{% url 'django.contrib.auth.views.login' %}" class="action-text login-action-text" id="register_prompt">Cancel</a>
+		</div>
+		<a id="login_le" href="https://learningequality.org/" target="_blank"><img src="{% static 'img/le_logo.png' %}" id="le_img">Learning Equality</a>
+	</div>
+</div>
+
+{% endblock %}
