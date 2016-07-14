@@ -188,8 +188,13 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.$(".submit_uploaded_files").text("FINISH UPLOAD");
     },
     disable_next:function(){
+        console.log(this.file_list)
+
         this.$(".go_to_formats").attr("disabled", "disabled");
         this.$(".go_to_formats").text((this.file_list.length === 0)? "Add files to continue" : "Upload in progress...");
+        if (this.file_list.length === 0) {
+                        $("#new-files-separator").remove();
+        }
     },
     enable_next:function(){
         if(this.file_list.length > 0){
@@ -202,7 +207,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
     },
     file_added: function(file) {
         if(this.original_count > 0 && this.original_count == this.views.length){
-            $(file.previewTemplate).before("<hr/>");
+            $(file.previewTemplate).before("<hr id='new-files-separator'/>");
         }
         this.disable_next();
         this.$(".go_to_formats").text("Upload in progress...");
@@ -212,7 +217,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.file_list.splice(this.file_list.indexOf(file), 1);
         if (this.file_list.length === 0) {
             this.disable_next();
-            this.$(".go_to_formats").text("Add files to continue");
         }
     },
     go_to_formats:function(){
