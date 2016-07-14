@@ -278,7 +278,7 @@ var ContentNodeCollection = BaseCollection.extend({
 				parent: target_parent.id,
 				sort_order:++sort_order
 			});
-			console.log("MODEL:", model)
+			// console.log("MODEL:", model)
     	});
     	this.save(function(){
 			callback();

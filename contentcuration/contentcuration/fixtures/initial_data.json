@@ -242,7 +242,7 @@
     "model": "contentcuration.FormatPreset",
     "fields": {
       "id" : "aud",
-      "readable_name": "Sound",
+      "readable_name": "Audio",
       "multi_language" : false,
       "supplementary" : false,
       "order" : 5,

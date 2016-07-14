@@ -292,7 +292,8 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     Be careful! we don't know if this will work when perform bash delete on File obejcts.
     """
     if not File.objects.filter(file_on_disk=instance.file_on_disk.url):
-        file_on_disk_path = os.path.join(settings.STORAGE_ROOT, instance.checksum[0:1], instance.checksum[1:2], instance.checksum + instance.extension)
+        file_on_disk_path = os.path.join(settings.STORAGE_ROOT, instance.checksum[0:1], instance.checksum[1:2], instance.checksum + '.' + instance.file_format.extension)
+        print file_on_disk_path
         if os.path.isfile(file_on_disk_path):
             os.remove(file_on_disk_path)
 

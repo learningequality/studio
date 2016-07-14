@@ -477,7 +477,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             var tag = this.$el.find("#tag_box").val().trim();
             if(/^([A-z\d\s.,:\+)(\-&-)]*)$/.test(tag)){
                 var selector=this.encode_tag(tag);
-                console.log(selector);
                 if(this.$("#tag_area").find("#" + selector).length == 0){
                     this.append_tags([tag]);
                     if(this.multiple_selected){
