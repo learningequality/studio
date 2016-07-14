@@ -326,7 +326,7 @@ class InvitationAcceptView(FormView):
         channel = Channel.objects.get(id=self.kwargs["channel_id"])
         user = self.user()
         if user not in channel.editors.all():
-            channel.editors.add(user_id)
+            channel.editors.add(user.pk)
             channel.save()
             if self.invitation is not None:
                 self.invitation.delete()
