@@ -70,7 +70,7 @@ def map_content_tags(channel):
     logging.debug("Creating the Kolibri content tags.")
 
     cctags = ccmodels.ContentTag.objects.filter(
-        channel=channel).values("tag_name")
+        channel=channel).values("tag_name", "id")
     kolibrimodels.ContentTag.objects.bulk_create(
         [kolibrimodels.ContentTag(**vals) for vals in cctags])
 
@@ -181,8 +181,7 @@ def map_channel_to_kolibri_channel(channel):
 
 
 def prepare_export_database():
-    # call_command("flush", database='export_staging',
-    #              noinput=True)  # clears the db!
+    call_command("flush", "--noinput", database='export_staging')  # clears the db!
     call_command("migrate",
                  run_syncdb=True,
                  database="export_staging",
