@@ -181,8 +181,7 @@ def map_channel_to_kolibri_channel(channel):
 
 
 def prepare_export_database():
-    # call_command("flush", database='export_staging',
-    #              noinput=True)  # clears the db!
+    call_command("flush", "--noinput", database='export_staging')  # clears the db!
     call_command("migrate",
                  run_syncdb=True,
                  database="export_staging",
