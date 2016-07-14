@@ -262,7 +262,7 @@
 			}
 		}
 	}
-	#edit {
+	#edit,#clipboard {
 		@edit-new-button-color: #C9C9C9;
 		@edit-container-color: #F2F2F3;
 		@edit-new-content-color: #89C0B1;
@@ -398,7 +398,7 @@
 			.add_content_dropdown{
 				font-size:12pt;
 				a{
-					padding:5px 10px;
+					padding:10px 30px;
 				}
 			}
 			.placeholder{
@@ -499,9 +499,27 @@
 		}
 	}
 
+
+
 	.hidden_details{
 		.metadata_to_hide, .description, .filler{
 			display:none !important;
 		}
+	}
+}
+#clipboard{
+	@clipboard-button-color: #915194;
+	@clipboard-background-color: #EDDEED;
+	#channel-edit-content-wrapper{
+		background-color: @clipboard-background-color !important;
+	}
+	#button_bar .nav-button-container .nav-button span{
+		color:@clipboard-button-color !important;
+	}
+	#clipboard_header{
+		margin:0;
+		margin-bottom:10px;
+		font-size:25pt;
+		color:gray;
 	}
 }

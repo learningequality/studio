@@ -3,7 +3,8 @@
 #queue{
 	@queue-background-color:#EFEFEF;
 	@queue-width:400px;
-	@queue-height: 600px;
+	@queue-height: 75vh;
+	@queue-min-height: 600px;
 	@queue-button-width: 110px;
 	@queue-border-color: #8DA9DB;
 	@queue-list-item-height: 40px;
@@ -63,6 +64,7 @@
 		display: inline-block;
 		padding: 10px 15px 15px 15px;
 		height: @queue-height;
+		min-height:@queue-min-height;
 		width: @queue-width;
 		background-color: @queue-background-color;
 		div ul {
@@ -95,6 +97,8 @@
 			border:1px solid gray;
 			background-color:white;
 			height:@queue-height * 0.9;
+			min-height:@queue-min-height * 0.9;
+
 			padding:0;
 			z-index:10;
 			display:none;
@@ -140,36 +144,45 @@
 				}
 			}
 			.manage_clipboard{
-				width: 100%;
-				padding: 13px;
-				text-align: center;
-				bottom: 0;
-				height: @manage-clipboard-btn-height;
-				font-size: 16px;
+				margin-right:20px;
 			}
 			#queue_content{
 				width:@queue-width - 30px;
-				height: @queue-height * 0.75;
-				#trash_list{
-					height:100%;
-				}
+				height:@queue-height * 0.9;
+				min-height:@queue-min-height * 0.9;
+
+				overflow:hidden;
+
 				#clipboard_list{
-					height:@queue-height * 0.75 - @manage-clipboard-btn-height;
+					height:@queue-height * 0.6 - @manage-clipboard-btn-height;
+					min-height:@queue-min-height * 0.75 - @manage-clipboard-btn-height;
 				}
 				.list_content{
 					width: 100%;
-					padding-top:10px;
+					height:100%;
+					overflow:auto;
+					padding-top:30px;
 					position:relative;
-					margin-top: 5px;
-					// overflow-y:auto;
+					padding-bottom:@queue-list-item-height * 3;
+					margin-top: 10px;
+					.select_all_fixed{
+						position:fixed;
+						background-color:white;
+						width:@queue-width - 40px;
+						padding:5px;
+						margin-top:-40px;
+						z-index:100;
+					}
 					.select_all{
 						width:16px;
 						height:16px;
 						margin-left:7px;
+						cursor:pointer;
 					}
 
 					.select_all+label{
 						font-size:10pt;
+						cursor:pointer;
 					}
 					.placeholder{
 						width: 100%;

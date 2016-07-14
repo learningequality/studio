@@ -6,6 +6,7 @@
 @exporter-list-height: 375px;
 
 #export_modal{
+	cursor:default;
 	.modal-header{
 		border: none;
 		padding-bottom: 5px;
@@ -51,6 +52,15 @@
 		.annotation{
 			color:@gray-400;
 			font-weight:normal;
+		}
+
+		#export_buttons{
+			margin-top:40px;
+			margin-bottom:30px;
+			*{
+				display:inline-block;
+				vertical-align:middle;
+			}
 		}
 
 		#export_preview{

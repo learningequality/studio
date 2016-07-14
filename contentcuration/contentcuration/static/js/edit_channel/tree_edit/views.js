@@ -30,9 +30,13 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.display_load("Loading Content...", function(){
 			self.$el.html(self.template({
 				edit: self.is_edit_page,
-				channel : window.current_channel,
+				channel : window.current_channel.toJSON(),
 				is_clipboard : self.is_clipboard
 			}));
+			if(self.is_clipboard){
+				$("#secondary-nav").css("display","none");
+				$("#channel-edit-content-wrapper").css("background-color", "#EDDEED");
+			}
 			self.add_container(self.containers.length, self.model);
 			$("#channel-edit-content-wrapper").data("data", self);
 			self.queue_view = new QueueView.Queue({

@@ -89,7 +89,7 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.render();
 	},
 	events: {
-		'click #select_all_check' : 'check_all',
+		'change .select_all' : 'check_all',
 		'click .delete_items' : 'delete_items',
 		'click .edit_items' : 'edit_items',
 		'click .create_new_content' : 'add_items',
@@ -139,7 +139,7 @@ var QueueList = BaseViews.BaseListView.extend({
 		});
 	},
 	check_all :function(){
-		this.$el.find(":checkbox").prop("checked", this.$el.find("#select_all_check").prop('checked'));
+		this.$el.find(":checkbox").prop("checked", this.$el.find("#select_all_check_" + this.model.id).prop('checked'));
 	},
 	delete_items:function(){
 		var list = this.$el.find('input:checked').parent("li");

@@ -62,8 +62,13 @@
 			</div>
 			<div id = "trash_list" class="list_content">
 		{{/if}}
-			<input type="checkbox" class="select_all" id="select_all_check"/>
-			<label for="select_all_check">Select All</label>
+			<div class="select_all_fixed">
+				{{#if is_clipboard}}
+					<a class="action-text pull-right manage_clipboard" href="clipboard">MANAGE</a>
+				{{/if}}
+				<input type="checkbox" class="select_all select_all_component" id="select_all_check_{{id}}"/>
+				<label for="select_all_check_{{id}}">Select All</label>
+			</div>
 	{{/if}}
 
 			<ul class="list-unstyled content-list" id="list_for_{{id}}">
@@ -73,8 +78,6 @@
 			</ul>
 	{{#if add_controls}}
 		</div>
-		{{#if is_clipboard}}
-			<a class="btn btn-default manage_clipboard text-center" href="clipboard">Manage Clipboard</a>
-		{{/if}}
+
 	{{/if}}
 </div>
