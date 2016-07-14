@@ -153,7 +153,6 @@ var QueueList = BaseViews.BaseListView.extend({
 						if($("#" + list[i].id).data("data")){
 							$("#" + list[i].id).data("data").remove_item();
 						}
-
 					}
 					self.render();
 				});
@@ -162,7 +161,12 @@ var QueueList = BaseViews.BaseListView.extend({
 		}
 	},
 	edit_items:function(){
-		this.edit_selected();
+		var list = this.$el.find('input:checked').parent("li");
+		if(list.length == 0){
+			alert("No items selected.");
+		}else{
+			this.edit_selected();
+		}
 	},
 	move_trash:function(){
 		var list = this.$el.find('input:checked').parent("li");
@@ -170,8 +174,14 @@ var QueueList = BaseViews.BaseListView.extend({
 			alert("No items selected.");
 		}else{
 			var moveCollection = new Models.ContentNodeCollection();
+			var ancestor_list = [];
 			for(var i =0 ;i < list.length; i++){
-				moveCollection.add($("#" + list[i].id).data("data").model);
+				var node = $("#" + list[i].id).data("data").model;
+				if(ancestor_list.length === 0 || $(node.get("ancestors")).filter(ancestor_list).length === 1){
+					moveCollection.add(node);
+					ancestor_list.push(node.get("id"));
+				}
+
 			}
 			this.container.add_to_clipboard(moveCollection);
 		}
@@ -284,6 +294,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 				this.add_to_trash();
 			}else{
 				this.model.destroy({async:false});
+				this.$el.remove();
 			}
 			if(prompt){
 				this.containing_list_view.render();

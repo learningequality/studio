@@ -16,6 +16,7 @@
 	position:absolute;
 	pointer-events:none;
 	z-index:999;
+	cursor:default;
 
 	*{
 		margin:0;
@@ -148,20 +149,20 @@
 			}
 			#queue_content{
 				width:@queue-width - 30px;
-				height:@queue-height * 0.9;
-				min-height:@queue-min-height * 0.9;
+				height:@queue-height * 0.95;
+				min-height:@queue-min-height * 0.95;
 
 				overflow:hidden;
 
-				#clipboard_list{
-					height:@queue-height * 0.6 - @manage-clipboard-btn-height;
-					min-height:@queue-min-height * 0.75 - @manage-clipboard-btn-height;
+				.queue-list-wrapper{
+					width: 100%;
+					height:100%;
+					overflow:auto;
 				}
 				.list_content{
 					width: 100%;
 					height:100%;
-					overflow:auto;
-					padding-top:30px;
+					padding-top:20px;
 					position:relative;
 					padding-bottom:@queue-list-item-height * 3;
 					margin-top: 10px;
@@ -170,7 +171,7 @@
 						background-color:white;
 						width:@queue-width - 40px;
 						padding:5px;
-						margin-top:-40px;
+						margin-top:-30px;
 						z-index:100;
 					}
 					.select_all{
@@ -192,12 +193,13 @@
 					}
 					li{
 						padding: 10px 5px;
-						width:@queue-width - 20px;
+						width:@queue-width - 30px;
 						input[type=checkbox]{
 							display:inline-block;
 							width:20px;
 							height:20px;
 							vertical-align:middle;
+							cursor:pointer;
 						}
 
 						label{

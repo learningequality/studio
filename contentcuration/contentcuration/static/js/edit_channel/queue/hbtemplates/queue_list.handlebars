@@ -69,14 +69,15 @@
 				<input type="checkbox" class="select_all select_all_component" id="select_all_check_{{id}}"/>
 				<label for="select_all_check_{{id}}">Select All</label>
 			</div>
+		<div class="queue-list-wrapper">
 	{{/if}}
-
 			<ul class="list-unstyled content-list" id="list_for_{{id}}">
 				{{#unless content_list}}
 					<li class="default-item"><h5>No items found.</h5></li>
 				{{/unless}}
 			</ul>
 	{{#if add_controls}}
+			</div>
 		</div>
 
 	{{/if}}

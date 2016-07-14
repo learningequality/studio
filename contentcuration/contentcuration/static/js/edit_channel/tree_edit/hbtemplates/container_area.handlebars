@@ -38,6 +38,9 @@
 			<input type="checkbox" id="hide_details_checkbox"/>
 			<label for="hide_details_checkbox">Hide details</label>
 		</div>
+		{{#if is_clipboard}}
+			<span class="glyphicon glyphicon-remove pull-right back_to_edit_button close_clipboard"></span>
+		{{/if}}
 	</nav>
 	{{else}}
 		<h1>Select content to preview.
@@ -55,7 +58,7 @@
 
 	<div id="container-wrapper">
 		{{#if is_clipboard}}
-			<h1 id="clipboard_header">Clipboard for {{channel.name}}</h1>
+			<h1 id="clipboard_header">{{channel.name}} Clipboard</h1>
 		{{/if}}
 		<ul id="container_area" class="list-unstyled">
 		</ul>
