@@ -228,5 +228,5 @@ def hack_hack_hack_zip_actual_files():
 
         for f in filepaths:
             locations = str(f.file_on_disk).split('/') #os.path.sep)
-            full_path = os.path.join(settings.STORAGE_ROOT, os.path.sep.join(locations[1:len(locations)]))
+            full_path = f.file_on_disk.url #os.path.join(settings.STORAGE_ROOT, os.path.sep.join(locations[1:len(locations)]))
             zf.write(full_path, str(f))
