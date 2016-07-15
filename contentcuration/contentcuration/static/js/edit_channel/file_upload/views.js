@@ -63,9 +63,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
         var list = [];
         window.formatpresets.forEach(function(preset){
             if(!preset.get("supplementary")){
-                preset.get("allowed_formats").forEach(function(format){
-                    list.push(window.fileformats.findWhere({"extension": format}).get("mimetype"));
-                });
+                list.push(preset.get("associated_mimetypes"));
             }
         });
         return list.join(",");
@@ -326,19 +324,23 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     load_slots:function(){
         var self = this;
         this.format_views=[];
-        this.presets.forEach(function(preset){
-            var acceptedFiles = "";
-            preset.get("allowed_formats").forEach(function(format){
-                acceptedFiles += window.fileformats.findWhere({extension: format}).get("mimetype") + ",";
-            });
+        console.log(this.model.get("kind"))
+        var kind = window.contentkinds.findWhere({"kind" : this.model.get("kind")});
+        kind.get("associated_presets").forEach(function(formatpreset){
+            var preset = self.presets.get({id:formatpreset.id});
+            if(!preset){
+                preset = window.formatpresets.get({id: formatpreset.id});
+            }
+
             var format_slot = new FormatSlot({
                 preset:preset,
                 model: self.model,
                 file: preset.attached_format,// preset.get("attached_format"),
                 containing_list_view: self.containing_list_view,
-                acceptedFiles: acceptedFiles,
+                acceptedFiles: preset.get("associated_mimetypes").join(","),
                 container:self,
-                list: self.$(".format_editor_list")
+                list: self.$(".format_editor_list"),
+                preview: self.preview
             });
             self.format_views.push(format_slot);
         });
@@ -465,6 +467,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.acceptedFiles = options.acceptedFiles;
         this.list = options.list;
         this.initial = true;
+        this.preview= options.preview;
     },
     events: {
         'click .format_editor_remove ' : 'remove_item'
@@ -484,6 +487,10 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.$el.attr("id", this.id() + "_" + this.preset.get("id"));
         if(this.model.get("kind") !== "topic" && (!this.containing_list_view.uploading || this.container.inline)){
             this.create_dropzone();
+        }
+        if(this.preview){
+            console.log("CHANGED!", this.preview)
+            this.preview.switch_preview(this.model);
         }
     },
     create_dropzone:function(){

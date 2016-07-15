@@ -12,7 +12,7 @@ http://{{ site.domain }}{% url 'accept_invitation_and_registration' user.id invi
 http://{{ site.domain }}{% url 'accept_invitation' user.id invitation_key channel_id %}
 {% endif %}
 
-or decline it here:
+or if you'd like to decline the invitation, follow this link:
 http://{{ site.domain }}{% url 'decline_invitation' invitation_key %}
 
 Thanks for using our site!

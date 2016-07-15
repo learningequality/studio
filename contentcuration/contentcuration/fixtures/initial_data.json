@@ -134,13 +134,6 @@
   {
     "model": "contentcuration.FileFormat",
     "fields": {
-      "extension": "mp3",
-      "mimetype" : "audio/mpeg3"
-    }
-  },
-  {
-    "model": "contentcuration.FileFormat",
-    "fields": {
       "extension": "jpg",
       "mimetype" : "image/jpeg"
     }
@@ -229,7 +222,7 @@
   {
     "model": "contentcuration.FormatPreset",
     "fields": {
-      "id" : "thumbnail",
+      "id" : "video_thumbnail",
       "readable_name": "Thumbnail",
       "multi_language" : false,
       "supplementary" : true,
@@ -245,9 +238,21 @@
       "readable_name": "Audio",
       "multi_language" : false,
       "supplementary" : false,
-      "order" : 5,
+      "order" : 4,
       "kind" : "audio",
       "allowed_formats" : ["wav", "mp3"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "audio_thumbnail",
+      "readable_name": "Thumbnail",
+      "multi_language" : false,
+      "supplementary" : true,
+      "order" : 5,
+      "kind" : "audio",
+      "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },
   {
@@ -260,6 +265,18 @@
       "order" : 6,
       "kind" : "document",
       "allowed_formats" : ["vtt", "srt", "pdf", "PDF"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "document_thumbnail",
+      "readable_name": "Thumbnail",
+      "multi_language" : false,
+      "supplementary" : true,
+      "order" : 7,
+      "kind" : "document",
+      "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },
 

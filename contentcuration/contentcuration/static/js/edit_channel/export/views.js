@@ -34,7 +34,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             node: this.model.toJSON()
         }));
         $("body").append(this.el);
-        this.$("#export_modal").modal({show: true, backdrop: 'static', keyboard: false});
+        this.$("#export_modal").modal({show: true});
         this.$("#export_modal").on("hide.bs.modal", this.close);
     },
     close_exporter:function(){

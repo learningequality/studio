@@ -32,8 +32,8 @@
 							<a class="add_items">Add</a>
 						</div>
 					  <ul class="dropdown-menu clipboard_add_options" aria-labelledby="clipboard_add_dd">
-					    <li><a class="create_new_content">Create New</a></li>
-					    <li><a class="import_content">Import Content</a></li>
+					    <li><a class="create_new_content">Upload files / create topics</a></li>
+					    <li><a class="import_content">Import from another channel</a></li>
 					  </ul>
 					</div>
 
@@ -63,9 +63,9 @@
 			<div id = "trash_list" class="list_content">
 		{{/if}}
 			<div class="select_all_fixed">
-				{{#if is_clipboard}}
+				<!-- {{#if is_clipboard}}
 					<a class="action-text pull-right manage_clipboard" href="clipboard">MANAGE</a>
-				{{/if}}
+				{{/if}} -->
 				<input type="checkbox" class="select_all select_all_component" id="select_all_check_{{id}}"/>
 				<label for="select_all_check_{{id}}">Select All</label>
 			</div>

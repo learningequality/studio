@@ -1,1 +1,1 @@
-{% load i18n %}{% trans "Invitation to edit a channel on" %} {{ site.name }}
+{% load i18n %}{% trans "You've been invite to help edit" %} {{ channel }}

@@ -53,10 +53,10 @@ class User(AbstractBaseUser):
         return self.email
 
     def email_user(self, subject, message, from_email=None, **kwargs):
-        msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
-        msg.attach_alternative(kwargs["html_message"],"text/html")
-        msg.send()
-        # send_mail(subject, message, from_email, [self.email], **kwargs)
+        # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
+        # msg.attach_alternative(kwargs["html_message"],"text/html")
+        # msg.send()
+        send_mail(subject, message, from_email, [self.email], **kwargs)
 
     def clean(self):
         super(User, self).clean()

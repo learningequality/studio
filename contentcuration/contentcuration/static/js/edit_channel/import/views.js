@@ -25,7 +25,7 @@ var ImportModalView = BaseViews.BaseModalView.extend({
     render: function() {
         this.$el.html(this.template());
         $("body").append(this.el);
-        this.$(".modal").modal({show: true, backdrop: 'static', keyboard: false});
+        this.$(".modal").modal({show: true});
         this.$(".modal").on("hide.bs.modal", this.close);
     },
     close_importer:function(collection){

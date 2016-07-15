@@ -68,15 +68,26 @@ class FileFormatSerializer(serializers.ModelSerializer):
 
 class FormatPresetSerializer(serializers.ModelSerializer):
    # files = FileSerializer(many=True, read_only=True)
+    associated_mimetypes = serializers.SerializerMethodField('retrieve_mimetypes')
 
-   class Meta:
+    def retrieve_mimetypes(self, preset):
+        mimetypes = []
+        for m in preset.allowed_formats.all():
+            mimetypes.append(m.mimetype)
+        return mimetypes
+
+    class Meta:
         model = FormatPreset
-        fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats')
+        fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats','associated_mimetypes')
 
 class ContentKindSerializer(serializers.ModelSerializer):
-   class Meta:
+    associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
+    def retrieve_associated_presets(self, kind):
+        return FormatPreset.objects.filter(kind = kind).values()
+
+    class Meta:
         model = ContentKind
-        fields = ("__all__")
+        fields = ("kind", 'associated_presets')
 
 class CustomListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):

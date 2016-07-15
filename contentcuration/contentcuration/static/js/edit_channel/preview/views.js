@@ -5,19 +5,18 @@ var Models = require("edit_channel/models");
 require("modal-styles.less");
 
 var PreviewView = BaseViews.BaseModalView.extend({
-    template: require("./hbtemplates/preview_templates/tabs.handlebars"),
+    tabs_template: require("./hbtemplates/preview_templates/tabs.handlebars"),
+    template: require("./hbtemplates/preview_dialog.handlebars"),
     modal_template: require("./hbtemplates/preview_modal.handlebars"),
     current_preview:null,
     initialize: function(options) {
         _.bindAll(this, 'set_preview');
         this.modal = options.modal;
         this.presets = new Models.FormatPresetCollection();
+        this.render();
         if(this.modal){
-            this.load_preview();
-        }else{
-           this.render();
+             this.switch_preview(this.model);
         }
-
     },
     events: {
         'click .preview_btn_tab' : 'set_preview'
@@ -44,9 +43,12 @@ var PreviewView = BaseViews.BaseModalView.extend({
                 is_modal:false
             }));
         }
+        this.load_preset_dropdown();
     },
-    closePreview:function(event){
-        $(".modal").remove();
+    load_preset_dropdown:function(){
+        this.$("#preview_tabs_dropdown").html(this.tabs_template({
+             presets: this.presets.toJSON()
+        }));
     },
     set_preview:function(event){
         var self = this;
@@ -58,7 +60,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
                 return;
             }
         });
-        this.render();
+        this.load_preset_dropdown();
         this.generate_preview();
     },
 
@@ -93,38 +95,39 @@ var PreviewView = BaseViews.BaseModalView.extend({
             default:
                 preview_template = require("./hbtemplates/preview_templates/default.handlebars");
         }
-
-
         this.$("#preview_window").html(preview_template({
             source: location,
             extension:extension
         }));
+
     },
 
     load_preview:function(){
         if(this.model){
-            var self = this;
-            if(this.model.get("files")){
-                this.model.get("files").forEach(function(file){
-                    if(!self.current_preview || self.model.get("files").length === 1){
-                        self.set_current_preview(file);
-                    }
-                    self.presets.add(window.formatpresets.get((file.attributes)? file.get("preset") : file.preset));
-                });
-            }
-            this.render();
             this.generate_preview();
         }
     },
     switch_preview:function(model){
         this.model = model;
-        this.load_preview();
+        if(this.model){
+            var self = this;
+            this.presets = new Models.FormatPresetCollection();
+             if(this.model.get("files")){
+                this.model.get("files").forEach(function(file){
+                    self.presets.add(window.formatpresets.get((file.attributes)? file.get("preset") : file.preset));
+                });
+            }
+            this.load_preset_dropdown();
+            this.set_current_preview(this.model.get("files")[0]);
+            this.generate_preview();
+        }
     },
     set_current_preview:function(file){
         this.current_preview = file;
         if(this.current_preview.attributes){
             this.current_preview = this.current_preview.attributes;
         }
+         $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
     }
 });
 

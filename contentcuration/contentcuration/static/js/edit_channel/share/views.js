@@ -26,7 +26,7 @@ var ShareModalView = BaseViews.BaseModalView.extend({
             channel: this.model.toJSON()
         }));
         $("body").append(this.el);
-        this.$(".modal").modal({show: true, backdrop: 'static', keyboard: false});
+        this.$(".modal").modal({show: true});
         this.$(".modal").on("hide.bs.modal", this.close_share_modal);
     },
     close_share_modal:function(){

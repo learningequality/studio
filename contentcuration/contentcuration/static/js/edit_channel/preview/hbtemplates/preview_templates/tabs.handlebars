@@ -1,22 +1,3 @@
-{{#unless is_modal}}<h3>{{node.attributes.title}}</h3>{{/unless}}
-<div class="btn-group">
-  <button class="btn btn-default btn-sm dropdown-toggle" id="preview_format_switch" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-  	{{#if selected_preset}}
-  		{{selected_preset.attributes.readable_name}} <span class="caret"></span>
-  	{{else}}No files found.
-  	{{/if}}
-  </button>
-  <ul class="dropdown-menu text-center">
-    {{#each presets}}
-	    <li class="btn preview_btn_tab" value="{{id}}">{{readable_name}}</li>
-  	{{/each}}
-  </ul>
-</div>
-
-<div id="preview_window">
-	{{#unless file}}
-	<div class="container-fluid">
-		<h5 class="default_preview_text text-center"><em>Select a format to preview.</em></h5>
-	</div>
-	{{/unless}}
-</div>
+{{#each presets}}
+    <li class="btn preview_btn_tab" value="{{id}}">{{readable_name}}</li>
+  {{/each}}

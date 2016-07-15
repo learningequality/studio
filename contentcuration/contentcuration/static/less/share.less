@@ -1,21 +1,26 @@
 @import "global-variables.less";
 @import "modal-styles.less";
 
+@share-width:650px;
 .share-header{
 	background-color: @blue-200;
 	.modal-title{
 		font-weight:bold;
 	}
 }
+#share_modal .modal-dialog{
+	width: @share-width;
+}
 
 #share_area{
 	@content-height: 300px;
-	width: @uploader-width;
+
+	width: @share-width;
 	padding-right:20px;
 	margin-top:-5px;
 
 	#share_public_option{
-		width:@uploader-width * 0.25;
+		width:@share-width * 0.25;
 		height:@content-height;
 		border-left:1px solid lightgray;
 		padding-left:10px;
@@ -43,7 +48,7 @@
 		}
 	}
 	#editor_list_area{
-		width:@uploader-width * 0.75;
+		width:@share-width;
 		height:@content-height;
 		padding-right:20px;
 		padding-top:2px;
@@ -59,7 +64,7 @@
 			}
 
 			#share_email_address{
-				width: @uploader-width / 1.85;
+				width: @share-width / 1.85;
 				font-size:12pt;
 				outline:none;
 				border:none;
