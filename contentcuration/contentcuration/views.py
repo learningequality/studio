@@ -279,7 +279,7 @@ def send_invitation_email(request):
             subject = render_to_string('permissions/permissions_email_subject.txt', {'site' : get_current_site(request)})
             message = render_to_string('permissions/permissions_email.txt', ctx_dict)
             message_html = render_to_string('permissions/permissions_email.html', ctx_dict)
-            recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, html_message=message_html,)
+            recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, ) #html_message=message_html,)
             # recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL,)
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -439,4 +439,4 @@ class UserRegistrationView(RegistrationView):
         subject = ''.join(subject.splitlines())
         message = render_to_string(self.email_body_template, context)
         message_html = render_to_string(self.email_html_template, context)
-        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, html_message=message_html,)
+        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, ) #html_message=message_html,)
