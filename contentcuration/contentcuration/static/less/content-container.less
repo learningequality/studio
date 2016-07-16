@@ -33,8 +33,24 @@
 		margin: -6px 40px 0 0;
 		.action-button;
 	}
+
 }
 
+#disable-none-selected-wrapper{
+	display:inline-block;
+	/*.nav-button-container{
+		opacity:1;
+		cursor:cursor;
+	}*/
+}
+.disabled-wrapper{
+	.nav-button-container{
+		opacity:0.5;
+	}
+	.disable-none-selected{
+		cursor:not-allowed !important;
+	}
+}
 #channel-edit-content-wrapper {
 	@container-width: 230px;
 	@container-height: 75vh;

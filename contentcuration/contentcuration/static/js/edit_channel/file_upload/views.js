@@ -42,7 +42,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
     file_list : [],
     returnCollection: null,
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded",  "submit_files", "all_files_uploaded", "file_added", "file_removed", "go_to_formats", "go_to_upload");
+        _.bindAll(this, "file_uploaded",  "submit_files", "all_files_uploaded", "file_added", "file_removed", "go_to_formats", "go_to_upload", "file_failed");
         this.callback = options.callback;
         this.container = options.container;
         this.uploading = true;
@@ -95,6 +95,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
             this.dropzone.on("addedfile", this.file_added);
 
             this.dropzone.on("removedfile", this.file_removed);
+            this.dropzone.on("error", this.file_failed);
         }
         this.load_content();
     },
@@ -176,6 +177,9 @@ var FileUploadView = BaseViews.BaseListView.extend({
         });
 
         this.views.push(new_format_item);
+    },
+    file_failed:function(file, error){
+        $(file.previewTemplate).find(".dropzone_remove").css("display", "inline-block");
     },
     disable_submit: function() {
         this.$(".submit_uploaded_files").attr("disabled", "disabled");
@@ -324,7 +328,6 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     load_slots:function(){
         var self = this;
         this.format_views=[];
-        console.log(this.model.get("kind"))
         var kind = window.contentkinds.findWhere({"kind" : this.model.get("kind")});
         kind.get("associated_presets").forEach(function(formatpreset){
             var preset = self.presets.get({id:formatpreset.id});
@@ -459,7 +462,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     className:"row format_editor_item",
     initialize: function(options) {
-        _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed','all_files_uploaded');
+        _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed','all_files_uploaded','file_failed');
         this.preset = options.preset;
         this.containing_list_view = options.containing_list_view;
         this.file = options.file;
@@ -489,7 +492,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             this.create_dropzone();
         }
         if(this.preview){
-            console.log("CHANGED!", this.preview)
             this.preview.switch_preview(this.model);
         }
     },
@@ -517,6 +519,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                 dropzone.on("queuecomplete", self.all_files_uploaded);
                 dropzone.on("addedfile", self.file_added);
                 dropzone.on("removedfile", self.file_removed);
+               dropzone.on("error", self.file_failed);
             }
         }, 1);
     },
@@ -553,6 +556,10 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.$(".add_format_button").css("display", "inline");
         this.file.set("contentnode", null);
         this.preset.attached_format = null;
+        this.render();
+    },
+    file_failed:function(file, error){
+        alert(error);
         this.render();
     },
     remove_item:function(){

@@ -368,7 +368,12 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.current_node = this.collection.get({cid: view.model.cid});
             this.current_view = view;
         }
-        this.load_preview();
+        if(this.current_node.get("kind") === "topic"){
+            this.switchPanel(true);
+        }else{
+            this.load_preview();
+        }
+
         this.$el.find("#input_title").val(this.current_node.get("title"));
         this.$el.find("#input_description").val(this.current_node.get("description"));
         view.$el.addClass("current_item");

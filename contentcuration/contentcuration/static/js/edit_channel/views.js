@@ -64,8 +64,12 @@ var BaseView = Backbone.View.extend({
 
         if(callback){
     		setTimeout(function(){
-				callback();
-				$("#loading_modal").remove();
+    			try{
+    				callback();
+    				$("#loading_modal").remove();
+    			}catch(err){
+    				$("#kolibri_load_text").text(err + ". Please refresh the page");
+    			}
 			 }, 800);
     	}else{
     		$("#loading_modal").remove();

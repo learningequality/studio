@@ -168,14 +168,14 @@ var ContentNodeModel = BaseModel.extend({
 		if(attrs.title == "")
 			return "Name is required.";
 
-		if(attrs.parent){
-			var parent = new ContentNodeModel({'id': attrs.parent});
-			parent.fetch({async:false});
+		// if(attrs.parent){
+		// 	var parent = new ContentNodeModel({'id': attrs.parent});
+		// 	parent.fetch({async:false});
 
-			if(parent.get("ancestors").indexOf(attrs.id) >= 0){
-				return "Cannot place topic under itself."
-			}
-		}
+		// 	if(parent.get("ancestors").indexOf(attrs.id) >= 0){
+		// 		return "Cannot place topic under itself."
+		// 	}
+		// }
 	},
 	create_file:function(){
 		this.get("files").forEach(function(file){

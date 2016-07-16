@@ -50,21 +50,27 @@ var ImportView = BaseViews.BaseListView.extend({
       "click #import_content_submit" : "import_content"
     },
     render: function() {
-        this.$el.html(this.template({is_empty:this.other_channels.length===0}));
+        console.log(this.other_channels.length)
+        this.$el.html(this.template({
+            is_empty:this.other_channels.length===0
+        }));
         var channel_collection = new Models.ContentNodeCollection();
         this.other_channels.forEach(function(channel){
             var node = channel.get_root("main_tree");
             node.set({title:channel.get("name")});
             channel_collection.add(node);
         });
-        this.importList = new ImportList({
-            model : null,
-            el:$("#import_from_channel_box"),
-            is_channel: true,
-            collection :  channel_collection,
-            parent_node_view:null,
-            container :this
-        });
+        if(this.other_channels.length>0){
+            this.importList = new ImportList({
+                model : null,
+                el:$("#import_from_channel_box"),
+                is_channel: true,
+                collection :  channel_collection,
+                parent_node_view:null,
+                container :this
+            });
+        }
+
     },
     update_count:function(){
         var list = this.$el.find(".to_import");

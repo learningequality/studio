@@ -58,9 +58,10 @@ var TreeEditView = BaseViews.BaseView.extend({
 				$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.get("id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 			});
 			$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
-			self.$el.find(".disable-none-selected").prop("disabled",true);
-			self.$el.find(".disable-none-selected").css("cursor","not-allowed");
+
+			self.handle_checked();
 		});
+
 	},
 	events: {
 		'click .copy_button' : 'copy_content',
@@ -146,10 +147,18 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.queue_view.render();
 		//this.queue_view.add_to_clipboard(collection);
 	},
-	handle_checked:function(event){
-		var checked_count = this.$el.find("input[type=checkbox]:checked").length;
-		this.$el.find(".disable-none-selected").prop("disabled", checked_count == 0);
-		this.$el.find(".disable-none-selected").css("cursor", (checked_count > 0)? "pointer" : "not-allowed");
+	handle_checked:function(){
+		var checked_count = this.$el.find(".content input[type=checkbox]:checked").length;
+		console.log(checked_count)
+		if(checked_count > 0){
+			this.$("#disable-none-selected-wrapper").removeClass("disabled-wrapper");
+			this.$(".disable-none-selected").prop("disabled", false);
+
+		}else{
+			this.$("#disable-none-selected-wrapper").addClass("disabled-wrapper");
+			this.$(".disable-none-selected").prop("disabled", true);
+		}
+
 	},
 	edit_permissions:function(){
 		var share_view = new ShareViews.ShareModalView({
@@ -306,6 +315,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	reload:function(){
 		this.model.fetch({async:false});
 		this.render();
+		this.containing_list_view.container.handle_checked();
 	},
 	events: {
 		'click .edit_folder_button': 'edit_folder',

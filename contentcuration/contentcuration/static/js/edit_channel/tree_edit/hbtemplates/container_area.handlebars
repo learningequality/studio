@@ -10,19 +10,21 @@
 			<a class="nav-label back_to_edit_button disable-on-edit">Back</a>
 		</div>
 		{{/if}}
-		<div class="nav-button-container">
-			<div class="nav-button edit_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-pencil"></span></div>
-			<a class="nav-label edit_button disable-on-edit disable-none-selected">Edit</a>
-		</div>
-		{{#unless is_clipboard}}
-		<div class="nav-button-container">
-			<div class="nav-button copy_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-duplicate"></span></div>
-			<a class="nav-label copy_button disable-on-edit disable-none-selected">Copy</a>
-		</div>
-		{{/unless}}
-		<div class="nav-button-container">
-			<div class="nav-button delete_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-remove"></span></div>
-			<a class="nav-label delete_button disable-on-edit disable-none-selected">Delete</a>
+		<div id="disable-none-selected-wrapper">
+			<div class="nav-button-container">
+				<div class="nav-button edit_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-pencil"></span></div>
+				<a class="nav-label edit_button disable-on-edit disable-none-selected">Edit</a>
+			</div>
+			{{#unless is_clipboard}}
+			<div class="nav-button-container">
+				<div class="nav-button copy_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-duplicate"></span></div>
+				<a class="nav-label copy_button disable-on-edit disable-none-selected">Copy</a>
+			</div>
+			{{/unless}}
+			<div class="nav-button-container">
+				<div class="nav-button delete_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-remove"></span></div>
+				<a class="nav-label delete_button disable-on-edit disable-none-selected">Delete</a>
+			</div>
 		</div>
 
 		{{#unless is_clipboard}}
