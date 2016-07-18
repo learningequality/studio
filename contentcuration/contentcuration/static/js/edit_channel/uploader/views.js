@@ -159,6 +159,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
     modal_template: require("./hbtemplates/uploader_modal.handlebars"),
     header_template: require("./hbtemplates/edit_metadata_header.handlebars"),
+
     description_limit : 400,
 
     initialize: function(options) {
@@ -175,25 +176,22 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.switchPanel(true);
     },
     render: function() {
+        var template_data = {
+            node_list: this.collection.toJSON(),
+            multiple_selected: this.collection.length > 1 || this.allow_add,
+            allow_add: this.allow_add,
+            word_limit : this.description_limit,
+            licenses: window.licenses.toJSON()
+        }
         if(this.modal){
             this.$el.html(this.modal_template());
             this.$(".modal-title").prepend(this.header_template());
-            this.$(".modal-body").html(this.template({
-                node_list: this.collection.toJSON(),
-                multiple_selected: this.collection.length > 1 || this.allow_add,
-                allow_add: this.allow_add,
-                word_limit : this.description_limit
-            }));
+            this.$(".modal-body").html(this.template(template_data));
             $("body").append(this.el);
             this.$(".modal").modal({show: true, backdrop: 'static', keyboard: false});
             this.$(".modal").on("hide.bs.modal", this.close_uploader);
         }else{
-            this.$el.html(this.template({
-                node_list: this.collection.toJSON(),
-                multiple_selected: this.collection.length > 1 || this.allow_add,
-                allow_add: this.allow_add,
-                word_limit : this.description_limit
-            }));
+            this.$el.html(this.template(template_data));
         }
         this.preview_view = new Previewer.PreviewView({
             modal:false,
@@ -222,7 +220,9 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         'click .delete_tag':'remove_tag',
         'keyup #input_description': 'update_count',
         'keydown #input_description': 'update_count',
-        'paste #input_description': 'update_count'
+        'paste #input_description': 'update_count',
+        "change #license_select" : "select_license",
+        "click #license_about": "load_license"
     },
     update_count:function(){
         this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
@@ -551,6 +551,41 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                 .replace("_pl_","(").replace("_a_", "&").replace("_d_","-")
                 .replace("_c_",":").replace("_p_","+").replace("_pe_",".");
 
+    },
+    load_license:function(){
+
+        var license_modal = new LicenseModalView({
+            select_license : window.licenses.get({id: $("#license_select").val()})
+        })
+    },
+    select_license:function(){
+        console.log(window.licenses.get({id: $("#license_select").val()}))
+        this.$("#license_about").css("display", "inline");
+        if(this.multiple_selected){
+
+        }else{
+            this.set_node_edited();
+        }
+    }
+});
+
+var LicenseModalView = BaseViews.BaseModalView.extend({
+    template: require("./hbtemplates/license_modal.handlebars"),
+
+    initialize: function(options) {
+        this.modal = true;
+        this.select_license = options.select_license;
+        console.log(this.select_license)
+        this.render();
+    },
+
+    render: function() {
+        this.$el.html(this.template({
+            license: this.select_license.toJSON()
+        }));
+        $("body").append(this.el);
+        this.$("#license_modal").modal({show: true});
+        this.$("#license_modal").on("hide.bs.modal", this.close);
     }
 });
 
@@ -619,11 +654,7 @@ var UploadedItem = ContentItem.extend({
         this.checked = false;
         this.file_data = options.file_data;
         this.presets = new Models.FormatPresetCollection();
-        this.originalData = {
-            "title":this.model.get("title"),
-            "description":this.model.get("description"),
-            "changed" : this.model.get("changed")
-        };
+        this.originalData = this.model.pick("title", "description", "license", "changed", "tags");
         this.render();
         this.load_tags();
 
@@ -697,7 +728,8 @@ var UploadedItem = ContentItem.extend({
         if(!this.containing_list_view.multiple_selected){
             this.set({
                 title: $("#input_title").val().trim(),
-                description: $("#input_description").val().trim()
+                description: $("#input_description").val().trim(),
+                license: $("#license_select").val()
             });
         }
     },
