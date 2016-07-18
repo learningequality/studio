@@ -568,6 +568,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                 this.container.initial = true;
                 this.container.render();
                 this.container.$(".format_options_dropdown").val(this.container.default_file.get("preset"));
+            }else{
+
             }
         }else{
             this.container.files_to_delete.add(this.file);
