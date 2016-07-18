@@ -35,7 +35,7 @@
 
 	#uploading_step_area{
 		height: @uploader-height - 100;
-		.formatting_only{
+		.formatting_only, .metadata_only{
 			display:none;
 		}
 		.uploading_only{
@@ -128,7 +128,7 @@
 		.formatting_only{
 			display:block;
 		}
-		.uploading_only{
+		.uploading_only, .metadata_only{
 			display:none;
 		}
 
@@ -267,6 +267,15 @@
 				}
 			}
 
+		}
+	}
+
+	#metadata_step_area{
+		.metadata_only{
+			display:block;
+		}
+		.uploading_only, .formatting_only{
+			display:none;
 		}
 	}
 }

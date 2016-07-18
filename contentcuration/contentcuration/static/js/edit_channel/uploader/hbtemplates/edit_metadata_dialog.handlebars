@@ -12,7 +12,9 @@
 			{{/each}}
 			</ul>
 			{{#if allow_add}}
-				<a class="action-text" id="add_more_button">BACK</a>
+				{{#if modal}}
+					<a class="action-text" id="add_more_button">ADD MORE</a>
+				{{/if}}
 			{{/if}}
 		</div>
 	{{/if}}
@@ -31,7 +33,7 @@
 					<h4>
 						License
 						<select id="license_select">
-	                        <option selected disabled>-- Select a License --</option>
+	                        <option selected disabled value=-1>-- Select a License --</option>
 	                        {{#each licenses}}
 	                            <option value={{id}}>{{license_name}}</option>
 	                        {{/each}}

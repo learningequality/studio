@@ -100,7 +100,12 @@ var ContentNodeModel = BaseModel.extend({
 	defaults: {
 		title:"Untitled",
 		children:[],
-		tags:[]
+		tags:[],
+		metadata:{
+			"resource_size":0,
+			"resource_count":0,
+			"max_sort_order":1
+		}
     },
 
 	/*Used when copying items to clipboard*/

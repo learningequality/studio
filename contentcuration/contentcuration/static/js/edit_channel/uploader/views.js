@@ -170,7 +170,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.collection = (options.collection)? options.collection : new Models.ContentNodeCollection();
         this.allow_add = options.allow_add;
         this.modal = options.modal;
+        this.new_topic = options.new_topic;
+        this.callback = options.callback;
         this.main_collection = options.main_collection;
+        this.back_function = options.back_function;
         this.fileCollection = new Models.FileCollection();
         this.render();
         this.switchPanel(true);
@@ -181,6 +184,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             multiple_selected: this.collection.length > 1 || this.allow_add,
             allow_add: this.allow_add,
             word_limit : this.description_limit,
+            modal: this.modal,
             licenses: window.licenses.toJSON()
         }
         if(this.modal){
@@ -300,8 +304,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                                 self.gray_out(true);
                             }
                         }
-                        if(!self.errorsFound && self.allow_add){
-                            self.parent_view.add_nodes(self.collection, self.main_collection.highest_sort_order);
+                        if(!self.errorsFound && (self.allow_add || self.new_topic)){
+                            self.parent_view.add_nodes(self.collection, self.parent_view.model.get("metadata").max_sort_order);
                         }
                         self.$el.css("visibility", "visible");
                         if(callback){
@@ -331,6 +335,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         }else{
             this.close_uploader(event);
         }
+
         $("#main-content-area").append("<div id='dialog'></div>");
         var content_view = new AddContentView({
             collection: this.collection,
@@ -344,6 +349,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.reset();
         this.undelegateEvents();
         this.unbind();
+        // this.back_function(this.collection);
     },
     set_current_node:function(view){
         this.$el.find("#title_error").html("");
@@ -376,6 +382,15 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
         this.$el.find("#input_title").val(this.current_node.get("title"));
         this.$el.find("#input_description").val(this.current_node.get("description"));
+
+            if(this.current_node.get("license") != null){
+                this.$el.find("#license_select").val(this.current_node.get("license"));
+                this.$("#license_about").css("display", "inline");
+            }else{
+                this.$el.find("#license_select").val(-1);
+            }
+
+
         view.$el.addClass("current_item");
         view.$el.find("input[type=checkbox]").prop("checked", true);
         this.$("#editmetadata_format_section").css("display", (this.current_node.get("kind") == "topic")? "none" : "block");
@@ -559,9 +574,9 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         })
     },
     select_license:function(){
-        console.log(window.licenses.get({id: $("#license_select").val()}))
         this.$("#license_about").css("display", "inline");
         if(this.multiple_selected){
+            var list = this.$el.find('#uploaded_list input:checked').parent("li");
 
         }else{
             this.set_node_edited();
@@ -756,6 +771,9 @@ var UploadedItem = ContentItem.extend({
           event.preventDefault();
         });
         this.$el.css("pointer", "not-allowed");
+    },
+    set_license:function(license_id){
+        this.model.set("license", license_id);
     }
 });
 

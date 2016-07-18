@@ -4,7 +4,7 @@ require("queue.less");
 var BaseViews = require("./../views");
 var Models = require("./../models");
 var DragHelper = require("edit_channel/utils/drag_drop");
-var Import = require("edit_channel/import/views");
+
 
 /* Loaded when user clicks clipboard button below navigation bar */
 var Queue = BaseViews.BaseView.extend({
@@ -85,14 +85,14 @@ var QueueList = BaseViews.BaseListView.extend({
 		//this.set_sort_orders(this.childrenCollection);
 		this.add_controls = options.add_controls;
 		this.container = options.container;
-		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_items', 'import_content', 'move_trash', 'search', 'import_nodes');
+		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_topic', 'import_content', 'move_trash', 'search', 'import_nodes', 'add_files');
 		this.render();
 	},
 	events: {
 		'change .select_all' : 'check_all',
 		'click .delete_items' : 'delete_items',
 		'click .edit_items' : 'edit_items',
-		'click .create_new_content' : 'add_items',
+		'click .create_new_content' : 'add_topic',
 		'click .move_trash' : 'move_trash',
 		'keydown .search_queue' : 'search',
 		'click .import_content' : 'import_content'
@@ -190,9 +190,6 @@ var QueueList = BaseViews.BaseListView.extend({
 		//if(this.$el.find(".search_queue").val().length > 2)
 			//this.render();
 	},
-	add_items:function(){
-		this.add_to_view();
-	},
 	add_to_list:function(collection){
 		this.add_nodes(collection, this.childrenCollection.highest_sort_order);
 		this.model.fetch({async:false});
@@ -202,17 +199,7 @@ var QueueList = BaseViews.BaseListView.extend({
 	},
 	add_to_clipboard:function(collection){
 		this.container.add_to_clipboard(collection);
-	},
-	import_content:function(){
-        var import_view = new Import.ImportModalView({
-            callback: this.import_nodes,
-            model: this.model
-        });
-    },
-    import_nodes:function(collection){
-        this.reload_listed(collection);
-        this.render();
-    }
+	}
 });
 
 /* Loaded when user clicks clipboard button below navigation bar */

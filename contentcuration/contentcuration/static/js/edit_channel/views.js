@@ -261,7 +261,52 @@ BaseListView = BaseView.extend({
 			self.reload_listed(collection);
 			self.render();
 		});
-	}
+	},
+	add_topic: function(event){
+		var UploaderViews = require("edit_channel/uploader/views");
+		var new_topic = this.collection.create({
+            "kind":"topic",
+            "title": "Topic",
+            "sort_order" : this.collection.length
+        }, {async:false});
+        new_topic.set({
+            "original_node" : new_topic.get("id"),
+            "cloned_source" : new_topic.get("id")
+        });
+
+        var edit_collection = new Models.ContentNodeCollection(new_topic);
+        $("#main-content-area").append("<div id='dialog'></div>");
+
+        var metadata_view = new UploaderViews.EditMetadataView({
+            el : $("#dialog"),
+            collection: edit_collection,
+            parent_view: this,
+            model: new_topic,
+            allow_add: false,
+            new_topic: true,
+            main_collection : this.collection,
+            modal: true
+        });
+	},
+	import_content:function(){
+		var Import = require("edit_channel/import/views");
+        var import_view = new Import.ImportModalView({
+            modal: true,
+            callback: this.import_nodes,
+            model: this.model
+        });
+    },
+    import_nodes:function(collection){
+        this.reload_listed(collection);
+        this.render();
+    },
+    add_files:function(){
+    	var FileUploader = require("edit_channel/file_upload/views");
+    	this.file_upload_view = new FileUploader.FileModalView({
+            parent_view: this,
+            model:this.model
+    	})
+    }
 });
 
 
@@ -359,6 +404,8 @@ var BaseEditorView = BaseListView.extend({
 		if(this.unsaved_queue.length == 0){
 			if (this.modal) {
 				this.$el.modal('hide');
+	        }else{
+	        	this.callback();
 	        }
 
 	        this.remove();
@@ -374,7 +421,12 @@ var BaseEditorView = BaseListView.extend({
 	        }
 	        this.unsaved_queue = [];
 	        this.views = [];
-	        this.remove();
+	        if(this.modal){
+	        	this.remove();
+	        }else{
+	        	this.callback();
+	        }
+
 		}else{
 			event.stopPropagation();
 			event.preventDefault();

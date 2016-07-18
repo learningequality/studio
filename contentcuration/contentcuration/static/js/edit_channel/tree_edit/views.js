@@ -149,7 +149,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 	},
 	handle_checked:function(){
 		var checked_count = this.$el.find(".content input[type=checkbox]:checked").length;
-		console.log(checked_count)
 		if(checked_count > 0){
 			this.$("#disable-none-selected-wrapper").removeClass("disabled-wrapper");
 			this.$(".disable-none-selected").prop("disabled", false);
@@ -180,7 +179,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 	className: "container content-container",
 	initialize: function(options) {
-		_.bindAll(this, 'add_content','import_content','close_container','import_nodes');
+		_.bindAll(this, 'add_topic','import_content','close_container','import_nodes','add_topic', 'add_files');
 		this.index = options.index;
 		this.lock = true;
 		this.edit_mode = options.edit_mode;
@@ -214,9 +213,10 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	events: {
-		'click .create_new_button':'add_content',
+		'click .create_new_button':'add_topic',
 		'click .import_button':'import_content',
-		'click .back_button' :'close_container'
+		'click .back_button' :'close_container',
+		'click .upload_files_button': 'add_files'
 	},
 
 	load_content : function(){
@@ -239,10 +239,6 @@ var ContentList = BaseViews.BaseListView.extend({
 			self.views.push(file_view);
 		});
 	},
-	add_content: function(event){
-		this.add_to_view();
-	},
-
 	add_container:function(view){
 		this.current_node = view.model.id;
 		this.container.add_container(this.index, view.model);
@@ -268,17 +264,7 @@ var ContentList = BaseViews.BaseListView.extend({
 			self.container.remove_containers_from(self.index - 1);
 		});
 	},
-	import_content:function(){
-        var import_view = new Import.ImportModalView({
-            modal: true,
-            callback: this.import_nodes,
-            model: this.model
-        });
-    },
-    import_nodes:function(collection){
-        this.reload_listed(collection);
-        this.render();
-    }
+
 });
 
 
