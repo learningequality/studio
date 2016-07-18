@@ -61,7 +61,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
 
     },
     events:{
-      // "click .submit_uploaded_files" : "submit_files",
       "click .go_to_formats" : "go_to_formats",
       "click .go_to_upload" : "go_to_upload",
       "click .go_to_metadata": "go_to_metadata",

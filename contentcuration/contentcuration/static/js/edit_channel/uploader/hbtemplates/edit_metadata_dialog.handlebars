@@ -30,10 +30,10 @@
 	                </div>
 					<h4>Title<label class="required">*<span id="title_error"></span></label></h4>
 					<input type="text" id="input_title" class="disable-on-edit upload_input" placeholder="Enter a title" maxlength="200" required/>
-					<h4>
+					<h4 class="content_nodes_only">
 						License
 						<select id="license_select">
-	                        <option selected disabled value=-1>-- Select a License --</option>
+	                        <option selected disabled value=null>-- Select a License --</option>
 	                        {{#each licenses}}
 	                            <option value={{id}}>{{license_name}}</option>
 	                        {{/each}}

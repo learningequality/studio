@@ -376,19 +376,21 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         }
         if(this.current_node.get("kind") === "topic"){
             this.switchPanel(true);
+            this.$(".content_nodes_only").css("display", "none");
         }else{
             this.load_preview();
+            this.$(".content_nodes_only").css("display", "inline-block");
         }
 
         this.$el.find("#input_title").val(this.current_node.get("title"));
         this.$el.find("#input_description").val(this.current_node.get("description"));
 
-            if(this.current_node.get("license") != null){
-                this.$el.find("#license_select").val(this.current_node.get("license"));
-                this.$("#license_about").css("display", "inline");
-            }else{
-                this.$el.find("#license_select").val(-1);
-            }
+        if(this.current_node.get("license") != null){
+            this.$el.find("#license_select").val(this.current_node.get("license"));
+            this.$("#license_about").css("display", "inline");
+        }else{
+            this.$el.find("#license_select").val(-1);
+        }
 
 
         view.$el.addClass("current_item");
@@ -461,6 +463,15 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                 tagList = $(tagList).filter($(list[i]).data("data").tags);
             }
             this.append_tags(tagList);
+
+            this.$(".content_nodes_only").css("display", "inline-block");
+            for(var i = 0; i < list.length; i++){
+                if($(list[i]).data("data").model.get("kind") === "topic"){
+                    this.$(".content_nodes_only").css("display", "none");
+                    break;
+                }
+            }
+
         }
         else {
             this.gray_out(false);

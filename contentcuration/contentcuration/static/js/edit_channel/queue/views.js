@@ -93,6 +93,7 @@ var QueueList = BaseViews.BaseListView.extend({
 		'click .delete_items' : 'delete_items',
 		'click .edit_items' : 'edit_items',
 		'click .create_new_content' : 'add_topic',
+		'click .upload_files_button': 'add_files',
 		'click .move_trash' : 'move_trash',
 		'keydown .search_queue' : 'search',
 		'click .import_content' : 'import_content'
