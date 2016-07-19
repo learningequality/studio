@@ -363,7 +363,14 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
                 node: this.model,
                 size: this.size
             }));
-            if(!this.initial){
+            if(this.initial){
+                var preset_list = this.presets.where({supplementary:false});
+
+                if(preset_list.length === 1){
+                    this.$(".format_options_dropdown").val(preset_list[0].id);
+                    this.assign_default_format();
+                }
+            }else{
                 this.load_slots();
                 this.render_slots();
             }
