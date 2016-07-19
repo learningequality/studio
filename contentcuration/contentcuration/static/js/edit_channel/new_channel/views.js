@@ -23,7 +23,7 @@ var ChannelList  = BaseListView.extend({
 		this.set_editing(false);
 		this.$el.html(this.template({
 			channel_list: this.collection.toJSON(),
-			user: this.user
+			user: window.current_user
 		}));
 		this.load_content();
 	},
@@ -44,11 +44,14 @@ var ChannelList  = BaseListView.extend({
 			default_license: window.licenses.get_default(),
 		});
 		this.$el.find("#channel_list").append(new_channel.el);
+		$(".default-channel-item").remove();
 	},
 	load_content:function(){
 		var self = this;
+		$(".default-channel-item").remove();
 		$("#channel_selection_dropdown_list").html("");
-		this.collection.forEach(function(entry){
+		$("#channel_list").html("");
+		this.collection.where({deleted:false}).forEach(function(entry){
 			var view = new ChannelListItem({
 				model: entry,
 				edit: false,
@@ -59,9 +62,9 @@ var ChannelList  = BaseListView.extend({
 			self.views.push(view);
         	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.get("id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 		});
-
-		if(this.collection.length == 0){
+		if (this.collection.where({deleted:false}).length ===0){
 			$("#channel_selection_dropdown_list").append("<li class='default-channel-item'><em>No channels found.</em></li>");
+			$("#channel_list").append("<li class='default-channel-item'><em>No channels found.</em></li>");
 		}
 	}
 });
@@ -162,10 +165,14 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 				self.containing_list_view.set_editing(false);
 				self.delete();
 				self.delete_view();
+				self.containing_list_view.collection.remove(self.model);
+				self.containing_list_view.load_content();
 			});
 		}else{
 			this.containing_list_view.set_editing(false);
 			this.delete_view();
+			this.containing_list_view.collection.remove(this.model);
+			this.containing_list_view.load_content();
 		}
 	},
 	toggle_channel: function(event){
@@ -177,6 +184,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			this.render();
 		}else{
 			this.delete_view();
+			this.containing_list_view.load_content();
 		}
 	},
 	save_channel: function(event){
@@ -196,7 +204,9 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		this.display_load("Saving Channel...", function(){
 			self.edit = false;
 			self.save(data, {async:false});
-			self.render();
+			self.containing_list_view.collection.add(self.model);
+			self.containing_list_view.load_content();
+			self.delete_view();
 		});
 	},
 
