@@ -29,12 +29,23 @@ var FileModalView = BaseViews.BaseModalView.extend({
     render: function() {
         this.$el.html(this.template());
         $("body").append(this.el);
-        this.$(".modal").modal({show: true, backdrop: 'static', keyboard: false});
-        this.$(".modal").on("hide.bs.modal", this.close);
+        this.$(".modal").modal({show: true});
+        this.$(".modal").on("hide.bs.modal", this.close_file_uploader);
     },
-    close_file_uploader:function(){
-      this.callback(this.file_upload_view.returnCollection);
-      this.close();
+    close_file_uploader:function(event){
+        if(this.file_upload_view.views.length === 0){
+            this.close();
+        }else if(confirm("Unsaved Metadata Detected! Exiting now will"
+            + " undo any new changes. \n\nAre you sure you want to exit?")){
+
+            this.file_upload_view.views.forEach(function(view){
+                view.clean_files();
+            });
+            this.close();
+        }else{
+            event.stopPropagation();
+            event.preventDefault();
+        }
     }
 });
 
@@ -189,7 +200,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
         });
 
         this.views.push(new_format_item);
-        console.log(this.nodeCollection)
     },
     file_failed:function(file, error){
         $(file.previewTemplate).find(".dropzone_remove").css("display", "inline-block");

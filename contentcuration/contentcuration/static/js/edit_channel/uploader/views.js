@@ -192,7 +192,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.$(".modal-title").prepend(this.header_template());
             this.$(".modal-body").html(this.template(template_data));
             $("body").append(this.el);
-            this.$(".modal").modal({show: true, backdrop: 'static', keyboard: false});
+            this.$(".modal").modal({show: true});
             this.$(".modal").on("hide.bs.modal", this.close_uploader);
         }else{
             this.$el.html(this.template(template_data));

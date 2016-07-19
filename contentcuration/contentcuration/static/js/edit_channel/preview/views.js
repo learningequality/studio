@@ -10,7 +10,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
     modal_template: require("./hbtemplates/preview_modal.handlebars"),
     current_preview:null,
     initialize: function(options) {
-        _.bindAll(this, 'set_preview');
+        _.bindAll(this, 'set_preview','toggle_fullscreen');
         this.modal = options.modal;
         this.presets = new Models.FormatPresetCollection();
         this.render();
@@ -19,7 +19,8 @@ var PreviewView = BaseViews.BaseModalView.extend({
         }
     },
     events: {
-        'click .preview_btn_tab' : 'set_preview'
+        'click .preview_btn_tab' : 'set_preview',
+        'click .view_fullscreen': 'toggle_fullscreen'
     },
     render: function() {
         if(this.modal){
@@ -128,6 +129,35 @@ var PreviewView = BaseViews.BaseModalView.extend({
             this.current_preview = this.current_preview.attributes;
         }
          $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
+    },
+    toggle_fullscreen:function(){
+        var elem = document.getElementById("preview_content_main");
+
+        if(this.$(".view_fullscreen").text() === "Show Fullscreen"){
+            $(elem).addClass("preview_on");
+            if (elem.requestFullscreen) {
+              elem.requestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+              elem.msRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+              elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) {
+              elem.webkitRequestFullscreen();
+            }
+            this.$(".view_fullscreen").text("Hide Fullscreen");
+        }else{
+            $(elem).removeClass("preview_on");
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+            this.$(".view_fullscreen").text("Show Fullscreen");
+        }
     }
 });
 

@@ -401,7 +401,7 @@ var BaseEditorView = BaseListView.extend({
 	errorsFound : false,
 	parent_view : null,
 	close_uploader: function(event){
-		if(this.unsaved_queue.length == 0){
+		if(this.unsaved_queue.length === 0){
 			if (this.modal) {
 				this.$el.modal('hide');
 	        }else{
