@@ -5,6 +5,7 @@ var Models = require("edit_channel/models");
 var FileUploader = require("edit_channel/file_upload/views");
 var Import = require("edit_channel/import/views");
 var Previewer = require("edit_channel/preview/views");
+var stringHelper = require("edit_channel/utils/string_helper");
 require("uploader.less");
 //var ExerciseViews = require("edit_channel/exercise_creation/views");
 
@@ -506,28 +507,29 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         $("#tag_error").css("display", "none");
         if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").val().trim() != ""){
             var tag = this.$el.find("#tag_box").val().trim();
-            if(/^([A-z\d\s.,:\+)(\-&-)]*)$/.test(tag)){
-                var selector=this.encode_tag(tag);
-                if(this.$("#tag_area").find("#" + selector).length == 0){
-                    this.append_tags([tag]);
-                    if(this.multiple_selected){
-                        var list = this.$el.find('#uploaded_list input:checked').parent("li");
-                        for(var i = 0; i < list.length; i++){
-                            $(list[i]).data("data").add_tag(tag);
-                        }
-                    }else{
-                        this.current_view.add_tag(tag);
-                    }
+            var exists_already = false;
+            this.$("#tag_area").find(".tag").each(function(index, entry){
+                if(entry.getAttribute("value") === tag){
+                    exists_already = true;
                 }
-                this.$el.find("#tag_box").val("");
-            }else{
-                $("#tag_error").css("display", "inline");
+            })
+            if(!exists_already){
+                this.append_tags([tag]);
+                if(this.multiple_selected){
+                    var list = this.$el.find('#uploaded_list input:checked').parent("li");
+                    for(var i = 0; i < list.length; i++){
+                        $(list[i]).data("data").add_tag(tag);
+                    }
+                }else{
+                    this.current_view.add_tag(tag);
+                }
             }
+            this.$el.find("#tag_box").val("");
             this.$("#uploaded_list").height($("#edit_details_wrapper").height());
         }
     },
     remove_tag:function(event){
-        var tagname = this.decode_tag(event.target.parentNode.id);
+        var tagname = event.target.getAttribute("value");
         if(this.multiple_selected){
             var list = this.$el.find('#uploaded_list input:checked').parent("li");
             for(var i = 0; i < list.length; i++){
@@ -564,20 +566,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     },
     append_tags:function(tags){
         for(var i = 0; i < tags.length; i++){
-            var selector=this.encode_tag(tags[i]);
-            this.$el.find("#tag_area").append("<div class='col-xs-4 tag' id='" + selector+ "'>" + tags[i] + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
+            var new_tag_elem = document.createElement('div');
+            new_tag_elem.className = "col-xs-4 tag";
+            $(new_tag_elem).val(tags[i]);
+            $(new_tag_elem).text(tags[i]);
+            $(new_tag_elem).append("<span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true' value='" + tags[i] + "'></span>");
+            this.$el.find("#tag_area").append(new_tag_elem);
         }
-    },
-    encode_tag:function(tag){
-        return tag.replace(/\s/g, "_s_").replace(/\)/g,"_pr_").replace(/,/g,"_co_")
-                .replace(/\(/g,"_pl_").replace(/&/g,"_a_").replace(/\-/g,"_d_")
-                .replace(/:/g,"_c_").replace(/\+/g,"_p_").replace(/\./g,"_pe_");
-    },
-    decode_tag:function(tag){
-        return tag.replace("_s_", " ").replace("_pr_",")").replace("_co_",",")
-                .replace("_pl_","(").replace("_a_", "&").replace("_d_","-")
-                .replace("_c_",":").replace("_p_","+").replace("_pe_",".");
-
     },
     load_license:function(){
 
