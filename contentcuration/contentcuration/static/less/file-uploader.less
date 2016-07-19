@@ -34,7 +34,7 @@
 	}
 
 	#uploading_step_area{
-		height: @uploader-height - 100;
+		min-height: @uploader-height - 100;
 		.formatting_only, .metadata_only{
 			display:none;
 		}
@@ -43,7 +43,7 @@
 		}
 		div#dropzone {
 			margin-top:20px;
-			height: 400px;
+			min-height: 400px;
 			overflow:hidden;
 			overflow-y:auto;
 			width:100%;
@@ -124,7 +124,7 @@
 	}
 
 	#formatting_step_area{
-		height: @uploader-height - 100;
+		min-height: @uploader-height - 100;
 		.formatting_only{
 			display:block;
 		}
@@ -133,7 +133,7 @@
 		}
 
 		#format_list{
-			height: 470px;
+			min-height: 470px;
 			overflow:hidden;
 			overflow-y:auto;
 

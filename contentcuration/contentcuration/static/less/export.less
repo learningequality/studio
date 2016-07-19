@@ -24,7 +24,7 @@
 
 	.modal-content{
 		width: @exporter-width;
-		height:@exporter-height;
+		min-height:@exporter-height;
 		background-color:@exporter-background-color;
 
 		label, #export_license_select{
@@ -56,7 +56,7 @@
 
 		#export_preview{
 			margin: 10px;
-			height: @exporter-list-height;
+			min-height: @exporter-list-height;
 			overflow-y:auto;
 			.export_list{
 				margin-left:10px;

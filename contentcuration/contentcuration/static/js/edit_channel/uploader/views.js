@@ -441,7 +441,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.parent_view.set_editing(this.multiple_selected);
         this.$el.find("#input_title").val((this.multiple_selected || !this.current_node)? " " : this.current_node.get("title"));
         this.$el.find("#input_description").val((this.multiple_selected || !this.current_node)? " " : this.current_node.get("description"));
-
         if(this.$el.find("#uploaded_list :checked").length == 0){
             this.gray_out(true);
             this.$el.find(".tag_input").addClass("gray-out");
@@ -481,6 +480,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         }
     },
     gray_out:function(grayout){
+        this.$("#uploaded_list").height($("#edit_details_wrapper").height());
         if(grayout){
             this.$el.find(".disable-on-edit").addClass("gray-out");
             this.$el.find(".upload_input").addClass("gray-out");
@@ -523,6 +523,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             }else{
                 $("#tag_error").css("display", "inline");
             }
+            this.$("#uploaded_list").height($("#edit_details_wrapper").height());
         }
     },
     remove_tag:function(event){

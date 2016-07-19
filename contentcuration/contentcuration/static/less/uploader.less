@@ -117,7 +117,7 @@
 		height: 100%;
 		padding: 10px 0;
 		overflow:hidden;
-		max-height: @uploader-height * 0.7;
+		/*max-height: @uploader-height * 0.7;*/
 
 		#editmetadata_format_section{
 			display:none;
@@ -243,7 +243,7 @@
 	#metadata_preview{
 		display:none;
 		overflow-y:auto;
-		height:@uploader-height - 190px;
+		min-height:@uploader-height - 190px;
 		max-width:90%;
 
 		h3{
@@ -257,7 +257,7 @@
 	}
 
 	#edit_details_wrapper{
-		height:@uploader-height * 0.7;
+		/*height:@uploader-height * 0.7;*/
 		padding-right:10px;
 		overflow-y:auto;
 		padding-left: 3px;
@@ -268,12 +268,12 @@
 	}
 
 	#preview_window{
-		height:@uploader-height * 0.5;
+		/*height:@uploader-height * 0.5;*/
 		width:100%;
 	}
 	#uploaded_list{
 		margin: 10px;
-		height: @uploader-height - 150px;
+		min-height: @uploader-height - 150px;
 		background-color:white;
 		overflow-y:auto;
 		overflow-x:none;
