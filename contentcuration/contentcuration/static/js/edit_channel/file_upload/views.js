@@ -455,8 +455,12 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         }
     },
     update_count:function(){
-        this.$(".format_counter").html(this.get_count());
-        this.$el.find(".format_editor_remove").css("display", (this.get_count() ===1) ? "none" : "inline");
+        this.$(".format_counter").html(this.get_count(true));
+        this.$el.find(".format_editor_remove").css("display", (this.get_count(true) ===1) ? "none" : "inline");
+
+        if(this.get_count(false) ===1){
+            this.$(".main_file_remove").css("display", "none");
+        }
     },
     set_format:function(formatModel, preset){
         var assigned_preset = this.presets.get(preset);
@@ -474,13 +478,15 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     disable_submit:function(){
         this.containing_list_view.disable_submit();
     },
-    get_count:function(){
+    get_count:function(inlcudeSupplementary){
         var self = this;
         var count = 0;
         this.format_views.forEach(function(format){
             if(format.file){
                 self.default_file = format.file;
-                count++;
+                if(inlcudeSupplementary || !format.preset.get("supplementary")){
+                    count++;
+                }
             }
         });
         return count;
@@ -511,7 +517,9 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
     clean_files:function(){
         this.files_to_delete.forEach(function(file){
-            file.destroy();
+            if(file){
+              file.destroy();
+            }
         });
     }
 });
@@ -588,6 +596,9 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     file_uploaded:function(file){
         console.log("Successfully added file!", file);
+        if(this.file){
+            this.remove_item(null);
+        }
         this.file = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
         this.file.fetch({async:false});
 
@@ -596,17 +607,12 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             contentnode: this.model.get("id"),
             preset : this.preset.get("id")
         });
-        if(this.preset.attached_format){
-            this.preset.attached_format.set({
-                contentnode:null
-            });
-            this.container.files_to_delete.add(this.preset.attached_format);
-        }
         this.preset.attached_format = this.file;
-        this.container.update_size();
-        this.container.update_count();
         this.container.set_model();
         this.render();
+        this.container.update_size();
+        this.container.update_count();
+
     },
     file_added: function(file) {
         if(this.file){
@@ -625,25 +631,17 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         alert(error);
         this.render();
     },
-    remove_item:function(){
-        if(this.container.get_count() ===1){
-            if(!this.inline){
-                this.container.initial = true;
-                this.container.render();
-                this.container.$(".format_options_dropdown").val(this.container.default_file.get("preset"));
-            }else{
-
-            }
-        }else{
-            this.container.files_to_delete.add(this.file);
-            this.file.set({contentnode: null});
-            this.file = null;
-        }
-        this.container.set_model();
+    remove_item:function(event){
+        this.container.files_to_delete.add(this.file);
+        this.file.set({contentnode: null});
+        this.file = null;
         this.preset.attached_format = null;
-        this.render();
-        this.container.update_size();
-        this.container.update_count();
+        if(event){
+            this.container.set_model();
+            this.render();
+            this.container.update_size();
+            this.container.update_count();
+        }
     },
     enable_submit:function(){
         this.container.enable_submit();

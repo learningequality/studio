@@ -34,7 +34,7 @@
 			height: 22px;
 		}
 		.glyphicon{
-			padding: 7px 30px 0 0;
+			/*padding: 7px 30px 0 0;*/
 			color: @gray-700;
 		}
 
@@ -180,7 +180,7 @@
 			}
 		}
 		.format_editor_list{
-			margin-left:10px;
+			margin-left:25px;
 			margin-bottom:10px;
 			display:none;
 
@@ -209,21 +209,22 @@
 			.format_editor_item{
 				font-size:10pt;
 				margin-bottom:5px;
+				max-width:100%;
 
 				.format_editor_format_name{
 					font-weight:bold;
-					width:(@metadata-width / 2.5) * 0.25;
+					width:(@metadata-width / 2.5) * 0.3;
+					padding:0;
 				}
 
 				.format_editor_file_name{
-					max-width:(@metadata-width / 2.5) * 0.6;
-					width:auto;
-					max-width:55%;
+					/*max-width:(@metadata-width / 2.6) * 0.6;*/
+					max-width:65%;
 					overflow:hidden;
 					display:inline-block;
 				}
 				.format_editor_options_wrapper{
-					width:40px;
+					width:auto;
 					.glyphicon{
 						cursor:pointer;
 					}
@@ -252,8 +253,6 @@
 			margin:0;
 			margin-bottom:5px;
 		}
-
-
 	}
 
 	#edit_details_wrapper{
@@ -364,7 +363,8 @@
 
 	textarea{
 		resize:none;
-		height:@larger-body-text * 6;
+		min-height:@larger-body-text * 6;
+		height:auto;
 	}
 	.metadata_save_buttons{
 		margin-right:30px;
