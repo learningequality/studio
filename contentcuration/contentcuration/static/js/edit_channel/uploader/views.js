@@ -391,7 +391,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.$el.find("#input_license_owner").val(this.current_node.get("copyright_holder"));
         this.$("#author_field").css("visibility", (this.current_node.get("author") != "")? "visible" : "hidden");
         this.$("#author_field i").text(this.current_node.get("author"));
-        console.log("GOT THIS?")
 
         if(this.current_node.get("license") != null){
             this.$el.find("#license_select").val(this.current_node.get("license"));

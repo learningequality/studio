@@ -238,7 +238,7 @@
       "readable_name": "Audio",
       "multi_language" : false,
       "supplementary" : false,
-      "order" : 4,
+      "order" : 1,
       "kind" : "audio",
       "allowed_formats" : ["wav", "mp3"]
     }
@@ -250,7 +250,7 @@
       "readable_name": "Thumbnail",
       "multi_language" : false,
       "supplementary" : true,
-      "order" : 5,
+      "order" : 2,
       "kind" : "audio",
       "allowed_formats" : ["png", "jpg", "jpeg"]
     }
@@ -262,7 +262,7 @@
       "readable_name": "Document",
       "multi_language" : false,
       "supplementary" : false,
-      "order" : 6,
+      "order" : 1,
       "kind" : "document",
       "allowed_formats" : ["vtt", "srt", "pdf", "PDF"]
     }
@@ -274,7 +274,7 @@
       "readable_name": "Thumbnail",
       "multi_language" : false,
       "supplementary" : true,
-      "order" : 7,
+      "order" : 2,
       "kind" : "document",
       "allowed_formats" : ["png", "jpg", "jpeg"]
     }

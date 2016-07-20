@@ -45,7 +45,9 @@
                         <select class="format_options_dropdown text-center">
                             <option selected disabled>-- Select a Format --</option>
                             {{#each presets}}
-                                <option value="{{id}}">{{this.attributes.readable_name}}</option>
+                                {{#unless attributes.supplementary}}
+                                    <option value="{{id}}">{{this.attributes.readable_name}}</option>
+                                {{/unless}}
                             {{/each}}
                         </select>
                          <a class="btn action-button save_initial_format">SAVE</a>

@@ -158,19 +158,16 @@ var FileUploadView = BaseViews.BaseListView.extend({
         fileModel.fetch({async:false});
 
         var presets = new Models.FormatPresetCollection();
-
-        window.formatpresets.forEach(function(preset){
-            if(preset.get("allowed_formats").indexOf(fileModel.get("file_format")) >= 0){
-                var new_slot = preset.clone();
-                presets.add(new_slot);
-            }
-        });
+        var kind = window.contentkinds.findWhere({kind: fileModel.get("recommended_kind")});
+        kind.get("associated_presets").forEach(function(preset){
+            presets.add(window.formatpresets.get(preset).clone());
+        })
 
         var node = this.nodeCollection.create({
             title : new_file_data.data.name.split(".")[0],
             parent : null,
             children : [],
-            kind: (presets.models.length > 0) ? presets.models[0].get("kind") : null,
+            kind: fileModel.get("recommended_kind"),
             license: 1,
             total_file_size : 0,
             tags : [],
@@ -214,7 +211,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.$(".go_to_metadata").text("EDIT METADATA");
     },
     disable_next:function(){
-        console.log(this.file_list)
 
         this.$(".go_to_formats").attr("disabled", "disabled");
         this.$(".go_to_formats").text((this.file_list.length === 0)? "Add files to continue" : "Upload in progress...");
@@ -562,9 +558,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.$el.attr("id", this.id() + "_" + this.preset.get("id"));
         if(this.model.get("kind") !== "topic" && (!this.containing_list_view.uploading || this.container.inline)){
             this.create_dropzone();
-        }
-        if(this.preview){
-            this.preview.switch_preview(this.model);
         }
     },
     create_dropzone:function(){

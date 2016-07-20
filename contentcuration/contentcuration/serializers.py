@@ -51,15 +51,23 @@ class ChannelSerializer(serializers.ModelSerializer):
 
 class FileSerializer(serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
+    recommended_kind = serializers.SerializerMethodField('retrieve_recommended_kind')
+    mimetype = serializers.SerializerMethodField('retrieve_extension')
 
     def get(*args, **kwargs):
          return super.get(*args, **kwargs)
     class Meta:
         model = File
-        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'lang','original_filename')
+        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'mimetype')
 
     def get_file_url(self, obj):
         return obj.file_on_disk.url
+
+    def retrieve_recommended_kind(self, obj):
+        return FormatPreset.objects.filter(allowed_formats__extension__contains=obj.file_format).first().kind.pk
+
+    def retrieve_extension(self, obj):
+        return obj.file_format.mimetype
 
 class FileFormatSerializer(serializers.ModelSerializer):
     class Meta:
