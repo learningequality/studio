@@ -97,6 +97,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			container : this
 		});
 		this.containers.push(container_view);
+		this.$("#container-wrapper").scrollLeft(this.$("#container_area").width());
 		this.$el.find("#container_area").append(container_view.el);
 		this.$el.find("#container_area").width(this.$el.find("#container_area").width() + this.containers[0].$el.outerWidth());
 		/* Animate sliding in from left */
@@ -104,9 +105,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 		container_view.$el.animate({
 			'margin-left' : "0px"
 		}, 500);
-		this.$el.find("#container-wrapper").animate({
-			scrollLeft:this.$el.find("#container_area").width() - container_view.$el.outerWidth()
-		}, 250);
 	},
 
 	delete_content: function (event){
@@ -162,7 +160,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	edit_permissions:function(){
 		var share_view = new ShareViews.ShareModalView({
 			model:window.current_channel,
-			current_user: window.current_user
+			current_user: window.current_user.toJSON()
 		});
 	}
 });
