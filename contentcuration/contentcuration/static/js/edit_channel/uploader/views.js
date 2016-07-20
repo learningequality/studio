@@ -164,7 +164,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     description_limit : 400,
 
     initialize: function(options) {
-        _.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',"select_item",
+        _.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',"select_item", "set_license_owner",
                         'add_tag','save_and_finish','add_more','set_edited','enable_submit', 'disable_submit',
                         'render_details', 'render_preview', 'remove_tag', 'update_count');
         this.parent_view = options.parent_view;
@@ -227,7 +227,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         'keydown #input_description': 'update_count',
         'paste #input_description': 'update_count',
         "change #license_select" : "select_license",
-        "click #license_about": "load_license"
+        "click #license_about": "load_license",
+        "keyup #input_license_owner":"set_license_owner",
+        "keydown #input_license_owner":"set_license_owner",
+        'paste #input_license_owner': 'set_license_owner',
     },
     update_count:function(){
         this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
@@ -385,12 +388,13 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
         this.$el.find("#input_title").val(this.current_node.get("title"));
         this.$el.find("#input_description").val(this.current_node.get("description"));
+        this.$el.find("#input_license_owner").val(this.current_node.get("license_owner"));
 
         if(this.current_node.get("license") != null){
             this.$el.find("#license_select").val(this.current_node.get("license"));
             this.$("#license_about").css("display", "inline");
         }else{
-            this.$el.find("#license_select").val(-1);
+            this.$el.find("#license_select").val(0);
         }
 
 
@@ -459,6 +463,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
             var tagList = $(list[0]).data("data").tags;
             var license_id = $(list[0]).data("data").model.get("license");
+            var license_owner = $(list[0]).data("data").model.get("license_owner");
 
             /* Create list of nodes to edit */
             for(var i = 1; i < list.length; i++){
@@ -467,8 +472,12 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                 if(license_id != view.model.get("license")){
                     license_id = 0;
                 }
+                if(license_owner != view.model.get("license_owner")){
+                    license_owner = " ";
+                }
             }
             this.$("#license_select").val(license_id);
+            this.$("#input_license_owner").val(license_owner);
             this.append_tags(tagList);
 
             this.$(".content_nodes_only").css("display", "inline-block");
@@ -500,6 +509,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.$("#metadata_preview_btn").prop("disabled", true);
             this.switchPanel(true);
             $("#metadata_preview_btn").css("visibility", "hidden");
+            this.$(".content_nodes_only").css("display", "none");
         }else{
             this.$el.find(".tag_input").removeClass("gray-out");
             this.$el.find(".upload_input").removeClass("gray-out");
@@ -596,6 +606,19 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             })
         }else{
             this.set_node_edited();
+        }
+    },
+    set_license_owner:function(){
+        var license_owner = $("#input_license_owner").val().trim();
+        if(license_owner !== ""){
+            if(this.multiple_selected){
+                var list = this.$el.find('#uploaded_list input:checked').parent("li");
+                list.each(function(index, item){
+                    $(item).data("data").set_license_owner(license_owner);
+                })
+            }else{
+                this.set_node_edited();
+            }
         }
     }
 });
@@ -760,7 +783,8 @@ var UploadedItem = ContentItem.extend({
             this.set({
                 title: $("#input_title").val().trim(),
                 description: $("#input_description").val().trim(),
-                license: $("#license_select").val()
+                license: $("#license_select").val(),
+                license_owner: $("#input_license_owner").val().trim()
             });
         }
     },
@@ -790,6 +814,9 @@ var UploadedItem = ContentItem.extend({
     },
     set_license:function(license_id){
         this.model.set("license", license_id);
+    },
+    set_license_owner:function(license_owner){
+        this.model.set("license_owner", license_owner);
     }
 });
 
