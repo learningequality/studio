@@ -458,10 +458,17 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             list.addClass("current_item");
 
             var tagList = $(list[0]).data("data").tags;
+            var license_id = $(list[0]).data("data").model.get("license");
+
             /* Create list of nodes to edit */
             for(var i = 1; i < list.length; i++){
-                tagList = $(tagList).filter($(list[i]).data("data").tags);
+                var view = $(list[i]).data("data");
+                tagList = $(tagList).filter(view.tags);
+                if(license_id != view.model.get("license")){
+                    license_id = 0;
+                }
             }
+            this.$("#license_select").val(license_id);
             this.append_tags(tagList);
 
             this.$(".content_nodes_only").css("display", "inline-block");

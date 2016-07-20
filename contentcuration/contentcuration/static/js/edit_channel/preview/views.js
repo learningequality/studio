@@ -135,7 +135,6 @@ var PreviewView = BaseViews.BaseModalView.extend({
     },
     toggle_fullscreen:function(){
         var elem = document.getElementById("preview_content_main");
-        console.log("CLICK!")
 
         if(this.$(".view_fullscreen").text() === "Show Fullscreen"){
             $(elem).addClass("preview_on");
