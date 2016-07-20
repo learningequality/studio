@@ -10,7 +10,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
     modal_template: require("./hbtemplates/preview_modal.handlebars"),
     current_preview:null,
     initialize: function(options) {
-        _.bindAll(this, 'set_preview','toggle_fullscreen');
+        _.bindAll(this, 'set_preview','toggle_fullscreen', 'close_preview');
         this.modal = options.modal;
         this.presets = new Models.FormatPresetCollection();
         this.render();
@@ -34,7 +34,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
             }));
             this.$el.append(this.el);
             this.$(".modal").modal({show: true});
-            this.$el.find(".modal").on("hide.bs.modal", this.closePreview);
+            this.$(".modal").on("hide.bs.modal", this.close_preview);
         }else{
             this.$el.html(this.template({
                 node: this.model,
@@ -63,6 +63,9 @@ var PreviewView = BaseViews.BaseModalView.extend({
         });
         this.load_preset_dropdown();
         this.generate_preview();
+    },
+    close_preview:function(){
+        this.remove();
     },
 
     generate_preview:function(){
@@ -132,6 +135,7 @@ var PreviewView = BaseViews.BaseModalView.extend({
     },
     toggle_fullscreen:function(){
         var elem = document.getElementById("preview_content_main");
+        console.log("CLICK!")
 
         if(this.$(".view_fullscreen").text() === "Show Fullscreen"){
             $(elem).addClass("preview_on");
