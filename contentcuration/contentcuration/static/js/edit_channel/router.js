@@ -14,6 +14,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		this.nodeCollection.fetch();
 		window.licenses = new Models.LicenseCollection(window.license_list);
 		window.current_channel = new Models.ChannelModel(window.channel);
+		window.current_user = new Models.UserModel(window.user);
 		//this.listenTo(saveDispatcher, "save", this.save);
 		this.channelCollection = new Models.ChannelCollection(window.channels);
 
@@ -47,7 +48,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		this.open_channel(false, false, window.current_channel.get_root("main_tree"));
 	},
 	clipboard_page:function(){
-		this.open_channel(true, true, window.current_channel.get_root("clipboard_tree"));
+		this.open_channel(true, true, window.current_user.get_clipboard());
 	},
 
 	open_channel: function(edit_mode_on, is_clipboard, root){

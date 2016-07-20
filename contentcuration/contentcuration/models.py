@@ -44,6 +44,7 @@ class User(AbstractBaseUser):
     last_name = models.CharField(max_length=100)
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
+    clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -72,6 +73,13 @@ class User(AbstractBaseUser):
     def get_short_name(self):
         "Returns the short name for the user."
         return self.first_name
+
+    def save(self, *args, **kwargs):
+        super(User, self).save(*args, **kwargs)
+        if not self.clipboard_tree:
+            self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id="topic", sort_order=0)
+            self.clipboard_tree.save()
+            self.save()
 
     class Meta:
         verbose_name = _("User")

@@ -17,7 +17,7 @@ var Queue = BaseViews.BaseView.extend({
 	},
 	render: function() {
 		this.$el.html(this.template());
-		this.clipboard_root = window.current_channel.get_root("clipboard_tree");
+		this.clipboard_root = window.current_user.get_clipboard();
 		this.trash_root = window.current_channel.get_root("trash_tree");
 		this.clipboard_queue = new ClipboardList({
 			collection: this.collection,

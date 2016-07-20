@@ -15,7 +15,7 @@
 		var presets = JSON.parse("{{ fpreset_list|escapejs }}");
 		var kinds = JSON.parse("{{ ckinds_list |escapejs }}");
 		var channel_tags = JSON.parse("{{ ctags |escapejs }}");
-		var current_user = JSON.parse("{{ current_user|escapejs }}");
+		var user = JSON.parse("{{ current_user|escapejs }}");
 	</script>
 	<script type="text/javascript">
 		var bundle = require("channel_edit");

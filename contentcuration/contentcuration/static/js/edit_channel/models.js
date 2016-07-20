@@ -39,6 +39,11 @@ var UserModel = BaseModel.extend({
     },
     send_invitation_email:function(email, channel, callback){
     	mail_helper.send_mail(channel, email, callback);
+    },
+    get_clipboard:function(){
+    	var root = new ContentNodeModel({id: this.get("clipboard_tree")});
+    	root.fetch({async:false});
+    	return root;
     }
 });
 

@@ -151,7 +151,7 @@ BaseListView = BaseView.extend({
 	copy_selected:function(){
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = [];
-		var clipboard_root = window.current_channel.get_root("clipboard_tree");
+		var clipboard_root = window.current_user.get_clipboard();
 		var copyCollection = new Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
 			copyCollection.add($(list[i]).data("data").model);//.duplicate(clipboard_root, null);
