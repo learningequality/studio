@@ -209,8 +209,16 @@ var ClipboardList = QueueList.extend({
 		}
 	},
 	handle_transfer_drop:function(transfer, sort_order){
-		transfer.model.duplicate(this.model, sort_order);
-		transfer.reload();
+		/* Implementation for copying nodes on drop*/
+		// transfer.model.duplicate(this.model, sort_order);
+		// transfer.reload();
+
+		/* Implementation for moving nodes on drop */
+		transfer.model.save({
+			parent: this.model.id,
+			sort_order:sort_order,
+			changed:true
+		}, {async:false, validate:false});
     }
 });
 

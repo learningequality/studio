@@ -569,10 +569,10 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     create_dropzone:function(){
         var self = this;
         setTimeout(function(){
-            var dz_selector="#" + self.$el.attr("id") + "_dropzone";
+            var dz_selector="#" + self.$el.attr("id") + "_dropzone" + ((self.file)? "_swap" : "");
             var clickables = [dz_selector + " .dz_click"];
             if(self.file){
-                clickables.push(dz_selector + "_swap .format_editor_file_name");
+                clickables.push(dz_selector + " .format_editor_file_name");
             }
             if(self.$(dz_selector)){
                 var dropzone = new Dropzone(self.$(dz_selector).get(0), {
@@ -581,7 +581,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                    url: window.Urls.file_upload(),
                    previewTemplate:self.dropzone_template(),
                    maxFiles: 1,
-                   previewsContainer: (self.file)? dz_selector + "_swap" : dz_selector,
+                   previewsContainer: dz_selector,
                    headers: {"X-CSRFToken": get_cookie("csrftoken")}
                 });
                 dropzone.on("success", self.file_uploaded);
