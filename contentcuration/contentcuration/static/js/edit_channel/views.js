@@ -246,7 +246,8 @@ BaseListView = BaseView.extend({
 		var new_topic = this.collection.create({
             "kind":"topic",
             "title": "Topic",
-            "sort_order" : this.collection.length
+            "sort_order" : this.collection.length,
+            "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
         }, {async:false});
         new_topic.set({
             "original_node" : new_topic.get("id"),

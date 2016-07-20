@@ -388,7 +388,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
         this.$el.find("#input_title").val(this.current_node.get("title"));
         this.$el.find("#input_description").val(this.current_node.get("description"));
-        this.$el.find("#input_license_owner").val(this.current_node.get("license_owner"));
+        this.$el.find("#input_license_owner").val(this.current_node.get("copyright_holder"));
+        this.$("#author_field").css("visibility", (this.current_node.get("author") != "")? "visible" : "hidden");
+        this.$("#author_field i").text(this.current_node.get("author"));
+        console.log("GOT THIS?")
 
         if(this.current_node.get("license") != null){
             this.$el.find("#license_select").val(this.current_node.get("license"));
@@ -450,6 +453,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.gray_out(true);
             this.$el.find(".tag_input").addClass("gray-out");
             this.$el.find(".tag_input").prop("disabled", true);
+            this.$("#author_field").css("visibility", "hidden");
             this.$el.find("#description_counter").html("Select an item first.");
             $("#tag_area").html("");
             return;
@@ -463,7 +467,9 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
             var tagList = $(list[0]).data("data").tags;
             var license_id = $(list[0]).data("data").model.get("license");
-            var license_owner = $(list[0]).data("data").model.get("license_owner");
+            var license_owner = $(list[0]).data("data").model.get("copyright_holder");
+            var author = $(list[0]).data("data").model.get("author");
+            this.$("#author_field").css("visibility", "visible");
 
             /* Create list of nodes to edit */
             for(var i = 1; i < list.length; i++){
@@ -472,12 +478,16 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                 if(license_id != view.model.get("license")){
                     license_id = 0;
                 }
-                if(license_owner != view.model.get("license_owner")){
+                if(license_owner != view.model.get("copyright_holder")){
                     license_owner = " ";
+                }
+                if(author != view.model.get("author")){
+                    this.$("#author_field").css("visibility", "hidden");
                 }
             }
             this.$("#license_select").val(license_id);
             this.$("#input_license_owner").val(license_owner);
+            this.$("#author_field i").text(author);
             this.append_tags(tagList);
 
             this.$(".content_nodes_only").css("display", "inline-block");
@@ -487,7 +497,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                     break;
                 }
             }
-
         }
         else {
             this.gray_out(false);
@@ -784,7 +793,7 @@ var UploadedItem = ContentItem.extend({
                 title: $("#input_title").val().trim(),
                 description: $("#input_description").val().trim(),
                 license: $("#license_select").val(),
-                license_owner: $("#input_license_owner").val().trim()
+                copyright_holder: $("#input_license_owner").val().trim()
             });
         }
     },
@@ -816,7 +825,7 @@ var UploadedItem = ContentItem.extend({
         this.model.set("license", license_id);
     },
     set_license_owner:function(license_owner){
-        this.model.set("license_owner", license_owner);
+        this.model.set("copyright_holder", license_owner);
     }
 });
 

@@ -174,7 +174,8 @@ var FileUploadView = BaseViews.BaseListView.extend({
             license: 1,
             total_file_size : 0,
             tags : [],
-            sort_order : this.current_sort_order++
+            sort_order : this.current_sort_order++,
+            author: window.current_user.get("first_name") + " " + window.current_user.get("last_name")
         }, {async:false});
 
         node.set({

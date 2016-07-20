@@ -275,7 +275,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
-                 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
+                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','preset',
                  'ancestors', 'tags', 'files', 'metadata')
 
 class ExerciseSerializer(serializers.ModelSerializer):

@@ -128,7 +128,7 @@ def create_bare_contentnode(ccnode):
         content_id=ccnode.content_id,
         description=ccnode.description,
         sort_order=ccnode.sort_order,
-        license_owner=ccnode.license_owner,
+        license_owner=ccnode.copyright_holder,
         kind=ccnode.kind.kind,
         license=kolibri_license,
         available=False,
