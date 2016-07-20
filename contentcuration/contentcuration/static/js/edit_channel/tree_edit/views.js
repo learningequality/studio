@@ -179,7 +179,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 	className: "container content-container",
 	initialize: function(options) {
-		_.bindAll(this, 'add_topic','import_content','close_container','import_nodes','add_topic', 'add_files');
+		_.bindAll(this, 'add_topic','import_content','close_container','import_nodes','add_topic', 'add_files','handle_transfer_drop');
 		this.index = options.index;
 		this.lock = true;
 		this.edit_mode = options.edit_mode;
@@ -264,7 +264,14 @@ var ContentList = BaseViews.BaseListView.extend({
 			self.container.remove_containers_from(self.index - 1);
 		});
 	},
-
+	handle_transfer_drop:function(transfer, sort_order){
+    	transfer.model.save({
+			parent: this.model.id,
+			sort_order:sort_order,
+			changed:true
+		}, {async:false, validate:false});
+		transfer.$el.removeClass("current_topic");
+    }
 });
 
 

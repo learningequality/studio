@@ -97,9 +97,7 @@ var ImportView = BaseViews.BaseListView.extend({
             for(var i = 0; i < checked_items.length; i++){
                 copyCollection.add($(checked_items[i]).data("data").model);
             }
-            // console.log("IMPORTING COLLECTION:", copyCollection);
-
-            self.close_importer(copyCollection.duplicate(self.model, {async:false}));
+            self.close_importer(copyCollection.duplicate(self.model, null));
         });
     },
     close_importer:function(collection){

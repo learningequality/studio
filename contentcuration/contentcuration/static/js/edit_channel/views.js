@@ -173,46 +173,25 @@ BaseListView = BaseView.extend({
 		return stopLoop;
 	},
 	drop_in_container:function(transfer, target){
-		/*Set model's parent*/
-		var new_sort_order = this.get_new_sort_order(transfer, target);
-		transfer.model.set({
-			sort_order: new_sort_order
-		});
-		if(this.model.id != transfer.model.get("parent")){
-			var old_parent = transfer.containing_list_view.model;
-			transfer.model.set({
-				parent: this.model.id
-			}, {validate:true});
-
-			if(transfer.model.validationError){
-				alert(transfer.model.validationError);
-				transfer.model.set({parent: old_parent.id});
+		try{
+			/*Set model's parent*/
+			var new_sort_order = this.get_new_sort_order(transfer, target);
+			if(this.model.id != transfer.model.get("parent")){
+				var old_parent = transfer.containing_list_view.model;
+				this.handle_transfer_drop(transfer, new_sort_order);
 				transfer.containing_list_view.render();
+				var reload_collection = new Models.ContentNodeCollection();
+				reload_collection.add([old_parent, this.model]);
+				this.reload_listed(reload_collection);
 			}else{
 				transfer.model.save({
-					parent: this.model.id,
 					sort_order:new_sort_order,
 					changed:true
 				}, {async:false, validate:false});
-				this.model.fetch({async:false});
-				if(this.model.get("parent")){
-					$("#" + this.model.get("id")).data("data").render();
-				}
-				old_parent.fetch({async:false});
-				if(old_parent.get("parent")){
-					$("#" + old_parent.id).data("data").render();
-				}
-				transfer.containing_list_view.render();
 			}
-		}else{
-			transfer.model.save({
-				sort_order:new_sort_order,
-				changed:true
-			}, {async:false, validate:false});
-		}
-		this.render();
-		if(transfer.$el.hasClass("current_topic")){
-			transfer.$el.removeClass("current_topic");
+			this.render();
+		}catch(err){
+			alert("Error dropping content:", err);
 		}
 	},
 	get_new_sort_order: function(transfer, target){
@@ -306,6 +285,9 @@ BaseListView = BaseView.extend({
             parent_view: this,
             model:this.model
     	})
+    },
+    handle_transfer_drop:function(transfer, sort_order){
+    	/*To override in subclasses*/
     }
 });
 

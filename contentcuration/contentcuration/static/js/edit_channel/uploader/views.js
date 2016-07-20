@@ -575,7 +575,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         }
     },
     load_license:function(){
-
         var license_modal = new LicenseModalView({
             select_license : window.licenses.get({id: $("#license_select").val()})
         })
@@ -583,8 +582,11 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     select_license:function(){
         this.$("#license_about").css("display", "inline");
         if(this.multiple_selected){
+            var license_id = $("#license_select").val();
             var list = this.$el.find('#uploaded_list input:checked').parent("li");
-
+            list.each(function(index, item){
+                $(item).data("data").set_license(license_id);
+            })
         }else{
             this.set_node_edited();
         }
