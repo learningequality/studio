@@ -342,14 +342,20 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	},
 	load_subfiles:function(){
 		//console.log("SUBFILES ", this.$el.find("#" + this.id() +"_sub"));
-		this.subfile_view = new QueueList({
+		var data = {
 			collection: this.containing_list_view.collection,
 			el: this.$el.find("#" + this.id() +"_sub"),
 			is_clipboard : this.is_clipboard,
 			add_controls : false,
 			model: this.model,
 			container: this.container
-		});
+		}
+		if(this.is_clipboard){
+			this.subfile_view = new ClipboardList(data);
+		}else{
+			this.subfile_view = new TrashList(data);
+		}
+
 		this.$el.find("#" + this.id() +"_sub").append(this.subfile_view.el);
 	},
 	delete_content:function(){

@@ -82,6 +82,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			this.containers.splice(this.containers.length-1);
 		}
 		this.containers[this.containers.length-1].close_folders();
+		this.handle_checked();
 	},
 	add_container: function(index, topic){
 		/* Close directories of children and siblings of opened topic*/
