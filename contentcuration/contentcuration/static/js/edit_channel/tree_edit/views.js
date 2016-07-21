@@ -17,6 +17,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	container_index: 0,
 	containers:[],
 	template: require("./hbtemplates/container_area.handlebars"),
+	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details', 'back_to_edit', 'handle_checked', 'edit_permissions' /*,'undo_action', 'redo_action'*/);
 		this.is_edit_page = options.edit;
@@ -52,13 +53,10 @@ var TreeEditView = BaseViews.BaseView.extend({
 		 		$("#channel-preview-button").addClass("active");
 		 	}
 
-		 	$("#channel_selection_dropdown_list").html("");
-
-		 	window.channels.forEach(function (entry){
-				$("#channel_selection_dropdown_list").append("<li><a href='/channels/" + entry.get("id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
-			});
-			$("#channel_selection_dropdown").html(window.current_channel.get("name") + "<span class='caret'></span>");
-
+		 	$("#channel_select_dd_wrapper").html(self.dropdown_template({
+				channel_list: window.channels.toJSON(),
+				current_channel: window.current_channel.toJSON()
+			}));
 			self.handle_checked();
 		});
 

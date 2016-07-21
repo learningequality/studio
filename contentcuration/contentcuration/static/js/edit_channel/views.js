@@ -425,10 +425,11 @@ var BaseEditorView = BaseListView.extend({
 	save_nodes: function(callback){
 		this.parent_view.set_editing(false);
 		var self = this;
+		var stringHelper = require("edit_channel/utils/string_helper");
 		this.views.forEach(function(entry){
 			var tags = [];
 			entry.tags.forEach(function(tag){
-				tags.push("{\"tag_name\" : \"" + tag + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
+				tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
 			})
 			entry.model.set({tags: tags});
 			if(entry.format_view){

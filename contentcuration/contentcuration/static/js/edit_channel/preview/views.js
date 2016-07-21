@@ -125,12 +125,10 @@ var PreviewView = BaseViews.BaseModalView.extend({
                     var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
                     self.presets.add(preset);
                     if(!default_preview || preset.get("order") === 1){
-                        console.log("ASSIGNING...")
                         default_preview = file;
                     }
                 });
             }
-            console.log(default_preview);
             this.load_preset_dropdown();
             this.set_current_preview(default_preview);
             this.generate_preview(true);

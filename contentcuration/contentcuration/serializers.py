@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 from contentcuration.models import *
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
@@ -122,6 +123,7 @@ class CustomListSerializer(serializers.ListSerializer):
         for tag_data in unformatted_input_tags:
             # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
             if isinstance(tag_data, unicode):
+                print tag_data
                 tag_data = json.loads(tag_data)
             tag_tuple = ContentTag.objects.get_or_create(tag_name=tag_data['tag_name'], channel_id=tag_data['channel'])
             all_tags.append(tag_tuple[0])

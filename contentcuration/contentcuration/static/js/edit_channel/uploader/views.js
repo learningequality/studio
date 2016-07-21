@@ -784,7 +784,10 @@ var UploadedItem = ContentItem.extend({
             this.set_node();
             this.containing_list_view.enqueue(this);
         }
-        $("#item_" + this.model.cid + " .item_name").html(this.model.get("title") + ((edited) ? " <b>*</b>" : ""));
+        $("#item_" + this.model.cid + " .item_name").text(this.model.get("title"));
+        if(edited){
+            $("#item_" + this.model.cid + " .item_name").after(" <b>*</b>");
+        }
     },
     set_node:function(){
         if(!this.containing_list_view.multiple_selected){

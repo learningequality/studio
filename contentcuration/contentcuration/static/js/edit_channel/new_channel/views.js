@@ -10,6 +10,7 @@ var urlizer = require("edit_channel/utils/data_url");
 
 var ChannelList  = BaseListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
+	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
 	item_view: "channel", // TODO: Use to indicate how to save items on list
 
 	initialize: function(options) {
@@ -60,12 +61,13 @@ var ChannelList  = BaseListView.extend({
 			});
 			self.$("#channel_list").append(view.el);
 			self.views.push(view);
-        	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.get("id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 		});
 		if (this.collection.where({deleted:false}).length ===0){
-			$("#channel_selection_dropdown_list").append("<li class='default-channel-item'><em>No channels found.</em></li>");
 			$("#channel_list").append("<li class='default-channel-item'><em>No channels found.</em></li>");
 		}
+		$("#channel_selection_dropdown_list").html(this.dropdown_template({
+			channel_list: this.collection.toJSON()
+		}));
 	}
 });
 
@@ -158,8 +160,13 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		this.$(".save_channel").attr("disabled", "disabled");
 	},
 	delete_channel: function(event){
-		if(!this.model.isNew() && (confirm("WARNING: All content under this channel will be permanently deleted."
-					+ "\nAre you sure you want to delete this channel?"))){
+		if(this.model.isNew()){
+			this.containing_list_view.set_editing(false);
+			this.delete_view();
+			this.containing_list_view.collection.remove(this.model);
+			this.containing_list_view.load_content();
+		}else if(confirm("WARNING: All content under this channel will be permanently deleted."
+					+ "\nAre you sure you want to delete this channel?")){
 			var self = this;
 			this.display_load("Deleting Channel...", function(){
 				self.containing_list_view.set_editing(false);
@@ -169,10 +176,8 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 				self.containing_list_view.load_content();
 			});
 		}else{
-			this.containing_list_view.set_editing(false);
-			this.delete_view();
-			this.containing_list_view.collection.remove(this.model);
-			this.containing_list_view.load_content();
+			event.stopPropagation();
+			event.preventDefault();
 		}
 	},
 	toggle_channel: function(event){
