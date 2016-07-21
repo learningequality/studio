@@ -7,7 +7,7 @@ var get_cookie = require("utils/get_cookie");
 require("file-uploader.less");
 require("dropzone/dist/dropzone.css");
 var stringHelper = require("edit_channel/utils/string_helper");
-
+var browserHelper = require("edit_channel/utils/browser_functions");
 
 var FileModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/file_upload_modal.handlebars"),
@@ -69,7 +69,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.parent_view = options.parent_view;
         this.current_sort_order = this.model.get("metadata").max_sort_order + 1;
         this.render();
-
     },
     events:{
       "click .go_to_formats" : "go_to_formats",
@@ -100,7 +99,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
                 acceptedFiles: this.acceptedFiles,
                 url: window.Urls.file_upload(),
                 previewTemplate:this.file_upload_template(),
-                parallelUploads: 20,
+                parallelUploads: browserHelper.get_max_parallel_uploads()-1,
                 //autoQueue: false, // Make sure the files aren't queued until manually added
                 previewsContainer: "#dropzone", // Define the container to display the previews
                 headers: {"X-CSRFToken": get_cookie("csrftoken")}
@@ -119,7 +118,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
         if(!this.metadata){
             this.load_content();
         }
-
     },
     load_content:function(){
         var list = this.$el.find(".file_list");

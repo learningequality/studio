@@ -6,7 +6,6 @@ require("dropzone/dist/dropzone.css");
 var Models = require("edit_channel/models");
 var BaseViews = require("edit_channel/views");
 var get_cookie = require("utils/get_cookie");
-var urlizer = require("edit_channel/utils/data_url");
 
 var ChannelList  = BaseListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
