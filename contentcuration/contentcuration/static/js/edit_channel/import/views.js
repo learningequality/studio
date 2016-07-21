@@ -28,9 +28,10 @@ var ImportModalView = BaseViews.BaseModalView.extend({
         this.$(".modal").modal({show: true});
         this.$(".modal").on("hide.bs.modal", this.close);
     },
-    close_importer:function(collection){
+    close_importer:function(collection, resolve){
       this.callback(collection);
       this.close();
+      resolve("Success!");
     }
 });
 
@@ -91,21 +92,28 @@ var ImportView = BaseViews.BaseListView.extend({
     },
     import_content:function(){
         var self = this;
-        this.display_load("Importing Content...", function(){
-            var checked_items = self.$el.find(".to_import");
-            var copyCollection = new Models.ContentNodeCollection();
-            for(var i = 0; i < checked_items.length; i++){
-                copyCollection.add($(checked_items[i]).data("data").model);
+        this.display_load("Importing Content...", function(resolve, reject){
+            try{
+                var checked_items = self.$el.find(".to_import");
+                var copyCollection = new Models.ContentNodeCollection();
+                for(var i = 0; i < checked_items.length; i++){
+                    copyCollection.add($(checked_items[i]).data("data").model);
+                }
+                copyCollection.duplicate(self.model, null, function(collection){
+                    self.close_importer(collection, resolve);
+                });
+            }catch(error){
+                reject(error);
             }
-            self.close_importer(copyCollection.duplicate(self.model, null));
         });
     },
-    close_importer:function(collection){
+    close_importer:function(collection, resolve){
         if(this.modal){
-            this.modal.close_importer(collection);
+            this.modal.close_importer(collection, resolve);
         }else{
             this.callback(collection);
             this.remove();
+            resolve("Success!");
         }
     }
 });

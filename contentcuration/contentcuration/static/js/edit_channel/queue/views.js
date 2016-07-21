@@ -55,13 +55,32 @@ var Queue = BaseViews.BaseView.extend({
 	},
 	add_to_clipboard:function(collection){
 		this.clipboard_queue.add_to_list(collection);
-		this.trash_queue.model.fetch({async:false});
-		this.trash_queue.render();
+		var self = this;
+		this.trash_queue.model.fetch({
+			success:function(root){
+				self.trash_queue.render();
+			},
+			error:function(obj, error){
+				console.log("Error loading trash", obj);
+                console.log("Error message:", error);
+                console.trace();
+			}
+		});
+
 	},
 	add_to_trash:function(collection){
+		var self = this;
 		this.trash_queue.add_to_list(collection);
-		this.clipboard_queue.model.fetch({async:false});
-		this.clipboard_queue.render();
+		this.clipboard_queue.model.fetch({
+			success:function(root){
+				self.clipboard_queue.render();
+			},
+			error:function(obj, error){
+				console.log("Error loading clipboard", obj);
+                console.log("Error message:", error);
+                console.trace();
+			}
+		});
 	},
 	switch_to_queue:function(){
 		this.switch_tab("clipboard");
@@ -84,28 +103,33 @@ var QueueList = BaseViews.BaseListView.extend({
 	item_view:"queue",
 	render: function() {
 		DragHelper.removeDragDrop(this);
-		this.model.fetch({async:false});
-		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
-		this.childrenCollection.sort_by_order();
-		this.$el.html(this.template({
-			content_list : this.childrenCollection.toJSON(),
-			is_clipboard : this.is_clipboard,
-			add_controls : this.add_controls,
-			id: this.model.id
-		}));
+		var self = this;
+		this.model.fetch({
+			success:function(root){
+				self.childrenCollection = self.collection.get_all_fetch(root.get("children"));
+				self.childrenCollection.sort_by_order();
+				self.$el.html(self.template({
+					content_list : self.childrenCollection.toJSON(),
+					is_clipboard : self.is_clipboard,
+					add_controls : self.add_controls,
+					id: root.id
+				}));
 
-		this.load_content();
-		if(this.add_controls){
-			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("metadata").total_count);
-		}
+				self.load_content();
+				if(self.add_controls){
+					$((self.is_clipboard)? ".queue-badge" : ".trash-badge").html(root.get("metadata").total_count);
+				}
 
-		this.$el.data("container", this);
-		this.$el.find("ul").data("list", this);
-		this.$el.find(".default-item").data("data", {
-			containing_list_view: this,
-			index:0
+				self.$el.data("container", self);
+				self.$el.find("ul").data("list", self);
+				self.$el.find(".default-item").data("data", {
+					containing_list_view: self,
+					index:0
+				});
+				DragHelper.addDragDrop(self);
+			}
 		});
-		DragHelper.addDragDrop(this);
+
 	},
 	load_content:function(){
 		this.views = [];
@@ -133,13 +157,24 @@ var QueueList = BaseViews.BaseListView.extend({
 		}else{
 			if(confirm((this.is_clipboard)? "Are you sure you want to delete these selected items?" : "Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
 				var self = this;
-				this.display_load("Deleting Content...", function(){
-					for(var i = 0; i < list.length; i++){
-						if($("#" + list[i].id).data("data")){
-							$("#" + list[i].id).data("data").remove_item();
+				this.display_load("Deleting Content...", function(resolve, reject){
+					try{
+						var promise_list = [];
+						for(var i = 0; i < list.length; i++){
+							if($("#" + list[i].id).data("data")){
+								var promise = new Promise(function(resolve, reject){
+									$("#" + list[i].id).data("data").remove_item(false, resolve);
+								});
+								promise_list.push(promise);
+							}
 						}
+	    				Promise.all(promise_list).then(function(){
+	    					self.render();
+							resolve("Success!");
+	    				});
+					}catch(error){
+						reject(error);
 					}
-					self.render();
 				});
 
 			}
@@ -151,7 +186,7 @@ var QueueList = BaseViews.BaseListView.extend({
 	},
 	add_to_list:function(collection){
 		this.add_nodes(collection, this.childrenCollection.highest_sort_order);
-		this.model.fetch({async:false});
+		this.model.fetch();
 	},
 	add_to_trash:function(collection){
 		this.container.add_to_trash(collection);
@@ -181,25 +216,6 @@ var ClipboardList = QueueList.extend({
 		'click .upload_files_button': 'add_files',
 		'click .import_content' : 'import_content'
 	},
-	delete_items:function(){
-		var list = this.$el.find('input:checked').parent("li");
-		if(list.length == 0){
-			alert("No items selected.");
-		}else{
-			if(confirm((this.is_clipboard)? "Are you sure you want to delete these selected items?" : "Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
-				var self = this;
-				this.display_load("Deleting Content...", function(){
-					for(var i = 0; i < list.length; i++){
-						if($("#" + list[i].id).data("data")){
-							$("#" + list[i].id).data("data").remove_item();
-						}
-					}
-					self.render();
-				});
-
-			}
-		}
-	},
 	edit_items:function(){
 		var list = this.$el.find('input:checked').parent("li");
 		if(list.length == 0){
@@ -208,17 +224,41 @@ var ClipboardList = QueueList.extend({
 			this.edit_selected();
 		}
 	},
-	handle_transfer_drop:function(transfer, sort_order){
+	handle_transfer_drop:function(transfer, sort_order, callback){
 		/* Implementation for copying nodes on drop*/
-		// transfer.model.duplicate(this.model, sort_order);
-		// transfer.reload();
+		// transfer.model.duplicate(this.model, sort_order, function(){
+			// transfer.reload();
+			//callback();
+		// });
+
 
 		/* Implementation for moving nodes on drop */
+		var self = this;
 		transfer.model.save({
 			parent: this.model.id,
 			sort_order:sort_order,
 			changed:true
-		}, {async:false, validate:false});
+		}, {
+			success:function(dropped){
+				var item_view = new QueueItem({
+					containing_list_view: self,
+					model:dropped,
+					index : self.list_index ++,
+					is_clipboard : self.is_clipboard,
+					container : self.container
+				});
+				transfer.$el.after(item_view.el);
+				transfer.$el.remove();
+				self.views.push(item_view);
+				callback();
+			},
+			error:function(obj, error){
+				console.log("Error moving content", obj);
+                console.log("Error message:", error);
+                console.trace();
+				callback();
+			}
+		});
     }
 });
 
@@ -239,48 +279,59 @@ var TrashList = QueueList.extend({
 		'click .delete_items' : 'delete_items',
 		'click .move_trash' : 'move_trash'
 	},
-	delete_items:function(){
-		var list = this.$el.find('input:checked').parent("li");
-		if(list.length == 0){
-			alert("No items selected.");
-		}else{
-			if(confirm((this.is_clipboard)? "Are you sure you want to delete these selected items?" : "Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
-				var self = this;
-				this.display_load("Deleting Content...", function(){
-					for(var i = 0; i < list.length; i++){
-						if($("#" + list[i].id).data("data")){
-							$("#" + list[i].id).data("data").remove_item();
-						}
-					}
-					self.render();
-				});
-
-			}
-		}
-	},
 	move_trash:function(){
 		var list = this.$el.find('input:checked').parent("li");
 		if(list.length == 0){
 			alert("No items selected.");
 		}else{
-			var moveCollection = new Models.ContentNodeCollection();
-			var ancestor_list = [];
-			for(var i =0 ;i < list.length; i++){
-				var node = $("#" + list[i].id).data("data").model;
-				if(ancestor_list.length === 0 || $(node.get("ancestors")).filter(ancestor_list).length === 1){
-					moveCollection.add(node);
-					ancestor_list.push(node.get("id"));
+			var self = this;
+			this.display_load("Recovering Content to Clipboard...", function(resolve, reject){
+				try{
+					var moveCollection = new Models.ContentNodeCollection();
+					var ancestor_list = [];
+					for(var i =0 ;i < list.length; i++){
+						var node = $("#" + list[i].id).data("data").model;
+						if(ancestor_list.length === 0 || $(node.get("ancestors")).filter(ancestor_list).length < 2){
+							moveCollection.add(node);
+							ancestor_list.push(node.get("id"));
+						}
+					}
+					self.container.add_to_clipboard(moveCollection);
+					resolve("Success!");
+				}catch(error){
+					reject(error);
 				}
-			}
-			this.container.add_to_clipboard(moveCollection);
+			});
+
 		}
 	},
-	handle_transfer_drop:function(transfer, sort_order){
+	handle_transfer_drop:function(transfer, sort_order, callback){
+		var self = this;
     	transfer.model.save({
 			parent: this.model.id,
 			sort_order:sort_order,
 			changed:true
-		}, {async:false, validate:false});
+		}, {
+			success:function(dropped){
+				var item_view = new QueueItem({
+					containing_list_view: self,
+					model:dropped,
+					index : self.list_index ++,
+					is_clipboard : self.is_clipboard,
+					container : self.container
+				});
+				transfer.$el.after(item_view.el);
+				transfer.$el.remove();
+				self.views.push(item_view);
+				callback();
+			},
+			error:function(obj, error){
+				console.log("Error moving content", obj);
+                console.log("Error message:", error);
+                console.trace();
+				callback();
+			}
+		});
     }
 });
 
@@ -309,8 +360,12 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		'dblclick .queue_item_title' : 'edit_item'
 	},
 	reload:function(){
-		this.model.fetch({async:false});
-		this.render();
+		var self = this;
+		this.model.fetch({
+			success:function(){
+				self.render();
+			}
+		});
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -363,16 +418,28 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		event.preventDefault();
 		this.remove_item(true);
 	},
-	remove_item: function(prompt){
+	remove_item: function(prompt, resolve){
 		if((prompt && confirm("Are you sure you want to delete " + this.model.get("title") + "?")) || !prompt){
 			if(this.is_clipboard){
 				this.add_to_trash();
+				resolve("Success!");
 			}else{
-				this.model.destroy({async:false});
-				this.$el.remove();
-			}
-			if(prompt){
-				this.containing_list_view.render();
+				var self = this;
+				this.model.destroy({
+					success:function(){
+						self.$el.remove();
+						if(prompt){
+							self.containing_list_view.render();
+						}else{
+							resolve("Success!");
+						}
+					},
+					error:function(obj, error){
+						console.log("Error deleting item", obj);
+		                console.log("Error message:", error);
+		                console.trace();
+					}
+				});
 			}
 		}
 	},

@@ -23,33 +23,6 @@ class LanguageSerializer(serializers.ModelSerializer):
         model = Language
         fields = ('lang_code', 'lang_subcode', 'id')
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id','clipboard_tree')
-
-class ChannelSerializer(serializers.ModelSerializer):
-    resource_count = serializers.SerializerMethodField('count_resources')
-    resource_size = serializers.SerializerMethodField('calculate_resources_size')
-
-    def count_resources(self, channel):
-        if not channel.main_tree:
-            return 0
-        else:
-            return count_files(channel.main_tree)
-
-    def calculate_resources_size(self, channel):
-        if not channel.main_tree:
-            return 0
-        else:
-            return get_total_size(channel.main_tree)
-
-    class Meta:
-        model = Channel
-        fields = ('id', 'name', 'description', 'editors', 'main_tree',
-                    'clipboard_tree', 'trash_tree','resource_count', 'resource_size',
-                    'version', 'thumbnail', 'deleted', 'public', 'pending_editors')
-
 class FileSerializer(serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
     recommended_kind = serializers.SerializerMethodField('retrieve_recommended_kind')
@@ -299,6 +272,36 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
         model = AssessmentItem
         fields = ('question', 'type', 'answers', 'id', 'exercise')
         list_serializer_class = BulkListSerializer
+
+class ChannelSerializer(serializers.ModelSerializer):
+    resource_count = serializers.SerializerMethodField('count_resources')
+    resource_size = serializers.SerializerMethodField('calculate_resources_size')
+    main_tree = ContentNodeSerializer(read_only=True)
+    trash_tree = ContentNodeSerializer(read_only=True)
+
+    def count_resources(self, channel):
+        if not channel.main_tree:
+            return 0
+        else:
+            return count_files(channel.main_tree)
+
+    def calculate_resources_size(self, channel):
+        if not channel.main_tree:
+            return 0
+        else:
+            return get_total_size(channel.main_tree)
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'name', 'description', 'editors', 'main_tree',
+                    'clipboard_tree', 'trash_tree','resource_count', 'resource_size',
+                    'version', 'thumbnail', 'deleted', 'public', 'pending_editors')
+
+class UserSerializer(serializers.ModelSerializer):
+    clipboard_tree = ContentNodeSerializer(read_only=True)
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id','clipboard_tree')
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:

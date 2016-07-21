@@ -41,9 +41,7 @@ var UserModel = BaseModel.extend({
     	mail_helper.send_mail(channel, email, callback);
     },
     get_clipboard:function(){
-    	var root = new ContentNodeModel({id: this.get("clipboard_tree")});
-    	root.fetch({async:false});
-    	return root;
+    	return new ContentNodeModel(this.get("clipboard_tree"));
     }
 });
 
@@ -114,7 +112,7 @@ var ContentNodeModel = BaseModel.extend({
     },
 
 	/*Used when copying items to clipboard*/
-    duplicate: function(target_parent, sort_order){
+    duplicate: function(target_parent, sort_order, callback){
 		var node_id = this.get("id");
 		var sort_order_index = 1;
 		if(sort_order){
@@ -127,20 +125,18 @@ var ContentNodeModel = BaseModel.extend({
         var data = {"node_id": node_id,
                     "sort_order": sort_order_index,
                     "target_parent": parent_id};
-        var copied_id;
         $.ajax({
         	method:"POST",
             url: window.Urls.duplicate_node(),
             data:  JSON.stringify(data),
             async: false,
             success: function(data) {
-                copied_id = JSON.parse(data).node_id;
+                callback(JSON.parse(data).node_id);
             },
             error:function(e){
             	console.log("ERROR: " + e.responseText);
             }
         });
-        return copied_id;
 	},
 
 	move:function(target_parent, allow_duplicate, sort_order){
@@ -180,17 +176,9 @@ var ContentNodeModel = BaseModel.extend({
     	return new_title.slice(0, new_title.length);
 	},
 	validate:function (attrs, options){
-		if(attrs.title == "")
+		if(attrs.title == ""){
 			return "Name is required.";
-
-		// if(attrs.parent){
-		// 	var parent = new ContentNodeModel({'id': attrs.parent});
-		// 	parent.fetch({async:false});
-
-		// 	if(parent.get("ancestors").indexOf(attrs.id) >= 0){
-		// 		return "Cannot place topic under itself."
-		// 	}
-		// }
+		}
 	},
 	create_file:function(){
 		this.get("files").forEach(function(file){
@@ -199,14 +187,6 @@ var ContentNodeModel = BaseModel.extend({
 				file.save(data,{async:false});
 			}
 		});
-	},
-	get_formats:function(){
-		var formats = new FileFormatCollection();
-		formats.fetch({async:false});
-		return formats.where({contentnode : this.id});
-	},
-	get_fileformat:function(type){
-		return window.fileformats.findWhere({extension: type});
 	}
 });
 
@@ -259,7 +239,7 @@ var ContentNodeCollection = BaseCollection.extend({
     	this.sort();
     	this.highest_sort_order = (this.length > 0)? this.at(this.length - 1).get("sort_order") : 1;
     },
-    duplicate:function(target_parent, options){
+    duplicate:function(target_parent, options, callback){
     	var copied_list = [];
     	this.forEach(function(node){
     		copied_list.push(node.get("id"));
@@ -277,15 +257,14 @@ var ContentNodeCollection = BaseCollection.extend({
             async: false,
             success: function(data) {
                 copied_list = JSON.parse(data).node_ids.split(" ");
+                var copiedCollection = new ContentNodeCollection();
+    			copiedCollection.get_all_fetch(copied_list);
+    			callback(copiedCollection);
             },
             error:function(e){
             	console.log("ERROR: " + e.responseText);
             }
         });
-
-    	var copiedCollection = new ContentNodeCollection();
-    	copiedCollection.get_all_fetch(copied_list);
-    	return copiedCollection;
     },
     move:function(target_parent, sort_order, callback){
     	this.forEach(function(model){
@@ -314,9 +293,7 @@ var ChannelModel = BaseModel.extend({
     },
 
     get_root:function(tree_name){
-    	var root = new ContentNodeModel({'id' : this.get(tree_name)});
-    	root.fetch({async:false});
-    	return root;
+    	return new ContentNodeModel(this.get(tree_name));
     },
 
     publish:function(callback){
@@ -325,7 +302,6 @@ var ChannelModel = BaseModel.extend({
         	method:"POST",
             url: window.Urls.publish_channel(),
             data:  JSON.stringify(data),
-            async: false,
             success:function(){
             	callback();
             }
@@ -335,10 +311,7 @@ var ChannelModel = BaseModel.extend({
 
 var ChannelCollection = BaseCollection.extend({
 	model: ChannelModel,
-	list_name:"channel-list",
-	create_channel:function(data){
-		this.create(data, {async:false});
-    }
+	list_name:"channel-list"
 });
 
 var TagModel = BaseModel.extend({
@@ -367,16 +340,7 @@ var TagCollection = BaseCollection.extend({
 
 /**** MODELS SPECIFIC TO FILE NODES ****/
 var FileModel = BaseModel.extend({
-	root_list:"file-list",
-	duplicate: function(contentnode){
-		var new_file = this.clone();
-		new_file.set({
-			contentnode : contentnode
-		});
-
-		new_file.save(new_file.attributes, {async:false});
-		return new_file;
-	}
+	root_list:"file-list"
 });
 
 var FileCollection = BaseCollection.extend({
@@ -395,12 +359,7 @@ var FileCollection = BaseCollection.extend({
 
 var FormatPresetModel = BaseModel.extend({
 	root_list:"formatpreset-list",
-	attached_format: null,
-	get_files : function(){
-		var files = new FileCollection();
-		files.fetch({async:false});
-		return files.where({format: this.id});
-	}
+	attached_format: null
 });
 
 var FormatPresetCollection = BaseCollection.extend({

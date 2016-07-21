@@ -167,12 +167,19 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		}else if(confirm("WARNING: All content under this channel will be permanently deleted."
 					+ "\nAre you sure you want to delete this channel?")){
 			var self = this;
-			this.display_load("Deleting Channel...", function(){
-				self.containing_list_view.set_editing(false);
-				self.delete();
-				self.delete_view();
-				self.containing_list_view.collection.remove(self.model);
-				self.containing_list_view.load_content();
+			this.display_load("Deleting Channel...", function(resolve, reject){
+				try{
+					self.containing_list_view.set_editing(false);
+					self.delete();
+					self.delete_view();
+					self.containing_list_view.collection.remove(self.model);
+					self.containing_list_view.load_content();
+					resolve("Success!");
+				}catch(error){
+					reject(error)
+				}
+
+
 			});
 		}else{
 			event.stopPropagation();
@@ -205,12 +212,23 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		this.originalData = data;
 		this.original_thumbnail = this.thumbnail;
 
-		this.display_load("Saving Channel...", function(){
+		this.display_load("Saving Channel...", function(resolve, reject){
 			self.edit = false;
-			self.save(data, {async:false});
-			self.containing_list_view.collection.add(self.model);
-			self.containing_list_view.load_content();
-			self.delete_view();
+			self.save(data, {
+				success:function(channel){
+					self.model = channel;
+					self.containing_list_view.collection.add(self.model);
+					self.containing_list_view.load_content();
+					self.delete_view();
+					resolve("Success!");
+				},
+				error:function(obj, error){
+					console.log("Error saving channel", obj);
+	                console.log("Error message:", error);
+	                console.trace();
+	                reject(error);
+				}
+			});
 		});
 	},
 

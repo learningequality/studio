@@ -99,7 +99,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
                 acceptedFiles: this.acceptedFiles,
                 url: window.Urls.file_upload(),
                 previewTemplate:this.file_upload_template(),
-                parallelUploads: browserHelper.get_max_parallel_uploads()-1,
+                parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads() / 2),
                 //autoQueue: false, // Make sure the files aren't queued until manually added
                 previewsContainer: "#dropzone", // Define the container to display the previews
                 headers: {"X-CSRFToken": get_cookie("csrftoken")}
@@ -152,50 +152,68 @@ var FileUploadView = BaseViews.BaseListView.extend({
         }
         this.file_list.push(new_file_data);
         var fileModel = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
-
-        fileModel.fetch({async:false});
-
         var presets = new Models.FormatPresetCollection();
-        var kind = window.contentkinds.findWhere({kind: fileModel.get("recommended_kind")});
-        kind.get("associated_presets").forEach(function(preset){
-            presets.add(window.formatpresets.get(preset).clone());
-        })
+        var self = this;
+        fileModel.fetch({
+            success:function(file_model){
+                var kind = window.contentkinds.findWhere({kind: file_model.get("recommended_kind")});
+                kind.get("associated_presets").forEach(function(preset){
+                    presets.add(window.formatpresets.get(preset).clone());
+                })
 
-        var node = this.nodeCollection.create({
-            title : new_file_data.data.name.split(".")[0],
-            parent : null,
-            children : [],
-            kind: fileModel.get("recommended_kind"),
-            license: 1,
-            total_file_size : 0,
-            tags : [],
-            sort_order : this.current_sort_order++,
-            author: window.current_user.get("first_name") + " " + window.current_user.get("last_name")
-        }, {async:false});
+                self.nodeCollection.create({
+                    title : new_file_data.data.name.split(".")[0],
+                    parent : null,
+                    children : [],
+                    kind: file_model.get("recommended_kind"),
+                    license: 1,
+                    total_file_size : 0,
+                    tags : [],
+                    sort_order : self.current_sort_order++,
+                    author: window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+                }, {
+                    /*TODO: Find way to avoid database locking to remove async:false*/
+                    async:false,
+                    success:function(node){
+                        node.set({
+                            original_node : node.get("id"),
+                            cloned_source : node.get("id")
+                        });
 
-        node.set({
-            original_node : node.get("id"),
-            cloned_source : node.get("id")
+                        file_model.set({
+                            file_size : new_file_data.data.size,
+                            contentnode: node.id
+                        });
+
+                        var new_format_item = new FormatItem({
+                            el:  $(file.previewTemplate),
+                            model: node,
+                            default_file: fileModel,
+                            containing_list_view : self,
+                            thumbnail: $(file.previewTemplate).find(".thumbnail_img").attr("src"),
+                            presets : presets,
+                            initial:true,
+                            inline:false,
+                            update_models: false
+                        });
+
+                        self.views.push(new_format_item);
+                    },
+                    error:function(obj, error){
+                        console.log("Error uploading file", obj);
+                        console.log("Error message:", error);
+                        console.trace();
+                    }
+                });
+            },
+            error:function(obj, error){
+                console.log("Error uploading file", obj);
+                console.log("Error message:", error);
+                console.trace();
+            }
         });
 
-        fileModel.set({
-            file_size : new_file_data.data.size,
-            contentnode: node.id
-        });
 
-        var new_format_item = new FormatItem({
-            el:  $(file.previewTemplate),
-            model: node,
-            default_file: fileModel,
-            containing_list_view : this,
-            thumbnail: $(file.previewTemplate).find(".thumbnail_img").attr("src"),
-            presets : presets,
-            initial:true,
-            inline:false,
-            update_models: false
-        });
-
-        this.views.push(new_format_item);
     },
     file_failed:function(file, error){
         $(file.previewTemplate).find(".dropzone_remove").css("display", "inline-block");
@@ -591,20 +609,27 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         if(this.file){
             this.remove_item(null);
         }
+        var self = this;
         this.file = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
-        this.file.fetch({async:false});
-
-        this.file.set({
-            file_size : file.size,
-            contentnode: this.model.get("id"),
-            preset : this.preset.get("id")
+        this.file.fetch({
+            success:function(file_model){
+                self.file.set({
+                    file_size : file.size,
+                    contentnode: self.model.get("id"),
+                    preset : self.preset.get("id")
+                });
+                self.preset.attached_format = self.file;
+                self.container.set_model();
+                self.render();
+                self.container.update_size();
+                self.container.update_count();
+            },
+            error:function(obj, error){
+                console.log("Error uploading file", obj);
+                console.log("Error message:", error);
+                console.trace();
+            }
         });
-        this.preset.attached_format = this.file;
-        this.container.set_model();
-        this.render();
-        this.container.update_size();
-        this.container.update_count();
-
     },
     file_added: function(file) {
         if(this.file){

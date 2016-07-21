@@ -72,22 +72,32 @@ var AddContentView = BaseViews.BaseListView.extend({
         }
     },
     add_topic:function(){
-        var topic = this.collection.create({
+        var self = this;
+        this.collection.create({
             "kind":"topic",
             "title": (this.counter > 0)? "Topic " + this.counter : "Topic",
             "sort_order" : this.main_collection.length + this.collection.length
-        }, {async:false});
-        topic.set({
-            "original_node" : topic.get("id"),
-            "cloned_source" : topic.get("id")
+        }, {
+            success:function(topic){
+                topic.set({
+                    "original_node" : topic.get("id"),
+                    "cloned_source" : topic.get("id")
+                });
+                self.counter++;
+                var item_view = new NodeListItem({
+                    containing_list_view: self,
+                    model: topic
+                });
+                $("#upload_content_add_list").append(item_view.el);
+                self.views.push(item_view);
+            },
+            error:function(obj, error){
+                console.log("Error creating topic", obj);
+                console.log("Error message:", error);
+                console.trace();
+            }
         });
-        this.counter++;
-        var item_view = new NodeListItem({
-            containing_list_view: this,
-            model: topic
-        });
-        $("#upload_content_add_list").append(item_view.el);
-        this.views.push(item_view);
+
     },
     edit_metadata: function(){
         if(this.modal){
@@ -298,24 +308,29 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
 
             if(!self.errorsFound){
                 self.$el.css("visibility", "hidden");
-                self.display_load("Saving Content...", function(){
-                    self.save_nodes(function(){
-                        if(!self.errorsFound){
-                            $(".uploaded").css("background-color", "white");
-                            self.$el.find("#title_error").html("");
-                            self.$el.find("#description_error").html("");
-                            if(self.multiple_selected){
-                                self.gray_out(true);
+                self.display_load("Saving Content...", function(resolve, reject){
+                    try{
+                        self.save_nodes(function(){
+                            if(!self.errorsFound){
+                                $(".uploaded").css("background-color", "white");
+                                self.$el.find("#title_error").html("");
+                                self.$el.find("#description_error").html("");
+                                if(self.multiple_selected){
+                                    self.gray_out(true);
+                                }
                             }
-                        }
-                        if(!self.errorsFound && (self.allow_add || self.new_topic)){
-                            self.parent_view.add_nodes(self.collection, self.parent_view.model.get("metadata").max_sort_order);
-                        }
-                        self.$el.css("visibility", "visible");
-                        if(callback){
-                            callback();
-                        }
-                    });
+                            if(!self.errorsFound && (self.allow_add || self.new_topic)){
+                                self.parent_view.add_nodes(self.collection, self.parent_view.model.get("metadata").max_sort_order);
+                            }
+                            self.$el.css("visibility", "visible");
+                            if(callback){
+                                callback();
+                            }
+                            resolve("Success!");
+                        });
+                    }catch(error){
+                        reject(error);
+                    }
                 });
             }
 
@@ -778,16 +793,16 @@ var UploadedItem = ContentItem.extend({
         this.delete_item();
     },
     set_edited:function(edited){
-        this.edited = edited;
         this.model.set("changed", true);
         if(edited){
             this.set_node();
             this.containing_list_view.enqueue(this);
         }
         $("#item_" + this.model.cid + " .item_name").text(this.model.get("title"));
-        if(edited){
+        if(edited && !this.edited){
             $("#item_" + this.model.cid + " h5").before("<b class='pull-left'>*</b>");
         }
+        this.edited = edited;
     },
     set_node:function(){
         if(!this.containing_list_view.multiple_selected){
@@ -800,8 +815,18 @@ var UploadedItem = ContentItem.extend({
         }
     },
     unset_node:function(){
-        this.save(this.originalData, {async:false, validate:false});
-        this.format_view.unset_model();
+        var self = this;
+        this.save(this.originalData, {
+            success:function(){
+                self.format_view.unset_model();
+            },
+            error:function(obj, error){
+                console.log("Error undoing changes", obj);
+                console.log("Error message:", error);
+                console.trace();
+            }
+        });
+
     },
     add_tag:function(tagname){
         if(this.tags.indexOf(tagname) < 0){

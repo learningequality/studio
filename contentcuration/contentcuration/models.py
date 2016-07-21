@@ -153,8 +153,12 @@ class Channel(models.Model):
         if not self.main_tree:
             self.main_tree = ContentNode.objects.create(title=self.name + " main root", kind_id="topic", sort_order=0)
             self.main_tree.save()
+            self.save()
+        if not self.clipboard_tree:
             self.clipboard_tree = ContentNode.objects.create(title=self.name + " clipboard root", kind_id="topic", sort_order=0)
             self.clipboard_tree.save()
+            self.save()
+        if not self.trash_tree:
             self.trash_tree = ContentNode.objects.create(title=self.name + " trash root", kind_id="topic", sort_order=0)
             self.trash_tree.save()
             self.save()

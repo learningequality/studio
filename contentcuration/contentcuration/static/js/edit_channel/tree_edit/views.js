@@ -28,7 +28,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	},
 	render: function() {
 		var self=this;
-		this.display_load("Loading Content...", function(){
+		this.display_load("Loading Content...", function(resolve, reject){
 			self.$el.html(self.template({
 				edit: self.is_edit_page,
 				channel : window.current_channel.toJSON(),
@@ -58,6 +58,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 				current_channel: window.current_channel.toJSON()
 			}));
 			self.handle_checked();
+			resolve("Success!");
 		});
 
 	},
@@ -110,25 +111,36 @@ var TreeEditView = BaseViews.BaseView.extend({
 	delete_content: function (event){
 		if(confirm("Are you sure you want to delete these selected items?")){
 			var self = this;
-			this.display_load("Deleting Content...", function(){
-				for(var i = 0; i < self.containers.length; i++){
-					if(self.containers[i].delete_selected()){
-						self.remove_containers_from(self.containers[i].index);
-						break;
+			this.display_load("Deleting Content...", function(resolve, reject){
+				try{
+					for(var i = 0; i < self.containers.length; i++){
+						if(self.containers[i].delete_selected()){
+							self.remove_containers_from(self.containers[i].index);
+							break;
+						}
 					}
+					resolve("Success!");
+				}catch(error){
+					reject(error);
 				}
-			});
 
+			});
 		}
 	},
 	copy_content: function(event){
 		var self = this;
-		this.display_load("Copying Content...", function(){
-			for(var i = 0; i < self.containers.length; i++){
-				if(self.containers[i].copy_selected()){
-					break;
+		this.display_load("Copying Content...", function(resolve, reject){
+			try{
+				for(var i = 0; i < self.containers.length; i++){
+					if(self.containers[i].copy_selected()){
+						break;
+					}
 				}
+				resolve("Success!");
+			}catch(error){
+				reject(error);
 			}
+
 		});
 	},
 	edit_content: function(event){
@@ -189,25 +201,34 @@ var ContentList = BaseViews.BaseListView.extend({
 
 	},
 	render: function() {
+		var self = this;
 		DragHelper.removeDragDrop(this);
-		this.model.fetch({async:false});
-		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
-		this.childrenCollection.sort_by_order();
-		this.$el.html(this.template({
-			topic: this.model,
-			title: (this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name"),
-			edit_mode: this.edit_mode,
-			index: this.index,
-			content_list: this.childrenCollection.toJSON()
-		}));
-		this.load_content();
-		this.$el.data("container", this);
-		this.$el.find("ul").data("list", this);
-		this.$el.find(".default-item").data("data", {
-			containing_list_view: this,
-			index:0
+		this.model.fetch({
+			success:function(model){
+				self.childrenCollection = self.collection.get_all_fetch(self.model.get("children"));
+				self.childrenCollection.sort_by_order();
+				self.$el.html(self.template({
+					topic: self.model,
+					title: (self.model.get("parent"))? self.model.get("title") : window.current_channel.get("name"),
+					edit_mode: self.edit_mode,
+					index: self.index,
+					content_list: self.childrenCollection.toJSON()
+				}));
+				self.load_content();
+				self.$el.data("container", self);
+				self.$el.find("ul").data("list", self);
+				self.$el.find(".default-item").data("data", {
+					containing_list_view: self,
+					index:0
+				});
+				DragHelper.addDragDrop(self);
+			},
+			error:function(obj, error){
+				console.log("Error loading content", obj);
+                console.log("Error message:", error);
+                console.trace();
+			}
 		});
-		DragHelper.addDragDrop(this);
 	},
 
 	events: {
@@ -251,7 +272,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	add_to_trash:function(collection){
 		var self = this;
 		this.container.add_to_trash(collection);
-		this.model.fetch({async:false});
+		this.model.fetch();
 	},
 	add_to_clipboard:function(collection){
 		this.container.add_to_clipboard(collection);
@@ -262,13 +283,34 @@ var ContentList = BaseViews.BaseListView.extend({
 			self.container.remove_containers_from(self.index - 1);
 		});
 	},
-	handle_transfer_drop:function(transfer, sort_order){
+	handle_transfer_drop:function(transfer, sort_order, callback){
+		var self = this;
     	transfer.model.save({
 			parent: this.model.id,
 			sort_order:sort_order,
 			changed:true
-		}, {async:false, validate:false});
-		transfer.$el.removeClass("current_topic");
+		}, {
+			success:function(dropped){
+				transfer.$el.removeClass("current_topic");
+				var file_view = new ContentItem({
+					model: dropped,
+					edit_mode: self.edit_mode,
+					containing_list_view:self,
+					allow_edit: false,
+					index : self.list_index++
+				});
+				transfer.$el.after(file_view.el);
+				transfer.$el.remove();
+				self.views.push(file_view);
+				callback();
+			},
+			error:function(obj, error){
+				console.log("Error moving content", obj);
+                console.log("Error message:", error);
+                console.trace();
+                callback();
+			}
+		});
     },
     update_name:function(container_name){
     	this.$el.find(".container-title").text(container_name);
@@ -307,12 +349,17 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 			this.$el.find("label").addClass("hidden_details");
 	},
 	reload:function(){
-		this.model.fetch({async:false});
-		this.render();
-		if(this.$el.hasClass("current_topic")){
-			this.sub_content_list.update_name(this.model.get("title"));
-		}
-		this.containing_list_view.container.handle_checked();
+		var self = this;
+		this.model.fetch({
+			success:function(model){
+				self.render();
+				if(self.$el.hasClass("current_topic")){
+					self.sub_content_list.update_name(model.get("title"));
+				}
+				self.containing_list_view.container.handle_checked();
+			}
+		});
+
 	},
 	events: {
 		'click .edit_folder_button': 'edit_folder',
@@ -397,16 +444,6 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 				el : $("#dialog")
 			});
 		}
-
-
-	},
-	publish:function(){
-		var self = this;
-		this.display_load("Publishing Content...", function(){
-			self.save({"changed": false},{validate:false});
-			self.render();
-		});
-
 	},
 	add_to_trash:function(){
 		this.containing_list_view.add_to_trash([this]);

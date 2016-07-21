@@ -7,7 +7,6 @@ function send_mail(channel, email, callback){
     method:"POST",
       url: window.Urls.send_invitation_email(),
       data:  JSON.stringify(data),
-      async: false,
       success:function(data){
         callback(JSON.parse(data).invitation_id);
       }

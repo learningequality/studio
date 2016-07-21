@@ -42,16 +42,24 @@ var ShareView = BaseViews.BaseListView.extend({
         this.container = options.container;
         this.current_user = options.current_user;
         this.originalData = this.model.toJSON();
-        this.model.fetch({async:false});
-        this.editor_list = this.model.get("editors");
-        this.editor_list.splice(this.editor_list.indexOf(this.current_user.id), 1);
-        this.collection = new Models.UserCollection();
-        this.collection.get_all_fetch(this.editor_list);
+        var self = this;
+        this.model.fetch({
+            success:function(user){
+                self.editor_list = user.get("editors");
+                self.editor_list.splice(self.editor_list.indexOf(self.current_user.id), 1);
+                self.collection = new Models.UserCollection();
+                self.collection.get_all_fetch(self.editor_list);
+                self.pending_collection = new Models.InvitationCollection();
+                self.pending_collection.get_all_fetch(self.model.get("pending_editors"));
+                self.render();
+            },
+            error:function(obj, error){
+                console.log("Error loading user", obj);
+                console.log("Error message:", error);
+                console.trace();
+            }
+        });
 
-        this.pending_collection = new Models.InvitationCollection();
-        this.pending_collection.get_all_fetch(this.model.get("pending_editors"));
-
-        this.render();
     },
     events:{
         'keypress #share_email_address' : 'send_invite',
@@ -94,7 +102,10 @@ var ShareView = BaseViews.BaseListView.extend({
             this.$(".share_list_item").removeClass("error_share_list_item");
             this.$("#share_error").text("");
             var result;
-            if(result = this.collection.findWhere({"email": email})){
+            if(result = (this.current_user.email===email)? this.current_user : null){
+                this.$("#share_error").text("You already have editing permission for this channel.");
+                this.$("#share_item_" + result.id).addClass("error_share_list_item");
+            }else if(result = this.collection.findWhere({"email": email})){
                 this.$("#share_error").text("This person already has editing permission.");
                 this.$("#share_item_" + result.get("id")).addClass("error_share_list_item");
                 $('#editor_list_wrapper').animate({
@@ -122,31 +133,49 @@ var ShareView = BaseViews.BaseListView.extend({
         var self = this;
         user.send_invitation_email(email, this.model, function(invitation_id){
             var invitation = new Models.InvitationModel({id:invitation_id});
-            invitation.fetch({async:false});
+            invitation.fetch({
+                success:function(invite){
+                    self.add_to_pending_collection(invite, function(){
+                        self.$("#share_invite_button").val("Invite");
+                        self.$("#share_item_" + invite.get("id")).addClass("added_to_list");
+                        self.$("#share_item_" + invite.get("id") + " .pending_indicator").text("Invitation Sent!");
+                        $('#editor_list_wrapper').animate({
+                            scrollTop : self.$("#share_item_" + invite.get("id")).position().top,
+                        }, 100);
+                        setTimeout(function(){
+                            $("#share_item_" + invite.get("id")).animate({"background-color" : "transparent"}, 500);
+                            $("#share_item_" + invite.get("id")).removeClass("added_to_list");
+                        }, 2500);
+                   });
+                },
+                error:function(obj, error){
+                    console.log("Error sending invitation", obj);
+                    console.log("Error message:", error);
+                    console.trace();
+                }
+            });
 
-            self.add_to_pending_collection(invitation, function(){
-                self.$("#share_invite_button").val("Invite");
-                self.$("#share_item_" + invitation.get("id")).addClass("added_to_list");
-                self.$("#share_item_" + invitation.get("id") + " .pending_indicator").text("Invitation Sent!");
-                $('#editor_list_wrapper').animate({
-                    scrollTop : self.$("#share_item_" + invitation.get("id")).position().top,
-                }, 100);
-                setTimeout(function(){
-                    $("#share_item_" + invitation.get("id")).animate({"background-color" : "transparent"}, 500);
-                    $("#share_item_" + invitation.get("id")).removeClass("added_to_list");
-                }, 2500);
-           });
+
         });
     },
     add_to_pending_collection:function(user, callback){
         var self = this;
-        this.model.fetch({async:false});
-        this.pending_collection.forEach(function(editor){
-            self.$("#share_item_" + editor.get("id")).data("data").remove();
+        this.model.fetch({
+            success:function(){
+                self.pending_collection.forEach(function(editor){
+                    self.$("#share_item_" + editor.get("id")).data("data").remove();
+                });
+                self.pending_collection = self.pending_collection.get_all_fetch(self.model.get("pending_editors"));
+                self.load_collection(self.pending_collection, true);
+                callback();
+            },
+            error:function(obj, error){
+                console.log("Error adding user", obj);
+                console.log("Error message:", error);
+                console.trace();
+            }
         });
-        this.pending_collection = this.pending_collection.get_all_fetch(this.model.get("pending_editors"));
-        this.load_collection(this.pending_collection, true);
-        callback();
+
     },
     remove_editor:function(editor){
         this.collection.remove(editor);
@@ -161,7 +190,6 @@ var ShareView = BaseViews.BaseListView.extend({
             "editors": this.collection.pluck("id"),
             "public": this.$("#share_public_channel").is(':checked')
         }, {
-            async:false,
             success:function(){
                 self.$("#share_change_indicator").text("Changes Saved");
                 if(show_indicator){
@@ -215,7 +243,6 @@ var ShareItem = BaseViews.BaseListItemView.extend({
             if(confirm("Are you sure you want to uninvite " + this.model.get("email") + "?")){
                 this.model.destroy();
                 this.remove();
-                this.containing_list_view.model.fetch({async:false});
             }
         }else{
             if(confirm("Are you sure you want to remove " + this.model.get("first_name") + " " + this.model.get("last_name") + " from the list?")){

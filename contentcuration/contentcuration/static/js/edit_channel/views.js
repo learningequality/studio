@@ -65,8 +65,16 @@ var BaseView = Backbone.View.extend({
         if(callback){
     		setTimeout(function(){
     			try{
-    				callback();
-    				$("#loading_modal").remove();
+    				var promise = new Promise(function(resolve, reject){
+						callback(resolve, reject);
+    				});
+    				promise.then(function(){
+    					$("#loading_modal").remove();
+    				}).catch(function(error){
+    					$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+    					console.log("Error with asychronous call", error);
+                		console.trace();
+    				});
     			}catch(err){
     				$("#kolibri_load_text").text(err + ". Please refresh the page");
     			}
@@ -156,8 +164,10 @@ BaseListView = BaseView.extend({
 		for(var i = 0; i < list.length; i++){
 			copyCollection.add($(list[i]).data("data").model);//.duplicate(clipboard_root, null);
 		}
-		var copiedCollection = copyCollection.duplicate(clipboard_root, null);
-		this.add_to_clipboard(copiedCollection);
+		var self = this;
+		copyCollection.duplicate(clipboard_root, null, function(copiedCollection){
+			self.add_to_clipboard(copiedCollection);
+		});
 		return this.$el.find(".current_topic input:checked").length != 0;
 	},
 	delete_selected:function(){
@@ -178,18 +188,32 @@ BaseListView = BaseView.extend({
 			var new_sort_order = this.get_new_sort_order(transfer, target);
 			if(this.model.id != transfer.model.get("parent")){
 				var old_parent = transfer.containing_list_view.model;
-				this.handle_transfer_drop(transfer, new_sort_order);
-				transfer.containing_list_view.render();
-				var reload_collection = new Models.ContentNodeCollection();
-				reload_collection.add([old_parent, this.model]);
-				this.reload_listed(reload_collection);
+				var self = this;
+				transfer.$el.html(transfer.$el.find(">label").html(transfer.$el.find(">label .title"))).addClass("loading_placeholder_item");
+				this.handle_transfer_drop(transfer, new_sort_order, function(){
+					// transfer.containing_list_view.render();
+					// self.render();
+					var reload_collection = new Models.ContentNodeCollection();
+					reload_collection.add([old_parent, transfer.model]);
+					self.reload_listed(reload_collection);
+
+				});
 			}else{
+				var self = this;
 				transfer.model.save({
 					sort_order:new_sort_order,
 					changed:true
-				}, {async:false, validate:false});
+				}, {
+					success:function(){
+						// self.render();
+					},
+					error:function(obj, error){
+						console.log("Error moving content", obj);
+		                console.log("Error message:", error);
+		                console.trace();
+					}
+				});
 			}
-			this.render();
 		}catch(err){
 			alert("Error dropping content:", err);
 		}
@@ -243,29 +267,37 @@ BaseListView = BaseView.extend({
 	},
 	add_topic: function(event){
 		var UploaderViews = require("edit_channel/uploader/views");
+		var self = this;
 		var new_topic = this.collection.create({
             "kind":"topic",
             "title": "Topic",
             "sort_order" : this.collection.length,
             "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
-        }, {async:false});
-        new_topic.set({
-            "original_node" : new_topic.get("id"),
-            "cloned_source" : new_topic.get("id")
-        });
+        }, {
+        	success:function(new_topic){
+        		new_topic.set({
+		            "original_node" : new_topic.get("id"),
+		            "cloned_source" : new_topic.get("id")
+		        });
+		        var edit_collection = new Models.ContentNodeCollection(new_topic);
+		        $("#main-content-area").append("<div id='dialog'></div>");
 
-        var edit_collection = new Models.ContentNodeCollection(new_topic);
-        $("#main-content-area").append("<div id='dialog'></div>");
-
-        var metadata_view = new UploaderViews.EditMetadataView({
-            el : $("#dialog"),
-            collection: edit_collection,
-            parent_view: this,
-            model: new_topic,
-            allow_add: false,
-            new_topic: true,
-            main_collection : this.collection,
-            modal: true
+		        var metadata_view = new UploaderViews.EditMetadataView({
+		            el : $("#dialog"),
+		            collection: edit_collection,
+		            parent_view: self,
+		            model: new_topic,
+		            allow_add: false,
+		            new_topic: true,
+		            main_collection : self.collection,
+		            modal: true
+		        });
+        	},
+        	error:function(obj, error){
+        		console.log("Error creating topic", obj);
+                console.log("Error message:", error);
+                console.trace();
+        	}
         });
 	},
 	import_content:function(){
@@ -362,14 +394,14 @@ var BaseListChannelItemView = BaseListItemView.extend({
 		if(!this.model){
     		this.delete_view();
 	    }else{
-	    	this.model.save({"deleted":true}, {async:false});
+	    	this.model.save({"deleted":true});
 	    	this.delete_view();
 	    }
 	},
 	save: function(data, options){
     	if(!this.model){
     		this.model = new Models.ChannelModel(data);
-    		this.containing_list_view.collection.create_channel(this.model);
+    		this.containing_list_view.collection.create(this.model, options);
     	}else{
     		this.model.save(data, options);
     	}

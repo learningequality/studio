@@ -19,11 +19,11 @@ ChannelEditRouter  = Backbone.Router.extend({
 		this.channelCollection = new Models.ChannelCollection(window.channels);
 
 		this.fileformats = new Models.FileFormatCollection(window.fformats);
-		this.fileformats.fetch({async:false, cache:true});
+		this.fileformats.fetch({cache:true});
 		this.formatpresets = new Models.FormatPresetCollection(window.presets);
-		this.formatpresets.fetch({async:false, cache:true});
+		this.formatpresets.fetch({cache:true});
 		this.contentkinds = new Models.ContentKindCollection(window.kinds);
-		this.contentkinds.fetch({async:false, cache:true});
+		this.contentkinds.fetch({cache:true});
     },
 
     routes: {

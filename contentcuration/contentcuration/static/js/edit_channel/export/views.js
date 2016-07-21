@@ -40,10 +40,16 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     },
     publish:function(){
         var self = this;
-        this.display_load("Publishing...", function(){
+        this.display_load("Publishing...", function(resolve, reject){
             window.current_channel.publish(function(){
-                self.callback();
-                self.close_exporter();
+                try{
+                   self.callback();
+                    self.close_exporter();
+                    resolve("Success!");
+                }catch(error){
+                    reject(error);
+                }
+
             });
 
         });

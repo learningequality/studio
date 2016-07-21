@@ -11,7 +11,7 @@ function addDragDrop(element){
 		group: 'sortable_list',
 	  	connectWith: '.content-list',
 	  	exclude: '.current_topic, .default-item, #preview li',
-	  	delay:100,
+	  	delay:50,
 	  	revert:true,
 	 	// animation on drop
 	 	/*
@@ -44,6 +44,7 @@ function addDragDrop(element){
 				$clonedItem.detach();
 				_super($item, container);
 			});
+
 			if(target.data("data"))
 				target.data("data").containing_list_view.drop_in_container(window.transfer_data, target);
 			else if(target.data("list"))
