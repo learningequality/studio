@@ -104,6 +104,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 		container_view.$el.animate({
 			'margin-left' : "0px"
 		}, 500);
+		return container_view;
 	},
 
 	delete_content: function (event){
@@ -176,7 +177,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 	className: "container content-container",
 	initialize: function(options) {
-		_.bindAll(this, 'add_topic','import_content','close_container','import_nodes','add_topic', 'add_files','handle_transfer_drop');
+		_.bindAll(this, 'add_topic','import_content','close_container','import_nodes','add_topic', 'add_files','handle_transfer_drop','update_name');
 		this.index = options.index;
 		this.lock = true;
 		this.edit_mode = options.edit_mode;
@@ -238,7 +239,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 	add_container:function(view){
 		this.current_node = view.model.id;
-		this.container.add_container(this.index, view.model);
+		return this.container.add_container(this.index, view.model);
 	},
 
 	/* Resets folders to initial state */
@@ -268,6 +269,9 @@ var ContentList = BaseViews.BaseListView.extend({
 			changed:true
 		}, {async:false, validate:false});
 		transfer.$el.removeClass("current_topic");
+    },
+    update_name:function(container_name){
+    	this.$el.find(".container-title").text(container_name);
     }
 });
 
@@ -305,6 +309,9 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	reload:function(){
 		this.model.fetch({async:false});
 		this.render();
+		if(this.$el.hasClass("current_topic")){
+			this.sub_content_list.update_name(this.model.get("title"));
+		}
 		this.containing_list_view.container.handle_checked();
 	},
 	events: {
@@ -322,7 +329,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		event.preventDefault();
 		event.stopPropagation();
 		this.containing_list_view.close_folders();
-		this.containing_list_view.add_container(this);
+		this.sub_content_list = this.containing_list_view.add_container(this);
 		this.set_opened(true);
 	},
 	cancel_open_folder:function(event){

@@ -786,7 +786,7 @@ var UploadedItem = ContentItem.extend({
         }
         $("#item_" + this.model.cid + " .item_name").text(this.model.get("title"));
         if(edited){
-            $("#item_" + this.model.cid + " .item_name").after(" <b>*</b>");
+            $("#item_" + this.model.cid + " h5").before("<b class='pull-left'>*</b>");
         }
     },
     set_node:function(){
