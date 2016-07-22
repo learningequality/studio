@@ -1,5 +1,5 @@
+{{#if add_controls}}
 <div class="wrapper"> <!-- used for dragging/dropping -->
-	{{#if add_controls}}
 	<!--<input type="text" placeholder="Find in Queue... (under construction)" class="search_queue construction"/>
 	<div class="sort_box">
 		<label for="sort_queue">Sort by</label>
@@ -73,13 +73,12 @@
 		<div class="queue-list-wrapper">
 	{{/if}}
 			<ul class="list-unstyled content-list" id="list_for_{{id}}">
-				{{#unless content_list}}
+				<!-- {{#unless content_list}} -->
 					<li class="default-item"><h5>No items found.</h5></li>
-				{{/unless}}
+				<!-- {{/unless}} -->
 			</ul>
 	{{#if add_controls}}
 			</div>
 		</div>
-
-	{{/if}}
 </div>
+{{/if}}

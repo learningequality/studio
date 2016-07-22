@@ -211,6 +211,11 @@ class ContentNode(MPTTModel, models.Model):
 
     changed = models.BooleanField(default=True)
 
+    def save(self, *args, **kwargs):
+        print "CALLED FIRST"
+        super(ContentNode, self).save(*args, **kwargs)
+        print "CALLED SECOND"
+
     class MPTTMeta:
         order_insertion_by = ['sort_order']
 

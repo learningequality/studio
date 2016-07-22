@@ -13,13 +13,4 @@
 		<h4><div class="queue_item_title title truncate" title="{{node.attributes.title}}">{{node.attributes.title}}</div>{{#if isfolder}}<div class="badge clipboard-topic-count">{{node.attributes.metadata.resource_count}}</div>{{/if}}</h4>
 	{{/if}}
 </label>
-{{#if isfolder}}<div id="{{node.id}}_sub" class="subdirectory">
-	<ul class="list-unstyled content-list">
-		{{#each sub_list}}
-			<li id="{{this}}" class="queue_item"></li>
-		{{else}}
-			<li><em>No items found.</em></li>
-		{{/each}}
-	</ul>
-	</div>
-{{/if}}
+{{#if isfolder}}<div id="{{node.id}}_sub" class="subdirectory wrapper"></div>{{/if}}

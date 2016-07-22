@@ -183,13 +183,15 @@ var ContentList = BaseViews.BaseListView.extend({
 	template: require("./hbtemplates/content_container.handlebars"),
 	current_node : null,
 	tagName: "li",
+	item_class:"content",
 	indent: 0,
 	'id': function() {
 		return "container_" + this.model.get("id");
 	},
 	className: "container content-container",
 	initialize: function(options) {
-		_.bindAll(this, 'add_topic','import_content','close_container','import_nodes','add_topic', 'add_files','handle_transfer_drop','update_name');
+		_.bindAll(this, 'add_topic','import_content','close_container','import_nodes','add_topic', 'create_new_item',
+						'add_files','handle_transfer_drop','update_name','check_number_of_items_in_list');
 		this.index = options.index;
 		this.lock = true;
 		this.edit_mode = options.edit_mode;
@@ -221,6 +223,7 @@ var ContentList = BaseViews.BaseListView.extend({
 					containing_list_view: self,
 					index:0
 				});
+
 				DragHelper.addDragDrop(self);
 			},
 			error:function(obj, error){
@@ -257,6 +260,7 @@ var ContentList = BaseViews.BaseListView.extend({
 				file_view.set_opened(true, false);
 			self.views.push(file_view);
 		});
+		self.check_number_of_items_in_list();
 	},
 	add_container:function(view){
 		this.current_node = view.model.id;
@@ -283,37 +287,21 @@ var ContentList = BaseViews.BaseListView.extend({
 			self.container.remove_containers_from(self.index - 1);
 		});
 	},
-	handle_transfer_drop:function(transfer, sort_order, callback){
-		var self = this;
-    	transfer.model.save({
-			parent: this.model.id,
-			sort_order:sort_order,
-			changed:true
-		}, {
-			success:function(dropped){
-				transfer.$el.removeClass("current_topic");
-				var file_view = new ContentItem({
-					model: dropped,
-					edit_mode: self.edit_mode,
-					containing_list_view:self,
-					allow_edit: false,
-					index : self.list_index++
-				});
-				transfer.$el.after(file_view.el);
-				transfer.$el.remove();
-				self.views.push(file_view);
-				callback();
-			},
-			error:function(obj, error){
-				console.log("Error moving content", obj);
-                console.log("Error message:", error);
-                console.trace();
-                callback();
-			}
-		});
-    },
+
     update_name:function(container_name){
     	this.$el.find(".container-title").text(container_name);
+    },
+    check_number_of_items_in_list:function(){
+    	this.$el.find(".default-item").css("display", (this.views.length === 0) ? "block" : "none");
+    },
+    create_new_item:function(model){
+    	return new ContentItem({
+					model: model,
+					edit_mode: this.edit_mode,
+					containing_list_view:this,
+					allow_edit: false,
+					index : this.list_index++
+				});
     }
 });
 

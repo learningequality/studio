@@ -182,21 +182,24 @@ BaseListView = BaseView.extend({
 		this.add_to_trash(deleteCollection);
 		return stopLoop;
 	},
-	drop_in_container:function(transfer, target){
+	drop_in_container:function(transfer, target, resolve, reject){
 		try{
 			/*Set model's parent*/
 			var new_sort_order = this.get_new_sort_order(transfer, target);
 			if(this.model.id != transfer.model.get("parent")){
 				var old_parent = transfer.containing_list_view.model;
+				var old_container = transfer.containing_list_view;
 				var self = this;
 				transfer.$el.html(transfer.$el.find(">label").html(transfer.$el.find(">label .title"))).addClass("loading_placeholder_item");
 				this.handle_transfer_drop(transfer, new_sort_order, function(){
-					// transfer.containing_list_view.render();
-					// self.render();
+					transfer.containing_list_view.assign_indices();
+					self.assign_indices();
 					var reload_collection = new Models.ContentNodeCollection();
-					reload_collection.add([old_parent, transfer.model]);
+					reload_collection.add([old_parent, self.model, transfer.model]);
+					console.log("OLD PARENT",old_parent)
 					self.reload_listed(reload_collection);
-
+					transfer.remove();
+					resolve({"list1":self, "list2":old_container});
 				});
 			}else{
 				var self = this;
@@ -206,6 +209,7 @@ BaseListView = BaseView.extend({
 				}, {
 					success:function(){
 						// self.render();
+						self.assign_indices();
 					},
 					error:function(obj, error){
 						console.log("Error moving content", obj);
@@ -215,7 +219,7 @@ BaseListView = BaseView.extend({
 				});
 			}
 		}catch(err){
-			alert("Error dropping content:", err);
+			// reject(err);
 		}
 	},
 	get_new_sort_order: function(transfer, target){
@@ -319,8 +323,50 @@ BaseListView = BaseView.extend({
             model:this.model
     	})
     },
-    handle_transfer_drop:function(transfer, sort_order){
-    	/*To override in subclasses*/
+    assign_indices:function(){
+    	var self = this;
+    	this.views = [];
+    	this.$el.find("." + this.item_class).each(function(index, item){
+    		var view = $(item).data("data");
+    		view.index = index;
+    		self.views.push(view);
+    		self.list_index = index + 1;
+    	});
+    },
+    handle_transfer_drop:function(transfer, sort_order, callback){
+    	var DragHelper = require("edit_channel/utils/drag_drop");
+		/* Implementation for copying nodes on drop*/
+		// transfer.model.duplicate(this.model, sort_order, function(){
+			// transfer.reload();
+			//callback();
+		// });
+		DragHelper.removeDragDrop(transfer.containing_list_view);
+    	DragHelper.removeDragDrop(this);
+
+		var self = this;
+    	transfer.model.save({
+			parent: this.model.id,
+			sort_order:sort_order,
+			changed:true
+		}, {
+			success:function(dropped){
+				transfer.$el.removeClass("current_topic");
+				var item_view = self.create_new_item(dropped);
+				transfer.$el.after(item_view.el);
+				transfer.$el.remove();
+				self.views.push(item_view);
+				transfer.containing_list_view.remove_view(transfer);
+				transfer.containing_list_view.check_number_of_items_in_list();
+				self.check_number_of_items_in_list();
+				callback();
+			},
+			error:function(obj, error){
+				console.log("Error moving content", obj);
+                console.log("Error message:", error);
+                console.trace();
+                callback();
+			}
+		});
     }
 });
 

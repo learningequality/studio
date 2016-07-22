@@ -101,6 +101,7 @@ var Queue = BaseViews.BaseView.extend({
 var QueueList = BaseViews.BaseListView.extend({
 	template: require("./hbtemplates/queue_list.handlebars"),
 	item_view:"queue",
+	item_class:"queue-item",
 	render: function() {
 		DragHelper.removeDragDrop(this);
 		var self = this;
@@ -116,10 +117,6 @@ var QueueList = BaseViews.BaseListView.extend({
 				}));
 
 				self.load_content();
-				if(self.add_controls){
-					$((self.is_clipboard)? ".queue-badge" : ".trash-badge").html(root.get("metadata").total_count);
-				}
-
 				self.$el.data("container", self);
 				self.$el.find("ul").data("list", self);
 				self.$el.find(".default-item").data("data", {
@@ -146,6 +143,7 @@ var QueueList = BaseViews.BaseListView.extend({
 			self.$el.find("#list_for_" + self.model.id).append(item_view.el);
 			self.views.push(item_view);
 		});
+		this.check_number_of_items_in_list();
 	},
 	check_all :function(){
 		this.$el.find(":checkbox").prop("checked", this.$el.find("#select_all_check_" + this.model.id).prop('checked'));
@@ -193,7 +191,23 @@ var QueueList = BaseViews.BaseListView.extend({
 	},
 	add_to_clipboard:function(collection){
 		this.container.add_to_clipboard(collection);
-	}
+	},
+	check_number_of_items_in_list:function(){
+		console.log(this.views);
+    	this.$(".default-item").css("display", (this.views.length === 0) ? "block" : "none");
+    	if(this.add_controls){
+			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("metadata").total_count);
+		}
+    },
+    create_new_item:function(model){
+    	return new QueueItem({
+					containing_list_view: this,
+					model:model,
+					index : this.list_index ++,
+					is_clipboard : this.is_clipboard,
+					container : this.container
+				});
+    }
 });
 
 var ClipboardList = QueueList.extend({
@@ -205,7 +219,8 @@ var ClipboardList = QueueList.extend({
 		//this.set_sort_orders(this.childrenCollection);
 		this.add_controls = options.add_controls;
 		this.container = options.container;
-		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_topic', 'import_content', 'import_nodes', 'add_files');
+		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_topic', 'import_content',
+					'create_new_item','import_nodes', 'add_files','check_number_of_items_in_list','render');
 		this.render();
 	},
 	events: {
@@ -224,42 +239,13 @@ var ClipboardList = QueueList.extend({
 			this.edit_selected();
 		}
 	},
-	handle_transfer_drop:function(transfer, sort_order, callback){
-		/* Implementation for copying nodes on drop*/
-		// transfer.model.duplicate(this.model, sort_order, function(){
-			// transfer.reload();
-			//callback();
-		// });
-
-
-		/* Implementation for moving nodes on drop */
-		var self = this;
-		transfer.model.save({
-			parent: this.model.id,
-			sort_order:sort_order,
-			changed:true
-		}, {
-			success:function(dropped){
-				var item_view = new QueueItem({
-					containing_list_view: self,
-					model:dropped,
-					index : self.list_index ++,
-					is_clipboard : self.is_clipboard,
-					container : self.container
-				});
-				transfer.$el.after(item_view.el);
-				transfer.$el.remove();
-				self.views.push(item_view);
-				callback();
-			},
-			error:function(obj, error){
-				console.log("Error moving content", obj);
-                console.log("Error message:", error);
-                console.trace();
-				callback();
-			}
-		});
-    }
+	// handle_transfer_drop:function(transfer, sort_order, callback){
+	// 	/* Implementation for copying nodes on drop*/
+	// 	// transfer.model.duplicate(this.model, sort_order, function(){
+	// 		// transfer.reload();
+	// 		//callback();
+	// 	// });
+ //    }
 });
 
 var TrashList = QueueList.extend({
@@ -271,7 +257,7 @@ var TrashList = QueueList.extend({
 		//this.set_sort_orders(this.childrenCollection);
 		this.add_controls = options.add_controls;
 		this.container = options.container;
-		_.bindAll(this, 'check_all', 'delete_items', 'move_trash');
+		_.bindAll(this, 'check_all', 'delete_items', 'move_trash','check_number_of_items_in_list');
 		this.render();
 	},
 	events: {
@@ -304,35 +290,7 @@ var TrashList = QueueList.extend({
 			});
 
 		}
-	},
-	handle_transfer_drop:function(transfer, sort_order, callback){
-		var self = this;
-    	transfer.model.save({
-			parent: this.model.id,
-			sort_order:sort_order,
-			changed:true
-		}, {
-			success:function(dropped){
-				var item_view = new QueueItem({
-					containing_list_view: self,
-					model:dropped,
-					index : self.list_index ++,
-					is_clipboard : self.is_clipboard,
-					container : self.container
-				});
-				transfer.$el.after(item_view.el);
-				transfer.$el.remove();
-				self.views.push(item_view);
-				callback();
-			},
-			error:function(obj, error){
-				console.log("Error moving content", obj);
-                console.log("Error message:", error);
-                console.trace();
-				callback();
-			}
-		});
-    }
+	}
 });
 
 /* Loaded when user clicks clipboard button below navigation bar */
@@ -343,7 +301,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		return this.model.get("id");
 	},
 	initialize: function(options) {
-		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item');
+		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item','render');
 		this.containing_list_view = options.containing_list_view;
 		this.allow_edit = false;
 		this.is_clipboard = options.is_clipboard;
@@ -416,13 +374,14 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	delete_content:function(){
 		event.stopPropagation();
 		event.preventDefault();
-		this.remove_item(true);
+		this.remove_item(true, null);
 	},
 	remove_item: function(prompt, resolve){
 		if((prompt && confirm("Are you sure you want to delete " + this.model.get("title") + "?")) || !prompt){
 			if(this.is_clipboard){
 				this.add_to_trash();
-				resolve("Success!");
+				if(resolve)
+					resolve("Success!");
 			}else{
 				var self = this;
 				this.model.destroy({
@@ -431,7 +390,8 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 						if(prompt){
 							self.containing_list_view.render();
 						}else{
-							resolve("Success!");
+							if(resolve)
+								resolve("Success!");
 						}
 					},
 					error:function(obj, error){

@@ -7,12 +7,15 @@ function addDragDrop(element){
 	var item_height = 0;
 	var target;
 	var isaboveclosest;
-	element.$el.find("ul.content-list").sortable({
+	element.$el.addClass("dropping-place");
+	element.$el.find(".content-list").sortable({
 		group: 'sortable_list',
 	  	connectWith: '.content-list',
 	  	exclude: '.current_topic, .default-item, #preview li',
-	  	delay:50,
+	  	delay:100,
 	  	revert:true,
+	  	distance:20,
+	  	tolerance:-10,
 	 	// animation on drop
 	 	/*
   		start: function(event,ui) {
@@ -45,10 +48,23 @@ function addDragDrop(element){
 				_super($item, container);
 			});
 
+			var target_container;
 			if(target.data("data"))
-				target.data("data").containing_list_view.drop_in_container(window.transfer_data, target);
+				target_container = target.data("data").containing_list_view;
 			else if(target.data("list"))
-				target.data("list").drop_in_container(window.transfer_data, target);
+				target_container = target.data("list");
+
+			var promise = new Promise(function(resolve, reject){
+				target_container.drop_in_container(window.transfer_data, target, resolve, reject);
+			});
+			promise.then(function(data){
+				addDragDrop(data.list1);
+				addDragDrop(data.list2);
+			})
+			.catch(function(error){
+				console.log("Error with asychronous call", error);
+        		console.trace();
+			});
 		},
 
 	    // set $item relative to cursor position*/
