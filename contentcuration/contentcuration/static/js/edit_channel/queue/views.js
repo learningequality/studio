@@ -195,8 +195,14 @@ var QueueList = BaseViews.BaseListView.extend({
 	check_number_of_items_in_list:function(){
 		console.log(this.views);
     	this.$(".default-item").css("display", (this.views.length === 0) ? "block" : "none");
+    	var self =this;
     	if(this.add_controls){
-			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("metadata").total_count);
+    		self.model.fetch({
+    			success:function(root){
+    				$((self.is_clipboard)? ".queue-badge" : ".trash-badge").html(root.get("metadata").total_count);
+    			}
+    		})
+
 		}
     },
     create_new_item:function(model){

@@ -70,7 +70,13 @@ function addDragDrop(element){
 	    // set $item relative to cursor position*/
 		onDragStart: function ($item, container, _super) {
 			window.transfer_data = $item.data("data");
-			$item.css("z-index", "99999999999999999999");
+			$item.css({
+				"position" : "absolute",
+				"z-index" : "999999999999",
+				"opacity" : "0.7",
+				"padding-left" : "5px"
+			});
+			$item.find("input").css("display", "none");
 			var offset = $item.offset(),
 			pointer = container.rootGroup.pointer;
 			adjustment = {

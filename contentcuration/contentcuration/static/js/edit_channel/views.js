@@ -196,7 +196,6 @@ BaseListView = BaseView.extend({
 					self.assign_indices();
 					var reload_collection = new Models.ContentNodeCollection();
 					reload_collection.add([old_parent, self.model, transfer.model]);
-					console.log("OLD PARENT",old_parent)
 					self.reload_listed(reload_collection);
 					transfer.remove();
 					resolve({"list1":self, "list2":old_container});
@@ -208,7 +207,7 @@ BaseListView = BaseView.extend({
 					changed:true
 				}, {
 					success:function(){
-						// self.render();
+						transfer.render();
 						self.assign_indices();
 					},
 					error:function(obj, error){
