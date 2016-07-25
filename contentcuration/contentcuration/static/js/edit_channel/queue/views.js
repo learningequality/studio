@@ -103,7 +103,7 @@ var QueueList = BaseViews.BaseListView.extend({
 	item_view:"queue",
 	item_class:"queue-item",
 	render: function() {
-		DragHelper.removeDragDrop(this);
+		// DragHelper.removeDragDrop(this);
 		var self = this;
 		this.model.fetch({
 			success:function(root){
@@ -123,7 +123,7 @@ var QueueList = BaseViews.BaseListView.extend({
 					containing_list_view: self,
 					index:0
 				});
-				DragHelper.addDragDrop(self);
+				// DragHelper.addDragDrop(self);
 			}
 		});
 

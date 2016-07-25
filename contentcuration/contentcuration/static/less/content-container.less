@@ -113,64 +113,6 @@
 		cusor:pointer;
 	}
 
-	#container-breadcrumb{
-		@breadcrumb-color: #BCD7D0;
-		@breadcrumb-active-color: #7BAEA9;
-		margin-top:20px;
-		background-color:transparent;
-		overflow: hidden;
-		li {
-			float: left;
-		}
-		li a{
-			color:gray;
-			text-decoration: none;
-			padding: 2px 0 2px 20px;
-			background: @breadcrumb-color;
-			border:1px solid white;
-			position: relative;
-			display: block;
-			float:left;
-			width:auto;
-		}
-		li a:after {
-			content: " ";
-			display: block;
-			width: 0;
-			height: 0;
-			border-top: 12px solid transparent;
-			border-bottom: 12px solid transparent;
-			border-left: 15px solid @breadcrumb-color;
-			position: absolute;
-			top: 50%;
-			margin-top: -12px;
-			left: 100%;
-			z-index: 2;
-		}
-		li a:before {
-			content: " ";
-			display: block;
-			width: 0;
-			height: 0;
-			border-top: 12px solid transparent;
-			border-bottom: 12px solid transparent;
-			border-left: 15px solid white;
-			position: absolute;
-			top: 50%;
-			margin-top: -12px;
-			margin-left: 1px;
-			left: 100%;
-			z-index: 1;
-		}
-		li:last-child a{
-			background-color: @breadcrumb-active-color;
-			color:white;
-		}
-		li:last-child a:after{
-			border-left: 15px solid @breadcrumb-active-color;
-		}
-	}
-
 	.content-container{
 		padding:2px;
 		margin:0;
@@ -179,10 +121,10 @@
 		display:inline-block;
 		height:  @container-height;
 		min-height: @container-min-height;
+		cursor:default;
 		.back_button{
 			cursor:pointer;
 		}
-
 
 		h2{
 			color:@container-title-color;
@@ -412,6 +354,25 @@
 				.current_topic{
 					background-color: @highlighted-file;
 					border-left:4px solid @edit-current-folder-color;
+					label{
+						width: @container-width - 65px;
+						h3{
+							width:80%;
+						}
+					}
+				}
+				.under_topic{
+					.list_item_wrapper{
+						background-color:@blue-100;
+					}
+				}
+				.under_topic_placeholder{
+					display:none;
+					height:@collapsed-height;
+					background-color: @gray-200;
+				}
+				.under_topic_placeholder:hover{
+					background-color:@edit-current-folder-color;
 				}
 			}
 
@@ -432,11 +393,10 @@
 					padding:10px 30px;
 				}
 			}
-			.placeholder{
+			.sorting-placeholder{
 				width: 100%;
-				background-color: @edit-current-folder-color;
+				background-color: @edit-current-folder-color !important;
 				opacity: 0.4;
-				height: @collapsed-height;
 			}
 		}
 
@@ -452,9 +412,6 @@
 				h3{
 					width:@container-last-width  - 80px;
 				}
-			}
-			.placeholder{
-				height: @expanded-height;
 			}
 			.add_content_button{
 				padding:5px 20px;

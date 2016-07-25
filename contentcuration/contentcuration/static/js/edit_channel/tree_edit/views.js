@@ -9,6 +9,7 @@ var UploaderViews = require("edit_channel/uploader/views");
 var ShareViews = require("edit_channel/share/views");
 var Previewer = require("edit_channel/preview/views");
 var Import = require("edit_channel/import/views");
+
 //var UndoManager = require("backbone-undo");
 var Models = require("./../models");
 
@@ -204,7 +205,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 	render: function() {
 		var self = this;
-		DragHelper.removeDragDrop(this);
+		// DragHelper.removeDragDrop(this);
 		this.model.fetch({
 			success:function(model){
 				self.childrenCollection = self.collection.get_all_fetch(self.model.get("children"));
@@ -223,8 +224,8 @@ var ContentList = BaseViews.BaseListView.extend({
 					containing_list_view: self,
 					index:0
 				});
+				DragHelper.addDroppable(self);
 
-				DragHelper.addDragDrop(self);
 			},
 			error:function(obj, error){
 				console.log("Error loading content", obj);
@@ -259,6 +260,7 @@ var ContentList = BaseViews.BaseListView.extend({
 			if(self.current_node && entry.id == self.current_node)
 				file_view.set_opened(true, false);
 			self.views.push(file_view);
+			DragHelper.addDragDrop(self);
 		});
 		self.check_number_of_items_in_list();
 	},

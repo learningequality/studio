@@ -10,17 +10,6 @@
 {{else}}
 	<label class="file" for="item_{{node.id}}" title="{{node.attributes.title}}">
 {{/if}}
-{{#if allow_edit}}
-	<p class="error_msg"><p>
-	<input id="textbox_{{node.id}}" type="text" class="node_title_textbox" value="{{node.attributes.title}}" placeholder="Enter Item Name" maxlength="200"/>
-	{{#if isfolder}}
-	<textarea id="textarea_{{node.id}}" class="topic_textarea"  placeholder="Enter Description" maxlength="400" >{{node.attributes.description}}</textarea>
-	{{/if}}
-	<div class="item_edit_options">
-		<span class="cancel_edit glyphicon glyphicon-remove pull-right" aria-hidden="true"></span>
-		<span class="submit_edit glyphicon glyphicon-ok pull-right" aria-hidden="true"></span>
-	</div>
-{{else}}
 	<div class="options pull-right">
 		{{#if isfolder}}
 			<span class="edit_folder_button disable-on-edit glyphicon glyphicon-pencil" aria-hidden="true"></span>
@@ -36,14 +25,6 @@
 			&nbsp;
 			{{#if node.attributes.changed}}
 				<em class="unpublished">Updated</em>
-			 {{else}}
-			 	<!--
-				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
-				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
-				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
-				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
-				<span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
-				-->
 			{{/if}}
 		</span>
 	</h6>
@@ -51,5 +32,4 @@
 	<div class="description_wrapper">
 		<p class="description wordwrap" title="{{node.attributes.description}}">{{#if node}}{{node.attributes.description}}{{else}}No description found.{{/if}}</p>
 	</div>
-{{/if}}
 </label>
