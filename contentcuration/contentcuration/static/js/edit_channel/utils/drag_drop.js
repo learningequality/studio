@@ -94,6 +94,41 @@ function addDragDrop(element){
 				left: position.left - adjustment.left,
 				top: position.top - adjustment.top
 			});
+			// if(this.targetIsTopic()){
+			// 	var targetCheck = target;
+			// 	$(".placeholder").css("display", "none");
+			// 	if(!target.hasClass("under_topic")){
+			// 		$(".under_topic").removeClass("under_topic");
+			// 		$(".above_topic").css("display", "none");
+			// 		$(".below_topic").css("display", "none");
+			// 		target.addClass("under_topic");
+			// 		target.find(".above_topic, .below_topic").css({
+			// 			"display" : "block",
+			// 			"background-color" : "#EEEEEE"
+			// 		});
+			// 	}
+
+			// 	if(this.checkInRange(target)){
+			// 		var self = this;
+			// 		setTimeout(function(){
+			// 			if(self.checkInRange(targetCheck)){
+			// 				console.log(targetCheck.data("data"));
+			// 				if(!targetCheck.data("data").$el.hasClass("current_topic")){
+			// 					targetCheck.data("data").open_folder(event);
+			// 				}
+			// 			}
+			// 		}, this.openTopicInterval);
+			// 	}else{
+			// 		isaboveclosest = this.currentEvent.pageY < this.getBoundingBox(target).yMin;
+			// 		$(".above_topic").css("background-color", (isaboveclosest)? "#BDBDBD" : "#EEEEEE");
+			// 		$(".below_topic").css("background-color", (!isaboveclosest)? "#BDBDBD" : "#EEEEEE");
+			// 	}
+			// }else{
+			// 	$(".placeholder").css("display", "block");
+			// 	$(".above_topic").css("display", "none");
+			// 	$(".below_topic").css("display", "none");
+			// }
+
 		},
 
 		afterMove: function (placeholder, container, $closestItemOrContainer) {
