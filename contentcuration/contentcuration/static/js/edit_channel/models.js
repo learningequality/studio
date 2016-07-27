@@ -210,7 +210,7 @@ var ContentNodeCollection = BaseCollection.extend({
 				self.get_all_fetch(fetch_list).forEach(function(node){
 					node.create_file();
 				});
-        		callback();
+        		callback(true);
         	}
         });
 	},

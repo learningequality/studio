@@ -182,77 +182,79 @@ BaseListView = BaseView.extend({
 		this.add_to_trash(deleteCollection);
 		return stopLoop;
 	},
-	drop_in_container:function(transfer, target, resolve, reject){
+	drop_in_container:function(selected_items, orders, resolve, reject){
 		try{
-			/*Set model's parent*/
-			var new_sort_order = this.get_new_sort_order(transfer, target);
-			if(this.model.id != transfer.model.get("parent")){
-				var old_parent = transfer.containing_list_view.model;
-				var old_container = transfer.containing_list_view;
+			// console.log("moved:", selected_items);
+			// console.log("with orders:", orders);
+
+			/* Step 1: Get sort orders updated */
+				var max = 1;
+				var min = 1;
 				var self = this;
-				transfer.$el.html(transfer.$el.find(">label").html(transfer.$el.find(">label .title"))).addClass("loading_placeholder_item");
-				this.handle_transfer_drop(transfer, new_sort_order, function(){
-					transfer.containing_list_view.assign_indices();
-					self.assign_indices();
-					var reload_collection = new Models.ContentNodeCollection();
-					reload_collection.add([old_parent, self.model, transfer.model]);
-					self.reload_listed(reload_collection);
-					transfer.remove();
-					resolve({"list1":self, "list2":old_container});
-				});
-			}else{
-				var self = this;
-				transfer.model.save({
-					sort_order:new_sort_order,
-					changed:true
-				}, {
-					success:function(){
-						transfer.render();
-						self.assign_indices();
-					},
-					error:function(obj, error){
-						console.log("Error moving content", obj);
-		                console.log("Error message:", error);
-		                console.trace();
+				var index = orders.indexOf(selected_items.first());
+				if(index >= 0){
+					min = (index === 0)? 0 : orders.at(index - 1).get("sort_order");
+					max = (index === orders.length - 1)? min + 2 : orders.at(index + 1).get("sort_order");
+					var updated_collection = new Models.ContentNodeCollection();
+					selected_items.forEach(function(node){
+						min = (min + max) / 2;
+						node.set({
+							"sort_order": min,
+							"changed" : true
+						});
+						updated_collection.push(node.clone());
+					});
+					selected_items = updated_collection;
+				}
+
+			/* Step 2: Handle nodes from another parent if needed */
+				var promise = new Promise(function(resolve, reject){
+					if(orders.findWhere({id: selected_items.first().id})){
+						self.handle_transfer_drop(selected_items, resolve, reject);
 					}
 				});
-			}
+				promise.then(function(collections){
+					selected_items = collections.collection;
+					original_parents = collections.original_parents;
+
+			/* Step 3: Save nodes */
+					var second_promise = new Promise(function(resolve, reject){
+						selected_items.save(resolve, reject);
+					});
+					second_promise.then(function(){
+			/* Step 4: Reload page to render changes */
+						var first_elem = $("#" + selected_items.first().id);
+						selected_items.forEach(function(node){
+							var element_to_delete = $("#" + node.id);
+							var item_view = self.create_new_item(node);
+							first_elem.before(item_view.el);
+							console.log(first_elem)
+							if(first_elem != element_to_delete){
+								element_to_delete.remove();
+							}
+							self.views.push(item_view);
+						});
+						first_elem.remove();
+						var reload_list = new Models.ContentNodeCollection(reload_list);
+						reload_list.add(original_parents.models.concat(selected_items.models));
+						self.reload_listed(reload_list);
+						// self.render();
+
+						resolve(true);
+					}).catch(function(error){
+						console.log(error)
+						reject(error);
+					});
+				}).catch(function(error){
+					reject(error);
+					if(self.container){
+						self.container.render();
+					}
+				});
 		}catch(err){
 			// reject(err);
+			console.log(err)
 		}
-	},
-	get_new_sort_order: function(transfer, target){
-		var new_sort_order = 1;
-
-		/* Case 1: Remains at 1 if no items in list */
-		if(target.data("data") && this.views.length > 0){
-			var element = target.data("data");
-
-		/* Case 2: one item in list */
-			if(this.views.length == 1){
-				new_sort_order =  (target.data("isbelow"))? element.model.get("sort_order") / 2 : element.model.get("sort_order") + 1;
-			}else{
-				var first_index = element.index;
-				var second_index = (target.data("isbelow"))? element.index - 1 : element.index + 1;
-				if(second_index == transfer.index){
-					second_index = (target.data("isbelow"))? element.index - 1 : element.index + 1;
-				}
-		/* Case 3: at top of list */
-				if(second_index < 0 && target.data("isbelow")){
-					new_sort_order = this.views[first_index].model.get("sort_order") / 2;
-				}
-		/* Case 4: at bottom of list */
-				else if(second_index >= this.views.length -1 && !target.data("isbelow")){
-					new_sort_order = this.views[first_index].model.get("sort_order") + 1;
-				}
-		/* Case 5: in middle of list */
-				else{
-					new_sort_order = (this.views[second_index].model.get("sort_order")
-					+ this.views[first_index].model.get("sort_order")) / 2;
-				}
-			}
-		}
-		return new_sort_order;
 	},
 
 	remove_view: function(view){
@@ -332,40 +334,29 @@ BaseListView = BaseView.extend({
     		self.list_index = index + 1;
     	});
     },
-    handle_transfer_drop:function(transfer, sort_order, callback){
-    	var DragHelper = require("edit_channel/utils/drag_drop");
-		/* Implementation for copying nodes on drop*/
-		// transfer.model.duplicate(this.model, sort_order, function(){
-			// transfer.reload();
-			//callback();
-		// });
-		DragHelper.removeDragDrop(transfer.containing_list_view);
-    	DragHelper.removeDragDrop(this);
+    handle_transfer_drop:function(transfer_collection, resolve, reject){
+		// /* Implementation for copying nodes on drop*/
+		// // transfer.model.duplicate(this.model, sort_order, function(){
+		// 	// transfer.reload();
+		// 	//callback();
+		// // });
 
 		var self = this;
-    	transfer.model.save({
-			parent: this.model.id,
-			sort_order:sort_order,
-			changed:true
-		}, {
-			success:function(dropped){
-				transfer.$el.removeClass("current_topic");
-				var item_view = self.create_new_item(dropped);
-				transfer.$el.after(item_view.el);
-				transfer.$el.remove();
-				self.views.push(item_view);
-				transfer.containing_list_view.remove_view(transfer);
-				transfer.containing_list_view.check_number_of_items_in_list();
-				self.check_number_of_items_in_list();
-				callback();
-			},
-			error:function(obj, error){
-				console.log("Error moving content", obj);
-                console.log("Error message:", error);
-                console.trace();
-                callback();
+		var original_parents = new Models.ContentNodeCollection();
+		var fetch_collection = [];
+		var updated_collection = new Models.ContentNodeCollection();
+		transfer_collection.forEach(function(node){
+			if(node.get("parent") != self.model.id){
+				if(fetch_collection.indexOf(node.get("parent")) < 0){
+					fetch_collection.push(node.get("parent"));
+				}
+				node.set("parent", self.model.id);
 			}
+			updated_collection.push(node.clone());
 		});
+		original_parents = original_parents.get_all_fetch(fetch_collection);
+		resolve({"collection" : updated_collection,
+				"original_parents" : original_parents});
     }
 });
 

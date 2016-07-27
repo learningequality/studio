@@ -6,6 +6,7 @@
 @search-bg-color: #f4edf5;
 @searchtext-color: #444444;
 @search-border: #56367f;
+@placeholder-color:#666666;
 
 /* GLOBAL STYLES */
 *{margin:0;padding:0;}
@@ -379,4 +380,17 @@ body {
 		}
 
 	}
+}
+
+
+.ui-sortable-helper{
+	input[type=checkbox], .options{visibility:hidden;}
+	background-color:@gray-200 !important;
+	cursor:move;
+}
+
+.sorting-placeholder{
+	width: 100%;
+	background-color: @placeholder-color !important;
+	opacity: 0.4;
 }

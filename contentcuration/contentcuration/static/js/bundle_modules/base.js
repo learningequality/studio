@@ -8,7 +8,6 @@ require("handlebars/helpers");
 
 require("../../less/styles.less");
 require("bootstrap/dist/js/npm.js");
-// // require("jquery-sortable");
 require("../../js/jquery-ui.min");
 
 

@@ -192,7 +192,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	className: "container content-container",
 	initialize: function(options) {
 		_.bindAll(this, 'add_topic','import_content','close_container','import_nodes','add_topic', 'create_new_item',
-						'add_files','handle_transfer_drop','update_name','check_number_of_items_in_list');
+						'add_files','handle_transfer_drop','update_name','check_number_of_items_in_list', 'drop_in_container');
 		this.index = options.index;
 		this.lock = true;
 		this.edit_mode = options.edit_mode;
@@ -224,8 +224,7 @@ var ContentList = BaseViews.BaseListView.extend({
 					containing_list_view: self,
 					index:0
 				});
-				DragHelper.addDroppable(self);
-
+				DragHelper.addSortable(self, self.drop_in_container);
 			},
 			error:function(obj, error){
 				console.log("Error loading content", obj);
@@ -260,7 +259,7 @@ var ContentList = BaseViews.BaseListView.extend({
 			if(self.current_node && entry.id == self.current_node)
 				file_view.set_opened(true, false);
 			self.views.push(file_view);
-			DragHelper.addDragDrop(self);
+
 		});
 		self.check_number_of_items_in_list();
 	},
@@ -319,7 +318,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	className: "content draggable to_publish",
 	initialize: function(options) {
 		_.bindAll(this, 'edit_folder','open_folder',/*'expand_or_collapse_folder', */
-					'submit_edit', 'cancel_edit','preview_node', 'cancel_open_folder');
+					'submit_edit', 'cancel_edit','preview_node', 'cancel_open_folder', 'handle_checked');
 		this.edit_mode = options.edit_mode;
 		this.allow_edit = options.allow_edit;
 		this.containing_list_view = options.containing_list_view;
@@ -343,8 +342,10 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		this.model.fetch({
 			success:function(model){
 				self.render();
-				if(self.$el.hasClass("current_topic")){
+				if(self.sub_content_list){
 					self.sub_content_list.update_name(model.get("title"));
+					self.sub_content_list.assign_indices();
+					self.sub_content_list.check_number_of_items_in_list();
 				}
 				self.containing_list_view.container.handle_checked();
 			}
@@ -360,7 +361,8 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		'click .cancel_edit' : 'cancel_edit',
 		'click .submit_edit' : 'submit_edit',
 		'click .preview_button': 'preview_node',
-		'click .file' : 'preview_node'
+		'click .file' : 'preview_node',
+		'change input[type=checkbox]': 'handle_checked'
 	},
 	open_folder:function(event){
 		event.preventDefault();
@@ -438,6 +440,9 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	add_to_trash:function(){
 		this.containing_list_view.add_to_trash([this]);
 		this.delete_view();
+	},
+	handle_checked:function(){
+		this.$el.toggleClass("content-selected");
 	}
 });
 

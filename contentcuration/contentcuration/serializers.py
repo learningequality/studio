@@ -129,7 +129,6 @@ class CustomListSerializer(serializers.ListSerializer):
                                 taglist.append(tag_itm)
 
                     setattr(node, 'tags', taglist)
-
                     node.save()
                     ret.append(node)
 

@@ -123,7 +123,7 @@ var QueueList = BaseViews.BaseListView.extend({
 					containing_list_view: self,
 					index:0
 				});
-				// DragHelper.addDragDrop(self);
+				DragHelper.addSortable(self, self.drop_in_container);
 			}
 		});
 
@@ -142,6 +142,7 @@ var QueueList = BaseViews.BaseListView.extend({
 			});
 			self.$el.find("#list_for_" + self.model.id).append(item_view.el);
 			self.views.push(item_view);
+			// DragHelper.addDragDrop(self);
 		});
 		this.check_number_of_items_in_list();
 	},
@@ -193,13 +194,14 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.container.add_to_clipboard(collection);
 	},
 	check_number_of_items_in_list:function(){
-		console.log(this.views);
+		console.log("CALLED?");
     	this.$(".default-item").css("display", (this.views.length === 0) ? "block" : "none");
     	var self =this;
     	if(this.add_controls){
     		self.model.fetch({
     			success:function(root){
     				$((self.is_clipboard)? ".queue-badge" : ".trash-badge").html(root.get("metadata").total_count);
+    				self.$el.find(".queue-list-wrapper>.content-list>.default-item").css("display", (root.get("metadata").total_count > 0)? "none" : "block");
     			}
     		})
 
@@ -225,8 +227,8 @@ var ClipboardList = QueueList.extend({
 		//this.set_sort_orders(this.childrenCollection);
 		this.add_controls = options.add_controls;
 		this.container = options.container;
-		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_topic', 'import_content',
-					'create_new_item','import_nodes', 'add_files','check_number_of_items_in_list','render');
+		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_topic', 'import_content', 'handle_transfer_drop',
+					'create_new_item','import_nodes', 'add_files','check_number_of_items_in_list','render','drop_in_container');
 		this.render();
 	},
 	events: {
@@ -263,7 +265,7 @@ var TrashList = QueueList.extend({
 		//this.set_sort_orders(this.childrenCollection);
 		this.add_controls = options.add_controls;
 		this.container = options.container;
-		_.bindAll(this, 'check_all', 'delete_items', 'move_trash','check_number_of_items_in_list');
+		_.bindAll(this, 'check_all', 'delete_items', 'move_trash','check_number_of_items_in_list','handle_transfer_drop','drop_in_container');
 		this.render();
 	},
 	events: {
@@ -307,7 +309,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		return this.model.get("id");
 	},
 	initialize: function(options) {
-		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item','render');
+		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item','render','handle_checked');
 		this.containing_list_view = options.containing_list_view;
 		this.allow_edit = false;
 		this.is_clipboard = options.is_clipboard;
@@ -321,13 +323,24 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		'click .edit_content' : 'edit_item',
 		'click .submit_content' : "submit_item",
 		'keydown .queue_title_input' : "submit_item",
-		'dblclick .queue_item_title' : 'edit_item'
+		'dblclick .queue_item_title' : 'edit_item',
+		'change input[type=checkbox]': 'handle_checked'
 	},
 	reload:function(){
 		var self = this;
 		this.model.fetch({
 			success:function(){
 				self.render();
+				if(self.subfile_view){
+					// self.load_subfiles();
+					// self.$("#" + self.id() +"_sub").css("display", "block");
+					// self.$("#menu_toggle_" + self.model.id).removeClass("glyphicon-menu-up").addClass("glyphicon-menu-down");
+					self.subfile_view.assign_indices();
+					self.subfile_view.check_number_of_items_in_list();
+				}else{
+					self.containing_list_view.assign_indices();
+					self.containing_list_view.check_number_of_items_in_list();
+				}
 			}
 		});
 	},
@@ -442,6 +455,9 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		var individualCollection = new Models.ContentNodeCollection();
 		individualCollection.add(this.model);
 		this.containing_list_view.add_to_clipboard(individualCollection);
+	},
+	handle_checked:function(){
+		this.$el.toggleClass("content-selected");
 	}
 });
 
