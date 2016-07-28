@@ -18,6 +18,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STORAGE_ROOT = os.path.join(BASE_DIR, "storage")
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
+DB_ROOT = os.path.join(BASE_DIR, "databases")
 
 PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
 
