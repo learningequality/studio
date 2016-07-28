@@ -321,7 +321,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                                     if(callback){
                                         callback();
                                     }
-                                    // self.parent_view.render();
                                     resolve("Success!");
                                 }).catch(function(error){
                                     reject(error)
@@ -331,7 +330,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                                 if(callback){
                                     callback();
                                 }
-                                // self.parent_view.render();
                                 resolve("Success!");
                             }
                         }).catch(function(error){
@@ -358,7 +356,6 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                 self.close_uploader(event);
             }
         });
-
     },
     add_more:function(event){
         this.save_queued();

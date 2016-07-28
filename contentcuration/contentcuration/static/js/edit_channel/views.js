@@ -61,7 +61,7 @@ var BaseView = Backbone.View.extend({
             '<h4 id="kolibri_load_text" class="text-center">' + message + '</h4>' +
             '</div>';
         $(load).appendTo('body');
-
+console.log("DISPLAYING LOADs")
         if(callback){
     		setTimeout(function(){
     			try{
@@ -69,16 +69,16 @@ var BaseView = Backbone.View.extend({
 						callback(resolve, reject);
     				});
     				promise.then(function(){
+    					console.log("REMOVING")
     					$("#loading_modal").remove();
     				}).catch(function(error){
     					$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
     					console.log("Error with asychronous call", error);
-                		console.trace();
     				});
     			}catch(err){
     				$("#kolibri_load_text").text(err + ". Please refresh the page");
     			}
-			 }, 800);
+			 }, 100);
     	}else{
     		$("#loading_modal").remove();
     	}
@@ -196,12 +196,10 @@ BaseListView = BaseView.extend({
 		this.add_to_trash(deleteCollection, resolve, reject);
 	},
 	drop_in_container:function(moved_item, selected_items, orders, resolve, reject){
-		try{
-			// console.log("moved:", selected_items);
-			// console.log("with orders:", orders);
-			var self = this;
-
-			/* Step 1: Get sort orders updated */
+		var self = this;
+		this.display_load("Moving Content...", function(resolve_main, reject_main){
+            try{
+                /* Step 1: Get sort orders updated */
 				var max = 1;
 				var min = 1;
 				var index = orders.indexOf(moved_item);
@@ -218,14 +216,14 @@ BaseListView = BaseView.extend({
 						updated_collection.push(node.clone());
 					});
 					selected_items = updated_collection;
+				}else{
+					resolve_main("Success!");
 				}
 
-
-
 			/* Step 2: Handle nodes from another parent if needed */
-				var promise = new Promise(function(resolve, reject){
+				var promise = new Promise(function(resolve1, reject1){
 					if(orders.findWhere({id: moved_item.id})){
-						self.handle_transfer_drop(selected_items, resolve, reject);
+						self.handle_transfer_drop(selected_items, resolve1, reject1);
 					}
 				});
 				promise.then(function(collections){
@@ -233,8 +231,8 @@ BaseListView = BaseView.extend({
 					original_parents = collections.original_parents;
 
 			/* Step 3: Save nodes */
-					var second_promise = new Promise(function(resolve, reject){
-						selected_items.save(resolve, reject);
+					var second_promise = new Promise(function(resolve2, reject2){
+						selected_items.save(resolve2, reject2);
 					});
 					second_promise.then(function(){
 			 /* Step 4: Reload page to render changes */
@@ -250,21 +248,25 @@ BaseListView = BaseView.extend({
 						var reload_list = new Models.ContentNodeCollection(reload_list);
 						reload_list.add(original_parents.models.concat(selected_items.models));
 						self.reload_listed(reload_list);
-						resolve(true);
+						resolve(resolve_main);
 					}).catch(function(error){
 						console.log(error)
 						reject(error);
+						reject_main(error);
 					});
 				}).catch(function(error){
-					reject(error);
 					if(self.container){
 						self.container.render();
 					}
+					reject(error);
+					reject_main(error);
 				});
-		}catch(err){
-			// reject(err);
-			console.log(err)
-		}
+
+            }catch(error){
+                reject(error);
+                reject_main(error);
+            }
+        });
 	},
 
 	remove_view: function(view){
@@ -435,34 +437,40 @@ var BaseListNodeItemView = BaseListItemView.extend({
 		});
 	},
 	handle_hover:function(event){
-		console.log("Handling hover");
 		this.hover_open_folder(event);
 	},
 	handle_drop:function(models, resolve, reject){
-		console.log("Handling drop", models)
 		var self = this;
 		var tempCollection = new Models.ContentNodeCollection();
 		var sort_order = this.model.get("metadata").max_sort_order;
 		var reload_list = [];
-		models.forEach(function(node){
-			node.set({
-				parent: self.model.id,
-				sort_order: ++sort_order
-			});
-			tempCollection.add(node);
-		});
-		var promise = new Promise(function(resolve, reject){
-			tempCollection.save(resolve, reject);
-		});
-		promise.then(function(){
-			self.reload();
-			self.containing_list_view.render();
-			resolve(true);
-		}).catch(function(error){
-			alert(error)
-			console.log("Error with asychronous call", error);
-    		console.trace();
-		});
+
+		this.display_load("Moving Content...", function(resolve_main, reject_main){
+			console.log("FROM HANDLE DROP")
+            try{
+                models.forEach(function(node){
+					node.set({
+						parent: self.model.id,
+						sort_order: ++sort_order
+					});
+					tempCollection.add(node);
+				});
+				var promise = new Promise(function(resolve1, reject1){
+					tempCollection.save(resolve1, reject1);
+				});
+				promise.then(function(){
+					self.reload();
+					resolve(resolve_main);
+				}).catch(function(error){
+					reject(error);
+					self.containing_list_view.render();
+				});
+
+            }catch(error){
+                reject(error);
+                reject_main(error);
+            }
+        });
 	},
 });
 

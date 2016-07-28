@@ -78,12 +78,13 @@ function addSortable(element, selected_class, callback){
 	        	}
 
 	        	selected_items.add(appended_items.models, {at: selected_items.length});
-				var promise = new Promise(function(resolve, reject){
-			        callback(current_node, selected_items, order, resolve, reject);
+				var promise = new Promise(function(resolve2, reject2){
+			        callback(current_node, selected_items, order, resolve2, reject2);
 				});
 
-				promise.then(function(){
+				promise.then(function(resolution){
 					$(".content-list").sortable( "enable" );
+					resolution("Success!");
 				}).catch(function(error){
 					alert(error);
 					$(".content-list").sortable( "enable" );
@@ -116,16 +117,16 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 			console.log(current_node)
 
 	        var appended_items = new Models.ContentNodeCollection(); //Items from another container
-	        console.log("GETTING DATA: ", $("#drag-list li").data("data"));
-	        // ui.item.data('items').each(function(e){
-	        // 	if($(this).data("data")){
-	        // 		var node = $(this).data("data").model;
-		       //  	if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
-		       //  		selected_items.push(current_node);
-		       //  	}
-		       //  	(current_node.get("parent") === node.get("parent")) ? selected_items.push(node) : appended_items.push(node);
-	        // 	}
-	        // });
+	        $("#drag-list li").each(function(index, item){
+	        	if($(".content-list #"  + item.id).data("data")){
+	        		var node = $(".content-list #"  + item.id).data("data").model;
+		        	if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
+		        		selected_items.push(current_node);
+		        	}
+		        	(current_node.get("parent") === node.get("parent")) ? selected_items.push(node) : appended_items.push(node);
+		        	$(".content-list #"  + item.id).remove();
+	        	}
+	        })
 
 	        if(!selected_items.contains(current_node)){
         		selected_items.push(current_node);
@@ -136,9 +137,10 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		       dropCallback(selected_items, resolve, reject);
 			});
 
-			promise.then(function(){
-				$(".content-list").sortable( "enable" );
+			promise.then(function(callback){
 				$(ui.draggable.context).remove();
+				$(".content-list").sortable( "enable" );
+				callback("Success!");
 			}).catch(function(error){
 				alert(error);
 				$(".content-list").sortable( "enable" );

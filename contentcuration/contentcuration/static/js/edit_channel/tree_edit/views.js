@@ -254,9 +254,7 @@ var ContentList = BaseViews.BaseListView.extend({
 				promise.then(function(){
 					$("#loading_modal").remove();
 				}).catch(function(error){
-					$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
-					console.log("Error with asychronous call", error);
-            		console.trace();
+					reject(error);
 				});
 
 				self.$el.data("container", self);
@@ -266,12 +264,16 @@ var ContentList = BaseViews.BaseListView.extend({
 					index:0
 				});
 				DragHelper.addSortable(self, 'content-selected', self.drop_in_container);
-				self.resolve(true);
+				if(resolve){
+					resolve(true);
+				}
+
 			},
 			error:function(obj, error){
-				console.log("Error loading content", obj);
-                console.log("Error message:", error);
-                console.trace();
+				if(reject){
+					reject(error);
+				}
+
 			}
 		});
 	},
@@ -405,7 +407,10 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		if(this.model.get("kind") == "topic"){
 			DragHelper.addTopicDragDrop(this, this.handle_hover, this.handle_drop);
 		}
-		this.resolve(true);
+		if(this.resolve){
+			this.resolve(true);
+		}
+		this.$el.removeClass("content-selected");
 	},
 	reload:function(){
 		var self = this;
@@ -413,9 +418,10 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 			success:function(model){
 				self.render();
 				if(self.sub_content_list){
-					self.sub_content_list.update_name(model.get("title"));
-					// self.sub_content_list.assign_indices();
-					self.sub_content_list.check_number_of_items_in_list();
+					self.sub_content_list.render();
+					// self.sub_content_list.update_name(model.get("title"));
+					// // self.sub_content_list.assign_indices();
+					// self.sub_content_list.check_number_of_items_in_list();
 				}
 				self.containing_list_view.container.handle_checked();
 			}
