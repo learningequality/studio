@@ -123,7 +123,7 @@ var QueueList = BaseViews.BaseListView.extend({
 					containing_list_view: self,
 					index:0
 				});
-				DragHelper.addSortable(self, self.drop_in_container);
+				DragHelper.addSortable(self, 'queue-selected', self.drop_in_container);
 			}
 		});
 
@@ -194,7 +194,6 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.container.add_to_clipboard(collection);
 	},
 	check_number_of_items_in_list:function(){
-		console.log("CALLED?");
     	this.$(".default-item").css("display", (this.views.length === 0) ? "block" : "none");
     	var self =this;
     	if(this.add_controls){
@@ -309,7 +308,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		return this.model.get("id");
 	},
 	initialize: function(options) {
-		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item','render','handle_checked');
+		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item','render','handle_checked','handle_hover','handle_drop','hover_open_folder');
 		this.containing_list_view = options.containing_list_view;
 		this.allow_edit = false;
 		this.is_clipboard = options.is_clipboard;
@@ -335,7 +334,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 					// self.load_subfiles();
 					// self.$("#" + self.id() +"_sub").css("display", "block");
 					// self.$("#menu_toggle_" + self.model.id).removeClass("glyphicon-menu-up").addClass("glyphicon-menu-down");
-					self.subfile_view.assign_indices();
+					// self.subfile_view.assign_indices();
 					self.subfile_view.check_number_of_items_in_list();
 				}else{
 					self.containing_list_view.assign_indices();
@@ -354,6 +353,9 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			index: this.index
 		}));
 		this.$el.data("data", this);
+		if(this.model.get("kind") == "topic"){
+			DragHelper.addTopicDragDrop(this, this.handle_hover, this.handle_drop);
+		}
 	},
 	toggle:function(){
 		event.stopPropagation();
@@ -457,7 +459,12 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		this.containing_list_view.add_to_clipboard(individualCollection);
 	},
 	handle_checked:function(){
-		this.$el.toggleClass("content-selected");
+		this.$el.toggleClass("queue-selected");
+	},
+	hover_open_folder:function(event){
+		if(this.$el.find("#menu_toggle_" + this.model.id).hasClass("glyphicon-menu-up")){
+			this.toggle(event);
+		}
 	}
 });
 

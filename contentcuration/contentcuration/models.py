@@ -8,7 +8,7 @@ from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connections, models
 from django.db.utils import ConnectionDoesNotExist
-from mptt.models import MPTTModel, TreeForeignKey
+from mptt.models import MPTTModel, TreeForeignKey, TreeManager
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
@@ -191,7 +191,6 @@ class ContentNode(MPTTModel, models.Model):
     # similar" types of content by having them have the same content_id.
     content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
-
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
@@ -211,8 +210,31 @@ class ContentNode(MPTTModel, models.Model):
 
     changed = models.BooleanField(default=True)
 
+    objects = TreeManager()
+
     def save(self, *args, **kwargs):
+        # try:
+        parent = None
+        if self.parent:
+            parent = ContentNode.objects.get(id=self.parent_id)     # Refreshes cache before save
         super(ContentNode, self).save(*args, **kwargs)
+        if parent:
+            self.move_to(ContentNode.objects.get(id=self.parent.pk)) # Makes sure cache is updated after save
+        # except:
+        #     print "ERROR MOVING: Rebuilding tree..."
+        #     ContentNode.objects.rebuild()
+        #     super(ContentNode, self).save(*args, **kwargs)
+
+        #     parent = ContentNode.objects.get(id=self.parent.pk)
+
+        #     opts = parent._mptt_meta
+        #     parent._mptt_cached_fields = {}
+        #     field_names = [opts.parent_attr]
+        #     if opts.order_insertion_by:
+        #         field_names += opts.order_insertion_by
+        #     for field_name in field_names:
+        #         parent._mptt_cached_fields[field_name] = opts.get_raw_field_value(parent, field_name)
+        #     super(ContentNode, self).save(*args, **kwargs)
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']

@@ -131,7 +131,7 @@ class CustomListSerializer(serializers.ListSerializer):
                     setattr(node, 'tags', taglist)
                     node.save()
                     ret.append(node)
-
+            # ContentNode.objects.rebuild()
         return ret
 
 class TagSerializer(serializers.ModelSerializer):

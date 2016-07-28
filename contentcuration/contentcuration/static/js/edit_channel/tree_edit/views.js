@@ -89,23 +89,37 @@ var TreeEditView = BaseViews.BaseView.extend({
 		if(index < this.containers.length){
 			this.remove_containers_from(index);
 		}
-		/* Create place for opened topic */
-		var container_view = new ContentList({
-			model: topic,
-			index: this.containers.length + 1,
-			edit_mode: this.is_edit_page,
-			collection: this.collection,
-			container : this
+		var self = this;
+		var container_view = null;
+		var promise = new Promise(function(resolve, reject){
+			/* Create place for opened topic */
+			container_view = new ContentList({
+				model: topic,
+				index: self.containers.length + 1,
+				edit_mode: self.is_edit_page,
+				collection: self.collection,
+				container : self,
+				resolve:resolve
+			});
+			self.containers.push(container_view);
+			self.$("#container-wrapper").scrollLeft(self.$("#container_area").width());
+			self.$el.find("#container_area").append(container_view.el);
+			self.$el.find("#container_area").width(self.$el.find("#container_area").width() + self.containers[0].$el.outerWidth());
+			/* Animate sliding in from left */
+			container_view.$el.css('margin-left', -container_view.$el.outerWidth());
 		});
-		this.containers.push(container_view);
-		this.$("#container-wrapper").scrollLeft(this.$("#container_area").width());
-		this.$el.find("#container_area").append(container_view.el);
-		this.$el.find("#container_area").width(this.$el.find("#container_area").width() + this.containers[0].$el.outerWidth());
-		/* Animate sliding in from left */
-		container_view.$el.css('margin-left', -container_view.$el.outerWidth());
-		container_view.$el.animate({
-			'margin-left' : "0px"
-		}, 500);
+		promise.then(function(){
+			DragHelper.addSortable(container_view, 'content-selected', container_view.drop_in_container);
+			setTimeout(function(){
+				$( ".content-list" ).sortable( "refresh" );
+				$( ".content-list" ).sortable( "enable" );
+			}, 500);
+			container_view.$el.animate({
+				'margin-left' : "0px"
+			}, 500);
+
+
+		});
 		return container_view;
 	},
 
@@ -200,6 +214,7 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.collection = options.collection;
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();
+		this.resolve = options.resolve;
 		this.render();
 
 	},
@@ -224,7 +239,8 @@ var ContentList = BaseViews.BaseListView.extend({
 					containing_list_view: self,
 					index:0
 				});
-				DragHelper.addSortable(self, self.drop_in_container);
+				DragHelper.addSortable(self, 'content-selected', self.drop_in_container);
+				self.resolve(true);
 			},
 			error:function(obj, error){
 				console.log("Error loading content", obj);
@@ -317,8 +333,8 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'edit_folder','open_folder',/*'expand_or_collapse_folder', */
-					'submit_edit', 'cancel_edit','preview_node', 'cancel_open_folder', 'handle_checked');
+		_.bindAll(this, 'edit_folder','open_folder',/*'expand_or_collapse_folder', */'hover_open_folder',
+					'submit_edit', 'cancel_edit','preview_node', 'cancel_open_folder', 'handle_checked','handle_hover','handle_drop');
 		this.edit_mode = options.edit_mode;
 		this.allow_edit = options.allow_edit;
 		this.containing_list_view = options.containing_list_view;
@@ -336,6 +352,9 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		this.$el.data("data", this);
 		if($("#hide_details_checkbox").attr("checked"))
 			this.$el.find("label").addClass("hidden_details");
+		if(this.model.get("kind") == "topic"){
+			DragHelper.addTopicDragDrop(this, this.handle_hover, this.handle_drop);
+		}
 	},
 	reload:function(){
 		var self = this;
@@ -344,7 +363,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 				self.render();
 				if(self.sub_content_list){
 					self.sub_content_list.update_name(model.get("title"));
-					self.sub_content_list.assign_indices();
+					// self.sub_content_list.assign_indices();
 					self.sub_content_list.check_number_of_items_in_list();
 				}
 				self.containing_list_view.container.handle_checked();
@@ -443,6 +462,12 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	},
 	handle_checked:function(){
 		this.$el.toggleClass("content-selected");
+	},
+	hover_open_folder:function(event){
+		// if(!this.sub_content_list || !$(this.sub_content_list.el)){
+			this.open_folder(event);
+		// }
+
 	}
 });
 

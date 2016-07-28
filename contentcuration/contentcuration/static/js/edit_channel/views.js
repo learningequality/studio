@@ -182,7 +182,7 @@ BaseListView = BaseView.extend({
 		this.add_to_trash(deleteCollection);
 		return stopLoop;
 	},
-	drop_in_container:function(selected_items, orders, resolve, reject){
+	drop_in_container:function(moved_item, selected_items, orders, resolve, reject){
 		try{
 			// console.log("moved:", selected_items);
 			// console.log("with orders:", orders);
@@ -191,7 +191,7 @@ BaseListView = BaseView.extend({
 				var max = 1;
 				var min = 1;
 				var self = this;
-				var index = orders.indexOf(selected_items.first());
+				var index = orders.indexOf(moved_item);
 				if(index >= 0){
 					min = (index === 0)? 0 : orders.at(index - 1).get("sort_order");
 					max = (index === orders.length - 1)? min + 2 : orders.at(index + 1).get("sort_order");
@@ -223,22 +223,18 @@ BaseListView = BaseView.extend({
 					});
 					second_promise.then(function(){
 			/* Step 4: Reload page to render changes */
-						var first_elem = $("#" + selected_items.first().id);
-						selected_items.forEach(function(node){
-							var element_to_delete = $("#" + node.id);
-							var item_view = self.create_new_item(node);
-							first_elem.before(item_view.el);
-							console.log(first_elem)
-							if(first_elem != element_to_delete){
-								element_to_delete.remove();
-							}
-							self.views.push(item_view);
-						});
-						first_elem.remove();
 						var reload_list = new Models.ContentNodeCollection(reload_list);
 						reload_list.add(original_parents.models.concat(selected_items.models));
 						self.reload_listed(reload_list);
-						// self.render();
+						var last_elem = $("#" + moved_item.id);
+						selected_items.forEach(function(node){
+							var to_delete = $("#" + node.id);
+							var item_view = self.create_new_item(node);
+							last_elem.after(item_view.el);
+							last_elem = item_view.$el;
+							self.views.push(item_view);
+							to_delete.remove();
+						});
 
 						resolve(true);
 					}).catch(function(error){
@@ -422,7 +418,30 @@ var BaseListNodeItemView = BaseListItemView.extend({
 			modal:true,
 			model: this.model
 		});
-	}
+	},
+	handle_hover:function(event){
+		console.log("Handling hover");
+		this.hover_open_folder(event);
+	},
+	handle_drop:function(models, resolve, reject){
+		console.log("Handling drop", models)
+		var self = this;
+		var tempCollection = new Models.ContentNodeCollection();
+		var sort_order = this.model.get("metadata").max_sort_order;
+		var reload_list = [];
+		models.forEach(function(node){
+			node.set({
+				parent: self.model.id,
+				sort_order: ++sort_order
+			});
+			tempCollection.add(node);
+		});
+		tempCollection.save(function(){
+			self.reload();
+			self.containing_list_view.render();
+			resolve(true);
+		});
+	},
 });
 
 var BaseListChannelItemView = BaseListItemView.extend({

@@ -13,6 +13,8 @@
 body {
 	font-family: "Noto Sans", Verdana, sans-serif;
 	overflow-x:hidden;
+	width:100vw;
+	position:fixed;
 	letter-spacing: 0.03em;
 }
 
@@ -383,14 +385,29 @@ body {
 }
 
 
-.ui-sortable-helper{
-	input[type=checkbox], .options{visibility:hidden;}
+.ui-sortable-helper, .ui-sorting-list li{
+	input[type=checkbox], .options, .queue-options, .unpublished, .tog_folder, .clipboard-topic-count{visibility:hidden;}
 	background-color:@gray-200 !important;
+	border-top:1px solid white;
 	cursor:move;
-}
+	min-height: 60px;
+	height:auto;
+	width:275px !important;
 
+	.title{
+		font-size:13pt;
+		padding:0px;
+		margin:0px;
+	}
+}
 .sorting-placeholder{
 	width: 100%;
 	background-color: @placeholder-color !important;
 	opacity: 0.4;
+}
+
+.drop-topic-hover{
+	margin-top: 15px !important;
+	margin-bottom: 15px !important;
+	background-color: @blue-100 !important;
 }
