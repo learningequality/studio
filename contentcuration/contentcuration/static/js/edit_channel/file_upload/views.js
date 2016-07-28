@@ -11,7 +11,6 @@ var browserHelper = require("edit_channel/utils/browser_functions");
 
 var FileModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/file_upload_modal.handlebars"),
-
     initialize: function(options) {
         _.bindAll(this, "close_file_uploader");
         this.callback = options.callback;

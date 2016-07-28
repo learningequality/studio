@@ -111,74 +111,9 @@ var ContentNodeModel = BaseModel.extend({
 		}
     },
 
-	/*Used when copying items to clipboard*/
-    duplicate: function(target_parent, sort_order, callback){
-		var node_id = this.get("id");
-		var sort_order_index = 1;
-		if(sort_order){
-			sort_order_index = sort_order;
-		}else if(target_parent){
-			sort_order_index = target_parent.get("metadata").max_sort_order + 1;
-		}
-        var parent_id = (target_parent) ? target_parent.get("id") : null;
-
-        var data = {"node_id": node_id,
-                    "sort_order": sort_order_index,
-                    "target_parent": parent_id};
-        $.ajax({
-        	method:"POST",
-            url: window.Urls.duplicate_node(),
-            data:  JSON.stringify(data),
-            async: false,
-            success: function(data) {
-                callback(JSON.parse(data).node_id);
-            },
-            error:function(e){
-            	console.log("ERROR: " + e.responseText);
-            }
-        });
-	},
-
 	move:function(target_parent, allow_duplicate, sort_order){
-    	var start = new Date().getTime();
-    	var title = this.get("title");
 		this.set({parent: target_parent.id,sort_order:sort_order}, {validate:true});
-
-		if(allow_duplicate){
-			while(this.validationError !== null){
-				title = this.generate_title(title);
-				this.set({
-	                title: title,
-					parent: target_parent.id,
-					sort_order:sort_order
-				}, {validate:true});
-			}
-			this.save(this.attributes, {async:false, validate:false}); //Save any other values
-		}else{
-			return this.validationError;
-		}
-	},
-
-	/* Function in case want to append (Copy #) to end of copied content*/
-	generate_title:function(title){
-		var start = new Date().getTime();
-		var new_title = title;
-		var matching = /\(Copy\s*([0-9]*)\)/g;
-		if (matching.test(new_title)) {
-		    new_title = new_title.replace(matching, function(match, p1) {
-		        // Already has "(Copy)"  or "(Copy <p1>)" in the title, so return either
-		        // "(Copy 2)" or "(Copy <p1+1>)"
-		        return "(Copy " + ((p1==="") ? 2: Number(p1) + 1) + ")";
-		    });
-		}else{
-			new_title += " (Copy)";
-		}
-    	return new_title.slice(0, new_title.length);
-	},
-	validate:function (attrs, options){
-		if(attrs.title == ""){
-			return "Name is required.";
-		}
+		this.save(this.attributes, {async:false, validate:false}); //Save any other values
 	},
 	create_file:function(){
 		this.get("files").forEach(function(file){
@@ -195,11 +130,10 @@ var ContentNodeCollection = BaseCollection.extend({
 	list_name:"contentnode-list",
 	highest_sort_order: 1,
 
-	save: function(callback) {
+	save: function(resolve, reject) {
 		var self = this;
         Backbone.sync("update", this, {
         	url: this.model.prototype.urlRoot(),
-        	async:false,
         	success: function(data){
         		var fetch_list = [];
         		data.forEach(function(entry){
@@ -210,7 +144,11 @@ var ContentNodeCollection = BaseCollection.extend({
 				self.get_all_fetch(fetch_list).forEach(function(node){
 					node.create_file();
 				});
-        		callback(true);
+
+        		resolve(true);
+        	},
+        	error:function(obj, error){
+        		reject(obj, error);
         	}
         });
 	},
@@ -239,13 +177,13 @@ var ContentNodeCollection = BaseCollection.extend({
     	this.sort();
     	this.highest_sort_order = (this.length > 0)? this.at(this.length - 1).get("sort_order") : 1;
     },
-    duplicate:function(target_parent, options, callback){
+    duplicate:function(target_parent, resolve, reject){
     	var copied_list = [];
     	this.forEach(function(node){
     		copied_list.push(node.get("id"));
     	});
 		var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
-        var parent_id = (target_parent) ? target_parent.get("id") : null;
+        var parent_id = target_parent.get("id");
 
         var data = {"node_ids": copied_list.join(" "),
                     "sort_order": sort_order,
@@ -254,28 +192,32 @@ var ContentNodeCollection = BaseCollection.extend({
         	method:"POST",
             url: window.Urls.duplicate_nodes(),
             data:  JSON.stringify(data),
-            async: false,
             success: function(data) {
                 copied_list = JSON.parse(data).node_ids.split(" ");
                 var copiedCollection = new ContentNodeCollection();
     			copiedCollection.get_all_fetch(copied_list);
-    			callback(copiedCollection);
+    			resolve(copiedCollection);
             },
             error:function(e){
-            	console.log("ERROR: " + e.responseText);
+            	reject(e);
             }
         });
     },
-    move:function(target_parent, sort_order, callback){
+    move:function(target_parent, sort_order, resolve, reject){
     	this.forEach(function(model){
 			model.set({
 				parent: target_parent.id,
 				sort_order:++sort_order
 			});
-			// console.log("MODEL:", model)
     	});
-    	this.save(function(){
-			callback();
+    	var self  = this;
+    	var promise = new Promise(function(resolve, reject){
+    		self.save(resolve, reject);
+		});
+		promise.then(function(){
+			resolve(true);
+		}).catch(function(error){
+			reject(error);
 		});
 	}
 });

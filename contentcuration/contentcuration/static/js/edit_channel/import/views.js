@@ -51,7 +51,6 @@ var ImportView = BaseViews.BaseListView.extend({
       "click #import_content_submit" : "import_content"
     },
     render: function() {
-        console.log(this.other_channels.length)
         this.$el.html(this.template({
             is_empty:this.other_channels.length===0
         }));
@@ -99,9 +98,15 @@ var ImportView = BaseViews.BaseListView.extend({
                 for(var i = 0; i < checked_items.length; i++){
                     copyCollection.add($(checked_items[i]).data("data").model);
                 }
-                copyCollection.duplicate(self.model, null, function(collection){
-                    self.close_importer(collection, resolve);
+                var promise = new Promise(function(resolve1, reject1){
+                    copyCollection.duplicate(self.model, resolve1, reject1);
                 });
+                promise.then(function(collection){
+                    self.close_importer(collection, resolve);
+                }).catch(function(error){
+                    reject(error);
+                });
+
             }catch(error){
                 reject(error);
             }

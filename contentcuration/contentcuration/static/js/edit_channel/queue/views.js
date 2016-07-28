@@ -46,15 +46,14 @@ var Queue = BaseViews.BaseView.extend({
 		if(this.$el.find("#queue").css("margin-right") != "0px"){
 			this.$el.find(".content-list").css("display", "block");
 			this.$el.find("#queue").animate({marginRight:0}, 200);
-
 		}
 		else{
 			this.$el.find("#queue").animate({marginRight: -this.$el.find("#main-queue").outerWidth()}, 200);
 			this.$el.find(".content-list").css("display", "none");
 		}
 	},
-	add_to_clipboard:function(collection){
-		this.clipboard_queue.add_to_list(collection);
+	add_to_clipboard:function(collection, resolve, reject){
+		this.clipboard_queue.add_to_list(collection, resolve, reject);
 		var self = this;
 		this.trash_queue.model.fetch({
 			success:function(root){
@@ -68,18 +67,23 @@ var Queue = BaseViews.BaseView.extend({
 		});
 
 	},
-	add_to_trash:function(collection){
+	add_to_trash:function(collection, resolve, reject){
 		var self = this;
-		this.trash_queue.add_to_list(collection);
-		this.clipboard_queue.model.fetch({
-			success:function(root){
-				self.clipboard_queue.render();
-			},
-			error:function(obj, error){
-				console.log("Error loading clipboard", obj);
-                console.log("Error message:", error);
-                console.trace();
-			}
+		var promise = new Promise(function(resolve, reject){
+			self.trash_queue.add_to_list(collection, resolve, reject);
+		});
+		promise.then(function(){
+			self.clipboard_queue.model.fetch({
+				success:function(root){
+					self.clipboard_queue.render();
+					resolve(root);
+				},
+				error:function(obj, error){
+	                reject(error);
+				}
+			});
+		}).catch(function(error){
+			reject(error)
 		});
 	},
 	switch_to_queue:function(){
@@ -183,15 +187,31 @@ var QueueList = BaseViews.BaseListView.extend({
 		//if(this.$el.find(".search_queue").val().length > 2)
 			//this.render();
 	},
-	add_to_list:function(collection){
-		this.add_nodes(collection, this.childrenCollection.highest_sort_order);
-		this.model.fetch();
+	add_to_list:function(collection, resolve, reject){
+		var self = this;
+		var promise = new Promise(function(resolve, reject){
+			self.add_nodes(collection, self.childrenCollection.highest_sort_order, resolve, reject);
+		});
+		promise.then(function(){
+			self.model.fetch({
+				success:function(model){
+					resolve(model);
+				},
+				error:function(obj, error){
+					reject(error);
+				}
+			});
+		}).catch(function(error){
+			reject(error)
+		});
+
+
 	},
-	add_to_trash:function(collection){
-		this.container.add_to_trash(collection);
+	add_to_trash:function(collection, resolve, reject){
+		this.container.add_to_trash(collection, resolve, reject);
 	},
-	add_to_clipboard:function(collection){
-		this.container.add_to_clipboard(collection);
+	add_to_clipboard:function(collection, resolve, reject){
+		this.container.add_to_clipboard(collection, resolve, reject);
 	},
 	check_number_of_items_in_list:function(){
     	this.$(".default-item").css("display", (this.views.length === 0) ? "block" : "none");
@@ -289,8 +309,14 @@ var TrashList = QueueList.extend({
 							ancestor_list.push(node.get("id"));
 						}
 					}
-					self.container.add_to_clipboard(moveCollection);
-					resolve("Success!");
+					var promise = new Promise(function(resolve, reject){
+						self.container.add_to_clipboard(moveCollection, resolve, reject);
+					});
+					promise.then(function(){
+						resolve("Success!");
+					}).catch(function(error){
+						reject(error)
+					});
 				}catch(error){
 					reject(error);
 				}
@@ -395,14 +421,21 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	delete_content:function(){
 		event.stopPropagation();
 		event.preventDefault();
-		this.remove_item(true, null);
+		var self = this;
+		var promise = new Promise(function(resolve, reject){
+			self.remove_item(true, resolve);
+		});
+		promise.then(function(){
+			self.delete_view();
+		}).catch(function(error){
+			reject(error)
+		});
+
 	},
 	remove_item: function(prompt, resolve){
 		if((prompt && confirm("Are you sure you want to delete " + this.model.get("title") + "?")) || !prompt){
 			if(this.is_clipboard){
-				this.add_to_trash();
-				if(resolve)
-					resolve("Success!");
+				this.add_to_trash(resolve);
 			}else{
 				var self = this;
 				this.model.destroy({
@@ -410,6 +443,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 						self.$el.remove();
 						if(prompt){
 							self.containing_list_view.render();
+							self.containing_list_view.check_number_of_items_in_list();
 						}else{
 							if(resolve)
 								resolve("Success!");
@@ -447,16 +481,31 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			}
 		}
 	},
-	add_to_trash:function(){
-		var individualCollection = new Models.ContentNodeCollection();
-		individualCollection.add(this.model);
-		this.containing_list_view.add_to_trash(individualCollection);
-		this.delete_view();
+	add_to_trash:function(resolve){
+		var self = this;
+		var promise = new Promise(function(resolve, reject){
+			self.containing_list_view.add_to_trash(new Models.ContentNodeCollection([self.model]), resolve, reject);
+		});
+		promise.then(function(){
+			self.remove();
+			resolve("Success!");
+		}).catch(function(error){
+			reject(error)
+		});
+
+
 	},
-	add_to_clipboard:function(){
-		var individualCollection = new Models.ContentNodeCollection();
-		individualCollection.add(this.model);
-		this.containing_list_view.add_to_clipboard(individualCollection);
+	add_to_clipboard:function(resolve, reject){
+		var self = this;
+		var promise = new Promise(function(resolve, reject){
+			self.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([self.model]));
+		});
+		promise.then(function(){
+			resolve(true);
+		}).catch(function(error){
+			reject(error)
+		});
+
 	},
 	handle_checked:function(){
 		this.$el.toggleClass("queue-selected");

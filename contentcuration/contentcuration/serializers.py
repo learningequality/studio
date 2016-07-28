@@ -130,6 +130,8 @@ class CustomListSerializer(serializers.ListSerializer):
 
                     setattr(node, 'tags', taglist)
                     node.save()
+                    if node.parent:
+                        node.move_to(ContentNode.objects.get(id=node.parent_id)) # Makes sure cache is updated after save
                     ret.append(node)
             # ContentNode.objects.rebuild()
         return ret

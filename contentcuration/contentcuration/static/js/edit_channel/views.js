@@ -83,10 +83,10 @@ var BaseView = Backbone.View.extend({
     		$("#loading_modal").remove();
     	}
     },
-	add_to_trash:function(collection){
+	add_to_trash:function(collection, resolve, reject){
 		//OVERWRITE IN SUBCLASSES
 	},
-	add_to_clipboard:function(collection){
+	add_to_clipboard:function(collection, resolve, reject){
 		//OVERWRITE IN SUBCLASSES
 	},
 	undo: function() {
@@ -96,7 +96,17 @@ var BaseView = Backbone.View.extend({
         this.undo_manager.redo();
     },
     save:function(){
-		this.collection.save();
+    	var self = this;
+    	var promise = new Promise(function(resolve, reject){
+			self.collection.save(resolve, reject);
+		});
+		promise.then(function(){
+
+		}).catch(function(error){
+			alert(error);
+			console.log("Error with save", error);
+    		console.trace();
+		});
 	},
 	update_word_count:function(input, counter, limit){
 		var char_length = limit - input.val().length;
@@ -156,7 +166,7 @@ BaseListView = BaseView.extend({
 			entry.set({'sort_order' : ++index}, {validate: false});
 		});
 	},
-	copy_selected:function(){
+	copy_selected:function(resolve, reject){
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = [];
 		var clipboard_root = window.current_user.get_clipboard();
@@ -165,32 +175,35 @@ BaseListView = BaseView.extend({
 			copyCollection.add($(list[i]).data("data").model);//.duplicate(clipboard_root, null);
 		}
 		var self = this;
-		copyCollection.duplicate(clipboard_root, null, function(copiedCollection){
-			self.add_to_clipboard(copiedCollection);
-		});
-		return this.$el.find(".current_topic input:checked").length != 0;
+
+        var promise = new Promise(function(resolve1, reject1){
+            copyCollection.duplicate(clipboard_root, resolve1, reject1);
+        });
+        promise.then(function(collection){
+            self.add_to_clipboard(collection, resolve, reject);
+        }).catch(function(error){
+            reject(error);
+        });
 	},
-	delete_selected:function(){
+	delete_selected:function(resolve, reject){
 		var list = this.$el.find('input:checked').parent("li");
-		var stopLoop = this.$el.find(".current_topic input").is(":checked");
 		var deleteCollection = new Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
 			var view = $("#" + list[i].id).data("data");
 			deleteCollection.add(view.model);
 			view.delete_view();
 		}
-		this.add_to_trash(deleteCollection);
-		return stopLoop;
+		this.add_to_trash(deleteCollection, resolve, reject);
 	},
 	drop_in_container:function(moved_item, selected_items, orders, resolve, reject){
 		try{
 			// console.log("moved:", selected_items);
 			// console.log("with orders:", orders);
+			var self = this;
 
 			/* Step 1: Get sort orders updated */
 				var max = 1;
 				var min = 1;
-				var self = this;
 				var index = orders.indexOf(moved_item);
 				if(index >= 0){
 					min = (index === 0)? 0 : orders.at(index - 1).get("sort_order");
@@ -207,9 +220,11 @@ BaseListView = BaseView.extend({
 					selected_items = updated_collection;
 				}
 
+
+
 			/* Step 2: Handle nodes from another parent if needed */
 				var promise = new Promise(function(resolve, reject){
-					if(orders.findWhere({id: selected_items.first().id})){
+					if(orders.findWhere({id: moved_item.id})){
 						self.handle_transfer_drop(selected_items, resolve, reject);
 					}
 				});
@@ -222,11 +237,8 @@ BaseListView = BaseView.extend({
 						selected_items.save(resolve, reject);
 					});
 					second_promise.then(function(){
-			/* Step 4: Reload page to render changes */
-						var reload_list = new Models.ContentNodeCollection(reload_list);
-						reload_list.add(original_parents.models.concat(selected_items.models));
-						self.reload_listed(reload_list);
-						var last_elem = $("#" + moved_item.id);
+			 /* Step 4: Reload page to render changes */
+			 			var last_elem = $("#" + moved_item.id);
 						selected_items.forEach(function(node){
 							var to_delete = $("#" + node.id);
 							var item_view = self.create_new_item(node);
@@ -235,7 +247,9 @@ BaseListView = BaseView.extend({
 							self.views.push(item_view);
 							to_delete.remove();
 						});
-
+						var reload_list = new Models.ContentNodeCollection(reload_list);
+						reload_list.add(original_parents.models.concat(selected_items.models));
+						self.reload_listed(reload_list);
 						resolve(true);
 					}).catch(function(error){
 						console.log(error)
@@ -257,14 +271,21 @@ BaseListView = BaseView.extend({
 		this.views.splice(this.views.indexOf(this), 1);
 		view.delete_view();
 	},
-	add_nodes:function(collection, startingIndex){
+	add_nodes:function(collection, startingIndex, resolve, reject){
 		var self = this;
-		collection.move(this.model, startingIndex, function(){
+		var promise = new Promise(function(resolve, reject){
+			collection.move(self.model, startingIndex, resolve, reject);
+		});
+		promise.then(function(){
 			self.list_index = startingIndex;
 			collection.add(self.model);
 			self.reload_listed(collection);
 			self.render();
+			resolve(collection);
+		}).catch(function(error){
+			reject(error)
 		});
+
 	},
 	add_topic: function(event){
 		var UploaderViews = require("edit_channel/uploader/views");
@@ -331,12 +352,6 @@ BaseListView = BaseView.extend({
     	});
     },
     handle_transfer_drop:function(transfer_collection, resolve, reject){
-		// /* Implementation for copying nodes on drop*/
-		// // transfer.model.duplicate(this.model, sort_order, function(){
-		// 	// transfer.reload();
-		// 	//callback();
-		// // });
-
 		var self = this;
 		var original_parents = new Models.ContentNodeCollection();
 		var fetch_collection = [];
@@ -436,10 +451,17 @@ var BaseListNodeItemView = BaseListItemView.extend({
 			});
 			tempCollection.add(node);
 		});
-		tempCollection.save(function(){
+		var promise = new Promise(function(resolve, reject){
+			tempCollection.save(resolve, reject);
+		});
+		promise.then(function(){
 			self.reload();
 			self.containing_list_view.render();
 			resolve(true);
+		}).catch(function(error){
+			alert(error)
+			console.log("Error with asychronous call", error);
+    		console.trace();
 		});
 	},
 });
@@ -509,27 +531,32 @@ var BaseEditorView = BaseListView.extend({
 			this.reload_listed(reload_collection);
 	    }
 	},
-	save_nodes: function(callback){
-		this.parent_view.set_editing(false);
+	save_nodes: function(resolve, reject){
 		var self = this;
-		var stringHelper = require("edit_channel/utils/string_helper");
-		this.views.forEach(function(entry){
-			var tags = [];
-			entry.tags.forEach(function(tag){
-				tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
-			})
-			entry.model.set({tags: tags});
-			if(entry.format_view){
-				entry.format_view.update_file();
-				entry.format_view.clean_files();
-			}
-	        entry.set_edited(false);
-		});
-		this.errorsFound = this.errorsFound || !this.save_queued();
-		this.collection.save(function(){
-			callback();
-		});
 
+		var promise = new Promise(function(resolve, reject){
+			self.parent_view.set_editing(false);
+			var stringHelper = require("edit_channel/utils/string_helper");
+			self.views.forEach(function(entry){
+				var tags = [];
+				entry.tags.forEach(function(tag){
+					tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
+				})
+				entry.model.set({tags: tags});
+				if(entry.format_view){
+					entry.format_view.update_file();
+					entry.format_view.clean_files();
+				}
+		        entry.set_edited(false);
+			});
+			self.errorsFound = self.errorsFound || !self.save_queued();
+			self.collection.save(resolve, reject);
+		});
+		promise.then(function(){
+			resolve(true);
+		}).catch(function(error){
+			reject(error);
+		});
 	},
 	check_nodes:function(){
 		var self = this;

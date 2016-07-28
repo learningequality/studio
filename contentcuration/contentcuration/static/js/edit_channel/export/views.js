@@ -35,8 +35,9 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         this.$(".modal").modal({show: true});
         this.$(".modal").on("hide.bs.modal", this.close);
     },
-    close_exporter:function(){
+    close_exporter:function(resolve){
       this.close();
+      resolve("Success!");
     },
     publish:function(){
         var self = this;
@@ -44,14 +45,11 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             window.current_channel.publish(function(){
                 try{
                    self.callback();
-                    self.close_exporter();
-                    resolve("Success!");
+                    self.close_exporter(resolve);
                 }catch(error){
                     reject(error);
                 }
-
             });
-
         });
     }
 });

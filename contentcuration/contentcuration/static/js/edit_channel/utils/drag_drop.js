@@ -89,47 +89,7 @@ function addSortable(element, selected_class, callback){
 					$(".content-list").sortable( "enable" );
 				});
 			}
-	    },
-	    // over : function(event, ui){
-	    // 	var element = $(this)[0]//.elementFromPoint(ui.offset.left, ui.offset.top)
-	    // 	// $(".sorting-placeholder").css("display", "none")
-	    // 	// var element = $(this).find("li").not(".sorting-placeholder").not(".hidden")
-     //  //          .filter(function() {
-     //  //          		var comp = $($(this)[0]);
-     //  //          		console.log($(this))
-     //  //          		// console.log("CHECKING: " +event.clientY + " VS " +  (comp.position().top + comp.height()) + "? " + (event.clientY  <= comp.position().top + comp.height()) )
-     //  //          		// var isOver = ui.offset.top <= comp.offsetTop
-     //  //            //   			&& ui.offset.top >= comp.offsetTop + comp.offsetHeight
-     //  //            //            && ui.offset.left >= comp.offsetLeft
-     //  //            //            && ui.offset.left <= comp.offsetLeft + comp.offsetWidth;
-     //  //          		// console.log(comp);
-     //  //              return yPosition >= comp.offset().top && yPosition <= comp.offset().top + comp.height();
-     //  //          });
-	    //      console.log("CALLED OVER", element)
-	    //  },
-	    //  out : function(){
-	    //       $(this).removeClass('valid');
-	    //       // console.log("CALLED OUT")
-	    //  },
-	    // change:function(event, ui){
-	    // 	// $(".sorting-placeholder").css("display", "none");
-	    // 	// var element = $(this).find("li").not(".sorting-placeholder").not(".hidden")
-     //  //          .filter(function() {
-     //  //          		var comp = $($(this)[0]);
-     //  //          		console.log($(this))
-     //  //          		// console.log("CHECKING: " +event.clientY + " VS " +  (comp.position().top + comp.height()) + "? " + (event.clientY  <= comp.position().top + comp.height()) )
-     //  //          		// var isOver = ui.offset.top <= comp.offsetTop
-     //  //            //   			&& ui.offset.top >= comp.offsetTop + comp.offsetHeight
-     //  //            //            && ui.offset.left >= comp.offsetLeft
-     //  //            //            && ui.offset.left <= comp.offsetLeft + comp.offsetWidth;
-     //  //          		// console.log(comp);
-     //  //              return yPosition >= comp.offset().top && yPosition <= comp.offset().top + comp.height();
-     //  //          });
-     //  //           console.log("CALLED SORT", element)
-	    // },
-	    // sort:function(event,ui){
-	    // 	yPosition = event.clientY;
-	    // }
+	    }
 	}).droppable({
 		items : 'li',
 		revert: "valid",
@@ -140,7 +100,7 @@ function addSortable(element, selected_class, callback){
 }
 
 function addTopicDragDrop(element, hoverCallback, dropCallback){
-	var hoverInterval = 1500;
+	var hoverInterval = 2000;
 	var hoverOnItem = null;
 	element.$el.droppable({
 		items : 'li',

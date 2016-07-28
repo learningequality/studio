@@ -168,34 +168,9 @@ def duplicate_nodes(request):
             new_nodes.append(new_node.pk)
             sort_order+=1
 
-        print " ".join(new_nodes)
         return HttpResponse(json.dumps({
             "success": True,
             "node_ids": " ".join(new_nodes)
-        }))
-
-@csrf_exempt
-def duplicate_node(request):
-    logging.debug("Entering the copy_node endpoint")
-
-    if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-    else:
-        data = json.loads(request.body)
-
-        try:
-            node_id = data["node_id"]
-            sort_order = data["sort_order"]
-            target_parent = data["target_parent"]
-        except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-        logging.info("Copying node id %s", node_id)
-
-        new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent)
-        return HttpResponse(json.dumps({
-            "success": True,
-            "node_id": new_node.pk
         }))
 
 def _duplicate_node(node, sort_order=1, parent=None):

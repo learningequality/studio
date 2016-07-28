@@ -153,16 +153,6 @@ var AddContentView = BaseViews.BaseListView.extend({
     close: function() {
         $(".modal-backdrop").remove();  //TODO: Might need to change this later, but remove any remaining modals
         this.delete_view();
-    },
-    import_content:function(){
-        var import_view = new Import.ImportView({
-            modal: true,
-            callback: this.import_nodes
-        });
-    },
-    import_nodes:function(collection){
-        this.collection.add(collection.models);
-        this.render();
     }
 });
 
@@ -310,7 +300,10 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                 self.$el.css("visibility", "hidden");
                 self.display_load("Saving Content...", function(resolve, reject){
                     try{
-                        self.save_nodes(function(){
+                        var promise = new Promise(function(resolve1, reject1){
+                            self.save_nodes(resolve1, reject1);
+                        });
+                        promise.then(function(){
                             if(!self.errorsFound){
                                 $(".uploaded").css("background-color", "white");
                                 self.$el.find("#title_error").html("");
@@ -320,16 +313,35 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                                 }
                             }
                             if(!self.errorsFound && (self.allow_add || self.new_topic)){
-                                self.parent_view.add_nodes(self.collection, self.parent_view.model.get("metadata").max_sort_order);
+                                var promise = new Promise(function(resolve2, reject2){
+                                    self.parent_view.add_nodes(self.collection, self.parent_view.model.get("metadata").max_sort_order, resolve2, reject2);
+                                });
+                                promise.then(function(){
+                                    self.$el.css("visibility", "visible");
+                                    if(callback){
+                                        callback();
+                                    }
+                                    // self.parent_view.render();
+                                    resolve("Success!");
+                                }).catch(function(error){
+                                    reject(error)
+                                });
+                            }else{
+                                self.$el.css("visibility", "visible");
+                                if(callback){
+                                    callback();
+                                }
+                                // self.parent_view.render();
+                                resolve("Success!");
                             }
-                            self.$el.css("visibility", "visible");
-                            if(callback){
-                                callback();
-                            }
-                            resolve("Success!");
+                        }).catch(function(error){
+                            $("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+                            console.log("Error with asychronous call", error);
+                            console.trace();
                         });
+
                     }catch(error){
-                        reject(error);
+                        alert(error);
                     }
                 });
             }
@@ -338,6 +350,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     },
     save_and_finish: function(event){
         var self = this;
+
         this.check_and_save_nodes(function(){
             if(self.modal){
                 self.$el.find(".modal").modal("hide");

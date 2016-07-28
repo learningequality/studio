@@ -177,6 +177,147 @@ class ContentTag(models.Model):
     class Meta:
         unique_together = ['tag_name', 'channel']
 
+class ContentNodeManager(TreeManager):
+    def _move_child_within_tree(self, node, target, position):
+        """
+        Moves child node ``node`` within its current tree relative to
+        the given ``target`` node as specified by ``position``.
+
+        ``node`` will be modified to reflect its new tree state in the
+        database.
+        """
+        left = getattr(node, self.left_attr)
+        right = getattr(node, self.right_attr)
+        level = getattr(node, self.level_attr)
+        width = right - left + 1
+        tree_id = getattr(node, self.tree_id_attr)
+        target_left = getattr(target, self.left_attr)
+        target_right = getattr(target, self.right_attr)
+        target_level = getattr(target, self.level_attr)
+
+        if position == 'last-child' or position == 'first-child':
+            if node == target:
+                print "line 200"
+                import IPython
+                IPython.embed()
+                raise InvalidMove(_('A node may not be made a child of itself.'))
+            elif left < target_left < right:
+                print "line 205"
+                import IPython
+                IPython.embed()
+                raise InvalidMove(_('A node may not be made a child of any of its descendants.'))
+            if position == 'last-child':
+                if target_right > right:
+                    new_left = target_right - width
+                    new_right = target_right - 1
+                else:
+                    new_left = target_right
+                    new_right = target_right + width - 1
+            else:
+                if target_left > left:
+                    new_left = target_left - width + 1
+                    new_right = target_left
+                else:
+                    new_left = target_left + 1
+                    new_right = target_left + width
+            level_change = level - target_level - 1
+            parent = target
+        elif position == 'left' or position == 'right':
+            if node == target:
+                print "line 227"
+                import IPython
+                IPython.embed()
+                raise InvalidMove(_('A node may not be made a sibling of itself.'))
+            elif left < target_left < right:
+                print "line 232"
+                import IPython
+                IPython.embed()
+                raise InvalidMove(_('A node may not be made a sibling of any of its descendants.'))
+            if position == 'left':
+                if target_left > left:
+                    new_left = target_left - width
+                    new_right = target_left - 1
+                else:
+                    new_left = target_left
+                    new_right = target_left + width - 1
+            else:
+                if target_right > right:
+                    new_left = target_right - width + 1
+                    new_right = target_right
+                else:
+                    new_left = target_right + 1
+                    new_right = target_right + width
+            level_change = level - target_level
+            parent = getattr(target, self.parent_attr)
+        else:
+            raise ValueError(_('An invalid position was given: %s.') % position)
+
+        left_boundary = min(left, new_left)
+        right_boundary = max(right, new_right)
+        left_right_change = new_left - left
+        gap_size = width
+        if left_right_change > 0:
+            gap_size = -gap_size
+
+        connection = self._get_connection(instance=node)
+        qn = connection.ops.quote_name
+
+        opts = self.model._meta
+        # The level update must come before the left update to keep
+        # MySQL happy - left seems to refer to the updated value
+        # immediately after its update has been specified in the query
+        # with MySQL, but not with SQLite or Postgres.
+        move_subtree_query = """
+        UPDATE %(table)s
+        SET %(level)s = CASE
+                WHEN %(left)s >= %%s AND %(left)s <= %%s
+                  THEN %(level)s - %%s
+                ELSE %(level)s END,
+            %(left)s = CASE
+                WHEN %(left)s >= %%s AND %(left)s <= %%s
+                  THEN %(left)s + %%s
+                WHEN %(left)s >= %%s AND %(left)s <= %%s
+                  THEN %(left)s + %%s
+                ELSE %(left)s END,
+            %(right)s = CASE
+                WHEN %(right)s >= %%s AND %(right)s <= %%s
+                  THEN %(right)s + %%s
+                WHEN %(right)s >= %%s AND %(right)s <= %%s
+                  THEN %(right)s + %%s
+                ELSE %(right)s END,
+            %(parent)s = CASE
+                WHEN %(pk)s = %%s
+                  THEN %%s
+                ELSE %(parent)s END
+        WHERE %(tree_id)s = %%s""" % {
+            'table': qn(self.tree_model._meta.db_table),
+            'level': qn(opts.get_field(self.level_attr).column),
+            'left': qn(opts.get_field(self.left_attr).column),
+            'right': qn(opts.get_field(self.right_attr).column),
+            'parent': qn(opts.get_field(self.parent_attr).column),
+            'pk': qn(opts.pk.column),
+            'tree_id': qn(opts.get_field(self.tree_id_attr).column),
+        }
+
+        cursor = connection.cursor()
+        cursor.execute(move_subtree_query, [
+            left, right, level_change,
+            left, right, left_right_change,
+            left_boundary, right_boundary, gap_size,
+            left, right, left_right_change,
+            left_boundary, right_boundary, gap_size,
+            node._meta.get_field(node._meta.pk.name).get_db_prep_value(node.pk, connection),
+            parent._meta.get_field(parent._meta.pk.name).get_db_prep_value(parent.pk, connection),
+            tree_id])
+
+        # Update the node to be consistent with the updated
+        # tree in the database.
+        setattr(node, self.left_attr, new_left)
+        setattr(node, self.right_attr, new_right)
+        setattr(node, self.level_attr, level - level_change)
+        setattr(node, self.parent_attr, parent)
+        node._mptt_cached_fields[self.parent_attr] = parent.pk
+
 class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
@@ -210,16 +351,17 @@ class ContentNode(MPTTModel, models.Model):
 
     changed = models.BooleanField(default=True)
 
-    objects = TreeManager()
+    objects = ContentNodeManager()
 
     def save(self, *args, **kwargs):
         # try:
-        parent = None
-        if self.parent:
-            parent = ContentNode.objects.get(id=self.parent_id)     # Refreshes cache before save
+        # if self.parent:
+        #     self.move_to(ContentNode.objects.get(id=self.parent_id))
         super(ContentNode, self).save(*args, **kwargs)
-        if parent:
-            self.move_to(ContentNode.objects.get(id=self.parent.pk)) # Makes sure cache is updated after save
+        # if self.parent:
+        #     self.move_to(ContentNode.objects.get(id=self.parent_id)) # Makes sure cache is updated after save
+
+
         # except:
         #     print "ERROR MOVING: Rebuilding tree..."
         #     ContentNode.objects.rebuild()

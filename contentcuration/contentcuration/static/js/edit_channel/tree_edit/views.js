@@ -99,7 +99,8 @@ var TreeEditView = BaseViews.BaseView.extend({
 				edit_mode: self.is_edit_page,
 				collection: self.collection,
 				container : self,
-				resolve:resolve
+				resolve:resolve,
+				reject:reject
 			});
 			self.containers.push(container_view);
 			self.$("#container-wrapper").scrollLeft(self.$("#container_area").width());
@@ -117,8 +118,6 @@ var TreeEditView = BaseViews.BaseView.extend({
 			container_view.$el.animate({
 				'margin-left' : "0px"
 			}, 500);
-
-
 		});
 		return container_view;
 	},
@@ -128,13 +127,21 @@ var TreeEditView = BaseViews.BaseView.extend({
 			var self = this;
 			this.display_load("Deleting Content...", function(resolve, reject){
 				try{
+					var promises = [];
 					for(var i = 0; i < self.containers.length; i++){
-						if(self.containers[i].delete_selected()){
-							self.remove_containers_from(self.containers[i].index);
+						promises.push(new Promise(function(resolve, reject){
+							self.containers[i].delete_selected(resolve, reject)
+	    				}));
+	    				if(self.containers[i].$el.find(".current_topic input").is(":checked")){
+	    					self.remove_containers_from(self.containers[i].index);
 							break;
-						}
+	    				}
 					}
-					resolve("Success!");
+					Promise.all(promises).then(function(){
+						resolve("Success!");
+					}).catch(function(error){
+						reject(error);
+					});
 				}catch(error){
 					reject(error);
 				}
@@ -146,12 +153,20 @@ var TreeEditView = BaseViews.BaseView.extend({
 		var self = this;
 		this.display_load("Copying Content...", function(resolve, reject){
 			try{
+				var promises = [];
 				for(var i = 0; i < self.containers.length; i++){
-					if(self.containers[i].copy_selected()){
-						break;
-					}
+					promises.push(new Promise(function(resolve, reject){
+						self.containers[i].copy_selected(resolve, reject)
+    				}));
+    				if(self.containers[i].$el.find(".current_topic input:checked").length != 0){
+    					break;
+    				}
 				}
-				resolve("Success!");
+				Promise.all(promises).then(function(){
+					resolve("Success!");
+				}).catch(function(error){
+					reject(error);
+				});
 			}catch(error){
 				reject(error);
 			}
@@ -165,11 +180,12 @@ var TreeEditView = BaseViews.BaseView.extend({
 		/*TODO: Debug more with editing and opening folders*/
 		this.$el.find("#container_area").toggleClass("hidden_details");
 	},
-	add_to_trash:function(collection){
-		this.queue_view.add_to_trash(collection);
+	add_to_trash:function(collection, resolve, reject){
+		this.queue_view.add_to_trash(collection, resolve, reject);
 	},
-	add_to_clipboard:function(collection){
+	add_to_clipboard:function(collection, resolve, reject){
 		this.queue_view.render();
+		resolve(true);
 		//this.queue_view.add_to_clipboard(collection);
 	},
 	handle_checked:function(){
@@ -215,24 +231,34 @@ var ContentList = BaseViews.BaseListView.extend({
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.childrenCollection.sort_by_order();
 		this.resolve = options.resolve;
-		this.render();
+		this.reject = options.reject;
+		this.render(this.resolve, this.reject);
 
 	},
-	render: function() {
+	render: function(resolve, reject) {
 		var self = this;
-		// DragHelper.removeDragDrop(this);
 		this.model.fetch({
 			success:function(model){
-				self.childrenCollection = self.collection.get_all_fetch(self.model.get("children"));
-				self.childrenCollection.sort_by_order();
-				self.$el.html(self.template({
-					topic: self.model,
-					title: (self.model.get("parent"))? self.model.get("title") : window.current_channel.get("name"),
-					edit_mode: self.edit_mode,
-					index: self.index,
-					content_list: self.childrenCollection.toJSON()
-				}));
-				self.load_content();
+				var promise = new Promise(function(resolve, reject){
+					self.childrenCollection = self.collection.get_all_fetch(self.model.get("children"));
+					self.childrenCollection.sort_by_order();
+					self.$el.html(self.template({
+						topic: self.model,
+						title: (self.model.get("parent"))? self.model.get("title") : window.current_channel.get("name"),
+						edit_mode: self.edit_mode,
+						index: self.index,
+						content_list: self.childrenCollection.toJSON()
+					}));
+					self.load_content(resolve, reject);
+				});
+				promise.then(function(){
+					$("#loading_modal").remove();
+				}).catch(function(error){
+					$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+					console.log("Error with asychronous call", error);
+            		console.trace();
+				});
+
 				self.$el.data("container", self);
 				self.$el.find("ul").data("list", self);
 				self.$el.find(".default-item").data("data", {
@@ -257,27 +283,39 @@ var ContentList = BaseViews.BaseListView.extend({
 		'click .upload_files_button': 'add_files'
 	},
 
-	load_content : function(){
+	load_content : function(resolve, reject){
 		this.views = [];
 		var self = this;
 		var el = this.$el.find(".content-list");
 		this.list_index = 0;
-		this.childrenCollection.forEach(function(entry){
-			var file_view = new ContentItem({
-				//el: el.find("#" + entry.id),
-				model: entry,
-				edit_mode: self.edit_mode,
-				containing_list_view:self,
-				allow_edit: false,
-				index : self.list_index++
-			});
-			el.append(file_view.el);
-			if(self.current_node && entry.id == self.current_node)
-				file_view.set_opened(true, false);
-			self.views.push(file_view);
+		var promises = [];
 
+		self.childrenCollection.forEach(function(entry){
+			var promise = new Promise(function(resolve, reject){
+				var file_view = new ContentItem({
+					//el: el.find("#" + entry.id),
+					model: entry,
+					edit_mode: self.edit_mode,
+					containing_list_view:self,
+					allow_edit: false,
+					index : self.list_index++,
+					resolve:resolve,
+					reject:reject
+				});
+				el.append(file_view.el);
+				if(self.current_node && entry.id == self.current_node)
+					file_view.set_opened(true, false);
+				self.views.push(file_view);
+			});
 		});
-		self.check_number_of_items_in_list();
+
+		Promise.all(promises).then(function(){
+			self.check_number_of_items_in_list();
+			resolve(true);
+		}).catch(function(error){
+			console.log("Error loading content", error);
+    		console.trace();
+		});
 	},
 	add_container:function(view){
 		this.current_node = view.model.id;
@@ -290,13 +328,23 @@ var ContentList = BaseViews.BaseListView.extend({
 			entry.set_opened(false);
 		});
 	},
-	add_to_trash:function(collection){
+	add_to_trash:function(collection, resolve, reject){
 		var self = this;
-		this.container.add_to_trash(collection);
-		this.model.fetch();
+		var promise = new Promise(function(resolve, reject){
+			self.container.add_to_trash(collection,resolve, reject);
+		});
+		promise.then(function(){
+			self.model.fetch({
+				success:function(model){
+					resolve(model);
+				}
+			});
+		}).catch(function(error){
+			reject(error)
+		});
 	},
-	add_to_clipboard:function(collection){
-		this.container.add_to_clipboard(collection);
+	add_to_clipboard:function(collection, resolve, reject){
+		this.container.add_to_clipboard(collection, resolve, reject);
 	},
 	close_container:function(views){
 		var self = this;
@@ -333,12 +381,14 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'edit_folder','open_folder',/*'expand_or_collapse_folder', */'hover_open_folder',
-					'submit_edit', 'cancel_edit','preview_node', 'cancel_open_folder', 'handle_checked','handle_hover','handle_drop');
+		_.bindAll(this, 'edit_folder','open_folder','hover_open_folder',
+					'preview_node', 'handle_checked','handle_hover','handle_drop');
 		this.edit_mode = options.edit_mode;
 		this.allow_edit = options.allow_edit;
 		this.containing_list_view = options.containing_list_view;
 		this.index = options.index;
+		this.resolve = options.resolve;
+		this.reject = options.reject;
 		this.render();
 	},
 
@@ -355,6 +405,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		if(this.model.get("kind") == "topic"){
 			DragHelper.addTopicDragDrop(this, this.handle_hover, this.handle_drop);
 		}
+		this.resolve(true);
 	},
 	reload:function(){
 		var self = this;
@@ -373,12 +424,8 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	},
 	events: {
 		'click .edit_folder_button': 'edit_folder',
-		'click .node_title_textbox': 'cancel_open_folder',
-		'click .topic_textarea' : 'cancel_open_folder',
 		'click .open_folder':'open_folder',
 		'click .folder' : "open_folder",
-		'click .cancel_edit' : 'cancel_edit',
-		'click .submit_edit' : 'submit_edit',
 		'click .preview_button': 'preview_node',
 		'click .file' : 'preview_node',
 		'change input[type=checkbox]': 'handle_checked'
@@ -389,10 +436,6 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		this.containing_list_view.close_folders();
 		this.sub_content_list = this.containing_list_view.add_container(this);
 		this.set_opened(true);
-	},
-	cancel_open_folder:function(event){
-		event.preventDefault();
-		event.stopPropagation();
 	},
 	set_opened:function(is_opened){
 		if(is_opened){
@@ -407,34 +450,6 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		event.preventDefault();
 		event.stopPropagation();
 		this.open_edit();
-	},
-	submit_edit: function(event){
-		event.preventDefault();
-		event.stopPropagation();
-		var title = ($("#textbox_" + this.model.id).val().trim() == "")? "Untitled" : $("#textbox_" + this.model.id).val().trim();
-		var description = ($("#textarea_" + this.model.id).val().trim() == "")? " " : $("#textarea_" + this.model.id).val().trim();
-		this.model.set({title:title, description:description}, {validate:true});
-		if(this.model.validationError){
-			this.$el.find(".node_title_textbox").addClass("error_input");
-			this.$el.find(".error_msg").html(this.model.validationError);
-		}
-		else{
-			this.save();
-			this.allow_edit = false;
-			this.$el.removeClass("editing");
-			this.render();
-		}
-
-	},
-	cancel_edit: function(event){
-		event.preventDefault();
-		event.stopPropagation();
-		this.allow_edit = false;
-		this.render();
-		if($("#hide_details_checkbox").attr("checked")){
-			this.$el.find("label").removeClass("editing");
-			this.$el.find("label").addClass("hidden_details");
-		}
 	},
 	preview_node: function(event){
 		event.preventDefault();
@@ -457,17 +472,21 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		}
 	},
 	add_to_trash:function(){
-		this.containing_list_view.add_to_trash([this]);
-		this.delete_view();
+		var self = this;
+		var promise = new Promise(function(resolve, reject){
+			self.containing_list_view.add_to_trash([self]);
+		});
+		promise.then(function(){
+			self.delete_view();
+		}).catch(function(error){
+			reject(error)
+		});
 	},
 	handle_checked:function(){
 		this.$el.toggleClass("content-selected");
 	},
 	hover_open_folder:function(event){
-		// if(!this.sub_content_list || !$(this.sub_content_list.el)){
-			this.open_folder(event);
-		// }
-
+		this.open_folder(event);
 	}
 });
 
