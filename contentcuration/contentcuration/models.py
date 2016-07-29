@@ -351,21 +351,17 @@ class ContentNode(MPTTModel, models.Model):
 
     changed = models.BooleanField(default=True)
 
-    objects = ContentNodeManager()
+    objects = TreeManager()
 
     def save(self, *args, **kwargs):
-        # try:
-        # if self.parent:
-        #     self.move_to(ContentNode.objects.get(id=self.parent_id))
-        super(ContentNode, self).save(*args, **kwargs)
-        # if self.parent:
-        #     self.move_to(ContentNode.objects.get(id=self.parent_id)) # Makes sure cache is updated after save
-
-
-        # except:
-        #     print "ERROR MOVING: Rebuilding tree..."
-        #     ContentNode.objects.rebuild()
-        #     super(ContentNode, self).save(*args, **kwargs)
+        try:
+            super(ContentNode, self).save(*args, **kwargs)
+            # if self.parent:
+            #     self.move_to(ContentNode.objects.get(id=self.parent_id)) # Makes sure cache is updated after save
+        except:
+            print "ERROR MOVING: Rebuilding tree..."
+            ContentNode.objects.rebuild()
+            super(ContentNode, self).save(*args, **kwargs)
 
         #     parent = ContentNode.objects.get(id=self.parent.pk)
 

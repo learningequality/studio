@@ -6,7 +6,7 @@
 	margin: 0 0 0 27px;
 	background-color:transparent;
 	border:none;
-	width:100vw;
+	width:100%;
 	min-height: 0;
 
 	li {
@@ -74,16 +74,15 @@
 	overflow-x:hidden;
 	width:100vw;
 	height:100%;
-	background: @blue-100;
-	padding: 13px 0 0 15px;
+	padding: 0;
 	border-top: 1px solid @blue-500;
 
 	#container-wrapper{
 		overflow:hidden;
 		overflow-x:auto;
 		position:absolute;
-		padding: 10px;
-		width:90vw;
+		width:100vw;
+		padding-left:40px;
 	}
 
 	.close_clipboard{
@@ -242,6 +241,11 @@
 		@edit-current-folder-color:#666666;
 
 		#button_bar {
+			width:100vw;
+			background-color:@blue-100;
+			margin:0;
+			margin-bottom:20px;
+			padding: 13px 0 0 30px;
 			.nav-button-container {
 				width: 50px;
 				.inline-block;

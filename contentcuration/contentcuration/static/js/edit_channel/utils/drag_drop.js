@@ -18,7 +18,6 @@ function addSortable(element, selected_class, callback){
 		placeholder: "sorting-placeholder",
 		forcePlaceholderSize: true,
 		scroll:true,
-	   	scrollSensitivity: 100,
 	   	scrollSpeed: 10,
 	   	connectWith: '.content-list',
 	   	tolerance: "pointer",
@@ -26,7 +25,6 @@ function addSortable(element, selected_class, callback){
 	   	distance:20,
 	   	cursor:"move",
 	   	zIndex:999999999999,
-	   	appendTo: 'body',
 	   	cancel: '.current_topic, .default-item, #preview li',
 	   	bodyClass: "dragging",
 	    helper: function (e, item) {
@@ -90,7 +88,10 @@ function addSortable(element, selected_class, callback){
 					$(".content-list").sortable( "enable" );
 				});
 			}
-	    }
+	    },
+	    over: function (e, ui) {
+		  $(ui.sender).sortable('instance').scrollParent = $(e.target)
+		}
 	}).droppable({
 		items : 'li',
 		revert: "valid",

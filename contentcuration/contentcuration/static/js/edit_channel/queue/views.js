@@ -46,6 +46,7 @@ var Queue = BaseViews.BaseView.extend({
 		if(this.$el.find("#queue").css("margin-right") != "0px"){
 			this.$el.find(".content-list").css("display", "block");
 			this.$el.find("#queue").animate({marginRight:0}, 200);
+
 		}
 		else{
 			this.$el.find("#queue").animate({marginRight: -this.$el.find("#main-queue").outerWidth()}, 200);
@@ -383,7 +384,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			DragHelper.addTopicDragDrop(this, this.handle_hover, this.handle_drop);
 		}
 	},
-	toggle:function(){
+	toggle:function(event){
 		event.stopPropagation();
 		event.preventDefault();
 		this.load_subfiles();
