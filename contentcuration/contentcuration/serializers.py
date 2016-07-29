@@ -109,9 +109,12 @@ class CustomListSerializer(serializers.ListSerializer):
                     bulk_adding_list.append(ThroughModel(node_id=node.pk, contenttag_id=tag.pk))
             ThroughModel.objects.bulk_create(bulk_adding_list)
 
+        print "*********** STARTING: ***********"
         # Perform updates.
         if update_nodes:
             for node_id, data in update_nodes.items():
+                print "BEFORE:"
+                recurse(ContentNode.objects.get(id__startswith='b9c5d'))
                 node = node_mapping.get(node_id, None)
                 if node:
                     # potential optimization opportunity
@@ -130,11 +133,21 @@ class CustomListSerializer(serializers.ListSerializer):
 
                     setattr(node, 'tags', taglist)
                     node.save()
-                    if node.parent:
-                        node.move_to(ContentNode.objects.get(id=node.parent_id)) # Makes sure cache is updated after save
+                    # if node.parent:
+                    #     node.move_to(ContentNode.objects.get(id=node.parent_id)) # Makes sure cache is updated after save
                     ret.append(node)
+                print "AFTER:"
+                recurse(ContentNode.objects.get(id__startswith='b9c5d'))
             # ContentNode.objects.rebuild()
+        print "*********** FINAL: ***********"
+        recurse(ContentNode.objects.get(id__startswith='b9c5d'))
+        print "*********** END ***********\n\n\n\n"
         return ret
+
+def recurse(node, level=0):
+    print ('\t' * level), node.id, node.lft, node.rght, node.title
+    for child in ContentNode.objects.filter(parent=node).order_by('sort_order'):
+        recurse(child, level + 1)
 
 class TagSerializer(serializers.ModelSerializer):
    class Meta:

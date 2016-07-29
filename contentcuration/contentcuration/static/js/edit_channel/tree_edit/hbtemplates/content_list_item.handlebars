@@ -1,8 +1,3 @@
-<!-- PARAMETERS -->
-<!-- edit_mode: is editing mode -->
-<!-- allow_edit: allow user to edit values on folders -->
-<!-- isfolder: content type is a folder -->
-
 {{#if edit_mode}}<input type="checkbox" id="item_{{node.id}}"/>
 {{else}}<input type="radio" name="{{container}}" id="item_{{node.id}}"/>{{/if}}
 {{#if isfolder}}

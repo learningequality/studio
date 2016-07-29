@@ -49,7 +49,7 @@ function addSortable(element, selected_class, callback){
         },
 		update: function(event, ui) {
 			if($(ui.item.context).data("data")){
-				$(".content-list").sortable("disable");
+				// $(".content-list").sortable("disable");
 				var order = new Models.ContentNodeCollection();
 				var selected_items = new Models.ContentNodeCollection();
 				var current_node = $(ui.item.context).data("data").model;
@@ -84,7 +84,7 @@ function addSortable(element, selected_class, callback){
 					$(".content-list").sortable( "enable" );
 					resolution("Success!");
 				}).catch(function(error){
-					alert(error);
+					console.log(error);
 					$(".content-list").sortable( "enable" );
 				});
 			}
@@ -111,7 +111,7 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		cursor:"move",
 		hoverClass: "drop-topic-hover",
 		drop:function(event, ui){
-			if(!$(".sorting-placeholder")){
+			if($(".sorting-placeholder").css('display') === "none"){
 				$(".content-list").sortable("disable");
 				var selected_items = new Models.ContentNodeCollection();
 				var current_node = $(ui.draggable.context).data("data").model;

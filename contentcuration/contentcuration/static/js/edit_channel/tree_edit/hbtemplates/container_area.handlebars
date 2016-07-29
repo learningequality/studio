@@ -6,8 +6,10 @@
 		<!--{{#if is_clipboard}}<a class="btn btn-default disable-on-edit construction">Import to Channel</a>{{/if}}-->
 		{{#if is_clipboard}}
 		<div class="nav-button-container">
-			<div class="nav-button back_to_edit_button disable-on-edit"><span class="glyphicon glyphicon-arrow-left"></span></div>
-			<a class="nav-label back_to_edit_button disable-on-edit">Back</a>
+			<a href="edit">
+				<div class="nav-button back_to_edit_button disable-on-edit"><span class="glyphicon glyphicon-arrow-left"></span></div>
+				<a class="nav-label back_to_edit_button disable-on-edit">Back</a>
+			</a>
 		</div>
 		{{/if}}
 		<div id="disable-none-selected-wrapper">

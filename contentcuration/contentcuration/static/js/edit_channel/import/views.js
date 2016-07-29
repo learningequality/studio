@@ -158,8 +158,8 @@ var ImportList = BaseViews.BaseListView.extend({
         this.views.forEach(function(entry){
             entry.check_item(checked);
             entry.set_disabled(checked);
-            if(entry.subfile_view){
-                entry.subfile_view.check_all_items(checked);
+            if(entry.subcontent_view){
+                entry.subcontent_view.check_all_items(checked);
             }
 
         });
@@ -240,8 +240,8 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
             this.$el.removeClass("to_import");
             this.metadata = {"count" : 0, "size": 0};
         }
-        if(this.subfile_view){
-            this.subfile_view.check_all_items(this.selected);
+        if(this.subcontent_view){
+            this.subcontent_view.check_all_items(this.selected);
         }
         this.update_count();
     },
@@ -261,7 +261,7 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         if(this.collection.length === 0){
              this.collection = this.collection.get_all_fetch(this.model.get("children"));
              this.collection.sort_by_order();
-             this.subfile_view = new ImportList({
+             this.subcontent_view = new ImportList({
                 model : this.model,
                 el: $("#" + this.id() + "_sub"),
                 is_channel: false,
@@ -281,8 +281,8 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         }
     },
     update_count:function(){
-        if(this.subfile_view){
-            this.metadata = this.subfile_view.get_metadata();
+        if(this.subcontent_view){
+            this.metadata = this.subcontent_view.get_metadata();
         }
         this.$("#" + this.id() + "_count").css("visibility", (this.metadata.count === 0)? "hidden" : "visible");
         this.$("#" + this.id() + "_count").text(this.metadata.count);

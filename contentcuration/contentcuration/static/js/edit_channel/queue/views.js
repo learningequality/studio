@@ -12,10 +12,12 @@ var Queue = BaseViews.BaseView.extend({
 	item_view:"queue",
 	initialize: function(options) {
 		_.bindAll(this, 'toggle_queue', 'switch_to_queue', 'switch_to_trash');
-		this.render();
+		this.resolve = options.resolve;
+		this.reject = options.reject;
+		this.render(this.resolve, this.reject);
 		this.$el.find("#queue").css("margin-right", -this.$el.find("#main-queue").outerWidth());
 	},
-	render: function() {
+	render: function(resolve, reject) {
 		this.$el.html(this.template());
 		this.clipboard_root = window.current_user.get_clipboard();
 		this.trash_root = window.current_channel.get_root("trash_tree");
@@ -36,6 +38,7 @@ var Queue = BaseViews.BaseView.extend({
 			container: this
 		});
 		this.switch_tab("clipboard");
+		resolve(true);
 	},
 	events: {
 		'click .queue-button' : 'toggle_queue',
@@ -212,9 +215,7 @@ var QueueList = BaseViews.BaseListView.extend({
 	add_to_trash:function(collection, resolve, reject){
 		this.container.add_to_trash(collection, resolve, reject);
 	},
-	add_to_clipboard:function(collection, resolve, reject){
-		this.container.add_to_clipboard(collection, resolve, reject);
-	},
+
 	check_number_of_items_in_list:function(){
     	this.$(".default-item").css("display", (this.views.length === 0) ? "block" : "none");
     	var self =this;
@@ -332,6 +333,7 @@ var TrashList = QueueList.extend({
 var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	template: require("./hbtemplates/queue_item.handlebars"),
 	tagName: "li",
+	selectedClass: "queue-selected",
 	'id': function() {
 		return this.model.get("id");
 	},
@@ -353,24 +355,24 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		'dblclick .queue_item_title' : 'edit_item',
 		'change input[type=checkbox]': 'handle_checked'
 	},
-	reload:function(){
-		var self = this;
-		this.model.fetch({
-			success:function(){
-				self.render();
-				if(self.subfile_view){
-					// self.load_subfiles();
-					// self.$("#" + self.id() +"_sub").css("display", "block");
-					// self.$("#menu_toggle_" + self.model.id).removeClass("glyphicon-menu-up").addClass("glyphicon-menu-down");
-					// self.subfile_view.assign_indices();
-					self.subfile_view.check_number_of_items_in_list();
-				}else{
-					self.containing_list_view.assign_indices();
-					self.containing_list_view.check_number_of_items_in_list();
-				}
-			}
-		});
-	},
+	// reload:function(){
+	// 	var self = this;
+	// 	this.model.fetch({
+	// 		success:function(){
+	// 			self.render();
+	// 			if(self.subcontent_view){
+	// 				// self.load_subfiles();
+	// 				// self.$("#" + self.id() +"_sub").css("display", "block");
+	// 				// self.$("#menu_toggle_" + self.model.id).removeClass("glyphicon-menu-up").addClass("glyphicon-menu-down");
+	// 				// self.subcontent_view.assign_indices();
+	// 				self.subcontent_view.check_number_of_items_in_list();
+	// 			}else{
+	// 				self.containing_list_view.assign_indices();
+	// 				self.containing_list_view.check_number_of_items_in_list();
+	// 			}
+	// 		}
+	// 	});
+	// },
 	render: function() {
 		this.$el.html(this.template({
 			node:this.model,
@@ -413,12 +415,12 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			container: this.container
 		}
 		if(this.is_clipboard){
-			this.subfile_view = new ClipboardList(data);
+			this.subcontent_view = new ClipboardList(data);
 		}else{
-			this.subfile_view = new TrashList(data);
+			this.subcontent_view = new TrashList(data);
 		}
 
-		this.$el.find("#" + this.id() +"_sub").append(this.subfile_view.el);
+		this.$el.find("#" + this.id() +"_sub").append(this.subcontent_view.el);
 	},
 	delete_content:function(){
 		event.stopPropagation();
@@ -460,15 +462,6 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			}
 		}
 	},
-	edit_item: function(){
-		event.stopPropagation();
-		event.preventDefault();
-		this.open_edit();
-		/*
-		this.allow_edit = true;
-		this.render();
-		*/
-	},
 	submit_item:function(event){
 		if(!event.keyCode || event.keyCode ==13){
 			this.model.set({title: this.$el.find(".queue_title_input").val().trim()}, {validate:true});
@@ -482,35 +475,6 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 				this.render();
 			}
 		}
-	},
-	add_to_trash:function(resolve){
-		var self = this;
-		var promise = new Promise(function(resolve, reject){
-			self.containing_list_view.add_to_trash(new Models.ContentNodeCollection([self.model]), resolve, reject);
-		});
-		promise.then(function(){
-			self.remove();
-			resolve("Success!");
-		}).catch(function(error){
-			reject(error)
-		});
-
-
-	},
-	add_to_clipboard:function(resolve, reject){
-		var self = this;
-		var promise = new Promise(function(resolve, reject){
-			self.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([self.model]));
-		});
-		promise.then(function(){
-			resolve(true);
-		}).catch(function(error){
-			reject(error)
-		});
-
-	},
-	handle_checked:function(){
-		this.$el.toggleClass("queue-selected");
 	},
 	hover_open_folder:function(event){
 		if(this.$el.find("#menu_toggle_" + this.model.id).hasClass("glyphicon-menu-up")){

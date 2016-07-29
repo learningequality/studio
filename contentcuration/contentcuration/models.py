@@ -2,6 +2,7 @@ import logging
 import os
 import uuid
 import hashlib
+import functools
 
 from django.conf import settings
 from django.contrib import admin
@@ -177,7 +178,58 @@ class ContentTag(models.Model):
     class Meta:
         unique_together = ['tag_name', 'channel']
 
+def delegate_manager(method):
+    """
+    Delegate method calls to base manager, if exists.
+    """
+    @functools.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        if self._base_manager:
+            return getattr(self._base_manager, method.__name__)(*args, **kwargs)
+        return method(self, *args, **kwargs)
+    return wrapped
+
 class ContentNodeManager(TreeManager):
+    @delegate_manager
+    def _move_node(self, node, target, position='last-child', save=True, refresh_target=True):
+        if self.tree_model._mptt_is_tracking:
+            print "CALLED CASE 1"
+            # delegate to insert_node and clean up the gaps later.
+            return self.insert_node(node, target, position=position, save=save,
+                                    allow_existing_pk=True, refresh_target=refresh_target)
+        else:
+            print "CALLED CASE 2"
+            if target is None:
+                print "CALLED CASE 2.1"
+                if node.is_child_node():
+                    self._make_child_root_node(node)
+            elif target.is_root_node() and position in ('left', 'right'):
+                print "CALLED CASE 2.2"
+                self._make_sibling_of_root_node(node, target, position)
+            else:
+                if node.is_root_node():
+                    print "CALLED CASE 2.3"
+                    self._move_root_node(node, target, position)
+                else:
+                    print "CALLED CASE 2.4"
+                    self._move_child_node(node, target, position)
+
+    def _move_child_node(self, node, target, position):
+        """
+        Calls the appropriate method to move child node ``node``
+        relative to the given ``target`` node as specified by
+        ``position``.
+        """
+        tree_id = getattr(node, self.tree_id_attr)
+        target_tree_id = getattr(target, self.tree_id_attr)
+
+        if tree_id == target_tree_id:
+            print "MOVING WITHIN TREE"
+            self._move_child_within_tree(node, target, position)
+        else:
+            print "MOVING TO NEW TREE"
+            self._move_child_to_new_tree(node, target, position)
+
     def _move_child_within_tree(self, node, target, position):
         """
         Moves child node ``node`` within its current tree relative to
@@ -310,6 +362,8 @@ class ContentNodeManager(TreeManager):
             parent._meta.get_field(parent._meta.pk.name).get_db_prep_value(parent.pk, connection),
             tree_id])
 
+        # print "NODE WAS: ", node.left_attr, node.right_attr, node.level_attr, node.parent_attr
+
         # Update the node to be consistent with the updated
         # tree in the database.
         setattr(node, self.left_attr, new_left)
@@ -317,6 +371,8 @@ class ContentNodeManager(TreeManager):
         setattr(node, self.level_attr, level - level_change)
         setattr(node, self.parent_attr, parent)
         node._mptt_cached_fields[self.parent_attr] = parent.pk
+
+        # print "NODE IS: ", node.left_attr, node.right_attr, node.level_attr, node.parent_attr
 
 class ContentNode(MPTTModel, models.Model):
     """
@@ -351,17 +407,17 @@ class ContentNode(MPTTModel, models.Model):
 
     changed = models.BooleanField(default=True)
 
-    objects = TreeManager()
+    objects = ContentNodeManager()
 
     def save(self, *args, **kwargs):
-        try:
-            super(ContentNode, self).save(*args, **kwargs)
+        # try:
+        super(ContentNode, self).save(*args, **kwargs)
             # if self.parent:
             #     self.move_to(ContentNode.objects.get(id=self.parent_id)) # Makes sure cache is updated after save
-        except:
-            print "ERROR MOVING: Rebuilding tree..."
-            ContentNode.objects.rebuild()
-            super(ContentNode, self).save(*args, **kwargs)
+        # except:
+        #     print "ERROR MOVING: Rebuilding tree..."
+        #     ContentNode.objects.rebuild()
+        #     super(ContentNode, self).save(*args, **kwargs)
 
         #     parent = ContentNode.objects.get(id=self.parent.pk)
 

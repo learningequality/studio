@@ -114,15 +114,23 @@ var BaseView = Backbone.View.extend({
 	    counter.html(char_length + ((char_length  == 1) ? " char left" : " chars left"));
 	    counter.css("color", (char_length == 0)? "red" : "gray");
 	},
-	reload_listed:function(collection){
+	reload_listed:function(collection, resolve, reject){
 		var list_to_reload = [];
+		var promises = [];
         collection.forEach(function(entry){
         	$.merge(list_to_reload, entry.get("ancestors"));
 		});
 		$.unique(list_to_reload).forEach(function(id){
 			if($("#" + id) && $("#" + id).data("data")){
-        		$("#" + id).data("data").reload();
+				promises.push(new Promise(function(resolve, reject){
+					$("#" + id).data("data").reload(resolve, reject);
+				}));
         	}
+		});
+		Promise.all(promises).then(function(){
+			resolve(true);
+		}).catch(function(error){
+			reject(error)
 		});
 	},
 	publish:function(){
@@ -197,7 +205,7 @@ BaseListView = BaseView.extend({
 		var self = this;
 		this.display_load("Moving Content...", function(resolve_main, reject_main){
             try{
-                /* Step 1: Get sort orders updated */
+            /* Step 1: Get sort orders updated */
 				var max = 1;
 				var min = 1;
 				var index = orders.indexOf(moved_item);
@@ -217,7 +225,6 @@ BaseListView = BaseView.extend({
 				}else{
 					resolve_main("Success!");
 				}
-
 			/* Step 2: Handle nodes from another parent if needed */
 				var promise = new Promise(function(resolve1, reject1){
 					if(orders.findWhere({id: moved_item.id})){
@@ -227,26 +234,36 @@ BaseListView = BaseView.extend({
 				promise.then(function(collections){
 					selected_items = collections.collection;
 					original_parents = collections.original_parents;
-
 			/* Step 3: Save nodes */
 					var second_promise = new Promise(function(resolve2, reject2){
 						selected_items.save(resolve2, reject2);
 					});
 					second_promise.then(function(){
-			 /* Step 4: Reload page to render changes */
-			 			var last_elem = $("#" + moved_item.id);
+			/* Step 4: Add items to show where items are dropped */
+			 			var promises = [];
+				 		var last_elem = $("#" + moved_item.id);
 						selected_items.forEach(function(node){
-							var to_delete = $("#" + node.id);
-							var item_view = self.create_new_item(node);
-							last_elem.after(item_view.el);
-							last_elem = item_view.$el;
-							self.views.push(item_view);
-							to_delete.remove();
+							promises.push(new Promise(function(resolve, reject){
+									var to_delete = $("#" + node.id);
+									var item_view = self.create_new_item(node, resolve, reject);
+									last_elem.after(item_view.el);
+									last_elem = item_view.$el;
+									self.views.push(item_view);
+									to_delete.remove();
+								}));
 						});
-						var reload_list = new Models.ContentNodeCollection(reload_list);
-						reload_list.add(original_parents.models.concat(selected_items.models));
-						self.reload_listed(reload_list);
-						resolve(resolve_main);
+			/* Step 5: Once all items have been created, reload page to reflect changes */
+						Promise.all(promises).then(function(){
+							var reload_list = new Models.ContentNodeCollection(reload_list);
+							reload_list.add(original_parents.models.concat(selected_items.models));
+							var promise = new Promise(function(resolve1, reject1){
+					            self.reload_listed(reload_list, resolve1, reject1);
+					        });
+					        promise.then(function(){
+								resolve(resolve_main);
+					        });
+						});
+			/* Catch any errors */
 					}).catch(function(error){
 						console.log(error)
 						reject(error);
@@ -368,7 +385,10 @@ BaseListView = BaseView.extend({
 		original_parents = original_parents.get_all_fetch(fetch_collection);
 		resolve({"collection" : updated_collection,
 				"original_parents" : original_parents});
-    }
+    },
+    add_to_clipboard:function(collection, resolve, reject){
+		this.container.add_to_clipboard(collection, resolve, reject);
+	},
 });
 
 
@@ -383,6 +403,18 @@ var BaseListItemView = BaseView.extend({
 });
 
 var BaseListNodeItemView = BaseListItemView.extend({
+	selectedClass: null,
+	reload:function(resolve, reject){
+		var self = this;
+		this.model.fetch({
+			success:function(model){
+				self.render(resolve, reject);
+			},
+			error:function(obj, error){
+				reject(error);
+			}
+		});
+	},
 	delete:function(){
     	if(!this.model){
     		this.delete_view();
@@ -416,6 +448,11 @@ var BaseListNodeItemView = BaseListItemView.extend({
     	}else{
     		this.model.set(data, options);
     	}
+	},
+	edit_item: function(event){
+		event.preventDefault();
+		event.stopPropagation();
+		this.open_edit();
 	},
 	open_edit:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
@@ -469,6 +506,16 @@ var BaseListNodeItemView = BaseListItemView.extend({
                 reject_main(error);
             }
         });
+	},
+	add_to_trash:function(resolve, reject){
+		this.containing_list_view.add_to_trash(new Models.ContentNodeCollection([self.model]), resolve, reject);
+		this.remove();
+	},
+	add_to_clipboard:function(resolve, reject){
+		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([self.model], resolve, reject));
+	},
+	handle_checked:function(){
+		(this.$el.find("input[type=checkbox]:checked"))? this.$el.addClass(this.selectedClass) : this.$el.removeClass(this.selectedClass);
 	},
 });
 
