@@ -111,41 +111,41 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		cursor:"move",
 		hoverClass: "drop-topic-hover",
 		drop:function(event, ui){
-			$(".content-list").sortable("disable");
-			console.log(ui)
-			var selected_items = new Models.ContentNodeCollection();
-			var current_node = $(ui.draggable.context).data("data").model;
-			console.log(current_node)
+			if(!$(".sorting-placeholder")){
+				$(".content-list").sortable("disable");
+				var selected_items = new Models.ContentNodeCollection();
+				var current_node = $(ui.draggable.context).data("data").model;
 
-	        var appended_items = new Models.ContentNodeCollection(); //Items from another container
-	        $("#drag-list li").each(function(index, item){
-	        	if($(".content-list #"  + item.id).data("data")){
-	        		var node = $(".content-list #"  + item.id).data("data").model;
-		        	if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
-		        		selected_items.push(current_node);
+		        var appended_items = new Models.ContentNodeCollection(); //Items from another container
+		        $("#drag-list li").each(function(index, item){
+		        	if($(".content-list #"  + item.id).data("data")){
+		        		var node = $(".content-list #"  + item.id).data("data").model;
+			        	if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
+			        		selected_items.push(current_node);
+			        	}
+			        	(current_node.get("parent") === node.get("parent")) ? selected_items.push(node) : appended_items.push(node);
+			        	$(".content-list #"  + item.id).remove();
 		        	}
-		        	(current_node.get("parent") === node.get("parent")) ? selected_items.push(node) : appended_items.push(node);
-		        	$(".content-list #"  + item.id).remove();
+		        })
+
+		        if(!selected_items.contains(current_node)){
+	        		selected_items.push(current_node);
 	        	}
-	        })
 
-	        if(!selected_items.contains(current_node)){
-        		selected_items.push(current_node);
-        	}
+	        	selected_items.add(appended_items.models, {at: selected_items.length});
+	        	var promise = new Promise(function(resolve, reject){
+			       dropCallback(selected_items, resolve, reject);
+				});
 
-        	selected_items.add(appended_items.models, {at: selected_items.length});
-        	var promise = new Promise(function(resolve, reject){
-		       dropCallback(selected_items, resolve, reject);
-			});
-
-			promise.then(function(callback){
-				$(ui.draggable.context).remove();
-				$(".content-list").sortable( "enable" );
-				callback("Success!");
-			}).catch(function(error){
-				alert(error);
-				$(".content-list").sortable( "enable" );
-			});
+				promise.then(function(callback){
+					$(ui.draggable.context).remove();
+					$(".content-list").sortable( "enable" );
+					callback("Success!");
+				}).catch(function(error){
+					alert(error);
+					$(".content-list").sortable( "enable" );
+				});
+			}
 		},
 		out: function(event, ui){
 			$(".sorting-placeholder").css("display", "block");
@@ -153,14 +153,17 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		},
 		over: function(event, ui){
 			hoverOnItem = $(this)[0];
-			var self = this;
-			$(".sorting-placeholder").css("display", "none");
-			var hoverItem = $(this)[0];
-			setTimeout(function(){
-				if(hoverOnItem === hoverItem && $(ui.draggable.context).data("data")){
-					hoverCallback(event);
-				}
-			}, hoverInterval)
+			if(!$(hoverOnItem).find("#menu_toggle_" + hoverOnItem.id).hasClass("glyphicon-menu-down")){
+				var self = this;
+				$(".sorting-placeholder").css("display", "none");
+				var hoverItem = $(this)[0];
+				setTimeout(function(){
+					if(hoverOnItem === hoverItem && $(ui.draggable.context).data("data")){
+						hoverCallback(event);
+					}
+				}, hoverInterval)
+			}
+
 		},
 	});
 }

@@ -129,6 +129,7 @@ var QueueList = BaseViews.BaseListView.extend({
 					index:0
 				});
 				DragHelper.addSortable(self, 'queue-selected', self.drop_in_container);
+				$(".content-list").sortable( "refresh" );
 			}
 		});
 

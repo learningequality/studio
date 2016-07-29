@@ -61,7 +61,6 @@ var BaseView = Backbone.View.extend({
             '<h4 id="kolibri_load_text" class="text-center">' + message + '</h4>' +
             '</div>';
         $(load).appendTo('body');
-console.log("DISPLAYING LOADs")
         if(callback){
     		setTimeout(function(){
     			try{
@@ -69,7 +68,6 @@ console.log("DISPLAYING LOADs")
 						callback(resolve, reject);
     				});
     				promise.then(function(){
-    					console.log("REMOVING")
     					$("#loading_modal").remove();
     				}).catch(function(error){
     					$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
