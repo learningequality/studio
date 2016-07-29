@@ -235,6 +235,7 @@ class FormatPreset(models.Model):
     readable_name = models.CharField(max_length=400)
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
+    thumbnail = models.BooleanField(default=False)
     order = models.IntegerField()
     kind = models.ForeignKey(ContentKind, related_name='format_presets')
     allowed_formats = models.ManyToManyField(FileFormat, blank=True)

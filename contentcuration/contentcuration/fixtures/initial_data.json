@@ -202,6 +202,7 @@
       "readable_name": "High Resolution",
       "multi_language" : false,
       "supplementary" : false,
+      "thumbnail" : false,
       "order" : 1,
       "kind" : "video",
       "allowed_formats" : ["mp4"]
@@ -214,6 +215,7 @@
       "readable_name": "Low Resolution",
       "multi_language" : false,
       "supplementary" : false,
+      "thumbnail" : false,
       "order" : 2,
       "kind" : "video",
       "allowed_formats" : ["mp4"]
@@ -226,6 +228,7 @@
       "readable_name": "Thumbnail",
       "multi_language" : false,
       "supplementary" : true,
+      "thumbnail" : true,
       "order" : 3,
       "kind" : "video",
       "allowed_formats" : ["png", "jpg", "jpeg"]
@@ -238,6 +241,7 @@
       "readable_name": "Audio",
       "multi_language" : false,
       "supplementary" : false,
+      "thumbnail" : false,
       "order" : 1,
       "kind" : "audio",
       "allowed_formats" : ["wav", "mp3"]
@@ -250,6 +254,7 @@
       "readable_name": "Thumbnail",
       "multi_language" : false,
       "supplementary" : true,
+      "thumbnail" : true,
       "order" : 2,
       "kind" : "audio",
       "allowed_formats" : ["png", "jpg", "jpeg"]
@@ -262,6 +267,7 @@
       "readable_name": "Document",
       "multi_language" : false,
       "supplementary" : false,
+      "thumbnail" : false,
       "order" : 1,
       "kind" : "document",
       "allowed_formats" : ["vtt", "srt", "pdf", "PDF"]
@@ -274,6 +280,7 @@
       "readable_name": "Thumbnail",
       "multi_language" : false,
       "supplementary" : true,
+      "thumbnail" : true,
       "order" : 2,
       "kind" : "document",
       "allowed_formats" : ["png", "jpg", "jpeg"]
