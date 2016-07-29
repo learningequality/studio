@@ -166,7 +166,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             preset=preset.pk,
             supplementary=preset.supplementary,
             lang=None,          # TODO: same, fix this once we've implemented lang importing.
-            thumbnail=False,    # TODO: maybe set to true or false once we bundle in more stuff than just the content db
+            thumbnail='thumbnail' in preset.id,    # TODO: maybe set to true or false once we bundle in more stuff than just the content db
         )
 
 
