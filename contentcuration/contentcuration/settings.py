@@ -148,5 +148,3 @@ SITE_ID = 1
 # EMAIL_HOST_PASSWORD = ''
 # EMAIL_USE_TLS = False
 DEFAULT_FROM_EMAIL = 'info@learningequality.org'
-
-HACK_HACK_HACK_UNICEF_CONTENT_ZIP_PATH = os.path.join(BASE_DIR, "unicef.zip")

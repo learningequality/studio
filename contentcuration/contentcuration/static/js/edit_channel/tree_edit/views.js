@@ -59,7 +59,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			}));
 			self.handle_checked();
 		});
-
+		this.check_changed_descendant();
 	},
 	events: {
 		'click .copy_button' : 'copy_content',
@@ -162,6 +162,20 @@ var TreeEditView = BaseViews.BaseView.extend({
 			model:window.current_channel,
 			current_user: window.current_user.toJSON()
 		});
+	},
+	check_changed_descendant:function(){
+		this.model.fetch({async:false});
+		console.log(this.model)
+		if(this.model.get("metadata").has_changed_descendant){
+			$("#channel-publish-button").prop("disabled", false);
+			$("#channel-publish-button").text("PUBLISH");
+			$("#channel-publish-button").removeClass("disabled");
+		}else{
+			$("#channel-publish-button").prop("disabled", true);
+			$("#channel-publish-button").text("No changes detected");
+			$("#channel-publish-button").addClass("disabled");
+		}
+		$("#publish-id").css("display", (window.current_channel.get("version") >= 1)? "inline-block" : "none");
 	}
 });
 
@@ -208,6 +222,7 @@ var ContentList = BaseViews.BaseListView.extend({
 			index:0
 		});
 		DragHelper.addDragDrop(this);
+		this.container.check_changed_descendant();
 	},
 
 	events: {
@@ -313,6 +328,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 			this.sub_content_list.update_name(this.model.get("title"));
 		}
 		this.containing_list_view.container.handle_checked();
+		this.containing_list_view.container.check_changed_descendant();
 	},
 	events: {
 		'click .edit_folder_button': 'edit_folder',

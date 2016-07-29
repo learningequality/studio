@@ -18,7 +18,8 @@ def calculate_node_metadata(node):
         "total_count" : node.children.count(),
         "resource_count" : 0,
         "max_sort_order" : 1,
-        "resource_size" : 0
+        "resource_size" : 0,
+        "has_changed_descendant" : node.changed and not node.is_root_node()
     }
 
     if node.kind_id == "topic":
@@ -28,6 +29,9 @@ def calculate_node_metadata(node):
             metadata['total_count'] += child_metadata['total_count']
             metadata['resource_size'] += child_metadata['resource_size']
             metadata['resource_count'] += child_metadata['resource_count']
+            if child_metadata['has_changed_descendant']:
+                metadata['has_changed_descendant'] = True
+
     else:
         metadata['resource_count'] = 1
         for f in node.files.all():

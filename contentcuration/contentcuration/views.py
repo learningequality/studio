@@ -75,6 +75,7 @@ def channel(request, channel_id):
     channel_tags_serializer = TagSerializer(channel_tags, many=True)
 
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
+                                                "channel_id" : channel_id,
                                                 "accessible_channels" : JSONRenderer().render(accessible_channel_list_serializer.data),
                                                 "channels" : JSONRenderer().render(channel_list_serializer.data),
                                                 "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),

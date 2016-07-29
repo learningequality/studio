@@ -31,7 +31,6 @@ class UserSerializer(serializers.ModelSerializer):
 class ChannelSerializer(serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
-
     def count_resources(self, channel):
         if not channel.main_tree:
             return 0

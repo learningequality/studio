@@ -1,5 +1,10 @@
 @import "global-variables.less";
 
+.disabled{
+	opacity:0.5;
+	cursor:not-allowed !important;
+}
+
 #secondary-nav {
 	@secondary-nav-btn-color:#F2F2F2;
 	padding:0px 20px;
@@ -29,12 +34,17 @@
 		}
 	}
 
-	.navbar-right li{
+	.navbar-right #channel-publish-button{
 		margin: -6px 40px 0 0;
 		.action-button;
 	}
+	#publish-id{
+		margin-right:10px;
+		font-size:9pt;
+	}
 
 }
+
 
 #disable-none-selected-wrapper{
 	display:inline-block;
