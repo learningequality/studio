@@ -75,6 +75,7 @@ def channel(request, channel_id):
     channel_tags_serializer = TagSerializer(channel_tags, many=True)
 
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
+                                                "channel_id" : channel_id,
                                                 "accessible_channels" : JSONRenderer().render(accessible_channel_list_serializer.data),
                                                 "channels" : JSONRenderer().render(channel_list_serializer.data),
                                                 "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),
@@ -208,10 +209,11 @@ def _duplicate_node(node, sort_order=1, parent=None):
         license=node.license,
         parent=ContentNode.objects.get(pk=parent) if parent else None,
         sort_order=sort_order,
-        license_owner=node.license_owner,
+        copyright_holder=node.copyright_holder,
         changed=True,
         original_node=node.original_node,
-        cloned_source=node
+        cloned_source=node,
+        author=node.author
     )
 
     # add tags now

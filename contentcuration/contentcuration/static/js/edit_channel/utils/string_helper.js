@@ -13,6 +13,13 @@ function format_size(text){
     return parseInt(value) + "B";
 }
 
+function escape_str(text){
+  return text.replace(/>/g, "&gt;").replace(/</g, "&lt;")
+        .replace(/\//g, "&#x2F;").replace(/\&/g, "&amp;")
+        .replace(/\"/g, "&quot;").replace(/\'/g, "&#x27;");
+}
+
 module.exports = {
-  format_size : format_size
+  format_size : format_size,
+  escape_str:escape_str
 }

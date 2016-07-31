@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 from contentcuration.models import *
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
@@ -25,12 +26,11 @@ class LanguageSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id')
+        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id','clipboard_tree')
 
 class ChannelSerializer(serializers.ModelSerializer):
     resource_count = serializers.SerializerMethodField('count_resources')
     resource_size = serializers.SerializerMethodField('calculate_resources_size')
-
     def count_resources(self, channel):
         if not channel.main_tree:
             return 0
@@ -51,15 +51,23 @@ class ChannelSerializer(serializers.ModelSerializer):
 
 class FileSerializer(serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
+    recommended_kind = serializers.SerializerMethodField('retrieve_recommended_kind')
+    mimetype = serializers.SerializerMethodField('retrieve_extension')
 
     def get(*args, **kwargs):
          return super.get(*args, **kwargs)
     class Meta:
         model = File
-        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'lang','original_filename')
+        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'mimetype')
 
     def get_file_url(self, obj):
         return obj.file_on_disk.url
+
+    def retrieve_recommended_kind(self, obj):
+        return FormatPreset.objects.filter(allowed_formats__extension__contains=obj.file_format).first().kind.pk
+
+    def retrieve_extension(self, obj):
+        return obj.file_format.mimetype
 
 class FileFormatSerializer(serializers.ModelSerializer):
     class Meta:
@@ -275,7 +283,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
-                 'license_owner', 'license', 'kind', 'children', 'parent', 'content_id','preset',
+                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','preset',
                  'ancestors', 'tags', 'files', 'metadata')
 
 class ExerciseSerializer(serializers.ModelSerializer):

@@ -11,6 +11,7 @@
 	@highlight-color: #E6E6E6;
 	@queue-tab-height: 30px;
 	@manage-clipboard-btn-height : 50px;
+	@placeholder-color:#666666;
 	right:0em;
 	top: 6.7em;
 	position:absolute;
@@ -188,12 +189,13 @@
 					}
 					.placeholder{
 						width: 100%;
-						background-color: @highlight-color;
+						background-color: @placeholder-color;
 						opacity: 0.4;
 						height: @queue-list-item-height;
 					}
 					li{
-						padding: 10px 5px;
+						padding-top:5px;
+						padding-left:5px;
 						width:@queue-width - 30px;
 						input[type=checkbox]{
 							display:inline-block;

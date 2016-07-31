@@ -1,6 +1,6 @@
 <h2 class="text-center title-bar truncate">
 	<span class="glyphicon glyphicon-menu-left back_button pull-left" aria-hidden="true"></span>
-	{{title}}
+	<span class="container-title">{{title}}</span>
 </h2>
 <ul class="content-list sortable list-unstyled" id="container_list_{{topic.id}}">
 	{{#unless content_list}}<li id="default_item_{{topic.id}}" class="default-item"><h5>No items found.</h5></li>{{/unless}}
@@ -15,8 +15,14 @@
 		    <span class="sr-only">Toggle Dropdown</span>
 		  </button>
 		  <ul class="dropdown-menu add_content_dropdown">
-		    <li><a class="disable-on-edit create_new_button" name="{{topic.attributes.title}}">
-		    		Upload files / create topics
+		    <li>
+		    	<a class="disable-on-edit create_new_button" name="{{topic.attributes.title}}">
+		    		Create a new topic
+		    	</a>
+		    </li>
+		    <li>
+		    	<a class="disable-on-edit upload_files_button" name="{{topic.attributes.title}}">
+		    		Upload files from computer
 		    	</a>
 		    </li>
 		    <li>

@@ -39,6 +39,11 @@ var UserModel = BaseModel.extend({
     },
     send_invitation_email:function(email, channel, callback){
     	mail_helper.send_mail(channel, email, callback);
+    },
+    get_clipboard:function(){
+    	var root = new ContentNodeModel({id: this.get("clipboard_tree")});
+    	root.fetch({async:false});
+    	return root;
     }
 });
 
@@ -100,17 +105,27 @@ var ContentNodeModel = BaseModel.extend({
 	defaults: {
 		title:"Untitled",
 		children:[],
-		tags:[]
+		tags:[],
+		metadata:{
+			"resource_size":0,
+			"resource_count":0,
+			"max_sort_order":1
+		}
     },
 
 	/*Used when copying items to clipboard*/
-    duplicate: function(target_parent, options){
+    duplicate: function(target_parent, sort_order){
 		var node_id = this.get("id");
-		var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
+		var sort_order_index = 1;
+		if(sort_order){
+			sort_order_index = sort_order;
+		}else if(target_parent){
+			sort_order_index = target_parent.get("metadata").max_sort_order + 1;
+		}
         var parent_id = (target_parent) ? target_parent.get("id") : null;
 
         var data = {"node_id": node_id,
-                    "sort_order": sort_order,
+                    "sort_order": sort_order_index,
                     "target_parent": parent_id};
         var copied_id;
         $.ajax({

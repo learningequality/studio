@@ -9,7 +9,7 @@
 	<script>
 		var channels = JSON.parse("{{ channels |escapejs }}");
 		var license_list = JSON.parse("{{ license_list|escapejs}}");
-		var current_user = JSON.parse("{{ current_user|escapejs }}");
+		var user = JSON.parse("{{ current_user|escapejs }}");
 	</script>
 	<script type="text/javascript">
 		var bundle = require("channel_edit");

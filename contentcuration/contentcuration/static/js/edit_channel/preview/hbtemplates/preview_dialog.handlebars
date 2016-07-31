@@ -1,12 +1,18 @@
-{{#unless is_modal}}<h3>{{node.attributes.title}}</h3>{{/unless}}
-<div class="btn-group">
-  <button class="btn btn-default btn-sm dropdown-toggle" id="preview_format_switch" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-  	{{#if selected_preset}}
-  		{{selected_preset.attributes.readable_name}} <span class="caret"></span>
-  	{{else}}No files found.
-  	{{/if}}
-  </button>
-  <ul class="dropdown-menu text-center" id="preview_tabs_dropdown"></ul>
+{{#unless is_modal}}<h3 title="{{node.attributes.title}}">{{node.attributes.title}}</h3>{{/unless}}
+<div id="preview_content_main">
+<div class="row">
+    <div class="btn-group col-sm-6">
+      <button class="btn btn-default btn-sm dropdown-toggle" id="preview_format_switch" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      	{{#if selected_preset}}
+      		{{selected_preset.attributes.readable_name}} <span class="caret"></span>
+      	{{else}}No files found.
+      	{{/if}}
+      </button>
+      <ul class="dropdown-menu" id="preview_tabs_dropdown"></ul>
+    </div>
+    <div class="col-sm-6">
+      <a class="btn btn-default view_fullscreen">Show Fullscreen</a>
+    </div>
 </div>
 
 <div id="preview_window">
@@ -15,4 +21,5 @@
 		<h5 class="default_preview_text text-center"><em>Select a format to preview.</em></h5>
 	</div>
 	{{/unless}}
+</div>
 </div>

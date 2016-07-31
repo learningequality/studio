@@ -22,24 +22,19 @@
 		color:#EF2121;
 	}
 
-	.modal-content{
+	.modal-dialog{
 		width: @exporter-width;
-		height:@exporter-height;
+	}
+
+	.modal-content{
+
+		min-height:@exporter-height;
 		background-color:@exporter-background-color;
 
 		label, #export_license_select{
 			font-size: 14pt;
 		}
-		#export_license_select{
-			padding: 0px 2px;
-		}
-		#license_about{
-			display:none;
-			font-size:14pt;
-			margin-left:5px;
-			cursor:pointer;
-			color: @blue-500;
-		}
+
 		#version_number{
 			color:gray;
 			padding-right:10px;
@@ -65,7 +60,7 @@
 
 		#export_preview{
 			margin: 10px;
-			height: @exporter-list-height;
+			min-height: @exporter-list-height;
 			overflow-y:auto;
 			.export_list{
 				margin-left:10px;
@@ -92,36 +87,5 @@
 		}
 
 
-	}
-}
-
-#license_modal{
-	padding:10px 5px;
-	overflow-y:auto;
-	.modal-content{
-		width:@exporter-width * 0.7;
-		height: @exporter-height * 0.6;
-		margin-top:15%;
-		margin-left: 15%;
-		.modal-header{
-			background-color:@gray-200;
-		}
-		h4{
-			font-size:15pt;
-			font-weight:bold;
-		}
-
-		#license_description_wrapper{
-			height:@exporter-height * 0.4 ;
-			overflow-y:auto;
-			margin-bottom:20px;
-			padding:5px;
-		}
-
-		p{
-			font-size:12pt;
-			font-style:italic;
-			color:gray;
-		}
 	}
 }

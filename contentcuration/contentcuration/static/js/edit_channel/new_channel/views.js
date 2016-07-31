@@ -6,10 +6,10 @@ require("dropzone/dist/dropzone.css");
 var Models = require("edit_channel/models");
 var BaseViews = require("edit_channel/views");
 var get_cookie = require("utils/get_cookie");
-var urlizer = require("edit_channel/utils/data_url");
 
 var ChannelList  = BaseListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
+	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
 	item_view: "channel", // TODO: Use to indicate how to save items on list
 
 	initialize: function(options) {
@@ -23,7 +23,7 @@ var ChannelList  = BaseListView.extend({
 		this.set_editing(false);
 		this.$el.html(this.template({
 			channel_list: this.collection.toJSON(),
-			user: this.user
+			user: window.current_user
 		}));
 		this.load_content();
 	},
@@ -44,11 +44,14 @@ var ChannelList  = BaseListView.extend({
 			default_license: window.licenses.get_default(),
 		});
 		this.$el.find("#channel_list").append(new_channel.el);
+		$(".default-channel-item").remove();
 	},
 	load_content:function(){
 		var self = this;
+		$(".default-channel-item").remove();
 		$("#channel_selection_dropdown_list").html("");
-		this.collection.forEach(function(entry){
+		$("#channel_list").html("");
+		this.collection.where({deleted:false}).forEach(function(entry){
 			var view = new ChannelListItem({
 				model: entry,
 				edit: false,
@@ -57,12 +60,13 @@ var ChannelList  = BaseListView.extend({
 			});
 			self.$("#channel_list").append(view.el);
 			self.views.push(view);
-        	$("#channel_selection_dropdown_list").append("<li><a href='" + entry.get("id") + "/edit' class='truncate'>" + entry.get("name") + "</a></li>");
 		});
-
-		if(this.collection.length == 0){
-			$("#channel_selection_dropdown_list").append("<li class='default-channel-item'><em>No channels found.</em></li>");
+		if (this.collection.where({deleted:false}).length ===0){
+			$("#channel_list").append("<li class='default-channel-item'><em>No channels found.</em></li>");
 		}
+		$("#channel_selection_dropdown_list").html(this.dropdown_template({
+			channel_list: this.collection.toJSON()
+		}));
 	}
 });
 
@@ -155,17 +159,24 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		this.$(".save_channel").attr("disabled", "disabled");
 	},
 	delete_channel: function(event){
-		if(!this.model.isNew() && (confirm("WARNING: All content under this channel will be permanently deleted."
-					+ "\nAre you sure you want to delete this channel?"))){
+		if(this.model.isNew()){
+			this.containing_list_view.set_editing(false);
+			this.delete_view();
+			this.containing_list_view.collection.remove(this.model);
+			this.containing_list_view.load_content();
+		}else if(confirm("WARNING: All content under this channel will be permanently deleted."
+					+ "\nAre you sure you want to delete this channel?")){
 			var self = this;
 			this.display_load("Deleting Channel...", function(){
 				self.containing_list_view.set_editing(false);
 				self.delete();
 				self.delete_view();
+				self.containing_list_view.collection.remove(self.model);
+				self.containing_list_view.load_content();
 			});
 		}else{
-			this.containing_list_view.set_editing(false);
-			this.delete_view();
+			event.stopPropagation();
+			event.preventDefault();
 		}
 	},
 	toggle_channel: function(event){
@@ -177,6 +188,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			this.render();
 		}else{
 			this.delete_view();
+			this.containing_list_view.load_content();
 		}
 	},
 	save_channel: function(event){
@@ -196,7 +208,9 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		this.display_load("Saving Channel...", function(){
 			self.edit = false;
 			self.save(data, {async:false});
-			self.render();
+			self.containing_list_view.collection.add(self.model);
+			self.containing_list_view.load_content();
+			self.delete_view();
 		});
 	},
 

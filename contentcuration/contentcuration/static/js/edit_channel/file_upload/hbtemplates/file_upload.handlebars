@@ -1,4 +1,4 @@
-<div id="{{#if uploading}}uploading_step_area{{else}}formatting_step_area{{/if}}">
+<div id="{{#if uploading}}uploading_step_area{{else}}{{#if metadata}}metadata_step_area{{else}}formatting_step_area{{/if}}{{/if}}">
 	<div class="uploading_only">
 		<button class="btn btn-default fileinput-button dz-clickable action-button">
 		    <span>Add More Files</span>
@@ -8,6 +8,7 @@
 	<div id="{{#if uploading}}dropzone{{else}}format_list{{/if}}" class="file_list">
 
 	</div>
+	<div id="editmetadata_section" class="metadata_only"></div>
 	<div class="file_upload_buttons">
 		<div class="uploading_only">
 			<button disabled class="action-button pull-right go_to_formats">
@@ -18,11 +19,16 @@
 			</a>
 		</div>
 		<div class="formatting_only">
-			<button disabled class="action-button pull-right submit_uploaded_files">
+			<button disabled class="action-button pull-right go_to_metadata">
 				<span>Assign formats to continue</span>
 			</button>
 			<a class="action-text go_to_upload">
 				<span>BACK</span>
+			</a>
+		</div>
+		<div class="metadata_only">
+			<a class="action-text go_to_upload_from_metadata">
+				<span>ADD MORE</span>
 			</a>
 		</div>
 	</div>

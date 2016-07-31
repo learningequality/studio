@@ -10,9 +10,7 @@
 		{{#if isfolder}}<div class="pull-left tog_folder"><span id="menu_toggle_{{node.id}}" class="glyphicon glyphicon-menu-up"></span></div>{{/if}}
 		<!--<span class="glyphicon glyphicon-{{file_icon}}"></span>-->
 		<h6>{{to_upper_case node.attributes.kind}}</h6>
-		<h4><div class="queue_item_title truncate">{{node.attributes.title}}</div>{{#if isfolder}}<div class="badge clipboard-topic-count">{{node.attributes.metadata.total_count}}</div>{{/if}}</h4>
-
-
+		<h4><div class="queue_item_title truncate" title="{{node.attributes.title}}">{{node.attributes.title}}</div>{{#if isfolder}}<div class="badge clipboard-topic-count">{{node.attributes.metadata.resource_count}}</div>{{/if}}</h4>
 	{{/if}}
 </label>
 {{#if isfolder}}<div id="{{node.id}}_sub" class="subdirectory">

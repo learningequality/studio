@@ -13,7 +13,6 @@
 .modal{
 	padding-top:20px;
 	z-index: 99999;
-	position:absolute;
 }
 
 .file-row{
@@ -61,6 +60,7 @@
 
 .modal-dialog{
 	width: @uploader-width;
+	margin-top:5%;
 }
 
 
@@ -70,7 +70,7 @@ div#dropzone {
 
 
 .dz_click{
-	margin-right:10px;
+/*	margin-right:10px;*/
 	cursor:pointer;
 }
 
@@ -106,6 +106,9 @@ div#dropzone {
 	max-width:100%;
 	max-height:90%;
 }
+video::-webkit-media-controls-fullscreen-button {
+    display: none;
+}
 
 #preview_modal_content{
 	.modal-title{
@@ -113,5 +116,54 @@ div#dropzone {
 	}
 	.document_preview{
 		min-height:600px;
+	}
+}
+
+#preview_tabs_dropdown{
+	margin-top:-2px;
+	margin-left:15px;
+	width:90%;
+}
+.preview_btn_tab{
+	font-size:10pt;
+	width:100%;
+	padding:10px;
+}
+.preview_btn_tab:hover{
+	background-color: @gray-200;
+}
+
+.view_fullscreen{
+	width:100%;
+}
+
+#preview_format_switch{
+	font-size:11pt;
+	width:100%;
+}
+
+.preview_on{
+	height:100vh !important;
+	width:100vw !important;
+	padding:20px !important;
+	background-color:white !important;
+	.document_preview{
+		width:100% !important;
+		height:90vh !important;
+		margin-top:10px !important;
+	}
+	.image_preview{
+		max-width:100% !important;
+		max-height:90vh !important;
+	}
+	.audio_preview{
+		width:100% !important;
+		margin-top:40% !important;
+	}
+
+	.video_preview{
+		margin-top:20px !important;
+		width:100% !important;
+		max-height:90vh !important;
 	}
 }

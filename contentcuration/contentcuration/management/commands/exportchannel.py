@@ -1,6 +1,7 @@
 import collections
 import os
 import zipfile
+import shutil
 
 from django.conf import settings
 from django.core.management import call_command
@@ -44,7 +45,7 @@ class Command(BaseCommand):
 
             map_channel_to_kolibri_channel(channel)
             map_content_nodes(channel.main_tree,)
-            hack_hack_hack_zip_actual_files()
+            save_export_database(channel_id)
             # use SQLite backup API to put DB into archives folder.
             # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -128,7 +129,7 @@ def create_bare_contentnode(ccnode):
         content_id=ccnode.content_id,
         description=ccnode.description,
         sort_order=ccnode.sort_order,
-        license_owner=ccnode.license_owner,
+        license_owner=ccnode.copyright_holder,
         kind=ccnode.kind.kind,
         license=kolibri_license,
         available=False,
@@ -165,7 +166,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             preset=preset.pk,
             supplementary=preset.supplementary,
             lang=None,          # TODO: same, fix this once we've implemented lang importing.
-            thumbnail=False,    # TODO: maybe set to true or false once we bundle in more stuff than just the content db
+            thumbnail=preset.thumbnail,    # TODO: maybe set to true or false once we bundle in more stuff than just the content db
         )
 
 
@@ -214,20 +215,14 @@ def mark_all_nodes_as_changed(channel):
 
     logging.info("Marked all nodes as changed.")
 
+def save_export_database(channel_id):
+    logging.debug("Saving export database")
+    current_export_db_location = settings.DATABASES["export_staging"]["NAME"]
+    target_export_db_location = os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
+    try:
+        os.mkdir(settings.DB_ROOT)
+    except OSError:
+        logging.debug("{} directory already exists".format(settings.DB_ROOT))
 
-def hack_hack_hack_zip_actual_files():
-    # TODO: remove once we deliver UNICEF MMVP
-
-    zippath = settings.HACK_HACK_HACK_UNICEF_CONTENT_ZIP_PATH
-
-    with zipfile.ZipFile(zippath, "w") as zf:
-        channel_file_ids = [k.pk for k in kolibrimodels.File.objects.all()]
-        filepaths = [f for f in ccmodels.File.objects.filter(id__in=channel_file_ids)]
-
-        logging.debug("Writing {count} files to the zip".format(count=len(filepaths)))
-
-        for f in filepaths:
-            # locations = str(f.file_on_disk).split('/') #os.path.sep)
-            # full_path = f.file_on_disk.url #os.path.join(settings.STORAGE_ROOT, os.path.sep.join(locations[1:len(locations)]))
-            full_path = os.path.join(settings.STORAGE_ROOT, f.file_on_disk.url)
-            zf.write(full_path, str(f))
+    shutil.copyfile(current_export_db_location, target_export_db_location)
+    logging.info("Successfully copied to {}".format(target_export_db_location))

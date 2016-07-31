@@ -7,6 +7,7 @@ var get_cookie = require("utils/get_cookie");
 require("file-uploader.less");
 require("dropzone/dist/dropzone.css");
 var stringHelper = require("edit_channel/utils/string_helper");
+var browserHelper = require("edit_channel/utils/browser_functions");
 
 var FileModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/file_upload_modal.handlebars"),
@@ -18,20 +19,33 @@ var FileModalView = BaseViews.BaseModalView.extend({
         this.render();
         this.file_upload_view = new FileUploadView({
             el: this.$(".modal-body"),
+            parent_view : this.parent_view,
             callback: this.callback,
-            container: this
+            container: this,
+            model:this.model
         });
     },
 
     render: function() {
         this.$el.html(this.template());
         $("body").append(this.el);
-        this.$(".modal").modal({show: true, backdrop: 'static', keyboard: false});
-        this.$(".modal").on("hide.bs.modal", this.close);
+        this.$(".modal").modal({show: true});
+        this.$(".modal").on("hide.bs.modal", this.close_file_uploader);
     },
-    close_file_uploader:function(){
-      this.callback(this.file_upload_view.returnCollection);
-      this.close();
+    close_file_uploader:function(event){
+        if(this.file_upload_view.views.length === 0){
+            this.close();
+        }else if(confirm("Unsaved Metadata Detected! Exiting now will"
+            + " undo any new changes. \n\nAre you sure you want to exit?")){
+
+            this.file_upload_view.views.forEach(function(view){
+                view.clean_files();
+            });
+            this.close();
+        }else{
+            event.stopPropagation();
+            event.preventDefault();
+        }
     }
 });
 
@@ -42,22 +56,25 @@ var FileUploadView = BaseViews.BaseListView.extend({
     file_list : [],
     returnCollection: null,
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded",  "submit_files", "all_files_uploaded", "file_added", "file_removed", "go_to_formats", "go_to_upload", "file_failed");
+        _.bindAll(this, "file_uploaded",  "all_files_uploaded", "file_added", "file_removed", "go_to_upload_from_metadata","go_to_formats", "go_to_upload", "go_to_metadata","file_failed", "close_file_uploader");
         this.callback = options.callback;
         this.container = options.container;
         this.uploading = true;
+        this.metadata = false;
         this.file_list = [];
         this.views=[];
         this.fileCollection = new Models.FileCollection();
         this.returnCollection = new Models.ContentNodeCollection();
         this.acceptedFiles = this.get_accepted_files();
+        this.parent_view = options.parent_view;
+        this.current_sort_order = this.model.get("metadata").max_sort_order + 1;
         this.render();
-
     },
     events:{
-      "click .submit_uploaded_files" : "submit_files",
       "click .go_to_formats" : "go_to_formats",
-      "click .go_to_upload" : "go_to_upload"
+      "click .go_to_upload" : "go_to_upload",
+      "click .go_to_metadata": "go_to_metadata",
+      "click .go_to_upload_from_metadata":"go_to_upload_from_metadata"
     },
     get_accepted_files:function(){
         var list = [];
@@ -71,7 +88,8 @@ var FileUploadView = BaseViews.BaseListView.extend({
     render: function() {
         this.nodeCollection = new Models.ContentNodeCollection();
         this.$el.html(this.template({
-            uploading:this.uploading
+            uploading:this.uploading,
+            metadata:this.metadata
         }));
 
         if(this.uploading){
@@ -81,7 +99,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
                 acceptedFiles: this.acceptedFiles,
                 url: window.Urls.file_upload(),
                 previewTemplate:this.file_upload_template(),
-                parallelUploads: 20,
+                parallelUploads: browserHelper.get_max_parallel_uploads()-1,
                 //autoQueue: false, // Make sure the files aren't queued until manually added
                 previewsContainer: "#dropzone", // Define the container to display the previews
                 headers: {"X-CSRFToken": get_cookie("csrftoken")}
@@ -97,7 +115,9 @@ var FileUploadView = BaseViews.BaseListView.extend({
             this.dropzone.on("removedfile", this.file_removed);
             this.dropzone.on("error", this.file_failed);
         }
-        this.load_content();
+        if(!this.metadata){
+            this.load_content();
+        }
     },
     load_content:function(){
         var list = this.$el.find(".file_list");
@@ -136,22 +156,21 @@ var FileUploadView = BaseViews.BaseListView.extend({
         fileModel.fetch({async:false});
 
         var presets = new Models.FormatPresetCollection();
-
-        window.formatpresets.forEach(function(preset){
-            if(preset.get("allowed_formats").indexOf(fileModel.get("file_format")) >= 0){
-                var new_slot = preset.clone();
-                presets.add(new_slot);
-            }
-        });
+        var kind = window.contentkinds.findWhere({kind: fileModel.get("recommended_kind")});
+        kind.get("associated_presets").forEach(function(preset){
+            presets.add(window.formatpresets.get(preset).clone());
+        })
 
         var node = this.nodeCollection.create({
             title : new_file_data.data.name.split(".")[0],
             parent : null,
             children : [],
-            kind: (presets.models.length > 0) ? presets.models[0].get("kind") : null,
+            kind: fileModel.get("recommended_kind"),
             license: 1,
             total_file_size : 0,
-            tags : []
+            tags : [],
+            sort_order : this.current_sort_order++,
+            author: window.current_user.get("first_name") + " " + window.current_user.get("last_name")
         }, {async:false});
 
         node.set({
@@ -182,15 +201,14 @@ var FileUploadView = BaseViews.BaseListView.extend({
         $(file.previewTemplate).find(".dropzone_remove").css("display", "inline-block");
     },
     disable_submit: function() {
-        this.$(".submit_uploaded_files").attr("disabled", "disabled");
-        this.$(".submit_uploaded_files").text((this.check_completed()) ? "Upload in progress..." : "Assign formats to continue");
+        this.$(".go_to_metadata").attr("disabled", "disabled");
+        this.$(".go_to_metadata").text((this.check_completed()) ? "Upload in progress..." : "Assign formats to continue");
     },
     enable_submit: function() {
-        this.$(".submit_uploaded_files").removeAttr("disabled");
-        this.$(".submit_uploaded_files").text("FINISH UPLOAD");
+        this.$(".go_to_metadata").removeAttr("disabled");
+        this.$(".go_to_metadata").text("EDIT METADATA");
     },
     disable_next:function(){
-        console.log(this.file_list)
 
         this.$(".go_to_formats").attr("disabled", "disabled");
         this.$(".go_to_formats").text((this.file_list.length === 0)? "Add files to continue" : "Upload in progress...");
@@ -224,6 +242,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
     go_to_formats:function(){
         this.container.$("#formats_step_number").addClass("active_number");
         this.uploading = false;
+        this.metadata = false;
         this.render();
         if(this.check_completed()){
             this.enable_submit();
@@ -231,11 +250,50 @@ var FileUploadView = BaseViews.BaseListView.extend({
     },
     go_to_upload:function(){
         this.container.$("#formats_step_number").removeClass("active_number");
+        this.container.$("#metadata_step_number").removeClass("active_number");
         this.uploading = true;
+        this.metadata = false;
         this.render();
     },
+    go_to_metadata:function(){
+        this.container.$("#metadata_step_number").addClass("active_number");
+        this.uploading = false;
+        this.metadata = true;
+        this.render();
+        var self = this;
+        this.views.forEach(function(view){
+            self.returnCollection.add(view.submit_file());
+        });
+        var UploaderViews = require("edit_channel/uploader/views");
+        this.metadata_view = new UploaderViews.EditMetadataView({
+            el : $("#editmetadata_section"),
+            collection: this.returnCollection,
+            parent_view: this.parent_view,
+            model: this.model,
+            allow_add: true,
+            new_topic: false,
+            main_collection : this.returnCollection,
+            modal: false,
+            callback: this.close_file_uploader
+        });
+    },
+    go_to_upload_from_metadata:function(){
+        var self = this;
+        this.views.forEach(function(view){
+            view.model.set(self.returnCollection.get(view.model).attributes);
+            var preset_collection = new Models.FormatPresetCollection();
+            view.model.get("files").forEach(function(file){
+                var new_preset = window.formatpresets.get({id: file.get("preset")});
+                new_preset.attached_format = file;
+                preset_collection.add(new_preset);
+            })
+            view.presets = preset_collection;
+        });
+        this.go_to_upload();
+    },
     close_file_uploader:function(){
-        this.container.close_file_uploader();
+        this.container.close();
+        $(".modal-backdrop").remove();
     },
     remove_view: function(view){
         this.views.splice(this.views.indexOf(this), 1);
@@ -250,13 +308,6 @@ var FileUploadView = BaseViews.BaseListView.extend({
             is_completed = is_completed && !view.initial;
         });
         return is_completed;
-    },
-    submit_files:function(){
-        var self = this;
-        this.views.forEach(function(view){
-            self.returnCollection.add(view.submit_file());
-        });
-        this.container.close_file_uploader();
     }
 });
 
@@ -284,7 +335,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         this.initial = options.initial;
         this.presets = options.presets;
         this.inline = options.inline;
-        this.files_to_delete=new Models.FileCollection(),
+        this.files_to_delete=new Models.FileCollection();
         this.size = 0;
         this.render();
         this.$(".save_initial_format").attr("disabled", "disabled");
@@ -307,7 +358,14 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
                 node: this.model,
                 size: this.size
             }));
-            if(!this.initial){
+            if(this.initial){
+                var preset_list = this.presets.where({supplementary:false});
+
+                if(preset_list.length === 1){
+                    this.$(".format_options_dropdown").val(preset_list[0].id);
+                    this.assign_default_format();
+                }
+            }else{
                 this.load_slots();
                 this.render_slots();
             }
@@ -392,8 +450,12 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         }
     },
     update_count:function(){
-        this.$(".format_counter").html(this.get_count());
-        this.$el.find(".format_editor_remove").css("display", (this.get_count() ===1) ? "none" : "inline");
+        this.$(".format_counter").html(this.get_count(true));
+        this.$el.find(".format_editor_remove").css("display", (this.get_count(true) ===1) ? "none" : "inline");
+
+        if(this.get_count(false) ===1){
+            this.$(".main_file_remove").css("display", "none");
+        }
     },
     set_format:function(formatModel, preset){
         var assigned_preset = this.presets.get(preset);
@@ -411,13 +473,15 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     disable_submit:function(){
         this.containing_list_view.disable_submit();
     },
-    get_count:function(){
+    get_count:function(inlcudeSupplementary){
         var self = this;
         var count = 0;
         this.format_views.forEach(function(format){
             if(format.file){
                 self.default_file = format.file;
-                count++;
+                if(inlcudeSupplementary || !format.preset.get("supplementary")){
+                    count++;
+                }
             }
         });
         return count;
@@ -448,7 +512,9 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
     clean_files:function(){
         this.files_to_delete.forEach(function(file){
-            file.destroy();
+            if(file){
+              file.destroy();
+            }
         });
     }
 });
@@ -491,17 +557,14 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         if(this.model.get("kind") !== "topic" && (!this.containing_list_view.uploading || this.container.inline)){
             this.create_dropzone();
         }
-        if(this.preview){
-            this.preview.switch_preview(this.model);
-        }
     },
     create_dropzone:function(){
         var self = this;
         setTimeout(function(){
-            var dz_selector="#" + self.$el.attr("id") + "_dropzone";
+            var dz_selector="#" + self.$el.attr("id") + "_dropzone" + ((self.file)? "_swap" : "");
             var clickables = [dz_selector + " .dz_click"];
             if(self.file){
-                clickables.push(dz_selector + "_swap .format_editor_file_name");
+                clickables.push(dz_selector + " .format_editor_file_name");
             }
             if(self.$(dz_selector)){
                 var dropzone = new Dropzone(self.$(dz_selector).get(0), {
@@ -510,7 +573,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                    url: window.Urls.file_upload(),
                    previewTemplate:self.dropzone_template(),
                    maxFiles: 1,
-                   previewsContainer: (self.file)? dz_selector + "_swap" : dz_selector,
+                   previewsContainer: dz_selector,
                    headers: {"X-CSRFToken": get_cookie("csrftoken")}
                 });
                 dropzone.on("success", self.file_uploaded);
@@ -525,6 +588,9 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     file_uploaded:function(file){
         console.log("Successfully added file!", file);
+        if(this.file){
+            this.remove_item(null);
+        }
         this.file = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
         this.file.fetch({async:false});
 
@@ -533,17 +599,12 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             contentnode: this.model.get("id"),
             preset : this.preset.get("id")
         });
-        if(this.preset.attached_format){
-            this.preset.attached_format.set({
-                contentnode:null
-            });
-            this.container.files_to_delete.add(this.preset.attached_format);
-        }
         this.preset.attached_format = this.file;
-        this.container.update_size();
-        this.container.update_count();
         this.container.set_model();
         this.render();
+        this.container.update_size();
+        this.container.update_count();
+
     },
     file_added: function(file) {
         if(this.file){
@@ -562,23 +623,17 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         alert(error);
         this.render();
     },
-    remove_item:function(){
-        if(this.container.get_count() ===1){
-            if(!this.inline){
-                this.container.initial = true;
-                this.container.render();
-                this.container.$(".format_options_dropdown").val(this.container.default_file.get("preset"));
-            }
-        }else{
-            this.container.files_to_delete.add(this.file);
-            this.file.set({contentnode: null});
-            this.file = null;
-        }
-        this.container.set_model();
+    remove_item:function(event){
+        this.container.files_to_delete.add(this.file);
+        this.file.set({contentnode: null});
+        this.file = null;
         this.preset.attached_format = null;
-        this.render();
-        this.container.update_size();
-        this.container.update_count();
+        if(event){
+            this.container.set_model();
+            this.render();
+            this.container.update_size();
+            this.container.update_count();
+        }
     },
     enable_submit:function(){
         this.container.enable_submit();

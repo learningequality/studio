@@ -10,8 +10,8 @@ var ExportModalView = BaseViews.BaseModalView.extend({
 
     initialize: function(options) {
         _.bindAll(this, "close_exporter", "publish");
-        this.render();
         this.modal = true;
+        this.render();
         this.callback = options.callback;
         this.export_view = new ExportListView({
             el: this.$("#export_preview"),
@@ -21,8 +21,6 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         this.select_license = null;
     },
     events:{
-      // "change #export_license_select" : "select_license",
-      // "click #license_about": "load_license",
       "click #publish_btn" : "publish"
     },
 
@@ -34,24 +32,12 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             node: this.model.toJSON()
         }));
         $("body").append(this.el);
-        this.$("#export_modal").modal({show: true});
-        this.$("#export_modal").on("hide.bs.modal", this.close);
+        this.$(".modal").modal({show: true});
+        this.$(".modal").on("hide.bs.modal", this.close);
     },
     close_exporter:function(){
       this.close();
     },
-    // load_license:function(){
-    //     this.$("#license_modal").html(this.license_template({
-    //         license: this.select_license.toJSON()
-    //     }));
-    //     this.$("#license_modal").modal({show: true});
-    // },
-    // select_license:function(){
-    //     this.select_license = window.licenses.get($("#export_license_select").val());
-    //     this.$("#publish_btn").removeAttr("disabled");
-    //     this.$("#publish_btn").text("PUBLISH");
-    //     this.$("#license_about").css("display", "inline");
-    // },
     publish:function(){
         var self = this;
         this.display_load("Publishing...", function(){

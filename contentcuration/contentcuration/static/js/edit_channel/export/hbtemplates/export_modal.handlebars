@@ -1,4 +1,4 @@
-<div class="modal fade" id="export_modal">
+<div class="modal fade" id="export_modal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -7,7 +7,9 @@
             </div>
             <div class="modal-body">
                 <div id="export_area">
+                    <em >PUBLISH ID: {{channel.id}}</em>
                     <em class="pull-right" id="version_number">Current Version: {{version}}</em>
+
                     <!-- <label><i class="required">*</i> License:</label>
                     <select id="export_license_select">
                         <option selected disabled>-- Select a License --</option>

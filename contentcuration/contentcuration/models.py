@@ -44,6 +44,7 @@ class User(AbstractBaseUser):
     last_name = models.CharField(max_length=100)
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
+    clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -72,6 +73,13 @@ class User(AbstractBaseUser):
     def get_short_name(self):
         "Returns the short name for the user."
         return self.first_name
+
+    def save(self, *args, **kwargs):
+        super(User, self).save(*args, **kwargs)
+        if not self.clipboard_tree:
+            self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id="topic", sort_order=0)
+            self.clipboard_tree.save()
+            self.save()
 
     class Meta:
         verbose_name = _("User")
@@ -189,7 +197,7 @@ class ContentNode(MPTTModel, models.Model):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
     sort_order = models.FloatField(max_length=50, default=0, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
-    license_owner = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
+    copyright_holder = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
     author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"))
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
@@ -227,6 +235,7 @@ class FormatPreset(models.Model):
     readable_name = models.CharField(max_length=400)
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
+    thumbnail = models.BooleanField(default=False)
     order = models.IntegerField()
     kind = models.ForeignKey(ContentKind, related_name='format_presets')
     allowed_formats = models.ManyToManyField(FileFormat, blank=True)

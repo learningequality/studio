@@ -19,6 +19,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STORAGE_ROOT = os.path.join(BASE_DIR, "storage")
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
+DB_ROOT = os.path.join(BASE_DIR, "databases")
 
 PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
 
@@ -143,6 +144,11 @@ ACCOUNT_ACTIVATION_DAYS=7
 REGISTRATION_OPEN = True
 SITE_ID = 1
 
+# EMAIL_HOST = 'localhost'
+# EMAIL_PORT = 8000
+# EMAIL_HOST_USER = ''
+# EMAIL_HOST_PASSWORD = ''
+# EMAIL_USE_TLS = False
 DEFAULT_FROM_EMAIL = 'Kolibri Content Curation <info@learningequality.org>'
 
 HACK_HACK_HACK_UNICEF_CONTENT_ZIP_PATH = os.path.join(BASE_DIR, "unicef.zip")

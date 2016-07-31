@@ -110,17 +110,20 @@ var BaseView = Backbone.View.extend({
 		});
 	},
 	publish:function(){
-		var self = this;
-		var Exporter = require("edit_channel/export/views");
-		var exporter = new Exporter.ExportModalView({
-			model: window.current_channel.get_root("main_tree"),
-			callback: function(){
-				var list = $(".to_publish");
-				list.each(function(index, entry){
-					$(entry).data("data").reload();
-				});
-			}
-		});
+		if(!$("#channel-publish-button").hasClass("disabled")){
+			var self = this;
+			var Exporter = require("edit_channel/export/views");
+			var exporter = new Exporter.ExportModalView({
+				model: window.current_channel.get_root("main_tree"),
+				callback: function(){
+					var list = $(".to_publish");
+					list.each(function(index, entry){
+						$(entry).data("data").reload();
+					});
+				}
+			});
+		}
+
 	}
 });
 
@@ -151,7 +154,7 @@ BaseListView = BaseView.extend({
 	copy_selected:function(){
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = [];
-		var clipboard_root = window.current_channel.get_root("clipboard_tree");
+		var clipboard_root = window.current_user.get_clipboard();
 		var copyCollection = new Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
 			copyCollection.add($(list[i]).data("data").model);//.duplicate(clipboard_root, null);
@@ -173,46 +176,25 @@ BaseListView = BaseView.extend({
 		return stopLoop;
 	},
 	drop_in_container:function(transfer, target){
-		/*Set model's parent*/
-		var new_sort_order = this.get_new_sort_order(transfer, target);
-		transfer.model.set({
-			sort_order: new_sort_order
-		});
-		if(this.model.id != transfer.model.get("parent")){
-			var old_parent = transfer.containing_list_view.model;
-			transfer.model.set({
-				parent: this.model.id
-			}, {validate:true});
-
-			if(transfer.model.validationError){
-				alert(transfer.model.validationError);
-				transfer.model.set({parent: old_parent.id});
+		try{
+			/*Set model's parent*/
+			var new_sort_order = this.get_new_sort_order(transfer, target);
+			if(this.model.id != transfer.model.get("parent")){
+				var old_parent = transfer.containing_list_view.model;
+				this.handle_transfer_drop(transfer, new_sort_order);
 				transfer.containing_list_view.render();
+				var reload_collection = new Models.ContentNodeCollection();
+				reload_collection.add([old_parent, this.model]);
+				this.reload_listed(reload_collection);
 			}else{
 				transfer.model.save({
-					parent: this.model.id,
 					sort_order:new_sort_order,
 					changed:true
 				}, {async:false, validate:false});
-				this.model.fetch({async:false});
-				if(this.model.get("parent")){
-					$("#" + this.model.get("id")).data("data").render();
-				}
-				old_parent.fetch({async:false});
-				if(old_parent.get("parent")){
-					$("#" + old_parent.id).data("data").render();
-				}
-				transfer.containing_list_view.render();
 			}
-		}else{
-			transfer.model.save({
-				sort_order:new_sort_order,
-				changed:true
-			}, {async:false, validate:false});
-		}
-		this.render();
-		if(transfer.$el.hasClass("current_topic")){
-			transfer.$el.removeClass("current_topic");
+			this.render();
+		}catch(err){
+			alert("Error dropping content:", err);
 		}
 	},
 	get_new_sort_order: function(transfer, target){
@@ -261,7 +243,56 @@ BaseListView = BaseView.extend({
 			self.reload_listed(collection);
 			self.render();
 		});
-	}
+	},
+	add_topic: function(event){
+		var UploaderViews = require("edit_channel/uploader/views");
+		var new_topic = this.collection.create({
+            "kind":"topic",
+            "title": "Topic",
+            "sort_order" : this.collection.length,
+            "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+        }, {async:false});
+        new_topic.set({
+            "original_node" : new_topic.get("id"),
+            "cloned_source" : new_topic.get("id")
+        });
+
+        var edit_collection = new Models.ContentNodeCollection(new_topic);
+        $("#main-content-area").append("<div id='dialog'></div>");
+
+        var metadata_view = new UploaderViews.EditMetadataView({
+            el : $("#dialog"),
+            collection: edit_collection,
+            parent_view: this,
+            model: new_topic,
+            allow_add: false,
+            new_topic: true,
+            main_collection : this.collection,
+            modal: true
+        });
+	},
+	import_content:function(){
+		var Import = require("edit_channel/import/views");
+        var import_view = new Import.ImportModalView({
+            modal: true,
+            callback: this.import_nodes,
+            model: this.model
+        });
+    },
+    import_nodes:function(collection){
+        this.reload_listed(collection);
+        this.render();
+    },
+    add_files:function(){
+    	var FileUploader = require("edit_channel/file_upload/views");
+    	this.file_upload_view = new FileUploader.FileModalView({
+            parent_view: this,
+            model:this.model
+    	})
+    },
+    handle_transfer_drop:function(transfer, sort_order){
+    	/*To override in subclasses*/
+    }
 });
 
 
@@ -356,9 +387,11 @@ var BaseEditorView = BaseListView.extend({
 	errorsFound : false,
 	parent_view : null,
 	close_uploader: function(event){
-		if(this.unsaved_queue.length == 0){
+		if(this.unsaved_queue.length === 0){
 			if (this.modal) {
 				this.$el.modal('hide');
+	        }else{
+	        	this.callback();
 	        }
 
 	        this.remove();
@@ -374,7 +407,12 @@ var BaseEditorView = BaseListView.extend({
 	        }
 	        this.unsaved_queue = [];
 	        this.views = [];
-	        this.remove();
+	        if(this.modal){
+	        	this.remove();
+	        }else{
+	        	this.callback();
+	        }
+
 		}else{
 			event.stopPropagation();
 			event.preventDefault();
@@ -390,10 +428,11 @@ var BaseEditorView = BaseListView.extend({
 	save_nodes: function(callback){
 		this.parent_view.set_editing(false);
 		var self = this;
+		var stringHelper = require("edit_channel/utils/string_helper");
 		this.views.forEach(function(entry){
 			var tags = [];
 			entry.tags.forEach(function(tag){
-				tags.push("{\"tag_name\" : \"" + tag + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
+				tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
 			})
 			entry.model.set({tags: tags});
 			if(entry.format_view){

@@ -5,6 +5,7 @@ var Models = require("edit_channel/models");
 var FileUploader = require("edit_channel/file_upload/views");
 var Import = require("edit_channel/import/views");
 var Previewer = require("edit_channel/preview/views");
+var stringHelper = require("edit_channel/utils/string_helper");
 require("uploader.less");
 //var ExerciseViews = require("edit_channel/exercise_creation/views");
 
@@ -159,41 +160,43 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
     modal_template: require("./hbtemplates/uploader_modal.handlebars"),
     header_template: require("./hbtemplates/edit_metadata_header.handlebars"),
+
     description_limit : 400,
 
     initialize: function(options) {
-        _.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',"select_item",
+        _.bindAll(this, 'close_uploader', "save_and_keep_open", 'check_item',"select_item", "set_license_owner",
                         'add_tag','save_and_finish','add_more','set_edited','enable_submit', 'disable_submit',
                         'render_details', 'render_preview', 'remove_tag', 'update_count');
         this.parent_view = options.parent_view;
         this.collection = (options.collection)? options.collection : new Models.ContentNodeCollection();
         this.allow_add = options.allow_add;
         this.modal = options.modal;
+        this.new_topic = options.new_topic;
+        this.callback = options.callback;
         this.main_collection = options.main_collection;
+        this.back_function = options.back_function;
         this.fileCollection = new Models.FileCollection();
         this.render();
         this.switchPanel(true);
     },
     render: function() {
+        var template_data = {
+            node_list: this.collection.toJSON(),
+            multiple_selected: this.collection.length > 1 || this.allow_add,
+            allow_add: this.allow_add,
+            word_limit : this.description_limit,
+            modal: this.modal,
+            licenses: window.licenses.toJSON()
+        }
         if(this.modal){
             this.$el.html(this.modal_template());
             this.$(".modal-title").prepend(this.header_template());
-            this.$(".modal-body").html(this.template({
-                node_list: this.collection.toJSON(),
-                multiple_selected: this.collection.length > 1 || this.allow_add,
-                allow_add: this.allow_add,
-                word_limit : this.description_limit
-            }));
+            this.$(".modal-body").html(this.template(template_data));
             $("body").append(this.el);
-            this.$(".modal").modal({show: true, backdrop: 'static', keyboard: false});
+            this.$(".modal").modal({show: true});
             this.$(".modal").on("hide.bs.modal", this.close_uploader);
         }else{
-            this.$el.html(this.template({
-                node_list: this.collection.toJSON(),
-                multiple_selected: this.collection.length > 1 || this.allow_add,
-                allow_add: this.allow_add,
-                word_limit : this.description_limit
-            }));
+            this.$el.html(this.template(template_data));
         }
         this.preview_view = new Previewer.PreviewView({
             modal:false,
@@ -222,7 +225,12 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         'click .delete_tag':'remove_tag',
         'keyup #input_description': 'update_count',
         'keydown #input_description': 'update_count',
-        'paste #input_description': 'update_count'
+        'paste #input_description': 'update_count',
+        "change #license_select" : "select_license",
+        "click #license_about": "load_license",
+        "keyup #input_license_owner":"set_license_owner",
+        "keydown #input_license_owner":"set_license_owner",
+        'paste #input_license_owner': 'set_license_owner',
     },
     update_count:function(){
         this.update_word_count(this.$el.find("#input_description"), this.$el.find("#description_counter"), this.description_limit);
@@ -300,8 +308,8 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
                                 self.gray_out(true);
                             }
                         }
-                        if(!self.errorsFound && self.allow_add){
-                            self.parent_view.add_nodes(self.collection, self.main_collection.highest_sort_order);
+                        if(!self.errorsFound && (self.allow_add || self.new_topic)){
+                            self.parent_view.add_nodes(self.collection, self.parent_view.model.get("metadata").max_sort_order);
                         }
                         self.$el.css("visibility", "visible");
                         if(callback){
@@ -331,6 +339,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         }else{
             this.close_uploader(event);
         }
+
         $("#main-content-area").append("<div id='dialog'></div>");
         var content_view = new AddContentView({
             collection: this.collection,
@@ -344,6 +353,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.reset();
         this.undelegateEvents();
         this.unbind();
+        // this.back_function(this.collection);
     },
     set_current_node:function(view){
         this.$el.find("#title_error").html("");
@@ -370,12 +380,26 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         }
         if(this.current_node.get("kind") === "topic"){
             this.switchPanel(true);
+            this.$(".content_nodes_only").css("display", "none");
         }else{
             this.load_preview();
+            this.$(".content_nodes_only").css("display", "inline-block");
         }
 
         this.$el.find("#input_title").val(this.current_node.get("title"));
         this.$el.find("#input_description").val(this.current_node.get("description"));
+        this.$el.find("#input_license_owner").val(this.current_node.get("copyright_holder"));
+        this.$("#author_field").css("visibility", (this.current_node.get("author") != "")? "visible" : "hidden");
+        this.$("#author_field i").text(this.current_node.get("author"));
+
+        if(this.current_node.get("license") != null){
+            this.$el.find("#license_select").val(this.current_node.get("license"));
+            this.$("#license_about").css("display", "inline");
+        }else{
+            this.$el.find("#license_select").val(0);
+        }
+
+
         view.$el.addClass("current_item");
         view.$el.find("input[type=checkbox]").prop("checked", true);
         this.$("#editmetadata_format_section").css("display", (this.current_node.get("kind") == "topic")? "none" : "block");
@@ -424,11 +448,11 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         this.parent_view.set_editing(this.multiple_selected);
         this.$el.find("#input_title").val((this.multiple_selected || !this.current_node)? " " : this.current_node.get("title"));
         this.$el.find("#input_description").val((this.multiple_selected || !this.current_node)? " " : this.current_node.get("description"));
-
         if(this.$el.find("#uploaded_list :checked").length == 0){
             this.gray_out(true);
             this.$el.find(".tag_input").addClass("gray-out");
             this.$el.find(".tag_input").prop("disabled", true);
+            this.$("#author_field").css("visibility", "hidden");
             this.$el.find("#description_counter").html("Select an item first.");
             $("#tag_area").html("");
             return;
@@ -441,11 +465,37 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             list.addClass("current_item");
 
             var tagList = $(list[0]).data("data").tags;
+            var license_id = $(list[0]).data("data").model.get("license");
+            var license_owner = $(list[0]).data("data").model.get("copyright_holder");
+            var author = $(list[0]).data("data").model.get("author");
+            this.$("#author_field").css("visibility", "visible");
+
             /* Create list of nodes to edit */
             for(var i = 1; i < list.length; i++){
-                tagList = $(tagList).filter($(list[i]).data("data").tags);
+                var view = $(list[i]).data("data");
+                tagList = $(tagList).filter(view.tags);
+                if(license_id != view.model.get("license")){
+                    license_id = 0;
+                }
+                if(license_owner != view.model.get("copyright_holder")){
+                    license_owner = " ";
+                }
+                if(author != view.model.get("author")){
+                    this.$("#author_field").css("visibility", "hidden");
+                }
             }
+            this.$("#license_select").val(license_id);
+            this.$("#input_license_owner").val(license_owner);
+            this.$("#author_field i").text(author);
             this.append_tags(tagList);
+
+            this.$(".content_nodes_only").css("display", "inline-block");
+            for(var i = 0; i < list.length; i++){
+                if($(list[i]).data("data").model.get("kind") === "topic"){
+                    this.$(".content_nodes_only").css("display", "none");
+                    break;
+                }
+            }
         }
         else {
             this.gray_out(false);
@@ -455,6 +505,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         }
     },
     gray_out:function(grayout){
+        this.$("#uploaded_list").height($("#edit_details_wrapper").height());
         if(grayout){
             this.$el.find(".disable-on-edit").addClass("gray-out");
             this.$el.find(".upload_input").addClass("gray-out");
@@ -466,6 +517,7 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
             this.$("#metadata_preview_btn").prop("disabled", true);
             this.switchPanel(true);
             $("#metadata_preview_btn").css("visibility", "hidden");
+            this.$(".content_nodes_only").css("display", "none");
         }else{
             this.$el.find(".tag_input").removeClass("gray-out");
             this.$el.find(".upload_input").removeClass("gray-out");
@@ -480,27 +532,29 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
         $("#tag_error").css("display", "none");
         if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").val().trim() != ""){
             var tag = this.$el.find("#tag_box").val().trim();
-            if(/^([A-z\d\s.,:\+)(\-&-)]*)$/.test(tag)){
-                var selector=this.encode_tag(tag);
-                if(this.$("#tag_area").find("#" + selector).length == 0){
-                    this.append_tags([tag]);
-                    if(this.multiple_selected){
-                        var list = this.$el.find('#uploaded_list input:checked').parent("li");
-                        for(var i = 0; i < list.length; i++){
-                            $(list[i]).data("data").add_tag(tag);
-                        }
-                    }else{
-                        this.current_view.add_tag(tag);
-                    }
+            var exists_already = false;
+            this.$("#tag_area").find(".tag").each(function(index, entry){
+                if(entry.getAttribute("value") === tag){
+                    exists_already = true;
                 }
-                this.$el.find("#tag_box").val("");
-            }else{
-                $("#tag_error").css("display", "inline");
+            })
+            if(!exists_already){
+                this.append_tags([tag]);
+                if(this.multiple_selected){
+                    var list = this.$el.find('#uploaded_list input:checked').parent("li");
+                    for(var i = 0; i < list.length; i++){
+                        $(list[i]).data("data").add_tag(tag);
+                    }
+                }else{
+                    this.current_view.add_tag(tag);
+                }
             }
+            this.$el.find("#tag_box").val("");
+            this.$("#uploaded_list").height($("#edit_details_wrapper").height());
         }
     },
     remove_tag:function(event){
-        var tagname = this.decode_tag(event.target.parentNode.id);
+        var tagname = event.target.getAttribute("value");
         if(this.multiple_selected){
             var list = this.$el.find('#uploaded_list input:checked').parent("li");
             for(var i = 0; i < list.length; i++){
@@ -537,20 +591,63 @@ var EditMetadataView = BaseViews.BaseEditorView.extend({
     },
     append_tags:function(tags){
         for(var i = 0; i < tags.length; i++){
-            var selector=this.encode_tag(tags[i]);
-            this.$el.find("#tag_area").append("<div class='col-xs-4 tag' id='" + selector+ "'>" + tags[i] + " <span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true'></span></div>");
+            var new_tag_elem = document.createElement('div');
+            new_tag_elem.className = "col-xs-4 tag";
+            $(new_tag_elem).val(tags[i]);
+            $(new_tag_elem).text(tags[i]);
+            $(new_tag_elem).append("<span class='glyphicon glyphicon-remove pull-right delete_tag' aria-hidden='true' value='" + tags[i] + "'></span>");
+            this.$el.find("#tag_area").append(new_tag_elem);
         }
     },
-    encode_tag:function(tag){
-        return tag.replace(/\s/g, "_s_").replace(/\)/g,"_pr_").replace(/,/g,"_co_")
-                .replace(/\(/g,"_pl_").replace(/&/g,"_a_").replace(/\-/g,"_d_")
-                .replace(/:/g,"_c_").replace(/\+/g,"_p_").replace(/\./g,"_pe_");
+    load_license:function(){
+        var license_modal = new LicenseModalView({
+            select_license : window.licenses.get({id: $("#license_select").val()})
+        })
     },
-    decode_tag:function(tag){
-        return tag.replace("_s_", " ").replace("_pr_",")").replace("_co_",",")
-                .replace("_pl_","(").replace("_a_", "&").replace("_d_","-")
-                .replace("_c_",":").replace("_p_","+").replace("_pe_",".");
+    select_license:function(){
+        this.$("#license_about").css("display", "inline");
+        if(this.multiple_selected){
+            var license_id = $("#license_select").val();
+            var list = this.$el.find('#uploaded_list input:checked').parent("li");
+            list.each(function(index, item){
+                $(item).data("data").set_license(license_id);
+            })
+        }else{
+            this.set_node_edited();
+        }
+    },
+    set_license_owner:function(){
+        var license_owner = $("#input_license_owner").val().trim();
+        if(license_owner !== ""){
+            if(this.multiple_selected){
+                var list = this.$el.find('#uploaded_list input:checked').parent("li");
+                list.each(function(index, item){
+                    $(item).data("data").set_license_owner(license_owner);
+                })
+            }else{
+                this.set_node_edited();
+            }
+        }
+    }
+});
 
+var LicenseModalView = BaseViews.BaseModalView.extend({
+    template: require("./hbtemplates/license_modal.handlebars"),
+
+    initialize: function(options) {
+        this.modal = true;
+        this.select_license = options.select_license;
+        console.log(this.select_license)
+        this.render();
+    },
+
+    render: function() {
+        this.$el.html(this.template({
+            license: this.select_license.toJSON()
+        }));
+        $("body").append(this.el);
+        this.$("#license_modal").modal({show: true});
+        this.$("#license_modal").on("hide.bs.modal", this.close);
     }
 });
 
@@ -619,11 +716,7 @@ var UploadedItem = ContentItem.extend({
         this.checked = false;
         this.file_data = options.file_data;
         this.presets = new Models.FormatPresetCollection();
-        this.originalData = {
-            "title":this.model.get("title"),
-            "description":this.model.get("description"),
-            "changed" : this.model.get("changed")
-        };
+        this.originalData = this.model.pick("title", "description", "license", "changed", "tags");
         this.render();
         this.load_tags();
 
@@ -691,13 +784,18 @@ var UploadedItem = ContentItem.extend({
             this.set_node();
             this.containing_list_view.enqueue(this);
         }
-        $("#item_" + this.model.cid + " .item_name").html(this.model.get("title") + ((edited) ? " <b>*</b>" : ""));
+        $("#item_" + this.model.cid + " .item_name").text(this.model.get("title"));
+        if(edited){
+            $("#item_" + this.model.cid + " h5").before("<b class='pull-left'>*</b>");
+        }
     },
     set_node:function(){
         if(!this.containing_list_view.multiple_selected){
             this.set({
                 title: $("#input_title").val().trim(),
-                description: $("#input_description").val().trim()
+                description: $("#input_description").val().trim(),
+                license: $("#license_select").val(),
+                copyright_holder: $("#input_license_owner").val().trim()
             });
         }
     },
@@ -724,6 +822,12 @@ var UploadedItem = ContentItem.extend({
           event.preventDefault();
         });
         this.$el.css("pointer", "not-allowed");
+    },
+    set_license:function(license_id){
+        this.model.set("license", license_id);
+    },
+    set_license_owner:function(license_owner){
+        this.model.set("copyright_holder", license_owner);
     }
 });
 

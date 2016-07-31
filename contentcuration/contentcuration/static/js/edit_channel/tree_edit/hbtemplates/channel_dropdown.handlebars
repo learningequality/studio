@@ -1,0 +1,9 @@
+<a href="#" id="channel_selection_dropdown" class="dropdown-toggle truncate" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{current_channel.name}} <span class="caret"></span></a>
+<ul class="dropdown-menu" id="channel_selection_dropdown_list">
+{{#each channel_list}}
+<li>
+	<a href="{{id}}/edit" class="truncate">{{name}}</a>
+</li>
+{{else}}<li class='default-channel-item'><em>No channels found.</em></li>
+{{/each}}
+</ul>

@@ -34,12 +34,13 @@
 			height: 22px;
 		}
 		.glyphicon{
-			padding: 7px 30px 0 0;
+			/*padding: 7px 30px 0 0;*/
 			color: @gray-700;
 		}
 
 		.row{
 			vertical-align:middle;
+			width:100%;
 		}
 		.content_type{
 			padding-top: 1px;
@@ -117,7 +118,7 @@
 		height: 100%;
 		padding: 10px 0;
 		overflow:hidden;
-		max-height: @uploader-height * 0.7;
+		/*max-height: @uploader-height * 0.7;*/
 
 		#editmetadata_format_section{
 			display:none;
@@ -128,6 +129,23 @@
 			color: @gray-800;
 			margin-top: 5px;
 			font-weight: bold;
+		}
+		#license_select{
+			margin-top:5px;
+			padding: 0px 2px;
+		}
+		.content_nodes_only{
+			display:none;
+		}
+		#license_about{
+			display:none;
+			font-size:14pt;
+			margin-left:5px;
+			cursor:pointer;
+			color: @blue-500;
+		}
+		#author_field{
+			visibility:hidden;
 		}
 		#keywords {
 			margin-bottom: 8px;
@@ -141,6 +159,7 @@
 			padding: 2px 0;
 			margin-bottom: 25px;
 			font-size: @larger-body-text;
+			width:100%;
 			.input-form;
 		}
 		#description_counter{
@@ -167,7 +186,7 @@
 			}
 		}
 		.format_editor_list{
-			margin-left:10px;
+			margin-left:25px;
 			margin-bottom:10px;
 			display:none;
 
@@ -196,21 +215,22 @@
 			.format_editor_item{
 				font-size:10pt;
 				margin-bottom:5px;
+				max-width:100%;
 
 				.format_editor_format_name{
 					font-weight:bold;
-					width:(@metadata-width / 2.5) * 0.25;
+					width:(@metadata-width / 2.5) * 0.3;
+					padding:0;
 				}
 
 				.format_editor_file_name{
-					max-width:(@metadata-width / 2.5) * 0.6;
-					width:auto;
-					max-width:55%;
+					/*max-width:(@metadata-width / 2.6) * 0.6;*/
+					max-width:65%;
 					overflow:hidden;
 					display:inline-block;
 				}
 				.format_editor_options_wrapper{
-					width:40px;
+					width:auto;
 					.glyphicon{
 						cursor:pointer;
 					}
@@ -230,7 +250,7 @@
 	#metadata_preview{
 		display:none;
 		overflow-y:auto;
-		height:@uploader-height - 190px;
+		min-height:@uploader-height - 190px;
 		max-width:90%;
 
 		h3{
@@ -239,29 +259,13 @@
 			margin:0;
 			margin-bottom:5px;
 		}
-
-		.btn-group, .dropdown-menu{
-			width:100%;
-		}
-		.preview_btn_tab{
-			width:100%;
-			padding:5px;
-			font-size:10pt;
-		}
-
-		.dropdown-toggle{
-			font-size:11pt;
-		}
-
-		#preview_format_switch{
-			min-width:100%;
-		}
 	}
 
 	#edit_details_wrapper{
-		height:@uploader-height * 0.7;
+		/*height:@uploader-height * 0.7;*/
 		padding-right:10px;
 		overflow-y:auto;
+		overflow-x:hidden;
 		padding-left: 3px;
 	}
 
@@ -270,12 +274,12 @@
 	}
 
 	#preview_window{
-		height:@uploader-height * 0.5;
+		/*height:@uploader-height * 0.5;*/
 		width:100%;
 	}
 	#uploaded_list{
 		margin: 10px;
-		height: @uploader-height - 150px;
+		min-height: @uploader-height - 150px;
 		background-color:white;
 		overflow-y:auto;
 		overflow-x:none;
@@ -318,6 +322,11 @@
 			h5 {
 				font-weight: bold;
 				margin-top: 0;
+			}
+			b{
+				color:@blue-500;
+				margin-top:-2px;
+				margin-left:5px;
 			}
 			h6 {
 				margin: 5px 0 0 0;
@@ -366,7 +375,8 @@
 
 	textarea{
 		resize:none;
-		height:@larger-body-text * 6;
+		min-height:@larger-body-text * 6;
+		height:auto;
 	}
 	.metadata_save_buttons{
 		margin-right:30px;
@@ -403,5 +413,39 @@
 	p{
 		margin:0;
 		padding:2px;
+	}
+}
+
+#license_modal{
+	@license-modal-height: 400px;
+	@license-modal-width: 600px;
+	padding:10px 5px;
+	overflow-y:auto;
+	.modal-dialog{
+		width:@license-modal-width * 0.7;
+		height: @license-modal-height;
+
+	}
+	.modal-content{
+		.modal-header{
+			background-color:@gray-200;
+		}
+		h4{
+			font-size:15pt;
+			font-weight:bold;
+		}
+
+		#license_description_wrapper{
+			height:@license-modal-height * 0.7;
+			overflow-y:auto;
+			margin-bottom:20px;
+			padding:5px;
+		}
+
+		p{
+			font-size:12pt;
+			font-style:italic;
+			color:gray;
+		}
 	}
 }
