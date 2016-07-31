@@ -11,7 +11,6 @@ ChannelEditRouter  = Backbone.Router.extend({
     initialize: function(options) {
         _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page");
 		this.nodeCollection = new Models.ContentNodeCollection();
-		this.nodeCollection.fetch();
 		window.licenses = new Models.LicenseCollection(window.license_list);
 		window.current_channel = new Models.ChannelModel(window.channel);
 		window.current_user = new Models.UserModel(window.user);
