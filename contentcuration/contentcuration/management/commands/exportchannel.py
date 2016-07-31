@@ -160,13 +160,13 @@ def create_associated_file_objects(kolibrinode, ccnode):
             pk=ccfilemodel.pk,
             checksum=ccfilemodel.checksum,
             extension=format.extension,
-            available=False,
+            available=True,  # TODO: Set this to False to start with, once we have availability stamping implemented in Kolibri
             file_size=ccfilemodel.file_size,
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
-            lang=None,          # TODO: same, fix this once we've implemented lang importing.
-            thumbnail=preset.thumbnail,    # TODO: maybe set to true or false once we bundle in more stuff than just the content db
+            lang=None,          # TODO: fix this once we've implemented lang importing.
+            thumbnail=preset.thumbnail,
         )
 
 
