@@ -176,7 +176,7 @@ BaseListView = BaseView.extend({
 		return stopLoop;
 	},
 	drop_in_container:function(transfer, target){
-		try{
+		// try{
 			/*Set model's parent*/
 			var new_sort_order = this.get_new_sort_order(transfer, target);
 			if(this.model.id != transfer.model.get("parent")){
@@ -193,9 +193,9 @@ BaseListView = BaseView.extend({
 				}, {async:false, validate:false});
 			}
 			this.render();
-		}catch(err){
-			alert("Error dropping content:", err);
-		}
+		// }catch(err){
+		// 	alert("Error dropping content:", err);
+		// }
 	},
 	get_new_sort_order: function(transfer, target){
 		var new_sort_order = 1;
