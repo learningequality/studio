@@ -211,7 +211,7 @@ def _duplicate_node(node, sort_order=1, parent=None):
         sort_order=sort_order,
         copyright_holder=node.copyright_holder,
         changed=True,
-        original_node=node.original_node,
+        original_node=node.original_node or node,
         cloned_source=node,
         author=node.author
     )
@@ -226,8 +226,8 @@ def _duplicate_node(node, sort_order=1, parent=None):
         fobj_copy.contentnode = new_node
         fobj_copy.save()
 
-    new_node.children = [_duplicate_node(c, parent=None) for c in node.children.all()]
-    new_node.save()
+    for c in node.children.all():
+        _duplicate_node(c, parent=new_node.id)
 
     return new_node
 
