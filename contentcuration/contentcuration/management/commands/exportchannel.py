@@ -132,7 +132,7 @@ def create_bare_contentnode(ccnode):
         license_owner=ccnode.copyright_holder,
         kind=ccnode.kind.kind,
         license=kolibri_license,
-        available=False,
+        available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
     )
 
     if ccnode.parent:
@@ -160,7 +160,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             pk=ccfilemodel.pk,
             checksum=ccfilemodel.checksum,
             extension=format.extension,
-            available=True,  # TODO: Set this to False to start with, once we have availability stamping implemented in Kolibri
+            available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
             file_size=ccfilemodel.file_size,
             contentnode=kolibrinode,
             preset=preset.pk,
