@@ -3,7 +3,6 @@ var Models = require("./../models");
 var _ = require("underscore");
 require("content-container.less");
 var BaseViews = require("./../views");
-//var PreviewerViews = require("edit_channel/previewer/views");
 var QueueView = require("edit_channel/queue/views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var UploaderViews = require("edit_channel/uploader/views");
@@ -12,23 +11,30 @@ var Previewer = require("edit_channel/preview/views");
 var Import = require("edit_channel/import/views");
 //var UndoManager = require("backbone-undo");
 
-
 /* Main view for all draft tree editing */
 // model (ContentNodeModel): root node of channel
 // collection (ContentNodeCollection): collection of nodes
 // is_clipboard (boolean): determines how to render screen
 // is_edit_page (boolean): determines if previewing or editing
 var TreeEditView = BaseViews.BaseView.extend({
-	// container_index: 0,
 	containers:[],
 	template: require("./hbtemplates/container_area.handlebars"),
 	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
 	initialize: function(options) {
-		// _.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_content', 'toggle_details', 'back_to_edit', 'handle_checked', 'edit_permissions' /*,'undo_action', 'redo_action'*/);
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_selected',
+						'toggle_details', 'handle_checked', 'edit_permissions');
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
 		this.render();
+	},
+	events: {
+		'click .copy_button' : 'copy_content',
+		'click .delete_button' : 'delete_content',
+		'click .edit_button' : 'edit_selected',
+		'click #hide_details_checkbox' :'toggle_details',
+		'change input[type=checkbox]' : 'handle_checked',
+		'click .permissions_button' : 'edit_permissions'
 	},
 	render: function() {
 		var self=this;
@@ -59,6 +65,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 				}));
 				self.add_container(self.containers.length, self.model, main_resolve, main_reject);
 			});
+
 			var queue_promise = new Promise(function(queue_resolve, queue_reject){
 				self.queue_view = new QueueView.Queue({
 			 		el: $("#queue-area"),
@@ -78,54 +85,50 @@ var TreeEditView = BaseViews.BaseView.extend({
 	},
 	add_container: function(index, topic, resolve, reject){
 		/* Step 1: Close directories of children and siblings of opened topic*/
-			try{
-					if(index < this.containers.length){
-						this.remove_containers_from(index);
-					}
-		/* Step 2: Create new container */
-					var self = this;
-					var promise = new Promise(function(resolve1, reject1){
-						var container_view = new ContentList({
-							model: topic,
-							index: self.containers.length + 1,
-							edit_mode: self.is_edit_page,
-							collection: self.collection,
-							container : self,
-							resolve:resolve1,
-							reject:reject1
-						});
-						self.containers.push(container_view);
-					});
-					promise.then(function(container_view){
-		/* Step 3: Add container to DOM */
-						self.$("#container-wrapper").scrollLeft(self.$("#container_area").width());
-						self.$el.find("#container_area").append(container_view.el);
-						self.$el.find("#container_area").width(self.$el.find("#container_area").width() + self.containers[0].$el.outerWidth());
-						container_view.$el.css('margin-left', -container_view.$el.outerWidth());
-		/* Step 4: Add sortable to view */
-						DragHelper.addSortable(container_view, 'content-selected', container_view.drop_in_container);
-						setTimeout(function(){
-							$( ".content-list" ).sortable( "refresh" );
-							$( ".content-list" ).sortable( "enable" );
-						}, 500);
-		/* Step 5: Animate sliding in from left and resolve */
-						container_view.$el.animate({
-							'margin-left' : "0px"
-						}, 500);
-						self.handle_checked();
-						resolve(container_view);
-		/* Catch any errors */
-				}).catch(function(error){
-					reject(error);
-				});
-			}catch(error){
-				console.log("Error on add_container:", error);
+			if(index < this.containers.length){
+				this.remove_containers_from(index);
 			}
+		/* Step 2: Create new container */
+			var self = this;
+			var promise = new Promise(function(resolve1, reject1){
+				var container_view = new ContentList({
+					model: topic,
+					index: self.containers.length + 1,
+					edit_mode: self.is_edit_page,
+					collection: self.collection,
+					container : self,
+					resolve:resolve1,
+					reject:reject1
+				});
+				self.containers.push(container_view);
+			});
+			promise.then(function(container_view){
+		/* Step 3: Add container to DOM */
+				self.$("#container-wrapper").scrollLeft(self.$("#container_area").width());
+				self.$el.find("#container_area").append(container_view.el);
+				self.$el.find("#container_area").width(self.$el.find("#container_area").width() + self.containers[0].$el.outerWidth());
+				container_view.$el.css('margin-left', -container_view.$el.outerWidth());
+		/* Step 4: Add sortable to view */
+				DragHelper.addSortable(container_view, 'content-selected', container_view.drop_in_container);
+				setTimeout(function(){
+					$( ".content-list" ).sortable( "refresh" );
+					$( ".content-list" ).sortable( "enable" );
+				}, 500);
+		/* Step 5: Animate sliding in from left and resolve */
+				container_view.$el.animate({
+					'margin-left' : "0px"
+				}, 500);
+				self.handle_checked();
+				resolve(container_view);
+		/* Catch any errors */
+			}).catch(function(error){
+				reject(error);
+			});
 	},
 	remove_containers_from:function(index){
 		while(this.containers.length > index){
-			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.containers[0].$el.outerWidth());  //this.containers[this.containers.length-2].$el.outerWidth() * (this.containers.length-2));
-			this.containers[this.containers.length-1].delete_view();
+			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.containers[0].$el.outerWidth());
+			this.containers[this.containers.length-1].remove();
 			this.containers.splice(this.containers.length-1);
 		}
 		this.containers[this.containers.length-1].close_folders();
@@ -136,6 +139,58 @@ var TreeEditView = BaseViews.BaseView.extend({
 		this.$(".disable-none-selected").prop("disabled", checked_count === 0);
 		(checked_count > 0)? this.$("#disable-none-selected-wrapper").removeClass("disabled-wrapper") : this.$("#disable-none-selected-wrapper").addClass("disabled-wrapper");
 	},
+	toggle_details:function(event){
+		this.$el.find("#container_area").toggleClass("hidden_details");
+	},
+	add_to_trash:function(collection, resolve, reject){
+		this.queue_view.add_to_trash(collection, resolve, reject);
+	},
+	add_to_clipboard:function(collection, resolve, reject){
+		this.queue_view.render();
+		resolve(true);
+		//this.queue_view.add_to_clipboard(collection);
+	},
+	delete_content: function (event){
+		if(confirm("Are you sure you want to delete these selected items?")){
+			var self = this;
+			this.display_load("Deleting Content...", function(resolve, reject){
+				try{
+					var promises = [];
+					for(var i = 0; i < self.containers.length; i++){
+						promises.push(new Promise(function(resolve, reject){
+							self.containers[i].delete_selected(resolve, reject)
+	    				}));
+	    				if(self.containers[i].$el.find(".current_topic input").is(":checked")){
+	    					self.remove_containers_from(self.containers[i].index);
+							break;
+	    				}
+					}
+					Promise.all(promises).then(function(){
+						resolve("Success!");
+					})
+				}catch(error){
+					reject(error);
+				}
+			});
+		}
+	},
+	copy_content: function(event){
+		var self = this;
+		this.display_load("Copying Content...", function(resolve, reject){
+			var promises = [];
+			for(var i = 0; i < self.containers.length; i++){
+				promises.push(new Promise(function(resolve, reject){
+					self.containers[i].copy_selected(resolve, reject)
+				}));
+				if(self.containers[i].$el.find(".current_topic input:checked").length != 0){
+					break;
+				}
+			}
+			Promise.all(promises).then(function(){
+				resolve("Success!");
+			});
+		});
+	}
 });
 
 /* Open directory view */
@@ -295,8 +350,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'handle_hover','handle_drop','handle_checked','hover_open_folder','open_folder','edit_item');
-			// ,'preview_node');
+		_.bindAll(this, 'handle_hover','handle_drop','handle_checked','hover_open_folder','open_folder','edit_item','preview_node');
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
 		// this.index = options.index;
@@ -354,22 +408,15 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	preview_node: function(event){
 		event.preventDefault();
 		$("#main-content-area").append("<div id='dialog'></div>");
-		if(this.edit_mode){
-			var metadata_view = new UploaderViews.EditMetadataView({
-				el : $("#dialog"),
-				model: this.model,
-				allow_add: false,
-				main_collection : this.main_collection,
-				modal: true,
-				parent_view : this
-			});
-		}else{
-			var preview_view = new Previewer.PreviewView({
-				modal:true,
-				model: this.model,
-				el : $("#dialog")
-			});
+		var data={
+			el : $("#dialog"),
+			model: this.model,
+			allow_add: false,
+			main_collection : this.main_collection,
+			modal: true,
+			parent_view : this
 		}
+		var preview_view = (this.edit_mode)? this.open_edit() : new Previewer.PreviewView(data);
 	}
 });
 

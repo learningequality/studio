@@ -157,6 +157,7 @@ class TagSerializer(serializers.ModelSerializer):
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     preset = FormatPresetSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True)
     id = serializers.CharField(required=False)
 
     ancestors = serializers.SerializerMethodField('get_node_ancestors')

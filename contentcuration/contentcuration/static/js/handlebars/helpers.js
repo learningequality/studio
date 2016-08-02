@@ -76,18 +76,18 @@ Handlebars.registerHelper('format_count', function(text, count){
 Handlebars.registerHelper('get_icon', function(kind){
   switch (kind){
       case "topic":
-          return "folder-close";
+          return "glyphicon glyphicon-folder-close";
       case "video":
-          return "film";
+          return "glyphicon glyphicon-film";
       case "audio":
-          return "headphones";
+          return "glyphicon glyphicon-headphones";
       case "image":
-          return "picture";
+          return "glyphicon glyphicon-picture";
       case "exercise":
-          return "star";
+          return "glyphicon glyphicon-star";
       case "document":
-          return "file";
+          return "glyphicon glyphicon-file";
       default:
-          return "exclamation-sign";
+          return "glyphicon glyphicon-exclamation-sign";
   }
 });

@@ -7,9 +7,6 @@ var BaseView = Backbone.View.extend({
 	list_index : 0,
 	undo_manager: null,
 	queue_view: null,
-	delete_view: function(){
-		this.remove();
-	},
 	set_editing: function(edit_mode_on){
 		$(".disable-on-edit").prop("disabled", edit_mode_on);
 		$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
@@ -31,27 +28,12 @@ var BaseView = Backbone.View.extend({
 			content = edit_collection.models[0];
 		}
 
-		var metadata_view = new UploaderViews.EditMetadataView({
+		var metadata_view = new UploaderViews.MetadataModalView({
 			collection: edit_collection,
-			parent_view: this,
 			el: $("#dialog"),
-			allow_add : false,
-			main_collection: this.collection,
-			modal:true,
-			model: content
-		});
-	},
-	add_to_view:function(){
-		var UploaderViews = require("edit_channel/uploader/views");
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var new_collection = new Models.ContentNodeCollection();
-		var add_view = new UploaderViews.AddContentView({
-			el : $("#dialog"),
-			collection: new_collection,
-			main_collection: this.collection,
-			parent_view: this,
-			model: this.model,
-			modal:true
+			model: content,
+			new_content: false,
+		    onsave: self.reload_listed
 		});
 	},
 	display_load:function(message, callback){
@@ -62,21 +44,15 @@ var BaseView = Backbone.View.extend({
             '</div>';
         $(load).appendTo('body');
         if(callback){
-    		setTimeout(function(){
-    			try{
-    				var promise = new Promise(function(resolve, reject){
-						callback(resolve, reject);
-    				});
-    				promise.then(function(){
-    					$("#loading_modal").remove();
-    				}).catch(function(error){
-    					$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
-    					console.log("Error with asychronous call", error);
-    				});
-    			}catch(err){
-    				$("#kolibri_load_text").text(err + ". Please refresh the page");
-    			}
-			 }, 100);
+			var promise = new Promise(function(resolve, reject){
+				callback(resolve, reject);
+			});
+			promise.then(function(){
+				$("#loading_modal").remove();
+			}).catch(function(error){
+				$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+				console.log("Error with asychronous call", error);
+			});
     	}else{
     		$("#loading_modal").remove();
     	}
@@ -87,33 +63,6 @@ var BaseView = Backbone.View.extend({
 	add_to_clipboard:function(collection, resolve, reject){
 		//OVERWRITE IN SUBCLASSES
 	},
-	undo: function() {
-        this.undo_manager.undo();
-    },
-    redo: function() {
-        this.undo_manager.redo();
-    },
-    save:function(){
-    	var self = this;
-    	var promise = new Promise(function(resolve, reject){
-			self.collection.save(resolve, reject);
-		});
-		promise.then(function(){
-
-		}).catch(function(error){
-			alert(error);
-			console.log("Error with save", error);
-    		console.trace();
-		});
-	},
-	update_word_count:function(input, counter, limit){
-		var char_length = limit - input.val().length;
-		if(input.val().trim() == ""){
-			char_length = limit;
-		}
-	    counter.html(char_length + ((char_length  == 1) ? " char left" : " chars left"));
-	    counter.css("color", (char_length == 0)? "red" : "gray");
-	},
 	reload_listed:function(collection, resolve, reject){
 		var list_to_reload = [];
 		var promises = [];
@@ -122,16 +71,14 @@ var BaseView = Backbone.View.extend({
 		});
 		$.unique(list_to_reload).forEach(function(id){
 			if($("#" + id) && $("#" + id).data("data")){
-				promises.push(new Promise(function(resolve, reject){
-					$("#" + id).data("data").reload(resolve, reject);
+				promises.push(new Promise(function(resolve1, reject1){
+					$("#" + id).data("data").reload(resolve1, reject1);
 				}));
         	}
 		});
 		Promise.all(promises).then(function(){
 			resolve(true);
-		}).catch(function(error){
-			reject(error)
-		});
+		})
 	},
 	publish:function(){
 		var self = this;
@@ -145,6 +92,12 @@ var BaseView = Backbone.View.extend({
 				});
 			}
 		});
+	},
+	edit_permissions:function(){
+		var share_view = new ShareViews.ShareModalView({
+			model:window.current_channel,
+			current_user: window.current_user.toJSON()
+		});
 	}
 });
 
@@ -153,23 +106,9 @@ BaseListView = BaseView.extend({
 	collection : null,		//Collection to be used for data
 	allow_edit: false,
 	item_view: null, // Use to determine how to save, delete, update files
-
-	set_editing: function(edit_mode_on){
-		this.allow_edit = !edit_mode_on;
-		$(".disable-on-edit").prop("disabled", edit_mode_on);
-		$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
-		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
-	},
-
 	reset: function(){
 		this.views.forEach(function(entry){
 			entry.model.unset();
-		});
-	},
-	set_sort_orders: function(collection){
-		var index = 1;
-		views.forEach(function(entry){
-			entry.set({'sort_order' : ++index}, {validate: false});
 		});
 	},
 	copy_selected:function(resolve, reject){
@@ -197,112 +136,96 @@ BaseListView = BaseView.extend({
 		for(var i = 0; i < list.length; i++){
 			var view = $("#" + list[i].id).data("data");
 			deleteCollection.add(view.model);
-			view.delete_view();
+			view.remove();
 		}
 		this.add_to_trash(deleteCollection, resolve, reject);
 	},
 	drop_in_container:function(moved_item, selected_items, orders, resolve, reject){
 		var self = this;
-		this.display_load("Moving Content...", function(resolve_main, reject_main){
-            try{
-            /* Step 1: Get sort orders updated */
-				var max = 1;
-				var min = 1;
-				var index = orders.indexOf(moved_item);
-				if(index >= 0){
-					min = (index === 0)? 0 : orders.at(index - 1).get("sort_order");
-					max = (index === orders.length - 1)? min + 2 : orders.at(index + 1).get("sort_order");
-					var updated_collection = new Models.ContentNodeCollection();
-					selected_items.forEach(function(node){
-						min = (min + max) / 2;
-						node.set({
-							"sort_order": min,
-							"changed" : true
-						});
-						updated_collection.push(node.clone());
+        /* Step 1: Get sort orders updated */
+			var max = 1;
+			var min = 1;
+			var index = orders.indexOf(moved_item);
+			if(index >= 0){
+				min = (index === 0)? 0 : orders.at(index - 1).get("sort_order");
+				max = (index === orders.length - 1)? min + 2 : orders.at(index + 1).get("sort_order");
+				var updated_collection = new Models.ContentNodeCollection();
+				selected_items.forEach(function(node){
+					min = (min + max) / 2;
+					node.set({
+						"sort_order": min,
+						"changed" : true
 					});
-					selected_items = updated_collection;
-				}else{
-					resolve_main("Success!");
+					updated_collection.push(node.clone());
+				});
+				selected_items = updated_collection;
+			}else{
+				resolve_main("Success!");
+			}
+		/* Step 2: Handle nodes from another parent if needed */
+			var promise = new Promise(function(resolve1, reject1){
+				if(orders.findWhere({id: moved_item.id})){
+					self.handle_transfer_drop(selected_items, resolve1, reject1);
 				}
-			/* Step 2: Handle nodes from another parent if needed */
-				var promise = new Promise(function(resolve1, reject1){
-					if(orders.findWhere({id: moved_item.id})){
-						self.handle_transfer_drop(selected_items, resolve1, reject1);
-					}
+			});
+			promise.then(function(collections){
+				selected_items = collections.collection;
+				original_parents = collections.original_parents;
+		/* Step 3: Save nodes */
+				var second_promise = new Promise(function(resolve2, reject2){
+					selected_items.save(resolve2, reject2);
 				});
-				promise.then(function(collections){
-					selected_items = collections.collection;
-					original_parents = collections.original_parents;
-			/* Step 3: Save nodes */
-					var second_promise = new Promise(function(resolve2, reject2){
-						selected_items.save(resolve2, reject2);
+				second_promise.then(function(){
+		/* Step 4: Add items to show where items are dropped */
+		 			var promises = [];
+			 		var last_elem = $("#" + moved_item.id);
+					selected_items.forEach(function(node){
+						promises.push(new Promise(function(resolve3, reject3){
+								var to_delete = $("#" + node.id);
+								var item_view = self.create_new_item(node, resolve3, reject3);
+								last_elem.after(item_view.el);
+								last_elem = item_view.$el;
+								self.views.push(item_view);
+								to_delete.remove();
+							}));
 					});
-					second_promise.then(function(){
-			/* Step 4: Add items to show where items are dropped */
-			 			var promises = [];
-				 		var last_elem = $("#" + moved_item.id);
-						selected_items.forEach(function(node){
-							promises.push(new Promise(function(resolve, reject){
-									var to_delete = $("#" + node.id);
-									var item_view = self.create_new_item(node, resolve, reject);
-									last_elem.after(item_view.el);
-									last_elem = item_view.$el;
-									self.views.push(item_view);
-									to_delete.remove();
-								}));
-						});
-			/* Step 5: Once all items have been created, reload page to reflect changes */
-						Promise.all(promises).then(function(){
-							var reload_list = new Models.ContentNodeCollection(reload_list);
-							reload_list.add(original_parents.models.concat(selected_items.models));
-							var promise = new Promise(function(resolve1, reject1){
-					            self.reload_listed(reload_list, resolve1, reject1);
-					        });
-					        promise.then(function(){
-								resolve(resolve_main);
-					        });
-						});
-			/* Catch any errors */
-					}).catch(function(error){
-						console.log(error)
-						reject(error);
-						reject_main(error);
+		/* Step 5: Once all items have been created, reload page to reflect changes */
+					Promise.all(promises).then(function(){
+						var reload_list = new Models.ContentNodeCollection(reload_list);
+						reload_list.add(original_parents.models.concat(selected_items.models));
+						var promise = new Promise(function(resolve1, reject1){
+				            self.reload_listed(reload_list, resolve1, reject1);
+				        });
+				        promise.then(function(){
+							resolve();
+				        });
 					});
-				}).catch(function(error){
-					if(self.container){
-						self.container.render();
-					}
-					reject(error);
-					reject_main(error);
+		/* Catch any errors */
 				});
-
-            }catch(error){
-                reject(error);
-                reject_main(error);
-            }
-        });
+			});
 	},
 
 	remove_view: function(view){
 		this.views.splice(this.views.indexOf(this), 1);
-		view.delete_view();
+		view.remove();
 	},
 	add_nodes:function(collection, startingIndex, resolve, reject){
 		var self = this;
-		var promise = new Promise(function(resolve, reject){
-			collection.move(self.model, startingIndex, resolve, reject);
+		var promise = new Promise(function(resolve1, reject1){
+			collection.move(self.model, startingIndex, resolve1, reject1);
 		});
 		promise.then(function(){
 			self.list_index = startingIndex;
 			collection.add(self.model);
-			self.reload_listed(collection);
-			self.render();
-			resolve(collection);
-		}).catch(function(error){
-			reject(error)
-		});
+			var promise1 = new Promise(function(resolve2, reject2){
+				self.reload_listed(collection, resolve2, reject2);
+			});
+			promise1.then(function(){
+				self.render();
+				resolve(collection);
+			})
 
+		});
 	},
 	add_topic: function(event){
 		var UploaderViews = require("edit_channel/uploader/views");
@@ -318,18 +241,15 @@ BaseListView = BaseView.extend({
 		            "original_node" : new_topic.get("id"),
 		            "cloned_source" : new_topic.get("id")
 		        });
-		        var edit_collection = new Models.ContentNodeCollection(new_topic);
+		        var edit_collection = new Models.ContentNodeCollection([new_topic]);
 		        $("#main-content-area").append("<div id='dialog'></div>");
 
-		        var metadata_view = new UploaderViews.EditMetadataView({
+		        var metadata_view = new UploaderViews.MetadataModalView({
 		            el : $("#dialog"),
 		            collection: edit_collection,
-		            parent_view: self,
-		            model: new_topic,
-		            allow_add: false,
-		            new_topic: true,
-		            main_collection : self.collection,
-		            modal: true
+		            model: self.model,
+		            new_content: true,
+		            onsave: self.add_nodes
 		        });
         	},
         	error:function(obj, error){
@@ -389,6 +309,9 @@ BaseListView = BaseView.extend({
     add_to_clipboard:function(collection, resolve, reject){
 		this.container.add_to_clipboard(collection, resolve, reject);
 	},
+	add_to_trash:function(collection, resolve, reject){
+		this.container.add_to_trash(collection, resolve, reject);
+	}
 });
 
 
@@ -417,38 +340,38 @@ var BaseListNodeItemView = BaseListItemView.extend({
 	},
 	delete:function(){
     	if(!this.model){
-    		this.delete_view();
+    		this.remove();
     	}
 		if(this.containing_list_view.item_view != "uploading_content"){
 			this.add_to_trash();
 		}
 	},
-	save: function(data, options){
-    	if(!this.model){
-    		var node_data = new Models.ContentNodeModel(data);
-			this.containing_list_view.collection.create(node_data, options);
-			if(this.model.get("kind").toLowerCase() != "topic"){
-				node_data.create_file();
-			}
-    	}
-		else{
-			this.model.save(data, options);
-			if(this.model.get("kind") && this.model.get("kind").toLowerCase() != "topic"){
-				this.model.create_file();
-			}
-		}
-	},
-	set:function(data, options){
-		if(!this.model){
-    		var node_data = new Models.ContentNodeModel(data);
-			this.containing_list_view.collection.create(node_data, options);
-			if(this.model.get("kind").toLowerCase() != "topic"){
-				node_data.create_file();
-			}
-    	}else{
-    		this.model.set(data, options);
-    	}
-	},
+	// save: function(data, options){
+ //    	if(!this.model){
+ //    		var node_data = new Models.ContentNodeModel(data);
+	// 		this.containing_list_view.collection.create(node_data, options);
+	// 		if(this.model.get("kind").toLowerCase() != "topic"){
+	// 			node_data.create_file();
+	// 		}
+ //    	}
+	// 	else{
+	// 		this.model.save(data, options);
+	// 		if(this.model.get("kind") && this.model.get("kind").toLowerCase() != "topic"){
+	// 			this.model.create_file();
+	// 		}
+	// 	}
+	// },
+	// set:function(data, options){
+	// 	if(!this.model){
+ //    		var node_data = new Models.ContentNodeModel(data);
+	// 		this.containing_list_view.collection.create(node_data, options);
+	// 		if(this.model.get("kind").toLowerCase() != "topic"){
+	// 			node_data.create_file();
+	// 		}
+ //    	}else{
+ //    		this.model.set(data, options);
+ //    	}
+	// },
 	edit_item: function(event){
 		event.preventDefault();
 		event.stopPropagation();
@@ -456,55 +379,44 @@ var BaseListNodeItemView = BaseListItemView.extend({
 	},
 	open_edit:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
-		var edit_collection = new Models.ContentNodeCollection();
-		edit_collection.add(this.model);
 
 		$("#main-content-area").append("<div id='dialog'></div>");
-
-		var metadata_view = new UploaderViews.EditMetadataView({
-			collection: edit_collection,
-			parent_view: this,
+		var editCollection =  new Models.ContentNodeCollection([this.model]);
+		var metadata_view = new UploaderViews.MetadataModalView({
+			collection: editCollection,
 			el: $("#dialog"),
-			allow_add : false,
-			main_collection: this.containing_list_view.collection,
-			modal:true,
-			model: this.model
+			new_content: false,
+			model: this.model,
+		    onsave: self.reload
 		});
 	},
 	handle_hover:function(event){
 		this.hover_open_folder(event);
 	},
-	handle_drop:function(models, resolve, reject){
+	handle_drop:function(models, enable_function){
 		var self = this;
 		var tempCollection = new Models.ContentNodeCollection();
 		var sort_order = this.model.get("metadata").max_sort_order;
 		var reload_list = [];
 
-		this.display_load("Moving Content...", function(resolve_main, reject_main){
-			console.log("FROM HANDLE DROP")
-            try{
-                models.forEach(function(node){
-					node.set({
-						parent: self.model.id,
-						sort_order: ++sort_order
-					});
-					tempCollection.add(node);
+		this.display_load("Moving Content...", function(resolve, reject){
+            models.forEach(function(node){
+				node.set({
+					parent: self.model.id,
+					sort_order: ++sort_order
 				});
-				var promise = new Promise(function(resolve1, reject1){
-					tempCollection.save(resolve1, reject1);
-				});
-				promise.then(function(){
-					self.reload();
-					resolve(resolve_main);
-				}).catch(function(error){
-					reject(error);
-					self.containing_list_view.render();
-				});
-
-            }catch(error){
-                reject(error);
-                reject_main(error);
-            }
+				tempCollection.add(node);
+			});
+			var promise = new Promise(function(resolve1, reject1){
+				tempCollection.save(resolve1, reject1);
+			});
+			promise.then(function(){
+				self.reload(resolve, reject);
+				enable_function();
+			}).catch(function(error){
+				self.containing_list_view.render(resolve, reject);
+				enable_function();
+			});
         });
 	},
 	add_to_trash:function(resolve, reject){
@@ -515,17 +427,17 @@ var BaseListNodeItemView = BaseListItemView.extend({
 		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([self.model], resolve, reject));
 	},
 	handle_checked:function(){
-		(this.$el.find("input[type=checkbox]:checked"))? this.$el.addClass(this.selectedClass) : this.$el.removeClass(this.selectedClass);
+		(this.$el.find(">input[type=checkbox]").is(":checked"))? this.$el.addClass(this.selectedClass) : this.$el.removeClass(this.selectedClass);
 	},
 });
 
 var BaseListChannelItemView = BaseListItemView.extend({
 	delete:function(){
 		if(!this.model){
-    		this.delete_view();
+    		this.remove();
 	    }else{
 	    	this.model.save({"deleted":true});
-	    	this.delete_view();
+	    	this.remove();
 	    }
 	},
 	save: function(data, options){
@@ -535,128 +447,6 @@ var BaseListChannelItemView = BaseListItemView.extend({
     	}else{
     		this.model.save(data, options);
     	}
-	}
-});
-
-var BaseEditorView = BaseListView.extend({
-	multiple_selected: false,
-	current_node: null,
-	item_view:"uploading_content",
-	unsaved_queue: [], // Used to keep track of temporary model data
-	errorsFound : false,
-	parent_view : null,
-	close_uploader: function(event){
-		if(this.unsaved_queue.length === 0){
-			if (this.modal) {
-				this.$el.modal('hide');
-	        }else{
-	        	this.callback();
-	        }
-
-	        this.remove();
-		}else if(confirm("Unsaved Metadata Detected! Exiting now will"
-			+ " undo any new changes. \n\nAre you sure you want to exit?")){
-			if(!this.allow_add){
-				this.views.forEach(function(entry){
-					entry.unset_node();
-				});
-			}
-			if (this.modal) {
-				this.$el.modal('hide');
-	        }
-	        this.unsaved_queue = [];
-	        this.views = [];
-	        if(this.modal){
-	        	this.remove();
-	        }else{
-	        	this.callback();
-	        }
-
-		}else{
-			event.stopPropagation();
-			event.preventDefault();
-		}
-		if(!this.allow_add){
-        	var reload_collection = new Models.ContentNodeCollection();
-	        this.views.forEach(function(entry){
-	        	reload_collection.add(entry.model);
-			});
-			this.reload_listed(reload_collection);
-	    }
-	},
-	save_nodes: function(resolve, reject){
-		var self = this;
-
-		var promise = new Promise(function(resolve, reject){
-			self.parent_view.set_editing(false);
-			var stringHelper = require("edit_channel/utils/string_helper");
-			self.views.forEach(function(entry){
-				var tags = [];
-				entry.tags.forEach(function(tag){
-					tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
-				})
-				entry.model.set({tags: tags});
-				if(entry.format_view){
-					entry.format_view.update_file();
-					entry.format_view.clean_files();
-				}
-		        entry.set_edited(false);
-			});
-			self.errorsFound = self.errorsFound || !self.save_queued();
-			self.collection.save(resolve, reject);
-		});
-		promise.then(function(){
-			resolve(true);
-		}).catch(function(error){
-			reject(error);
-		});
-	},
-	check_nodes:function(){
-		var self = this;
-		self.errorsFound = false;
-		this.views.forEach(function(entry){
-			entry.model.set(entry.model.attributes, {validate:true});
-			if(entry.model.validationError){
-				self.handle_error(entry);
-				self.errorsFound = true;
-			}
-		});
-	},
-	set_node_edited:function(){
-		this.enqueue(this.current_view);
-		this.current_view.set_edited(true);
-		this.current_view.set_node();
-		this.current_view.render();
-	},
-	enqueue: function(view){
-		var index = this.unsaved_queue.indexOf(view);
-		if(index >= 0)
-			this.unsaved_queue.splice(index, 1);
-		this.unsaved_queue.push(view);
-	},
-	save_queued:function(){
-		var self = this;
-		var success = true;
-		this.unsaved_queue.forEach(function(entry){
-			entry.model.set(entry.model.attributes, {validate:true});
-			if(entry.format_view){
-				entry.model.set("files", entry.format_view.model.get("files"));
-			}
-			if(entry.model.validationError){
-				self.handle_error(entry);
-				success = false;
-			}else{
-				self.unsaved_queue.splice(self.unsaved_queue.indexOf(entry), 1);
-			}
-		});
-
-		/*Make sure queue is cleared*/
-		if(success){
-			this.unsaved_queue.forEach(function(entry){
-				self.views.push(self.unsaved_queue.pop());
-			});
-		}
-		return success;
 	}
 });
 
@@ -677,6 +467,5 @@ module.exports = {
 	BaseListItemView:BaseListItemView,
 	BaseListChannelItemView: BaseListChannelItemView,
 	BaseListNodeItemView:BaseListNodeItemView,
-	BaseEditorView:BaseEditorView,
 	BaseModalView:BaseModalView
 }

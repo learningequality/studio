@@ -36,6 +36,14 @@
 
 }
 
+#button_bar {
+	width:100vw;
+	background-color:@blue-100;
+	margin:0;
+	margin-bottom:20px;
+	padding: 13px 0 0 30px;
+}
+
 #disable-none-selected-wrapper{
 	display:inline-block;
 	/*.nav-button-container{
@@ -241,11 +249,6 @@
 		@edit-current-folder-color:#666666;
 
 		#button_bar {
-			width:100vw;
-			background-color:@blue-100;
-			margin:0;
-			margin-bottom:20px;
-			padding: 13px 0 0 30px;
 			.nav-button-container {
 				width: 50px;
 				.inline-block;
@@ -516,4 +519,33 @@
 	#container_area{
 		margin-top:40px;
 	}
+}
+
+
+@placeholder-color:#666666;
+.ui-sortable-helper, .ui-sorting-list li{
+	input[type=checkbox], .options, .queue-options, .unpublished, .tog_folder, .clipboard-topic-count{visibility:hidden;}
+	background-color:@gray-200 !important;
+	border-top:1px solid white;
+	cursor:move;
+	min-height: 60px;
+	height:auto;
+	width:275px !important;
+
+	.title{
+		font-size:13pt;
+		padding:0px;
+		margin:0px;
+	}
+}
+.sorting-placeholder{
+	width: 100%;
+	background-color: @placeholder-color !important;
+	opacity: 0.4;
+}
+
+.drop-topic-hover{
+	margin-top: 15px !important;
+	margin-bottom: 15px !important;
+	background-color: @blue-100 !important;
 }

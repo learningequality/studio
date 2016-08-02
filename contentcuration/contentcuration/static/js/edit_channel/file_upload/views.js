@@ -287,11 +287,10 @@ var FileUploadView = BaseViews.BaseListView.extend({
             collection: this.returnCollection,
             parent_view: this.parent_view,
             model: this.model,
-            allow_add: true,
-            new_topic: false,
-            main_collection : this.returnCollection,
-            modal: false,
-            callback: this.close_file_uploader
+            upload_files: true,
+            new_content: false,
+            onsave: this.close_file_uploader,
+            onclose:this.close_file_uploader
         });
     },
     go_to_upload_from_metadata:function(){
@@ -314,7 +313,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
     },
     remove_view: function(view){
         this.views.splice(this.views.indexOf(this), 1);
-        view.delete_view();
+        view.remove();
         if(this.views.length == 0){
             this.disable_next();
         }

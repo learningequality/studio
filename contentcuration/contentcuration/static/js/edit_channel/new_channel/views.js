@@ -161,7 +161,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	delete_channel: function(event){
 		if(this.model.isNew()){
 			this.containing_list_view.set_editing(false);
-			this.delete_view();
+			this.remove();
 			this.containing_list_view.collection.remove(this.model);
 			this.containing_list_view.load_content();
 		}else if(confirm("WARNING: All content under this channel will be permanently deleted."
@@ -171,7 +171,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 				try{
 					self.containing_list_view.set_editing(false);
 					self.delete();
-					self.delete_view();
+					self.remove();
 					self.containing_list_view.collection.remove(self.model);
 					self.containing_list_view.load_content();
 					resolve("Success!");
@@ -194,7 +194,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			this.edit = false;
 			this.render();
 		}else{
-			this.delete_view();
+			this.remove();
 			this.containing_list_view.load_content();
 		}
 	},
@@ -219,7 +219,7 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 					self.model = channel;
 					self.containing_list_view.collection.add(self.model);
 					self.containing_list_view.load_content();
-					self.delete_view();
+					self.remove();
 					resolve("Success!");
 				},
 				error:function(obj, error){

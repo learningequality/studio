@@ -147,7 +147,7 @@ var ContentNodeCollection = BaseCollection.extend({
         		resolve(true);
         	},
         	error:function(obj, error){
-        		reject(obj, error);
+        		reject(error);
         	}
         });
 	},

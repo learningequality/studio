@@ -1,9 +1,10 @@
-<input type="checkbox" id="check_{{id}}" class="upload_item_checkbox"/>
-<label for="check_{{id}}" class="uploaded_list_item">
-	<!--<span class="glyphicon glyphicon-remove remove_item pull-right" aria-hidden="true"></span>-->
-	<h6>{{to_upper_case topic.attributes.kind}}</h6>
-	<h5 class="truncate" title="{{topic.attributes.title}}" >
-		<span class="item_name" id="{{id}}">{{topic.attributes.title}}</span>
-		<!--<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>-->
+<input type="checkbox" id="check_{{node.id}}" class="upload_item_checkbox"/>
+<label for="check_{{node.id}}" class="uploaded_list_item">
+	{{#if new_content}}
+	<span class="glyphicon glyphicon-remove remove_topic pull-right" aria-hidden="true"></span>
+	{{/if}}
+	<h5 class="truncate" title="{{node.title}}" >
+		<span class="{{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
+		<span class="item_name" id="{{node.id}}">{{node.title}}</span>
 	</h5>
 </label>

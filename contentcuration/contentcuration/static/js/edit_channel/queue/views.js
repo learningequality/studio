@@ -5,7 +5,6 @@ var BaseViews = require("./../views");
 var Models = require("./../models");
 var DragHelper = require("edit_channel/utils/drag_drop");
 
-
 /* Loaded when user clicks clipboard button below navigation bar */
 var Queue = BaseViews.BaseView.extend({
 	template: require("./hbtemplates/queue.handlebars"),
@@ -14,7 +13,7 @@ var Queue = BaseViews.BaseView.extend({
 		_.bindAll(this, 'toggle_queue', 'switch_to_queue', 'switch_to_trash');
 		this.resolve = options.resolve;
 		this.reject = options.reject;
-		this.render(this.resolve, this.reject);
+		this.render(options.resolve, options.reject);
 		this.$el.find("#queue").css("margin-right", -this.$el.find("#main-queue").outerWidth());
 	},
 	render: function(resolve, reject) {
@@ -209,11 +208,6 @@ var QueueList = BaseViews.BaseListView.extend({
 		}).catch(function(error){
 			reject(error)
 		});
-
-
-	},
-	add_to_trash:function(collection, resolve, reject){
-		this.container.add_to_trash(collection, resolve, reject);
 	},
 
 	check_number_of_items_in_list:function(){
@@ -246,7 +240,6 @@ var ClipboardList = QueueList.extend({
 		this.collection = options.collection;
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.collection.sort_by_order();
-		//this.set_sort_orders(this.childrenCollection);
 		this.add_controls = options.add_controls;
 		this.container = options.container;
 		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_topic', 'import_content', 'handle_transfer_drop',
@@ -284,7 +277,6 @@ var TrashList = QueueList.extend({
 		this.collection = options.collection;
 		this.childrenCollection = this.collection.get_all_fetch(this.model.get("children"));
 		this.collection.sort_by_order();
-		//this.set_sort_orders(this.childrenCollection);
 		this.add_controls = options.add_controls;
 		this.container = options.container;
 		_.bindAll(this, 'check_all', 'delete_items', 'move_trash','check_number_of_items_in_list','handle_transfer_drop','drop_in_container');
@@ -391,7 +383,6 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		event.stopPropagation();
 		event.preventDefault();
 		this.load_subfiles();
-		//console.log("toggling", this.$el.find("#" + this.id() +"_sub"));
 		var el =  this.$el.find("#menu_toggle_" + this.model.id);
 		if(el.hasClass("glyphicon-menu-up")){
 			this.$el.find("#" + this.id() +"_sub").slideDown();
@@ -405,7 +396,6 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		containing_element.scrollLeft(containing_element.width());
 	},
 	load_subfiles:function(){
-		//console.log("SUBFILES ", this.$el.find("#" + this.id() +"_sub"));
 		var data = {
 			collection: this.containing_list_view.collection,
 			el: this.$el.find("#" + this.id() +"_sub"),
@@ -430,7 +420,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			self.remove_item(true, resolve);
 		});
 		promise.then(function(){
-			self.delete_view();
+			self.remove();
 		}).catch(function(error){
 			reject(error)
 		});

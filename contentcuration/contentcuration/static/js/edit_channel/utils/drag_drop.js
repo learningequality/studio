@@ -79,10 +79,8 @@ function addSortable(element, selected_class, callback){
 				var promise = new Promise(function(resolve2, reject2){
 			        callback(current_node, selected_items, order, resolve2, reject2);
 				});
-
-				promise.then(function(resolution){
+				promise.then(function(){
 					$(".content-list").sortable( "enable" );
-					resolution("Success!");
 				}).catch(function(error){
 					console.log(error);
 					$(".content-list").sortable( "enable" );
@@ -131,20 +129,11 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		        if(!selected_items.contains(current_node)){
 	        		selected_items.push(current_node);
 	        	}
-
 	        	selected_items.add(appended_items.models, {at: selected_items.length});
-	        	var promise = new Promise(function(resolve, reject){
-			       dropCallback(selected_items, resolve, reject);
-				});
-
-				promise.then(function(callback){
-					$(ui.draggable.context).remove();
-					$(".content-list").sortable( "enable" );
-					callback("Success!");
-				}).catch(function(error){
-					alert(error);
-					$(".content-list").sortable( "enable" );
-				});
+	        	dropCallback(selected_items, function(){
+	        		$(ui.draggable.context).remove();
+	        		$(".content-list").sortable( "enable" );
+	        	});
 			}
 		},
 		out: function(event, ui){

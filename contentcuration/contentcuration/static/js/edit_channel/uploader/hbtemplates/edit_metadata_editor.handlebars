@@ -1,0 +1,36 @@
+{{#if author}}<h4 id="author_field">Created by: <i></i></h4>{{/if}}
+{{#if is_file}}
+<div id="editmetadata_format_section"></div>
+{{/if}}
+<h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>
+<input type="text" id="input_title" class="upload_input {{#unless node}}gray-out{{/unless}} input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required {{#unless node}}disabled{{/unless}}/>
+{{#if is_file}}
+<div class="row">
+	<div class="content_nodes_only col-sm-5">
+		<h4>License</h4>
+		<select id="license_select">
+            <option selected disabled value=0>-</option>
+            {{#each licenses}}
+                <option value={{id}}>{{license_name}}</option>
+            {{/each}}
+        </select>
+        <span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about"></span>
+	</div>
+	<!-- <div class="col-sm-1">&nbsp;</div> -->
+	<div class="content_nodes_only col-sm-7">
+		<h4>Copyright Holder</h4>
+		<input type="text" id="input_license_owner" class="license_input input_listener" placeholder="Enter license owner name" maxlength="200"value="{{copyright_owner}}"/>
+	</div>
+</div>
+{{/if}}
+
+<h4>Description {{#if node}}<i id="description_counter" class="pull-right">{{word_limit}} chars left</i>{{/if}}</h4>
+<textarea id="input_description" class="{{#unless node}}gray-out{{/unless}} upload_input input_listener" placeholder="Enter a description of your content" maxlength={{word_limit}} value="{{node.description}}" {{#unless node}}disabled{{/unless}}/>
+
+<h4>Tags (optional) <span id="tag_error">Invalid characters found.</span></h4>
+<input type="text" id="tag_box" class="tag_input {{#if none_selected}}gray-out{{/if}}" placeholder="Press 'Enter' to add tag" maxlength="30" {{#if none_selected}}disabled{{/if}}/>
+{{#unless none_selected}}
+<div class="container-fluid">
+	<div class="row" id="tag_area"></div>
+</div>
+{{/unless}}
