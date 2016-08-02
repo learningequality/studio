@@ -22,7 +22,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_selected',
-						'toggle_details', 'handle_checked', 'edit_permissions');
+						'toggle_details', 'handle_checked', 'edit_permissions', 'reload_listed');
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
@@ -213,7 +213,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	className: "container content-container",
 	initialize: function(options) {
 		_.bindAll(this, 'drop_in_container','handle_transfer_drop','create_new_item',
-					'close_container','add_topic','import_content','import_nodes',
+					'close_container','add_topic','add_nodes', 'import_content','import_nodes',
 					'add_files','update_name','check_number_of_items_in_list');
 		this.index = options.index;
 		this.edit_mode = options.edit_mode;
@@ -350,7 +350,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'handle_hover','handle_drop','handle_checked','hover_open_folder','open_folder','edit_item','preview_node');
+		_.bindAll(this, 'handle_hover','open_edit','handle_drop','handle_checked','handle_edit_submit', 'hover_open_folder','open_folder','edit_item','preview_node');
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
 		// this.index = options.index;

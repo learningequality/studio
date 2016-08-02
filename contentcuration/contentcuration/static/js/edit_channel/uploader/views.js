@@ -311,8 +311,9 @@ var EditMetadataView = BaseViews.BaseListView.extend({
                     self.save_nodes(resolve1, reject1);
                 });
                 promise.then(function(){
-                    resolve("Success!");
                     self.onclose(event);
+                    resolve("Success!")
+                    $(".modal-backdrop").remove();
                 });
             });
         },
@@ -330,8 +331,12 @@ var EditMetadataView = BaseViews.BaseListView.extend({
                 }
                 entry.set_edited(false);
             });
-            console.log("COLLECTION IS NOW:", self.collection)
-            self.collection.save(resolve, reject);
+            var promise = new Promise(function(resolve1, reject1){
+                self.collection.save(resolve1, reject1);
+            });
+            promise.then(function(collection){
+                self.onsave(collection, resolve, reject);
+            })
         },
     /* SWITCHING OPERATIONS */
         update_checked:function(){

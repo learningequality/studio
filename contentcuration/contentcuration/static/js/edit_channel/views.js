@@ -33,7 +33,7 @@ var BaseView = Backbone.View.extend({
 			el: $("#dialog"),
 			model: content,
 			new_content: false,
-		    onsave: self.reload_listed
+		    onsave: this.reload_listed
 		});
 	},
 	display_load:function(message, callback){
@@ -209,18 +209,18 @@ BaseListView = BaseView.extend({
 		this.views.splice(this.views.indexOf(this), 1);
 		view.remove();
 	},
-	add_nodes:function(collection, startingIndex, resolve, reject){
+	add_nodes:function(collection, resolve, reject){
 		var self = this;
 		var promise = new Promise(function(resolve1, reject1){
-			collection.move(self.model, startingIndex, resolve1, reject1);
+			collection.move(self.model, self.model.get("metadata").max_sort_order, resolve1, reject1);
 		});
 		promise.then(function(){
-			self.list_index = startingIndex;
 			collection.add(self.model);
 			var promise1 = new Promise(function(resolve2, reject2){
 				self.reload_listed(collection, resolve2, reject2);
 			});
 			promise1.then(function(){
+				self.list_index = collection.length;
 				self.render();
 				resolve(collection);
 			})
@@ -387,8 +387,11 @@ var BaseListNodeItemView = BaseListItemView.extend({
 			el: $("#dialog"),
 			new_content: false,
 			model: this.model,
-		    onsave: self.reload
+		    onsave: this.handle_edit_submit
 		});
+	},
+	handle_edit_submit:function(collection, resolve, reload){
+		this.reload(resolve, reload);
 	},
 	handle_hover:function(event){
 		this.hover_open_folder(event);

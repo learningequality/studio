@@ -194,7 +194,7 @@ var QueueList = BaseViews.BaseListView.extend({
 	add_to_list:function(collection, resolve, reject){
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
-			self.add_nodes(collection, self.childrenCollection.highest_sort_order, resolve, reject);
+			self.add_nodes(collection, resolve, reject);
 		});
 		promise.then(function(){
 			self.model.fetch({
@@ -242,7 +242,7 @@ var ClipboardList = QueueList.extend({
 		this.collection.sort_by_order();
 		this.add_controls = options.add_controls;
 		this.container = options.container;
-		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_topic', 'import_content', 'handle_transfer_drop',
+		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_topic','add_nodes', 'import_content', 'handle_transfer_drop',
 					'create_new_item','import_nodes', 'add_files','check_number_of_items_in_list','render','drop_in_container');
 		this.render();
 	},
@@ -330,7 +330,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		return this.model.get("id");
 	},
 	initialize: function(options) {
-		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item','render','handle_checked','handle_hover','handle_drop','hover_open_folder');
+		_.bindAll(this, 'remove_item', 'reload','toggle','edit_item', 'open_edit','handle_edit_submit', 'submit_item','render','handle_checked','handle_hover','handle_drop','hover_open_folder');
 		this.containing_list_view = options.containing_list_view;
 		this.allow_edit = false;
 		this.is_clipboard = options.is_clipboard;
