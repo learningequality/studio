@@ -2,7 +2,7 @@
 <ul class="dropdown-menu" id="channel_selection_dropdown_list">
 {{#each channel_list}}
 <li>
-	<a href="{{id}}/edit" class="truncate">{{name}}</a>
+	<a href="/channels/{{id}}/edit" class="truncate">{{name}}</a>
 </li>
 {{else}}<li class='default-channel-item'><em>No channels found.</em></li>
 {{/each}}
