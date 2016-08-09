@@ -158,7 +158,7 @@ var ShareView = BaseViews.BaseListView.extend({
     save_permissions:function(show_indicator){
         var self = this;
         this.model.save({
-            "editors": this.collection.pluck("id"),
+            "editors": [this.current_user.id].concat(this.collection.pluck("id")),
             "public": this.$("#share_public_channel").is(':checked')
         }, {
             async:false,
