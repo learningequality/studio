@@ -10,14 +10,12 @@ var get_cookie = require("utils/get_cookie");
 var ChannelList  = BaseListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
 	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
-	item_view: "channel", // TODO: Use to indicate how to save items on list
 
 	initialize: function(options) {
 		_.bindAll(this, 'new_channel');
 		this.collection = options.channels;
 		this.render();
 		this.user = options.user;
-        //this.listenTo(this.collection, "sync", this.render);
 	},
 	render: function() {
 		this.set_editing(false);
@@ -67,6 +65,11 @@ var ChannelList  = BaseListView.extend({
 		$("#channel_selection_dropdown_list").html(this.dropdown_template({
 			channel_list: this.collection.toJSON()
 		}));
+	},
+	set_editing: function(edit_mode_on){
+		$(".disable-on-edit").prop("disabled", edit_mode_on);
+		$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
+		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
 	}
 });
 

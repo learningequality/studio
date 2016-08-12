@@ -4,44 +4,45 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("modal-styles.less");
 
-var PreviewView = BaseViews.BaseModalView.extend({
+var PreviewModalView = BaseViews.BaseModalView.extend({
+    template: require("./hbtemplates/preview_modal.handlebars"),
+    initialize: function(options) {
+        _.bindAll(this, "close_preview");
+        this.modal = true;
+        this.render(this.close_preview, {node:this.model.toJSON()});
+        this.preview_view = new PreviewView({
+            model:this.model,
+            el: this.$(".modal-body"),
+            is_modal: true
+        });
+        this.preview_view.switch_preview(this.model);
+    },
+    close_preview:function(){
+        this.remove();
+    },
+});
+
+var PreviewView = BaseViews.BaseView.extend({
     tabs_template: require("./hbtemplates/preview_templates/tabs.handlebars"),
     template: require("./hbtemplates/preview_dialog.handlebars"),
-    modal_template: require("./hbtemplates/preview_modal.handlebars"),
     current_preview:null,
     initialize: function(options) {
-        _.bindAll(this, 'set_preview','toggle_fullscreen', 'close_preview');
-        this.modal = options.modal;
+        _.bindAll(this, 'set_preview','toggle_fullscreen');
         this.presets = new Models.FormatPresetCollection();
+        this.is_modal = options.is_modal;
         this.render();
-        if(this.modal){
-             this.switch_preview(this.model);
-        }
     },
     events: {
         'click .preview_btn_tab' : 'set_preview',
         'click .view_fullscreen': 'toggle_fullscreen'
     },
     render: function() {
-        if(this.modal){
-            this.$el.html(this.modal_template({node:this.model.toJSON()}));
-            this.$(".modal-body").html(this.template({
-                node: this.model,
-                file: this.current_preview,
-                selected_preset: (this.current_preview) ? window.formatpresets.get(this.current_preview.preset) : null,
-                is_modal:true
-            }));
-            this.$el.append(this.el);
-            this.$(".modal").modal({show: true});
-            this.$(".modal").on("hide.bs.modal", this.close_preview);
-        }else{
-            this.$el.html(this.template({
-                node: this.model,
-                file: this.current_preview,
-                selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset) : null,
-                is_modal:false
-            }));
-        }
+        this.$el.html(this.template({
+            node: this.model,
+            file: this.current_preview,
+            selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset) : null,
+            is_modal:this.is_modal
+        }));
         this.load_preset_dropdown();
     },
     load_preset_dropdown:function(){
@@ -62,9 +63,6 @@ var PreviewView = BaseViews.BaseModalView.extend({
         });
         this.load_preset_dropdown();
         this.generate_preview(true);
-    },
-    close_preview:function(){
-        this.remove();
     },
 
     generate_preview:function(force_load){
@@ -173,5 +171,6 @@ var PreviewView = BaseViews.BaseModalView.extend({
 });
 
 module.exports = {
+    PreviewModalView:PreviewModalView,
     PreviewView:PreviewView
 }

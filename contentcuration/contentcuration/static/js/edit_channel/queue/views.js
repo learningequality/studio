@@ -11,12 +11,10 @@ var Queue = BaseViews.BaseView.extend({
 	item_view:"queue",
 	initialize: function(options) {
 		_.bindAll(this, 'toggle_queue', 'switch_to_queue', 'switch_to_trash');
-		this.resolve = options.resolve;
-		this.reject = options.reject;
-		this.render(options.resolve, options.reject);
+		this.render();
 		this.$el.find("#queue").css("margin-right", -this.$el.find("#main-queue").outerWidth());
 	},
-	render: function(resolve, reject) {
+	render: function() {
 		this.$el.html(this.template());
 		this.clipboard_root = window.current_user.get_clipboard();
 		this.trash_root = window.current_channel.get_root("trash_tree");
@@ -37,7 +35,7 @@ var Queue = BaseViews.BaseView.extend({
 			container: this
 		});
 		this.switch_tab("clipboard");
-		resolve(true);
+		this.$("#queue").data("data", this);
 	},
 	events: {
 		'click .queue-button' : 'toggle_queue',

@@ -16,17 +16,10 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
         this.collection = options.collection;
         this.new_content = options.new_content;
         this.upload_files = options.upload_files;
-        this.render();
-    },
-
-    render: function() {
-        this.$el.html(this.template({
+        this.render(this.close_uploader, {
             new_content: this.new_content,
             title: (this.model)? ((this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name")) : null
-        }));
-        $("body").append(this.el);
-        this.$(".modal").modal({show: true});
-        this.$(".modal").on("hide.bs.modal", this.close_uploader);
+        });
         this.metadata_view = new EditMetadataView({
             el: this.$(".modal-body"),
             collection : this.collection,
@@ -300,43 +293,56 @@ var EditMetadataView = BaseViews.BaseListView.extend({
             var self = this;
             this.display_load("Saving Content...", function(resolve, reject){
                 self.add_tag(null);
-                self.save_nodes(resolve, reject);
+                self.save_nodes().then(function(){
+                    resolve("Success!");
+                });
             });
         },
         save_and_finish: function(event){
             var self = this;
             this.display_load("Saving Content...", function(resolve, reject){
-                var promise = new Promise(function(resolve1, reject1){
-                    self.add_tag(null);
-                    self.save_nodes(resolve1, reject1);
-                });
-                promise.then(function(){
-                    self.onclose(event);
-                    resolve("Success!")
-                    $(".modal-backdrop").remove();
+                self.add_tag(null);
+                self.save_nodes().then(() => {
+                   self.onclose(event);
+                   resolve("Success!");
+                   $(".modal-backdrop").remove();
                 });
             });
         },
-        save_nodes:function(resolve, reject){
+        save_nodes:function(){
             var self = this;
-            self.views.forEach(function(entry){
-                var tags = [];
-                entry.tags.forEach(function(tag){
-                    tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
-                })
-                entry.model.set({tags: tags});
-                if(entry.format_view){
-                    entry.format_view.update_file();
-                    entry.format_view.clean_files();
+            var promise = new Promise(function(resolve, reject){
+                var sort_order = null;
+                if(self.model && (self.new_content || self.upload_files)){
+                    sort_order = Math.ceil(self.model.get("metadata").max_sort_order);
                 }
-                entry.set_edited(false);
+                self.views.forEach(function(entry){
+                    var tags = [];
+                    entry.tags.forEach(function(tag){
+                        tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
+                    })
+                    entry.model.set({tags: tags});
+                    if(sort_order){
+                        entry.model.set({
+                            parent:self.model.id,
+                            sort_order:++sort_order
+                        });
+                    }
+                    if(entry.format_view){
+                        entry.format_view.update_file();
+                        entry.format_view.clean_files();
+                    }
+                });
+                console.log(self.collection);
+                self.collection.save().then(function(collection){
+                    self.onsave(collection);
+                    self.views.forEach(function(entry){
+                        entry.set_edited(false);
+                    });
+                    resolve(true);
+                });
             });
-            var promise = new Promise(function(resolve1, reject1){
-                self.collection.save(resolve1, reject1);
-            });
-            promise.then(function(collection){
-                self.onsave(collection, resolve, reject);
-            })
+            return promise;
         },
     /* SWITCHING OPERATIONS */
         update_checked:function(){
@@ -432,7 +438,7 @@ var UploadedItem = BaseViews.BaseListNodeItemView.extend({
             title: (this.containing_list_view.selected_items.length === 1)? $("#input_title").val().trim() : this.model.get("title"),
             description: (this.containing_list_view.selected_items.length===1)? $("#input_description").val().trim() : this.model.get("description"),
             license: (this.model.get("kind") != "topic" && $("#license_select").val()!=0)? $("#license_select").val() : this.model.get("license"),
-            copyright_holder: (this.model.get("kind") != "topic" && $("#input_license_owner").val().trim() !== "")? $("#input_license_owner").val().trim() : this.model.get("copyright_holder")
+            copyright_holder: (this.model.get("kind") != "topic" && $("#input_license_owner").val() !== "")? $("#input_license_owner").val().trim() : this.model.get("copyright_holder")
         });
         this.$el.find(".item_name").text(this.model.get("title"));
         this.$el.find("h5").prop("title", this.model.get("title"));

@@ -22,7 +22,39 @@ var BaseCollection = Backbone.Collection.extend({
 	},
 	save: function(callback) {
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
-	}
+	},
+	get_all_fetch: function(ids){
+    	var self = this;
+    	var promise = new Promise(function(resolve, reject){
+			var promises = [];
+			ids.forEach(function(id){
+				promises.push(new Promise(function(modelResolve, modelReject){
+					var model = self.get({'id' : id});
+					if(!model){
+						model = self.add({'id': id});
+						model.fetch({
+							success:function(returned){
+								modelResolve(returned);
+							},
+							error:function(obj, error){
+								modelReject(error);
+							}
+						});
+					} else {
+						modelResolve(model);
+					}
+				}));
+			});
+			Promise.all(promises).then(function(fetchedModels){
+				var to_fetch = new ContentNodeCollection();
+				fetchedModels.forEach(function(entry){
+					to_fetch.add(entry);
+				});
+				resolve(to_fetch);
+			});
+    	});
+    	return promise;
+    },
 });
 
 /**** USER-CENTERED MODELS ****/
@@ -110,18 +142,35 @@ var ContentNodeModel = BaseModel.extend({
 			"max_sort_order":1
 		}
     },
-
-	move:function(target_parent, allow_duplicate, sort_order){
-		this.set({parent: target_parent.id,sort_order:sort_order}, {validate:true});
-		this.save(this.attributes, {async:false, validate:false}); //Save any other values
-	},
-	create_file:function(){
-		this.get("files").forEach(function(file){
-			if(file.attributes){
-				var data = file.pick("file_size", "contentnode", "preset");
-				file.save(data,{async:false});
+	handle_file_data:function(){
+		var self = this;
+		var promise = new Promise(function(resolve, reject){
+			if(self.get("kind") === "topic"){
+				resolve(self);
+			}else{
+				var promises = [];
+				self.get("files").forEach(function(file){
+					if(file.attributes){
+						promises.push(new Promise(function(fileResolve, fileReject){
+							var data = file.pick("file_size", "contentnode", "preset");
+							file.save(data,{
+								success:function(file){
+									fileResolve(file);
+								},
+								error:function(obj, error){
+									fileReject(error);
+								}
+							});
+						}));
+					}
+				});
+				Promise.all(promises).then(function(files){
+					self.set("files", files);
+					resolve(self);
+				});
 			}
 		});
+		return promise;
 	}
 });
 
@@ -130,45 +179,30 @@ var ContentNodeCollection = BaseCollection.extend({
 	list_name:"contentnode-list",
 	highest_sort_order: 1,
 
-	save: function(resolve, reject) {
+	save: function() {
 		var self = this;
-        Backbone.sync("update", this, {
-        	url: this.model.prototype.urlRoot(),
-        	success: function(data){
-        		var fetch_list = [];
-        		data.forEach(function(entry){
-        			if(entry.kind != "topic"){
-        				fetch_list.push(entry.id);
-        			}
-				});
-				self.get_all_fetch(fetch_list).forEach(function(node){
-					node.create_file();
-				});
-        		resolve(self);
-        	},
-        	error:function(obj, error){
-        		reject(error);
-        	}
-        });
-	},
+		var promise = new Promise(function(saveResolve, saveReject){
+			var promises = [];
+			self.forEach(function(node){
+    			promises.push(node.handle_file_data());
+			});
 
-   /* TODO: would be better to fetch all values at once */
-    get_all_fetch: function(ids){
-  //   	console.log("PERFORMANCE models.js: starting get_all_fetch...", ids);
-		// var start = new Date().getTime();
-    	var to_fetch = new ContentNodeCollection();
-    	var self = this;
-    	ids.forEach(function(id){
-			var model = self.get({'id': id});
-    		if(!model){
-    			model = self.add({'id':id});
-    			model.fetch({async:false});
-    		}
-    		to_fetch.add(model);
-    	});
-    	// console.log("PERFORMANCE models.js: get_all_fetch end (time = " + (new Date().getTime() - start) + ")");
-    	return to_fetch;
-    },
+			Promise.all(promises).then(function(nodes){
+				var toSave = new ContentNodeCollection(nodes);
+				Backbone.sync("update", toSave, {
+		        	url: self.model.prototype.urlRoot(),
+		        	success: function(data){
+		        		saveResolve(new ContentNodeCollection(data));
+		        	},
+		        	error:function(obj, error){
+		        		saveReject(error);
+		        	}
+		        });
+			});
+
+		});
+        return promise;
+	},
     sort_by_order:function(){
     	this.comparator = function(node){
     		return node.get("sort_order");
@@ -202,23 +236,55 @@ var ContentNodeCollection = BaseCollection.extend({
             }
         });
     },
-    move:function(target_parent, sort_order, resolve, reject){
-    	this.forEach(function(model){
-			model.set({
-				parent: target_parent.id,
-				sort_order:++sort_order
-			});
-    	});
-    	var self  = this;
-    	var promise = new Promise(function(resolve, reject){
-    		self.save(resolve, reject);
+    move:function(target_parent, sort_order){
+    	var self = this;
+		var promise = new Promise(function(resolve, reject){
+			self.forEach(function(model){
+				model.set({
+					parent: target_parent.id,
+					sort_order:++sort_order
+				});
+	    	});
+	    	self.save().then(function(collection){
+	    		resolve(collection);
+	    	});
 		});
-		promise.then(function(){
-			resolve(true);
-		}).catch(function(error){
-			reject(error);
-		});
-	}
+        return promise;
+	},
+	create_node_for_file:function(title, file, size){
+		var self = this;
+        var promise = new Promise(function(resolve, reject){
+			self.create({
+                title : title,
+                parent : null,
+                children : [],
+                kind: file.get("recommended_kind"),
+                license: 1,
+                total_file_size : 0,
+                tags : [],
+                sort_order : 1,
+            }, {
+            	/* TODO: Find way to avoid database locking to remove async:false */
+            	async:false,
+            	success:function(created){
+            		created.set({
+                        original_node : created.get("id"),
+                        cloned_source : created.get("id")
+                    });
+
+                    file.set({
+                        file_size : size,
+                        contentnode: created.id
+                    });
+            		resolve(created);
+            	},
+            	error:function(obj, error){
+            		reject(error);
+            	}
+            });
+        });
+        return promise;
+    },
 });
 
 var ChannelModel = BaseModel.extend({

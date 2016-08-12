@@ -13,20 +13,13 @@ var ImportModalView = BaseViews.BaseModalView.extend({
         this.callback = options.callback;
         this.parent_view = options.parent_view;
         this.modal = true;
-        this.render();
+        this.render(this.close, {});
         this.import_view = new ImportView({
             el: this.$(".modal-body"),
             callback: this.callback,
             modal : this,
             model:this.model
         });
-    },
-
-    render: function() {
-        this.$el.html(this.template());
-        $("body").append(this.el);
-        this.$(".modal").modal({show: true});
-        this.$(".modal").on("hide.bs.modal", this.close);
     },
     close_importer:function(collection, resolve){
       this.callback(collection);

@@ -70,7 +70,7 @@ def get_node_siblings(node):
 
 def get_node_ancestors(node):
     ancestors = []
-    for n in node.get_ancestors(include_self=True):
+    for n in node.get_ancestors():
         ancestors.append(n.id)
     return ancestors
 

@@ -11,29 +11,21 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     initialize: function(options) {
         _.bindAll(this, "close_exporter", "publish");
         this.modal = true;
-        this.render();
+        this.render(this.close, {
+            channel: window.current_channel.toJSON(),
+            licenses: window.licenses.toJSON(),
+            version: window.current_channel.get("version") + 1,
+            node: this.model.toJSON()
+        });
         this.callback = options.callback;
         this.export_view = new ExportListView({
             el: this.$("#export_preview"),
             container: this,
             model: this.model
         });
-        this.select_license = null;
     },
     events:{
       "click #publish_btn" : "publish"
-    },
-
-    render: function() {
-        this.$el.html(this.template({
-            channel: window.current_channel.toJSON(),
-            licenses: window.licenses.toJSON(),
-            version: window.current_channel.get("version") + 1,
-            node: this.model.toJSON()
-        }));
-        $("body").append(this.el);
-        this.$(".modal").modal({show: true});
-        this.$(".modal").on("hide.bs.modal", this.close);
     },
     close_exporter:function(resolve){
       this.close();

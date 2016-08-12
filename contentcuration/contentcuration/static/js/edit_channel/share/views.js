@@ -10,7 +10,9 @@ var ShareModalView = BaseViews.BaseModalView.extend({
 
     initialize: function(options) {
         _.bindAll(this, "close_share_modal");
-        this.render();
+        this.render(this.close_share_modal, {
+            channel: this.model.toJSON()
+        });
         this.save_changes = false;
         this.originalData = this.model.toJSON();
         this.share_view = new ShareView({
@@ -19,15 +21,6 @@ var ShareModalView = BaseViews.BaseModalView.extend({
             model: this.model,
             current_user: options.current_user
         });
-    },
-
-    render: function() {
-        this.$el.html(this.template({
-            channel: this.model.toJSON()
-        }));
-        $("body").append(this.el);
-        this.$(".modal").modal({show: true});
-        this.$(".modal").on("hide.bs.modal", this.close_share_modal);
     },
     close_share_modal:function(){
         this.model.set(this.originalData);
@@ -187,7 +180,7 @@ var ShareView = BaseViews.BaseListView.extend({
     save_permissions:function(show_indicator){
         var self = this;
         this.model.save({
-            "editors": this.collection.pluck("id"),
+            "editors": [this.current_user.id, this.collection.pluck("id")],
             "public": this.$("#share_public_channel").is(':checked')
         }, {
             success:function(){

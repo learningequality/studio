@@ -15,21 +15,15 @@ var FileModalView = BaseViews.BaseModalView.extend({
         _.bindAll(this, "close_file_uploader");
         this.callback = options.callback;
         this.parent_view = options.parent_view;
-        this.render();
+        this.render(this.close_file_uploader, {});
         this.file_upload_view = new FileUploadView({
             el: this.$(".modal-body"),
             parent_view : this.parent_view,
             callback: this.callback,
             container: this,
-            model:this.model
+            model:this.model,
+            onsave: options.onsave
         });
-    },
-
-    render: function() {
-        this.$el.html(this.template());
-        $("body").append(this.el);
-        this.$(".modal").modal({show: true});
-        this.$(".modal").on("hide.bs.modal", this.close_file_uploader);
     },
     close_file_uploader:function(event){
         if(this.file_upload_view.views.length === 0){
@@ -66,7 +60,8 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.returnCollection = new Models.ContentNodeCollection();
         this.acceptedFiles = this.get_accepted_files();
         this.parent_view = options.parent_view;
-        this.current_sort_order = this.model.get("metadata").max_sort_order + 1;
+        this.onsave = options.onsave;
+        this.upload_in_progress = false;
         this.render();
     },
     events:{
@@ -158,64 +153,32 @@ var FileUploadView = BaseViews.BaseListView.extend({
                 var kind = window.contentkinds.findWhere({kind: file_model.get("recommended_kind")});
                 kind.get("associated_presets").forEach(function(preset){
                     presets.add(window.formatpresets.get(preset).clone());
-                })
+                });
+                self.nodeCollection.create_node_for_file(new_file_data.data.name.split(".")[0], file_model, new_file_data.data.size).then(function(createdNode){
+                    var new_format_item = new FormatItem({
+                        el:  $(file.previewTemplate),
+                        model: createdNode,
+                        default_file: fileModel,
+                        containing_list_view : self,
+                        thumbnail: $(file.previewTemplate).find(".thumbnail_img").attr("src"),
+                        presets : presets,
+                        initial:true,
+                        inline:false,
+                        update_models: false
+                    });
 
-                self.nodeCollection.create({
-                    title : new_file_data.data.name.split(".")[0],
-                    parent : null,
-                    children : [],
-                    kind: file_model.get("recommended_kind"),
-                    license: 1,
-                    total_file_size : 0,
-                    tags : [],
-                    sort_order : self.current_sort_order++,
-                    author: window.current_user.get("first_name") + " " + window.current_user.get("last_name")
-                }, {
-                    /*TODO: Find way to avoid database locking to remove async:false*/
-                    async:false,
-                    success:function(node){
-                        node.set({
-                            original_node : node.get("id"),
-                            cloned_source : node.get("id")
-                        });
-
-                        file_model.set({
-                            file_size : new_file_data.data.size,
-                            contentnode: node.id
-                        });
-
-                        var new_format_item = new FormatItem({
-                            el:  $(file.previewTemplate),
-                            model: node,
-                            default_file: fileModel,
-                            containing_list_view : self,
-                            thumbnail: $(file.previewTemplate).find(".thumbnail_img").attr("src"),
-                            presets : presets,
-                            initial:true,
-                            inline:false,
-                            update_models: false
-                        });
-
-                        self.views.push(new_format_item);
-                    },
-                    error:function(obj, error){
-                        console.log("Error uploading file", obj);
-                        console.log("Error message:", error);
-                        console.trace();
+                    self.views.push(new_format_item);
+                    console.log("CHECKING PROGRESS");
+                    if(!self.upload_in_progress){
+                        self.enable_next();
                     }
                 });
-            },
-            error:function(obj, error){
-                console.log("Error uploading file", obj);
-                console.log("Error message:", error);
-                console.trace();
             }
         });
-
-
     },
     file_failed:function(file, error){
         $(file.previewTemplate).find(".dropzone_remove").css("display", "inline-block");
+        console.log(error);
     },
     disable_submit: function() {
         this.$(".go_to_metadata").attr("disabled", "disabled");
@@ -226,11 +189,10 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.$(".go_to_metadata").text("EDIT METADATA");
     },
     disable_next:function(){
-
         this.$(".go_to_formats").attr("disabled", "disabled");
-        this.$(".go_to_formats").text((this.file_list.length === 0)? "Add files to continue" : "Upload in progress...");
+        this.$(".go_to_formats").text((this.upload_in_progress)? "Upload in progress..." : "Add files to continue");
         if (this.file_list.length === 0) {
-                        $("#new-files-separator").remove();
+            $("#new-files-separator").remove();
         }
     },
     enable_next:function(){
@@ -240,13 +202,15 @@ var FileUploadView = BaseViews.BaseListView.extend({
         }
     },
     all_files_uploaded: function() {
-        this.enable_next();
+        console.log("ALL REACHED");
+        this.upload_in_progress = false;
     },
     file_added: function(file) {
         if(this.original_count > 0 && this.original_count == this.views.length){
             $(file.previewTemplate).before("<hr id='new-files-separator'/>");
         }
         this.disable_next();
+        this.upload_in_progress = true;
         this.$(".go_to_formats").text("Upload in progress...");
     },
 
@@ -289,7 +253,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
             model: this.model,
             upload_files: true,
             new_content: false,
-            onsave: this.close_file_uploader,
+            onsave: this.onsave,
             onclose:this.close_file_uploader
         });
     },
@@ -361,7 +325,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         'click .remove_from_dz ' : 'remove_item',
         'keyup .name_content_input': 'update_name',
         'paste .name_content_input': 'update_name',
-        'click .save_initial_format' : "assign_default_format"
+        'change .format_options_dropdown' : "assign_default_format"
     },
     render: function() {
         this.presets.sort_by_order();
@@ -523,7 +487,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
     update_file:function(){
         if(this.update_models){
-            this.submit_file();
+            this.set_model();
         }
     },
     clean_files:function(){
