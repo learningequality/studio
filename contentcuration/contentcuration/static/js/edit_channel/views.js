@@ -123,20 +123,24 @@ BaseListView = BaseView.extend({
 	/* Properties to overwrite */
 	collection : null,		//Collection to be used for data
 	template:null,
+	views: [],			//List of item views to help with garbage collection
 
 	/* Functions to overwrite */
 	handle_if_empty:null,
 	create_new_view: null,
 	list_selector:null,
+	default_item:null,
 
-	views: [],			//List of item views to help with garbage collection
-
+	bind_list_functions:function(){
+		_.bindAll(this, 'load_content', 'handle_if_empty');
+	},
 	render:function(renderData){
 		this.$el.html(this.template(renderData));
 		this.load_content();
 	},
 	load_content: function(collection=this.collection){
 		this.views = [];
+		this.$(this.list_selector).html("");
 		var self = this;
 		collection.forEach(function(entry){
 			var item_view = self.create_new_view(entry);
@@ -144,63 +148,38 @@ BaseListView = BaseView.extend({
 		});
 		this.handle_if_empty();
 	},
+	handle_if_empty:function(){
+		this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
+	}
 });
 
 BaseEditableListView = BaseListView.extend({
 	create_new_view:null,
 	bind_edit_functions:function(){
-		_.bindAll(this, 'create_new_item', 'set', 'unset', 'save');
+		this.bind_list_functions();
+		_.bindAll(this, 'create_new_item');
 	},
-	create_new_item: function(newModelData, appendToList = false){
+	create_new_item: function(newModelData, appendToList = false, message="Creating..."){
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
-			self.collection.create(newModelData, {
-				success:function(newModel){
-					var new_view = self.create_new_view(newModel);
-					if(appendToList){
-						self.$(self.list_selector).append(new_view.el);
-					}
-					self.handle_if_empty();
-					resolve(new_view);
-				},
-				error:function(obj, error){
-					console.log("ERROR:", error);
-					reject(error);
-				}
-			});
-		});
-		return promise;
-	},
-	set:function(data){
-		if(this.model){
-			this.model.set(data);
-		}
-	},
-	unset:function(){
-		this.model.set(this.originalData);
-	},
-	save:function(data){
-		var self = this;
-		var promise = new Promise(function(resolve, reject){
-			this.originalData = data;
-			if(self.model.isNew()){
-				self.containing_list_view.create_new_item(self.model.attributes).then(function(newModel){
-					resolve(newModel);
-				}).catch(function(error){
-					console.log("ERROR (edit_channel: save):", error);
-					reject(error);
-				});
-			}else{
-				self.model.save(data,{
-					success:function(savedModel){
-						resolve(savedModel);
+			self.display_load(message, function(resolve_load, reject_load){
+				self.collection.create(newModelData, {
+					success:function(newModel){
+						var new_view = self.create_new_view(newModel);
+						if(appendToList){
+							self.$(self.list_selector).append(new_view.el);
+						}
+						self.handle_if_empty();
+						resolve(new_view);
+						resolve_load(true);
 					},
 					error:function(obj, error){
 						console.log("ERROR:", error);
 						reject(error);
+						reject_load(error);
 					}
 				});
-			}
+			});
 		});
 		return promise;
 	},
@@ -221,10 +200,6 @@ BaseWorkspaceListView = BaseListView.extend({
 		console.log("binding:", this);
 		_.bindAll(this, '_mapping', 'add_topic','add_nodes', 'create_new_view', 'drop_in_container','handle_transfer_drop');
 	},
-
-
-
-
 
 	reset: function(){
 		this.views.forEach(function(entry){
@@ -421,9 +396,6 @@ var BaseListItemView = BaseView.extend({
 	className:null,
 	model: null,
 
-	remove_item:function(){
-		this.containing_list_view.remove_view(this);
-	}
 });
 
 var BaseListEditableItemView = BaseView.extend({
@@ -431,10 +403,61 @@ var BaseListEditableItemView = BaseView.extend({
 	originalData: null,
 
 	bind_edit_functions:function(){
-		_.bindAll(this, 'set','unset','save');
+		_.bindAll(this, 'set','unset','save','delete');
 	},
-	remove_item:function(){
-		this.containing_list_view.remove_view(this);
+	set:function(data){
+		if(this.model){
+			this.model.set(data);
+		}
+	},
+	unset:function(){
+		this.model.set(this.originalData);
+	},
+	save:function(data, message="Saving..."){
+		var self = this;
+		var promise = new Promise(function(resolve, reject){
+			self.originalData = data;
+			if(self.model.isNew()){
+				self.containing_list_view.create_new_item(self.model.attributes).then(function(newModel){
+					resolve(newModel);
+				}).catch(function(error){
+					console.log("ERROR (edit_channel: save):", error);
+					reject(error);
+				});
+			}else{
+				self.display_load(message, function(resolve_load, reject_load){
+					self.model.save(data,{
+						success:function(savedModel){
+							resolve(savedModel);
+							resolve_load(true);
+						},
+						error:function(obj, error){
+							console.log("ERROR:", error);
+							reject(error);
+							reject_load(error);
+						}
+					});
+				});
+			}
+		});
+		return promise;
+	},
+	delete:function(destroy_model, message="Deleting..."){
+		this.remove();
+		var self = this;
+		if(destroy_model){
+			this.display_load(message, function(resolve_load, reject_load){
+				self.model.destroy({
+					success:function(){
+						self.containing_list_view.load_content();
+						resolve_load(true);
+					},
+					error:function(obj, error){
+						reject_load(error);
+					}
+				});
+			});
+		}
 	},
 
 

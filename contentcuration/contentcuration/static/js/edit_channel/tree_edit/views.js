@@ -101,9 +101,9 @@ var TreeEditView = BaseViews.BaseView.extend({
 				$( ".content-list" ).sortable( "enable" );
 			}, 500);
 		/* Step 5: Animate sliding in from left and resolve */
-			container_view.$el.animate({
-				'margin-left' : "0px"
-			}, 500);
+			// container_view.$el.animate({
+			// 	'margin-left' : "0px"
+			// }, 500);
 			self.handle_checked();
 			return container_view;
 	},
