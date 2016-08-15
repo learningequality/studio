@@ -33,7 +33,6 @@
 		margin: -6px 40px 0 0;
 		.action-button;
 	}
-
 }
 
 #button_bar {
@@ -129,8 +128,7 @@
 		height:  @container-height;
 		min-height: @container-min-height;
 		cursor:default;
-		-moz-transition: left 1s ease, width 0s ease-out 1s, border-width 0s ease-out 1s;
-		-webkit-transition: left 1s ease, width 0s ease-out 1s, border-width 0s ease-out 1s;
+
 		.back_button{
 			cursor:pointer;
 		}
@@ -207,12 +205,9 @@
 	}
 
 	#container_area .content-container:last-child{
-		width: @container-last-width;
-
 		.content-list{
 			li{
 				label{
-
 					.metadata_to_hide{
 						display:inline-block;
 					}
@@ -244,6 +239,17 @@
 			}
 		}
 	}
+
+	.content-container.pre_animation{
+		transform: translateX(-@container-last-width);
+	}
+
+	.content-container.post_animation{
+		transform: translateX(0);
+		transition:500ms;
+		width:@container-last-width;
+	}
+
 	#edit,#clipboard {
 		@edit-new-button-color: #C9C9C9;
 		@edit-container-color: #F2F2F3;

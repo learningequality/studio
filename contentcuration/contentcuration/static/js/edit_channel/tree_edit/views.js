@@ -18,14 +18,14 @@ var Import = require("edit_channel/import/views");
  * @param {boolean} is_clipboard (determines how to render screen)
  * @param {boolean} is_edit_page (determines if previewing or editing)
  */
-var TreeEditView = BaseViews.BaseView.extend({
+var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	containers:[],
 	template: require("./hbtemplates/container_area.handlebars"),
 	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
 	queue_view: null,
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container', 'edit_selected',
-						'toggle_details', 'handle_checked', 'edit_permissions', 'reload_ancestors');
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container','toggle_details', 'handle_checked');
+		this.bind_workspace_functions();
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
@@ -92,7 +92,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			self.$("#container-wrapper").scrollLeft(self.$("#container_area").width());
 			self.$el.find("#container_area").append(container_view.el);
 			self.$el.find("#container_area").width(self.$el.find("#container_area").width() + self.containers[0].$el.outerWidth());
-			container_view.$el.css('margin-left', -container_view.$el.outerWidth());
+			// container_view.$el.css('margin-left', -container_view.$el.outerWidth());
 
 		/* Step 4: Add sortable to view */
 			DragHelper.addSortable(container_view, 'content-selected', container_view.drop_in_container);
@@ -182,7 +182,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 // resolve (function): function to call when view has completely rendered
 // reject (function): function to call if view fails to render
 // index (int): index of where container is in structure
-var ContentList = BaseViews.BaseListView.extend({
+var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	template: require("./hbtemplates/content_container.handlebars"),
 	current_node : null,
 	tagName: "li",
@@ -191,7 +191,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	'id': function() {
 		return "container_" + this.model.get("id");
 	},
-	className: "container content-container",
+	className: "container content-container pre_animation",
 
 	_mapping: function(model) {
 		return{
@@ -202,8 +202,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	initialize: function(options) {
-		_.bindAll(this, 'add_topic','add_nodes', 'create_new_view', 'drop_in_container','handle_transfer_drop',
-			'close_container');
+		_.bindAll(this, 'close_container');
 		// 			'import_content','import_nodes',
 		// 			'add_files','update_name','check_number_of_items_in_list');
 		this.index = options.index;
@@ -224,7 +223,6 @@ var ContentList = BaseViews.BaseListView.extend({
 		'click .upload_files_button': 'add_files'
 	},
 	render: function() {
-		// /* Step 2: Load container to DOM and load content*/
 		this.$el.html(this.template({
 			topic: this.model.toJSON(),
 			title: (this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name"),
@@ -232,6 +230,11 @@ var ContentList = BaseViews.BaseListView.extend({
 			index: this.index,
 		}));
 		this.load_content();
+		var self = this;
+		setTimeout(function(){
+			self.$el.removeClass("pre_animation").addClass("post_animation");
+		}, 1);
+
 	},
 	render_views: function(){
 		var self = this;

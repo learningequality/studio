@@ -7,7 +7,7 @@ var Models = require("edit_channel/models");
 var BaseViews = require("edit_channel/views");
 var get_cookie = require("utils/get_cookie");
 
-var ChannelList  = BaseEditableListView.extend({
+var ChannelList  = BaseViews.BaseEditableListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
 	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
 	list_selector: "#channel_list",

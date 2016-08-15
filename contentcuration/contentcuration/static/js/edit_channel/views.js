@@ -7,61 +7,32 @@ var BaseView = Backbone.View.extend({
 	render:function(renderData){
 		this.$el.html(this.template(renderData));
 	},
-
-	get_queue:function(){
-		return $("#queue").data("data");
-	},
-
-	edit_selected:function(){
-		var UploaderViews = require("edit_channel/uploader/views");
-		var list = this.$el.find('input:checked').parent("li");
-		var edit_collection = new Models.ContentNodeCollection();
-		/* Create list of nodes to edit */
-		for(var i = 0; i < list.length; i++){
-			var model = $(list[i]).data("data").model;
-			model.view = $(list[i]).data("data");
-			edit_collection.add(model);
-		}
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var content = null;
-		if(edit_collection.length ==1){
-			content = edit_collection.models[0];
-		}
-
-		var metadata_view = new UploaderViews.MetadataModalView({
-			collection: edit_collection,
-			el: $("#dialog"),
-			model: content,
-			new_content: false,
-		    onsave: this.reload_ancestors
-		});
-	},
 	display_load:function(message, callback){
-    	var self = this;
+    var self = this;
 		var load = '<div id="loading_modal" class="text-center fade">' +
             '<div id="kolibri_load_gif"></div>' +
             '<h4 id="kolibri_load_text" class="text-center">' + message + '</h4>' +
             '</div>';
-        $(load).appendTo('body');
-        if(callback){
-			var promise = new Promise(function(resolve, reject){
-				callback(resolve, reject);
-			});
-			promise.then(function(){
-				$("#loading_modal").remove();
-			}).catch(function(error){
-				$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
-				console.log("Error with asychronous call", error);
-			});
-    	}else{
-    		$("#loading_modal").remove();
-    	}
-    },
-	add_to_trash:function(collection, resolve, reject){
-		//OVERWRITE IN SUBCLASSES
-	},
-	add_to_clipboard:function(collection, resolve, reject){
-		//OVERWRITE IN SUBCLASSES
+      $(load).appendTo('body');
+      if(callback){
+		var promise = new Promise(function(resolve, reject){
+			callback(resolve, reject);
+		});
+		promise.then(function(){
+			$("#loading_modal").remove();
+		}).catch(function(error){
+			$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+			console.log("Error with asychronous call", error);
+		});
+  	}else{
+  		$("#loading_modal").remove();
+  	}
+  }
+});
+
+var BaseWorkspaceView = BaseView.extend({
+	bind_workspace_functions:function(){
+		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'edit_selected', 'add_to_trash', 'add_to_clipboard');
 	},
 	reload_ancestors:function(collection, include_collection = true, callback=null){
 		var list_to_reload = (include_collection) ? collection.pluck("id") : [];
@@ -99,7 +70,40 @@ var BaseView = Backbone.View.extend({
 			model:window.current_channel,
 			current_user: window.current_user.toJSON()
 		});
-	}
+	},
+	get_queue:function(){
+		return $("#queue").data("data");
+	},
+	edit_selected:function(){
+		var UploaderViews = require("edit_channel/uploader/views");
+		var list = this.$el.find('input:checked').parent("li");
+		var edit_collection = new Models.ContentNodeCollection();
+		/* Create list of nodes to edit */
+		for(var i = 0; i < list.length; i++){
+			var model = $(list[i]).data("data").model;
+			model.view = $(list[i]).data("data");
+			edit_collection.add(model);
+		}
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var content = null;
+		if(edit_collection.length ==1){
+			content = edit_collection.models[0];
+		}
+
+		var metadata_view = new UploaderViews.MetadataModalView({
+			collection: edit_collection,
+			el: $("#dialog"),
+			model: content,
+			new_content: false,
+		    onsave: this.reload_ancestors
+		});
+	},
+	add_to_trash:function(collection, resolve, reject){
+		//OVERWRITE IN SUBCLASSES
+	},
+	add_to_clipboard:function(collection, resolve, reject){
+		//OVERWRITE IN SUBCLASSES
+	},
 });
 
 var BaseModalView = BaseView.extend({
@@ -119,7 +123,7 @@ var BaseModalView = BaseView.extend({
   }
 });
 
-BaseListView = BaseView.extend({
+var BaseListView = BaseView.extend({
 	/* Properties to overwrite */
 	collection : null,		//Collection to be used for data
 	template:null,
@@ -153,11 +157,11 @@ BaseListView = BaseView.extend({
 	}
 });
 
-BaseEditableListView = BaseListView.extend({
+var BaseEditableListView = BaseListView.extend({
 	create_new_view:null,
 	bind_edit_functions:function(){
 		this.bind_list_functions();
-		_.bindAll(this, 'create_new_item');
+		_.bindAll(this, 'create_new_item', 'reset');
 	},
 	create_new_item: function(newModelData, appendToList = false, message="Creating..."){
 		var self = this;
@@ -183,12 +187,18 @@ BaseEditableListView = BaseListView.extend({
 		});
 		return promise;
 	},
+	reset: function(){
+		this.views.forEach(function(entry){
+			entry.model.unset();
+		});
+	},
 });
 
-BaseWorkspaceListView = BaseListView.extend({
+var BaseWorkspaceListView = BaseEditableListView.extend({
 	/* Properties to overwrite */
 	collection : null,		//Collection to be used for data
 	item_view: null,
+	template:null,
 
 	/* Functions to overwrite */
 	_mapping:null,
@@ -196,17 +206,11 @@ BaseWorkspaceListView = BaseListView.extend({
 
 	views: [],			//List of item views to help with garbage collection
 
-	bind_edit_functions: function(){
-		console.log("binding:", this);
-		_.bindAll(this, '_mapping', 'add_topic','add_nodes', 'create_new_view', 'drop_in_container','handle_transfer_drop');
+	bind_workspace_functions: function(){
+		this.bind_edit_functions();
+		_.bindAll(this, 'copy_selected', 'delete_selected', 'add_topic','add_nodes', 'drop_in_container','handle_transfer_drop',
+			'remove_view', 'import_content', 'import_nodes', 'add_files', 'add_to_clipboard', 'add_to_trash');
 	},
-
-	reset: function(){
-		this.views.forEach(function(entry){
-			entry.model.unset();
-		});
-	},
-
 	copy_selected:function(resolve, reject){
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = [];
@@ -352,34 +356,34 @@ BaseWorkspaceListView = BaseListView.extend({
 	},
 	import_content:function(){
 		var Import = require("edit_channel/import/views");
-        var import_view = new Import.ImportModalView({
-            modal: true,
-            callback: this.import_nodes,
-            model: this.model
-        });
-    },
-    import_nodes:function(collection){
-        this.reload_listed(collection);
-        this.render();
-    },
-    add_files:function(){
-    	var FileUploader = require("edit_channel/file_upload/views");
-    	this.file_upload_view = new FileUploader.FileModalView({
-            parent_view: this,
-            model:this.model,
-            onsave: this.add_nodes
-    	})
-    },
-    assign_indices:function(){
-    	var self = this;
-    	this.views = [];
-    	this.$el.find("." + this.item_class).each(function(index, item){
-    		var view = $(item).data("data");
-    		view.index = index;
-    		self.views.push(view);
-    	});
-    },
-    add_to_clipboard:function(collection, resolve, reject){
+      var import_view = new Import.ImportModalView({
+          modal: true,
+          callback: this.import_nodes,
+          model: this.model
+      });
+  },
+  import_nodes:function(collection){
+    this.reload_listed(collection);
+    this.render();
+  },
+  add_files:function(){
+  	var FileUploader = require("edit_channel/file_upload/views");
+  	this.file_upload_view = new FileUploader.FileModalView({
+      parent_view: this,
+      model:this.model,
+      onsave: this.add_nodes
+  	});
+  },
+  assign_indices:function(){
+  	var self = this;
+  	this.views = [];
+  	this.$el.find("." + this.item_class).each(function(index, item){
+  		var view = $(item).data("data");
+  		view.index = index;
+  		self.views.push(view);
+  	});
+  },
+  add_to_clipboard:function(collection, resolve, reject){
 		this.container.add_to_clipboard(collection, resolve, reject);
 	},
 	add_to_trash:function(collection, resolve, reject){
@@ -395,7 +399,6 @@ var BaseListItemView = BaseView.extend({
 	id:null,
 	className:null,
 	model: null,
-
 });
 
 var BaseListEditableItemView = BaseView.extend({
@@ -482,7 +485,7 @@ var BaseListEditableItemView = BaseView.extend({
     // }
 });
 
-var BaseListNodeItemView = BaseListItemView.extend({
+var BaseListNodeItemView = BaseListEditableItemView.extend({
 	selectedClass: null,
 	reload:function(model){
 		this.model = model;
@@ -564,11 +567,12 @@ var BaseListNodeItemView = BaseListItemView.extend({
 
 module.exports = {
 	BaseView: BaseView,
+	BaseWorkspaceView:BaseWorkspaceView,
 	BaseModalView:BaseModalView,
 	BaseListView:BaseListView,
 	BaseEditableListView:BaseEditableListView,
 	BaseWorkspaceListView:BaseWorkspaceListView,
 	BaseListItemView:BaseListItemView,
 	BaseListEditableItemView: BaseListEditableItemView,
-	BaseListNodeItemView:BaseListNodeItemView
+	BaseListNodeItemView:BaseListNodeItemView,
 }
