@@ -127,13 +127,13 @@ var BaseListView = BaseView.extend({
 	/* Properties to overwrite */
 	collection : null,		//Collection to be used for data
 	template:null,
-	views: [],			//List of item views to help with garbage collection
-
-	/* Functions to overwrite */
-	handle_if_empty:null,
-	create_new_view: null,
 	list_selector:null,
 	default_item:null,
+
+	/* Functions to overwrite */
+	create_new_view: null,
+
+	views: [],			//List of item views to help with garbage collection
 
 	bind_list_functions:function(){
 		_.bindAll(this, 'load_content', 'handle_if_empty');
@@ -144,7 +144,8 @@ var BaseListView = BaseView.extend({
 	},
 	load_content: function(collection=this.collection){
 		this.views = [];
-		this.$(this.list_selector).html("");
+		var default_element = this.$(this.default_item);
+		this.$(this.list_selector).html("").append(default_element);
 		var self = this;
 		collection.forEach(function(entry){
 			var item_view = self.create_new_view(entry);
@@ -199,6 +200,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	collection : null,		//Collection to be used for data
 	item_view: null,
 	template:null,
+	list_selector:null,
+	default_item:null,
 
 	/* Functions to overwrite */
 	_mapping:null,
@@ -308,7 +311,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			});
 		});
 		return promise;
-    },
+  },
 	remove_view: function(view){
 		this.views.splice(this.views.indexOf(this), 1);
 		view.remove();
@@ -394,14 +397,33 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 
 var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
-	originalData: null,
 	template:null,
 	id:null,
 	className:null,
 	model: null,
+	tagName: "li",
+	// toggle_subfiles:function(event){
+    //     event.stopPropagation();
+    //     event.preventDefault();
+    //     var el =  this.$el.find("#menu_toggle_" + this.model.id);
+    //     if(!this.export_view){
+    //         this.export_view = new ExportListView({
+    //             el: this.$("#export_item_" + this.model.get("id") + "_sub"),
+    //             container: this,
+    //             model: this.model
+    //         });
+    //     }
+    //     if(el.hasClass("glyphicon-menu-right")){
+    //         this.$("#export_item_" + this.model.get("id") + "_sub").slideDown();
+    //         el.removeClass("glyphicon-menu-right").addClass("glyphicon-menu-down");
+    //     }else{
+    //         this.$("#export_item_" + this.model.get("id") + "_sub").slideUp();
+    //         el.removeClass("glyphicon-menu-down").addClass("glyphicon-menu-right");
+    //     }
+    // }
 });
 
-var BaseListEditableItemView = BaseView.extend({
+var BaseListEditableItemView = BaseListItemView.extend({
 	containing_list_view:null,
 	originalData: null,
 
@@ -461,32 +483,24 @@ var BaseListEditableItemView = BaseView.extend({
 				});
 			});
 		}
-	},
-
-
-    // toggle_subfiles:function(event){
-    //     event.stopPropagation();
-    //     event.preventDefault();
-    //     var el =  this.$el.find("#menu_toggle_" + this.model.id);
-    //     if(!this.export_view){
-    //         this.export_view = new ExportListView({
-    //             el: this.$("#export_item_" + this.model.get("id") + "_sub"),
-    //             container: this,
-    //             model: this.model
-    //         });
-    //     }
-    //     if(el.hasClass("glyphicon-menu-right")){
-    //         this.$("#export_item_" + this.model.get("id") + "_sub").slideDown();
-    //         el.removeClass("glyphicon-menu-right").addClass("glyphicon-menu-down");
-    //     }else{
-    //         this.$("#export_item_" + this.model.get("id") + "_sub").slideUp();
-    //         el.removeClass("glyphicon-menu-down").addClass("glyphicon-menu-right");
-    //     }
-    // }
+	}
 });
 
-var BaseListNodeItemView = BaseListEditableItemView.extend({
+var BaseWorkspaceListNodeItemView = BaseListEditableItemView.extend({
+	containing_list_view:null,
+	originalData: null,
+	template:null,
+	id:null,
+	className:null,
+	model: null,
+	tagName: "li",
 	selectedClass: null,
+
+	bind_workspace_functions:function(){
+		this.bind_edit_functions();
+		_.bindAll(this, 'reload');
+	},
+
 	reload:function(model){
 		this.model = model;
 		this.render();
@@ -574,5 +588,5 @@ module.exports = {
 	BaseWorkspaceListView:BaseWorkspaceListView,
 	BaseListItemView:BaseListItemView,
 	BaseListEditableItemView: BaseListEditableItemView,
-	BaseListNodeItemView:BaseListNodeItemView,
+	BaseWorkspaceListNodeItemView:BaseWorkspaceListNodeItemView,
 }

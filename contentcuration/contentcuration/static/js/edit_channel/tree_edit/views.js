@@ -8,7 +8,6 @@ var DragHelper = require("edit_channel/utils/drag_drop");
 var UploaderViews = require("edit_channel/uploader/views");
 var ShareViews = require("edit_channel/share/views");
 var Previewer = require("edit_channel/preview/views");
-var Import = require("edit_channel/import/views");
 //var UndoManager = require("backbone-undo");
 
 /**
@@ -90,27 +89,13 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 
 		/* Step 3: Add container to DOM */
 			self.$("#container-wrapper").scrollLeft(self.$("#container_area").width());
-			self.$el.find("#container_area").append(container_view.el);
 			self.$el.find("#container_area").width(self.$el.find("#container_area").width() + self.containers[0].$el.outerWidth());
-			// container_view.$el.css('margin-left', -container_view.$el.outerWidth());
-
-		/* Step 4: Add sortable to view */
-			DragHelper.addSortable(container_view, 'content-selected', container_view.drop_in_container);
-			setTimeout(function(){
-				$( ".content-list" ).sortable( "refresh" );
-				$( ".content-list" ).sortable( "enable" );
-			}, 500);
-		/* Step 5: Animate sliding in from left and resolve */
-			// container_view.$el.animate({
-			// 	'margin-left' : "0px"
-			// }, 500);
-			self.handle_checked();
+			self.$el.find("#container_area").append(container_view.el);
 			return container_view;
 	},
 	remove_containers_from:function(index){
 		while(this.containers.length > index){
 			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.containers[0].$el.outerWidth());
-			this.containers[this.containers.length-1].remove();
 			this.containers.splice(this.containers.length-1);
 		}
 		this.containers[this.containers.length-1].close_folders();
@@ -179,41 +164,31 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 // model (ContentNodeModel): root of directory
 // edit_mode (boolean): tells how to render ui
 // container (TreeEditView): link to main tree view
-// resolve (function): function to call when view has completely rendered
-// reject (function): function to call if view fails to render
 // index (int): index of where container is in structure
 var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	template: require("./hbtemplates/content_container.handlebars"),
 	current_node : null,
 	tagName: "li",
-	item_class:"content",
-	indent: 0,
+	list_selector:".content-list",
+	default_item:">.content-list .default-item",
+
 	'id': function() {
 		return "container_" + this.model.get("id");
 	},
 	className: "container content-container pre_animation",
 
-	_mapping: function(model) {
-		return{
-			model: model,
-			edit_mode: this.edit_mode,
-			containing_list_view:this
-		}
-	},
-
 	initialize: function(options) {
-		_.bindAll(this, 'close_container');
-		// 			'import_content','import_nodes',
-		// 			'add_files','update_name','check_number_of_items_in_list');
+		_.bindAll(this, 'close_container', 'update_name');
 		this.index = options.index;
 		this.edit_mode = options.edit_mode;
 		this.container = options.container;
 		this.collection = options.collection;
 		this.content_node_view = options.content_node_view;
 		this.render();
-		this.listenTo(this.model, 'change:children', function(data){
-			this.content_node_view.render();
-		});
+		// this.listenTo(this.model, 'change:title', this.update_name)
+		// this.listenTo(this.model, 'change:children', function(data){
+		// 	this.content_node_view.render();
+		// });
 		this.bind_edit_functions();
 	},
 	events: {
@@ -229,74 +204,50 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 			edit_mode: this.edit_mode,
 			index: this.index,
 		}));
-		this.load_content();
 		var self = this;
+		this.collection.get_all_fetch(this.model.get("children")).then(function(fetchedCollection){
+			self.$el.find(".default-item").text("No items found.");
+			fetchedCollection.sort_by_order();
+			self.load_content(fetchedCollection);
+		});
+		DragHelper.addSortable(this, 'content-selected', this.drop_in_container);
 		setTimeout(function(){
 			self.$el.removeClass("pre_animation").addClass("post_animation");
-		}, 1);
-
+			$( ".content-list" ).sortable( "refresh" );
+			$( ".content-list" ).sortable( "enable" );
+		}, 100);
 	},
-	render_views: function(){
-		var self = this;
-    	this.list_index = 0;
-		this.views.forEach(function(view){
-			view.index = self.list_index++;
-			self.$el.find(">.content-list").append(view.el);
-			if(self.current_node && view.model.id === self.current_node){
-				view.set_opened(true, false);
-			}
-		});
-		this.check_number_of_items_in_list();
-		this.container.handle_checked();
-		DragHelper.addSortable(this, 'content-selected', this.drop_in_container);
-		this.$el.find("ul").data("list", this);
-		this.$el.data("container", this);
-	},
-	load_content : function(){
-		this.views = [];
-		var self = this;
-		var el = this.$el.find(".content-list");
-
-		this.model.fetch({
-			success:function(model){
-				self.collection.get_all_fetch(model.get("children")).then(function(fetchedCollection){
-					fetchedCollection.sort_by_order();
-					/* Step 2: Go through content and create nodes */
-					fetchedCollection.forEach(function(entry){
-						self.create_new_view(entry);
-					});
-					self.render_views();
-				});
-			}
-		});
-
+	update_name:function(){
+		this.$el.find(".container-title").html(this.model.get("title"));
 	},
 	add_container:function(view){
 		this.current_node = view.model.id;
 		return this.container.add_container(this.index, view.model, view);
 	},
-	check_number_of_items_in_list:function(){
-  	this.$el.find(".default-item").css("display", (this.views.length === 0) ? "block" : "none");
-  	this.$el.find(".default-item").text("No items found.");
-  },
-
   /* Resets folders to initial state */
 	close_folders:function(){
 		this.views.forEach(function(entry){
 			entry.set_opened(false);
 		});
+		this.$el.find(".current_topic").removeClass("current_topic")
 	},
-	close_container:function(views){
+	close_container:function(){
 		var self = this;
-		this.$el.animate({'margin-left' : -this.$el.outerWidth()}, 100,function(){
-			self.container.remove_containers_from(self.index - 1);
-		});
+		this.$el.removeClass("post_animation").addClass("remove_animation");
+		this.container.remove_containers_from(this.index - 1);
+		setTimeout(function(){
+			self.remove();
+		}, 100);
 	},
 	create_new_view:function(model){
-	  	var newView = new ContentItem(this._mapping(model));
+	  	var newView = new ContentItem({
+			model: model,
+			edit_mode: this.edit_mode,
+			containing_list_view:this
+		});
 	  	this.views.push(newView);
-	  	return newView;
-	  },
+		return newView;
+	},
 });
 
 /*folders, files, exercises listed*/
@@ -305,17 +256,14 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 // containing_list_view (ContentList): list item is contained in
 // resolve (function): function to call when completed rendering
 // reject (function): function to call if failed to render
-var ContentItem = BaseViews.BaseListNodeItemView.extend({
+var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
-	tagName: "li",
-	indent: 0,
 	selectedClass: "content-selected",
 	'id': function() {
 		return this.model.get("id");
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder');
 		_.bindAll(this, 'handle_hover','open_edit','handle_drop','handle_checked','handle_edit_submit', 'hover_open_folder','open_folder','edit_item','preview_node', 'reload');
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
@@ -335,9 +283,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 			if(this.model.get("kind") == "topic"){
 				DragHelper.addTopicDragDrop(this, this.handle_hover, this.handle_drop);
 			}
-		/* Step 3: Make sure any sub content lists are updated as well */
 			this.$el.removeClass("content-selected");
-			// (this.subcontent_view)? this.subcontent_view.render();
 	},
 	events: {
 		'click .edit_folder_button': 'edit_item',
@@ -355,10 +301,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		event.stopPropagation();
 		this.containing_list_view.close_folders();
 		this.subcontent_view = this.containing_list_view.add_container(this);
-		this.set_opened(true);
-	},
-	set_opened:function(is_opened){
-		(is_opened)? this.$el.addClass("current_topic") : this.$el.removeClass("current_topic");
+		this.$el.addClass("current_topic")
 	},
 	preview_node: function(event){
 		event.preventDefault();
@@ -371,7 +314,7 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 			modal: true,
 			parent_view : this
 		}
-		var preview_view = (this.edit_mode)? this.open_edit() : new Previewer.PreviewModalView(data);
+		(this.edit_mode)? this.open_edit() : new Previewer.PreviewModalView(data);
 	}
 });
 
