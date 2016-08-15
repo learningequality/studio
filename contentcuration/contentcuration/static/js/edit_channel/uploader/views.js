@@ -460,7 +460,6 @@ var UploadedItem = BaseViews.BaseListNodeItemView.extend({
     },
     handle_save:function(){
         this.set_edited(false);
-
     },
     check_item:function(){
         (this.$(".upload_item_checkbox").is(":checked"))? this.$el.addClass("current_item") : this.$el.removeClass("current_item")

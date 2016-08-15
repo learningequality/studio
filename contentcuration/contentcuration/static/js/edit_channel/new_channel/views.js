@@ -7,12 +7,14 @@ var Models = require("edit_channel/models");
 var BaseViews = require("edit_channel/views");
 var get_cookie = require("utils/get_cookie");
 
-var ChannelList  = BaseListView.extend({
+var ChannelList  = BaseEditableListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
 	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
+	list_selector: "#channel_list",
 
 	initialize: function(options) {
 		_.bindAll(this, 'new_channel');
+		this.bind_edit_functions();
 		this.collection = options.channels;
 		this.render();
 		this.user = options.user;
@@ -23,45 +25,33 @@ var ChannelList  = BaseListView.extend({
 			channel_list: this.collection.toJSON(),
 			user: window.current_user
 		}));
-		this.load_content();
+		this.load_content(this.collection.where({deleted:false}));
+		this.load_dropdown();
 	},
 	events: {
 		'click .new_channel_button' : 'new_channel'
 	},
-
-	new_channel: function(event){
-		this.set_editing(true);
-		var new_channel = new ChannelListItem({
-			edit:true,
-			model: new Models.ChannelModel({
-				name:null,
-				description:null,
-				thumbnail:"/static/img/kolibri_placeholder.png"
-			}),
+	create_new_view:function(data){
+		var newView = new ChannelListItem({
+			model: new Models.ChannelModel(data),
 			containing_list_view: this,
-			default_license: window.licenses.get_default(),
 		});
-		this.$el.find("#channel_list").append(new_channel.el);
-		$(".default-channel-item").remove();
+		this.views.push(newView);
+  	return newView;
 	},
-	load_content:function(){
+	new_channel: function(){
 		var self = this;
-		$(".default-channel-item").remove();
-		$("#channel_selection_dropdown_list").html("");
-		$("#channel_list").html("");
-		this.collection.where({deleted:false}).forEach(function(entry){
-			var view = new ChannelListItem({
-				model: entry,
-				edit: false,
-				containing_list_view: self,
-				channel_list: self.collection.toJSON()
-			});
-			self.$("#channel_list").append(view.el);
-			self.views.push(view);
+		var data = {
+			name:null,
+			description:null,
+			thumbnail:"/static/img/kolibri_placeholder.png"
+		};
+		this.create_new_item(data, true).then(function(newView){
+			newView.edit_channel();
 		});
-		if (this.collection.where({deleted:false}).length ===0){
-			$("#channel_list").append("<li class='default-channel-item'><em>No channels found.</em></li>");
-		}
+	},
+	load_dropdown:function(){
+		var self = this;
 		$("#channel_selection_dropdown_list").html(this.dropdown_template({
 			channel_list: this.collection.toJSON()
 		}));
@@ -70,13 +60,16 @@ var ChannelList  = BaseListView.extend({
 		$(".disable-on-edit").prop("disabled", edit_mode_on);
 		$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
 		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
+	},
+	handle_if_empty:function(){
+		this.$el.find(".default-item").css("display", (this.views.length > 0) ? "block" : "none");
 	}
 });
 
 /*
 	edit: determines whether to load channel or editor
 */
-var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
+var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	tagName: "li",
 	id: function(){
 		return (this.model)? this.model.get("id") : "new";
@@ -88,9 +81,8 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded',
 						'thumbnail_added','thumbnail_removed','create_dropzone', 'thumbnail_completed','thumbnail_failed');
 		this.listenTo(this.model, "sync", this.render);
-		this.edit = options.edit;
+		this.edit = false;
 		this.containing_list_view = options.containing_list_view;
-		this.default_license = options.default_license;
 		this.original_thumbnail = this.model.get("thumbnail");
 		this.thumbnail = this.original_thumbnail;
 		this.originalData = (this.model)? this.model.toJSON() : null;
@@ -108,14 +100,6 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			channel_link : this.model.get("id"),
 			picture : this.thumbnail
 		}));
-		if(this.edit){
-			var self = this;
-			setTimeout(function(){
-				if(!(self.model && self.model.get("deleted"))){
-					self.create_dropzone();
-				}
-			}, 100);
-        }
 	},
 	events: {
 		'click .edit_channel':'edit_channel',
@@ -123,10 +107,11 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 		'click .channel_toggle': 'toggle_channel',
 		'click .save_channel': 'save_channel'
 	},
-	edit_channel: function(event){
+	edit_channel: function(){
 		this.containing_list_view.set_editing(true);
 		this.edit = true;
 		this.render();
+		this.create_dropzone();
 	},
 	thumbnail_uploaded:function(thumbnail){
 		this.thumbnail_error = null;
@@ -189,10 +174,10 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 			event.preventDefault();
 		}
 	},
-	toggle_channel: function(event){
+	toggle_channel: function(){
 		this.thumbnail = this.original_thumbnail;
 		this.containing_list_view.set_editing(false);
-		this.unset_channel();
+		this.unset();
 		if(!this.model.isNew()){
 			this.edit = false;
 			this.render();
@@ -217,20 +202,11 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 
 		this.display_load("Saving Channel...", function(resolve, reject){
 			self.edit = false;
-			self.save(data, {
-				success:function(channel){
-					self.model = channel;
-					self.containing_list_view.collection.add(self.model);
-					self.containing_list_view.load_content();
-					self.remove();
-					resolve("Success!");
-				},
-				error:function(obj, error){
-					console.log("Error saving channel", obj);
-	                console.log("Error message:", error);
-	                console.trace();
-	                reject(error);
-				}
+			self.save(data).then(function(channel){
+				self.model = new Models.ChannelModel(channel);
+				self.containing_list_view.load_content();
+				self.remove();
+				resolve("Success!");
 			});
 		});
 	},
@@ -254,19 +230,32 @@ var ChannelListItem = BaseViews.BaseListChannelItemView.extend({
 	},
 
 	set_channel:function(){
-		if(this.model){
-			var title = (this.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : this.$el.find("#new_channel_name").val().trim();
-			var description = this.$el.find("#new_channel_description").val();
-			this.model.set({
-				name: title,
-				description: description,
-				thumbnail : this.thumbnail
-			});
-		}
+		this.set({
+			name: (this.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : this.$el.find("#new_channel_name").val().trim(),
+			description: this.$el.find("#new_channel_description").val(),
+			thumbnail : this.thumbnail
+		});
 	},
-	unset_channel:function(){
+
+
+
+	delete:function(){
+		if(!this.model){
+    		this.remove();
+	    }else{
+	    	this.model.save({"deleted":true});
+	    	this.remove();
+	    }
+	},
+
+	set_editing: function(edit_mode_on){
+		this.containing_list_view.set_editing(edit_mode_on);
+	},
+
+
+	unset:function(){
 		this.model.set(this.originalData);
-	}
+	},
 });
 
 module.exports = {

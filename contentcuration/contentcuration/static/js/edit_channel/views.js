@@ -102,197 +102,129 @@ var BaseView = Backbone.View.extend({
 	}
 });
 
+var BaseModalView = BaseView.extend({
+  callback:null,
+  render: function(closeFunction, renderData) {
+      this.$el.html(this.template(renderData));
+      $("body").append(this.el);
+      this.$(".modal").modal({show: true});
+      this.$(".modal").on("hide.bs.modal", closeFunction);
+  },
+  close: function() {
+  	if(this.modal){
+  		this.$(".modal").modal('hide');
+  	}
+
+      this.remove();
+  }
+});
+
 BaseListView = BaseView.extend({
-	views: [],			//List of item views to help with garbage collection
+	/* Properties to overwrite */
 	collection : null,		//Collection to be used for data
+	template:null,
 
 	/* Functions to overwrite */
+	handle_if_empty:null,
+	create_new_view: null,
+	list_selector:null,
+
+	views: [],			//List of item views to help with garbage collection
 
 	render:function(renderData){
 		this.$el.html(this.template(renderData));
 		this.load_content();
-	}
-
-
-    load_content:function(){
-        var self = this;
-        this.collection.forEach(function(entry){
-            var item_view = new ImportItem({
-                containing_list_view: self,
-                model: entry,
-                is_channel : self.is_channel,
-                selected: (self.parent_node_view)? self.parent_node_view.selected : false,
-            });
-            self.$el.find(".import-list").first().append(item_view.el);
-            self.views.push(item_view);
-        });
-    },
-    check_all_items:function(checked){
-        this.views.forEach(function(entry){
-            entry.check_item(checked);
-            entry.set_disabled(checked);
-            if(entry.subcontent_view){
-                entry.subcontent_view.check_all_items(checked);
-            }
-
-        });
-    },
-    update_count:function(){
-        if(this.parent_node_view){
-            this.parent_node_view.update_count();
-        }else{
-            this.container.update_count();
-        }
-    },
-    get_metadata:function(){
-        var self = this;
-        this.metadata = {"count" : 0, "size":0};
-        this.views.forEach(function(entry){
-            self.metadata.count += entry.metadata.count;
-            self.metadata.size += entry.metadata.size;
-        });
-        return this.metadata;
-    }
-
-
-
-
-
-    load_content:function(){
-        var self = this;
-        this.collection.forEach(function(entry){
-            var export_item = new ExportItem({
-                model: entry,
-                containing_list_view : self
-            });
-            self.$("#export_list_" + self.model.get("id")).append(export_item.el);
-            self.views.push(export_item);
-        });
-        if(this.collection.length ==0){
-            this.$("#export_list_" + self.model.get("id")).append("<em>No files found.</em>");
-        }
-    }
-
-
-
-
-
-	load_content:function(){
+	},
+	load_content: function(collection=this.collection){
 		this.views = [];
 		var self = this;
-		this.list_index = 0;
-		this.childrenCollection.forEach(function(entry){
-			var item_view = new QueueItem({
-				containing_list_view: self,
-				model: entry,
-				index : self.list_index ++,
-				is_clipboard : self.is_clipboard,
-				container : self.container
-			});
-			self.$el.find("#list_for_" + self.model.id).append(item_view.el);
-			self.views.push(item_view);
-			// DragHelper.addDragDrop(self);
+		collection.forEach(function(entry){
+			var item_view = self.create_new_view(entry);
+			self.$(self.list_selector).append(item_view.el);
 		});
-		this.check_number_of_items_in_list();
+		this.handle_if_empty();
 	},
-	check_all :function(){
-		this.$el.find(":checkbox").prop("checked", this.$el.find("#select_all_check_" + this.model.id).prop('checked'));
-	},
-	delete_items:function(){
-		var list = this.$el.find('input:checked').parent("li");
-		if(list.length == 0){
-			alert("No items selected.");
-		}else{
-			if(confirm((this.is_clipboard)? "Are you sure you want to delete these selected items?" : "Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
-				var self = this;
-				this.display_load("Deleting Content...", function(resolve, reject){
-					try{
-						var promise_list = [];
-						for(var i = 0; i < list.length; i++){
-							if($("#" + list[i].id).data("data")){
-								var promise = new Promise(function(resolve, reject){
-									$("#" + list[i].id).data("data").remove_item(false, resolve);
-								});
-								promise_list.push(promise);
-							}
-						}
-	    				Promise.all(promise_list).then(function(){
-	    					self.render();
-							resolve("Success!");
-	    				});
-					}catch(error){
-						reject(error);
-					}
-				});
+});
 
-			}
-		}
+BaseEditableListView = BaseListView.extend({
+	create_new_view:null,
+	bind_edit_functions:function(){
+		_.bindAll(this, 'create_new_item', 'set', 'unset', 'save');
 	},
-	search:function(){
-		//if(this.$el.find(".search_queue").val().length > 2)
-			//this.render();
-	},
-	add_to_list:function(collection, resolve, reject){
+	create_new_item: function(newModelData, appendToList = false){
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
-			self.add_nodes(collection, resolve, reject);
-		});
-		promise.then(function(){
-			self.model.fetch({
-				success:function(model){
-					resolve(model);
+			self.collection.create(newModelData, {
+				success:function(newModel){
+					var new_view = self.create_new_view(newModel);
+					if(appendToList){
+						self.$(self.list_selector).append(new_view.el);
+					}
+					self.handle_if_empty();
+					resolve(new_view);
 				},
 				error:function(obj, error){
+					console.log("ERROR:", error);
 					reject(error);
 				}
 			});
-		}).catch(function(error){
-			reject(error)
 		});
+		return promise;
 	},
-
-	check_number_of_items_in_list:function(){
-    	this.$(".default-item").css("display", (this.views.length === 0) ? "block" : "none");
-    	var self =this;
-    	if(this.add_controls){
-    		self.model.fetch({
-    			success:function(root){
-    				$((self.is_clipboard)? ".queue-badge" : ".trash-badge").html(root.get("metadata").total_count);
-    				self.$el.find(".queue-list-wrapper>.content-list>.default-item").css("display", (root.get("metadata").total_count > 0)? "none" : "block");
-    			}
-    		})
-
+	set:function(data){
+		if(this.model){
+			this.model.set(data);
 		}
-    },
-    create_new_item:function(model){
-    	return new QueueItem({
-					containing_list_view: this,
-					model:model,
-					index : this.list_index ++,
-					is_clipboard : this.is_clipboard,
-					container : this.container
+	},
+	unset:function(){
+		this.model.set(this.originalData);
+	},
+	save:function(data){
+		var self = this;
+		var promise = new Promise(function(resolve, reject){
+			this.originalData = data;
+			if(self.model.isNew()){
+				self.containing_list_view.create_new_item(self.model.attributes).then(function(newModel){
+					resolve(newModel);
+				}).catch(function(error){
+					console.log("ERROR (edit_channel: save):", error);
+					reject(error);
 				});
-    }
-
-
-
-
-
+			}else{
+				self.model.save(data,{
+					success:function(savedModel){
+						resolve(savedModel);
+					},
+					error:function(obj, error){
+						console.log("ERROR:", error);
+						reject(error);
+					}
+				});
+			}
+		});
+		return promise;
+	},
 });
 
 BaseWorkspaceListView = BaseListView.extend({
-	views: [],			//List of item views to help with garbage collection
+	/* Properties to overwrite */
 	collection : null,		//Collection to be used for data
 	item_view: null,
 
 	/* Functions to overwrite */
 	_mapping:null,
-	create_new_item:null,
+	create_new_view:null,
+
+	views: [],			//List of item views to help with garbage collection
 
 	bind_edit_functions: function(){
 		console.log("binding:", this);
-		_.bindAll(this, '_mapping', 'add_topic','add_nodes', 'create_new_item', 'drop_in_container','handle_transfer_drop');
+		_.bindAll(this, '_mapping', 'add_topic','add_nodes', 'create_new_view', 'drop_in_container','handle_transfer_drop');
 	},
+
+
+
+
 
 	reset: function(){
 		this.views.forEach(function(entry){
@@ -357,7 +289,7 @@ BaseWorkspaceListView = BaseListView.extend({
 				 		var last_elem = $("#" + moved_item.id);
 						savedCollection.forEach(function(node){
 							var to_delete = $("#" + node.id);
-							var item_view = self.create_new_item(node);
+							var item_view = self.create_new_view(node);
 							last_elem.after(item_view.el);
 							last_elem = item_view.$el;
 							to_delete.remove();
@@ -406,7 +338,7 @@ BaseWorkspaceListView = BaseListView.extend({
 		var self = this;
 		collection.sort_by_order();
 		collection.forEach(function(entry){
-			self.create_new_item(entry);
+			self.create_new_view(entry);
 		});
 		this.render_views();
 		this.reload_ancestors(collection, false);
@@ -483,10 +415,48 @@ BaseWorkspaceListView = BaseListView.extend({
 
 var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
+	originalData: null,
+	template:null,
+	id:null,
+	className:null,
+	model: null,
 
 	remove_item:function(){
 		this.containing_list_view.remove_view(this);
 	}
+});
+
+var BaseListEditableItemView = BaseView.extend({
+	containing_list_view:null,
+	originalData: null,
+
+	bind_edit_functions:function(){
+		_.bindAll(this, 'set','unset','save');
+	},
+	remove_item:function(){
+		this.containing_list_view.remove_view(this);
+	},
+
+
+    // toggle_subfiles:function(event){
+    //     event.stopPropagation();
+    //     event.preventDefault();
+    //     var el =  this.$el.find("#menu_toggle_" + this.model.id);
+    //     if(!this.export_view){
+    //         this.export_view = new ExportListView({
+    //             el: this.$("#export_item_" + this.model.get("id") + "_sub"),
+    //             container: this,
+    //             model: this.model
+    //         });
+    //     }
+    //     if(el.hasClass("glyphicon-menu-right")){
+    //         this.$("#export_item_" + this.model.get("id") + "_sub").slideDown();
+    //         el.removeClass("glyphicon-menu-right").addClass("glyphicon-menu-down");
+    //     }else{
+    //         this.$("#export_item_" + this.model.get("id") + "_sub").slideUp();
+    //         el.removeClass("glyphicon-menu-down").addClass("glyphicon-menu-right");
+    //     }
+    // }
 });
 
 var BaseListNodeItemView = BaseListItemView.extend({
@@ -566,51 +536,16 @@ var BaseListNodeItemView = BaseListItemView.extend({
 	},
 });
 
-var BaseListChannelItemView = BaseListItemView.extend({
-	delete:function(){
-		if(!this.model){
-    		this.remove();
-	    }else{
-	    	this.model.save({"deleted":true});
-	    	this.remove();
-	    }
-	},
-	save: function(data, options){
-    	if(!this.model){
-    		this.model = new Models.ChannelModel(data);
-    		this.containing_list_view.collection.create(this.model, options);
-    	}else{
-    		this.model.save(data, options);
-    	}
-	},
-	set_editing: function(edit_mode_on){
-		this.containing_list_view.set_editing(edit_mode_on);
-	},
-});
 
-var BaseModalView = BaseView.extend({
-    callback:null,
-    render: function(closeFunction, renderData) {
-        this.$el.html(this.template(renderData));
-        $("body").append(this.el);
-        this.$(".modal").modal({show: true});
-        this.$(".modal").on("hide.bs.modal", closeFunction);
-    },
-    close: function() {
-    	if(this.modal){
-    		this.$(".modal").modal('hide');
-    	}
 
-        this.remove();
-    }
-});
 
 module.exports = {
 	BaseView: BaseView,
+	BaseModalView:BaseModalView,
 	BaseListView:BaseListView,
+	BaseEditableListView:BaseEditableListView,
 	BaseWorkspaceListView:BaseWorkspaceListView,
 	BaseListItemView:BaseListItemView,
-	BaseListChannelItemView: BaseListChannelItemView,
-	BaseListNodeItemView:BaseListNodeItemView,
-	BaseModalView:BaseModalView
+	BaseListEditableItemView: BaseListEditableItemView,
+	BaseListNodeItemView:BaseListNodeItemView
 }

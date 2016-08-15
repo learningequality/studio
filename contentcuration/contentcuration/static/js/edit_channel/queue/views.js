@@ -221,7 +221,7 @@ var QueueList = BaseViews.BaseListView.extend({
 
 		}
     },
-    create_new_item:function(model){
+    create_new_view:function(model){
     	return new QueueItem({
 					containing_list_view: this,
 					model:model,
@@ -241,7 +241,7 @@ var ClipboardList = QueueList.extend({
 		this.add_controls = options.add_controls;
 		this.container = options.container;
 		_.bindAll(this, 'check_all', 'delete_items', 'edit_items', 'add_topic','add_nodes', 'import_content', 'handle_transfer_drop',
-					'create_new_item','import_nodes', 'add_files','check_number_of_items_in_list','render','drop_in_container');
+					'create_new_view','import_nodes', 'add_files','check_number_of_items_in_list','render','drop_in_container');
 		this.render();
 	},
 	events: {

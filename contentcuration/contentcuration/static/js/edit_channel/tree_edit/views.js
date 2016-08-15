@@ -202,7 +202,7 @@ var ContentList = BaseViews.BaseListView.extend({
 	},
 
 	initialize: function(options) {
-		_.bindAll(this, 'add_topic','add_nodes', 'create_new_item', 'drop_in_container','handle_transfer_drop',
+		_.bindAll(this, 'add_topic','add_nodes', 'create_new_view', 'drop_in_container','handle_transfer_drop',
 			'close_container');
 		// 			'import_content','import_nodes',
 		// 			'add_files','update_name','check_number_of_items_in_list');
@@ -260,7 +260,7 @@ var ContentList = BaseViews.BaseListView.extend({
 					fetchedCollection.sort_by_order();
 					/* Step 2: Go through content and create nodes */
 					fetchedCollection.forEach(function(entry){
-						self.create_new_item(entry);
+						self.create_new_view(entry);
 					});
 					self.render_views();
 				});
@@ -289,11 +289,11 @@ var ContentList = BaseViews.BaseListView.extend({
 			self.container.remove_containers_from(self.index - 1);
 		});
 	},
-	create_new_item:function(model){
-  	var newView = new ContentItem(this._mapping(model));
-  	this.views.push(newView);
-  	return newView;
-  },
+	create_new_view:function(model){
+	  	var newView = new ContentItem(this._mapping(model));
+	  	this.views.push(newView);
+	  	return newView;
+	  },
 });
 
 /*folders, files, exercises listed*/
