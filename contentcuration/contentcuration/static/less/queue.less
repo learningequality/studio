@@ -1,8 +1,9 @@
 @import "global-variables.less";
 
+@queue-width:400px;
+
 #queue{
 	@queue-background-color:#EFEFEF;
-	@queue-width:400px;
 	@queue-height: 75vh;
 	@queue-min-height: 600px;
 	@queue-button-width: 110px;
@@ -253,5 +254,20 @@
 				}
 			}
 		}
+	}
+}
+
+#queue.closed{
+	transition:200ms;
+	transform: translateX(@queue-width);
+	.content-list{
+		display: none;
+	}
+}
+#queue.opened{
+	transition:200ms;
+	transform: translateX(0);
+	.content-list{
+		display: block;
 	}
 }

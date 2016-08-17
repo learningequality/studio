@@ -1,9 +1,9 @@
 {{#if edit_mode}}<input type="checkbox" id="item_{{node.id}}"/>
 {{else}}<input type="radio" name="{{container}}" id="item_{{node.id}}"/>{{/if}}
 {{#if isfolder}}
-	<label class="folder collapsed {{#unless edit_mode}}open_folder{{/unless}}" for="folder_{{node.id}}" title="{{node.attributes.title}}">
+	<label class="folder collapsed {{#unless edit_mode}}open_folder{{/unless}}" for="folder_{{node.id}}" title="{{node.title}}">
 {{else}}
-	<label class="file" for="item_{{node.id}}" title="{{node.attributes.title}}">
+	<label class="file" for="item_{{node.id}}" title="{{node.title}}">
 {{/if}}
 	<div class="options pull-right">
 		{{#if isfolder}}
@@ -12,20 +12,20 @@
 		{{/if}}
 	</div>
 	<h6 class="content_metadata_summary">
-		{{to_upper_case node.attributes.kind}}
+		{{to_upper_case node.kind}}
 		<span class="metadata_to_hide">
 			{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
-			{{#if isfolder}}&nbsp;{{#format_count "Resource" node.attributes.metadata.resource_count}}{{/format_count}}{{/if}}
-			&nbsp;<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.attributes.metadata.resource_size}}{{/format_file_size}}
+			{{#if isfolder}}&nbsp;{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}{{/if}}
+			&nbsp;<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}
 			&nbsp;
-			{{#if node.attributes.changed}}
+			{{#if node.changed}}
 				<em class="unpublished">Updated</em>
 			{{/if}}
 			<!-- {{node.attributes.sort_order}} -->
 		</span>
 	</h6>
-	<h3 class = "title truncate">{{#if node}}{{node.attributes.title}}{{else}}<em>[Untitled]</em>{{/if}}</h3>
+	<h3 class = "title truncate">{{#if node}}{{node.title}}{{else}}<em>[Untitled]</em>{{/if}}</h3>
 	<div class="description_wrapper">
-		<p class="description wordwrap" title="{{node.attributes.description}}">{{#if node}}{{node.attributes.description}}{{else}}No description found.{{/if}}</p>
+		<p class="description wordwrap" title="{{node.description}}">{{#if node}}{{node.description}}{{else}}No description found.{{/if}}</p>
 	</div>
 </label>

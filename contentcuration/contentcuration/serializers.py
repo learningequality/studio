@@ -113,8 +113,8 @@ class CustomListSerializer(serializers.ListSerializer):
         # Perform updates.
         if update_nodes:
             for node_id, data in update_nodes.items():
-                print "BEFORE:"
-                recurse(ContentNode.objects.get(id__startswith='b9c5d'))
+                # print "BEFORE:"
+                # recurse(ContentNode.objects.get(id__startswith='b9c5d'))
                 node = node_mapping.get(node_id, None)
                 if node:
                     # potential optimization opportunity
@@ -136,12 +136,12 @@ class CustomListSerializer(serializers.ListSerializer):
                     # if node.parent:
                     #     node.move_to(ContentNode.objects.get(id=node.parent_id)) # Makes sure cache is updated after save
                     ret.append(node)
-                print "AFTER:"
-                recurse(ContentNode.objects.get(id__startswith='b9c5d'))
+                # print "AFTER:"
+                # recurse(ContentNode.objects.get(id__startswith='b9c5d'))
             # ContentNode.objects.rebuild()
-        print "*********** FINAL: ***********"
-        recurse(ContentNode.objects.get(id__startswith='b9c5d'))
-        print "*********** END ***********\n\n\n\n"
+        # print "*********** FINAL: ***********"
+        # recurse(ContentNode.objects.get(id__startswith='b9c5d'))
+        # print "*********** END ***********\n\n\n\n"
         return ret
 
 def recurse(node, level=0):

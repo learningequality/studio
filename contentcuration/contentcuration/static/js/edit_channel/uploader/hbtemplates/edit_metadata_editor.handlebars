@@ -27,8 +27,8 @@
 <h4>Description {{#if node}}<i id="description_counter" class="pull-right">{{word_limit}} chars left</i>{{/if}}</h4>
 <textarea id="input_description" class="{{#unless node}}gray-out{{/unless}} upload_input input_listener" placeholder="Enter a description of your content" maxlength={{word_limit}} value="{{node.description}}" {{#unless node}}disabled{{/unless}}/>
 
-<h4>Tags (optional) <span id="tag_error">Invalid characters found.</span></h4>
-<input type="text" id="tag_box" class="tag_input {{#if none_selected}}gray-out{{/if}}" placeholder="Press 'Enter' to add tag" maxlength="30" {{#if none_selected}}disabled{{/if}}/>
+<h4>Tags (press 'Enter' to add) <span id="tag_error">Invalid characters found.</span></h4>
+<input type="text" id="tag_box" class="tag_input {{#if none_selected}}gray-out{{/if}}" placeholder="Enter tag" maxlength="30" {{#if none_selected}}disabled{{/if}}/>
 {{#unless none_selected}}
 <div class="container-fluid">
 	<div class="row" id="tag_area"></div>

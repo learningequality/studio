@@ -13,31 +13,25 @@ var BaseView = Backbone.View.extend({
             '<div id="kolibri_load_gif"></div>' +
             '<h4 id="kolibri_load_text" class="text-center">' + message + '</h4>' +
             '</div>';
-      $(load).appendTo('body');
-      if(callback){
-		var promise = new Promise(function(resolve, reject){
-			callback(resolve, reject);
-		});
-		promise.then(function(){
-			$("#loading_modal").remove();
-		}).catch(function(error){
-			$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
-			console.log("Error with asychronous call", error);
-		});
+    $(load).appendTo('body');
+    if(callback){
+			var promise = new Promise(function(resolve, reject){
+				callback(resolve, reject);
+			});
+			promise.then(function(){
+				$("#loading_modal").remove();
+			}).catch(function(error){
+				$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+				console.log("Error with asychronous call", error);
+			});
   	}else{
   		$("#loading_modal").remove();
   	}
-  }
-});
-
-var BaseWorkspaceView = BaseView.extend({
-	bind_workspace_functions:function(){
-		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'edit_selected', 'add_to_trash', 'add_to_clipboard');
-	},
-	reload_ancestors:function(collection, include_collection = true, callback=null){
+  },
+  reload_ancestors:function(collection, include_collection = true){
 		var list_to_reload = (include_collection) ? collection.pluck("id") : [];
 		collection.forEach(function(entry){
-        	$.merge(list_to_reload, entry.get("ancestors"));
+      $.merge(list_to_reload, entry.get("ancestors"));
 		});
 
 		collection.get_all_fetch($.unique(list_to_reload)).then(function(fetched){
@@ -45,12 +39,15 @@ var BaseWorkspaceView = BaseView.extend({
 				var element = $("#" + model.get("id"));
 				if(element && element.data("data")){
 					element.data("data").reload(model);
-	        	}
-	        	if(callback){
-	        		callback(true);
-	        	}
+	      }
 			});
 		});
+	}
+});
+
+var BaseWorkspaceView = BaseView.extend({
+	bind_workspace_functions:function(){
+		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'edit_selected', 'add_to_trash', 'add_to_clipboard');
 	},
 	publish:function(){
 		var self = this;
@@ -70,9 +67,6 @@ var BaseWorkspaceView = BaseView.extend({
 			model:window.current_channel,
 			current_user: window.current_user.toJSON()
 		});
-	},
-	get_queue:function(){
-		return $("#queue").data("data");
 	},
 	edit_selected:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
@@ -98,28 +92,43 @@ var BaseWorkspaceView = BaseView.extend({
 		    onsave: this.reload_ancestors
 		});
 	},
-	add_to_trash:function(collection, resolve, reject){
-		//OVERWRITE IN SUBCLASSES
+	add_to_trash:function(collection, message="Moving to Clipboard..."){
+		return this.move_to_queue_list(collection, window.queue.trash_queue, message);
 	},
-	add_to_clipboard:function(collection, resolve, reject){
-		//OVERWRITE IN SUBCLASSES
+	add_to_clipboard:function(collection, message="Deleting Content..."){
+		return this.move_to_queue_list(collection, window.queue.clipboard_queue, message);
 	},
+	move_to_queue_list:function(collection, list_view, message="Moving Content..."){
+		var self = this;
+		var promise = new Promise(function(resolve, reject){
+			self.display_load(message, function(resolve_load, reject_load){
+				var reloadCollection = collection.clone();
+				collection.move(list_view.model, list_view.model.get("metadata").max_sort_order).then(function(){
+					list_view.add_nodes(collection);
+					self.reload_ancestors(reloadCollection, false);
+					list_view.render();
+					resolve(collection);
+					resolve_load(true);
+				});
+			});
+		});
+		return promise;
+	}
 });
 
 var BaseModalView = BaseView.extend({
   callback:null,
   render: function(closeFunction, renderData) {
-      this.$el.html(this.template(renderData));
-      $("body").append(this.el);
-      this.$(".modal").modal({show: true});
-      this.$(".modal").on("hide.bs.modal", closeFunction);
+    this.$el.html(this.template(renderData));
+    $("body").append(this.el);
+    this.$(".modal").modal({show: true});
+    this.$(".modal").on("hide.bs.modal", closeFunction);
   },
   close: function() {
   	if(this.modal){
   		this.$(".modal").modal('hide');
   	}
-
-      this.remove();
+    this.remove();
   }
 });
 
@@ -162,7 +171,7 @@ var BaseEditableListView = BaseListView.extend({
 	create_new_view:null,
 	bind_edit_functions:function(){
 		this.bind_list_functions();
-		_.bindAll(this, 'create_new_item', 'reset');
+		_.bindAll(this, 'create_new_item', 'reset', 'save','delete_items_permanently');
 	},
 	create_new_item: function(newModelData, appendToList = false, message="Creating..."){
 		var self = this;
@@ -193,6 +202,53 @@ var BaseEditableListView = BaseListView.extend({
 			entry.model.unset();
 		});
 	},
+	save:function(message="Saving...", beforeSave=null){
+		var self = this;
+    var promise = new Promise(function(resolve, reject){
+        self.display_load(message, function(load_resolve, load_reject){
+				if(beforeSave){
+					beforeSave();
+				}
+	      self.collection.save().then(function(collection){
+	          resolve(collection);
+	          load_resolve(true);
+	      }).catch(function(error){
+		    	load_reject(error);
+		    });
+	    });
+    })
+  	return promise;
+	},
+	delete_items_permanently:function(message="Deleting"){
+		var self = this;
+		this.display_load(message, function(resolve_load, reject_load){
+			var list = self.$el.find('input:checked').parent("li");
+			var promise_list = [];
+			for(var i = 0; i < list.length; i++){
+				if($("#" + list[i].id).data("data")){
+					promise_list.push(new Promise(function(resolve, reject){
+						var view = $("#" + list[i].id).data("data");
+						view.model.destroy({
+							success:function(data){
+								resolve(data);
+							},
+							error:function(obj, error){
+								reject(error);
+							}
+						});
+						view.remove();
+					}));
+				}
+			}
+			Promise.all(promise_list).then(function(){
+				self.render();
+				self.handle_if_empty();
+				resolve_load("Success!");
+			}).catch(function(error){
+				reject_load(error);
+			});
+		});
+	}
 });
 
 var BaseWorkspaceListView = BaseEditableListView.extend({
@@ -202,9 +258,9 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	template:null,
 	list_selector:null,
 	default_item:null,
+	selectedClass: "content-selected",
 
 	/* Functions to overwrite */
-	_mapping:null,
 	create_new_view:null,
 
 	views: [],			//List of item views to help with garbage collection
@@ -212,9 +268,17 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	bind_workspace_functions: function(){
 		this.bind_edit_functions();
 		_.bindAll(this, 'copy_selected', 'delete_selected', 'add_topic','add_nodes', 'drop_in_container','handle_transfer_drop',
-			'remove_view', 'import_content', 'import_nodes', 'add_files', 'add_to_clipboard', 'add_to_trash');
+			'import_content', 'import_nodes', 'add_files', 'add_to_clipboard', 'add_to_trash','make_droppable', 'update_views');
+		this.model.on("change:children", this.update_views);
 	},
-	copy_selected:function(resolve, reject){
+	update_views:function(){
+		var self = this;
+		this.collection.reset();
+		this.collection.get_all_fetch(this.model.get("children")).then(function(fetched){
+			self.load_content(fetched);
+		});
+	},
+	copy_selected:function(){
 		var list = this.$el.find('input:checked').parent("li");
 		var clipboard_list = [];
 		var clipboard_root = window.current_user.get_clipboard();
@@ -222,32 +286,37 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		for(var i = 0; i < list.length; i++){
 			copyCollection.add($(list[i]).data("data").model);
 		}
-		var self = this;
-
-        var promise = new Promise(function(resolve1, reject1){
-            copyCollection.duplicate(clipboard_root, resolve1, reject1);
-        });
-        promise.then(function(collection){
-            self.add_to_clipboard(collection, resolve, reject);
-        }).catch(function(error){
-            reject(error);
-        });
+		return copyCollection.duplicate(clipboard_root);
 	},
-	delete_selected:function(resolve, reject){
-		var list = this.$el.find('input:checked').parent("li");
+	delete_selected:function(){
+		var list = this.$el.find(this.selectedClass);
 		var deleteCollection = new Models.ContentNodeCollection();
+		var reload_list = [];
 		for(var i = 0; i < list.length; i++){
-			var view = $("#" + list[i].id).data("data");
-			deleteCollection.add(view.model);
-			view.remove();
+			if($("#" + list[i].id).data("data")){
+				var view = $("#" + list[i].id).data("data");
+				deleteCollection.add(view.model);
+				view.remove();
+			}
 		}
-		this.add_to_trash(deleteCollection, resolve, reject);
+		var self = this;
+		this.add_to_trash(deleteCollection, "Deleting Content...");
+	},
+	make_droppable:function(){
+		var DragHelper = require("edit_channel/utils/drag_drop");
+		var self = this;
+		DragHelper.addSortable(this, this.selectedClass, this.drop_in_container);
+		setTimeout(function(){
+			self.$el.removeClass("pre_animation").addClass("post_animation");
+			$( this.list_selector ).sortable( "refresh" );
+			$( this.list_selector ).sortable( "enable" );
+		}, 100);
 	},
 	drop_in_container:function(moved_item, selected_items, orders){
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 			// var original_parents = selected_items.pluck("parent");
-	        /* Step 1: Get sort orders updated */
+	    /* Step 1: Get sort orders updated */
 			var max = 1;
 			var min = 1;
 			var index = orders.indexOf(moved_item);
@@ -312,18 +381,15 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		});
 		return promise;
   },
-	remove_view: function(view){
-		this.views.splice(this.views.indexOf(this), 1);
-		view.remove();
-	},
 	add_nodes:function(collection){
 		var self = this;
 		collection.sort_by_order();
 		collection.forEach(function(entry){
-			self.create_new_view(entry);
+			var new_view = self.create_new_view(entry);
+			self.$(self.list_selector).append(new_view.el);
 		});
-		this.render_views();
 		this.reload_ancestors(collection, false);
+		this.handle_if_empty();
 	},
 	add_topic: function(event){
 		var UploaderViews = require("edit_channel/uploader/views");
@@ -347,13 +413,14 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		            collection: edit_collection,
 		            model: self.model,
 		            new_content: true,
-		            onsave: self.add_nodes
+		            onsave: self.reload_ancestors,
+		            onclose: self.add_nodes,
 		        });
         	},
         	error:function(obj, error){
         		console.log("Error creating topic", obj);
-                console.log("Error message:", error);
-                console.trace();
+            console.log("Error message:", error);
+            console.trace();
         	}
         });
 	},
@@ -374,26 +441,23 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
   	this.file_upload_view = new FileUploader.FileModalView({
       parent_view: this,
       model:this.model,
-      onsave: this.add_nodes
+      onsave: this.reload_ancestors,
+      onclose: this.add_nodes
   	});
   },
-  assign_indices:function(){
+  add_to_clipboard:function(collection, message="Moving to Clipboard..."){
   	var self = this;
-  	this.views = [];
-  	this.$el.find("." + this.item_class).each(function(index, item){
-  		var view = $(item).data("data");
-  		view.index = index;
-  		self.views.push(view);
-  	});
-  },
-  add_to_clipboard:function(collection, resolve, reject){
-		this.container.add_to_clipboard(collection, resolve, reject);
+		this.container.add_to_clipboard(collection, message).then(function(){
+			self.handle_if_empty();
+		});
 	},
-	add_to_trash:function(collection, resolve, reject){
-		this.container.add_to_trash(collection, resolve, reject);
+	add_to_trash:function(collection, message="Deleting Content..."){
+		var self = this;
+		this.container.add_to_trash(collection, message).then(function(){
+			self.handle_if_empty();
+		});
 	}
 });
-
 
 var BaseListItemView = BaseView.extend({
 	containing_list_view:null,
@@ -402,25 +466,6 @@ var BaseListItemView = BaseView.extend({
 	className:null,
 	model: null,
 	tagName: "li",
-	// toggle_subfiles:function(event){
-    //     event.stopPropagation();
-    //     event.preventDefault();
-    //     var el =  this.$el.find("#menu_toggle_" + this.model.id);
-    //     if(!this.export_view){
-    //         this.export_view = new ExportListView({
-    //             el: this.$("#export_item_" + this.model.get("id") + "_sub"),
-    //             container: this,
-    //             model: this.model
-    //         });
-    //     }
-    //     if(el.hasClass("glyphicon-menu-right")){
-    //         this.$("#export_item_" + this.model.get("id") + "_sub").slideDown();
-    //         el.removeClass("glyphicon-menu-right").addClass("glyphicon-menu-down");
-    //     }else{
-    //         this.$("#export_item_" + this.model.get("id") + "_sub").slideUp();
-    //         el.removeClass("glyphicon-menu-down").addClass("glyphicon-menu-right");
-    //     }
-    // }
 });
 
 var BaseListEditableItemView = BaseListItemView.extend({
@@ -486,7 +531,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 	}
 });
 
-var BaseWorkspaceListNodeItemView = BaseListEditableItemView.extend({
+var BaseListNodeItemView = BaseListEditableItemView.extend({
 	containing_list_view:null,
 	originalData: null,
 	template:null,
@@ -495,33 +540,77 @@ var BaseWorkspaceListNodeItemView = BaseListEditableItemView.extend({
 	model: null,
 	tagName: "li",
 	selectedClass: null,
+	expandedClass: null,
+	collapsedClass: null,
+
+	getToggler: null,
+	getSubdirectory: null,
+	load_subfiles:null,
+
+	bind_node_functions: function(){
+		_.bindAll(this, 'toggle','open_folder','close_folder','reload');
+		this.bind_edit_functions();
+	},
+	toggle:function(event){
+		event.stopPropagation();
+		event.preventDefault();
+		(this.getToggler().hasClass(this.collapsedClass)) ? this.open_folder() : this.close_folder();
+		var containing_element = this.container.$el.find(this.list_selector);
+		containing_element.scrollLeft(containing_element.width());
+	},
+	open_folder:function(){
+		if(!this.subcontent_view){
+			this.load_subfiles();
+		}
+		this.getSubdirectory().slideDown(100);
+		this.getToggler().removeClass(this.collapsedClass).addClass(this.expandedClass);
+	},
+	close_folder:function(){
+		this.getSubdirectory().slideUp(100);
+		this.getToggler().removeClass(this.expandedClass).addClass(this.collapsedClass);
+	},
+	reload:function(model){
+		this.model = model;
+		this.render();
+	}
+});
+
+
+var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
+	containing_list_view:null,
+	originalData: null,
+	template:null,
+	id:null,
+	className:null,
+	model: null,
+	tagName: "li",
+	selectedClass: "content-selected",
 
 	bind_workspace_functions:function(){
-		this.bind_edit_functions();
-		_.bindAll(this, 'reload');
+		this.bind_node_functions();
+		_.bindAll(this, 'reload', 'open_preview', 'open_edit', 'handle_drop', 'handle_checked', 'add_to_clipboard', 'add_to_trash', 'make_droppable');
 	},
-
+	make_droppable:function(){
+		if(this.model.get("kind") === "topic"){
+			var DragHelper = require("edit_channel/utils/drag_drop");
+			DragHelper.addTopicDragDrop(this, this.open_folder, this.handle_drop);
+		}
+	},
 	reload:function(model){
 		this.model = model;
 		this.render();
 	},
-	delete:function(){
-		console.log("CALLED HERE!");
-    	if(!this.model){
-    		this.remove();
-    	}
-		if(this.containing_list_view.item_view != "uploading_content"){
-			this.add_to_trash();
+	open_preview:function(){
+		var Previewer = require("edit_channel/preview/views");
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var data={
+			el : $("#dialog"),
+			model: this.model,
 		}
-	},
-	edit_item: function(event){
-		event.preventDefault();
-		event.stopPropagation();
-		this.open_edit();
+		new Previewer.PreviewModalView(data);
 	},
 	open_edit:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
-
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var editCollection =  new Models.ContentNodeCollection([this.model]);
 		var metadata_view = new UploaderViews.MetadataModalView({
@@ -529,13 +618,8 @@ var BaseWorkspaceListNodeItemView = BaseListEditableItemView.extend({
 			el: $("#dialog"),
 			new_content: false,
 			model: this.model,
-		    onsave: this.handle_edit_submit
+		  onsave: this.reload_ancestors
 		});
-	},
-	handle_edit_submit:function(collection){
-		this.model = collection.pop();
-		console.log(this.model);
-		this.render();
 	},
 	handle_hover:function(event){
 		this.hover_open_folder(event);
@@ -564,20 +648,17 @@ var BaseWorkspaceListNodeItemView = BaseListEditableItemView.extend({
 		});
 		return promise;
 	},
-	add_to_trash:function(resolve, reject){
-		this.containing_list_view.add_to_trash(new Models.ContentNodeCollection([self.model]), resolve, reject);
+	add_to_trash:function(message="Deleting Content..."){
+		this.containing_list_view.add_to_trash(new Models.ContentNodeCollection([this.model]), message);
 		this.remove();
 	},
-	add_to_clipboard:function(resolve, reject){
-		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([self.model], resolve, reject));
+	add_to_clipboard:function(message="Moving to Clipboard..."){
+		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([this.model]),message);
 	},
 	handle_checked:function(){
 		(this.$el.find(">input[type=checkbox]").is(":checked"))? this.$el.addClass(this.selectedClass) : this.$el.removeClass(this.selectedClass);
 	},
 });
-
-
-
 
 module.exports = {
 	BaseView: BaseView,
@@ -587,6 +668,7 @@ module.exports = {
 	BaseEditableListView:BaseEditableListView,
 	BaseWorkspaceListView:BaseWorkspaceListView,
 	BaseListItemView:BaseListItemView,
+	BaseListNodeItemView:BaseListNodeItemView,
 	BaseListEditableItemView: BaseListEditableItemView,
 	BaseWorkspaceListNodeItemView:BaseWorkspaceListNodeItemView,
 }

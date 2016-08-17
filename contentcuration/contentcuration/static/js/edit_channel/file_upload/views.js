@@ -291,7 +291,7 @@ var FileUploadView = BaseViews.BaseListView.extend({
     }
 });
 
-var FormatItem = BaseViews.BaseListNodeItemView.extend({
+var FormatItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     template: require("./hbtemplates/file_upload_item.handlebars"),
     inline_template: require("./hbtemplates/file_upload_inline_item.handlebars"),
     className: "format_item row",
@@ -303,7 +303,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
 
     initialize: function(options) {
-        _.bindAll(this, 'assign_default_format', 'toggle_formats', 'remove_item','update_name', 'enable_save');
+        _.bindAll(this, 'assign_default_format', 'toggle_formats', 'update_name', 'enable_save'); //'remove_item',
         this.containing_list_view = options.containing_list_view;
         this.thumbnail = options.thumbnail;
         this.default_file = options.default_file;

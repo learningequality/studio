@@ -46,7 +46,8 @@ var BaseCollection = Backbone.Collection.extend({
 				}));
 			});
 			Promise.all(promises).then(function(fetchedModels){
-				var to_fetch = new ContentNodeCollection();
+				var to_fetch = self.clone();
+				to_fetch.reset();
 				fetchedModels.forEach(function(entry){
 					to_fetch.add(entry);
 				});
@@ -80,22 +81,6 @@ var UserModel = BaseModel.extend({
 var UserCollection = BaseCollection.extend({
 	model: UserModel,
 	list_name:"user-list",
-
-	/* TODO: would be better to fetch all values at once */
-    get_all_fetch: function(ids){
-    	var to_fetch = new UserCollection();
-    	var self = this;
-    	ids.forEach(function(id){
-			var model = self.get({'id': id});
-    		if(!model){
-    			model = self.add({'id':id});
-    			model.fetch({async:false});
-    		}
-    		to_fetch.add(model);
-    	});
-    	return to_fetch;
-    }
-
 });
 
 var InvitationModel = BaseModel.extend({
@@ -111,22 +96,6 @@ var InvitationModel = BaseModel.extend({
 var InvitationCollection = BaseCollection.extend({
 	model: InvitationModel,
 	list_name:"invitation-list",
-
-	/* TODO: would be better to fetch all values at once */
-    get_all_fetch: function(ids){
-    	var to_fetch = new InvitationCollection();
-    	var self = this;
-    	ids.forEach(function(id){
-			var model = self.get({'id': id});
-    		if(!model){
-    			model = self.add({'id':id});
-    			model.fetch({async:false});
-    		}
-    		to_fetch.add(model);
-    	});
-    	return to_fetch;
-    }
-
 });
 
 /**** CHANNEL AND CONTENT MODELS ****/
@@ -189,7 +158,8 @@ var ContentNodeCollection = BaseCollection.extend({
 
 			Promise.all(promises).then(function(nodes){
 				var toSave = new ContentNodeCollection(nodes);
-				Backbone.sync("update", toSave, {
+				console.log("SAVING...", self);
+				Backbone.sync("update", self, {
 		        	url: self.model.prototype.urlRoot(),
 		        	success: function(data){
 		        		saveResolve(new ContentNodeCollection(data));
@@ -210,31 +180,35 @@ var ContentNodeCollection = BaseCollection.extend({
     	this.sort();
     	this.highest_sort_order = (this.length > 0)? this.at(this.length - 1).get("sort_order") : 1;
     },
-    duplicate:function(target_parent, resolve, reject){
-    	var copied_list = [];
-    	this.forEach(function(node){
-    		copied_list.push(node.get("id"));
-    	});
-		var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
-        var parent_id = target_parent.get("id");
+    duplicate:function(target_parent){
+    	var self = this;
+    	var promise = new Promise(function(resolve, reject){
+    		var copied_list = [];
+	    	self.forEach(function(node){
+	    		copied_list.push(node.get("id"));
+	    	});
+			var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
+	        var parent_id = target_parent.get("id");
 
-        var data = {"node_ids": copied_list.join(" "),
-                    "sort_order": sort_order,
-                    "target_parent": parent_id};
-        $.ajax({
-        	method:"POST",
-            url: window.Urls.duplicate_nodes(),
-            data:  JSON.stringify(data),
-            success: function(data) {
-                copied_list = JSON.parse(data).node_ids.split(" ");
-                var copiedCollection = new ContentNodeCollection();
-    			copiedCollection.get_all_fetch(copied_list);
-    			resolve(copiedCollection);
-            },
-            error:function(e){
-            	reject(e);
-            }
-        });
+	        var data = {"node_ids": copied_list.join(" "),
+	                    "sort_order": sort_order,
+	                    "target_parent": parent_id};
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.duplicate_nodes(),
+	            data:  JSON.stringify(data),
+	            success: function(data) {
+	                copied_list = JSON.parse(data).node_ids.split(" ");
+	                self.get_all_fetch(copied_list).then(function(fetched){
+	    				resolve(fetched);
+	    			});
+	            },
+	            error:function(e){
+	            	reject(e);
+	            }
+	        });
+    	});
+    	return promise;
     },
     move:function(target_parent, sort_order){
     	var self = this;

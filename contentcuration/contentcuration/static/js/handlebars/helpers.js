@@ -56,7 +56,7 @@ Handlebars.registerHelper('to_upper_case', function(text){
 });
 
 Handlebars.registerHelper('check_is_topic', function(text){
-  return text.toLowerCase() == "topic";
+  return text === "topic";
 });
 
 Handlebars.registerHelper('get_filename', function(text){
