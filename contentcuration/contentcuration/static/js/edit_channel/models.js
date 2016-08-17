@@ -157,8 +157,6 @@ var ContentNodeCollection = BaseCollection.extend({
 			});
 
 			Promise.all(promises).then(function(nodes){
-				var toSave = new ContentNodeCollection(nodes);
-				console.log("SAVING...", self);
 				Backbone.sync("update", self, {
 		        	url: self.model.prototype.urlRoot(),
 		        	success: function(data){

@@ -84,12 +84,11 @@ var QueueList = BaseViews.BaseWorkspaceListView.extend({
   	if(this.add_controls){
   		self.model.fetch({
   			success:function(root){
-  				$(self.badge_selector).html(root.get("metadata").total_count);
+  				$(self.badge_selector).html(root.get("metadata").resource_count);
   			}
   		})
 		}
   },
-
 	handle_if_empty:function(){
 		this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
 		this.update_badge_count();
@@ -153,7 +152,6 @@ var ClipboardList = QueueList.extend({
 	// 		//callback();
 	// 	// });
  //    }
-
 });
 
 var TrashList = QueueList.extend({
@@ -191,7 +189,6 @@ var TrashList = QueueList.extend({
 		'click .move_trash' : 'move_trash'
 	},
 	create_new_view:function(model){
-		console.log("NEW TRASH MODEL:", model);
 		var item_view = new TrashItem({
 				containing_list_view: this,
 				model: model,
@@ -286,7 +283,6 @@ var TrashItem = QueueItem.extend({
 		this.containing_list_view = options.containing_list_view;
 		this.container=options.container;
 		this.render();
-		console.log("NEW TRASH:", this.model.toJSON().kind);
 	},
 	render: function(renderData) {
 		this.$el.html(this.template({

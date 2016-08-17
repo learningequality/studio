@@ -298,7 +298,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	},
 	delete_selected:function(){
 		var list = this.get_selected();
-		console.log(list);
 		var deleteCollection = new Models.ContentNodeCollection();
 		var reload_list = [];
 		for(var i = 0; i < list.length; i++){
