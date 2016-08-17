@@ -154,6 +154,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	default_item:">.content-list .default-item",
 	selectedClass: "content-selected",
 	openedFolderClass: "current_topic",
+	item_class_selector: ".content-item",
 
 	'id': function() {
 		return "container_" + this.model.get("id");
@@ -169,9 +170,6 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		this.content_node_view = options.content_node_view;
 		this.render();
 		this.listenTo(this.model, 'change:title', this.update_name);
-		// this.listenTo(this.model, 'change:children', function(data){
-		// 	this.content_node_view.render();
-		// });
 		this.bind_edit_functions();
 		this.on('add_nodes', this.reload, this);
 	},
@@ -236,6 +234,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
 	selectedClass: "content-selected",
 	openedFolderClass: "current_topic",
+	className: "content-item",
 	'id': function() {
 		return this.model.get("id");
 	},

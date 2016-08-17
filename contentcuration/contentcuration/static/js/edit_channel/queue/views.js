@@ -69,9 +69,10 @@ var QueueList = BaseViews.BaseWorkspaceListView.extend({
 	badge_selector: null,
 	tab_selector: null,
 	list_wrapper_selector:null,
+	item_class_selector: ".queue-item",
 
 	bind_queue_list_functions:function(){
-		_.bindAll(this, 'check_all', 'render','update_badge_count', 'switch_to');
+		_.bindAll(this, 'render','update_badge_count', 'switch_to');
 		this.bind_workspace_functions();
 	},
 	switch_to:function(is_active){
@@ -88,9 +89,7 @@ var QueueList = BaseViews.BaseWorkspaceListView.extend({
   		})
 		}
   },
-	check_all :function(){
-		this.$el.find(":checkbox").prop("checked", this.$el.find("#select_all_check_" + this.model.id).prop('checked'));
-	},
+
 	handle_if_empty:function(){
 		this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
 		this.update_badge_count();
@@ -228,6 +227,7 @@ var QueueItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	list_selector: null,
 	expandedClass: "glyphicon-menu-down",
 	collapsedClass: "glyphicon-menu-up",
+	className: "queue-item",
 	getToggler: function () { return this.$("#menu_toggle_" + this.model.id); },
 	getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },
 	'id': function() {

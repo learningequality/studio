@@ -138,6 +138,8 @@ var BaseListView = BaseView.extend({
 	template:null,
 	list_selector:null,
 	default_item:null,
+	selectedClass: "content-selected",
+	item_class_selector:null,
 
 	/* Functions to overwrite */
 	create_new_view: null,
@@ -145,7 +147,7 @@ var BaseListView = BaseView.extend({
 	views: [],			//List of item views to help with garbage collection
 
 	bind_list_functions:function(){
-		_.bindAll(this, 'load_content', 'handle_if_empty');
+		_.bindAll(this, 'load_content', 'handle_if_empty', 'check_all', 'get_selected');
 	},
 	render:function(renderData){
 		this.$el.html(this.template(renderData));
@@ -164,6 +166,14 @@ var BaseListView = BaseView.extend({
 	},
 	handle_if_empty:function(){
 		this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
+	},
+	check_all :function(event){
+		var is_checked = event.currentTarget.checked;
+		this.$el.find(":checkbox").prop("checked", is_checked);
+		(is_checked) ? this.$el.find(this.item_class_selector).addClass(this.selectedClass) : this.$el.find(this.item_class_selector).removeClass(this.selectedClass)
+	},
+	get_selected: function(){
+		return this.$el.find("." + this.selectedClass);
 	}
 });
 
@@ -222,7 +232,7 @@ var BaseEditableListView = BaseListView.extend({
 	delete_items_permanently:function(message="Deleting"){
 		var self = this;
 		this.display_load(message, function(resolve_load, reject_load){
-			var list = self.$el.find('input:checked').parent("li");
+			var list = self.get_selected();
 			var promise_list = [];
 			for(var i = 0; i < list.length; i++){
 				if($("#" + list[i].id).data("data")){
@@ -241,8 +251,7 @@ var BaseEditableListView = BaseListView.extend({
 				}
 			}
 			Promise.all(promise_list).then(function(){
-				self.render();
-				self.handle_if_empty();
+				self.load_content();
 				resolve_load("Success!");
 			}).catch(function(error){
 				reject_load(error);
@@ -258,7 +267,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	template:null,
 	list_selector:null,
 	default_item:null,
-	selectedClass: "content-selected",
 
 	/* Functions to overwrite */
 	create_new_view:null,
@@ -279,7 +287,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		});
 	},
 	copy_selected:function(){
-		var list = this.$el.find('input:checked').parent("li");
+		var list = this.get_selected();
 		var clipboard_list = [];
 		var clipboard_root = window.current_user.get_clipboard();
 		var copyCollection = new Models.ContentNodeCollection();
@@ -289,7 +297,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		return copyCollection.duplicate(clipboard_root);
 	},
 	delete_selected:function(){
-		var list = this.$el.find(this.selectedClass);
+		var list = this.get_selected();
+		console.log(list);
 		var deleteCollection = new Models.ContentNodeCollection();
 		var reload_list = [];
 		for(var i = 0; i < list.length; i++){
@@ -466,6 +475,10 @@ var BaseListItemView = BaseView.extend({
 	className:null,
 	model: null,
 	tagName: "li",
+	selectedClass: null,
+	handle_checked:function(){
+		(this.$el.find(">input[type=checkbox]").is(":checked"))? this.$el.addClass(this.selectedClass) : this.$el.removeClass(this.selectedClass);
+	},
 });
 
 var BaseListEditableItemView = BaseListItemView.extend({
@@ -473,7 +486,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 	originalData: null,
 
 	bind_edit_functions:function(){
-		_.bindAll(this, 'set','unset','save','delete');
+		_.bindAll(this, 'set','unset','save','delete', 'handle_checked');
 	},
 	set:function(data){
 		if(this.model){
@@ -654,10 +667,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	},
 	add_to_clipboard:function(message="Moving to Clipboard..."){
 		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([this.model]),message);
-	},
-	handle_checked:function(){
-		(this.$el.find(">input[type=checkbox]").is(":checked"))? this.$el.addClass(this.selectedClass) : this.$el.removeClass(this.selectedClass);
-	},
+	}
 });
 
 module.exports = {
