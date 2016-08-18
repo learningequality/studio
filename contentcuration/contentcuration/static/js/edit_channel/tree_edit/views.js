@@ -163,6 +163,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 
 	initialize: function(options) {
 		_.bindAll(this, 'close_container', 'update_name');
+		this.bind_workspace_functions();
 		this.index = options.index;
 		this.edit_mode = options.edit_mode;
 		this.container = options.container;
@@ -170,7 +171,6 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		this.content_node_view = options.content_node_view;
 		this.render();
 		this.listenTo(this.model, 'change:title', this.update_name);
-		this.bind_edit_functions();
 	},
 	events: {
 		'click .create_new_button':'add_topic',
@@ -186,7 +186,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 			index: this.index,
 		}));
 		var self = this;
-		this.collection.get_all_fetch(this.model.get("children")).then(function(fetchedCollection){
+		this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
 			self.$el.find(this.default_item).text("No items found.");
 			fetchedCollection.sort_by_order();
 			self.load_content(fetchedCollection);
@@ -214,10 +214,10 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	create_new_view:function(model){
 	  var newView = new ContentItem({
-			model: model,
-			edit_mode: this.edit_mode,
-			containing_list_view:this
-		});
+		model: model,
+		edit_mode: this.edit_mode,
+		containing_list_view:this
+	});
 	  this.views.push(newView);
 		return newView;
 	},
@@ -244,17 +244,17 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
 		this.render();
-		this.listenTo(this.model, 'change:metadata', function(){console.log("CHANGED");});
+		this.listenTo(this.model, 'change:metadata', this.render);
 	},
 	render:function(){
-			this.$el.html(this.template({
-				node: this.model.toJSON(),
-				isfolder: this.model.get("kind") === "topic",
-				edit_mode: this.edit_mode
-			}));
-			this.$el.data("data", this);
-			this.make_droppable();
-			this.$el.removeClass(this.selectedClass);
+		this.$el.html(this.template({
+			node: this.model.toJSON(),
+			isfolder: this.model.get("kind") === "topic",
+			edit_mode: this.edit_mode
+		}));
+		this.$el.data("data", this);
+		this.make_droppable();
+		this.$el.removeClass(this.selectedClass);
 	},
 	events: {
 		'click .edit_folder_button': 'open_edit',
@@ -267,9 +267,11 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	open_folder:function(event){
 		event.preventDefault();
 		event.stopPropagation();
-		this.containing_list_view.close_folders();
-		this.subcontent_view = this.containing_list_view.add_container(this);
-		this.$el.addClass(this.openedFolderClass);
+		if(!this.$el.hasClass(this.openedFolderClass)){
+			this.containing_list_view.close_folders();
+			this.subcontent_view = this.containing_list_view.add_container(this);
+			this.$el.addClass(this.openedFolderClass);
+		}
 	},
 	preview_node: function(event){
 		event.preventDefault();

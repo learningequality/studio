@@ -116,7 +116,7 @@ var ClipboardList = QueueList.extend({
 		}));
 		this.$(this.default_item).text("Loading...");
 		var self = this;
-		this.collection.get_all_fetch(this.model.get("children")).then(function(fetched){
+		this.retrieve_nodes(this.model.get("children")).then(function(fetched){
 			fetched.sort_by_order();
 			self.$(self.default_item).text("No items found.");
 			self.load_content(fetched);
@@ -175,7 +175,7 @@ var TrashList = QueueList.extend({
 		}));
 		this.$(this.default_item).text("Loading...");
 		var self = this;
-		this.collection.get_all_fetch(this.model.get("children")).then(function(fetched){
+		this.retrieve_nodes(this.model.get("children")).then(function(fetched){
 			fetched.sort_by_order();
 			self.$(self.default_item).text("No items found.");
 			self.load_content(fetched);

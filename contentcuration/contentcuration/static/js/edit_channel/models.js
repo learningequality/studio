@@ -23,14 +23,14 @@ var BaseCollection = Backbone.Collection.extend({
 	save: function(callback) {
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	},
-	get_all_fetch: function(ids){
+	get_all_fetch: function(ids, force_fetch = false){
     	var self = this;
     	var promise = new Promise(function(resolve, reject){
 			var promises = [];
 			ids.forEach(function(id){
 				promises.push(new Promise(function(modelResolve, modelReject){
 					var model = self.get({'id' : id});
-					if(!model){
+					if(force_fetch || !model){
 						model = self.add({'id': id});
 						model.fetch({
 							success:function(returned){
@@ -55,7 +55,7 @@ var BaseCollection = Backbone.Collection.extend({
 			});
     	});
     	return promise;
-    },
+    }
 });
 
 /**** USER-CENTERED MODELS ****/

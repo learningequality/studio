@@ -137,14 +137,13 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		over: function(event, ui){
 			hoverOnItem = $(this)[0];
 			if(!$(hoverOnItem).find("#menu_toggle_" + hoverOnItem.id).hasClass("glyphicon-menu-down")){
-				var self = this;
 				$(".sorting-placeholder").css("display", "none");
 				var hoverItem = $(this)[0];
 				setTimeout(function(){
 					if(hoverOnItem === hoverItem && $(ui.draggable.context).data("data")){
 						hoverCallback(event);
 					}
-				}, hoverInterval)
+				}, hoverInterval);
 			}
 
 		},

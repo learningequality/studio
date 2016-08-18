@@ -245,12 +245,12 @@ class ContentNodeManager(TreeManager):
 
         if position == 'last-child' or position == 'first-child':
             if node == target:
-                print "line 200"
+                print "node == target"
                 import IPython
                 IPython.embed()
                 raise InvalidMove(_('A node may not be made a child of itself.'))
             elif left < target_left < right:
-                print "line 205"
+                print "left < target_left < right"
                 import IPython
                 IPython.embed()
                 raise InvalidMove(_('A node may not be made a child of any of its descendants.'))
@@ -272,27 +272,31 @@ class ContentNodeManager(TreeManager):
             parent = target
         elif position == 'left' or position == 'right':
             if node == target:
-                print "line 227"
+                print "position == 'left' or position == 'right'"
                 import IPython
                 IPython.embed()
                 raise InvalidMove(_('A node may not be made a sibling of itself.'))
             elif left < target_left < right:
-                print "line 232"
+                print "left < target_left < right"
                 import IPython
                 IPython.embed()
                 raise InvalidMove(_('A node may not be made a sibling of any of its descendants.'))
             if position == 'left':
                 if target_left > left:
+                    print "target_left > left"
                     new_left = target_left - width
                     new_right = target_left - 1
                 else:
+                    print "target_left > left else"
                     new_left = target_left
                     new_right = target_left + width - 1
             else:
                 if target_right > right:
+                    print "target_left > right"
                     new_left = target_right - width + 1
                     new_right = target_right
                 else:
+                    print "target_left > right else"
                     new_left = target_right + 1
                     new_right = target_right + width
             level_change = level - target_level
@@ -358,7 +362,7 @@ class ContentNodeManager(TreeManager):
             parent._meta.get_field(parent._meta.pk.name).get_db_prep_value(parent.pk, connection),
             tree_id])
 
-        # print "NODE WAS: ", node.left_attr, node.right_attr, node.level_attr, node.parent_attr
+        print "SETTING TO: ", new_left, new_right
 
         # Update the node to be consistent with the updated
         # tree in the database.
@@ -367,8 +371,6 @@ class ContentNodeManager(TreeManager):
         setattr(node, self.level_attr, level - level_change)
         setattr(node, self.parent_attr, parent)
         node._mptt_cached_fields[self.parent_attr] = parent.pk
-
-        # print "NODE IS: ", node.left_attr, node.right_attr, node.level_attr, node.parent_attr
 
 class ContentNode(MPTTModel, models.Model):
     """
@@ -400,18 +402,27 @@ class ContentNode(MPTTModel, models.Model):
 
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
+    published = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
 
-    objects = ContentNodeManager()
+    objects = TreeManager()
 
     def save(self, *args, **kwargs):
-        # try:
+        isNew = self.pk is None and self.original_node is None
         super(ContentNode, self).save(*args, **kwargs)
+        if isNew:
+            if self.original_node is None:
+                self.original_node = self.pk
+            if self.cloned_source is None:
+                self.cloned_source = self.pk
+            super(ContentNode, self).save(*args, **kwargs)
+    #     # try:
+    #
             # if self.parent:
             #     self.move_to(ContentNode.objects.get(id=self.parent_id)) # Makes sure cache is updated after save
         # except:
-        #     print "ERROR MOVING: Rebuilding tree..."
+
         #     ContentNode.objects.rebuild()
         #     super(ContentNode, self).save(*args, **kwargs)
 

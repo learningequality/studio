@@ -110,38 +110,38 @@ class CustomListSerializer(serializers.ListSerializer):
             ThroughModel.objects.bulk_create(bulk_adding_list)
 
         print "*********** STARTING: ***********"
+        recurse(ContentNode.objects.get(id__startswith='f1a03d6'))
         # Perform updates.
         if update_nodes:
-            for node_id, data in update_nodes.items():
-                # print "BEFORE:"
-                # recurse(ContentNode.objects.get(id__startswith='b9c5d'))
-                node = node_mapping.get(node_id, None)
-                if node:
-                    # potential optimization opportunity
-                    for attr, value in data.items():
-                        setattr(node, attr, value)
-                    taglist = []
-                    for tag_data in tag_mapping.get(node_id, None):
-                        # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
-                        if isinstance(tag_data, unicode):
-                            tag_data = json.loads(tag_data)
+            with transaction.atomic():
+                with ContentNode.objects.delay_mptt_updates():
+                    for node_id, data in update_nodes.items():
+                        node = node_mapping.get(node_id, None)
 
-                        # this requires optimization
-                        for tag_itm in all_tags:
-                            if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
-                                taglist.append(tag_itm)
+                        if node:
+                            # potential optimization opportunity
+                            for attr, value in data.items():
+                                setattr(node, attr, value)
+                            taglist = []
+                            for tag_data in tag_mapping.get(node_id, None):
+                                # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
+                                if isinstance(tag_data, unicode):
+                                    tag_data = json.loads(tag_data)
 
-                    setattr(node, 'tags', taglist)
-                    node.save()
-                    # if node.parent:
-                    #     node.move_to(ContentNode.objects.get(id=node.parent_id)) # Makes sure cache is updated after save
-                    ret.append(node)
-                # print "AFTER:"
-                # recurse(ContentNode.objects.get(id__startswith='b9c5d'))
-            # ContentNode.objects.rebuild()
-        # print "*********** FINAL: ***********"
-        # recurse(ContentNode.objects.get(id__startswith='b9c5d'))
-        # print "*********** END ***********\n\n\n\n"
+                                # this requires optimization
+                                for tag_itm in all_tags:
+                                    if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
+                                        taglist.append(tag_itm)
+
+                            setattr(node, 'tags', taglist)
+                            node.save()
+                            # if node.parent:
+                            #     ContentNode.objects.move_node(node, ContentNode.objects.get(id=node.parent_id)) # Makes sure cache is updated after save
+                            ret.append(node)
+        print "*********** FINAL: ***********"
+        recurse(ContentNode.objects.get(id__startswith='f1a03d6'))
+
+        print "*********** END ***********\n\n\n\n"
         return ret
 
 def recurse(node, level=0):
@@ -273,7 +273,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
                  'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','preset',
-                 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified')
+                 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published')
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
