@@ -149,6 +149,7 @@ var BaseListView = BaseView.extend({
 	load_content: function(collection=this.collection){
 		this.views = [];
 		var default_element = this.$(this.default_item);
+		default_element.text("No items found.");
 		this.$(this.list_selector).html("").append(default_element);
 		var self = this;
 		collection.forEach(function(entry){
@@ -561,15 +562,15 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 		var containing_element = this.container.$el.find(this.list_selector);
 		containing_element.scrollLeft(containing_element.width());
 	},
-	open_folder:function(){
+	open_folder:function(open_speed = 200){
 		if(!this.subcontent_view){
 			this.load_subfiles();
 		}
-		this.getSubdirectory().slideDown(100);
+		this.getSubdirectory().slideDown(open_speed);
 		this.getToggler().removeClass(this.collapsedClass).addClass(this.expandedClass);
 	},
-	close_folder:function(){
-		this.getSubdirectory().slideUp(100);
+	close_folder:function(close_speed = 200){
+		this.getSubdirectory().slideUp(close_speed);
 		this.getToggler().removeClass(this.expandedClass).addClass(this.collapsedClass);
 	},
 	reload:function(model){
