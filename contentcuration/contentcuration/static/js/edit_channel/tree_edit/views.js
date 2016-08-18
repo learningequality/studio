@@ -171,7 +171,6 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		this.render();
 		this.listenTo(this.model, 'change:title', this.update_name);
 		this.bind_edit_functions();
-		this.on('add_nodes', this.reload, this);
 	},
 	events: {
 		'click .create_new_button':'add_topic',
@@ -250,7 +249,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	render:function(){
 			this.$el.html(this.template({
 				node: this.model.toJSON(),
-				isfolder: this.model.get("kind").toLowerCase() == "topic",
+				isfolder: this.model.get("kind") === "topic",
 				edit_mode: this.edit_mode
 			}));
 			this.$el.data("data", this);

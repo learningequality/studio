@@ -4,9 +4,6 @@ var Models = require("./models");
 //var UndoManager = require("backbone-undo");
 
 var BaseView = Backbone.View.extend({
-	render:function(renderData){
-		this.$el.html(this.template(renderData));
-	},
 	display_load:function(message, callback){
     var self = this;
 		var load = '<div id="loading_modal" class="text-center fade">' +
@@ -148,10 +145,6 @@ var BaseListView = BaseView.extend({
 
 	bind_list_functions:function(){
 		_.bindAll(this, 'load_content', 'handle_if_empty', 'check_all', 'get_selected');
-	},
-	render:function(renderData){
-		this.$el.html(this.template(renderData));
-		this.load_content();
 	},
 	load_content: function(collection=this.collection){
 		this.views = [];
@@ -299,7 +292,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	delete_selected:function(){
 		var list = this.get_selected();
 		var deleteCollection = new Models.ContentNodeCollection();
-		var reload_list = [];
 		for(var i = 0; i < list.length; i++){
 			if($("#" + list[i].id).data("data")){
 				var view = $("#" + list[i].id).data("data");
@@ -307,7 +299,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				view.remove();
 			}
 		}
-		var self = this;
 		this.add_to_trash(deleteCollection, "Deleting Content...");
 	},
 	make_droppable:function(){

@@ -80,15 +80,15 @@ var QueueList = BaseViews.BaseWorkspaceListView.extend({
 		(is_active) ? $(this.tab_selector).addClass("active-queue-tab") : $(this.tab_selector).removeClass("active-queue-tab");
 	},
 	update_badge_count:function(){
-  	var self =this;
-  	if(this.add_controls){
-  		self.model.fetch({
-  			success:function(root){
-  				$(self.badge_selector).html(root.get("metadata").resource_count);
-  			}
-  		})
+	  	var self =this;
+	  	if(this.add_controls){
+	  		self.model.fetch({
+	  			success:function(root){
+	  				$(self.badge_selector).html(root.get("metadata").resource_count);
+	  			}
+	  		})
 		}
-  },
+	  },
 	handle_if_empty:function(){
 		this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
 		this.update_badge_count();
@@ -203,14 +203,14 @@ var TrashList = QueueList.extend({
 		}
 	},
 	move_trash:function(){
-		var list = this.$el.find('input:checked').parent("li");
+		var list = this.get_selected();
 		var moveCollection = new Models.ContentNodeCollection();
-		var ancestor_list = [];
+		var reload_list = [];
 		for(var i =0;i < list.length; i++){
 			var node = $("#" + list[i].id).data("data").model;
-			if(ancestor_list.length === 0 || $(node.get("ancestors")).filter(ancestor_list).length < 2){
+			if(reload_list.length === 0 || $(node.get("ancestors")).filter(reload_list).length === 0 ){
 				moveCollection.add(node);
-				ancestor_list.push(node.get("id"));
+				reload_list.push(node.get("id"));
 			}
 		}
 		this.add_to_clipboard(moveCollection, "Recovering Content to Clipboard...");
