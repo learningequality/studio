@@ -118,12 +118,12 @@ def map_content_nodes(root_node):
                 create_associated_file_objects(kolibrinode, node)
 
 
-def fuzz(s):
+def fuzz(title_description):
     """
     Apply porter stemming algorithm then double metaphone algorithm to the passed in String
     to obtain normalized and misspelling tolerant hash values/tokens
     """
-    return ' '.join(dm(stem(word)) for word in s.split())
+    return ' '.join([dm(stem(word))[0] for word in title_description.split()])
 
 
 def create_bare_contentnode(ccnode):
@@ -144,7 +144,7 @@ def create_bare_contentnode(ccnode):
         kind=ccnode.kind.kind,
         license=kolibri_license,
         available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
-        stemmed_metaphone= fuzz(ccnode.title + ' ' + ccnode.description)
+        stemmed_metaphone= fuzz(ccnode.title + ' ' + ccnode.description),
     )
 
     if ccnode.parent:
