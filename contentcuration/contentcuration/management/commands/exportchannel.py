@@ -11,12 +11,13 @@ from contentcuration.constants import content_kinds
 
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
-from kolibri.content.utils.metaphone import dm
-from kolibri.content.utils.stemmer import stem
+from metaphone import doublemetaphone
+from porter2stemmer import Porter2Stemmer
 
 
 import logging as logmodule
 logging = logmodule.getLogger(__name__)
+stemmer = Porter2Stemmer()
 
 
 class EarlyExit(BaseException):
@@ -123,7 +124,7 @@ def fuzz(title_description):
     Apply porter stemming algorithm then double metaphone algorithm to the passed in String
     to obtain normalized and misspelling tolerant hash values/tokens
     """
-    return ' '.join([dm(stem(word))[0] for word in title_description.split()])
+    return ' '.join([doublemetaphone(self.stemmer.stem(word))[0] for word in title_description.split()])
 
 
 def create_bare_contentnode(ccnode):
