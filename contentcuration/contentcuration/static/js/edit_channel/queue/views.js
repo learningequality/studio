@@ -19,6 +19,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 		this.trash_root = options.trash_root;
 		this.collection = options.collection;
 		this.render();
+		window.workspace_manager.set_queue_view(this);
 	},
 	render: function() {
 		this.$el.html(this.template());
@@ -70,9 +71,12 @@ var QueueList = BaseViews.BaseWorkspaceListView.extend({
 	tab_selector: null,
 	list_wrapper_selector:null,
 	item_class_selector: ".queue-item",
+	'id': function() {
+		return "list_" + this.model.get("id");
+	},
 
 	bind_queue_list_functions:function(){
-		_.bindAll(this, 'render','update_badge_count', 'switch_to');
+		_.bindAll(this, 'update_badge_count', 'switch_to');
 		this.bind_workspace_functions();
 	},
 	switch_to:function(is_active){
@@ -80,15 +84,15 @@ var QueueList = BaseViews.BaseWorkspaceListView.extend({
 		(is_active) ? $(this.tab_selector).addClass("active-queue-tab") : $(this.tab_selector).removeClass("active-queue-tab");
 	},
 	update_badge_count:function(){
-	  	var self =this;
+	  	var self = this;
 	  	if(this.add_controls){
 	  		self.model.fetch({
 	  			success:function(root){
 	  				$(self.badge_selector).html(root.get("metadata").resource_count);
 	  			}
-	  		})
+	  		});
 		}
-	  },
+	},
 	handle_if_empty:function(){
 		this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
 		this.update_badge_count();
@@ -107,6 +111,7 @@ var ClipboardList = QueueList.extend({
 		this.container = options.container;
 		this.add_controls = options.add_controls;
 		this.render();
+		this.container.lists.push(this);
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -114,13 +119,15 @@ var ClipboardList = QueueList.extend({
 			add_controls : this.add_controls,
 			id: this.model.id
 		}));
+		window.workspace_manager.put_list(this.model.get("id"), this);
 		this.$(this.default_item).text("Loading...");
 		var self = this;
-		this.retrieve_nodes(this.model.get("children")).then(function(fetched){
-			fetched.sort_by_order();
+		self.make_droppable();
+		this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
 			self.$(self.default_item).text("No items found.");
-			self.load_content(fetched);
-			self.make_droppable();
+			fetchedCollection.sort_by_order();
+			self.load_content(fetchedCollection);
+			self.refresh_droppable();
 		});
 	},
 	create_new_view:function(model){
@@ -145,13 +152,10 @@ var ClipboardList = QueueList.extend({
 			this.delete_selected();
 		}
 	},
-	// handle_transfer_drop:function(transfer, sort_order, callback){
-	// 	/* Implementation for copying nodes on drop*/
-	// 	// transfer.model.duplicate(this.model, sort_order, function(){
-	// 		// transfer.reload();
-	// 		//callback();
-	// 	// });
- //    }
+	/* Implementation for creating copies of nodes when dropped onto clipboard */
+		// handle_drop:function(collection){
+		// 		return collection.duplicate(window.current_user.get_clipboard());
+	 	// },
 });
 
 var TrashList = QueueList.extend({
@@ -166,6 +170,7 @@ var TrashList = QueueList.extend({
 		this.container = options.container;
 		this.add_controls = options.add_controls;
 		this.render();
+		this.container.lists.push(this);
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -173,14 +178,15 @@ var TrashList = QueueList.extend({
 			add_controls : this.add_controls,
 			id: this.model.id
 		}));
+		window.workspace_manager.put_list(this.model.get("id"), this);
 		this.$(this.default_item).text("Loading...");
 		var self = this;
-		this.retrieve_nodes(this.model.get("children")).then(function(fetched){
-			fetched.sort_by_order();
+		self.make_droppable();
+		this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
 			self.$(self.default_item).text("No items found.");
-			self.load_content(fetched);
-			self.make_droppable();
-			self.update_badge_count();
+			fetchedCollection.sort_by_order();
+			self.load_content(fetchedCollection);
+			self.refresh_droppable();
 		});
 	},
 	events: {
@@ -207,7 +213,7 @@ var TrashList = QueueList.extend({
 		var moveCollection = new Models.ContentNodeCollection();
 		var reload_list = [];
 		for(var i =0;i < list.length; i++){
-			var node = $("#" + list[i].id).data("data").model;
+			var node = list[i].model;
 			if(reload_list.length === 0 || $(node.get("ancestors")).filter(reload_list).length === 0 ){
 				moveCollection.add(node);
 				reload_list.push(node.get("id"));
@@ -241,6 +247,7 @@ var ClipboardItem = QueueItem.extend({
 		this.containing_list_view = options.containing_list_view;
 		this.container=options.container;
 		this.render();
+		this.listenTo(this.model, 'change:metadata', this.render);
 	},
 	render: function(renderData) {
 		this.$el.html(this.template({
@@ -248,7 +255,7 @@ var ClipboardItem = QueueItem.extend({
 			isfolder: this.model.get("kind") === "topic",
 			is_clipboard : true,
 		}));
-		this.$el.data("data", this);
+		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
 	},
 	events: {
@@ -283,6 +290,7 @@ var TrashItem = QueueItem.extend({
 		this.containing_list_view = options.containing_list_view;
 		this.container=options.container;
 		this.render();
+		this.listenTo(this.model, 'change:metadata', this.render);
 	},
 	render: function(renderData) {
 		this.$el.html(this.template({
@@ -290,7 +298,7 @@ var TrashItem = QueueItem.extend({
 			isfolder: this.model.get("kind") === "topic",
 			is_clipboard : false,
 		}));
-		this.$el.data("data", this);
+		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
 	},
 	events: {

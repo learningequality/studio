@@ -2,6 +2,7 @@ var _ = require("underscore");
 var Backbone = require("backbone");
 var Models = require("./models");
 var Views = require("./views");
+var WorkspaceManager = require("./utils/workspace_manager");
 
 //var saveDispatcher = _.clone(Backbone.Events);
 
@@ -13,6 +14,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.licenses = new Models.LicenseCollection(window.license_list);
 		window.current_channel = new Models.ChannelModel(window.channel);
 		window.current_user = new Models.UserModel(window.user);
+		window.workspace_manager = new WorkspaceManager();
 		//this.listenTo(saveDispatcher, "save", this.save);
 		this.channelCollection = new Models.ChannelCollection(window.channels);
 
@@ -43,7 +45,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 	edit_page : function(){
 		this.open_channel(true, false, window.current_channel.get_root("main_tree"));
 		var QueueView = require("edit_channel/queue/views");
-		window.queue = new QueueView.Queue({
+		var queue = new QueueView.Queue({
 	 		el: $("#queue-area"),
 	 		collection: this.nodeCollection,
 	 		clipboard_root : window.current_user.get_clipboard(),

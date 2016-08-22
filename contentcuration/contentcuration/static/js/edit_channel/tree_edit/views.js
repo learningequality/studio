@@ -13,10 +13,9 @@ var DragHelper = require("edit_channel/utils/drag_drop");
  * @param {boolean} is_edit_page (determines if previewing or editing)
  */
 var TreeEditView = BaseViews.BaseWorkspaceView.extend({
-	containers:[],
+	lists: [],
 	template: require("./hbtemplates/container_area.handlebars"),
 	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
-	queue_view: null,
 	initialize: function(options) {
 		_.bindAll(this, 'copy_content','delete_content' , 'add_container','toggle_details', 'handle_checked');
 		this.bind_workspace_functions();
@@ -43,8 +42,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			$("#secondary-nav").css("display","none");
 			$("#channel-edit-content-wrapper").css("background-color", "#EDDEED");
 		}
-
-		$("#channel-edit-content-wrapper").data("data", this);
+		window.workspace_manager.set_main_view(this);
 		$("#main-nav-home-button").removeClass("active");
 
 		(this.is_edit_page) ? $("#channel-edit-button").addClass("active") : $("#channel-preview-button").addClass("active");
@@ -53,37 +51,37 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			channel_list: window.channels.toJSON(),
 			current_channel: window.current_channel.toJSON()
 		}));
-		this.add_container(this.containers.length, this.model);
+		this.add_container(this.lists.length, this.model);
 	},
 	add_container: function(index, topic, view = null){
 		/* Step 1: Close directories of children and siblings of opened topic*/
-			if(index < this.containers.length){
+			if(index < this.lists.length){
 				this.remove_containers_from(index);
 			}
 		/* Step 2: Create new container */
 			this.$("#container-wrapper").scrollLeft(this.$("#container_area").width());
 			var container_view = new ContentList({
 				model: topic,
-				index: this.containers.length + 1,
+				index: this.lists.length + 1,
 				edit_mode: this.is_edit_page,
 				collection: this.collection,
 				container : this,
 				content_node_view: view
 			});
-			this.containers.push(container_view);
-			this.$("#container_area").width(this.$("#container_area").width() + this.containers[0].$el.width());
+			this.lists.push(container_view);
+			this.$("#container_area").width(this.$("#container_area").width() + this.lists[0].$el.width());
 
 		/* Step 3: Add container to DOM */
 			this.$("#container_area").append(container_view.el);
 			return container_view;
 	},
 	remove_containers_from:function(index){
-		while(this.containers.length > index){
-			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.containers[0].$el.width());
-			this.containers[this.containers.length -1].remove();
-			this.containers.splice(this.containers.length-1);
+		while(this.lists.length > index){
+			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.lists[0].$el.width());
+			this.lists[this.lists.length -1].remove();
+			this.lists.splice(this.lists.length-1);
 		}
-		this.containers[this.containers.length-1].close_folders();
+		this.lists[this.lists.length-1].close_folders();
 		this.handle_checked();
 	},
 	handle_checked:function(){
@@ -96,32 +94,31 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	delete_content: function (event){
 		if(confirm("Are you sure you want to delete these selected items?")){
-			var self = this;
-			this.display_load("Deleting Content...", function(resolve, reject){
-					var promises = [];
-					for(var i = 0; i < self.containers.length; i++){
-						promises.push(new Promise(function(resolve, reject){
-							self.containers[i].delete_selected(resolve, reject)
-	    			}));
-    				if(self.containers[i].$el.find(".current_topic input").is(":checked")){
-    					self.remove_containers_from(self.containers[i].index);
-							break;
-	    			}
+			var deleteCollection = new Models.ContentNodeCollection();
+			for(var i = 0; i < this.lists.length; i++){
+				var list = this.lists[i].get_selected();
+				for(var i = 0; i < list.length; i++){
+					var view = list[i];
+					if(view){
+						deleteCollection.add(view.model);
+						view.remove();
 					}
-					Promise.all(promises).then(function(){
-						self.handle_if_empty();
-						resolve("Success!");
-					});
-			});
+				}
+				if(this.lists[i].$el.find(".current_topic input").is(":checked")){
+					this.remove_containers_from(this.lists[i].index);
+						break;
+    			}
+			}
+			this.add_to_trash(deleteCollection, "Deleting Content...");
 		}
 	},
 	copy_content: function(event){
 		var self = this;
 		this.display_load("Copying Content...", function(load_resolve, load_reject){
 			var promises = [];
-			for(var i = 0; i < self.containers.length; i++){
-				promises.push(self.containers[i].copy_selected());
-				if(self.containers[i].$el.find(".current_topic input:checked").length != 0){
+			for(var i = 0; i < self.lists.length; i++){
+				promises.push(self.lists[i].copy_selected());
+				if(self.lists[i].$el.find(".current_topic input:checked").length != 0){
 					break;
 				}
 			}
@@ -131,7 +128,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 					nodeCollection.add(list.models);
 				});
 				console.log(nodeCollection);
-				window.queue.clipboard_queue.add_nodes(nodeCollection);
+				window.workspace_manager.get_queue_view.clipboard_queue.add_nodes(nodeCollection);
 				load_resolve("Success!");
 			}).catch(function(error){
 				console.log(error);
@@ -157,7 +154,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	item_class_selector: ".content-item",
 
 	'id': function() {
-		return "container_" + this.model.get("id");
+		return "list_" + this.model.get("id");
 	},
 	className: "container content-container pre_animation",
 
@@ -185,13 +182,18 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 			edit_mode: this.edit_mode,
 			index: this.index,
 		}));
+		window.workspace_manager.put_list(this.model.get("id"), this);
 		var self = this;
+		self.make_droppable();
 		this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
 			self.$el.find(this.default_item).text("No items found.");
 			fetchedCollection.sort_by_order();
 			self.load_content(fetchedCollection);
+			self.refresh_droppable();
+			setTimeout(function(){
+				self.$el.removeClass("pre_animation").addClass("post_animation");
+			}, 100);
 		});
-		this.make_droppable();
 	},
 	update_name:function(){
 		this.$el.find(".container-title").text(this.model.get("title"));
@@ -252,7 +254,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			isfolder: this.model.get("kind") === "topic",
 			edit_mode: this.edit_mode
 		}));
-		this.$el.data("data", this);
+		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
 		this.$el.removeClass(this.selectedClass);
 	},

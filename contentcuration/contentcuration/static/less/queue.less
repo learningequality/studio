@@ -14,7 +14,7 @@
 	@manage-clipboard-btn-height : 50px;
 	@placeholder-color:#666666;
 	right:0em;
-	top: 6.7em;
+	top:0em;
 	position:absolute;
 	pointer-events:none;
 	z-index:999;
@@ -125,8 +125,8 @@
 			}
 
 			.trash_options, .clipboard_options{
-					background: @gray-400;
-					padding: 15px 0 10px 0;
+				background: @gray-400;
+				padding: 15px 0 10px 0;
 				.toolbar-button {
 					width: 50px;
 					display: inline-block;
@@ -154,7 +154,7 @@
 				font-weight:bold;
 			}
 			#queue_content{
-				width:@queue-width - 30px;
+				width:@queue-width - 32px;
 				height:@queue-height * 0.94;
 				min-height:@queue-min-height * 0.94;
 
@@ -245,7 +245,7 @@
 						padding-left:20px;
 					}
 
-					li label:hover{
+					li:hover{
 						background-color: @highlight-color;
 						.glyphicon{
 							visibility:visible;
