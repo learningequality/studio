@@ -124,7 +124,8 @@ def fuzz(title_description):
     Apply porter stemming algorithm then double metaphone algorithm to the passed in String
     to obtain normalized and misspelling tolerant hash values/tokens
     """
-    return ' '.join([doublemetaphone(self.stemmer.stem(word))[0] for word in title_description.split()])
+    processed_tokens = [doublemetaphone(self.stemmer.stem(word)) for word in title_description.split()]
+    return ' '.join(list(sum(processed_tokens, ()))).replace('  ', ' ')
 
 
 def create_bare_contentnode(ccnode):
