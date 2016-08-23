@@ -5,8 +5,16 @@
 		<span class="delete_content glyphicon glyphicon-trash" aria-hidden="true"></span>
 	</div>
 	{{#if isfolder}}<div class="pull-left tog_folder"><span id="menu_toggle_{{node.id}}" class="glyphicon glyphicon-menu-up"></span></div>{{/if}}
-	<!--<span class="glyphicon glyphicon-{{file_icon}}"></span>-->
-	<h6>{{to_upper_case node.kind}}</h6>
-	<h4><div class="queue_item_title title truncate" title="{{node.title}}">{{node.title}}</div>{{#if isfolder}}<div class="badge clipboard-topic-count">{{node.metadata.resource_count}}</div>{{/if}}</h4>
+	<h4>
+		<div class="queue_item_title title truncate" title="{{node.title}}">
+			<div class="content-item-icon pull-left">
+				{{#unless isfolder}}
+					<span class="{{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
+				{{/unless}}
+			</div>
+			{{node.title}}
+		</div>
+		{{#if isfolder}}<div class="badge clipboard-topic-count">{{node.metadata.resource_count}}</div>{{/if}}
+	</h4>
 </label>
 {{#if isfolder}}<div id="{{node.id}}_sub" class="subdirectory wrapper"></div>{{/if}}

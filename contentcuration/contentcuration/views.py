@@ -32,8 +32,11 @@ from contentcuration.forms import InvitationForm, InvitationAcceptForm, Registra
 from registration.backends.hmac.views import RegistrationView
 
 def base(request):
-    return redirect('channels')    # redirect to the channel list page
-
+    print request.user
+    if request.user.is_authenticated():
+        return redirect('channels')
+    else:
+        return redirect('accounts/login')
 
 def testpage(request):
     return render(request, 'test.html')
