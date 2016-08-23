@@ -127,8 +127,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				lists.forEach(function(list){
 					nodeCollection.add(list.models);
 				});
-				console.log(nodeCollection);
-				window.workspace_manager.get_queue_view.clipboard_queue.add_nodes(nodeCollection);
+				window.workspace_manager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
 				load_resolve("Success!");
 			}).catch(function(error){
 				console.log(error);

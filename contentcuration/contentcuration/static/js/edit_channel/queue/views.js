@@ -235,6 +235,11 @@ var QueueItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },
 	'id': function() {
 		return this.model.get("id");
+	},
+	reload:function(model){
+		this.model.set(model.attributes);
+		this.$el.find(">label .title").text(this.model.get("title"));
+		this.$el.find(">label .badge").text(this.model.get("metadata").resource_count);
 	}
 });
 

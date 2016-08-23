@@ -66,6 +66,7 @@ var BaseWorkspaceView = BaseView.extend({
 		});
 	},
 	edit_permissions:function(){
+		var ShareViews = require("edit_channel/share/views");
 		var share_view = new ShareViews.ShareModalView({
 			model:window.current_channel,
 			current_user: window.current_user.toJSON()
@@ -300,7 +301,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	bind_workspace_functions: function(){
 		this.bind_edit_functions();
 		_.bindAll(this, 'copy_selected', 'delete_selected', 'add_topic','add_nodes', 'drop_in_container','handle_drop', 'refresh_droppable',
-			'import_content', 'import_nodes', 'add_files', 'add_to_clipboard', 'add_to_trash','make_droppable');
+			'import_content', 'add_files', 'add_to_clipboard', 'add_to_trash','make_droppable');
 	},
 
 	copy_selected:function(){
@@ -371,7 +372,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				self.handle_drop(selected_items).then(function(collection){
 					collection.save().then(function(savedCollection){
 						self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
-							console.log("FETCHED:", fetched);
 							self.reload_ancestors(fetched);
 							resolve(true);
 						});
@@ -430,13 +430,9 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		var Import = require("edit_channel/import/views");
       var import_view = new Import.ImportModalView({
           modal: true,
-          callback: this.import_nodes,
+          onimport: this.add_nodes,
           model: this.model
       });
-  },
-  import_nodes:function(collection){
-    this.reload_listed(collection);
-    this.render();
   },
   add_files:function(){
   	var FileUploader = require("edit_channel/file_upload/views");
@@ -572,10 +568,10 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 		containing_element.scrollLeft(containing_element.width());
 	},
 	open_folder:function(open_speed = 200){
+		this.getSubdirectory().slideDown(open_speed);
 		if(!this.subcontent_view){
 			this.load_subfiles();
 		}
-		this.getSubdirectory().slideDown(open_speed);
 		this.getToggler().removeClass(this.collapsedClass).addClass(this.expandedClass);
 	},
 	close_folder:function(close_speed = 200){
@@ -583,6 +579,7 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 		this.getToggler().removeClass(this.expandedClass).addClass(this.collapsedClass);
 	},
 	reload:function(model){
+		console.log("CALLING DEFAULT");
 		this.model.set(model.attributes);
 		this.render();
 	}

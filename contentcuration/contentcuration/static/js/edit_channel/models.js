@@ -70,8 +70,8 @@ var UserModel = BaseModel.extend({
     	collection.fetch({async:false});
     	return collection.findWhere({email: email});
     },
-    send_invitation_email:function(email, channel, callback){
-    	mail_helper.send_mail(channel, email, callback);
+    send_invitation_email:function(email, channel){
+    	return mail_helper.send_mail(channel, email);
     },
     get_clipboard:function(){
     	return new ContentNodeModel(this.get("clipboard_tree"));

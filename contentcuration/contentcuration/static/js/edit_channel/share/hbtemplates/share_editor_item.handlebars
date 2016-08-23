@@ -4,7 +4,7 @@
 {{#if is_self}}
 	<span class="pending_indicator"><strong>You</strong></span>
 {{else}}
-	{{#if pending}}
+	{{#if editor.sender}}
 		<span class="pending_indicator">Pending...</span>
 		<span class="reinvite_editor glyphicon glyphicon-envelope" title="Resend Invitation"></span>
 	{{/if}}
