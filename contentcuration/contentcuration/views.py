@@ -75,6 +75,7 @@ def channel(request, channel_id):
     channel_tags_serializer = TagSerializer(channel_tags, many=True)
 
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
+                                                "channel_id" : channel_id,
                                                 "accessible_channels" : JSONRenderer().render(accessible_channel_list_serializer.data),
                                                 "channels" : JSONRenderer().render(channel_list_serializer.data),
                                                 "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),
@@ -185,7 +186,7 @@ def _duplicate_node(node, sort_order=1, parent=None):
         sort_order=sort_order,
         copyright_holder=node.copyright_holder,
         changed=True,
-        original_node=node.original_node,
+        original_node=node.original_node or node,
         cloned_source=node,
         author=node.author,
         content_id=node.content_id,
@@ -201,8 +202,8 @@ def _duplicate_node(node, sort_order=1, parent=None):
         fobj_copy.contentnode = new_node
         fobj_copy.save()
 
-    new_node.children = [_duplicate_node(c, parent=None) for c in node.children.all()]
-    new_node.save()
+    for c in node.children.all():
+        _duplicate_node(c, parent=new_node.id)
 
     return new_node
 

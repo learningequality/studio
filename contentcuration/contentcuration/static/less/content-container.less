@@ -1,5 +1,14 @@
 @import "global-variables.less";
 
+.disabled{
+	opacity:0.5;
+	cursor:not-allowed !important;
+}
+
+#publish-id{
+	margin-right:10px;
+	font-size:9pt;
+}
 #secondary-nav {
 	@secondary-nav-btn-color:#F2F2F2;
 	padding:0px 20px;
@@ -29,7 +38,7 @@
 		}
 	}
 
-	.navbar-right li{
+	.navbar-right #channel-publish-button{
 		margin: -6px 40px 0 0;
 		.action-button;
 	}
@@ -42,6 +51,7 @@
 	margin-bottom:20px;
 	padding: 13px 0 0 30px;
 }
+
 
 #disable-none-selected-wrapper{
 	display:inline-block;

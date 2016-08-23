@@ -46,7 +46,6 @@ class Command(BaseCommand):
             map_channel_to_kolibri_channel(channel)
             map_content_nodes(channel.main_tree,)
             save_export_database(channel_id)
-            # hack_hack_hack_zip_actual_files()
             # use SQLite backup API to put DB into archives folder.
             # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -133,7 +132,7 @@ def create_bare_contentnode(ccnode):
         license_owner=ccnode.copyright_holder,
         kind=ccnode.kind.kind,
         license=kolibri_license,
-        available=False,
+        available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
     )
 
     if ccnode.parent:
@@ -161,13 +160,13 @@ def create_associated_file_objects(kolibrinode, ccnode):
             pk=ccfilemodel.pk,
             checksum=ccfilemodel.checksum,
             extension=format.extension,
-            available=False,
+            available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
             file_size=ccfilemodel.file_size,
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
-            lang=None,          # TODO: same, fix this once we've implemented lang importing.
-            thumbnail=False,    # TODO: maybe set to true or false once we bundle in more stuff than just the content db
+            lang=None,          # TODO: fix this once we've implemented lang importing.
+            thumbnail=preset.thumbnail,
         )
 
 
@@ -215,25 +214,6 @@ def mark_all_nodes_as_changed(channel):
     channel.main_tree.get_family().update(changed=False)
 
     logging.info("Marked all nodes as changed.")
-
-
-def hack_hack_hack_zip_actual_files():
-    # TODO: remove once we deliver UNICEF MMVP
-
-    zippath = settings.HACK_HACK_HACK_UNICEF_CONTENT_ZIP_PATH
-
-    with zipfile.ZipFile(zippath, "w") as zf:
-        channel_file_ids = [k.pk for k in kolibrimodels.File.objects.all()]
-        filepaths = [f for f in ccmodels.File.objects.filter(id__in=channel_file_ids)]
-
-        logging.debug("Writing {count} files to the zip".format(count=len(filepaths)))
-
-        for f in filepaths:
-            full_path = os.path.join(settings.STORAGE_ROOT, f.file_on_disk.url)
-            if settings.DEBUG:
-                locations = str(f.file_on_disk).split('/') #os.path.sep)
-                full_path = os.path.join(settings.STORAGE_ROOT, os.path.sep.join(locations[1:len(locations)]))
-            zf.write(full_path, str(f))
 
 def save_export_database(channel_id):
     logging.debug("Saving export database")
