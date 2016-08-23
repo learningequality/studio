@@ -44,6 +44,18 @@ var BaseView = Backbone.View.extend({
 	},
 	retrieve_nodes:function(ids, force_fetch = false){
 		return window.channel_router.nodeCollection.get_all_fetch(ids, force_fetch);
+	},
+	fetch_model:function(model){
+		return new Promise(function(resolve, reject){
+            model.fetch({
+                success:function(data){
+                    resolve(data)
+                },
+                error:function(error){
+                    reject(error);
+                }
+            });
+        });
 	}
 });
 
@@ -69,7 +81,7 @@ var BaseWorkspaceView = BaseView.extend({
 		var ShareViews = require("edit_channel/share/views");
 		var share_view = new ShareViews.ShareModalView({
 			model:window.current_channel,
-			current_user: window.current_user.toJSON()
+			current_user: window.current_user
 		});
 	},
 	edit_selected:function(){
@@ -170,10 +182,10 @@ var BaseListView = BaseView.extend({
 			self.load_content(fetched);
 		});
 	},
-	load_content: function(collection=this.collection){
+	load_content: function(collection=this.collection, default_text="No items found."){
 		this.views = [];
 		var default_element = this.$(this.default_item);
-		default_element.text("No items found.");
+		default_element.text(default_text);
 		this.$(this.list_selector).html("").append(default_element);
 		var self = this;
 		collection.forEach(function(entry){

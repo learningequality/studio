@@ -189,10 +189,10 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 			fetchedCollection.sort_by_order();
 			self.load_content(fetchedCollection);
 			self.refresh_droppable();
-			setTimeout(function(){
-				self.$el.removeClass("pre_animation").addClass("post_animation");
-			}, 100);
 		});
+		setTimeout(function(){
+			self.$el.removeClass("pre_animation").addClass("post_animation");
+		}, 100);
 	},
 	update_name:function(){
 		this.$el.find(".container-title").text(this.model.get("title"));

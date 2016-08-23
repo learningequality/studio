@@ -64,12 +64,6 @@ var UserModel = BaseModel.extend({
 	defaults: {
 		first_name: "Guest"
     },
-    fetch_by_email:function(email){
-		/* TODO-BLOCKER: Better to only fetch email looking for */
-    	var collection = new UserCollection();
-    	collection.fetch({async:false});
-    	return collection.findWhere({email: email});
-    },
     send_invitation_email:function(email, channel){
     	return mail_helper.send_mail(channel, email);
     },
@@ -88,8 +82,8 @@ var InvitationModel = BaseModel.extend({
 	defaults: {
 		first_name: "Guest"
     },
-    resend_invitation_email:function(channel, callback){
-    	mail_helper.send_mail(channel, this.get("email"), callback);
+    resend_invitation_email:function(channel){
+    	return mail_helper.send_mail(channel, this.get("email"));
     }
 });
 
@@ -401,11 +395,6 @@ var ContentKindCollection = BaseCollection.extend({
     	return this.findWhere({kind:"topic"});
     }
 });
-
-function send_mail(data){
-
-}
-
 
 module.exports = {
 	ContentNodeModel: ContentNodeModel,

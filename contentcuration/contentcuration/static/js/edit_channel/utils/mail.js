@@ -9,7 +9,8 @@ function send_mail(channel, email){
         url: window.Urls.send_invitation_email(),
         data:  JSON.stringify(data),
         success:function(data){
-          resolve(JSON.parse(data).invitation_id);
+          var Models = require("edit_channel/models");
+          resolve(new Models.InvitationModel(JSON.parse(data)));
         },
         error:function(error){
           reject(error);

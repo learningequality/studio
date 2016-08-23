@@ -7,14 +7,12 @@ var stringHelper = require("edit_channel/utils/string_helper");
 
 var ShareModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/share_modal.handlebars"),
-
     initialize: function(options) {
         _.bindAll(this, "close");
         this.render(this.close, {
             channel: this.model.toJSON()
         });
         this.save_changes = false;
-        this.originalData = this.model.toJSON();
         this.share_view = new ShareView({
             el: this.$(".modal-body"),
             container: this,
@@ -24,45 +22,33 @@ var ShareModalView = BaseViews.BaseModalView.extend({
     }
 });
 
-var ShareView = BaseViews.BaseListView.extend({
+var ShareView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/share_dialog.handlebars"),
-    list_selector:"#share_list",
-    default_item:"#editor-default-item",
-    selectedClass: "editor-selected",
 
     initialize: function(options) {
-        _.bindAll(this, "send_invite", "save_content");
-        this.bind_list_functions();
+        _.bindAll(this, "send_invite");
         this.container = options.container;
         this.current_user = options.current_user;
         this.originalData = this.model.toJSON();
         this.render();
-
-        // var self = this;
-        // this.model.fetch({
-        //     success:function(user){
-
-        //     },
-        //     error:function(error){
-        //         console.log("Error message:", error);
-        //     }
-        // });
-
+        var self = this;
+        Promise.all([this.fetch_model(this.model), this.fetch_model(this.current_user)]).then(function(data){
+            self.load_lists();
+        });
     },
     events:{
         'keypress #share_email_address' : 'send_invite',
-         "click #share_invite_button" : "send_invite",
-         "click #share_content_submit" : "save_content"
+         "click #share_invite_button" : "send_invite"
     },
 
     render: function() {
         this.$el.html(this.template({
-            channel:this.model.toJSON()
+            channel:this.model.toJSON(),
+            user: this.current_user.toJSON()
         }));
-        var share_item = this.create_new_view(new Models.UserModel(this.current_user));
-        this.$("#share_list").append(share_item.el);
-
-        this.editor_list = user.get("editors");
+    },
+    load_lists:function(){
+        this.editor_list = this.model.get("editors");
         this.editor_list.splice(this.editor_list.indexOf(this.current_user.id), 1);
         this.collection = new Models.UserCollection();
         this.pending_collection = new Models.InvitationCollection();
@@ -70,17 +56,18 @@ var ShareView = BaseViews.BaseListView.extend({
         var pending_promise = this.pending_collection.get_all_fetch(this.model.get("pending_editors"));
         var self = this;
         Promise.all([current_promise, pending_promise]).then(function(collections){
-            self.load_content(collections[0]);
-            self.load_content(collections[1]);
+            self.current_view = new ShareCurrentList({
+                collection: collections[0],
+                el: self.$("#current_list_wrapper"),
+                model: self.model,
+                current_user: this.current_user
+            });
+            self.pending_view = new SharePendingList({
+                collection: collections[1],
+                el: self.$("#pending_list_wrapper"),
+                model: self.model
+            });
         });
-    },
-    create_new_view: function(model){
-        var share_item = new ShareItem({
-            model:model,
-            containing_list_view:this,
-        });
-        this.views.push(share_item);
-        return share_item;
     },
     send_invite:function(event){
         if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#share_email_address").val().trim() != ""){
@@ -89,8 +76,7 @@ var ShareView = BaseViews.BaseListView.extend({
             this.$("#share_error").text("");
 
             if(this.validate(email)){
-                result = new Models.UserModel().fetch_by_email(email);
-                this.send_mail(result, email);
+                this.send_mail(email);
             }
         }
     },
@@ -107,7 +93,7 @@ var ShareView = BaseViews.BaseListView.extend({
         return true;
     },
     check_current_user:function(email){
-        if(this.current_user.email===email){
+        if(this.current_user.get("email")===email){
             this.$("#share_error").text("You already have editing permission for this channel.");
             this.$("#share_item_" + this.current_user.id).addClass("error_share_list_item");
             return false;
@@ -138,90 +124,103 @@ var ShareView = BaseViews.BaseListView.extend({
         }
         return true;
     },
-    send_mail:function(user, email){
+    send_mail:function(email){
         this.$("#share_email_address").val("");
-        if(!user){
-            user = new Models.UserModel();
-        }
+        var user = new Models.UserModel();
         var self = this;
         user.send_invitation_email(email, this.model).then(function(invite){
-            self.add_to_pending_collection(invite, function(){
-                self.$("#share_invite_button").val("Invite");
-                self.$("#share_item_" + invite.get("id")).addClass("added_to_list");
-                self.$("#share_item_" + invite.get("id") + " .pending_indicator").text("Invitation Sent!");
-                $('#editor_list_wrapper').animate({
-                    scrollTop : self.$("#share_item_" + invite.get("id")).position().top,
-                }, 100);
-                setTimeout(function(){
-                    $("#share_item_" + invite.get("id")).animate({"background-color" : "transparent"}, 500);
-                    $("#share_item_" + invite.get("id")).removeClass("added_to_list");
-                }, 2500);
-           });
+            console.log(invite);
+            self.$("#share_invite_button").val("Invite");
+            self.pending_view.add_to_pending_collection(invite);
         });
-    },
-    add_to_pending_collection:function(user, callback){
-        var self = this;
-        this.model.fetch({
-            success:function(){
-                self.pending_collection.forEach(function(editor){
-                    self.$("#share_item_" + editor.get("id")).data("data").remove();
-                });
-                self.pending_collection = self.pending_collection.get_all_fetch(self.model.get("pending_editors"));
-                self.load_collection(self.pending_collection, true);
-                callback();
-            },
-            error:function(obj, error){
-                console.log("Error adding user", obj);
-                console.log("Error message:", error);
-                console.trace();
-            }
-        });
-
-    },
-    remove_editor:function(editor){
-        this.collection.remove(editor);
-        this.save_permissions(false);
-    },
-    save_content:function(){
-        this.save_permissions(true);
-    },
-    save_permissions:function(show_indicator){
-        var self = this;
-        this.model.save({
-            "editors": [this.current_user.id, this.collection.pluck("id")],
-            "public": this.$("#share_public_channel").is(':checked')
-        }, {
-            success:function(){
-                self.$("#share_change_indicator").text("Changes Saved");
-                if(show_indicator){
-                    self.$("#share_change_indicator").css("display", "inline");
-                    setTimeout(function(){
-                        self.$("#share_change_indicator").fadeOut(200);
-                    }, 2000)
-                }
-            },
-            error:function(){
-                self.$("#share_change_indicator").text("Error saving changes...");
-                self.$("#share_change_indicator").css("display", "inline");
-                setTimeout(function(){
-                    self.$("#share_change_indicator").fadeOut(200);
-                }, 2000)
-            }
-        });
-        this.container.originalData = this.model.toJSON();
     }
 });
 
-var ShareItem = BaseViews.BaseListItemView.extend({
+var ShareCurrentList = BaseViews.BaseEditableListView.extend({
+    template: require("./hbtemplates/share_current_list.handlebars"),
+    list_selector:"#current-list",
+    default_item:"#current-default",
+
+    initialize: function(options) {
+        this.bind_edit_functions();
+        this.collection = options.collection;
+        this.current_user = options.current_user;
+        this.render();
+    },
+    render: function() {
+        this.$el.html(this.template());
+        this.load_content(this.collection, "");
+    },
+    create_new_view: function(model){
+        var share_item = new ShareCurrentItem({
+            model:model,
+            containing_list_view:this,
+        });
+        this.views.push(share_item);
+        return share_item;
+    },
+    remove_editor:function(editor){
+        this.collection.remove(editor);
+        var editor_list = this.collection.pluck("id");
+        editor_list.push(this.current_user.id);
+        this.model.save({
+            "editors": editor_list,
+            // "public": this.$("#share_public_channel").is(':checked')
+        });
+    }
+});
+
+var SharePendingList = BaseViews.BaseEditableListView.extend({
+    template: require("./hbtemplates/share_pending_list.handlebars"),
+    list_selector:"#pending-list",
+    default_item:"#pending-default",
+
+    initialize: function(options) {
+        this.bind_edit_functions();
+        this.collection = options.collection;
+        this.render();
+    },
+    render: function() {
+        this.$el.html(this.template());
+        this.load_content(this.collection, "");
+    },
+    create_new_view: function(model){
+        var share_item = new SharePendingItem({
+            model:model,
+            containing_list_view:this,
+        });
+        this.views.push(share_item);
+        return share_item;
+    },
+    add_to_pending_collection:function(user){
+        this.collection.add(user);
+        this.render();
+        this.views.forEach(function(view){
+            if(view.model === user){
+                view.show_invitation_sent();
+            }
+        })
+    }
+});
+
+var ShareItem = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/share_editor_item.handlebars"),
     tagName: "li",
     className: "share_list_item",
     'id': function() {
         return "share_item_" + this.model.get("id");
     },
+    render: function() {
+        this.$el.html(this.template({
+            editor:this.model.toJSON()
+        }));
+    },
+});
 
+var SharePendingItem = ShareItem.extend({
     initialize: function(options) {
         _.bindAll(this, 'remove_editor', 'reinvite_editor');
+        this.bind_edit_functions();
         this.containing_list_view = options.containing_list_view;
         this.render();
     },
@@ -229,33 +228,48 @@ var ShareItem = BaseViews.BaseListItemView.extend({
         'click .remove_editor' : 'remove_editor',
         'click .reinvite_editor' : 'reinvite_editor'
     },
-    render: function() {
-        this.$el.html(this.template({
-            editor:this.model.toJSON(),
-            is_self: this.containing_list_view.current_user.id === this.model.get("id")
-        }));
-        this.$el.data("data", this);
-    },
     remove_editor:function(){
-        /* Person has not accepted the invite yet */
-        if(this.model.get("invited")){
-            if(confirm("Are you sure you want to uninvite " + this.model.get("email") + "?")){
-                this.model.destroy();
-                this.remove();
-            }
-        }else{
-            if(confirm("Are you sure you want to remove " + this.model.get("first_name") + " " + this.model.get("last_name") + " from the list?")){
-                this.containing_list_view.remove_editor(this.model);
-                this.remove();
-            }
+       if(confirm("Are you sure you want to uninvite " + this.model.get("email") + "?")){
+            this.model.destroy();
+            this.remove();
         }
     },
     reinvite_editor:function(){
         if(confirm("Send invitation to edit to " + this.model.get("first_name") + " " + this.model.get("last_name") + " again?")){
-            var el = this.$(".pending_indicator");
-            this.model.resend_invitation_email(this.containing_list_view.model, function(){
-                el.text("Invitation Sent!");
+            var self = this;
+            this.model.resend_invitation_email(this.containing_list_view.model).then(function(){
+                self.show_invitation_sent();
             });
+        }
+    },
+    show_invitation_sent:function(){
+        this.$el.addClass("adding_to_list");
+        this.$el.find(".pending_indicator").text("Invitation Sent!");
+        var self = this;
+        setTimeout(function(){
+            self.$el.removeClass("adding_to_list").addClass("added_to_list");
+            setTimeout(function(){
+               self.$el.removeClass("added_to_list");
+            }, 800);
+        }, 2500);
+    }
+});
+
+var ShareCurrentItem = ShareItem.extend({
+    initialize: function(options) {
+        _.bindAll(this, 'remove_editor');
+        this.bind_edit_functions();
+        this.containing_list_view = options.containing_list_view;
+        this.render();
+    },
+    events: {
+        'click .remove_editor' : 'remove_editor',
+    },
+    remove_editor:function(){
+        if(confirm("Are you sure you want to remove " + this.model.get("first_name")
+            + " " + this.model.get("last_name") + " from the list?")){
+            this.containing_list_view.remove_editor(this.model);
+            this.remove();
         }
     }
 });

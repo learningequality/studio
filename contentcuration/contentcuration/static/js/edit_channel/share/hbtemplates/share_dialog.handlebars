@@ -22,7 +22,17 @@
 			<input type="submit" class="action-button" value="Invite" id="share_invite_button">
 		</div>
 		<div id="editor_list_wrapper">
-			<ul id="share_list" class="list-unstyled"><li id="editor-default-item">Loading...</li></ul>
+			<ul class="list-unstyled">
+				<li id="share_item_{{user.id}}" class="share_list_item">
+					<span class="editor_name truncate" title="{{user.first_name}} {{user.last_name}}">
+						{{user.first_name}} {{user.last_name}}
+					</span>
+					<span class="editor_email">&nbsp;({{user.email}})</span>
+					<div class="pull-right"><span class="pending_indicator"><strong>You</strong></span></div>
+				</li>
+			</ul>
+			<div id="current_list_wrapper"><em>Loading editor list...</em></div>
+			<div id="pending_list_wrapper"></div>
 		</div>
 	</div>
 	<br/>
@@ -32,7 +42,7 @@
 		</a>
 		<!-- <button class="action-button pull-right" id="share_content_submit">
 			<span>SAVE</span>
-		</button>
-		<span id="share_change_indicator" class="pull-right">Changes Saved</span> -->
+		</button> -->
+		<span id="share_change_indicator" class="pull-right">Changes Saved</span>
 	</div>
 </div>

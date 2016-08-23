@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import FormView
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
 from django.contrib.sites.shortcuts import get_current_site
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core import paginator
@@ -262,8 +262,13 @@ def send_invitation_email(request):
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
         return HttpResponse(json.dumps({
-                "success": True,
-                "invitation_id": invitation.id
+                "id": invitation.pk,
+                "invited": invitation.invited_id,
+                "email": invitation.email,
+                "sender": invitation.sender_id,
+                "channel": invitation.channel_id,
+                "first_name": invitation.first_name,
+                "last_name": invitation.last_name,
             }))
 
 class InvitationAcceptView(FormView):
@@ -397,7 +402,7 @@ def decline_invitation(request, invitation_link):
     return render(request, 'permissions/permissions_decline.html')
 
 def fail_invitation(request):
-    return redirect("/invitation_fail")
+    return render(request, 'permissions/permissions_fail.html')
 
 class UserRegistrationView(RegistrationView):
     email_body_template = 'registration/activation_email.txt'
@@ -411,8 +416,7 @@ class UserRegistrationView(RegistrationView):
         context.update({
             'user': user
         })
-        subject = render_to_string(self.email_subject_template,
-                                   context)
+        subject = render_to_string(self.email_subject_template, context)
         subject = ''.join(subject.splitlines())
         message = render_to_string(self.email_body_template, context)
         # message_html = render_to_string(self.email_html_template, context)

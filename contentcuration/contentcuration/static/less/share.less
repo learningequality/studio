@@ -93,9 +93,6 @@
 
 		#editor_list_wrapper{
 			margin: 10px 40px 10px 30px;
-			min-height: @content-height * 0.7;
-			overflow:hidden;
-			overflow-y:auto;
 
 			.share_list_item{
 				font-size:12pt;
@@ -121,8 +118,13 @@
 				background-color:#FFF0F0;
 			}
 
+			.adding_to_list{
+				background-color: #FFF1A3 !important;
+			}
+
 			.added_to_list{
-				background-color:#FFF1A3 !important;
+				transition: background-color 0.5s ease;
+				background-color: transparent;
 			}
 		}
 	}
