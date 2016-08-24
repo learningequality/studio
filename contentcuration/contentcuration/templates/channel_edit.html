@@ -35,10 +35,11 @@
 		<ul class="nav navbar-nav navbar-right" id="publish">
 			<!--<li id="channel-publish-button" class="text-center">Unpublish Selected</li>-->
 			<li id="publish-id">
-				ID: <input type="text" id="publish-id-text" value="{{ channel_id }}" readonly>
-				<span id="publish-id-copy" class="glyphicon glyphicon-copy" aria-hidden="true" title="Copy ID to clipboard"></span>
+				<span id="hide-if-unpublished">
+					ID: <input type="text" id="publish-id-text" value="{{ channel_id }}" readonly>
+					<span id="publish-id-copy" class="glyphicon glyphicon-copy" aria-hidden="true" title="Copy ID to clipboard"></span>
+				</span>
 				<span id="publish-id-help" class="glyphicon glyphicon-question-sign" aria-hidden="true" title="What is this?"></span>
-				<span id="publish-copy-success"> Copied!</span>
 			</li>
 			<li id="channel-publish-button" class="text-center">PUBLISH</li>
 		</ul>
@@ -56,9 +57,19 @@
 	        <h4 class="modal-title">How to publish to Kolibri</h4>
 	      </div>
 	      <div class="modal-body">
-	      	<p>
-	      		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-	      	</p>
+	      	<ol class="container">
+	      		<li>Click the "PUBLISH" button</li>
+	      		<li>Review your content</li>
+	      		<li>If everything looks good, click "PUBLISH" in the modal</li>
+	      		<li>Once your channel is ready, copy the ID</li>
+	      		<li>Open your command line terminal</li>
+	      		<li>Enter "kolibri manage importchannel -- [your-channel-id]"</li>
+	      		<li>Enter "kolibri manage importcontent -- network [your-channel-id]"</li>
+	      		<li>Run Kolibri (your channel should be listed now)</li>
+	      	</ol>
+	      	<div class="container-fluid">
+		      	<a data-dismiss="modal" class="pull-right btn action-button">GOT IT!</a>
+		     </div>
 	      </div>
 	    </div>
 	  </div>

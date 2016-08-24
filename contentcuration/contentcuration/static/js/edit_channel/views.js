@@ -27,6 +27,7 @@ var BaseView = Backbone.View.extend({
   },
   	reload_ancestors:function(collection, include_collection = true){
 		var list_to_reload = (include_collection) ? collection.pluck("id") : [];
+		var self = this;
 		collection.forEach(function(entry){
       		$.merge(list_to_reload, entry.get("ancestors"));
 		});
@@ -38,6 +39,9 @@ var BaseView = Backbone.View.extend({
 				}
 				if(object.list){
 					object.list.set_root_model(model);
+				}
+				if(model.id === window.current_channel.get("main_tree").id){
+					self.check_if_published(model);
 				}
 			});
 		});
@@ -56,7 +60,20 @@ var BaseView = Backbone.View.extend({
                 }
             });
         });
-	}
+	},
+	check_if_published:function(root){
+		var is_published = root.get("published");
+		$("#hide-if-unpublished").css("display", (is_published) ? "inline-block" : "none");
+		if(root.get("metadata").has_changed_descendant){
+			$("#channel-publish-button").prop("disabled", false);
+			$("#channel-publish-button").text("PUBLISH");
+			$("#channel-publish-button").removeClass("disabled");
+		}else{
+			$("#channel-publish-button").prop("disabled", true);
+			$("#channel-publish-button").text("No changes detected");
+			$("#channel-publish-button").addClass("disabled");
+		}
+	},
 });
 
 var BaseWorkspaceView = BaseView.extend({
@@ -65,12 +82,13 @@ var BaseWorkspaceView = BaseView.extend({
 		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected');
 	},
 	publish:function(){
-		var self = this;
-		var Exporter = require("edit_channel/export/views");
-		var exporter = new Exporter.ExportModalView({
-			model: window.current_channel.get_root("main_tree"),
-			onpublish: this.reload_ancestors
-		});
+		if(!$("#channel-publish-button").hasClass("disabled")){
+			var Exporter = require("edit_channel/export/views");
+			var exporter = new Exporter.ExportModalView({
+				model: window.current_channel.get_root("main_tree"),
+				onpublish: this.reload_ancestors
+			});
+		}
 	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");

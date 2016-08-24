@@ -29,14 +29,13 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     publish:function(){
         var self = this;
         this.display_load("Publishing...", function(resolve, reject){
-            // window.current_channel.publish(function(){
-            //     self.onpublish();
-            // });
-        // var list = $(".to_publish");
-        //             list.each(function(index, entry){
-        //                 $(entry).data("data").reload();
-        //             });
-
+            window.current_channel.publish().then(function(){
+                self.onpublish(window.workspace_manager.get_published_collection());
+                self.close();
+                resolve("Success!");
+            }).catch(function(error){
+                reject(error);
+            });
         });
     }
 });

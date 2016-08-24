@@ -43,6 +43,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			$("#channel-edit-content-wrapper").css("background-color", "#EDDEED");
 		}
 		window.workspace_manager.set_main_view(this);
+		this.check_if_published(this.model);
 		$("#main-nav-home-button").removeClass("active");
 
 		(this.is_edit_page) ? $("#channel-edit-button").addClass("active") : $("#channel-preview-button").addClass("active");

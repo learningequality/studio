@@ -26,14 +26,12 @@ function copy_publish_id(){
 	$("#publish-id-text").select();
 	try {
     	document.execCommand("copy");
+    	$("#publish-id-copy").removeClass("glyphicon-copy").addClass("glyphicon-ok");
     } catch(e) {
-        $("#publish-copy-success").text("Copy failed");
+        $("#publish-id-copy").removeClass("glyphicon-copy").addClass("glyphicon-remove");
     }
-
-    $("#publish-copy-success").css("display", "inline");
     setTimeout(function(){
-    	$("#publish-copy-success").css("display", "none");
-    	$("#publish-copy-success").text("Copied!");
+    	$("#publish-id-copy").removeClass("glyphicon-ok").removeClass("glyphicon-remove").addClass("glyphicon-copy");
     }, 2500);
 }
 

@@ -270,15 +270,21 @@ var ChannelModel = BaseModel.extend({
     },
 
     publish:function(callback){
-        var data = {"channel_id": this.get("id")};
-        $.ajax({
-        	method:"POST",
-            url: window.Urls.publish_channel(),
-            data:  JSON.stringify(data),
-            success:function(){
-            	callback();
-            }
-        });
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+    		var data = {"channel_id": self.get("id")};
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.publish_channel(),
+	            data:  JSON.stringify(data),
+	            success:function(){
+	            	resolve(true);
+	            },
+	            error:function(error){
+	            	reject(error);
+	            }
+	        });
+    	});
     }
 });
 

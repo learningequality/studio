@@ -1,4 +1,5 @@
 var _ = require("underscore");
+var Models = require("edit_channel/models");
 
 function WorkspaceManager(){
 	this.table = {};
@@ -53,11 +54,17 @@ function WorkspaceManager(){
 
 	this.print_values = function(){
 		console.log(this.table);
-		// _.each(this.table, function(object){
-		// 	console.log("Node: " + ((object.node)? object.node.model.id : "none " + "List: ")
-		// 			 + ((object.list)? object.list.model.id : "none"));
-		// })
-	}
+	};
+
+	this.get_published_collection = function(){
+		var to_publish = new Models.ContentNodeCollection();
+		_.each(this.table, function(item){
+			if(item.node && item.node.$el.hasClass("to_publish")){
+				to_publish.add(item.node.model);
+			}
+		});
+		return to_publish;
+	};
 }
 
 module.exports = WorkspaceManager;
