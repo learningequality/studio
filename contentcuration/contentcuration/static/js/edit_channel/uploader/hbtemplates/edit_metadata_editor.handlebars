@@ -1,9 +1,10 @@
-{{#if author}}<h4 id="author_field">Created by: <i></i></h4>{{/if}}
 {{#if is_file}}
 <div id="editmetadata_format_section"></div>
 {{/if}}
 <h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>
 <input type="text" id="input_title" class="upload_input {{#unless node}}gray-out{{/unless}} input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required {{#unless node}}disabled{{/unless}}/>
+<!-- <h4>Author</h4>
+<input type="text" id="author_field" value="{{node.author}}" placeholder="Enter author name"/> -->
 {{#if is_file}}
 <div class="row">
 	<div class="content_nodes_only col-sm-5">

@@ -149,17 +149,25 @@ body {
 
 /* LOGIN STYLING */
 #login-container{
-	@login-background: rgba(145,81,148,.8); /*#915194*/
+	@login-background: rgba(145,81,148,.6); /*#915194*/
 	@login-secondary-color: rgba(255,255,255,.85); /*#DEEDE9*/
 	@login-text-bg-color: rgba(85,170,147,.5); /*#55AA93*/
 	@login-btn-color:  #067C7B;
 
-	background: url('/static/img/login_background.jpg');
+	/* Image background */
+	/*background: url('/static/img/kolibri_login.png');*/
+
+	/* Gradient background */
+	background: white; /* For browsers that do not support gradients */
+    background: -webkit-linear-gradient(black, white); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(black, white); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(black, white); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(black, white); /* Standard syntax */
+
 	background-size: 100vw 100vh;
 	width:100vw;
 	height:100vh;
 	margin:0;
-	margin-top:-20px;
 
 	#login_le{
 		margin-left:400px;
