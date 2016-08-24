@@ -79,16 +79,21 @@ var BaseView = Backbone.View.extend({
 var BaseWorkspaceView = BaseView.extend({
 	lists: [],
 	bind_workspace_functions:function(){
-		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected');
+		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published',
+			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected');
 	},
 	publish:function(){
 		if(!$("#channel-publish-button").hasClass("disabled")){
 			var Exporter = require("edit_channel/export/views");
 			var exporter = new Exporter.ExportModalView({
 				model: window.current_channel.get_root("main_tree"),
-				onpublish: this.reload_ancestors
+				onpublish: this.handle_published
 			});
 		}
+	},
+	handle_published:function(collection){
+		this.reload_ancestors(collection);
+		$("#publish-get-id-modal").modal("show");
 	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");

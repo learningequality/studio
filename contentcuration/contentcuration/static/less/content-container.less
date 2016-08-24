@@ -5,6 +5,14 @@
 	cursor:not-allowed !important;
 }
 
+.publish-id-text{
+	border:none;
+	outline:none;
+	font-weight:bold;
+	background-color:@gray-200;
+	padding-left:5px;
+}
+
 #secondary-nav {
 	@secondary-nav-btn-color:#F2F2F2;
 	padding:0px 20px;
@@ -47,17 +55,16 @@
 			#publish-copy-success{
 				display: none;
 			}
-			#publish-id-text{
-				border:none;
-				outline:none;
-				font-weight:bold;
+			.publish-id-text{
 				width:320px;
-				background-color:@gray-200;
-				padding-left:5px;
 			}
 		}
 
 	}
+}
+
+#publish-get-id-modal .publish-id-text{
+	width:400px;
 }
 
 #button_bar {
