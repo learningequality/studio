@@ -14,7 +14,7 @@ $(function() {
 });
 
 function publish_nodes(){
-	$("#channel-edit-content-wrapper").data("data").publish();
+	window.workspace_manager.get_main_view().publish();
 }
 
 function show_publish_help(){

@@ -69,12 +69,7 @@ var BaseWorkspaceView = BaseView.extend({
 		var Exporter = require("edit_channel/export/views");
 		var exporter = new Exporter.ExportModalView({
 			model: window.current_channel.get_root("main_tree"),
-			callback: function(){
-				var list = $(".to_publish");
-				list.each(function(index, entry){
-					$(entry).data("data").reload();
-				});
-			}
+			onpublish: this.reload_ancestors
 		});
 	},
 	edit_permissions:function(){

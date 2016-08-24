@@ -177,7 +177,6 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/import_list_item.handlebars"),
     tagName: "li",
     className: "import_list_item",
-    tagName: "li",
     selectedClass: "import-selected",
     collapsedClass: "glyphicon-triangle-top",
     expandedClass: "glyphicon-triangle-bottom",

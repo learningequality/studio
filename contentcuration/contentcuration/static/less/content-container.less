@@ -41,6 +41,9 @@
 		}
 		#publish-id{
 			font-size:12pt;
+			.glyphicon{
+				margin-right:5px;
+			}
 			#publish-copy-success{
 				display: none;
 			}
@@ -445,16 +448,10 @@
 		}
 
 		#container_area .content-container:last-child{
-			.folder{
+			.folder, .file{
 				width: @container-last-width - 55px;
 				h3{
 					width:@container-last-width  - @item-title-font-size - 100px;
-				}
-			}
-			.file{
-				width: @container-last-width - 55px;
-				h3{
-					width:@container-last-width  - 80px;
 				}
 			}
 			.add_content_button{
