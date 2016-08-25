@@ -9,7 +9,6 @@ from django.core.files import File as DjFile
 from django.db.models import Q
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
-from kolibri.content.utils import validate
 from django.db import transaction
 import models
 
