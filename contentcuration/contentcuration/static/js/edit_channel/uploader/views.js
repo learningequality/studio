@@ -297,7 +297,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
         this.views.forEach(function(view){
           var model = collection.findWhere({id: view.model.id});
           if(model){
-            view.reload(model);
+            view.set(model.toJSON());
             (view.isNew)? new_collection.add(model) : updated_collection.add(model);
           }
           view.handle_save();
