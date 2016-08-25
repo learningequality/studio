@@ -11,7 +11,7 @@ from contentcuration.constants import content_kinds
 
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
-from kolibri.content.utils import fuzz
+from kolibri.content.utils.search import fuzz
 
 
 import logging as logmodule
