@@ -44,6 +44,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		}
 		window.workspace_manager.set_main_view(this);
 		this.check_if_published(this.model);
+		this.handle_checked();
 		$("#main-nav-home-button").removeClass("active");
 
 		(this.is_edit_page) ? $("#channel-edit-button").addClass("active") : $("#channel-preview-button").addClass("active");
@@ -173,7 +174,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	className: "container content-container pre_animation",
 
 	initialize: function(options) {
-		_.bindAll(this, 'close_container', 'update_name');
+		_.bindAll(this, 'close_container', 'update_name', 'create_new_view');
 		this.bind_workspace_functions();
 		this.index = options.index;
 		this.edit_mode = options.edit_mode;
@@ -182,6 +183,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		this.content_node_view = options.content_node_view;
 		this.render();
 		this.listenTo(this.model, 'change:title', this.update_name);
+		this.listenTo(this.model, 'change:children', this.update_views);
 	},
 	events: {
 		'click .create_new_button':'add_topic',

@@ -12,6 +12,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
   initialize: function(options) {
     _.bindAll(this, "close_uploader");
     this.onsave = options.onsave;
+    this.onnew = options.onnew;
     this.collection = options.collection;
     this.new_content = options.new_content;
     this.upload_files = options.upload_files;
@@ -23,6 +24,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       el: this.$(".modal-body"),
       collection : this.collection,
       onsave: this.onsave,
+      onnew: this.onnew,
       onclose: this.close_uploader,
       new_content: this.new_content,
       container:this,
@@ -65,13 +67,14 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   default_item: "#uploaded_list .default-item",
 
   initialize: function(options) {
-    _.bindAll(this, 'add_topic', 'update_count','set_selected','render_details', 'render_preview','save_nodes',
-      'enable_submit', 'disable_submit', 'save_and_keep_open', 'remove_tag', 'add_tag','save_and_finish');
+    _.bindAll(this, 'add_topic', 'update_count','set_selected','render_details', 'render_preview','save_nodes', 'create_new_view',
+      'enable_submit', 'disable_submit', 'save_and_keep_open', 'remove_tag', 'add_tag','save_and_finish', 'process_updated_collection');
     this.bind_edit_functions();
     this.collection = options.collection;
     this.new_content = options.new_content;
     this.upload_files = options.upload_files;
     this.onsave = options.onsave;
+    this.onnew = options.onnew;
     this.onclose = options.onclose;
     this.render();
   },
@@ -83,7 +86,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       modal: this.modal,
       upload_files: this.upload_files
     }));
-    this.load_content(this.collection);
+    this.load_content();
     this.handle_if_individual();
     this.load_editor();
     this.preview_view = new Previewer.PreviewView({
@@ -148,6 +151,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       minLength: 0,
       select: this.add_tag
     });
+    this.adjust_list_height();
   },
   load_tags:function(){
     this.$("#tag_area").html(this.tags_template({
@@ -183,6 +187,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       }));
     }
   },
+  adjust_list_height:function(){
+    $("#uploaded_list").height($("#edit_details_wrapper").height() * 0.6);
+  },
   add_tag: function(event){
     $("#tag_error").css("display", "none");
     if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").val().trim() != ""){
@@ -194,7 +201,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
         })
       }
       this.$el.find("#tag_box").val("");
-      this.$("#uploaded_list").height($("#edit_details_wrapper").height());
+      this.adjust_list_height();
     }
   },
   remove_tag:function(event){
@@ -210,41 +217,38 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     event.target.parentNode.remove();
   },
 /* CONTENT CREATION OPERATIONS */
-  create_new_view:function(model){
-    var uploaded_view = new UploadedItem({
-      model: model,
-      containing_list_view : this,
-      new_content: this.new_content,
-      new_file: this.upload_files
-    });
-    this.views.push(uploaded_view);
-    return uploaded_view;
-  },
-      add_topic:function(){
-          var self = this;
-          var data = {
-              "kind":"topic",
-              "title": "Topic",
-              "sort_order" : this.collection.length,
-              "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
-          };
-          this.create_new_item(data, true, "Creating Topic...").then(function(newView){
-              newView.set({
-                  "original_node" : newView.model.get("id"),
-                  "cloned_source" : newView.model.get("id")
-              });
-          });
-      },
-      enable_submit:function(){
-          this.$("#upload_save_button, #upload_save_finish_button").removeAttr("disabled");
-          this.$("#upload_save_button, #upload_save_finish_button").prop("disabled", false);
-          this.$("#upload_save_button, #upload_save_finish_button").css("cursor", "pointer");
-      },
-      disable_submit:function(){
-          this.$("#upload_save_button, #upload_save_finish_button").attr("disabled", "disabled");
-          this.$("#upload_save_button, #upload_save_finish_button").prop("disabled", true);
-          this.$("#upload_save_button, #upload_save_finish_button").css("cursor", "not-allowed");
-      },
+    create_new_view:function(model){
+      var uploaded_view = new UploadedItem({
+        model: model,
+        containing_list_view : this,
+        new_content: this.new_content,
+        new_file: this.upload_files
+      });
+      this.views.push(uploaded_view);
+      return uploaded_view;
+    },
+    add_topic:function(){
+        var self = this;
+        var data = {
+            "kind":"topic",
+            "title": "Topic",
+            "sort_order" : this.collection.length,
+            "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+        };
+        this.create_new_item(data, true, "Creating Topic...").then(function(newView){
+          newView.select_item();
+        });
+    },
+    enable_submit:function(){
+        this.$("#upload_save_button, #upload_save_finish_button").removeAttr("disabled");
+        this.$("#upload_save_button, #upload_save_finish_button").prop("disabled", false);
+        this.$("#upload_save_button, #upload_save_finish_button").css("cursor", "pointer");
+    },
+    disable_submit:function(){
+        this.$("#upload_save_button, #upload_save_finish_button").attr("disabled", "disabled");
+        this.$("#upload_save_button, #upload_save_finish_button").prop("disabled", true);
+        this.$("#upload_save_button, #upload_save_finish_button").css("cursor", "not-allowed");
+    },
   /* UPDATE OPERATIONS */
       select_license:function(){
           this.$("#license_about").css("display", "inline");
@@ -265,10 +269,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
           }
       },
       check_for_changes:function(){
-          if(this.collection.length === 1){
-              return this.views[0].edited;
-          }
-         return this.$el.find(".edited_node").length > 0;
+         return _.findWhere(this.views, {edited : true}) != null;
       },
       undo_changes:function(){
           this.views.forEach(function(view){
@@ -279,16 +280,30 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
         var self = this;
         this.add_tag(null);
         this.save("Saving Content...", this.save_nodes).then(function(collection){
-          self.onsave(collection);
+          self.process_updated_collection(collection);
         });
       },
       save_and_finish: function(event){
         var self = this;
         this.add_tag(null);
         this.save("Saving Content...", this.save_nodes).then(function(collection){
-          self.onsave(collection);
+          self.process_updated_collection(collection);
           self.onclose(event);
         });
+      },
+      process_updated_collection:function(collection){
+        var new_collection = new Models.ContentNodeCollection();
+        var updated_collection = new Models.ContentNodeCollection();
+        this.views.forEach(function(view){
+          var model = collection.findWhere({id: view.model.id});
+          if(model){
+            view.reload(model);
+            (view.isNew)? new_collection.add(model) : updated_collection.add(model);
+          }
+          view.handle_save();
+        });
+        this.onnew(new_collection);
+        this.onsave(updated_collection);
       },
       save_nodes:function(){
         var sort_order = null;
@@ -297,7 +312,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
           sort_order = Math.ceil(this.model.get("metadata").max_sort_order);
         }
         this.views.forEach(function(entry){
-          entry.set_edited(false);
           var tags = [];
           entry.tags.forEach(function(tag){
             tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
@@ -351,11 +365,16 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
               this.shared_license = (this.shared_license === view.model.get("license"))? this.shared_license : 0;
               this.all_files = this.all_files && view.model.get("kind")  !== "topic";
           }
+      },
+      delete:function(view){
+        this.collection.remove(this.view);
+        console.log(this);
       }
 });
 
 var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   template: require("./hbtemplates/uploaded_list_item.handlebars"),
+  selectedClass:"current_item",
   format_view:null,
   'id': function() {
       return "item_" + this.model.get("id");
@@ -364,6 +383,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   tagName: "li",
   initialize: function(options) {
       _.bindAll(this, 'remove_topic', 'check_item', 'select_item', 'enable_submit', 'disable_submit');
+      this.bind_edit_functions();
       this.containing_list_view = options.containing_list_view;
       this.edited = false;
       this.new_content = options.new_content;
@@ -371,13 +391,15 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.presets = new Models.FormatPresetCollection();
       this.originalData = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder");
       this.render();
+      this.isNew = this.new_content || this.new_file;
       this.set_edited(this.new_content || this.new_file);
       this.load_tags();
   },
   render: function() {
       this.$el.html(this.template({
           node: this.model.toJSON(),
-          new_content: this.new_content
+          new_content: this.new_content,
+          isfolder: this.model.get("kind") === "topic"
       }));
       this.$el.data("data", this);
       if(this.model.get("kind") != "topic"){
@@ -386,46 +408,38 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   events: {
       'click .remove_topic' : 'remove_topic',
-      'change .upload_item_checkbox': 'check_item',
+      'click .upload_item_checkbox': 'check_item',
       'click .uploaded_list_item' : 'select_item',
   },
   remove_topic: function(){
-      this.containing_list_view.views.slice(this.containing_list_view.views.indexOf(this));
-      this.containing_list_view.collection.remove(this.model);
-      this.model.destroy();
-      this.remove();
+      this.delete(true);
   },
 
   set_edited:function(is_edited){
       this.edited = is_edited;
+      this.isNew = is_edited && this.isNew;
       this.model.set("changed", this.model.get("changed") || is_edited);
       (is_edited)? this.$el.addClass("edited_node") : this.$el.removeClass("edited_node");
       if(!is_edited){
-          this.originalData = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder");
+          this.originalData = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author");
       }
   },
   set_node:function(){
-      this.model.set({
+    var data = {
           title: (this.containing_list_view.selected_items.length === 1)? $("#input_title").val().trim() : this.model.get("title"),
           description: (this.containing_list_view.selected_items.length===1)? $("#input_description").val().trim() : this.model.get("description"),
           license: (this.model.get("kind") != "topic" && $("#license_select").val()!=0)? $("#license_select").val() : this.model.get("license"),
-          copyright_holder: (this.model.get("kind") != "topic" && $("#input_license_owner").val() !== "")? $("#input_license_owner").val().trim() : this.model.get("copyright_holder")
-      });
+          copyright_holder: (this.model.get("kind") != "topic" && $("#input_license_owner").val() !== "")? $("#input_license_owner").val().trim() : this.model.get("copyright_holder"),
+          author: ($("#author_field").val() !== "")? $("#author_field").val().trim() : this.model.get("author"),
+      };
+      this.set(data);
       this.$el.find(".item_name").text(this.model.get("title"));
       this.$el.find("h5").prop("title", this.model.get("title"));
       this.set_edited(true);
   },
   unset_node:function(){
-      var self = this;
-      this.model.set(this.originalData, {
-          success:function(){
-              self.format_view.unset_model();
-          },
-          error:function(obj, error){
-              console.log("Error undoing changes", obj);
-              console.log("Error message:", error);
-          }
-      });
+      this.unset();
+      this.format_view.unset_model();
       this.$el.find(".item_name").text(this.model.get("title"));
       this.set_edited(false);
   },
@@ -433,14 +447,15 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.set_edited(false);
   },
   check_item:function(){
-      (this.$(".upload_item_checkbox").is(":checked"))? this.$el.addClass("current_item") : this.$el.removeClass("current_item")
+      this.handle_checked();
       this.containing_list_view.update_checked();
   },
   select_item:function(){
-      var is_checked = this.$(".upload_item_checkbox").is(":checked");
-      $(".upload_item_checkbox:checked").prop("checked", false);
-      $(".uploaded").removeClass("current_item");
-      this.$(".upload_item_checkbox").attr("checked", is_checked);
+    console.log("CALLED SELECT", this);
+      $(".upload_item_checkbox:checked").attr("checked", false);
+      $(".uploaded").removeClass(this.selectedClass);
+      this.$(".upload_item_checkbox").attr("checked", true);
+      this.check_item();
   },
   load_presets:function(){
       var self = this;
