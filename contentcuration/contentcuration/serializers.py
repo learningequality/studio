@@ -156,13 +156,16 @@ class TagSerializer(serializers.ModelSerializer):
 
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    preset = FormatPresetSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
     id = serializers.CharField(required=False)
 
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
     metadata = serializers.SerializerMethodField('calculate_metadata')
+    associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
+
+    def retrieve_associated_presets(self, node):
+        return FormatPreset.objects.filter(kind = node.kind).values()
 
     def to_internal_value(self, data):
         """
@@ -272,7 +275,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
-                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','preset',
+                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets',
                  'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published')
 
 class ExerciseSerializer(serializers.ModelSerializer):

@@ -11,6 +11,7 @@
 	font-weight:bold;
 	background-color:@gray-200;
 	padding-left:5px;
+	cursor:pointer;
 }
 
 #secondary-nav {
@@ -222,6 +223,7 @@
 					.metadata_to_hide, .description, .filler{
 						display:none;
 					}
+
 					.item-text-area{
 						display:inline-block;
 						vertical-align: middle;
@@ -230,7 +232,7 @@
 				.folder{
 					h3{
 						font-weight:bold;
-						margin-top: 5px;
+						margin-top: 15px;
 						height: 21px;
 					}
 				}
@@ -266,6 +268,11 @@
 					h3, p, h6{
 						color : @item-last-font-color;
 					}
+				}
+			}
+			.folder{
+				h3{
+					margin-top: 5px;
 				}
 			}
 			.unpublished{
@@ -459,6 +466,9 @@
 				width: @container-last-width - 55px;
 				h3{
 					width:@container-last-width  - @item-title-font-size - 100px;
+				}
+				.folder_open_icon{
+					margin-top:5px;
 				}
 			}
 			.add_content_button{

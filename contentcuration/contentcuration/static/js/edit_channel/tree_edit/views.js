@@ -293,7 +293,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	preview_node: function(event){
 		event.preventDefault();
-		(this.edit_mode)? this.open_edit() : this.open_preview();
+		(this.edit_mode)? this.open_edit(event) : this.open_preview();
 	}
 });
 

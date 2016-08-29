@@ -111,6 +111,7 @@ urlpatterns = [
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),
     url(r'^file_upload/', views.file_upload, name="file_upload"),
+    url(r'^file_create/', views.file_create, name="file_create"),
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
     url(r'^accounts/password/reset/$',auth_views.password_reset,{'post_reset_redirect': reverse_lazy('auth_password_reset_done'),'html_email_template_name': 'registration/password_reset_email.html'}, name='auth_password_reset'),
     url(r'^accounts/register/$', views.UserRegistrationView.as_view(), name='registration_register'),

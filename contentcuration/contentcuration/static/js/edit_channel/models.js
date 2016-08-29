@@ -333,6 +333,12 @@ var FileCollection = BaseCollection.extend({
 		});
 		var file = newCollection.findWhere(data);
     	return file;
+    },
+    sort_by_preset:function(presets){
+    	this.comparator = function(file){
+    		return presets.findWhere({id: file.get("preset").id}).get("order");
+    	};
+    	this.sort();
     }
 });
 

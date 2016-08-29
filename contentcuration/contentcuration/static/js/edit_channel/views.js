@@ -233,7 +233,17 @@ var BaseListView = BaseView.extend({
 });
 
 var BaseEditableListView = BaseListView.extend({
-	create_new_view:null,
+	collection : null,		//Collection to be used for data
+	template:null,
+	list_selector:null,
+	default_item:null,
+	selectedClass: "content-selected",
+	item_class_selector:null,
+
+	/* Functions to overwrite */
+	create_new_view: null,
+
+	views: [],			//List of item views to help with garbage collection
 	bind_edit_functions:function(){
 		this.bind_list_functions();
 		_.bindAll(this, 'create_new_item', 'reset', 'save','delete_items_permanently', 'delete');
@@ -474,7 +484,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
       parent_view: this,
       model:this.model,
       onsave: this.reload_ancestors,
-      onclose: this.add_nodes
+	  onnew:this.add_nodes
   	});
   },
   add_to_clipboard:function(collection, message="Moving to Clipboard..."){
@@ -603,8 +613,10 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 		event.stopPropagation();
 		event.preventDefault();
 		(this.getToggler().hasClass(this.collapsedClass)) ? this.open_folder() : this.close_folder();
-		var containing_element = this.container.$el.find(this.list_selector);
-		containing_element.scrollLeft(containing_element.width());
+		if(this.container){
+			var containing_element = this.container.$el.find(this.list_selector);
+			containing_element.scrollLeft(containing_element.width());
+		}
 	},
 	open_folder:function(open_speed = 200){
 		this.getSubdirectory().slideDown(open_speed);

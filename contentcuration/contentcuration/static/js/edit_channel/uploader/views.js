@@ -2,7 +2,6 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var FileUploader = require("edit_channel/file_upload/views");
 var Previewer = require("edit_channel/preview/views");
 var stringHelper = require("edit_channel/utils/string_helper");
 require("uploader.less");
@@ -76,6 +75,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.onsave = options.onsave;
     this.onnew = options.onnew;
     this.onclose = options.onclose;
+    this.selected_items = [];
     this.render();
   },
   render: function() {
@@ -111,7 +111,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'keypress #tag_box' : 'add_tag',
     'click .delete_tag':'remove_tag',
     'click #upload_save_button' : 'save_and_keep_open',
-    'click #upload_save_finish_button' : 'save_and_finish'
+    'click #upload_save_finish_button' : 'save_and_finish',
+    // 'change #uploader_select_all_check' : 'check_all'
   },
 /* LOADING OPERATIONS */
   handle_if_individual:function(){
@@ -140,7 +141,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     $("#metadata_preview_btn").css("display", (this.all_files && this.current_view)? "inline-block" : "none");
     this.update_count();
     /*Load only one node*/
-    if(this.current_view){
+    if(this.current_view && this.current_view.model.get("kind") !== "topic"){
       this.current_view.load_file_displays(this.$("#editmetadata_format_section"));
     }
     this.switchPanel(true);
@@ -488,17 +489,13 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       }
   },
   load_file_displays:function(formats_el){
-      this.format_view = new FileUploader.FormatItem({
-          initial:false,
-          presets: this.presets,
+      var FileUploader = require("edit_channel/file_upload/views");
+      this.format_view = new FileUploader.FormatInlineItem({
           model: this.model,
-          inline:true,
-          el:formats_el,
-          containing_list_view:this,
-          update_models:!this.containing_list_view.allow_add,
-          preview : this.containing_list_view.preview_view
+          containing_list_view:this
       });
-      this.format_view.display_inline();
+      formats_el.html(this.format_view.el);
+      this.listenTo(this.model, "change:files", this.containing_list_view.preview_view.load_preview);
   },
   enable_submit:function(){
       this.containing_list_view.enable_submit();
@@ -525,7 +522,6 @@ var LicenseModalView = BaseViews.BaseModalView.extend({
   initialize: function(options) {
       this.modal = true;
       this.select_license = options.select_license;
-      console.log(this.select_license)
       this.render();
   },
 

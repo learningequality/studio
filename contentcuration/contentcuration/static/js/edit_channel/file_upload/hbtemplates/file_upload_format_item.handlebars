@@ -1,0 +1,41 @@
+<div class="row {{#unless initial}}hide_assigned{{/unless}}">
+    <div class="inline col-xs-3 preview_section text-center">
+        <object class="thumbnail_fallback" data="/static/img/{{node.kind}}_placeholder.png" type="image/png" width=130 height=130>
+            <img class="thumbnail_img" data-dz-thumbnail alt="No Preview Available" src="{{thumbnail}}"/>
+        </object>
+    </div>
+    <div class="inline col-xs-8 format_section">
+        <input type="text" placeholder="Title *" class="name_content_input" value="{{node.title}}"/>
+        {{#if initial}}
+            <h5 class="init_format_area">
+                <div class="init_dropdown_wrapper pull-right">
+                    <span class="required_input">*</span>
+                    <select class="format_options_dropdown text-center">
+                        <option selected disabled>-- Select a Format --</option>
+                        {{#each presets}}
+                            {{#unless supplementary}}
+                                <option value="{{id}}">{{readable_name}}</option>
+                            {{/unless}}
+                        {{/each}}
+                    </select>
+                 </div>
+                <div class="init_format_name_wrapper">
+                    <p class="init_format_name truncate">{{files.0.original_filename}}</p>
+                </div>
+
+            </h5>
+            <p class="init_format_size" >({{#format_file_size files.0.file_size}}{{/format_file_size}})</p>
+        {{else}}
+            <h4 class="format_editor_header">
+                Formats
+                <span class="format_counter badge">0</span>
+                <span class="glyphicon glyphicon-triangle-bottom expand_format_editor" aria-hidden="true"></span>
+                <span class="pull-right file_size_metadata">Total Size: <em class="format_size_text"></em></span>
+            </h4>
+            <div class="format_editor_list"><p>Loading...</p></div>
+        {{/if}}
+    </div>
+    <div class="inline col-xs-1">
+        <span class="glyphicon glyphicon-remove remove_from_dz pull-right" aria-hidden="true"></span>
+    </div>
+</div>
