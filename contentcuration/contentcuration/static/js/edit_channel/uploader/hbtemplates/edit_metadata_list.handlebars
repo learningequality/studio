@@ -1,0 +1,12 @@
+{{#if show_list}}
+	<div id="uploader_select_all">
+		<input type="checkbox" id="uploader_select_all_check"/>&nbsp;
+		<label for="uploader_select_all_check">Select All</label>
+	</div>
+	<ul class="list-unstyled" id="uploaded_list">
+		<li class="default-item">Loading...</li>
+	</ul>
+	{{#if new_content}}
+		<a class="action-text" id="add_topic_button">ADD TOPIC</a>
+	{{/if}}
+{{/if}}

@@ -486,6 +486,9 @@ var FormatInlineItem = FormatEditorItem.extend({
             node: this.model.toJSON()
         }));
         this.update_metadata();
+    },
+    unset_model:function(){
+
     }
 });
 
@@ -597,6 +600,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.originalFile = this.file;
         this.nodeid = options.nodeid;
         this.render();
+        setTimeout(this.create_dropzone, 100); // Wait for slide down animation to finish
     },
     events: {
         'click .format_editor_remove ' : 'remove_item'
@@ -607,7 +611,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             preset: this.model.toJSON(),
             nodeid:this.nodeid
         }));
-        setTimeout(this.create_dropzone, 100); // Wait for slide down animation to finish
     },
     create_dropzone:function(){
         var dz_selector="#" + this.model.get("id") + "_"  + this.nodeid + "_dropzone" + ((this.file)? "_swap" : "");
@@ -649,6 +652,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             self.render();
             self.containing_list_view.set_file_format(fetched, self.model, self.file);
             self.file = fetched;
+            self.create_dropzone();
         });
     },
     file_added: function(file) {
@@ -673,13 +677,13 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.render();
     },
     enable_submit:function(){
-        // this.container.enable_submit();
+        // this.containing_list_view.enable_submit();
     },
     disable_submit:function(){
-        // this.container.disable_submit();
+        // this.containing_list_view.disable_submit();
     },
     all_files_uploaded:function(){
-        // this.container.enable_submit();
+        // this.containing_list_view.enable_submit();
     }
 
 });

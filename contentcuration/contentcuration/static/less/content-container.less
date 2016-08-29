@@ -250,6 +250,12 @@
 		}
 	}
 
+	.content-container:first-child{
+		.back_button{
+			display:none;
+		}
+	}
+
 	#container_area .content-container:last-child{
 		width: @container-last-width;
 		.content-list{
@@ -508,15 +514,19 @@
 				height:@container-height * 0.87;
 				min-height: @container-min-height * 0.87;
 
-				.glyphicon{
+				/*.glyphicon{
 					display:none;
-				}
+				}*/
 				.edit_folder_button{
 					visibility:hidden;
 				}
 				li{
 					border-top: 1px solid  @preview-container-color;
 					cursor:pointer;
+
+					.folder_open_icon{
+						display:none;
+					}
 				}
 				.current_topic{
 					background-color: @highlighted-file;
@@ -535,11 +545,6 @@
 			}
 		}
 
-		.content-container:first-child{
-			.glyphicon{
-					display:none;
-				}
-		}
 		#container_area li:last-child{
 			.folder{
 				h3{

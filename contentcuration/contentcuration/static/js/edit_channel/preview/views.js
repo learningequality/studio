@@ -135,8 +135,9 @@ var PreviewView = BaseViews.BaseView.extend({
     set_current_preview:function(file){
         this.current_preview = file;
         if(this.current_preview.attributes){
-            this.current_preview = this.current_preview.attributes;
+            this.current_preview = this.current_preview.toJSON();
         }
+        console.log("PRESET", this.current_preview)
          $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
     },
     toggle_fullscreen:function(){

@@ -115,7 +115,8 @@ var ContentNodeModel = BaseModel.extend({
 				self.get("files").forEach(function(file){
 					if(file.attributes){
 						promises.push(new Promise(function(fileResolve, fileReject){
-							var data = file.pick("file_size", "contentnode", "preset");
+							var data = file.pick("preset");
+							console.log("SAVING:", data);
 							file.save(data,{
 								success:function(file){
 									fileResolve(file);
