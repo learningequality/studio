@@ -17,10 +17,11 @@ var BaseView = Backbone.View.extend({
 			});
 			promise.then(function(){
 				$("#loading_modal").remove();
-			}).catch(function(error){
-				$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
-				console.log("Error with asychronous call", error);
-			});
+			})
+			// }).catch(function(error){
+			// 	$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+			// 	console.log("Error with asychronous call", error);
+			// });
   	}else{
   		$("#loading_modal").remove();
   	}

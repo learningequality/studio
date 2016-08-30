@@ -21,6 +21,7 @@ var BaseCollection = Backbone.Collection.extend({
 		return window.Urls[this.list_name]();
 	},
 	save: function(callback) {
+		console.log("CALLED SAVE:", this)
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	},
 	get_all_fetch: function(ids, force_fetch = false){
@@ -55,6 +56,27 @@ var BaseCollection = Backbone.Collection.extend({
 			});
     	});
     	return promise;
+    },
+    destroy:function(){
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+    		var promise_list = [];
+	    	self.forEach(function(model){
+	    		promise_list.push(new Promise(function(subresolve, subreject){
+	    			model.destroy({
+	    				success:function(){
+	    					subresolve(true);
+	    				},
+	    				error:function(error){
+	    					subreject(error);
+	    				}
+	    			})
+	    		}))
+	    	});
+	    	Promise.all(promise_list).then(function(){
+	    		resolve(true);
+	    	});
+    	});
     }
 });
 
@@ -112,21 +134,20 @@ var ContentNodeModel = BaseModel.extend({
 				resolve(self);
 			}else{
 				var promises = [];
+				var files = new FileCollection();
 				self.get("files").forEach(function(file){
-					if(file.attributes){
-						promises.push(new Promise(function(fileResolve, fileReject){
-							var data = file.pick("preset");
-							console.log("SAVING:", data);
-							file.save(data,{
-								success:function(file){
-									fileResolve(file);
-								},
-								error:function(obj, error){
-									fileReject(error);
-								}
-							});
-						}));
-					}
+					promises.push(new Promise(function(fileResolve, fileReject){
+						var data = (file.attributes)? file.toJSON() : file;
+						data.preset= (data && data.preset.attributes)? data.preset : data.preset.id;
+						new FileModel(data).save(data,{
+							success:function(saved){
+								fileResolve(saved);
+							},
+							error:function(obj, error){
+								fileReject(error);
+							}
+						});
+					}));
 				});
 				Promise.all(promises).then(function(files){
 					self.set("files", files);
@@ -148,6 +169,7 @@ var ContentNodeCollection = BaseCollection.extend({
 		var promise = new Promise(function(saveResolve, saveReject){
 			var promises = [];
 			self.forEach(function(node){
+				console.log("SAVING NODE:", node);
     			promises.push(node.handle_file_data());
 			});
 
@@ -218,40 +240,6 @@ var ContentNodeCollection = BaseCollection.extend({
 		});
         return promise;
 	},
-	create_node_for_file:function(title, file, size){
-		var self = this;
-        var promise = new Promise(function(resolve, reject){
-			self.create({
-                title : title,
-                parent : null,
-                children : [],
-                kind: file.get("recommended_kind"),
-                license: 1,
-                total_file_size : 0,
-                tags : [],
-                sort_order : 1,
-            }, {
-            	/* TODO: Find way to avoid database locking to remove async:false */
-            	async:false,
-            	success:function(created){
-            		created.set({
-                        original_node : created.get("id"),
-                        cloned_source : created.get("id")
-                    });
-
-                    file.set({
-                        file_size : size,
-                        contentnode: created.id
-                    });
-            		resolve(created);
-            	},
-            	error:function(obj, error){
-            		reject(error);
-            	}
-            });
-        });
-        return promise;
-    },
 });
 
 var ChannelModel = BaseModel.extend({

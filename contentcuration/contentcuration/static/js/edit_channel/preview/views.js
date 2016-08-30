@@ -27,7 +27,7 @@ var PreviewView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/preview_dialog.handlebars"),
     current_preview:null,
     initialize: function(options) {
-        _.bindAll(this, 'set_preview','toggle_fullscreen');
+        _.bindAll(this, 'set_preview','toggle_fullscreen', 'load_preview');
         this.presets = new Models.FormatPresetCollection();
         this.is_modal = options.is_modal;
         this.render();

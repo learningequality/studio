@@ -23,13 +23,11 @@ var FileModalView = BaseViews.BaseModalView.extend({
         });
     },
     close_file_uploader:function(event){
-        if(this.file_upload_view.current_view.views.length === 0){
+        if(this.file_upload_view.collection.length === 0){
             this.close();
         }else if(confirm("Unsaved Metadata Detected! Exiting now will"
             + " undo any new changes. \n\nAre you sure you want to exit?")){
-            this.file_upload_view.current_view.views.forEach(function(view){
-                // view.clean_files();
-            });
+            this.file_upload_view.reset();
             this.close();
         }else{
             event.stopPropagation();
@@ -131,6 +129,11 @@ var FileUploadView = BaseViews.BaseView.extend({
         this.$(".go_to_metadata").removeClass("disabled");
         this.$(".go_to_metadata").text("EDIT METADATA");
     },
+    reset:function(){
+        if(this.current_view){
+            this.current_view.reset();
+        }
+    }
 });
 
 var FileBaseList = BaseViews.BaseEditableListView.extend({
@@ -331,37 +334,9 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
     set_file_format:function(file, preset){
         file.set({preset: preset.toJSON()});
-        this.files.sort_by_preset(this.presets);
         this.model.set("files", this.files.toJSON());
         this.containing_list_view.handle_completed();
-    },
-
-    // enable_submit:function(){
-    //     this.containing_list_view.enable_submit();
-    // },
-    // disable_submit:function(){
-    //     this.containing_list_view.disable_submit();
-    // },
-    // set_model:function(){
-    //     var files = [];
-    //     this.format_views.forEach(function(view){
-    //         if(view.file){
-    //             files.push(view.file);
-    //         }
-    //     });
-    //     this.model.set("files", files);
-    //     if(this.preview){
-    //         this.preview.load_preview();
-    //     }
-    //     return this.model;
-    // },
-    // clean_files:function(){
-    //     this.files_to_delete.forEach(function(file){
-    //         if(file){
-    //           file.destroy();
-    //         }
-    //     });
-    // }
+    }
 });
 
 var FormatUploadItem = FormatItem.extend({
@@ -371,6 +346,7 @@ var FormatUploadItem = FormatItem.extend({
     initialize: function(options) {
         _.bindAll(this, 'remove_item');
         this.containing_list_view = options.containing_list_view;
+        this.originalData = this.model.toJSON();
         this.init_collections();
         this.auto_assign_preset();
         this.render();
@@ -423,7 +399,8 @@ var FormatEditorItem = FormatItem.extend({
             files: this.files,
             el: this.$el.find(".format_editor_list"),
             model: this.model,
-            content_node_view:this
+            content_node_view:this,
+            to_delete: this.to_delete
         }
         this.subcontent_view = new FormatSlotList(data);
         this.update_metadata();
@@ -464,6 +441,7 @@ var FormatInlineItem = FormatEditorItem.extend({
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
         this.containing_list_view = options.containing_list_view;
+        this.to_delete = new Models.ContentNodeCollection();
         this.init_collections();
         this.render();
         this.listenTo(this.files, "add", this.sync_file_changes);
@@ -477,18 +455,21 @@ var FormatInlineItem = FormatEditorItem.extend({
         'click .expand_format_editor' : 'toggle'
     },
     render: function() {
-        this.files.sort_by_preset(this.presets);
+        // this.files.sort_by_preset(this.presets);
         this.presets.sort_by_order();
 
         this.$el.html(this.template({
-            presets:this.presets.toJSON(),
-            files: this.files.toJSON(),
             node: this.model.toJSON()
         }));
         this.update_metadata();
     },
     unset_model:function(){
 
+    },
+    clean_files:function(){
+        this.to_delete.destroy().then(function(){
+            console.log("files cleaned");
+        });
     }
 });
 
@@ -500,6 +481,7 @@ var FormatFormatItem = FormatEditorItem.extend({
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
         this.containing_list_view = options.containing_list_view;
+        this.to_delete = new Models.ContentNodeCollection();
         this.init_collections();
         this.render();
         this.listenTo(this.files, "add", this.sync_file_changes);
@@ -547,8 +529,8 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
 
     initialize: function(options) {
         this.content_node_view = options.content_node_view;
-        this.to_delete = new Models.ContentNodeCollection();
         this.collection = options.collection;
+        this.to_delete= options.to_delete;
         this.files = options.files;
         this.render();
     },
@@ -559,9 +541,11 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     create_new_view: function(model){
         var associated_file = null;
         this.files.forEach(function(file){
-            if(file.get("preset") && file.get("preset").id === model.get("id")){
-                associated_file = file;
-                return;
+            if(file.get("preset")){
+                var preset_id = (file.get("preset").id)? file.get("preset").id : file.get("preset");
+                if(preset_id === model.get("id")){
+                    associated_file = file;
+                }
             }
         });
         var format_slot = new FormatSlot({
@@ -600,7 +584,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.originalFile = this.file;
         this.nodeid = options.nodeid;
         this.render();
-        setTimeout(this.create_dropzone, 100); // Wait for slide down animation to finish
     },
     events: {
         'click .format_editor_remove ' : 'remove_item'
@@ -611,6 +594,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             preset: this.model.toJSON(),
             nodeid:this.nodeid
         }));
+        setTimeout(this.create_dropzone, 100); // Wait for slide down animation to finish
     },
     create_dropzone:function(){
         var dz_selector="#" + this.model.get("id") + "_"  + this.nodeid + "_dropzone" + ((this.file)? "_swap" : "");
@@ -649,10 +633,10 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         var new_file = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
         var self = this;
         this.fetch_model(new_file).then(function(fetched){
-            self.render();
-            self.containing_list_view.set_file_format(fetched, self.model, self.file);
+            var originalFile = self.file;
             self.file = fetched;
-            self.create_dropzone();
+            self.render();
+            self.containing_list_view.set_file_format(self.file, self.model, originalFile);
         });
     },
     file_added: function(file) {
@@ -660,7 +644,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             this.$(".format_metadata").css("display", "none");
         }
         this.$(".add_format_button").css("display", "none");
-        // this.disable_submit();
+        // this.containing_list_view.disable_submit();
     },
     file_removed: function(file) {
         this.$(".add_format_button").css("display", "inline");
@@ -675,12 +659,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.containing_list_view.set_file_format(null, this.model, this.file);
         this.file = null;
         this.render();
-    },
-    enable_submit:function(){
-        // this.containing_list_view.enable_submit();
-    },
-    disable_submit:function(){
-        // this.containing_list_view.disable_submit();
     },
     all_files_uploaded:function(){
         // this.containing_list_view.enable_submit();

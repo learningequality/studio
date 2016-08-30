@@ -4,7 +4,7 @@ import re
 from contentcuration.models import *
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
-from contentcuration.api import get_total_size, get_node_ancestors, count_files, calculate_node_metadata
+from contentcuration.api import get_total_size, get_node_ancestors, count_files, calculate_node_metadata, clean_db, recurse
 from rest_framework.utils import model_meta
 from collections import OrderedDict
 from rest_framework.fields import set_value, SkipField
@@ -109,8 +109,8 @@ class CustomListSerializer(serializers.ListSerializer):
                     bulk_adding_list.append(ThroughModel(node_id=node.pk, contenttag_id=tag.pk))
             ThroughModel.objects.bulk_create(bulk_adding_list)
 
-        print "*********** STARTING: ***********"
-        recurse(ContentNode.objects.get(id__startswith='f1a03d6'))
+        # print "*********** STARTING: ***********"
+        # recurse(ContentNode.objects.get(id__startswith='f1a03d6'))
         # Perform updates.
         if update_nodes:
             with transaction.atomic():
@@ -134,20 +134,16 @@ class CustomListSerializer(serializers.ListSerializer):
                                         taglist.append(tag_itm)
 
                             setattr(node, 'tags', taglist)
+
                             node.save()
                             # if node.parent:
                             #     ContentNode.objects.move_node(node, ContentNode.objects.get(id=node.parent_id)) # Makes sure cache is updated after save
                             ret.append(node)
-        print "*********** FINAL: ***********"
-        recurse(ContentNode.objects.get(id__startswith='f1a03d6'))
-
-        print "*********** END ***********\n\n\n\n"
+        # print "*********** FINAL: ***********"
+        # recurse(ContentNode.objects.get(id__startswith='f1a03d6'))
+        clean_db()
+        # print "*********** END ***********\n\n\n\n"
         return ret
-
-def recurse(node, level=0):
-    print ('\t' * level), node.id, node.lft, node.rght, node.title
-    for child in ContentNode.objects.filter(parent=node).order_by('sort_order'):
-        recurse(child, level + 1)
 
 class TagSerializer(serializers.ModelSerializer):
    class Meta:

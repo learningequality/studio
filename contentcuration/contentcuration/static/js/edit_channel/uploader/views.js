@@ -70,8 +70,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   render: function() {
     this.$el.html(this.template());
-    this.load_list();
     this.load_preview();
+    this.load_editor([]);
+    this.load_list();
   },
   render_details:function(){
     this.switchPanel(true);
@@ -116,9 +117,11 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       el: this.$("#edit_details_wrapper"),
       model: this.model,
       container: this,
-      shared_data: this.edit_list.shared_data
+      shared_data: (this.edit_list)? this.edit_list.shared_data : null
     });
-    this.edit_list.adjust_list_height();
+    if(this.edit_list){
+      this.edit_list.adjust_list_height();
+    }
   },
   enable_submit:function(){
       this.$("#upload_save_button, #upload_save_finish_button").removeAttr("disabled");
@@ -164,7 +167,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
         });
       }
       if(entry.format_view){
-        entry.format_view.update_file();
         entry.format_view.clean_files();
       }
     });
@@ -215,6 +217,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     _.bindAll(this, 'add_topic');
     this.bind_edit_functions();
     this.collection = options.collection;
+    console.log("LIST IS:", this.collection);
     this.new_content = options.new_content;
     this.upload_files = options.upload_files;
     this.container = options.container;
@@ -224,7 +227,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
   render: function() {
     this.$el.html(this.template({
       new_content: this.new_content,
-      show_list: this.collection.length > 1 || this.new_content
+      show_list: this.collection.length > 1 || this.new_content || this.upload_files
     }));
     this.load_content();
   },
@@ -250,10 +253,11 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     if(this.collection.length === 1){
       if(!this.new_content && !this.uploaded_files){
         this.selected_items.push(this.views[0]);
+        this.update_shared_values(true, this.views[0]);
+        this.container.load_editor(this.selected_items);
       }else{
         this.views[0].select_item();
       }
-      this.update_shared_values(true, this.views[0]);
     }
   },
   add_topic:function(){
@@ -323,16 +327,18 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   render: function() {
     this.$el.html(this.template({
       node: (this.selected_items.length === 1)? this.selected_items[0].model.toJSON() : null,
-      is_file: this.shared_data.all_files,
+      is_file: (this.shared_data)? this.shared_data.all_files : false,
       none_selected: this.selected_items.length === 0,
       licenses: window.licenses.toJSON(),
-      copyright_owner: this.shared_data.shared_copyright_owner,
-      author: this.shared_data.shared_author
+      copyright_owner: (this.shared_data)? this.shared_data.shared_copyright_owner:null,
+      author: (this.shared_data)? this.shared_data.shared_author:null
     }));
     this.update_count();
     this.handle_if_individual();
-    this.load_tags();
-    $("#license_select").val(this.shared_data.shared_license);
+    if(this.shared_data){
+      this.load_tags();
+      $("#license_select").val(this.shared_data.shared_license);
+    }
   },
   handle_if_individual:function(){
     if(this.selected_items.length === 1){
@@ -473,10 +479,10 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   select_item:function(){
     console.log("CALLED SELECT", this);
-      $(".upload_item_checkbox:checked").attr("checked", false);
-      $(".uploaded").removeClass(this.selectedClass);
-      this.$(".upload_item_checkbox").attr("checked", true);
-      this.check_item();
+    $(".upload_item_checkbox:checked").attr("checked", false);
+    $(".uploaded").removeClass(this.selectedClass);
+    this.$(".upload_item_checkbox").attr("checked", true);
+    this.check_item();
   },
   set_edited:function(is_edited){
       this.edited = is_edited;
@@ -488,12 +494,13 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       }
   },
   set_node:function(){
+    var individual_selected = this.containing_list_view.selected_items.length === 1;
     var data = {
-          title: (this.containing_list_view.selected_items.length === 1)? $("#input_title").val().trim() : this.model.get("title"),
-          description: (this.containing_list_view.selected_items.length===1)? $("#input_description").val().trim() : this.model.get("description"),
+          title: (individual_selected)? $("#input_title").val().trim() : this.model.get("title"),
+          description: (individual_selected)? $("#input_description").val().trim() : this.model.get("description"),
           license: (this.model.get("kind") != "topic" && $("#license_select").val()!=0)? $("#license_select").val() : this.model.get("license"),
-          copyright_holder: (this.model.get("kind") != "topic" && $("#input_license_owner").val() !== "")? $("#input_license_owner").val().trim() : this.model.get("copyright_holder"),
-          author: ($("#author_field").val() !== "")? $("#author_field").val().trim() : this.model.get("author"),
+          copyright_holder: (this.model.get("kind") != "topic" && (individual_selected || $("#input_license_owner").val() !== ""))? $("#input_license_owner").val().trim() : this.model.get("copyright_holder"),
+          author: (individual_selected || $("#author_field").val() !== "")? $("#author_field").val().trim() : this.model.get("author"),
       };
       this.set(data);
       this.set_edited(true);
