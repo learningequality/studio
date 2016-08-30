@@ -108,6 +108,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1 && selected_items[0].model.get("kind") !== "topic";
     this.$("#metadata_preview_btn").css("display", (is_individual) ? "inline-block" : "none");
+    if(!is_individual){
+      this.render_details();
+    }
     if(this.editor_view){
       this.editor_view.stopListening();
       this.editor_view.undelegateEvents();

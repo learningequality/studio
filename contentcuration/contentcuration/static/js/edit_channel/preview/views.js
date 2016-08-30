@@ -7,14 +7,14 @@ require("modal-styles.less");
 var PreviewModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/preview_modal.handlebars"),
     initialize: function(options) {
-        _.bindAll(this, "close");
+        _.bindAll(this, "close_preview");
         this.modal = true;
-        this.render(this.close, {node:this.model.toJSON()});
+        this.render(this.close_preview, {node:this.model.toJSON()});
         this.preview_view = new PreviewView({
             model:this.model,
             el: this.$(".modal-body"),
         });
-        // this.preview_view.switch_preview(this.model);
+        this.preview_view.switch_preview(this.model);
     },
     close_preview:function(){
         this.remove();
@@ -38,9 +38,8 @@ var PreviewView = BaseViews.BaseView.extend({
         this.$el.html(this.template({
             node: (this.model)? this.model.toJSON() : null,
             file: this.current_preview,
-            selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset) : null,
+            selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset).toJSON() : null,
         }));
-        // this.load_preset_dropdown();
     },
     load_preset_dropdown:function(){
         this.presets.sort_by_order();
@@ -52,14 +51,14 @@ var PreviewView = BaseViews.BaseView.extend({
         var self = this;
         this.model.get("files").forEach(function(file){
             var data = (file.attributes)? file.attributes : file;
-
-            if(data.preset == event.target.getAttribute("value")){
+            var preset_check = (data.preset.id)? data.preset.id : data.preset;
+            if(preset_check === event.target.getAttribute("value")){
                 self.set_current_preview(data);
                 return;
             }
         });
-        this.load_preset_dropdown();
         this.generate_preview(true);
+        this.load_preset_dropdown();
     },
 
     generate_preview:function(force_load){
@@ -105,33 +104,35 @@ var PreviewView = BaseViews.BaseView.extend({
 
     load_preview:function(){
         if(this.model){
-            this.generate_preview(false);
+            this.switch_preview(this.model);
         }
     },
     switch_preview:function(model){
-        console.log("MODEL IS:", model);
         this.model = model;
-        // var default_preview = null;
-        // if(this.model){
-        //     var self = this;
-        //     this.model.get("files").forEach(function(file){
-        //         var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
-        //         if(!default_preview || preset.get("order") === 1){
-        //             default_preview = file;
-        //         }
-        //     });
-        //     this.load_preset_dropdown();
-        //     this.set_current_preview(default_preview);
-        //     this.generate_preview(true);
-        // }
+        console.log("MODEL IS:", this.model);
+        if(this.model && this.model.get("kind")!=="topic"){
+            var default_preview = null;
+            var self = this;
+            this.presets.reset();
+            this.model.get("files").forEach(function(file){
+                var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
+                if(!default_preview || preset.get("order") === 1){
+                    default_preview = file;
+                }
+                self.presets.add(preset);
+            });
+            this.load_preset_dropdown();
+            this.set_current_preview(default_preview);
+            this.generate_preview(true);
+        }
     },
     set_current_preview:function(file){
         this.current_preview = file;
         console.log(file);
-        // if(this.current_preview.attributes){
-        //     this.current_preview = this.current_preview.toJSON();
-        // }
-         // $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
+        if(this.current_preview.attributes){
+            this.current_preview = this.current_preview.toJSON();
+        }
+         $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
     },
     toggle_fullscreen:function(){
         var elem = document.getElementById("preview_content_main");
