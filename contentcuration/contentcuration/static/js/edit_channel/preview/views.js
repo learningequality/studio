@@ -127,6 +127,7 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     set_current_preview:function(file){
         this.current_preview = file;
+        console.log(file);
         // if(this.current_preview.attributes){
         //     this.current_preview = this.current_preview.toJSON();
         // }

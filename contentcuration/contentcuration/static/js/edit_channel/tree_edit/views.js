@@ -99,8 +99,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			var deleteCollection = new Models.ContentNodeCollection();
 			for(var i = 0; i < this.lists.length; i++){
 				var list = this.lists[i].get_selected();
-				for(var i = 0; i < list.length; i++){
-					var view = list[i];
+				for(var j = 0; j < list.length; j++){
+					var view = list[j];
 					if(view){
 						deleteCollection.add(view.model);
 						view.remove();

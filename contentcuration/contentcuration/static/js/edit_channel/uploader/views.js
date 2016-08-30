@@ -462,6 +462,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.isNew = this.new_content || this.new_file;
       this.set_edited(this.isNew);
       this.load_tags();
+      this.uploads_in_progress = 0;
       this.listenTo(this.model, "change:title", this.update_name);
   },
   render: function() {
@@ -554,7 +555,11 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   remove_tag:function(tagname){
       this.tags.splice(this.tags.indexOf(tagname), 1);
       this.set_edited(true);
-  }
+  },
+  set_uploading:function(uploading){
+        (uploading)? this.uploads_in_progress++ : this.uploads_in_progress--;
+        (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
+    }
 });
 
 var LicenseModalView = BaseViews.BaseModalView.extend({

@@ -280,6 +280,7 @@ var FileFormatList  = FileBaseList.extend({
         _.bindAll(this, "hide_assigned");
         this.container = options.container;
         this.collection = options.collection;
+        this.uploads_in_progress = 0;
         this.render();
     },
     events:{
@@ -310,6 +311,10 @@ var FileFormatList  = FileBaseList.extend({
         if(this.check_completed()){
             this.enable_submit();
         }
+    },
+    set_uploading:function(uploading){
+        (uploading)? this.uploads_in_progress++ : this.uploads_in_progress--;
+        (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
     }
 });
 
@@ -418,10 +423,10 @@ var FormatEditorItem = FormatItem.extend({
         var main_count = 0;
         var size = 0;
         this.model.get("files").forEach(function(file){
-            if(!file.preset.id){
-                file.preset = window.formatpresets.get({id:file.preset}).toJSON();
-            }
             if(file.preset){
+                if(!file.preset.id){
+                    file.preset = window.formatpresets.get({id:file.preset}).toJSON();
+                }
                 count ++;
                 if(!file.preset.supplementary){
                     main_count++;
@@ -433,7 +438,10 @@ var FormatEditorItem = FormatItem.extend({
     },
     save_files:function(){
 
-    }
+    },
+    set_uploading:function(uploading){
+        this.containing_list_view.set_uploading(uploading);
+    },
 });
 var FormatInlineItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_inline_item.handlebars"),
@@ -534,6 +542,7 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         this.collection = options.collection;
         this.files = options.files;
         this.render();
+
     },
     render: function() {
         this.$el.html(this.template());
@@ -577,18 +586,22 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
             this.files.push(file);
         }
     },
+    set_uploading:function(uploading){
+        this.content_node_view.set_uploading(uploading);
+    }
 });
 
 var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/format_item.handlebars"),
     dropzone_template : require("./hbtemplates/format_dropzone_item.handlebars"),
+    upload_in_progress:false,
 
     'id': function() {
         return "format_slot_item_" + this.model.get("id");
     },
     className:"row format_editor_item",
     initialize: function(options) {
-        _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed','all_files_uploaded','file_failed', 'create_dropzone');
+        _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed','file_failed', 'create_dropzone');
         this.containing_list_view = options.containing_list_view;
         this.file = options.file;
         this.originalFile = this.file;
@@ -608,30 +621,31 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     create_dropzone:function(){
         var dz_selector="#" + this.model.get("id") + "_"  + this.nodeid + "_dropzone" + ((this.file)? "_swap" : "");
-        var clickables = [dz_selector + " .dz_click"];
-        if(this.file){
-            clickables.push(dz_selector + " .format_editor_file_name");
-        }
-        var dropzone = new Dropzone(this.$(dz_selector).get(0), {
-           clickable: clickables,
-           acceptedFiles: this.get_accepted_files(),
-           url: window.Urls.file_upload(),
-           previewTemplate:this.dropzone_template(),
-           maxFiles: 1,
-           previewsContainer: dz_selector,
-           headers: {
-                "X-CSRFToken": get_cookie("csrftoken"),
-                "Node" : this.nodeid,
-                "Preset": this.model.get("id")
+        if(this.$(dz_selector).is(":visible")){
+            var clickables = [dz_selector + " .dz_click"];
+            if(this.file){
+                clickables.push(dz_selector + " .format_editor_file_name");
             }
-        });
-        dropzone.on("success", this.file_uploaded);
+            var dropzone = new Dropzone(this.$(dz_selector).get(0), {
+               clickable: clickables,
+               acceptedFiles: this.get_accepted_files(),
+               url: window.Urls.file_upload(),
+               previewTemplate:this.dropzone_template(),
+               maxFiles: 1,
+               previewsContainer: dz_selector,
+               headers: {
+                    "X-CSRFToken": get_cookie("csrftoken"),
+                    "Node" : this.nodeid,
+                    "Preset": this.model.get("id")
+                }
+            });
+            dropzone.on("success", this.file_uploaded);
 
-        // Only enable the submit upload files button once all files have finished uploading.
-        dropzone.on("queuecomplete", this.all_files_uploaded);
-        dropzone.on("addedfile", this.file_added);
-        dropzone.on("removedfile", this.file_removed);
-        dropzone.on("error", this.file_failed);
+            // Only enable the submit upload files button once all files have finished uploading.
+            dropzone.on("addedfile", this.file_added);
+            dropzone.on("removedfile", this.file_removed);
+            dropzone.on("error", this.file_failed);
+        }
     },
     get_accepted_files:function(){
         var preset = window.formatpresets.findWhere({id: this.model.id});
@@ -647,6 +661,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             self.file = fetched;
             self.render();
             self.containing_list_view.set_file_format(self.file, self.model, originalFile);
+            self.set_uploading(false);
         });
     },
     file_added: function(file) {
@@ -654,23 +669,23 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             this.$(".format_metadata").css("display", "none");
         }
         this.$(".add_format_button").css("display", "none");
-        // this.containing_list_view.disable_submit();
+        this.set_uploading(true);
     },
     file_removed: function(file) {
         this.$(".add_format_button").css("display", "inline");
-        this.render();
     },
     file_failed:function(file, error){
         alert(error);
         this.render();
+        this.set_uploading(false);
     },
     remove_item:function(){
         this.containing_list_view.set_file_format(null, this.model, this.file);
         this.file = null;
         this.render();
     },
-    all_files_uploaded:function(){
-        // this.containing_list_view.enable_submit();
+    set_uploading:function(uploading){
+        this.containing_list_view.set_uploading(uploading);
     }
 
 });
