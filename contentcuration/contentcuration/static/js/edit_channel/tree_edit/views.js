@@ -268,7 +268,8 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.$el.html(this.template({
 			node: this.model.toJSON(),
 			isfolder: this.model.get("kind") === "topic",
-			edit_mode: this.edit_mode
+			edit_mode: this.edit_mode,
+			checked: this.checked
 		}));
 		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();

@@ -259,6 +259,7 @@ var ClipboardItem = QueueItem.extend({
 			node:this.model.toJSON(),
 			isfolder: this.model.get("kind") === "topic",
 			is_clipboard : true,
+			checked: this.checked
 		}));
 		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
@@ -302,6 +303,7 @@ var TrashItem = QueueItem.extend({
 			node:this.model.toJSON(),
 			isfolder: this.model.get("kind") === "topic",
 			is_clipboard : false,
+			checked: this.checked
 		}));
 		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();

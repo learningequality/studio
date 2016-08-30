@@ -1,4 +1,4 @@
-{{#if edit_mode}}<input type="checkbox" id="item_{{node.id}}"/>
+{{#if edit_mode}}<input type="checkbox" id="item_{{node.id}}" {{#if checked}}checked{{/if}}/>
 {{else}}<input type="radio" name="{{container}}" id="item_{{node.id}}"/>{{/if}}
 {{#if isfolder}}
 	<label class="folder collapsed {{#unless edit_mode}}open_folder{{/unless}}" for="folder_{{node.id}}" title="{{node.title}}">

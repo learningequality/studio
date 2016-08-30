@@ -32,6 +32,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     });
   },
   close_uploader:function(event){
+    console.log(this.metadata_view);
     if(!this.metadata_view.check_for_changes()){
       this.close();
       $(".modal-backdrop").remove();
@@ -215,7 +216,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
   default_item: "#uploaded_list .default-item",
 
   initialize: function(options) {
-    _.bindAll(this, 'add_topic');
+    _.bindAll(this, 'add_topic', 'check_all_wrapper');
     this.bind_edit_functions();
     this.collection = options.collection;
     this.new_content = options.new_content;
@@ -233,6 +234,11 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
   },
   events: {
     'click #add_topic_button' : 'add_topic',
+    'change #uploader_select_all_check':'check_all_wrapper'
+  },
+  check_all_wrapper :function(event){
+    this.check_all(event);
+    this.update_checked();
   },
   adjust_list_height:function(){
     this.$("#uploaded_list").height($("#edit_details_wrapper").height() * 0.55);
@@ -481,11 +487,12 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.handle_checked();
       this.containing_list_view.update_checked();
   },
-  select_item:function(){
-    console.log("CALLED SELECT", this);
+  select_item:function(event){
     $(".upload_item_checkbox:checked").attr("checked", false);
     $(".uploaded").removeClass(this.selectedClass);
-    this.$(".upload_item_checkbox").attr("checked", true);
+    if(!event){
+      this.$(".upload_item_checkbox").attr("checked", true);
+    }
     this.check_item();
   },
   set_edited:function(is_edited){
@@ -514,7 +521,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.set_edited(false);
   },
   handle_save:function(){
-    console.log(this.model);
       this.set_edited(false);
   },
   load_tags:function(){
@@ -536,7 +542,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.listenTo(this.model, "change:files", this.handle_change);
   },
   handle_change:function(){
-    console.log("CHANGED!!!", this.model.get("files"));
     this.set_edited(true);
     this.container.preview_view.load_preview();
   },

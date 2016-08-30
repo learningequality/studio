@@ -391,7 +391,6 @@ var FormatEditorItem = FormatItem.extend({
        return !this.files.findWhere({preset:null});
     },
     sync_file_changes:function(){
-        console.log("SYNCING:", this.files);
         this.model.set("files", this.files.toJSON());
     },
     load_subfiles:function(){
@@ -419,6 +418,9 @@ var FormatEditorItem = FormatItem.extend({
         var main_count = 0;
         var size = 0;
         this.model.get("files").forEach(function(file){
+            if(!file.preset.id){
+                file.preset = window.formatpresets.get({id:file.preset}).toJSON();
+            }
             if(file.preset){
                 count ++;
                 if(!file.preset.supplementary){
@@ -559,12 +561,14 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     set_file_format:function(file, preset, originalFile){
         var to_remove = [];
         this.files.forEach(function(file_obj){
-            if(file_obj && file_obj.get("preset") == preset.toJSON().id){
-                to_remove.push(file_obj);
+            if(file_obj){
+                var preset_check = (file_obj.get("preset").id)? file_obj.get("preset").id : file_obj.get("preset");
+                if(preset_check == preset.toJSON().id){
+                    to_remove.push(file_obj);
+                }
             }
         });
         this.files.remove(to_remove);
-        console.log("UPDATED FILES:", this.files);
         if(file){
             file.set({
                 "preset": preset.toJSON(),

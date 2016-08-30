@@ -39,6 +39,14 @@ class FileListSerializer(serializers.ListSerializer):
                     # create new nodes
                     ret.append(File.objects.create(**item))
 
+        for file_obj in validated_data:
+            contentnode = file_obj['contentnode'].pk
+            preset = file_obj['preset'].pk
+            file_id = file_obj['id']
+            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & Q(preset_id=preset) & ~Q(id=file_id))
+            for to_delete in files_to_delete:
+                to_delete.delete()
+
         if update_files:
             with transaction.atomic():
                 for file_id, data in update_files.items():
@@ -50,14 +58,6 @@ class FileListSerializer(serializers.ListSerializer):
                             setattr(file_obj, attr, value)
                         file_obj.save()
                         ret.append(file_obj)
-
-        for file_obj in validated_data:
-            contentnode = file_obj['contentnode'].pk
-            preset = file_obj['preset'].pk
-            file_id = file_obj['id']
-            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & Q(preset_id=preset) & ~Q(id=file_id))
-            for to_delete in files_to_delete:
-                to_delete.delete()
         return ret
 
 class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):

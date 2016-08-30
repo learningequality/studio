@@ -125,38 +125,7 @@ var ContentNodeModel = BaseModel.extend({
 			"resource_count":0,
 			"max_sort_order":1
 		}
-    },
-	handle_file_data:function(){
-		var self = this;
-		var promise = new Promise(function(resolve, reject){
-			if(self.get("kind") === "topic"){
-				resolve(self);
-			}else{
-				var promises = [];
-				var files = new FileCollection();
-				console.log("FILES ARE:", self.get("files"));
-				self.get("files").forEach(function(file){
-					promises.push(new Promise(function(fileResolve, fileReject){
-						var data = (file.attributes)? file.toJSON() : file;
-						data.preset= (data && data.preset.attributes)? data.preset : data.preset.id;
-						new FileModel(data).save(data,{
-							success:function(saved){
-								fileResolve(saved);
-							},
-							error:function(obj, error){
-								fileReject(error);
-							}
-						});
-					}));
-				});
-				Promise.all(promises).then(function(files){
-					self.set("files", files);
-					resolve(self);
-				});
-			}
-		});
-		return promise;
-	}
+    }
 });
 
 var ContentNodeCollection = BaseCollection.extend({
@@ -167,33 +136,24 @@ var ContentNodeCollection = BaseCollection.extend({
 	save: function() {
 		var self = this;
 		var promise = new Promise(function(saveResolve, saveReject){
-			var promises = [];
 			var fileCollection = new FileCollection()
 			self.forEach(function(node){
 				node.get("files").forEach(function(file){
 					file.preset = file.preset.id ? file.preset.id : file.preset
 				});
 				fileCollection.add(node.get("files"));
-    			// promises.push(node.handle_file_data());
 			});
-			console.log("FILE COLLECTION:", fileCollection);
 			fileCollection.save().then(function(){
-				saveResolve(self);
+				Backbone.sync("update", self, {
+		        	url: self.model.prototype.urlRoot(),
+		        	success: function(data){
+		        		saveResolve(new ContentNodeCollection(data));
+		        	},
+		        	error:function(obj, error){
+		        		saveReject(error);
+		        	}
+		        });
 			});
-
-
-			// Promise.all(promises).then(function(nodes){
-			// 	Backbone.sync("update", self, {
-		 //        	url: self.model.prototype.urlRoot(),
-		 //        	success: function(data){
-		 //        		saveResolve(new ContentNodeCollection(data));
-		 //        	},
-		 //        	error:function(obj, error){
-		 //        		saveReject(error);
-		 //        	}
-		 //        });
-			// });
-
 		});
         return promise;
 	},
