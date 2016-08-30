@@ -38,14 +38,21 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     render: function() {
         this.$el.html(this.template({
-            node: this.model,
+            node: (this.model)? this.model.toJSON() : null,
             file: this.current_preview,
             selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset) : null,
-            is_modal:this.is_modal
         }));
         this.load_preset_dropdown();
     },
     load_preset_dropdown:function(){
+        var self = this;
+        this.presets = new Models.FormatPresetCollection();
+        if(this.model && this.model.get("files")){
+            this.model.get("files").forEach(function(file){
+                var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
+                self.presets.add(preset);
+            });
+        }
         this.presets.sort_by_order();
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
              presets: this.presets.toJSON()
@@ -113,20 +120,17 @@ var PreviewView = BaseViews.BaseView.extend({
         }
     },
     switch_preview:function(model){
+        console.log("MODEL IS:", model);
         this.model = model;
         var default_preview = null;
         if(this.model){
             var self = this;
-            this.presets = new Models.FormatPresetCollection();
-             if(this.model.get("files")){
-                this.model.get("files").forEach(function(file){
-                    var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
-                    self.presets.add(preset);
-                    if(!default_preview || preset.get("order") === 1){
-                        default_preview = file;
-                    }
-                });
-            }
+            this.model.get("files").forEach(function(file){
+                var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
+                if(!default_preview || preset.get("order") === 1){
+                    default_preview = file;
+                }
+            });
             this.load_preset_dropdown();
             this.set_current_preview(default_preview);
             this.generate_preview(true);
@@ -137,7 +141,6 @@ var PreviewView = BaseViews.BaseView.extend({
         if(this.current_preview.attributes){
             this.current_preview = this.current_preview.toJSON();
         }
-        console.log("PRESET", this.current_preview)
          $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
     },
     toggle_fullscreen:function(){

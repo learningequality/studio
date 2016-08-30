@@ -391,6 +391,7 @@ var FormatEditorItem = FormatItem.extend({
        return !this.files.findWhere({preset:null});
     },
     sync_file_changes:function(){
+        console.log("SYNCING:", this.files);
         this.model.set("files", this.files.toJSON());
     },
     load_subfiles:function(){
@@ -418,13 +419,18 @@ var FormatEditorItem = FormatItem.extend({
         var main_count = 0;
         var size = 0;
         this.model.get("files").forEach(function(file){
-            count ++;
-            if(file.preset && !file.preset.supplementary){
-                main_count++;
+            if(file.preset){
+                count ++;
+                if(!file.preset.supplementary){
+                    main_count++;
+                }
             }
             size += file.file_size;
         });
         return {"count": count, "size": size, "main_file_count" : main_count};
+    },
+    save_files:function(){
+
     }
 });
 var FormatInlineItem = FormatEditorItem.extend({
@@ -465,11 +471,6 @@ var FormatInlineItem = FormatEditorItem.extend({
     },
     unset_model:function(){
 
-    },
-    clean_files:function(){
-        this.to_delete.destroy().then(function(){
-            console.log("files cleaned");
-        });
     }
 });
 
@@ -481,7 +482,6 @@ var FormatFormatItem = FormatEditorItem.extend({
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
         this.containing_list_view = options.containing_list_view;
-        this.to_delete = new Models.ContentNodeCollection();
         this.init_collections();
         this.render();
         this.listenTo(this.files, "add", this.sync_file_changes);
@@ -530,7 +530,6 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     initialize: function(options) {
         this.content_node_view = options.content_node_view;
         this.collection = options.collection;
-        this.to_delete= options.to_delete;
         this.files = options.files;
         this.render();
     },
@@ -558,15 +557,22 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         return format_slot;
     },
     set_file_format:function(file, preset, originalFile){
-        if(originalFile){
-            this.to_delete.add(originalFile);
-            this.files.remove(originalFile);
-        }
+        var to_remove = [];
+        this.files.forEach(function(file_obj){
+            if(file_obj && file_obj.get("preset") == preset.toJSON().id){
+                to_remove.push(file_obj);
+            }
+        });
+        this.files.remove(to_remove);
+        console.log("UPDATED FILES:", this.files);
         if(file){
-           file.set("preset", preset.toJSON());
+            file.set({
+                "preset": preset.toJSON(),
+                "contentnode": this.model.get("id")
+            });
             this.files.push(file);
         }
-    }
+    },
 });
 
 var FormatSlot = BaseViews.BaseListNodeItemView.extend({
@@ -648,7 +654,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     file_removed: function(file) {
         this.$(".add_format_button").css("display", "inline");
-        this.file.set("contentnode", null);
         this.render();
     },
     file_failed:function(file, error){

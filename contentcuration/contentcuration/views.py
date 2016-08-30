@@ -128,15 +128,13 @@ def exercise(request, exercise_id):
 @csrf_exempt
 def file_upload(request):
     if request.method == 'POST':
-        node = ContentNode.objects.get(id=request.META.get('HTTP_NODE'))
         preset = FormatPreset.objects.get(id=request.META.get('HTTP_PRESET'))
         #Implement logic for switching out files without saving it yet
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
         original_filename = request.FILES.values()[0]._name
         size = request.FILES.values()[0]._size
-        file_object = File(file_size=size, contentnode=node, file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, preset=preset)
+        file_object = File(file_size=size, file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, preset=preset)
         file_object.save()
-        node.save()
         return HttpResponse(json.dumps({
             "success": True,
             "filename": str(file_object),

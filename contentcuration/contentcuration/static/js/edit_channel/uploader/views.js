@@ -79,7 +79,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   render_preview:function(){
     this.switchPanel(false);
-    this.preview_view.switch_preview(this.current_view.model);
   },
   switchPanel:function(switch_to_details){
     $((switch_to_details)? "#metadata_details_btn" : "#metadata_preview_btn").addClass("btn-tab-active");
@@ -149,26 +148,25 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
   },
   save_nodes:function(){
-    var sort_order = null;
+    var sort_order = (this.model && (this.new_content || this.upload_files)) ? Math.ceil(this.model.get("metadata").max_sort_order) : null;
     var self = this;
-    if(this.model && (this.new_content || this.upload_files)){
-      sort_order = Math.ceil(this.model.get("metadata").max_sort_order);
-    }
     this.edit_list.views.forEach(function(entry){
       var tags = [];
       entry.tags.forEach(function(tag){
         tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
-      })
-      entry.set({tags: tags});
+      });
+      entry.set({
+        tags: tags
+      });
       if(sort_order){
         entry.set({
           parent:self.model.id,
           sort_order:++sort_order
         });
       }
-      if(entry.format_view){
-        entry.format_view.clean_files();
-      }
+      // if(entry.format_view){
+      //   entry.format_view.submit_files();
+      // }
     });
   },
   process_updated_collection:function(collection){
@@ -197,6 +195,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       view.unset();
     });
   },
+  switch_preview:function(model){
+    this.preview_view.switch_preview(model);
+  }
 
 });
 
@@ -217,7 +218,6 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     _.bindAll(this, 'add_topic');
     this.bind_edit_functions();
     this.collection = options.collection;
-    console.log("LIST IS:", this.collection);
     this.new_content = options.new_content;
     this.upload_files = options.upload_files;
     this.container = options.container;
@@ -255,6 +255,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         this.selected_items.push(this.views[0]);
         this.update_shared_values(true, this.views[0]);
         this.container.load_editor(this.selected_items);
+        this.container.switch_preview(this.selected_items[0].model);
       }else{
         this.views[0].select_item();
       }
@@ -290,6 +291,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         }
     });
     this.container.load_editor(this.selected_items);
+    if(this.selected_items.length === 1){
+      this.container.switch_preview(this.selected_items[0].model);
+    }
   },
   update_shared_values:function(reset, view){
     if(reset){
@@ -441,7 +445,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   className: "uploaded disable_on_error",
   tagName: "li",
   initialize: function(options) {
-      _.bindAll(this, 'remove_topic', 'check_item', 'select_item','update_name', 'set_edited');
+      _.bindAll(this, 'remove_topic', 'check_item', 'select_item','update_name', 'set_edited','handle_change');
       this.bind_edit_functions();
       this.containing_list_view = options.containing_list_view;
       this.container = options.container;
@@ -510,6 +514,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.set_edited(false);
   },
   handle_save:function(){
+    console.log(this.model);
       this.set_edited(false);
   },
   load_tags:function(){
@@ -528,7 +533,12 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
           containing_list_view:this
       });
       formats_el.html(this.format_view.el);
-      this.listenTo(this.model, "change:files", this.container.preview_view.load_preview);
+      this.listenTo(this.model, "change:files", this.handle_change);
+  },
+  handle_change:function(){
+    console.log("CHANGED!!!", this.model.get("files"));
+    this.set_edited(true);
+    this.container.preview_view.load_preview();
   },
   add_tag:function(tagname){
       if(this.tags.indexOf(tagname) < 0){

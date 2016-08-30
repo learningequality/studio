@@ -21,7 +21,6 @@ var BaseCollection = Backbone.Collection.extend({
 		return window.Urls[this.list_name]();
 	},
 	save: function(callback) {
-		console.log("CALLED SAVE:", this)
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
 	},
 	get_all_fetch: function(ids, force_fetch = false){
@@ -135,6 +134,7 @@ var ContentNodeModel = BaseModel.extend({
 			}else{
 				var promises = [];
 				var files = new FileCollection();
+				console.log("FILES ARE:", self.get("files"));
 				self.get("files").forEach(function(file){
 					promises.push(new Promise(function(fileResolve, fileReject){
 						var data = (file.attributes)? file.toJSON() : file;
@@ -168,22 +168,31 @@ var ContentNodeCollection = BaseCollection.extend({
 		var self = this;
 		var promise = new Promise(function(saveResolve, saveReject){
 			var promises = [];
+			var fileCollection = new FileCollection()
 			self.forEach(function(node){
-				console.log("SAVING NODE:", node);
-    			promises.push(node.handle_file_data());
+				node.get("files").forEach(function(file){
+					file.preset = file.preset.id ? file.preset.id : file.preset
+				});
+				fileCollection.add(node.get("files"));
+    			// promises.push(node.handle_file_data());
+			});
+			console.log("FILE COLLECTION:", fileCollection);
+			fileCollection.save().then(function(){
+				saveResolve(self);
 			});
 
-			Promise.all(promises).then(function(nodes){
-				Backbone.sync("update", self, {
-		        	url: self.model.prototype.urlRoot(),
-		        	success: function(data){
-		        		saveResolve(new ContentNodeCollection(data));
-		        	},
-		        	error:function(obj, error){
-		        		saveReject(error);
-		        	}
-		        });
-			});
+
+			// Promise.all(promises).then(function(nodes){
+			// 	Backbone.sync("update", self, {
+		 //        	url: self.model.prototype.urlRoot(),
+		 //        	success: function(data){
+		 //        		saveResolve(new ContentNodeCollection(data));
+		 //        	},
+		 //        	error:function(obj, error){
+		 //        		saveReject(error);
+		 //        	}
+		 //        });
+			// });
 
 		});
         return promise;
@@ -328,7 +337,22 @@ var FileCollection = BaseCollection.extend({
     		return presets.findWhere({id: file.get("preset").id}).get("order");
     	};
     	this.sort();
-    }
+    },
+    save: function() {
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+    		Backbone.sync("update", self, {
+    			url: self.model.prototype.urlRoot(),
+    			success:function(data){
+    				resolve(new FileCollection(data));
+    			},
+    			error:function(error){
+    				reject(error);
+    			}
+    		});
+    	})
+
+	},
 });
 
 var FormatPresetModel = BaseModel.extend({

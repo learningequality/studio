@@ -23,16 +23,51 @@ class LanguageSerializer(serializers.ModelSerializer):
         model = Language
         fields = ('lang_code', 'lang_subcode', 'id')
 
-class FileSerializer(serializers.ModelSerializer):
+
+class FileListSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+        file_mapping = {file_obj.id: file_obj for file_obj in instance}
+        node_file_mapping = []
+        ret = []
+        update_files = {}
+
+        with transaction.atomic():
+            for item in validated_data:
+                if 'id' in item:
+                    update_files[item['id']] = item
+                else:
+                    # create new nodes
+                    ret.append(File.objects.create(**item))
+
+        if update_files:
+            with transaction.atomic():
+                for file_id, data in update_files.items():
+                    file_obj = file_mapping.get(file_id, None)
+
+                    if file_obj:
+                        # potential optimization opportunity
+                        for attr, value in data.items():
+                            setattr(file_obj, attr, value)
+                        file_obj.save()
+                        ret.append(file_obj)
+
+        for file_obj in validated_data:
+            contentnode = file_obj['contentnode'].pk
+            preset = file_obj['preset'].pk
+            file_id = file_obj['id']
+            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & Q(preset_id=preset) & ~Q(id=file_id))
+            for to_delete in files_to_delete:
+                to_delete.delete()
+        return ret
+
+class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
     recommended_kind = serializers.SerializerMethodField('retrieve_recommended_kind')
     mimetype = serializers.SerializerMethodField('retrieve_extension')
+    id = serializers.CharField(required=False)
 
     def get(*args, **kwargs):
          return super.get(*args, **kwargs)
-    class Meta:
-        model = File
-        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'mimetype')
 
     def get_file_url(self, obj):
         return obj.file_on_disk.url
@@ -42,6 +77,11 @@ class FileSerializer(serializers.ModelSerializer):
 
     def retrieve_extension(self, obj):
         return obj.file_format.mimetype
+
+    class Meta:
+        model = File
+        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'mimetype')
+        list_serializer_class = FileListSerializer
 
 class FileFormatSerializer(serializers.ModelSerializer):
     class Meta:
@@ -76,12 +116,14 @@ class CustomListSerializer(serializers.ListSerializer):
         node_mapping = {node.id: node for node in instance}
         update_nodes = {}
         tag_mapping = {}
+        file_mapping = {}
         ret = []
         unformatted_input_tags = []
 
         with transaction.atomic():
             for item in validated_data:
                 item_tags = item.get('tags')
+
                 unformatted_input_tags += item.pop('tags')
                 if 'id' in item:
                     update_nodes[item['id']] = item
@@ -134,7 +176,6 @@ class CustomListSerializer(serializers.ListSerializer):
                                         taglist.append(tag_itm)
 
                             setattr(node, 'tags', taglist)
-
                             node.save()
                             # if node.parent:
                             #     ContentNode.objects.move_node(node, ContentNode.objects.get(id=node.parent_id)) # Makes sure cache is updated after save
