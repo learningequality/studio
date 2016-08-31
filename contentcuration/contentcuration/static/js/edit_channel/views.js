@@ -105,6 +105,7 @@ var BaseWorkspaceView = BaseView.extend({
 		});
 	},
 	edit_selected:function(){
+		console.log("CALLED HERE")
 		var UploaderViews = require("edit_channel/uploader/views");
 		var list = this.get_selected();
 		var edit_collection = new Models.ContentNodeCollection();
@@ -227,6 +228,8 @@ var BaseListView = BaseView.extend({
 		this.views.forEach(function(view){
 			if(view.checked){
 				selected_views.push(view);
+			}else if(view.subcontent_view){
+				selected_views = _.union(selected_views, view.subcontent_view.get_selected());
 			}
 		})
 		return selected_views;
@@ -312,12 +315,14 @@ var BaseEditableListView = BaseListView.extend({
 								reject(error);
 							}
 						});
+						self.collection.remove(view.model);
+						self.views.splice(view,1);
 						view.remove();
 					}));
 				}
 			}
 			Promise.all(promise_list).then(function(){
-				self.load_content();
+				self.handle_if_empty();
 				resolve_load("Success!");
 			}).catch(function(error){
 				reject_load(error);
@@ -325,7 +330,8 @@ var BaseEditableListView = BaseListView.extend({
 		});
 	},
 	delete:function(view){
-      	this.collection.remove(this.view);
+      	this.collection.remove(view.model);
+      	this.views.splice(view, 1);
       	this.handle_if_empty();
       	// this.update_views();
 	}
@@ -575,7 +581,6 @@ var BaseListEditableItemView = BaseListItemView.extend({
 				self.containing_list_view.delete(self);
 				self.model.destroy({
 					success:function(){
-						self.containing_list_view.load_content();
 						resolve_load(true);
 					},
 					error:function(obj, error){

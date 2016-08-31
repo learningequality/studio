@@ -106,7 +106,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 						view.remove();
 					}
 				}
-				if(this.lists[i].$el.find(".current_topic input").is(":checked")){
+				if(this.lists[i].current_node){
 					this.remove_containers_from(this.lists[i].index);
 						break;
     			}
@@ -120,7 +120,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			var promises = [];
 			for(var i = 0; i < self.lists.length; i++){
 				promises.push(self.lists[i].copy_selected());
-				if(self.lists[i].$el.find(".current_topic input:checked").length != 0){
+				if(self.lists[i].current_node){
 					break;
 				}
 			}

@@ -32,7 +32,6 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     });
   },
   close_uploader:function(event){
-    console.log(this.metadata_view);
     if(!this.metadata_view.check_for_changes()){
       this.close();
       $(".modal-backdrop").remove();
@@ -345,6 +344,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     if(this.shared_data){
       this.load_tags();
       $("#license_select").val(this.shared_data.shared_license);
+      this.$("#license_about").css("display", (this.shared_data.shared_license > 0)? "inline" : "none");
     }
   },
   handle_if_individual:function(){

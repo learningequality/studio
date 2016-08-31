@@ -222,34 +222,26 @@ class ContentNode(MPTTModel, models.Model):
 
     objects = TreeManager()
 
+    def __init__(self, *args, **kwargs):
+        super(ContentNode, self).__init__(*args, **kwargs)
+        self.original_parent = self.parent
+
     def save(self, *args, **kwargs):
         isNew = self.pk is None and self.original_node is None
+
+        # Detect if model has been moved to a different tree
+        if self.original_parent and self.original_parent.id != self.parent_id:
+            self.original_parent.changed = True
+            self.original_parent.save()
+            self.original_parent = self.parent
+
         super(ContentNode, self).save(*args, **kwargs)
         if isNew:
             if self.original_node is None:
                 self.original_node = self.pk
             if self.cloned_source is None:
                 self.cloned_source = self.pk
-            super(ContentNode, self).save(*args, **kwargs)
-    #     # try:
-    #
-            # if self.parent:
-            #     self.move_to(ContentNode.objects.get(id=self.parent_id)) # Makes sure cache is updated after save
-        # except:
-
-        #     ContentNode.objects.rebuild()
-        #     super(ContentNode, self).save(*args, **kwargs)
-
-        #     parent = ContentNode.objects.get(id=self.parent.pk)
-
-        #     opts = parent._mptt_meta
-        #     parent._mptt_cached_fields = {}
-        #     field_names = [opts.parent_attr]
-        #     if opts.order_insertion_by:
-        #         field_names += opts.order_insertion_by
-        #     for field_name in field_names:
-        #         parent._mptt_cached_fields[field_name] = opts.get_raw_field_value(parent, field_name)
-        #     super(ContentNode, self).save(*args, **kwargs)
+            self.save()
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']

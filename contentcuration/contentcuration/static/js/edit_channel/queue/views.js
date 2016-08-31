@@ -78,6 +78,7 @@ var QueueList = BaseViews.BaseWorkspaceListView.extend({
 	bind_queue_list_functions:function(){
 		_.bindAll(this, 'update_badge_count', 'switch_to');
 		this.bind_workspace_functions();
+		this.listenTo(this.model, 'change:children', this.handle_if_empty);
 	},
 	switch_to:function(is_active){
 		$(this.list_wrapper_selector).css("display", (is_active) ? "block" : "none");
@@ -94,7 +95,7 @@ var QueueList = BaseViews.BaseWorkspaceListView.extend({
 		}
 	},
 	handle_if_empty:function(){
-		this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
+		this.$(this.default_item).css("display", (this.model.get("children").length > 0) ? "none" : "block");
 		this.update_badge_count();
 	}
 });
@@ -105,7 +106,7 @@ var ClipboardList = QueueList.extend({
 	list_wrapper_selector: "#clipboard-queue",
 
 	initialize: function(options) {
-		_.bindAll(this, 'delete_items', 'create_new_view');
+		_.bindAll(this, 'delete_items', 'create_new_view', 'edit_items');
 		this.bind_queue_list_functions();
 		this.collection = options.collection;
 		this.container = options.container;
@@ -142,7 +143,7 @@ var ClipboardList = QueueList.extend({
 	events: {
 		'change .select_all' : 'check_all',
 		'click .delete_items' : 'delete_items',
-		'click .edit_items' : 'edit_selected',
+		'click .edit_items' : 'edit_items',
 		'click .create_new_content' : 'add_topic',
 		'click .upload_files_button': 'add_files',
 		'click .import_content' : 'import_content'
@@ -152,6 +153,9 @@ var ClipboardList = QueueList.extend({
 			this.delete_selected();
 		}
 	},
+	edit_items:function(){
+		this.container.edit_selected();
+	}
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
 		// handle_drop:function(collection){
 		// 		return collection.duplicate(window.current_user.get_clipboard());

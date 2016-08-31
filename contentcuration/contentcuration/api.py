@@ -37,7 +37,7 @@ def calculate_node_metadata(node):
         "resource_count" : 0,
         "max_sort_order" : 1,
         "resource_size" : 0,
-        "has_changed_descendant" : node.changed and not node.is_root_node()
+        "has_changed_descendant" : node.changed
     }
 
     if node.kind_id == "topic":
