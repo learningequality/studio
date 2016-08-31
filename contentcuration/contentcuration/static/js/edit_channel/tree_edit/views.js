@@ -265,7 +265,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder','preview_node');
+		_.bindAll(this, 'open_folder','preview_node', 'open_options');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
@@ -293,7 +293,12 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'click .folder' : "open_folder",
 		'click .preview_button': 'preview_node',
 		'click .file' : 'preview_node',
-		'change input[type=checkbox]': 'handle_checked'
+		'change input[type=checkbox]': 'handle_checked',
+		'click .content-options-dropdown' : 'open_options'
+	},
+	open_options:function(event){
+		event.preventDefault();
+		event.stopPropagation();
 	},
 	open_folder:function(event){
 		event.preventDefault();

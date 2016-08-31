@@ -281,6 +281,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     };
     this.create_new_item(data, true, "Creating Topic...").then(function(newView){
       newView.select_item();
+
     });
   },
   update_checked:function(){
@@ -480,6 +481,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     if(!event){
       this.$(".upload_item_checkbox").attr("checked", true);
     }
+    $("#uploader_select_all_check").attr("checked", false);
     this.check_item();
   },
   set_edited:function(is_edited){

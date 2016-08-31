@@ -25,6 +25,7 @@ function addSortable(element, selected_class, callback){
 	   	distance:5,
 	   	cursor:"move",
 	   	cancel: '.current_topic, .default-item, #preview li',
+	   	containment: "#channel-edit-sortable-boundary",
 	   	appendTo: "#channel-edit-content-wrapper",
 	   	bodyClass: "dragging",
 	    helper: function (e, item) {
@@ -91,7 +92,8 @@ function addSortable(element, selected_class, callback){
 		revert: "valid",
 		revertDuration:100,
 		cursor:"move",
-		cancel: '.current_topic, .default-item, #preview li'
+		cancel: '.current_topic, .default-item, #preview li',
+		containment: "#channel-edit-content-wrapper",
 	}).disableSelection();
 }
 
