@@ -106,7 +106,7 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		hoverClass: "drop-topic-hover",
 		drop:function(event, ui){
 			if($(".sorting-placeholder").css('display') === "none"){
-				$(".content-list").sortable("disable");
+				// $(".content-list").sortable("disable");
 				var selected_items = new Models.ContentNodeCollection();
 				var current_view = window.workspace_manager.get(ui.draggable.context.id);
 				var current_node = current_view.node.model;

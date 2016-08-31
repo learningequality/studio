@@ -17,11 +17,11 @@ var BaseView = Backbone.View.extend({
 			});
 			promise.then(function(){
 				$("#loading_modal").remove();
-			})
-			// }).catch(function(error){
-			// 	$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
-			// 	console.log("Error with asychronous call", error);
-			// });
+			// })
+			}).catch(function(error){
+				$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+				console.log("Error with asychronous call", error);
+			});
   	}else{
   		$("#loading_modal").remove();
   	}
@@ -218,7 +218,9 @@ var BaseListView = BaseView.extend({
 	check_all :function(event){
 		var is_checked = event.currentTarget.checked;
 		this.$el.find(":checkbox").prop("checked", is_checked);
-		(is_checked) ? this.$el.find(this.item_class_selector).addClass(this.selectedClass) : this.$el.find(this.item_class_selector).removeClass(this.selectedClass)
+		this.views.forEach(function(view){
+			view.handle_checked();
+		})
 	},
 	get_selected: function(){
 		var selected_views = [];
@@ -367,6 +369,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			if(view){
 				deleteCollection.add(view.model);
 				view.remove();
+				this.views.splice(view, 1);
 			}
 		}
 		this.add_to_trash(deleteCollection, "Deleting Content...");

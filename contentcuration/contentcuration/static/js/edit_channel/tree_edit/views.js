@@ -181,6 +181,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		this.container = options.container;
 		this.collection = options.collection;
 		this.content_node_view = options.content_node_view;
+		this.current_model = null;
 		this.render();
 		this.listenTo(this.model, 'change:title', this.update_name);
 		this.listenTo(this.model, 'change:children', this.update_views);
@@ -220,7 +221,8 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	},
   /* Resets folders to initial state */
 	close_folders:function(){
-		this.$el.find("." + this.openedFolderClass).removeClass(this.openedFolderClass)
+		this.$el.find("." + this.openedFolderClass).removeClass(this.openedFolderClass);
+		this.set_current(null);
 	},
 	close_container:function(){
 		var self = this;
@@ -237,8 +239,14 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		containing_list_view:this
 	});
 	  this.views.push(newView);
+	  if(this.current_model && model.id === this.current_model.id){
+	  	newView.$el.addClass("current_topic");
+	  }
 		return newView;
 	},
+	set_current:function(model){
+		this.current_model = model;
+	}
 });
 
 /*folders, files, exercises listed*/
@@ -262,6 +270,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
 		this.render();
+		this.isSelected = false;
 		this.listenTo(this.model, 'change:metadata', this.render);
 	},
 	render:function(){
@@ -271,6 +280,9 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			edit_mode: this.edit_mode,
 			checked: this.checked
 		}));
+		if(this.isSelected){
+			this.$el.addClass(this.openedFolderClass);
+		}
 		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
 		this.$el.removeClass(this.selectedClass);
@@ -290,6 +302,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			this.containing_list_view.close_folders();
 			this.subcontent_view = this.containing_list_view.add_container(this);
 			this.$el.addClass(this.openedFolderClass);
+			this.containing_list_view.set_current(this.model);
 		}
 	},
 	preview_node: function(event){
