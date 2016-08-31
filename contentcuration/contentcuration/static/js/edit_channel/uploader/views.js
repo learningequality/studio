@@ -138,14 +138,14 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   save_and_keep_open:function(){
     var self = this;
-    // this.add_tag(null);
+    this.editor_view.add_tag(null);
     this.save("Saving Content...", this.save_nodes).then(function(collection){
       self.process_updated_collection(collection);
     });
   },
   save_and_finish: function(event){
     var self = this;
-    // this.add_tag(null);
+    this.editor_view.add_tag(null);
     this.save("Saving Content...", this.save_nodes).then(function(collection){
       self.process_updated_collection(collection);
       self.onclose(event);
@@ -168,9 +168,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
           sort_order:++sort_order
         });
       }
-      // if(entry.format_view){
-      //   entry.format_view.submit_files();
-      // }
     });
   },
   process_updated_collection:function(collection){
@@ -201,7 +198,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   switch_preview:function(model){
     this.preview_view.switch_preview(model);
-  }
+  },
+  adjust_list_height:function(){
+    if(this.edit_list){
+      this.edit_list.adjust_list_height();
+    }
+  },
 
 });
 
@@ -284,14 +286,6 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
   },
   update_checked:function(){
     this.selected_items = [];
-    this.shared_data = {
-      shared_tags:[],
-      shared_copyright_owner:null,
-      shared_license:0,
-      shared_author:null,
-      all_files:false
-    };
-
     var self = this;
     this.views.forEach(function(view){
       if(!_.contains(self.selected_items, view) && view.$(".upload_item_checkbox").is(":checked")){
@@ -312,7 +306,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.shared_license = view.model.get("license");
       this.shared_data.all_files = view.model.get("kind") !== "topic";
     }else{
-      $(this.shared_data.shared_tags).filter(view.tags);
+      this.shared_data.shared_tags = _.intersection(this.shared_data.shared_tags, view.tags);
       this.shared_data.shared_copyright_owner = (this.shared_data.shared_copyright_owner === view.model.get("copyright_holder"))? this.shared_data.shared_copyright_owner : null;
       this.shared_data.shared_author = (this.shared_data.shared_author === view.model.get("author"))? this.shared_data.shared_author : null;
       this.shared_data.shared_license = (this.shared_data.shared_license === view.model.get("license"))? this.shared_data.shared_license : 0;
@@ -379,7 +373,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }));
     $( "#tag_box" ).autocomplete({
       source: window.contenttags.pluck("tag_name"),
-      minLength: 0,
+      minLength: 1,
       select: this.add_tag
     });
   },
@@ -391,37 +385,26 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   update_count:function(){
     stringHelper.update_word_count(this.$("#input_description"), this.$("#description_counter"), this.description_limit);
   },
-  append_tags:function(tags){
-    for(var i = 0; i < tags.length; i++){
-      this.$("#tag_area").append(this.tag_template({
-        tag: tags[i]
-      }));
-    }
-  },
   add_tag: function(event){
     $("#tag_error").css("display", "none");
     if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").val().trim() != ""){
       var tag = this.$el.find("#tag_box").val().trim();
-      if(this.shared_tags.indexOf(tag) < 0){
-        this.append_tags([tag]);
+      if(this.shared_data.shared_tags.indexOf(tag) < 0){
         this.selected_items.forEach(function(view){
           view.add_tag(tag);
-        })
+        });
+        this.load_tags();
       }
       this.$el.find("#tag_box").val("");
-      this.adjust_list_height();
+      this.container.adjust_list_height();
     }
   },
   remove_tag:function(event){
     var tagname = event.target.getAttribute("value");
-    if(this.multiple_selected){
-      var list = this.$el.find('#uploaded_list input:checked').parent("li");
-      for(var i = 0; i < list.length; i++){
-        $(list[i]).data("data").remove_tag(tagname);
-      }
-    }else{
-      this.current_view.remove_tag(tagname);
-    }
+    this.selected_items.forEach(function(view){
+      view.remove_tag(tagname);
+    });
+    this.load_tags();
     event.target.parentNode.remove();
   },
   select_license:function(){

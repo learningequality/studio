@@ -142,7 +142,6 @@ var BaseWorkspaceView = BaseView.extend({
 				collection.move(list_view.model, list_view.model.get("metadata").max_sort_order).then(function(){
 					list_view.add_nodes(collection);
 					self.reload_ancestors(reloadCollection, false);
-					list_view.render();
 					resolve(collection);
 					resolve_load(true);
 				});
@@ -191,7 +190,6 @@ var BaseListView = BaseView.extend({
 
 	bind_list_functions:function(){
 		_.bindAll(this, 'load_content', 'handle_if_empty', 'check_all', 'get_selected', 'set_root_model', 'update_views');
-		// this.listenTo(this.model, 'change:children', this.update_views);
 	},
 	set_root_model:function(model){
 		this.model.set(model.toJSON());

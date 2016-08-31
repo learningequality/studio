@@ -109,7 +109,6 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     switch_preview:function(model){
         this.model = model;
-        console.log("MODEL IS:", this.model);
         if(this.model && this.model.get("kind")!=="topic"){
             var default_preview = null;
             var self = this;
@@ -127,12 +126,13 @@ var PreviewView = BaseViews.BaseView.extend({
         }
     },
     set_current_preview:function(file){
-        this.current_preview = file;
-        console.log(file);
-        if(this.current_preview.attributes){
-            this.current_preview = this.current_preview.toJSON();
+        if(file){
+            this.current_preview = file;
+            if(this.current_preview.attributes){
+                this.current_preview = this.current_preview.toJSON();
+            }
+            $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
         }
-         $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
     },
     toggle_fullscreen:function(){
         var elem = document.getElementById("preview_content_main");
