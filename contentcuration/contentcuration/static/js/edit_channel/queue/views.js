@@ -14,7 +14,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 	trash_selector: "#trash-queue",
 
 	initialize: function(options) {
-		_.bindAll(this, 'toggle_queue', 'switch_to_queue', 'switch_to_trash');
+		_.bindAll(this, 'toggle_queue', 'switch_to_queue', 'switch_to_trash', 'open_queue', 'close_queue');
 		this.clipboard_root = options.clipboard_root;
 		this.trash_root = options.trash_root;
 		this.collection = options.collection;
@@ -47,11 +47,13 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 		'click #switch_to_trash' : 'switch_to_trash'
 	},
 	toggle_queue: function(){
-		if(this.$("#queue").hasClass("closed")){
-			this.$("#queue").removeClass("closed").addClass("opened");
-		}else{
-			this.$("#queue").removeClass("opened").addClass("closed");
-		}
+		(this.$("#queue").hasClass("closed")) ? this.open_queue() : this.close_queue();
+	},
+	open_queue:function(){
+		this.$("#queue").removeClass("closed").addClass("opened");
+	},
+	close_queue:function(){
+		this.$("#queue").removeClass("opened").addClass("closed");
 	},
 	switch_to_queue:function(){
 		this.trash_queue.switch_to(false);

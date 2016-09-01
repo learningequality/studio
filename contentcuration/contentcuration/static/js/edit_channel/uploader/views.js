@@ -245,7 +245,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     this.update_checked();
   },
   adjust_list_height:function(){
-    this.$("#uploaded_list").height($("#edit_details_wrapper").height() * 0.55);
+    this.$("#uploaded_list_wrapper").css('max-height', $("#edit_details_wrapper").height() * 0.95);
   },
   create_new_view:function(model){
     var uploaded_view = new UploadedItem({
@@ -279,9 +279,8 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       "sort_order" : this.collection.length,
       "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
     };
-    this.create_new_item(data, true, "Creating Topic...").then(function(newView){
+    this.create_new_item(data, true, "").then(function(newView){
       newView.select_item();
-
     });
   },
   update_checked:function(){
@@ -338,7 +337,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       none_selected: this.selected_items.length === 0,
       licenses: window.licenses.toJSON(),
       copyright_owner: (this.shared_data)? this.shared_data.shared_copyright_owner:null,
-      author: (this.shared_data)? this.shared_data.shared_author:null
+      author: (this.shared_data)? this.shared_data.shared_author:null,
+      selected_count: this.selected_items.length
     }));
     this.update_count();
     this.handle_if_individual();
@@ -384,11 +384,13 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     })
   },
   update_count:function(){
-    stringHelper.update_word_count(this.$("#input_description"), this.$("#description_counter"), this.description_limit);
+    if(this.$("#input_description").is(":visible")){
+      stringHelper.update_word_count(this.$("#input_description"), this.$("#description_counter"), this.description_limit);
+    }
   },
   add_tag: function(event){
     $("#tag_error").css("display", "none");
-    if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").val().trim() != ""){
+    if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").length > 0 && this.$el.find("#tag_box").val().trim() != ""){
       var tag = this.$el.find("#tag_box").val().trim();
       if(this.shared_data.shared_tags.indexOf(tag) < 0){
         this.selected_items.forEach(function(view){
@@ -469,7 +471,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       'click .uploaded_list_item' : 'select_item',
   },
   remove_topic: function(){
-      this.delete(true);
+      this.delete(true, "");
   },
   check_item:function(){
       this.handle_checked();

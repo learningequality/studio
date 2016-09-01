@@ -5,21 +5,26 @@ var Models = require("./models");
 
 var BaseView = Backbone.View.extend({
 	display_load:function(message, callback){
-    var self = this;
-		var load = '<div id="loading_modal" class="text-center fade">' +
+    	var self = this;
+    	if(message!=""){
+    		var load = '<div id="loading_modal" class="text-center fade">' +
             '<div id="kolibri_load_gif"></div>' +
             '<h4 id="kolibri_load_text" class="text-center">' + message + '</h4>' +
             '</div>';
-    $(load).appendTo('body');
-    if(callback){
+	    	$(load).appendTo('body');
+    	}
+	    if(callback){
 			var promise = new Promise(function(resolve, reject){
 				callback(resolve, reject);
 			});
 			promise.then(function(){
-				$("#loading_modal").remove();
-			// })
+				if(message!=""){
+					$("#loading_modal").remove();
+				}
 			}).catch(function(error){
-				$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+				if(message!=""){
+					$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+				}
 				console.log("Error with asychronous call", error);
 			});
   	}else{
@@ -127,10 +132,10 @@ var BaseWorkspaceView = BaseView.extend({
 		    onsave: this.reload_ancestors
 		});
 	},
-	add_to_trash:function(collection, message="Moving to Clipboard..."){
+	add_to_trash:function(collection, message="Deleting Content..."){
 		return this.move_to_queue_list(collection, window.workspace_manager.get_queue_view().trash_queue, message);
 	},
-	add_to_clipboard:function(collection, message="Deleting Content..."){
+	add_to_clipboard:function(collection, message="Moving to Clipboard..."){
 		return this.move_to_queue_list(collection, window.workspace_manager.get_queue_view().clipboard_queue, message);
 	},
 	move_to_queue_list:function(collection, list_view, message="Moving Content..."){
@@ -370,6 +375,9 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		for(var i = 0; i < list.length; i++){
 			copyCollection.add(list[i].model);
 		}
+		var clipboard = window.workspace_manager.get_queue_view();
+		clipboard.switch_to_queue();
+		clipboard.open_queue();
 		return copyCollection.duplicate(clipboard_root);
 	},
 	delete_selected:function(){
