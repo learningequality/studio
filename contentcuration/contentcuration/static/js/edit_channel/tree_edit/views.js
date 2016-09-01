@@ -71,7 +71,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				content_node_view: view
 			});
 			this.lists.push(container_view);
-			this.$("#container_area").width(this.$("#container_area").width() + this.lists[0].$el.width());
+			this.$("#container_area").width(this.$("#container_area").width() + this.lists[0].$el.outerWidth() + 30);
 
 		/* Step 3: Add container to DOM */
 			this.$("#container_area").append(container_view.el);
@@ -79,7 +79,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	remove_containers_from:function(index){
 		while(this.lists.length > index){
-			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.lists[0].$el.width());
+			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.lists[0].$el.outerWidth() - 30);
 			this.lists[this.lists.length -1].remove();
 			this.lists.splice(this.lists.length-1);
 		}

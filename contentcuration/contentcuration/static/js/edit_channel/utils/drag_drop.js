@@ -50,14 +50,13 @@ function addSortable(element, selected_class, callback){
         },
 		update: function(event, ui) {
 			if($(".drop-topic-hover").length === 0){
-				console.log("CALLING UPDATE")
 				var view = window.workspace_manager.get(ui.item.context.id);
 				if(view){
 					var order = [];
 					var selected_items = new Models.ContentNodeCollection();
 					var current_node = view.node.model;
 					$(".content-list").sortable( "disable" );
-			        element.$el.find("li").each( function(e, list_item) {
+			        element.$el.find(">.content-list >li").each( function(e, list_item) {
 			        	if($(list_item).attr('id') && !$(list_item).attr('id').includes("default_item")){
 			        		var node = window.workspace_manager.get(this.id).node.model;
 			        		order.push(node);
@@ -114,7 +113,6 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		drop:function(event, ui){
 			if($(event.target).find(".drop-topic-hover").length === 0){
 				if($(".sorting-placeholder").css('display') === "none"){
-					console.log("CALLING DROP")
 					var selected_items = new Models.ContentNodeCollection();
 					var current_view = window.workspace_manager.get(ui.draggable.context.id);
 					var current_node = current_view.node.model;
