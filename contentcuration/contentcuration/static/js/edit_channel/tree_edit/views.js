@@ -61,7 +61,6 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				this.remove_containers_from(index);
 			}
 		/* Step 2: Create new container */
-			this.$("#container-wrapper").scrollLeft(this.$("#container_area").width());
 			var container_view = new ContentList({
 				model: topic,
 				index: this.lists.length + 1,
@@ -72,6 +71,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			});
 			this.lists.push(container_view);
 			this.$("#container_area").width(this.$("#container_area").width() + this.lists[0].$el.outerWidth() + 30);
+			this.$("#container-wrapper").scrollLeft(this.$("#container_area").width());
 
 		/* Step 3: Add container to DOM */
 			this.$("#container_area").append(container_view.el);
