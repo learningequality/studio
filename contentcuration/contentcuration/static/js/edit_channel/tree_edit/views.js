@@ -136,20 +136,6 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				load_reject(error);
 			});
 		});
-	},
-	check_changed_descendant:function(){
-		this.model.fetch({async:false});
-		console.log(this.model)
-		if(this.model.get("metadata").has_changed_descendant){
-			$("#channel-publish-button").prop("disabled", false);
-			$("#channel-publish-button").text("PUBLISH");
-			$("#channel-publish-button").removeClass("disabled");
-		}else{
-			$("#channel-publish-button").prop("disabled", true);
-			$("#channel-publish-button").text("No changes detected");
-			$("#channel-publish-button").addClass("disabled");
-		}
-		$("#publish-id").css("display", (window.current_channel.get("version") >= 1)? "inline-block" : "none");
 	}
 });
 

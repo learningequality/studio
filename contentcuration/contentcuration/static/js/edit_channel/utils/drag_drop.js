@@ -50,6 +50,7 @@ function addSortable(element, selected_class, callback){
         },
 		update: function(event, ui) {
 			if($(".drop-topic-hover").length === 0){
+				console.log("CALLING UPDATE")
 				var view = window.workspace_manager.get(ui.item.context.id);
 				if(view){
 					var order = [];
@@ -113,6 +114,7 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		drop:function(event, ui){
 			if($(event.target).find(".drop-topic-hover").length === 0){
 				if($(".sorting-placeholder").css('display') === "none"){
+					console.log("CALLING DROP")
 					var selected_items = new Models.ContentNodeCollection();
 					var current_view = window.workspace_manager.get(ui.draggable.context.id);
 					var current_node = current_view.node.model;

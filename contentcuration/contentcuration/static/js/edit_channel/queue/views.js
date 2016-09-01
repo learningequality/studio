@@ -28,14 +28,16 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 			model: this.clipboard_root,
 			el: this.$(this.clipboard_selector),
 			add_controls : true,
-			container: this
+			container: this,
+			content_node_view:null
 		});
 		this.trash_queue = new TrashList({
 			collection: this.collection,
 			model : this.trash_root,
 			el: this.$(this.trash_selector),
 			add_controls : true,
-			container: this
+			container: this,
+			content_node_view:null
 		});
 		this.switch_to_queue();
 	},
@@ -112,6 +114,7 @@ var ClipboardList = QueueList.extend({
 		this.collection = options.collection;
 		this.container = options.container;
 		this.add_controls = options.add_controls;
+		this.content_node_view = options.content_node_view;
 		this.render();
 		this.container.lists.push(this);
 	},
@@ -152,6 +155,7 @@ var ClipboardList = QueueList.extend({
 	delete_items:function(){
 		if(confirm("Are you sure you want to delete these selected items?")){
 			this.delete_selected();
+			this.$(".select_all").attr("checked", false);
 		}
 	},
 	edit_items:function(){
@@ -174,6 +178,7 @@ var TrashList = QueueList.extend({
 		this.collection = options.collection;
 		this.container = options.container;
 		this.add_controls = options.add_controls;
+		this.content_node_view = options.content_node_view;
 		this.render();
 		this.container.lists.push(this);
 	},
@@ -211,18 +216,18 @@ var TrashList = QueueList.extend({
 	delete_items:function(){
 		if(confirm("Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
 			this.delete_items_permanently("Deleting Content...");
+			this.$(".select_all").attr("checked", false);
 		}
 	},
 	move_trash:function(){
 		var list = this.get_selected();
 		var moveCollection = new Models.ContentNodeCollection();
-		var reload_list = [];
+		this.$(".select_all").attr("checked", false);
 		for(var i =0;i < list.length; i++){
 			var view = list[i];
 			if(view){
 				moveCollection.add(view.model);
 				view.remove();
-				this.views.splice(view, 1);
 			}
 		}
 		this.add_to_clipboard(moveCollection, "Recovering Content to Clipboard...");
@@ -258,7 +263,6 @@ var ClipboardItem = QueueItem.extend({
 		this.containing_list_view = options.containing_list_view;
 		this.container=options.container;
 		this.render();
-		// this.listenTo(this.model, 'change:metadata', this.render);
 	},
 	render: function(renderData) {
 		this.$el.html(this.template({
@@ -284,12 +288,12 @@ var ClipboardItem = QueueItem.extend({
 				el: this.$el.find("#" + this.id() +"_sub"),
 				add_controls : false,
 				model: this.model,
-				container: this.container
+				container: this.container,
+				content_node_view:this
 			}
 			this.subcontent_view = new ClipboardList(data);
+			this.$el.find("#" + this.id() +"_sub").append(this.subcontent_view.el);
 		}
-
-		this.$el.find("#" + this.id() +"_sub").append(this.subcontent_view.el);
 	},
 	delete_content:function(){
 		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
@@ -306,7 +310,6 @@ var TrashItem = QueueItem.extend({
 		this.containing_list_view = options.containing_list_view;
 		this.container=options.container;
 		this.render();
-		this.listenTo(this.model, 'change:metadata', this.render);
 	},
 	render: function(renderData) {
 		this.$el.html(this.template({
@@ -325,15 +328,18 @@ var TrashItem = QueueItem.extend({
 		'change input[type=checkbox]': 'handle_checked'
 	},
 	load_subfiles:function(){
-		var data = {
-			collection: this.containing_list_view.collection,
-			el: this.$el.find("#" + this.id() +"_sub"),
-			add_controls : false,
-			model: this.model,
-			container: this.container
+		if(!this.subcontent_view){
+			var data = {
+				collection: this.containing_list_view.collection,
+				el: this.$el.find("#" + this.id() +"_sub"),
+				add_controls : false,
+				model: this.model,
+				container: this.container,
+				content_node_view:this
+			}
+			this.subcontent_view = new TrashList(data);
+			this.$el.find("#" + this.id() +"_sub").append(this.subcontent_view.el);
 		}
-		this.subcontent_view = new TrashList(data);
-		this.$el.find("#" + this.id() +"_sub").append(this.subcontent_view.el);
 	},
 	delete_content:function(){
 		if(confirm("Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!")){

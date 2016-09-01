@@ -196,7 +196,6 @@ var BaseListView = BaseView.extend({
 	update_views:function(){
 		var self = this;
 		this.retrieve_nodes(this.model.get("children")).then(function(fetched){
-			console.log(self.model.get("children"))
 			self.load_content(fetched);
 		});
 	},
@@ -238,7 +237,6 @@ var BaseListView = BaseView.extend({
 				selected_views = _.union(selected_views, view.subcontent_view.get_selected());
 			}
 		})
-		console.log("GOT SELECTED:", this.views)
 		return selected_views;
 	}
 });
@@ -382,7 +380,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			if(view){
 				deleteCollection.add(view.model);
 				view.remove();
-				this.views.splice(view, 1);
 			}
 		}
 		this.add_to_trash(deleteCollection, "Deleting Content...");

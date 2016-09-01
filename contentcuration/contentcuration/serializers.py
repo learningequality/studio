@@ -31,13 +31,13 @@ class FileListSerializer(serializers.ListSerializer):
         ret = []
         update_files = {}
 
-        with transaction.atomic():
-            for item in validated_data:
-                if 'id' in item:
-                    update_files[item['id']] = item
-                else:
-                    # create new nodes
-                    ret.append(File.objects.create(**item))
+        # with transaction.atomic():
+        for item in validated_data:
+            if 'id' in item:
+                update_files[item['id']] = item
+            else:
+                # create new nodes
+                ret.append(File.objects.create(**item))
 
         for file_obj in validated_data:
             contentnode = file_obj['contentnode'].pk
@@ -120,17 +120,17 @@ class CustomListSerializer(serializers.ListSerializer):
         ret = []
         unformatted_input_tags = []
 
-        with transaction.atomic():
-            for item in validated_data:
-                item_tags = item.get('tags')
+        # with transaction.atomic():
+        for item in validated_data:
+            item_tags = item.get('tags')
 
-                unformatted_input_tags += item.pop('tags')
-                if 'id' in item:
-                    update_nodes[item['id']] = item
-                    tag_mapping[item['id']] = item_tags
-                else:
-                    # create new nodes
-                    ret.append(ContentNode.objects.create(**item))
+            unformatted_input_tags += item.pop('tags')
+            if 'id' in item:
+                update_nodes[item['id']] = item
+                tag_mapping[item['id']] = item_tags
+            else:
+                # create new nodes
+                ret.append(ContentNode.objects.create(**item))
 
         # get all ContentTag objects, if doesn't exist, create them.
         all_tags = []
