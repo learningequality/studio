@@ -280,6 +280,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			edit_mode: this.edit_mode,
 			checked: this.checked
 		}));
+		this.handle_checked();
 		if(this.isSelected){
 			this.$el.addClass(this.openedFolderClass);
 		}

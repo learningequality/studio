@@ -35,7 +35,6 @@ var BaseView = Backbone.View.extend({
 		this.retrieve_nodes($.unique(list_to_reload), true).then(function(fetched){
 			fetched.forEach(function(model){
 				var object = window.workspace_manager.get(model.get("id"));
-				console.log(object);
 				if(object.node){
 					object.node.reload(model);
 				}
@@ -105,7 +104,6 @@ var BaseWorkspaceView = BaseView.extend({
 		});
 	},
 	edit_selected:function(){
-		console.log("CALLED HERE")
 		var UploaderViews = require("edit_channel/uploader/views");
 		var list = this.get_selected();
 		var edit_collection = new Models.ContentNodeCollection();
@@ -219,8 +217,15 @@ var BaseListView = BaseView.extend({
 	check_all :function(event){
 		var is_checked = event.currentTarget.checked;
 		this.$el.find(":checkbox").prop("checked", is_checked);
-		this.views.forEach(function(view){
+		this.recurse_check_all(this.views);
+	},
+	recurse_check_all:function(views){
+		var self = this;
+		views.forEach(function(view){
 			view.handle_checked();
+			if(view.subcontent_view){
+				self.recurse_check_all(view.subcontent_view.views);
+			}
 		})
 	},
 	get_selected: function(){
@@ -232,6 +237,7 @@ var BaseListView = BaseView.extend({
 				selected_views = _.union(selected_views, view.subcontent_view.get_selected());
 			}
 		})
+		console.log("GOT SELECTED:", this.views)
 		return selected_views;
 	}
 });
@@ -429,7 +435,9 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 							self.reload_ancestors(fetched);
 							resolve(true);
 						});
-					});
+					}).catch(function(error){
+		        		alert(error.message);
+		        	});
 				});
 			}
 		});

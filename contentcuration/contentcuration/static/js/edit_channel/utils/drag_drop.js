@@ -25,7 +25,7 @@ function addSortable(element, selected_class, callback){
 	   	distance:5,
 	   	cursor:"move",
 	   	cancel: '.current_topic, .default-item, #preview li',
-	   	containment: "#channel-edit-sortable-boundary",
+	   	containment: "#channel-edit-sortable-boundary, #queue.opened",
 	   	appendTo: "#channel-edit-content-wrapper",
 	   	bodyClass: "dragging",
 	    helper: function (e, item) {
@@ -49,39 +49,44 @@ function addSortable(element, selected_class, callback){
             $('.' + selectedClass).removeClass(selectedClass);
         },
 		update: function(event, ui) {
-			var view = window.workspace_manager.get(ui.item.context.id);
-			if(view){
-				$(".content-list").sortable("disable");
-				var order = [];
-				var selected_items = new Models.ContentNodeCollection();
-				var current_node = view.node.model;
-		        element.$el.find("li").each( function(e, list_item) {
-		        	if($(list_item).attr('id') && !$(list_item).attr('id').includes("default_item")){
-		        		var node = window.workspace_manager.get(this.id).node.model;
-		        		order.push(node);
-		        	}
-		       	});
-		        var appended_items = new Models.ContentNodeCollection(); //Items from another container
-		        ui.item.data('items').each(function(e){
-		        	var view = window.workspace_manager.get(this.id);
-		        	if(view){
-		        		var node = view.node.model;
-			        	if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
-			        		selected_items.push(current_node);
+			if($(".drop-topic-hover").length === 0){
+				var view = window.workspace_manager.get(ui.item.context.id);
+				if(view){
+					$(".content-list").sortable("disable");
+					var order = [];
+					var selected_items = new Models.ContentNodeCollection();
+					var current_node = view.node.model;
+			        element.$el.find("li").each( function(e, list_item) {
+			        	if($(list_item).attr('id') && !$(list_item).attr('id').includes("default_item")){
+			        		var node = window.workspace_manager.get(this.id).node.model;
+			        		order.push(node);
 			        	}
-			        	(current_node.get("parent") === node.get("parent")) ? selected_items.push(node) : appended_items.push(node);
+			       	});
+			        var appended_items = new Models.ContentNodeCollection(); //Items from another container
+			        if(ui.item.data('items')){
+			        	ui.item.data('items').each(function(e){
+				        	var view = window.workspace_manager.get(this.id);
+				        	if(view){
+				        		var node = view.node.model;
+					        	if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
+					        		selected_items.push(current_node);
+					        	}
+					        	(current_node.get("parent") === node.get("parent")) ? selected_items.push(node) : appended_items.push(node);
+				        	}
+				        });
+			        }
+
+			        if(!selected_items.contains(current_node)){
+		        		selected_items.push(current_node);
 		        	}
-		        });
 
-		        if(!selected_items.contains(current_node)){
-	        		selected_items.push(current_node);
-	        	}
+		        	selected_items.add(appended_items.models, {at: selected_items.length});
+		        	callback(current_node, selected_items, order).then(function(){
+						$(".content-list").sortable( "enable" );
+						$(".content-list").sortable( "refresh" );
+		        	});
+				}
 
-	        	selected_items.add(appended_items.models, {at: selected_items.length});
-	        	callback(current_node, selected_items, order).then(function(){
-					$(".content-list").sortable( "enable" );
-					$(".content-list").sortable( "refresh" );
-	        	});
 			}
 	    },
 	    over: function (e, ui) {
@@ -93,7 +98,6 @@ function addSortable(element, selected_class, callback){
 		revertDuration:100,
 		cursor:"move",
 		cancel: '.current_topic, .default-item, #preview li',
-		containment: "#channel-edit-content-wrapper",
 	}).disableSelection();
 }
 
@@ -107,33 +111,35 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		cursor:"move",
 		hoverClass: "drop-topic-hover",
 		drop:function(event, ui){
-			if($(".sorting-placeholder").css('display') === "none"){
-				// $(".content-list").sortable("disable");
-				var selected_items = new Models.ContentNodeCollection();
-				var current_view = window.workspace_manager.get(ui.draggable.context.id);
-				var current_node = current_view.node.model;
+			if($(event.target).find(".drop-topic-hover").length === 0){
+				if($(".sorting-placeholder").css('display') === "none"){
+					var selected_items = new Models.ContentNodeCollection();
+					var current_view = window.workspace_manager.get(ui.draggable.context.id);
+					var current_node = current_view.node.model;
+					hoverOnItem = null;
 
-		        var appended_items = new Models.ContentNodeCollection(); //Items from another container
-		        $("#drag-list li").each(function(index, item){
-		        	var view = window.workspace_manager.get(item.id);
-		        	if(view){
-		        		var node = view.node.model;
-			        	if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
-			        		selected_items.push(current_node);
+			        var appended_items = new Models.ContentNodeCollection(); //Items from another container
+			        $("#drag-list li").each(function(index, item){
+			        	var view = window.workspace_manager.get(item.id);
+			        	if(view){
+			        		var node = view.node.model;
+				        	if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
+				        		selected_items.push(current_node);
+				        	}
+				        	(current_node.get("parent") === node.get("parent")) ? selected_items.push(node) : appended_items.push(node);
+				        	$(".content-list #"  + item.id).remove();
 			        	}
-			        	(current_node.get("parent") === node.get("parent")) ? selected_items.push(node) : appended_items.push(node);
-			        	$(".content-list #"  + item.id).remove();
-		        	}
-		        })
+			        })
 
-		        if(!selected_items.contains(current_node)){
-	        		selected_items.push(current_node);
-	        	}
-	        	selected_items.add(appended_items.models, {at: selected_items.length});
-	        	dropCallback(selected_items).then(function(){
-	        		$(ui.draggable.context).remove();
-	        		$(".content-list").sortable( "enable" );
-	        	});
+			        if(!selected_items.contains(current_node)){
+		        		selected_items.push(current_node);
+		        	}
+		        	selected_items.add(appended_items.models, {at: selected_items.length});
+		        	dropCallback(selected_items).then(function(){
+		        		$(ui.draggable.context).remove();
+		        		$(".content-list").sortable( "enable" );
+		        	});
+				}
 			}
 		},
 		out: function(event, ui){

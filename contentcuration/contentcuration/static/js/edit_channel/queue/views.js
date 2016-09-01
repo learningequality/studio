@@ -217,11 +217,17 @@ var TrashList = QueueList.extend({
 		var moveCollection = new Models.ContentNodeCollection();
 		var reload_list = [];
 		for(var i =0;i < list.length; i++){
-			var node = list[i].model;
-			if(reload_list.length === 0 || $(node.get("ancestors")).filter(reload_list).length === 0 ){
-				moveCollection.add(node);
-				reload_list.push(node.get("id"));
+			var view = list[i];
+			if(view){
+				moveCollection.add(view.model);
+				view.remove();
+				this.views.splice(view, 1);
 			}
+
+			// if(reload_list.length === 0 || $(node.get("ancestors")).filter(reload_list).length === 0 ){
+			// 	moveCollection.add(node);
+			// 	reload_list.push(node.get("id"));
+			// }
 		}
 		this.add_to_clipboard(moveCollection, "Recovering Content to Clipboard...");
 	}
@@ -256,7 +262,7 @@ var ClipboardItem = QueueItem.extend({
 		this.containing_list_view = options.containing_list_view;
 		this.container=options.container;
 		this.render();
-		this.listenTo(this.model, 'change:metadata', this.render);
+		// this.listenTo(this.model, 'change:metadata', this.render);
 	},
 	render: function(renderData) {
 		this.$el.html(this.template({
@@ -265,6 +271,7 @@ var ClipboardItem = QueueItem.extend({
 			is_clipboard : true,
 			checked: this.checked
 		}));
+		this.handle_checked();
 		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
 	},
@@ -275,14 +282,17 @@ var ClipboardItem = QueueItem.extend({
 		'change input[type=checkbox]': 'handle_checked'
 	},
 	load_subfiles:function(){
-		var data = {
-			collection: this.containing_list_view.collection,
-			el: this.$el.find("#" + this.id() +"_sub"),
-			add_controls : false,
-			model: this.model,
-			container: this.container
+		if(!this.subcontent_view){
+			var data = {
+				collection: this.containing_list_view.collection,
+				el: this.$el.find("#" + this.id() +"_sub"),
+				add_controls : false,
+				model: this.model,
+				container: this.container
+			}
+			this.subcontent_view = new ClipboardList(data);
 		}
-		this.subcontent_view = new ClipboardList(data);
+
 		this.$el.find("#" + this.id() +"_sub").append(this.subcontent_view.el);
 	},
 	delete_content:function(){
@@ -309,6 +319,7 @@ var TrashItem = QueueItem.extend({
 			is_clipboard : false,
 			checked: this.checked
 		}));
+		this.handle_checked();
 		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
 	},
