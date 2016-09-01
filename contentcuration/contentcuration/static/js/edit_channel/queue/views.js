@@ -78,7 +78,8 @@ var QueueList = BaseViews.BaseWorkspaceListView.extend({
 	bind_queue_list_functions:function(){
 		_.bindAll(this, 'update_badge_count', 'switch_to');
 		this.bind_workspace_functions();
-		this.listenTo(this.model, 'change:children', this.handle_if_empty);
+		this.listenTo(this.model, 'change:children', this.update_views);
+		this.listenTo(this.model, 'change:metadata', this.update_badge_count);
 	},
 	switch_to:function(is_active){
 		$(this.list_wrapper_selector).css("display", (is_active) ? "block" : "none");
@@ -223,11 +224,6 @@ var TrashList = QueueList.extend({
 				view.remove();
 				this.views.splice(view, 1);
 			}
-
-			// if(reload_list.length === 0 || $(node.get("ancestors")).filter(reload_list).length === 0 ){
-			// 	moveCollection.add(node);
-			// 	reload_list.push(node.get("id"));
-			// }
 		}
 		this.add_to_clipboard(moveCollection, "Recovering Content to Clipboard...");
 	}

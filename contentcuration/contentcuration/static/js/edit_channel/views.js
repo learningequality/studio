@@ -196,6 +196,7 @@ var BaseListView = BaseView.extend({
 	update_views:function(){
 		var self = this;
 		this.retrieve_nodes(this.model.get("children")).then(function(fetched){
+			console.log(self.model.get("children"))
 			self.load_content(fetched);
 		});
 	},
@@ -444,6 +445,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		return promise;
 	},
 	handle_drop:function(collection){
+		this.$(this.default_item).css("display", "none");
 		var promise = new Promise(function(resolve, reject){
 			resolve(collection);
 		});
@@ -697,7 +699,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		var promise = new Promise(function(resolve, reject){
 			var tempCollection = new Models.ContentNodeCollection();
 			var sort_order = self.model.get("metadata").max_sort_order;
-			var reload_list = [];
+			var reload_list = [self.model.get("id")];
 	        models.forEach(function(node){
 	        	reload_list.push(node.get("parent"));
 	        	reload_list.push(node.get("id"));

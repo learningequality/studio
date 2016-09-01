@@ -52,10 +52,10 @@ function addSortable(element, selected_class, callback){
 			if($(".drop-topic-hover").length === 0){
 				var view = window.workspace_manager.get(ui.item.context.id);
 				if(view){
-					$(".content-list").sortable("disable");
 					var order = [];
 					var selected_items = new Models.ContentNodeCollection();
 					var current_node = view.node.model;
+					$(".content-list").sortable( "disable" );
 			        element.$el.find("li").each( function(e, list_item) {
 			        	if($(list_item).attr('id') && !$(list_item).attr('id').includes("default_item")){
 			        		var node = window.workspace_manager.get(this.id).node.model;
@@ -117,6 +117,7 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 					var current_view = window.workspace_manager.get(ui.draggable.context.id);
 					var current_node = current_view.node.model;
 					hoverOnItem = null;
+					$(".content-list").sortable( "disable" );
 
 			        var appended_items = new Models.ContentNodeCollection(); //Items from another container
 			        $("#drag-list li").each(function(index, item){
@@ -138,6 +139,7 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		        	dropCallback(selected_items).then(function(){
 		        		$(ui.draggable.context).remove();
 		        		$(".content-list").sortable( "enable" );
+		        		$(".content-list").sortable( "refresh" );
 		        	});
 				}
 			}
