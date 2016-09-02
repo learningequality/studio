@@ -665,7 +665,9 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 
 	bind_workspace_functions:function(){
 		this.bind_node_functions();
-		_.bindAll(this, 'copy_item', 'open_preview', 'open_edit', 'handle_drop', 'handle_checked', 'add_to_clipboard', 'add_to_trash', 'make_droppable');
+		_.bindAll(this, 'copy_item', 'open_preview', 'open_edit', 'handle_drop',
+			'handle_checked', 'add_to_clipboard', 'add_to_trash', 'make_droppable',
+			'add_nodes', 'add_topic');
 	},
 	make_droppable:function(){
 		if(this.model.get("kind") === "topic"){
@@ -740,7 +742,46 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 				resolve(collection);
 			});
 		});
+	},
+	add_topic: function(){
+		var UploaderViews = require("edit_channel/uploader/views");
+		var self = this;
+		var new_topic = new Models.ContentNodeModel();
+        new_topic.save({
+            "kind":"topic",
+            "title": "Topic",
+            "sort_order" : this.model.get("metadata").max_sort_order,
+            "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+        },{
+        	success:function(new_topic){
+		        var edit_collection = new Models.ContentNodeCollection([new_topic]);
+		        $("#main-content-area").append("<div id='dialog'></div>");
+
+		        var metadata_view = new UploaderViews.MetadataModalView({
+		            el : $("#dialog"),
+		            collection: edit_collection,
+		            model: self.model,
+		            new_content: true,
+		            onsave: self.reload_ancestors,
+		            onnew:self.add_nodes
+		        });
+        	},
+        	error:function(obj, error){
+            	console.log("Error message:", error);
+        	}
+        });
+	},
+	add_nodes:function(collection){
+		var self = this;
+		if(this.subcontent_view){
+			this.subcontent_view.add_nodes(collection);
+		}else{
+			this.fetch_model(this.model).then(function(fetched){
+				self.reload(fetched);
+			});
+		}
 	}
+
 });
 
 module.exports = {

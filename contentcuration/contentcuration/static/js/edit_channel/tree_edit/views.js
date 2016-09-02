@@ -266,7 +266,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node');
+		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'add_new_subtopic');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
@@ -314,10 +314,11 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'click .open_file' : 'preview_node',
 		'change input[type=checkbox]': 'handle_checked',
 		'click .delete_item_button' : 'delete_node',
-		'click .copy_item_button': 'copy_node'
+		'click .copy_item_button': 'copy_node',
+		'click .add_subtopic_item_button': 'add_new_subtopic'
 	},
 	open_folder:function(event){
-		event.stopPropagation();
+		event.preventDefault();
 		if(!this.$el.hasClass(this.openedFolderClass)){
 			this.containing_list_view.close_folders();
 			this.subcontent_view = this.containing_list_view.add_container(this);
@@ -343,6 +344,11 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 				this.subcontent_view.close_container();
 			}
 		}
+	},
+	add_new_subtopic:function(event){
+		event.stopPropagation();
+		event.preventDefault();
+		this.add_topic();
 	}
 });
 

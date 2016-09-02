@@ -471,7 +471,22 @@
 					padding:10px;
 				}
 			}
-
+			.popover{
+				border-radius: 0;
+				.popover-content {
+					padding:0px;
+					.option{
+						width:100%;
+						padding:5px 20px;
+						border:none;
+						font-size:12pt;
+					}
+					.option:hover{
+						font-weight:bold;
+						background-color: @gray-200;
+					}
+				}
+			}
 		}
 
 		#container_area .content-container:last-child{
@@ -492,22 +507,6 @@
 			.add_content_dropdown {
 				right:0;
 				margin-left:@container-last-width * .55 ;
-			}
-			.popover{
-				border-radius: 0;
-				.popover-content {
-					padding:0px;
-					.option{
-						width:100%;
-						padding:5px 20px;
-						border:none;
-						font-size:12pt;
-					}
-					.option:hover{
-						font-weight:bold;
-						background-color: @gray-200;
-					}
-				}
 			}
 		}
 
