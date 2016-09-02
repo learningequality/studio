@@ -139,6 +139,12 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				load_reject(error);
 			});
 		});
+	},
+	close_all_popups:function(){
+		$('.content-options-dropdown').each(function() {
+            $(this).popover('hide');
+            $(this).removeClass("active-popover");
+        });
 	}
 });
 
@@ -218,7 +224,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	close_container:function(){
 		var self = this;
-		this.$el.removeClass("post_animation").addClass("remove_animation");
+		this.$el.addClass("remove_animation");
 		this.container.remove_containers_from(this.index - 1);
 		setTimeout(function(){
 			self.remove();
@@ -238,6 +244,9 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	set_current:function(model){
 		this.current_model = model;
+	},
+	close_all_popups:function(){
+		this.container.close_all_popups();
 	}
 });
 
@@ -249,15 +258,15 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 // reject (function): function to call if failed to render
 var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
+	options_template:require("./hbtemplates/content_list_item_options.handlebars"),
 	selectedClass: "content-selected",
 	openedFolderClass: "current_topic",
-	className: "content-item",
 	'id': function() {
 		return this.model.get("id");
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder','preview_node', 'open_options');
+		_.bindAll(this, 'open_folder','preview_node', 'open_options', 'copy_node' , 'delete_node');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
@@ -279,22 +288,38 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
 		this.$el.removeClass(this.selectedClass);
+		var self = this;
+		this.$el.find(".content-options-dropdown").popover({
+			animation:false,
+			trigger:"manual",
+			html: true,
+			selector: '[rel="popover"]',
+			content: function () {
+		        return $("#options_" + self.model.get("id")).html();
+		    }
+		}).click(function(event){
+			self.containing_list_view.close_all_popups();
+	        $(this).popover('show');
+	        $(this).addClass("active-popover");
+	        event.preventDefault();
+	        event.stopPropagation();
+		});
 	},
 	events: {
-		'click .edit_folder_button': 'open_edit',
+		'click .edit_item_button': 'open_edit',
 		'click .open_folder':'open_folder',
-		'click .folder' : "open_folder",
-		'click .preview_button': 'preview_node',
-		'click .file' : 'preview_node',
+		// 'click .preview_button': 'preview_node',
+		// 'click .file' : 'preview_node',
 		'change input[type=checkbox]': 'handle_checked',
-		'click .content-options-dropdown' : 'open_options'
+		'click .content-options-dropdown' : 'open_options',
+		'click .content-popover':'open_options',
+		'click .delete_item_button' : 'delete_node',
+		'click .copy_item_button': 'copy_node'
 	},
 	open_options:function(event){
-		event.preventDefault();
-		event.stopPropagation();
+
 	},
 	open_folder:function(event){
-		event.preventDefault();
 		event.stopPropagation();
 		if(!this.$el.hasClass(this.openedFolderClass)){
 			this.containing_list_view.close_folders();
@@ -306,6 +331,21 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	preview_node: function(event){
 		event.preventDefault();
 		(this.edit_mode)? this.open_edit(event) : this.open_preview();
+	},
+	copy_node:function(){
+		event.stopPropagation();
+		event.preventDefault();
+
+	},
+	delete_node:function(){
+		event.stopPropagation();
+		event.preventDefault();
+		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
+			this.add_to_trash();
+			if(this.subcontent_view){
+				this.subcontent_view.close_container();
+			}
+		}
 	}
 });
 

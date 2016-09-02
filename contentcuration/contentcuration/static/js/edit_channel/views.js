@@ -632,7 +632,6 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 		this.bind_edit_functions();
 	},
 	toggle:function(event){
-		event.stopPropagation();
 		event.preventDefault();
 		(this.getToggler().hasClass(this.collapsedClass)) ? this.open_folder() : this.close_folder();
 		if(this.container){

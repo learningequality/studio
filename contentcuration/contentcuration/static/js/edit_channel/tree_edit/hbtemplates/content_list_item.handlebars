@@ -6,11 +6,13 @@
 	<label class="file" for="item_{{node.id}}" title="{{node.title}}">
 {{/if}}
 		<div class="options pull-right">
-			<span class="edit_folder_button disable-on-edit glyphicon glyphicon-pencil" aria-hidden="true"></span>
-			{{#if isfolder}}<span class="folder_open_icon glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
+			<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
+				<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
+			</a>
+<!-- 			<span class="edit_folder_button disable-on-edit glyphicon glyphicon-pencil" aria-hidden="true"></span> -->
+			{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
 		</div>
-		<h6 class="content_metadata_summary">
-			<!-- {{to_upper_case node.kind}} -->
+		<h6 class="content_metadata_summary {{#if isfolder}}open_folder{{/if}}">
 			<span class="metadata_to_hide">
 				{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
 				{{#if isfolder}}&nbsp;{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}{{/if}}
@@ -21,17 +23,27 @@
 				{{/if}}
 			</span>
 		</h6>
-		<h3 class = "title truncate">
-			<div class="content-item-icon pull-left">
-				{{#if isfolder}}
-					<img src="/static/img/topic.png"/>
-				{{else}}
-					<span class="{{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
-				{{/if}}
+		<div class="{{#if isfolder}}open_folder{{/if}} title_wrapper">
+			<h3 class = "title truncate">
+				<div class="content-item-icon pull-left">
+					{{#if isfolder}}
+						<img src="/static/img/topic.png"/>
+					{{else}}
+						<span class="{{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
+					{{/if}}
+				</div>
+				{{#if node}}{{node.title}}{{else}}<em>[Untitled]</em>{{/if}}
+			</h3>
+			<div class="description_wrapper">
+				<p class="description wordwrap" title="{{node.description}}">{{#if node}}{{node.description}}{{else}}No description found.{{/if}}</p>
 			</div>
-			{{#if node}}{{node.title}}{{else}}<em>[Untitled]</em>{{/if}}
-		</h3>
-		<div class="description_wrapper">
-			<p class="description wordwrap" title="{{node.description}}">{{#if node}}{{node.description}}{{else}}No description found.{{/if}}</p>
 		</div>
 </label>
+<div class="popover content-popover" role="tooltip" id="options_{{node.id}}">
+	<div class="arrow"></div>
+	<div class="popover-content">
+		<div class="edit_item_button option">Edit</div>
+		<div class="copy_item_button option">Copy</div>
+		<div class="delete_item_button option">Delete</div>
+	</div>
+</div>

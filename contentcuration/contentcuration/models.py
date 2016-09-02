@@ -304,6 +304,7 @@ class File(models.Model):
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
     lang = models.ForeignKey(Language, blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
+    source_url = models.CharField(max_length=400, blank=True)
 
     class Admin:
         pass
