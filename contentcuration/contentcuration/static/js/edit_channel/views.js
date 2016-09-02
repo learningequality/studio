@@ -364,21 +364,22 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	bind_workspace_functions: function(){
 		this.bind_edit_functions();
 		_.bindAll(this, 'copy_selected', 'delete_selected', 'add_topic','add_nodes', 'drop_in_container','handle_drop', 'refresh_droppable',
-			'import_content', 'add_files', 'add_to_clipboard', 'add_to_trash','make_droppable');
+			'import_content', 'add_files', 'add_to_clipboard', 'add_to_trash','make_droppable', 'copy_collection');
 	},
 
 	copy_selected:function(){
 		var list = this.get_selected();
-		var clipboard_list = [];
-		var clipboard_root = window.current_user.get_clipboard();
 		var copyCollection = new Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
 			copyCollection.add(list[i].model);
 		}
+		return this.copy_collection(copyCollection);
+	},
+	copy_collection:function(copyCollection){
 		var clipboard = window.workspace_manager.get_queue_view();
 		clipboard.switch_to_queue();
 		clipboard.open_queue();
-		return copyCollection.duplicate(clipboard_root);
+		return copyCollection.duplicate(clipboard.clipboard_queue.model);
 	},
 	delete_selected:function(){
 		var list = this.get_selected();
@@ -664,7 +665,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 
 	bind_workspace_functions:function(){
 		this.bind_node_functions();
-		_.bindAll(this, 'open_preview', 'open_edit', 'handle_drop', 'handle_checked', 'add_to_clipboard', 'add_to_trash', 'make_droppable');
+		_.bindAll(this, 'copy_item', 'open_preview', 'open_edit', 'handle_drop', 'handle_checked', 'add_to_clipboard', 'add_to_trash', 'make_droppable');
 	},
 	make_droppable:function(){
 		if(this.model.get("kind") === "topic"){
@@ -728,6 +729,17 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	},
 	add_to_clipboard:function(message="Moving to Clipboard..."){
 		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([this.model]),message);
+	},
+	copy_item:function(message="Copying to Clipboard..."){
+		var copyCollection = new Models.ContentNodeCollection();
+		copyCollection.add(this.model);
+		var self = this;
+		this.display_load(message, function(resolve, reject){
+			self.containing_list_view.copy_collection(copyCollection).then(function(collection){
+				self.containing_list_view.add_to_clipboard(collection, "");
+				resolve(collection);
+			});
+		});
 	}
 });
 

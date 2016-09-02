@@ -266,7 +266,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder','preview_node', 'open_options', 'copy_node' , 'delete_node');
+		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
@@ -298,9 +298,12 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		        return $("#options_" + self.model.get("id")).html();
 		    }
 		}).click(function(event){
+			var hadClass = $(this).hasClass("active-popover");
 			self.containing_list_view.close_all_popups();
-	        $(this).popover('show');
-	        $(this).addClass("active-popover");
+			if(!hadClass){
+				$(this).popover('show');
+	        	$(this).addClass("active-popover");
+			}
 	        event.preventDefault();
 	        event.stopPropagation();
 		});
@@ -308,16 +311,10 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	events: {
 		'click .edit_item_button': 'open_edit',
 		'click .open_folder':'open_folder',
-		// 'click .preview_button': 'preview_node',
-		// 'click .file' : 'preview_node',
+		'click .open_file' : 'preview_node',
 		'change input[type=checkbox]': 'handle_checked',
-		'click .content-options-dropdown' : 'open_options',
-		'click .content-popover':'open_options',
 		'click .delete_item_button' : 'delete_node',
 		'click .copy_item_button': 'copy_node'
-	},
-	open_options:function(event){
-
 	},
 	open_folder:function(event){
 		event.stopPropagation();
@@ -335,7 +332,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	copy_node:function(){
 		event.stopPropagation();
 		event.preventDefault();
-
+		this.copy_item();
 	},
 	delete_node:function(){
 		event.stopPropagation();
