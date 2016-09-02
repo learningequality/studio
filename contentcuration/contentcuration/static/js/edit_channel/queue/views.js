@@ -173,11 +173,12 @@ var ClipboardList = QueueList.extend({
 	},
 	edit_items:function(){
 		this.container.edit_selected();
-	}
+	},
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
-		// handle_drop:function(collection){
-		// 		return collection.duplicate(window.current_user.get_clipboard());
-	 	// },
+	// handle_drop:function(collection){
+	// 	this.$(this.default_item).css("display", "none");
+	// 	return collection.duplicate(window.workspace_manager.get_queue_view().clipboard_queue.model);
+ // 	},
 });
 
 var TrashList = QueueList.extend({
@@ -317,7 +318,11 @@ var ClipboardItem = QueueItem.extend({
 		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
 			this.add_to_trash();
 		}
-	}
+	},
+	/* Implementation for creating copies of nodes when dropped onto clipboard */
+	// handle_drop:function(collection){
+	// 	return collection.duplicate(window.workspace_manager.get_queue_view().clipboard_queue.model);
+ // 	},
 });
 
 var TrashItem = QueueItem.extend({

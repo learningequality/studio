@@ -220,7 +220,7 @@ var BaseListView = BaseView.extend({
 		this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
 	},
 	check_all :function(event){
-		var is_checked = event.currentTarget.checked;
+		var is_checked = (event) ? event.currentTarget.checked : true;
 		this.$el.find(":checkbox").prop("checked", is_checked);
 		this.recurse_check_all(this.views);
 	},
@@ -412,30 +412,30 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			var index = orders.indexOf(moved_item);
 			var moved_index = selected_items.indexOf(moved_item);
 			if(index >= 0){
-				var starting_index = index - moved_index - 1;
-				var ending_index= starting_index + selected_items.length + 1;
-				min = (starting_index < 0)? 0 : orders[starting_index].get("sort_order");
-				max = (ending_index >= orders.length)? min + 2 : orders[ending_index].get("sort_order");
-				var reload_list = [];
-				var last_elem = $("#" + moved_item.id);
-				selected_items.forEach(function(node){
-					reload_list.push(node.get("id"));
-					if(node.get("parent") !== self.model.get("id")){
-						reload_list.push(node.get("parent"));
-					}
-					min = (min + max) / 2;
-					node.set({
-						"sort_order": min,
-						"changed" : true,
-						"parent" : self.model.get("id")
-					});
-					var to_delete = $("#" + node.id);
-					var item_view = self.create_new_view(node);
-					last_elem.after(item_view.el);
-					last_elem = item_view.$el;
-					to_delete.remove();
-				});
 				self.handle_drop(selected_items).then(function(collection){
+					var starting_index = index - moved_index - 1;
+					var ending_index= starting_index + collection.length + 1;
+					min = (starting_index < 0)? 0 : orders[starting_index].get("sort_order");
+					max = (ending_index >= orders.length)? min + 2 : orders[ending_index].get("sort_order");
+					var reload_list = [];
+					var last_elem = $("#" + moved_item.id);
+					collection.forEach(function(node){
+						reload_list.push(node.get("id"));
+						if(node.get("parent") !== self.model.get("id")){
+							reload_list.push(node.get("parent"));
+						}
+						min = (min + max) / 2;
+						node.set({
+							"sort_order": min,
+							"changed" : true,
+							"parent" : self.model.get("id")
+						});
+						var to_delete = $("#" + node.id);
+						var item_view = self.create_new_view(node);
+						last_elem.after(item_view.el);
+						last_elem = item_view.$el;
+						to_delete.remove();
+					});
 					collection.save().then(function(savedCollection){
 						self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
 							self.reload_ancestors(fetched);

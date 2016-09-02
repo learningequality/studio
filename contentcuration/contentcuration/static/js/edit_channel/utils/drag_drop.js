@@ -56,9 +56,9 @@ function addSortable(element, selected_class, callback){
 					var selected_items = new Models.ContentNodeCollection();
 					var current_node = view.node.model;
 					$(".content-list").sortable( "disable" );
-			        element.$el.find(">.content-list >li").each( function(e, list_item) {
+			        element.$el.find(".queue-list-wrapper >.content-list >li, >.content-list >li").each( function(e, list_item) {
 			        	if($(list_item).attr('id') && !$(list_item).attr('id').includes("default_item")){
-			        		var node = window.workspace_manager.get(this.id).node.model;
+			        		var node = window.workspace_manager.get($(list_item).attr('id')).node.model;
 			        		order.push(node);
 			        	}
 			       	});

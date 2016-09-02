@@ -228,6 +228,10 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     this.container = options.container;
     this.selected_items = [];
     this.render();
+    if(!this.uploaded_files && !this.new_content && this.collection.length > 1){
+      this.$("#uploader_select_all_check").attr("checked", true);
+      this.check_all_wrapper(null);
+    }
   },
   render: function() {
     this.$el.html(this.template({
