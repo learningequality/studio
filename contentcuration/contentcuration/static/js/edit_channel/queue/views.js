@@ -40,6 +40,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 			content_node_view:null
 		});
 		this.switch_to_queue();
+		this.handle_checked();
 	},
 	events: {
 		'click .queue-button' : 'toggle_queue',
@@ -62,7 +63,11 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 	switch_to_trash:function(){
 		this.clipboard_queue.switch_to(false);
 		this.trash_queue.switch_to(true);
-	}
+	},
+	handle_checked:function(){
+		this.clipboard_queue.handle_checked();
+		this.trash_queue.handle_checked();
+	},
 });
 
 
@@ -102,7 +107,13 @@ var QueueList = BaseViews.BaseWorkspaceListView.extend({
 	handle_if_empty:function(){
 		this.$(this.default_item).css("display", (this.model.get("children").length > 0) ? "none" : "block");
 		this.update_badge_count();
-	}
+	},
+	handle_checked:function(){
+		var checked_count = this.$el.find(".queue-selected").length;
+		this.$(".queue-disable-none-selected *").prop("disabled", checked_count === 0);
+		(checked_count > 0)? this.$(".queue-disable-none-selected *").removeClass("disabled") : this.$(".queue-disable-none-selected *").addClass("disabled");
+	},
+
 });
 
 var ClipboardList = QueueList.extend({
@@ -253,7 +264,12 @@ var QueueItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.model.set(model.attributes);
 		this.$el.find(">label .title").text(this.model.get("title"));
 		this.$el.find(">label .badge").text(this.model.get("metadata").resource_count);
-	}
+	},
+	handle_checked:function(){
+		this.checked = this.$el.find(">input[type=checkbox]").is(":checked");
+		(this.checked)? this.$el.addClass(this.selectedClass) : this.$el.removeClass(this.selectedClass);
+		this.container.handle_checked();
+	},
 });
 
 var ClipboardItem = QueueItem.extend({

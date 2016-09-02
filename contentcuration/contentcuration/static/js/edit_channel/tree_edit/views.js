@@ -61,6 +61,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				this.remove_containers_from(index);
 			}
 		/* Step 2: Create new container */
+			this.$("#container-wrapper").scrollLeft(this.$("#container_area").width());
 			var container_view = new ContentList({
 				model: topic,
 				index: this.lists.length + 1,
@@ -70,8 +71,10 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				content_node_view: view
 			});
 			this.lists.push(container_view);
-			this.$("#container_area").width(this.$("#container_area").width() + this.lists[0].$el.outerWidth() + 30);
-			this.$("#container-wrapper").scrollLeft(this.$("#container_area").width());
+			var self = this;
+			setTimeout(function(){
+				self.$("#container_area").width(self.$("#container_area").width() + self.lists[0].$el.width());
+			}, 400)
 
 		/* Step 3: Add container to DOM */
 			this.$("#container_area").append(container_view.el);
@@ -79,7 +82,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	remove_containers_from:function(index){
 		while(this.lists.length > index){
-			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.lists[0].$el.outerWidth() - 30);
+			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.lists[0].$el.width());
 			this.lists[this.lists.length -1].remove();
 			this.lists.splice(this.lists.length-1);
 		}
@@ -196,6 +199,9 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		});
 		setTimeout(function(){
 			self.$el.removeClass("pre_animation").addClass("post_animation");
+			setTimeout(function(){
+				self.$el.removeClass("post_animation");
+			}, 350);
 		}, 100);
 	},
 	update_name:function(){
