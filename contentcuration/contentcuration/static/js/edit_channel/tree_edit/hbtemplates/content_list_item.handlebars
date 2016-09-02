@@ -12,7 +12,7 @@
 <!-- 			<span class="edit_folder_button disable-on-edit glyphicon glyphicon-pencil" aria-hidden="true"></span> -->
 			{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
 		</div>
-		<h6 class="content_metadata_summary {{#if isfolder}}open_folder{{/if}}">
+		<h6 class="content_metadata_summary {{#if isfolder}}open_folder{{else}}open_file{{/if}}">
 			<span class="metadata_to_hide">
 				{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
 				{{#if isfolder}}&nbsp;{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}{{/if}}
@@ -23,7 +23,7 @@
 				{{/if}}
 			</span>
 		</h6>
-		<div class="{{#if isfolder}}open_folder{{/if}} title_wrapper">
+		<div class="{{#if isfolder}}open_folder{{else}}open_file{{/if}} title_wrapper">
 			<h3 class = "title truncate">
 				<div class="content-item-icon pull-left">
 					{{#if isfolder}}
