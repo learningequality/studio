@@ -108,7 +108,11 @@ def file_on_disk_name(instance, filename):
     :param filename: str
     :return: str
     """
-    h = instance.checksum
+    return generate_file_on_disk_name(instance.checksum, filename)
+
+def generate_file_on_disk_name(checksum, filename):
+    """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
+    h = checksum
     basename, ext = os.path.splitext(filename)
     return os.path.join(settings.STORAGE_URL[1:-1], h[0], h[1], h + ext.lower())
 

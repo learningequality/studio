@@ -27,7 +27,7 @@ from django.template.loader import render_to_string
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, FileOnDiskStorage
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
 from registration.backends.hmac.views import RegistrationView
@@ -249,6 +249,20 @@ def publish_channel(request):
             "channel": channel_id
         }))
 
+def file_diff(request):
+    logging.debug("Entering the file_diff endpoint")
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+        difference = []
+        for filename in data:
+            file_path = generate_file_on_disk_name(filename.split('.')[0], filename)
+            if not FileOnDiskStorage().exists(file_path):
+                difference.append(filename)
+        return HttpResponse(json.dumps(difference))
+
+""" REGISTRATION/INVITATION ENDPOINTS """
 @csrf_exempt
 def send_invitation_email(request):
     if request.method != 'POST':
