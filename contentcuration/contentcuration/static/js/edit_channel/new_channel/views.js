@@ -127,8 +127,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				self.containing_list_view.load_content();
 			});
 		}else{
-			event.stopPropagation();
-			event.preventDefault();
+			this.cancel_actions(event);
 		}
 	},
 	toggle_channel: function(){

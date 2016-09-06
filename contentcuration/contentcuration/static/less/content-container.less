@@ -487,6 +487,26 @@
 					}
 				}
 			}
+			.context-menu {
+			  display:none;
+			  cursor:pointer;
+			  position: absolute;
+			  z-index: 10;
+			  background-color: white;
+			  border:1px solid @gray-200;
+			  border-width:thin;
+			  .context-option{
+			  	padding:5px 10px;
+			  	font-size:12pt;
+			  }
+			  .context-option:hover{
+			  	font-weight:bold;
+			  	background-color: @gray-200;
+			  }
+			}
+			.context-menu.init, .context-menu:focus{
+				display:block;
+			}
 		}
 
 		#container_area .content-container:last-child{

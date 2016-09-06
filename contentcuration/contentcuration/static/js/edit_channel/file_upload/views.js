@@ -30,8 +30,7 @@ var FileModalView = BaseViews.BaseModalView.extend({
             this.file_upload_view.reset();
             this.close();
         }else{
-            event.stopPropagation();
-            event.preventDefault();
+            this.cancel_actions(event);
         }
     }
 });

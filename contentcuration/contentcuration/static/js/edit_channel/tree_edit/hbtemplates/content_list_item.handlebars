@@ -1,45 +1,47 @@
-{{#if edit_mode}}<input type="checkbox" id="item_{{node.id}}" {{#if checked}}checked{{/if}}/>
-{{else}}<input type="radio" name="{{container}}" id="item_{{node.id}}"/>{{/if}}
-{{#if isfolder}}
-	<label class="folder collapsed {{#unless edit_mode}}open_folder{{/unless}}" for="folder_{{node.id}}" title="{{node.title}}">
-{{else}}
-	<label class="file" for="item_{{node.id}}" title="{{node.title}}">
-{{/if}}
-		<div class="options pull-right">
-			<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
-				<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
-			</a>
-<!-- 			<span class="edit_folder_button disable-on-edit glyphicon glyphicon-pencil" aria-hidden="true"></span> -->
-			{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
-		</div>
-		<h6 class="content_metadata_summary {{#if isfolder}}open_folder{{else}}open_file{{/if}}">
-			<span class="metadata_to_hide">
-				{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
-				{{#if isfolder}}&nbsp;{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}{{/if}}
-				&nbsp;<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}
-				&nbsp;
-				{{#if node.changed}}
-					<em class="unpublished">{{#if node.published}}Updated{{else}}New{{/if}}</em>
-				{{/if}}
-			</span>
-		</h6>
-		<div class="{{#if isfolder}}open_folder{{else}}open_file{{/if}} title_wrapper">
-			<h3 class = "title truncate">
-				<div class="content-item-icon pull-left">
-					{{#if isfolder}}
-						<img src="/static/img/topic.png"/>
-					{{else}}
-						<span class="{{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
-					{{/if}}
-				</div>
-				{{#if node}}{{node.title}}{{else}}<em>[Untitled]</em>{{/if}}
-			</h3>
-			<div class="description_wrapper">
-				<p class="description wordwrap" title="{{node.description}}">{{#if node}}{{node.description}}{{else}}No description found.{{/if}}</p>
+<div class="list_item_wrapper">
+	{{#if edit_mode}}<input type="checkbox" id="item_{{node.id}}" {{#if checked}}checked{{/if}}/>
+	{{else}}<input type="radio" name="{{container}}" id="item_{{node.id}}"/>{{/if}}
+	{{#if isfolder}}
+		<label class="folder collapsed {{#unless edit_mode}}open_folder{{/unless}}" for="folder_{{node.id}}" title="{{node.title}}">
+	{{else}}
+		<label class="file" for="item_{{node.id}}" title="{{node.title}}">
+	{{/if}}
+			<div class="options pull-right">
+				<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
+					<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
+				</a>
+	<!-- 			<span class="edit_folder_button disable-on-edit glyphicon glyphicon-pencil" aria-hidden="true"></span> -->
+				{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
 			</div>
-		</div>
-</label>
-<div class="popover content-popover" role="tooltip" id="options_{{node.id}}">
+			<h6 class="content_metadata_summary {{#if isfolder}}open_folder{{else}}open_file{{/if}}">
+				<span class="metadata_to_hide">
+					{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
+					{{#if isfolder}}&nbsp;{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}{{/if}}
+					&nbsp;<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}
+					&nbsp;
+					{{#if node.changed}}
+						<em class="unpublished">{{#if node.published}}Updated{{else}}New{{/if}}</em>
+					{{/if}}
+				</span>
+			</h6>
+			<div class="{{#if isfolder}}open_folder{{else}}open_file{{/if}} title_wrapper">
+				<h3 class = "title truncate">
+					<div class="content-item-icon pull-left">
+						{{#if isfolder}}
+							<img src="/static/img/topic.png"/>
+						{{else}}
+							<span class="{{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
+						{{/if}}
+					</div>
+					{{#if node}}{{node.title}}{{else}}<em>[Untitled]</em>{{/if}}
+				</h3>
+				<div class="description_wrapper">
+					<p class="description wordwrap" title="{{node.description}}">{{#if node}}{{node.description}}{{else}}No description found.{{/if}}</p>
+				</div>
+			</div>
+	</label>
+</div>
+<div class="popover content-popover" tabindex="0" role="tooltip" id="options_{{node.id}}">
 	<div class="arrow"></div>
 	<div class="popover-content">
 		{{#if isfolder}}<div class="add_subtopic_item_button option">Add Subtopic</div>{{/if}}
@@ -48,3 +50,10 @@
 		<div class="delete_item_button option">Delete</div>
 	</div>
 </div>
+
+<nav class="context-menu" tabindex="0">
+  	{{#if isfolder}}<div class="add_subtopic_item_button context-option">Add Subtopic</div>{{/if}}
+	<div class="edit_item_button context-option">Edit</div>
+	<div class="copy_item_button context-option">Copy</div>
+	<div class="delete_item_button context-option">Delete</div>
+</nav>

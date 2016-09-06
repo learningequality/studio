@@ -80,13 +80,20 @@ var BaseView = Backbone.View.extend({
 			$("#channel-publish-button").addClass("disabled");
 		}
 	},
+	cancel_actions:function(event){
+		event.preventDefault();
+		event.stopPropagation();
+		if(window.workspace_manager.get_main_view()){
+			window.workspace_manager.get_main_view().close_all_popups();
+		}
+	},
 });
 
 var BaseWorkspaceView = BaseView.extend({
 	lists: [],
 	bind_workspace_functions:function(){
 		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published',
-			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected');
+			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions');
 	},
 	publish:function(){
 		if(!$("#channel-publish-button").hasClass("disabled")){
@@ -193,7 +200,7 @@ var BaseListView = BaseView.extend({
 	views: [],			//List of item views to help with garbage collection
 
 	bind_list_functions:function(){
-		_.bindAll(this, 'load_content', 'handle_if_empty', 'check_all', 'get_selected', 'set_root_model', 'update_views');
+		_.bindAll(this, 'load_content', 'handle_if_empty', 'check_all', 'get_selected', 'set_root_model', 'update_views', 'cancel_actions');
 	},
 	set_root_model:function(model){
 		this.model.set(model.toJSON());
@@ -536,7 +543,7 @@ var BaseListItemView = BaseView.extend({
 	checked : false,
 
 	bind_list_functions:function(){
-		_.bindAll(this, 'handle_checked');
+		_.bindAll(this, 'handle_checked', 'cancel_actions');
 	},
 	handle_checked:function(){
 		this.checked = this.$el.find(">input[type=checkbox]").is(":checked");
@@ -633,7 +640,7 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 		this.bind_edit_functions();
 	},
 	toggle:function(event){
-		event.preventDefault();
+		this.cancel_actions(event);
 		(this.getToggler().hasClass(this.collapsedClass)) ? this.open_folder() : this.close_folder();
 		if(this.container){
 			var containing_element = this.container.$el.find(this.list_selector);
@@ -685,8 +692,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		new Previewer.PreviewModalView(data);
 	},
 	open_edit:function(event){
-		event.stopPropagation();
-		event.preventDefault();
+		this.cancel_actions(event);
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var editCollection =  new Models.ContentNodeCollection([this.model]);

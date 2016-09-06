@@ -41,8 +41,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       this.close();
       $(".modal-backdrop").remove();
     }else{
-      event.stopPropagation();
-      event.preventDefault();
+      this.cancel_actions(event);
     }
   }
 });

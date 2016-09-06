@@ -266,7 +266,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'add_new_subtopic');
+		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'add_new_subtopic', 'open_context_menu');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
@@ -288,6 +288,9 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
 		this.$el.removeClass(this.selectedClass);
+		this.create_popover();
+	},
+	create_popover:function(){
 		var self = this;
 		this.$el.find(".content-options-dropdown").popover({
 			animation:false,
@@ -315,10 +318,24 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'change input[type=checkbox]': 'handle_checked',
 		'click .delete_item_button' : 'delete_node',
 		'click .copy_item_button': 'copy_node',
-		'click .add_subtopic_item_button': 'add_new_subtopic'
+		'click .add_subtopic_item_button': 'add_new_subtopic',
+		'contextmenu .list_item_wrapper' : 'open_context_menu'
+	},
+	open_context_menu:function(event){
+		if( event.button == 2 ) {
+			this.cancel_actions(event);
+			var contextmenu = this.$(".context-menu");
+			contextmenu.addClass("init");
+			contextmenu.offset({
+				left: event.pageX + 5,
+				top: event.pageY + 5,
+			});
+			contextmenu.focus();
+			contextmenu.removeClass("init");
+		}
 	},
 	open_folder:function(event){
-		event.preventDefault();
+		this.cancel_actions(event);
 		if(!this.$el.hasClass(this.openedFolderClass)){
 			this.containing_list_view.close_folders();
 			this.subcontent_view = this.containing_list_view.add_container(this);
@@ -327,17 +344,15 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		}
 	},
 	preview_node: function(event){
-		event.preventDefault();
+		this.cancel_actions(event);
 		(this.edit_mode)? this.open_edit(event) : this.open_preview();
 	},
-	copy_node:function(){
-		event.stopPropagation();
-		event.preventDefault();
+	copy_node:function(event){
+		this.cancel_actions(event);
 		this.copy_item();
 	},
-	delete_node:function(){
-		event.stopPropagation();
-		event.preventDefault();
+	delete_node:function(event){
+		this.cancel_actions(event);
 		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
 			this.add_to_trash();
 			if(this.subcontent_view){
@@ -346,8 +361,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		}
 	},
 	add_new_subtopic:function(event){
-		event.stopPropagation();
-		event.preventDefault();
+		this.cancel_actions(event);
 		this.add_topic();
 	}
 });
