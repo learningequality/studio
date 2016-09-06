@@ -27,9 +27,10 @@ from django.template.loader import render_to_string
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, FileOnDiskStorage
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
+from contentcuration.api import get_file_diff
 from registration.backends.hmac.views import RegistrationView
 
 def base(request):
@@ -157,6 +158,14 @@ def file_create(request):
             "object_id": new_node.pk
         }))
 
+def file_diff(request):
+    logging.debug("Entering the file_diff endpoint")
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+        return HttpResponse(json.dumps(get_file_diff(data)))
+
 @csrf_exempt
 def thumbnail_upload(request):
     if request.method == 'POST':
@@ -248,19 +257,6 @@ def publish_channel(request):
             "success": True,
             "channel": channel_id
         }))
-
-def file_diff(request):
-    logging.debug("Entering the file_diff endpoint")
-    if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-    else:
-        data = json.loads(request.body)
-        difference = []
-        for filename in data:
-            file_path = generate_file_on_disk_name(filename.split('.')[0], filename)
-            if not FileOnDiskStorage().exists(file_path):
-                difference.append(filename)
-        return HttpResponse(json.dumps(difference))
 
 """ REGISTRATION/INVITATION ENDPOINTS """
 @csrf_exempt

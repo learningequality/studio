@@ -6,7 +6,8 @@ import logging
 from functools import wraps
 
 from django.core.files import File as DjFile
-from django.db.models import Q
+from django.db.models import Q, Value
+from django.db.models.functions import Concat
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
 from kolibri.content.utils import validate
@@ -124,3 +125,12 @@ def batch_add_tags(request):
     ThroughModel.objects.bulk_create(bulk_list)
 
     return HttpResponse("Tags are successfully saved.", status=200)
+
+def get_file_diff(file_list):
+    in_db_list = models.File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=file_list).values_list('filename', flat=True)
+    to_return = list(set(file_list) - set(in_db_list))
+    # print "ALL FILES:", file_list
+    # print "\n\n\nALREADY EXIST:", in_db_list, "\n\n\n"
+    # print "DIFFERENCE:", to_return
+
+    return to_return
