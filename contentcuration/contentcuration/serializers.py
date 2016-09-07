@@ -151,8 +151,6 @@ class CustomListSerializer(serializers.ListSerializer):
                     bulk_adding_list.append(ThroughModel(node_id=node.pk, contenttag_id=tag.pk))
             ThroughModel.objects.bulk_create(bulk_adding_list)
 
-        # print "*********** STARTING: ***********"
-        # recurse(ContentNode.objects.get(id__startswith='f1a03d6'))
         # Perform updates.
         if update_nodes:
             with transaction.atomic():
@@ -177,13 +175,8 @@ class CustomListSerializer(serializers.ListSerializer):
 
                             setattr(node, 'tags', taglist)
                             node.save()
-                            # if node.parent:
-                            #     ContentNode.objects.move_node(node, ContentNode.objects.get(id=node.parent_id)) # Makes sure cache is updated after save
                             ret.append(node)
-        # print "*********** FINAL: ***********"
-        # recurse(ContentNode.objects.get(id__startswith='f1a03d6'))
         clean_db()
-        # print "*********** END ***********\n\n\n\n"
         return ret
 
 class TagSerializer(serializers.ModelSerializer):

@@ -170,7 +170,16 @@ def api_file_upload(request):
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
-        obj = api_file_create(request.FILES.values()[0])
+        data = json.loads(json.dumps(request.POST))
+        print data
+        try:
+            filename = data['filename']
+            source_url = data["source_url"]
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+        obj = api_file_create(request.FILES.values()[0], filename, source_url)
+
         return HttpResponse(json.dumps({
             "success": True,
             "new_file": obj

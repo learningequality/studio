@@ -93,8 +93,7 @@
       "license_name": "Public Domain",
       "exists": true,
       "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
-      "license_description": "Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights.
-"
+      "license_description": "Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights."
     }
   },
 
@@ -168,6 +167,13 @@
     "fields": {
       "extension": "wav",
       "mimetype" : "audio/wav"
+    }
+  },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "perseus",
+      "mimetype" : ".perseus"
     }
   },
 
@@ -248,6 +254,19 @@
   {
     "model": "contentcuration.FormatPreset",
     "fields": {
+      "id" : "video_subtitle",
+      "readable_name": "Subtitle",
+      "multi_language" : false,
+      "supplementary" : true,
+      "thumbnail" : false,
+      "order" : 4,
+      "kind" : "video",
+      "allowed_formats" : ["srt", "vtt"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
       "id" : "aud",
       "readable_name": "Audio",
       "multi_language" : false,
@@ -281,7 +300,7 @@
       "thumbnail" : false,
       "order" : 1,
       "kind" : "document",
-      "allowed_formats" : ["vtt", "srt", "pdf", "PDF"]
+      "allowed_formats" : ["pdf", "PDF"]
     }
   },
   {
@@ -294,6 +313,32 @@
       "thumbnail" : true,
       "order" : 2,
       "kind" : "document",
+      "allowed_formats" : ["png", "jpg", "jpeg"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "exercise",
+      "readable_name": "Exercise",
+      "multi_language" : false,
+      "supplementary" : false,
+      "thumbnail" : false,
+      "order" : 1,
+      "kind" : "exercise",
+      "allowed_formats" : ["perseus"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "exercise_thumbnail",
+      "readable_name": "Thumbnail",
+      "multi_language" : false,
+      "supplementary" : true,
+      "thumbnail" : true,
+      "order" : 2,
+      "kind" : "exercise",
       "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },

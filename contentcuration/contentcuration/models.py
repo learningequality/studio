@@ -142,10 +142,13 @@ class Channel(models.Model):
         related_name='editable_channels',
         verbose_name=_("editors"),
         help_text=_("Users with edit rights"),
+        blank=True,
     )
+    language =  models.ForeignKey('Language', null=True, blank=True, related_name='channel_language')
     trash_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_trash')
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
     main_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
+    staging_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_staging')
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='bookmarked_channels',
@@ -203,6 +206,7 @@ class ContentNode(MPTTModel, models.Model):
     # content should be marked as such as well. We track these "substantially
     # similar" types of content by having them have the same content_id.
     content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
+    node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)

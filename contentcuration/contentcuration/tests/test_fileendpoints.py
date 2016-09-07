@@ -150,7 +150,7 @@ def test_api_file_upload_status(api_file_upload_response):
 
 def test_api_file_upload_data(api_file_upload_response):
     response = json.loads(api_file_upload_response.content)['new_file']
-    assert models.File.objects.filter(pk=response['file_id'], checksum=response['file_id']).exists()
+    assert models.File.objects.filter(pk=response['file_id'], checksum=response['file_id'], contentnode=None).exists()
 
 def test_file_diff(file_list, file_diff):
     returned_list = get_file_diff(file_list)

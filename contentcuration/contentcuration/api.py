@@ -129,21 +129,19 @@ def batch_add_tags(request):
 def get_file_diff(file_list):
     in_db_list = models.File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=file_list).values_list('filename', flat=True)
     to_return = list(set(file_list) - set(in_db_list))
-    # print "ALL FILES:", file_list
-    # print "\n\n\nALREADY EXIST:", in_db_list, "\n\n\n"
-    # print "DIFFERENCE:", to_return
-
     return to_return
 
-def api_file_create(file_object, original_filename, source_url):
-    # original_filename = file_object._name
-    ext = os.path.splitext(original_filename)[1].split(".")[-1]
+def api_file_create(file_object, filename, source_url):
+    hashed_name = os.path.splitext(file_object._name)[1].split(".")
+    ext = hashed_name[-1]
+    created = models.File.objects.filter(checksum=hashed_name[-2]).exists()
     size = file_object._size
     file_format = models.FileFormat.objects.get(extension=ext)
-    file_obj = models.File(file_on_disk=file_object, file_format=file_format, original_filename = original_filename, file_size=size, source_url=source_url)
+    file_obj = models.File(file_on_disk=file_object, file_format=file_format, original_filename=filename, file_size=size, source_url=source_url)
     file_obj.save()
 
     return {
         'hash' : file_obj.checksum + '.' + ext,
-        'file_id': file_obj.pk
+        'file_id': file_obj.pk,
+        'created':created
     }

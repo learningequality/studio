@@ -12,6 +12,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
 from contentcuration.api import get_file_diff, api_file_create
 from django.core.urlresolvers import reverse_lazy
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 pytestmark = pytest.mark.django_db
 
@@ -23,6 +24,10 @@ def fileobj_temp():
         f.write(randomfilebytes)
         f.flush()
         yield f
+
+@pytest.fixture
+def thumbnail(url, fileobj_temp):
+    return  SimpleUploadedFile("thumbnail", "IMAGE GOES HERE", content_type="image/png")
 
 @pytest.fixture
 def video():
@@ -95,7 +100,6 @@ def fileobj_document(fileobj_temp, preset_document, fileformat_pdf):
     db_file_obj = mixer.blend('contentcuration.File', file_format=fileformat_pdf, preset=preset_document, file_on_disk=fileobj_temp.name)
     yield db_file_obj
 
-
 @pytest.fixture
 def channel_metadata():
     return {
@@ -103,11 +107,18 @@ def channel_metadata():
         "id": "fasdfada",
         "has_changed": True,
         "description": "coolest channel this side of the Pacific",
-        "children": []
+        "children": [],
+        "language": "EN"
     }
 
+# @pytest.fixture
+# def api_file_upload_response(url, fileobj_temp, fileformat_mp4):
+#     name = fileobj_temp.name + "." + fileformat_mp4.extension
+#     contenttype = fileformat_mp4.mimetype
+#     return Client().post(url, {'file': SimpleUploadedFile(name, fileobj_temp.read(), content_type=contenttype)})
+
 @pytest.fixture
-def file_list():
+def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_audio):
     return [
         {
             "title": "Western Philosophy",
@@ -119,8 +130,8 @@ def file_list():
                     "id": "ffda92",
                     "author": "Aristotle",
                     "description": "The Nicomachean Ethics is the name normally given to ...",
-                    "file": "https://archive.org/download/petersethics00arisrich/petersethics00arisrich.pdf",
-                    "license": License.PUBLIC_DOMAIN,
+                    "file": fileobj_document.checksum,
+                    "license": "Public Domain",
                 },
                 {
 
@@ -131,18 +142,18 @@ def file_list():
                         {
                             "title": "01 - The Critique of Pure Reason",
                             "id": "8326cc",
-                            "related"
-                            "file": "https://archive.org/download/critique_pure_reason_0709_librivox/critique_of_pure_reason_01_kant.mp3",
+                            "related":"8326cc",
+                            "file": fileobj_video.checksum,
                             "author": "Immanuel Kant",
-                            "license": License.PUBLIC_DOMAIN,
+                            "license": "Public Domain",
                         },
                         {
                             "title": "02 - Preface to the Second Edition",
                             "id": "aaaa4d",
                             "author": "Immanuel Kant",
-                            "file": "https://archive.org/download/critique_pure_reason_0709_librivox/critique_of_pure_reason_02_kant.mp3",
+                            "file": fileobj_exercise.checksum,
                             "author": "Immanuel Kant",
-                            "license": License.PUBLIC_DOMAIN,
+                            "license": "Public Domain",
                         }
                     ]
                 },
@@ -157,45 +168,97 @@ def file_list():
                     "title": "Smoked Brisket Recipe",
                     "id": "418799",
                     "author": "Bradley Smoker",
-                    "file": "https://archive.org/download/SmokedBrisketRecipe/smokedbrisketrecipebybradleysmoker.mp4",
-                    "license": License.CC_BY,
+                    "file": fileobj_audio.checksum,
+                    "license": "CC-BY",
                 },
                 {
                     "title": "Food Mob Bites 10: Garlic Bread",
                     "id": "6cafe2",
                     "author": "Revision 3",
                     "description": "Basic garlic bread recipe.",
-                    "file": "https://archive.org/download/Food_Mob_Bites_10/foodmob--bites--0010--garlicbread--hd720p30.h264.mp4",
-                    "license": License.CC_BY_NC_SA,
+                    "file": fileobj_audio.checksum,
+                    "license": "CC BY-NC-SA",
                 }
             ]
         },
     ]
 
 @pytest.fixture
-def topic():
-    return mixer.blend('contentcuration.ContentKind', kind='topic')
+def url():
+    return "http://127.0.0.1:8000"
+
+@pytest.fixture
+def fileobj_id1():
+    return 'notarealid.pdf'
+
+@pytest.fixture
+def fileobj_id2():
+    return 'notarealid.mp3'
+
+@pytest.fixture
+def fileobj_id3():
+    return 'notarealid.mp4'
+
+@pytest.fixture
+def fileobj_id4():
+    return 'notarealid.perseus'
+
+@pytest.fixture
+def file_list(fileobj_video, fileobj_audio, fileobj_document, fileobj_exercise, fileobj_id1, fileobj_id2, fileobj_id3, fileobj_id4):
+    return [
+        str(fileobj_video),
+        str(fileobj_audio),
+        str(fileobj_document),
+        str(fileobj_exercise),
+        fileobj_id1,
+        fileobj_id2,
+        fileobj_id3,
+        fileobj_id4,
+    ]
+
+@pytest.fixture
+def file_diff(fileobj_id1, fileobj_id2, fileobj_id3, fileobj_id4):
+    return [
+        fileobj_id1,
+        fileobj_id2,
+        fileobj_id3,
+        fileobj_id4,
+    ]
+
+@pytest.fixture
+def filename():
+    return "Filename"
+
+@pytest.fixture
+def source_url():
+    return "http://abc@xyz.com"
 
 
 @pytest.fixture
-def url():
-    return "http://127.0.0.1:8000" + str(reverse_lazy('api_file_upload'))
+def api_file_upload_response(url, fileobj_temp, fileformat_mp4, filename, source_url):
+    name = fileobj_temp.name + "." + fileformat_mp4.extension
+    contenttype = fileformat_mp4.mimetype
+    file_upload_url = url + str(reverse_lazy('api_file_upload'))
+    payload={
+        'filename':filename,
+        'source_url':source_url,
+        'file': SimpleUploadedFile(name, fileobj_temp.read(), content_type=contenttype)
+    }
+    return Client().post(file_upload_url, data=payload, format="multipart")
 
-# @pytest.fixture
-# def api_file_upload_response(url, fileobj_temp, fileformat_mp4):
-#     name = fileobj_temp.name + "." + fileformat_mp4.extension
-#     contenttype = fileformat_mp4.mimetype
-#     return Client().post(url, {'file': SimpleUploadedFile(name, fileobj_temp.read(), content_type=contenttype)})
+
+""" FILE ENDPOINT TESTS """
+def test_api_file_upload_status(api_file_upload_response):
+    assert api_file_upload_response.status_code == requests.codes.ok
+
+def test_api_file_upload_data(api_file_upload_response, filename, source_url):
+    response = json.loads(api_file_upload_response.content)['new_file']
+    file_hash = response['hash'].split('.')[0]
+    assert models.File.objects.filter(pk=response['file_id'], checksum=file_hash, contentnode=None, original_filename=filename, source_url=source_url).exists()
+
+def test_file_diff(file_list, file_diff):
+    returned_list = get_file_diff(file_list)
+    assert set(returned_list) == set(file_diff) and len(returned_list) == len(file_diff)
 
 
-# def test_api_file_upload_status(api_file_upload_response):
-#     assert api_file_upload_response.status_code == requests.codes.ok
-
-# def test_api_file_upload_data(api_file_upload_response):
-#     response = json.loads(api_file_upload_response.content)['new_file']
-#     assert models.File.objects.filter(pk=response['file_id'], checksum=response['file_id']).exists()
-
-# def test_file_diff(file_list, file_diff):
-#     returned_list = get_file_diff(file_list)
-#     assert set(returned_list) == set(file_diff) and len(returned_list) == len(file_diff)
-
+""" TOPIC TREE CREATION TESTS """
