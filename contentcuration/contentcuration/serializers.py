@@ -80,7 +80,7 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     class Meta:
         model = File
-        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'mimetype')
+        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'mimetype', 'source_url')
         list_serializer_class = FileListSerializer
 
 class FileFormatSerializer(serializers.ModelSerializer):

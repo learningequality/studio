@@ -30,7 +30,7 @@ from rest_framework.renderers import JSONRenderer
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
-from contentcuration.api import get_file_diff
+from contentcuration.api import get_file_diff, api_file_create
 from registration.backends.hmac.views import RegistrationView
 
 def base(request):
@@ -165,6 +165,12 @@ def file_diff(request):
     else:
         data = json.loads(request.body)
         return HttpResponse(json.dumps(get_file_diff(data)))
+
+def api_file_upload(request):
+    return HttpResponse(json.dumps({
+        "success": True,
+        "object_id": json.dumps(api_file_create(request))
+    }))
 
 @csrf_exempt
 def thumbnail_upload(request):

@@ -3,6 +3,7 @@ This module acts as the only interface point between other apps and the database
 It exposes several convenience functions for accessing content
 """
 import logging
+import os
 from functools import wraps
 
 from django.core.files import File as DjFile
@@ -134,3 +135,15 @@ def get_file_diff(file_list):
     # print "DIFFERENCE:", to_return
 
     return to_return
+
+def api_file_create(request):
+    if request.method == 'POST':
+        file_object = request.FILES.values()[0]
+        original_filename = file_object._name
+        ext = os.path.splitext(original_filename)[1].split(".")[-1]
+        size = file_object._size
+        file_format = models.FileFormat.objects.get(extension=ext)
+        file_obj = models.File(file_on_disk=file_object, file_format=file_format, original_filename = original_filename, file_size=size)
+        file_obj.save()
+
+        return {file_obj.checksum + '.' + ext : file_obj.pk}

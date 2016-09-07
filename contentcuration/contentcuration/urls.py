@@ -125,6 +125,7 @@ urlpatterns = [
     url(r'^decline_invitation/(?P<invitation_link>[^/]+)$', views.decline_invitation, name="decline_invitation"),
     url(r'^invitation_fail$', views.fail_invitation, name="fail_invitation"),
     url(r'^api/internal/file_diff$', views.file_diff, name="file_diff"),
+    url(r'^api/internal/file_upload$', views.api_file_upload, name="api_file_upload"),
 ]
 
 urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]

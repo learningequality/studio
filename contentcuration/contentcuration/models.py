@@ -256,7 +256,6 @@ class ContentNode(MPTTModel, models.Model):
         # Do not allow two nodes with the same name on the same level
         #unique_together = ('parent', 'title')
 
-
 class ContentKind(models.Model):
     kind = models.CharField(primary_key=True, max_length=200, choices=content_kinds.choices)
 
@@ -308,6 +307,7 @@ class File(models.Model):
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
     lang = models.ForeignKey(Language, blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
+    source_url = models.CharField(max_length=400, blank=True)
 
     class Admin:
         pass
