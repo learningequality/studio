@@ -1,5 +1,5 @@
 """
-This module contains constants representing the kinds of ContentKind.
+This module contains constants representing the different licenses
 """
 from django.utils.translation import ugettext_lazy as _
 
@@ -10,7 +10,8 @@ CC_BY_ND = "CC BY-ND"
 CC_BY_NC = "CC BY-NC"
 CC_BY_NC_SA = "CC BY-NC-SA"
 CC_BY_NC_ND = "CC BY-NC-ND"
-ARRD = "All rights reserved"
+ARRD = "All Rights Reserved"
+PD = "Public Domain"
 
 choices = (
     (CC_BY, _("CC-BY")),
@@ -19,5 +20,6 @@ choices = (
     (CC_BY_NC, _("CC BY-NC")),
     (CC_BY_NC_SA, _("CC BY-NC-SA")),
     (CC_BY_NC_ND, _("CC BY-NC-ND")),
-    (ARRD, _("All rights reserved")),
+    (ARRD, _("All Rights Reserved")),
+    (PD, _("Public Domain")),
 )

@@ -86,6 +86,17 @@
       "license_description": "The All Rights Reserved License indicates that the copyright holder reserves, or holds for their own use, all the rights provided by copyright law under one specific copyright treaty."
     }
   },
+  {
+    "model": "contentcuration.License",
+    "pk": 8,
+    "fields": {
+      "license_name": "Public Domain",
+      "exists": true,
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "license_description": "Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights.
+"
+    }
+  },
 
 
 

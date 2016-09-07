@@ -9,7 +9,6 @@ VIDEO = "video"
 AUDIO = "audio"
 EXERCISE = "exercise"
 DOCUMENT = "document"
-IMAGE = "image"
 
 choices = (
     (TOPIC, _("Topic")),
@@ -17,5 +16,4 @@ choices = (
     (AUDIO, _("Audio")),
     (EXERCISE, _("Exercise")),
     (DOCUMENT, _("Document")),
-    (IMAGE, _("Image")),
 )

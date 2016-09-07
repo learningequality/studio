@@ -135,12 +135,12 @@ def get_file_diff(file_list):
 
     return to_return
 
-def api_file_create(file_object):
-    original_filename = file_object._name
+def api_file_create(file_object, original_filename, source_url):
+    # original_filename = file_object._name
     ext = os.path.splitext(original_filename)[1].split(".")[-1]
     size = file_object._size
     file_format = models.FileFormat.objects.get(extension=ext)
-    file_obj = models.File(file_on_disk=file_object, file_format=file_format, original_filename = original_filename, file_size=size)
+    file_obj = models.File(file_on_disk=file_object, file_format=file_format, original_filename = original_filename, file_size=size, source_url=source_url)
     file_obj.save()
 
     return {

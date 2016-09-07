@@ -149,9 +149,10 @@ def test_api_file_upload_status(api_file_upload_response):
     assert api_file_upload_response.status_code == requests.codes.ok
 
 def test_api_file_upload_data(api_file_upload_response):
-    response_id = json.loads(api_file_upload_response.content)['new_file']['file_id']
-    assert models.File.objects.filter(pk=response_id).exists()
+    response = json.loads(api_file_upload_response.content)['new_file']
+    assert models.File.objects.filter(pk=response['file_id'], checksum=response['file_id']).exists()
 
 def test_file_diff(file_list, file_diff):
     returned_list = get_file_diff(file_list)
     assert set(returned_list) == set(file_diff) and len(returned_list) == len(file_diff)
+
