@@ -167,10 +167,14 @@ def file_diff(request):
         return HttpResponse(json.dumps(get_file_diff(data)))
 
 def api_file_upload(request):
-    return HttpResponse(json.dumps({
-        "success": True,
-        "object_id": json.dumps(api_file_create(request))
-    }))
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        obj = api_file_create(request.FILES.values()[0])
+        return HttpResponse(json.dumps({
+            "success": True,
+            "new_file": obj
+        }))
 
 @csrf_exempt
 def thumbnail_upload(request):
