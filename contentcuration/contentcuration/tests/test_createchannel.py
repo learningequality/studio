@@ -32,6 +32,10 @@ def thumbnail(url, fileobj_temp):
     return base64.b64encode(fileobj_temp.read())
 
 @pytest.fixture
+def topic():
+    return mixer.blend('contentcuration.ContentKind', kind='topic')
+
+@pytest.fixture
 def video():
     return mixer.blend('contentcuration.ContentKind', kind='video')
 
@@ -118,40 +122,51 @@ def channel_metadata(thumbnail):
     }
 
 @pytest.fixture
-def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_audio, license):
+def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_audio, license, topic):
     return [
         {
             "title": "Western Philosophy",
             "id": "deafdeafdeafdeafdeafdeafdeafdeaf",
             "description": "Philosophy materials for the budding mind.",
+            "kind": topic.pk,
             "children": [
                 {
                     "title": "Nicomachean Ethics",
                     "id": "beadbeadbeadbeadbeadbeadbeadbead",
                     "author": "Aristotle",
                     "description": "The Nicomachean Ethics is the name normally given to ...",
-                    "file": fileobj_document.checksum,
+                    "files": [fileobj_document.checksum + '.' + fileobj_document.file_format.extension],
                     "license": license.license_name,
+                    "kind": fileobj_document.preset.kind.pk,
                 },
                 {
                     "title": "The Critique of Pure Reason",
                     "id": "fadefadefadefadefadefadefadefade",
                     "description": "Kant saw the Critique of Pure Reason as an attempt to bridge the gap...",
+                    "kind": topic.pk,
                     "children": [
                         {
                             "title": "01 - The Critique of Pure Reason",
                             "id": "facefacefacefacefacefacefaceface",
                             "related":"deaddeaddeaddeaddeaddeaddeaddead",
-                            "file": [fileobj_video.checksum],
+                            "files": [fileobj_video.checksum + '.' + fileobj_video.file_format.extension],
                             "author": "Immanuel Kant",
                             "license": license.license_name,
+                            "kind": fileobj_video.preset.kind.pk,
                         },
                         {
                             "title": "02 - Preface to the Second Edition",
                             "id": "deaddeaddeaddeaddeaddeaddeaddead",
                             "author": "Immanuel Kant",
-                            "file": fileobj_exercise.checksum,
-                            "license": license.license_name,
+                            "kind": topic.pk,
+                            "children": [
+                                {
+                                    "title": "02.1 - A Deeply Nested Thought",
+                                    "id": "badebadebadebadebadebadebadebade",
+                                    "author": "Immanuel Kant",
+                                    "kind": topic.pk,
+                                }
+                            ]
                         }
                     ]
                 },
@@ -161,28 +176,31 @@ def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
             "title": "Recipes",
             "id": "acedacedacedacedacedacedacedaced",
             "description": "Recipes for various dishes.",
+            "kind": topic.pk,
             "children": [
                 {
                     "title": "Smoked Brisket Recipe",
                     "id": "beefbeefbeefbeefbeefbeefbeefbeef",
                     "author": "Bradley Smoker",
-                    "file": fileobj_audio.checksum,
+                    "files": [fileobj_audio.checksum + '.' + fileobj_audio.file_format.extension],
                     "license": license.license_name,
+                    "kind": fileobj_audio.preset.kind.pk,
                 },
                 {
                     "title": "Food Mob Bites 10: Garlic Bread",
                     "id": "cafecafecafecafecafecafecafecafe",
                     "author": "Revision 3",
                     "description": "Basic garlic bread recipe.",
-                    "file": fileobj_audio.checksum,
+                    "files": [fileobj_exercise.checksum + '.' + fileobj_exercise.file_format.extension],
                     "license": license.license_name,
+                    "kind": fileobj_exercise.preset.kind.pk,
                 }
             ]
         },
     ]
 
 @pytest.fixture
-def topic_tree_flat(fileobj_document, fileobj_video, fileobj_exercise, fileobj_audio, license):
+def topic_tree_flat(fileobj_document, fileobj_video, fileobj_exercise, fileobj_audio, license, topic):
     return [
         {
             "title": "Western Philosophy",
@@ -191,6 +209,7 @@ def topic_tree_flat(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
             "parent_check": None,
             "author": "",
             "license": None,
+            "kind": topic.pk,
         },
         {
             "title": "Nicomachean Ethics",
@@ -198,8 +217,9 @@ def topic_tree_flat(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
             "parent_check": "deafdeafdeafdeafdeafdeafdeafdeaf",
             "author": "Aristotle",
             "description": "The Nicomachean Ethics is the name normally given to ...",
-            "file": fileobj_document.checksum,
+            "files": [fileobj_document.checksum + '.' + fileobj_document.file_format.extension],
             "license": license.license_name,
+            "kind": fileobj_document.preset.kind.pk,
         },
         {
             "title": "The Critique of Pure Reason",
@@ -208,16 +228,18 @@ def topic_tree_flat(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
             "description": "Kant saw the Critique of Pure Reason as an attempt to bridge the gap...",
             "author": "",
             "license": None,
+            "kind": topic.pk,
         },
         {
             "title": "01 - The Critique of Pure Reason",
             "id": "facefacefacefacefacefacefaceface",
             "parent_check": "fadefadefadefadefadefadefadefade",
             "related":"deaddeaddeaddeaddeaddeaddeaddead",
-            "file": [fileobj_video.checksum],
+            "files": [fileobj_video.checksum + '.' + fileobj_video.file_format.extension],
             "description": "",
             "author": "Immanuel Kant",
             "license": license.license_name,
+            "kind": fileobj_video.preset.kind.pk,
         },
         {
             "title": "02 - Preface to the Second Edition",
@@ -225,8 +247,17 @@ def topic_tree_flat(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
             "parent_check": "fadefadefadefadefadefadefadefade",
             "author": "Immanuel Kant",
             "description": "",
-            "file": fileobj_exercise.checksum,
-            "license": license.license_name,
+            "license": None,
+            "kind": topic.pk,
+        },
+        {
+            "title": "02.1 - A Deeply Nested Thought",
+            "id": "badebadebadebadebadebadebadebade",
+            "parent_check": "deaddeaddeaddeaddeaddeaddeaddead",
+            "author": "Immanuel Kant",
+            "license": None,
+            "kind": topic.pk,
+            "description": "",
         },
         {
             "title": "Recipes",
@@ -235,6 +266,7 @@ def topic_tree_flat(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
             "parent_check": None,
             "author": "",
             "license": None,
+            "kind": topic.pk,
         },
         {
             "title": "Smoked Brisket Recipe",
@@ -242,8 +274,9 @@ def topic_tree_flat(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
             "parent_check": "acedacedacedacedacedacedacedaced",
             "author": "Bradley Smoker",
             "description": "",
-            "file": fileobj_audio.checksum,
+            "files": [fileobj_audio.checksum + '.' + fileobj_audio.file_format.extension],
             "license": license.license_name,
+            "kind": fileobj_audio.preset.kind.pk,
         },
         {
             "title": "Food Mob Bites 10: Garlic Bread",
@@ -251,8 +284,9 @@ def topic_tree_flat(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
             "parent_check": "acedacedacedacedacedacedacedaced",
             "author": "Revision 3",
             "description": "Basic garlic bread recipe.",
-            "file": fileobj_audio.checksum,
+            "files": [fileobj_exercise.checksum + '.' + fileobj_exercise.file_format.extension],
             "license": license.license_name,
+            "kind": fileobj_exercise.preset.kind.pk,
         }
     ]
 
@@ -361,17 +395,21 @@ def test_channel_create_channel_created(api_create_channel_response, channel_met
     thumbnail_check = channel_metadata['thumbnail']
     assert models.Channel.objects.filter(pk=channel_id, name=name_check, description=description_check, thumbnail=thumbnail_check).exists()
 
-def test_channel_create_staging_tree_created(staging_tree_root):
-    assert staging_tree is not None
+def test_channel_create_staging_tree_created(staging_tree_root, topic):
+    assert staging_tree_root is not None and staging_tree_root.kind == topic
 
 def test_channel_create_tree_created(api_create_channel_response, topic_tree_flat, staging_tree_root):
     for n in topic_tree_flat:
         node = models.ContentNode.objects.get(node_id=n['id'])
-        print node.parent.__dict__
-        assert node.title==n['title'] and node.description==n['description'] and node.author == n['author']
+        assert node.title==n['title'] and node.description==n['description'] and node.author == n['author'] and node.kind.pk == n['kind']
         assert node.license.license_name==n['license'] if node.license else n['license'] is None
         assert node.parent.node_id==n['parent_check'] or node.parent == staging_tree_root
 
 def test_channel_create_files_created(api_create_channel_response, topic_tree_flat):
     for n in topic_tree_flat:
-        assert False
+        if 'files' in n:
+            node = models.ContentNode.objects.get(node_id=n['id'])
+            assert len(n['files']) == node.files.all().count()
+            for file_obj in node.files.all():
+                assert str(file_obj.checksum+'.'+file_obj.file_format.extension) in n['files']
+

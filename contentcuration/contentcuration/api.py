@@ -8,6 +8,7 @@ from functools import wraps
 from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
 from kolibri.content.utils import validate
@@ -132,12 +133,13 @@ def get_file_diff(file_list):
     return to_return
 
 def api_file_create(file_object, filename, source_url):
+    print "CALLED"
     hashed_name = os.path.splitext(file_object._name)[1].split(".")
     ext = hashed_name[-1]
     created = models.File.objects.filter(checksum=hashed_name[-2]).exists()
     size = file_object._size
     file_format = models.FileFormat.objects.get(extension=ext)
-    file_obj = models.File(file_on_disk=file_object, file_format=file_format, original_filename=filename, file_size=size, source_url=source_url)
+    file_obj = models.File.objects.create(file_on_disk=file_object, file_format=file_format, original_filename=filename, file_size=size, source_url=source_url)
     file_obj.save()
 
     return {
@@ -172,7 +174,9 @@ def init_staging_tree(channel):
 def convert_data_to_nodes(content_data, parent_node):
     for node_data in content_data:
         new_node = create_node(node_data, parent_node)
-        print "New Node:", new_node.pk, new_node.title, new_node.node_id
+        # print "New Node:", new_node.pk, new_node.title, new_node.kind
+        if 'files' in node_data:
+            map_files_to_node(new_node, node_data['files'])
         if 'children' in node_data:
             convert_data_to_nodes(node_data['children'], new_node)
 
@@ -188,10 +192,11 @@ def create_node(node_data, parent_node):
             license = models.License.objects.get(license_name__iexact=license_name)
         except ObjectDoesNotExist:
             raise ObjectDoesNotExist("Invalid license found")
+    kind = models.ContentKind.objects.get(kind=node_data['kind'])
 
     return models.ContentNode.objects.create(
         title=title,
-        kind_id="topic",
+        kind=kind,
         node_id=node_id,
         description = description,
         author=author,
@@ -199,7 +204,11 @@ def create_node(node_data, parent_node):
         parent = parent_node
     )
 
-    # file_checksum = node_data['file'].split('.')[0] if 'file' in node_data else None
-    # if file_checksum is not None:
-    #     file_obj = models.File.objects.filter(checksum=file_checksum, contentnode=None).first()
-    # preset = None
+def map_files_to_node(node, data):
+    for f in data:
+        file_hash = f.split(".")
+        file_obj = models.File.objects.filter(checksum=file_hash[0], contentnode=None, file_format_id=file_hash[1]).first()
+        if file_obj is None:
+            raise ObjectDoesNotExist("File has not been created!")
+        file_obj.contentnode = node
+        file_obj.save()
