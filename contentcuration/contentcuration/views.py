@@ -171,7 +171,6 @@ def api_file_upload(request):
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
-        #import pdb; pdb.set_trace()
         data = json.loads(request.body)
 
         try:

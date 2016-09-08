@@ -5,6 +5,7 @@ import requests
 import tempfile
 import base64
 import sys
+from django.db.models import Q
 import json
 from django.test import Client
 from mixer.backend.django import mixer
@@ -47,6 +48,9 @@ def fileobj_video(fileobj_temp, preset_video, fileformat_mp4):
     db_file_obj = mixer.blend('contentcuration.File', file_format=fileformat_mp4, preset=preset_video, file_on_disk=fileobj_temp.name)
     yield db_file_obj
 
+@pytest.fixture
+def license():
+    return mixer.blend('contentcuration.License', license_name="License to Kill")
 
 @pytest.fixture
 def audio():
@@ -114,42 +118,40 @@ def channel_metadata(thumbnail):
     }
 
 @pytest.fixture
-def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_audio):
+def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_audio, license):
     return [
         {
             "title": "Western Philosophy",
-            "id": "abd115",
+            "id": "deafdeafdeafdeafdeafdeafdeafdeaf",
             "description": "Philosophy materials for the budding mind.",
             "children": [
                 {
                     "title": "Nicomachean Ethics",
-                    "id": "ffda92",
+                    "id": "beadbeadbeadbeadbeadbeadbeadbead",
                     "author": "Aristotle",
                     "description": "The Nicomachean Ethics is the name normally given to ...",
                     "file": fileobj_document.checksum,
-                    "license": "Public Domain",
+                    "license": license.license_name,
                 },
                 {
-
                     "title": "The Critique of Pure Reason",
-                    "id": "6ef99c",
+                    "id": "fadefadefadefadefadefadefadefade",
                     "description": "Kant saw the Critique of Pure Reason as an attempt to bridge the gap...",
                     "children": [
                         {
                             "title": "01 - The Critique of Pure Reason",
-                            "id": "8326cc",
-                            "related":"8326cc",
-                            "file": fileobj_video.checksum,
+                            "id": "facefacefacefacefacefacefaceface",
+                            "related":"deaddeaddeaddeaddeaddeaddeaddead",
+                            "file": [fileobj_video.checksum],
                             "author": "Immanuel Kant",
-                            "license": "Public Domain",
+                            "license": license.license_name,
                         },
                         {
                             "title": "02 - Preface to the Second Edition",
-                            "id": "aaaa4d",
+                            "id": "deaddeaddeaddeaddeaddeaddeaddead",
                             "author": "Immanuel Kant",
                             "file": fileobj_exercise.checksum,
-                            "author": "Immanuel Kant",
-                            "license": "Public Domain",
+                            "license": license.license_name,
                         }
                     ]
                 },
@@ -157,26 +159,101 @@ def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
         },
         {
             "title": "Recipes",
-            "id": "d98752",
+            "id": "acedacedacedacedacedacedacedaced",
             "description": "Recipes for various dishes.",
             "children": [
                 {
                     "title": "Smoked Brisket Recipe",
-                    "id": "418799",
+                    "id": "beefbeefbeefbeefbeefbeefbeefbeef",
                     "author": "Bradley Smoker",
                     "file": fileobj_audio.checksum,
-                    "license": "CC-BY",
+                    "license": license.license_name,
                 },
                 {
                     "title": "Food Mob Bites 10: Garlic Bread",
-                    "id": "6cafe2",
+                    "id": "cafecafecafecafecafecafecafecafe",
                     "author": "Revision 3",
                     "description": "Basic garlic bread recipe.",
                     "file": fileobj_audio.checksum,
-                    "license": "CC BY-NC-SA",
+                    "license": license.license_name,
                 }
             ]
         },
+    ]
+
+@pytest.fixture
+def topic_tree_flat(fileobj_document, fileobj_video, fileobj_exercise, fileobj_audio, license):
+    return [
+        {
+            "title": "Western Philosophy",
+            "id": "deafdeafdeafdeafdeafdeafdeafdeaf",
+            "description": "Philosophy materials for the budding mind.",
+            "parent_check": None,
+            "author": "",
+            "license": None,
+        },
+        {
+            "title": "Nicomachean Ethics",
+            "id": "beadbeadbeadbeadbeadbeadbeadbead",
+            "parent_check": "deafdeafdeafdeafdeafdeafdeafdeaf",
+            "author": "Aristotle",
+            "description": "The Nicomachean Ethics is the name normally given to ...",
+            "file": fileobj_document.checksum,
+            "license": license.license_name,
+        },
+        {
+            "title": "The Critique of Pure Reason",
+            "id": "fadefadefadefadefadefadefadefade",
+            "parent_check": "deafdeafdeafdeafdeafdeafdeafdeaf",
+            "description": "Kant saw the Critique of Pure Reason as an attempt to bridge the gap...",
+            "author": "",
+            "license": None,
+        },
+        {
+            "title": "01 - The Critique of Pure Reason",
+            "id": "facefacefacefacefacefacefaceface",
+            "parent_check": "fadefadefadefadefadefadefadefade",
+            "related":"deaddeaddeaddeaddeaddeaddeaddead",
+            "file": [fileobj_video.checksum],
+            "description": "",
+            "author": "Immanuel Kant",
+            "license": license.license_name,
+        },
+        {
+            "title": "02 - Preface to the Second Edition",
+            "id": "deaddeaddeaddeaddeaddeaddeaddead",
+            "parent_check": "fadefadefadefadefadefadefadefade",
+            "author": "Immanuel Kant",
+            "description": "",
+            "file": fileobj_exercise.checksum,
+            "license": license.license_name,
+        },
+        {
+            "title": "Recipes",
+            "id": "acedacedacedacedacedacedacedaced",
+            "description": "Recipes for various dishes.",
+            "parent_check": None,
+            "author": "",
+            "license": None,
+        },
+        {
+            "title": "Smoked Brisket Recipe",
+            "id": "beefbeefbeefbeefbeefbeefbeefbeef",
+            "parent_check": "acedacedacedacedacedacedacedaced",
+            "author": "Bradley Smoker",
+            "description": "",
+            "file": fileobj_audio.checksum,
+            "license": license.license_name,
+        },
+        {
+            "title": "Food Mob Bites 10: Garlic Bread",
+            "id": "cafecafecafecafecafecafecafecafe",
+            "parent_check": "acedacedacedacedacedacedacedaced",
+            "author": "Revision 3",
+            "description": "Basic garlic bread recipe.",
+            "file": fileobj_audio.checksum,
+            "license": license.license_name,
+        }
     ]
 
 @pytest.fixture
@@ -253,6 +330,12 @@ def api_create_channel_response(url, channel_metadata, topic_tree_data):
     }
     return Client().post(create_channel_url, data=json.dumps(payload), content_type='text/json')
 
+@pytest.fixture
+def staging_tree_root(api_create_channel_response):
+    channel_id = json.loads(api_create_channel_response.content)['new_channel']
+    channel = models.Channel.objects.get(pk=channel_id)
+    return channel.staging_tree
+
 """ FILE ENDPOINT TESTS """
 def test_api_file_upload_status(api_file_upload_response):
     assert api_file_upload_response.status_code == requests.codes.ok
@@ -278,5 +361,17 @@ def test_channel_create_channel_created(api_create_channel_response, channel_met
     thumbnail_check = channel_metadata['thumbnail']
     assert models.Channel.objects.filter(pk=channel_id, name=name_check, description=description_check, thumbnail=thumbnail_check).exists()
 
-def test_channel_create_tree_created(api_create_channel_response, topic_tree_data):
-    assert False
+def test_channel_create_staging_tree_created(staging_tree_root):
+    assert staging_tree is not None
+
+def test_channel_create_tree_created(api_create_channel_response, topic_tree_flat, staging_tree_root):
+    for n in topic_tree_flat:
+        node = models.ContentNode.objects.get(node_id=n['id'])
+        print node.parent.__dict__
+        assert node.title==n['title'] and node.description==n['description'] and node.author == n['author']
+        assert node.license.license_name==n['license'] if node.license else n['license'] is None
+        assert node.parent.node_id==n['parent_check'] or node.parent == staging_tree_root
+
+def test_channel_create_files_created(api_create_channel_response, topic_tree_flat):
+    for n in topic_tree_flat:
+        assert False

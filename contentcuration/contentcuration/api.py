@@ -150,8 +150,8 @@ def api_file_create(file_object, filename, source_url):
 def api_create_channel(channel_data, content_data):
         channel = create_channel(channel_data) # Set up initial channel
         root_node = init_staging_tree(channel) # Set up initial staging tree
-        # Fill in foreign key relationships (kinds, files (by checksum and contentnode=none), license)
         nodes = convert_data_to_nodes(content_data, root_node) # converts dict to django models
+        # Map files
         # with atomic():
         #     commit_staging_tree(channel, nodes)# Set channel's main tree to be staging tree
         #     update_channel_metadata()
@@ -172,18 +172,34 @@ def init_staging_tree(channel):
 def convert_data_to_nodes(content_data, parent_node):
     for node_data in content_data:
         new_node = create_node(node_data, parent_node)
-        convert_data_to_nodes(node_data['children'], new_node)
+        print "New Node:", new_node.pk, new_node.title, new_node.node_id
+        if 'children' in node_data:
+            convert_data_to_nodes(node_data['children'], new_node)
 
 def create_node(node_data, parent_node):
     title=node_data['title']
-    description=node_data['description']
     node_id=node_data['id']
-    author = node_data['author']
-    file_obj = models.File.objects.filter(checksum=node_data['file'].split('.')[0], contentnode=None).first()
-    license = models.License.objects.get(license_name=license)
-    print title
-    return "title"
-    # preset =
-    # kind = preset.kind
+    description=node_data['description'] if 'description' in node_data else ""
+    author = node_data['author'] if 'author' in node_data else ""
+    license = None
+    license_name = node_data['license'] if 'license' in node_data else None
+    if license_name is not None:
+        try:
+            license = models.License.objects.get(license_name__iexact=license_name)
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist("Invalid license found")
 
-    # models.ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
+    return models.ContentNode.objects.create(
+        title=title,
+        kind_id="topic",
+        node_id=node_id,
+        description = description,
+        author=author,
+        license=license,
+        parent = parent_node
+    )
+
+    # file_checksum = node_data['file'].split('.')[0] if 'file' in node_data else None
+    # if file_checksum is not None:
+    #     file_obj = models.File.objects.filter(checksum=file_checksum, contentnode=None).first()
+    # preset = None
