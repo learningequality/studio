@@ -3,6 +3,7 @@ import pytest
 import zipfile
 import requests
 import tempfile
+import base64
 import sys
 import json
 from django.test import Client
@@ -12,7 +13,6 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
 from contentcuration.api import get_file_diff, api_file_create
 from django.core.urlresolvers import reverse_lazy
-from django.core.files.uploadedfile import SimpleUploadedFile
 
 pytestmark = pytest.mark.django_db
 
@@ -23,11 +23,12 @@ def fileobj_temp():
     with tempfile.NamedTemporaryFile(dir=settings.STORAGE_ROOT, mode='w+t', delete=False) as f:
         f.write(randomfilebytes)
         f.flush()
+        f.seek(0)
         yield f
 
 @pytest.fixture
 def thumbnail(url, fileobj_temp):
-    return  SimpleUploadedFile("thumbnail", "IMAGE GOES HERE", content_type="image/png")
+    return base64.b64encode(fileobj_temp.read())
 
 @pytest.fixture
 def video():
@@ -101,21 +102,16 @@ def fileobj_document(fileobj_temp, preset_document, fileformat_pdf):
     yield db_file_obj
 
 @pytest.fixture
-def channel_metadata():
+def channel_metadata(thumbnail):
     return {
-        "title": "Aron's cool channel",
+        "name": "Aron's cool channel",
         "id": "fasdfada",
         "has_changed": True,
         "description": "coolest channel this side of the Pacific",
         "children": [],
-        "language": "EN"
+        "language": "EN",
+        "thumbnail": thumbnail
     }
-
-# @pytest.fixture
-# def api_file_upload_response(url, fileobj_temp, fileformat_mp4):
-#     name = fileobj_temp.name + "." + fileformat_mp4.extension
-#     contenttype = fileformat_mp4.mimetype
-#     return Client().post(url, {'file': SimpleUploadedFile(name, fileobj_temp.read(), content_type=contenttype)})
 
 @pytest.fixture
 def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_audio):
@@ -242,10 +238,20 @@ def api_file_upload_response(url, fileobj_temp, fileformat_mp4, filename, source
     payload={
         'filename':filename,
         'source_url':source_url,
-        'file': SimpleUploadedFile(name, fileobj_temp.read(), content_type=contenttype)
+        'content_type': contenttype,
+        'name': name,
+        'file': fileobj_temp.read(),
     }
-    return Client().post(file_upload_url, data=payload, format="multipart")
+    return Client().post(file_upload_url, data=json.dumps(payload), content_type='text/json')
 
+@pytest.fixture
+def api_create_channel_response(url, channel_metadata, topic_tree_data):
+    create_channel_url = url + str(reverse_lazy('api_create_channel'))
+    payload={
+        'channel_data': channel_metadata,
+        'content_data':topic_tree_data,
+    }
+    return Client().post(create_channel_url, data=json.dumps(payload), content_type='text/json')
 
 """ FILE ENDPOINT TESTS """
 def test_api_file_upload_status(api_file_upload_response):
@@ -262,3 +268,15 @@ def test_file_diff(file_list, file_diff):
 
 
 """ TOPIC TREE CREATION TESTS """
+def test_channel_create_success(api_create_channel_response):
+    assert api_create_channel_response.status_code == requests.codes.ok
+
+def test_channel_create_channel_created(api_create_channel_response, channel_metadata):
+    channel_id = json.loads(api_create_channel_response.content)['new_channel']
+    name_check = channel_metadata['name']
+    description_check = channel_metadata['description']
+    thumbnail_check = channel_metadata['thumbnail']
+    assert models.Channel.objects.filter(pk=channel_id, name=name_check, description=description_check, thumbnail=thumbnail_check).exists()
+
+def test_channel_create_tree_created(api_create_channel_response, topic_tree_data):
+    assert False

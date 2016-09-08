@@ -3,10 +3,10 @@ import json
 import logging
 import os
 import urlparse
-import base64
 import zlib
 import re
 from rest_framework import status
+from cStringIO import StringIO
 from django.core.mail import send_mail
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
@@ -20,6 +20,7 @@ from django.core import paginator
 from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import get_storage_class
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.context_processors import csrf
 from django.db.models import Q
 from django.template import RequestContext
@@ -30,7 +31,7 @@ from rest_framework.renderers import JSONRenderer
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
-from contentcuration.api import get_file_diff, api_file_create
+from contentcuration.api import get_file_diff, api_file_create, api_create_channel
 from registration.backends.hmac.views import RegistrationView
 
 def base(request):
@@ -170,20 +171,44 @@ def api_file_upload(request):
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
-        data = json.loads(json.dumps(request.POST))
-        print data
+        #import pdb; pdb.set_trace()
+        data = json.loads(request.body)
+
         try:
             filename = data['filename']
             source_url = data["source_url"]
+            hashedname = data["name"]
+            contenttype = data["content_type"]
+            content = data['file']
+            fobj = SimpleUploadedFile(hashedname, StringIO(content).getvalue(), content_type = contenttype)
+
+            obj = api_file_create(fobj, filename, source_url)
+
+            return HttpResponse(json.dumps({
+                "success": True,
+                "new_file": obj
+            }))
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        obj = api_file_create(request.FILES.values()[0], filename, source_url)
+def api_create_channel_endpoint(request):
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+        try:
+            content_data = data['content_data']
+            channel_data = data['channel_data']
 
-        return HttpResponse(json.dumps({
-            "success": True,
-            "new_file": obj
-        }))
+            obj = api_create_channel(channel_data, content_data)
+
+            return HttpResponse(json.dumps({
+                "success": True,
+                "new_channel": obj.pk
+            }))
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
 
 @csrf_exempt
 def thumbnail_upload(request):

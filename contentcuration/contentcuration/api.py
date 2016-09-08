@@ -145,3 +145,45 @@ def api_file_create(file_object, filename, source_url):
         'file_id': file_obj.pk,
         'created':created
     }
+
+""" CHANNEL CREATE FUNCTIONS """
+def api_create_channel(channel_data, content_data):
+        channel = create_channel(channel_data) # Set up initial channel
+        root_node = init_staging_tree(channel) # Set up initial staging tree
+        # Fill in foreign key relationships (kinds, files (by checksum and contentnode=none), license)
+        nodes = convert_data_to_nodes(content_data, root_node) # converts dict to django models
+        # with atomic():
+        #     commit_staging_tree(channel, nodes)# Set channel's main tree to be staging tree
+        #     update_channel_metadata()
+        return channel # Return new channel
+
+def create_channel(channel_data):
+    name = channel_data['name']
+    description = channel_data['description']
+    thumbnail = channel_data['thumbnail']
+    return models.Channel.objects.create(name=name, description=description, thumbnail=thumbnail)
+
+def init_staging_tree(channel):
+    channel.staging_tree = models.ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
+    channel.staging_tree.save()
+    channel.save()
+    return channel.staging_tree
+
+def convert_data_to_nodes(content_data, parent_node):
+    for node_data in content_data:
+        new_node = create_node(node_data, parent_node)
+        convert_data_to_nodes(node_data['children'], new_node)
+
+def create_node(node_data, parent_node):
+    title=node_data['title']
+    description=node_data['description']
+    node_id=node_data['id']
+    author = node_data['author']
+    file_obj = models.File.objects.filter(checksum=node_data['file'].split('.')[0], contentnode=None).first()
+    license = models.License.objects.get(license_name=license)
+    print title
+    return "title"
+    # preset =
+    # kind = preset.kind
+
+    # models.ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
