@@ -116,9 +116,8 @@ def channel_metadata(thumbnail):
         "id": "fasdfada",
         "has_changed": True,
         "description": "coolest channel this side of the Pacific",
-        "children": [],
         "language": "EN",
-        "thumbnail": thumbnail
+        "thumbnail": thumbnail,
     }
 
 @pytest.fixture
@@ -413,3 +412,12 @@ def test_channel_create_files_created(api_create_channel_response, topic_tree_fl
             for file_obj in node.files.all():
                 assert str(file_obj.checksum+'.'+file_obj.file_format.extension) in n['files']
 
+def test_channel_create_main_tree_set(api_create_channel_response, staging_tree_root):
+    channel_id = json.loads(api_create_channel_response.content)['new_channel']
+    channel =  models.Channel.objects.get(pk=channel_id)
+    assert channel.main_tree == staging_tree_root
+
+def test_channel_create_version_incremented(api_create_channel_response):
+    channel_id = json.loads(api_create_channel_response.content)['new_channel']
+    channel =  models.Channel.objects.get(pk=channel_id)
+    assert channel.version == 1

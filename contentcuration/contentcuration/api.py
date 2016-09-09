@@ -152,11 +152,9 @@ def api_file_create(file_object, filename, source_url):
 def api_create_channel(channel_data, content_data):
         channel = create_channel(channel_data) # Set up initial channel
         root_node = init_staging_tree(channel) # Set up initial staging tree
-        nodes = convert_data_to_nodes(content_data, root_node) # converts dict to django models
-        # Map files
-        # with atomic():
-        #     commit_staging_tree(channel, nodes)# Set channel's main tree to be staging tree
-        #     update_channel_metadata()
+        convert_data_to_nodes(content_data, root_node) # converts dict to django models
+        with transaction.atomic():
+            update_channel(channel, root_node)
         return channel # Return new channel
 
 def create_channel(channel_data):
@@ -174,7 +172,6 @@ def init_staging_tree(channel):
 def convert_data_to_nodes(content_data, parent_node):
     for node_data in content_data:
         new_node = create_node(node_data, parent_node)
-        # print "New Node:", new_node.pk, new_node.title, new_node.kind
         if 'files' in node_data:
             map_files_to_node(new_node, node_data['files'])
         if 'children' in node_data:
@@ -212,3 +209,8 @@ def map_files_to_node(node, data):
             raise ObjectDoesNotExist("File has not been created!")
         file_obj.contentnode = node
         file_obj.save()
+
+def update_channel(channel, root):
+    channel.main_tree = root
+    channel.version += 1
+    channel.save()
