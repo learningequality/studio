@@ -16,3 +16,4 @@ django-hashedfilenamestorage==1.0.0
 djangorestframework-bulk==0.2.1
 django-email-extras==0.3.3
 kolibri-0.0.1.dev20160731203156-py2.py3-none-any.whl
+https://github.com/learningequality/fle-utils/tarball/master#egg=fle_utils

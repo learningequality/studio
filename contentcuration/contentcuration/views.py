@@ -5,6 +5,8 @@ import os
 import urlparse
 import zlib
 import re
+import tempfile
+import shutil
 from rest_framework import status
 from cStringIO import StringIO
 from django.core.mail import send_mail
@@ -28,10 +30,10 @@ from django.template.loader import render_to_string
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
-from contentcuration.api import get_file_diff, api_file_create, api_create_channel
+from contentcuration.api import get_file_diff, api_create_channel
 from registration.backends.hmac.views import RegistrationView
 
 def base(request):
@@ -159,6 +161,8 @@ def file_create(request):
             "object_id": new_node.pk
         }))
 
+# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
+@csrf_exempt
 def file_diff(request):
     logging.debug("Entering the file_diff endpoint")
     if request.method != 'POST':
@@ -167,29 +171,27 @@ def file_diff(request):
         data = json.loads(request.body)
         return HttpResponse(json.dumps(get_file_diff(data)))
 
+# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
+@csrf_exempt
 def api_file_upload(request):
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
-        data = json.loads(request.body)
-
         try:
-            filename = data['filename']
-            source_url = data["source_url"]
-            hashedname = data["name"]
-            contenttype = data["content_type"]
-            content = data['file']
-            fobj = SimpleUploadedFile(hashedname, StringIO(content).getvalue(), content_type = contenttype)
+            fobj = request.FILES["file"]
+            file_path = generate_file_on_disk_name(fobj._name.split(".")[-2], fobj._name)
 
-            obj = api_file_create(fobj, filename, source_url)
+            with open(file_path, 'wb') as destf:
+                shutil.copyfileobj(fobj, destf)
 
             return HttpResponse(json.dumps({
                 "success": True,
-                "new_file": obj
             }))
         except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+            raise ObjectDoesNotExist("Missing attribute from data")
 
+# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
+@csrf_exempt
 def api_create_channel_endpoint(request):
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
@@ -198,16 +200,32 @@ def api_create_channel_endpoint(request):
         try:
             content_data = data['content_data']
             channel_data = data['channel_data']
+            file_data = data['file_data']
 
-            obj = api_create_channel(channel_data, content_data)
+            obj = api_create_channel(channel_data, content_data, file_data)
+            invitation = Invitation.objects.create(channel=obj)
 
             return HttpResponse(json.dumps({
                 "success": True,
-                "new_channel": obj.pk
+                "new_channel": obj.pk,
+                "invite_id":invitation.pk,
             }))
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
+@login_required
+def api_open_channel(request, invitation_id, channel_id):
+    if Invitation.objects.filter(id=invitation_id, channel_id=channel_id).exists():
+        Invitation.objects.get(id=invitation_id).delete()
+        channel = Channel.objects.get(id=channel_id)
+        channel.editors = [request.user]
+        channel.save()
+        return redirect('/channels/{0}/edit'.format(channel_id))
+    else:
+        return redirect('/open_fail')
+
+def fail_open_channel(request):
+    return render(request, 'permissions/open_channel_fail.html')
 
 @csrf_exempt
 def thumbnail_upload(request):

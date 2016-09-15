@@ -132,36 +132,23 @@ def get_file_diff(file_list):
     to_return = list(set(file_list) - set(in_db_list))
     return to_return
 
-def api_file_create(file_object, filename, source_url):
-    print "CALLED"
-    hashed_name = os.path.splitext(file_object._name)[1].split(".")
-    ext = hashed_name[-1]
-    created = models.File.objects.filter(checksum=hashed_name[-2]).exists()
-    size = file_object._size
-    file_format = models.FileFormat.objects.get(extension=ext)
-    file_obj = models.File.objects.create(file_on_disk=file_object, file_format=file_format, original_filename=filename, file_size=size, source_url=source_url)
-    file_obj.save()
-
-    return {
-        'hash' : file_obj.checksum + '.' + ext,
-        'file_id': file_obj.pk,
-        'created':created
-    }
 
 """ CHANNEL CREATE FUNCTIONS """
-def api_create_channel(channel_data, content_data):
+def api_create_channel(channel_data, content_data, file_data):
         channel = create_channel(channel_data) # Set up initial channel
         root_node = init_staging_tree(channel) # Set up initial staging tree
-        convert_data_to_nodes(content_data, root_node) # converts dict to django models
         with transaction.atomic():
+            convert_data_to_nodes(content_data, root_node, file_data) # converts dict to django models
             update_channel(channel, root_node)
         return channel # Return new channel
 
 def create_channel(channel_data):
-    name = channel_data['name']
-    description = channel_data['description']
-    thumbnail = channel_data['thumbnail']
-    return models.Channel.objects.create(name=name, description=description, thumbnail=thumbnail)
+    return models.Channel.objects.create(
+        # id=channel_data['id'],
+        name=channel_data['name'],
+        description=channel_data['description'],
+        thumbnail=channel_data['thumbnail'],
+    )
 
 def init_staging_tree(channel):
     channel.staging_tree = models.ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
@@ -169,27 +156,25 @@ def init_staging_tree(channel):
     channel.save()
     return channel.staging_tree
 
-def convert_data_to_nodes(content_data, parent_node):
+def convert_data_to_nodes(content_data, parent_node, file_data):
     for node_data in content_data:
         new_node = create_node(node_data, parent_node)
-        if 'files' in node_data:
-            map_files_to_node(new_node, node_data['files'])
-        if 'children' in node_data:
-            convert_data_to_nodes(node_data['children'], new_node)
+        map_files_to_node(new_node, node_data['files'], file_data)
+        convert_data_to_nodes(node_data['children'], new_node, file_data)
 
 def create_node(node_data, parent_node):
     title=node_data['title']
     node_id=node_data['id']
-    description=node_data['description'] if 'description' in node_data else ""
-    author = node_data['author'] if 'author' in node_data else ""
+    description=node_data['description']
+    author = node_data['author']
+    kind = models.ContentKind.objects.get(kind=node_data['kind'])
     license = None
-    license_name = node_data['license'] if 'license' in node_data else None
+    license_name = node_data['license']
     if license_name is not None:
         try:
             license = models.License.objects.get(license_name__iexact=license_name)
         except ObjectDoesNotExist:
             raise ObjectDoesNotExist("Invalid license found")
-    kind = models.ContentKind.objects.get(kind=node_data['kind'])
 
     return models.ContentNode.objects.create(
         title=title,
@@ -201,13 +186,22 @@ def create_node(node_data, parent_node):
         parent = parent_node
     )
 
-def map_files_to_node(node, data):
+def map_files_to_node(node, data, file_data):
+
     for f in data:
         file_hash = f.split(".")
-        file_obj = models.File.objects.filter(checksum=file_hash[0], contentnode=None, file_format_id=file_hash[1]).first()
-        if file_obj is None:
-            raise ObjectDoesNotExist("File has not been created!")
-        file_obj.contentnode = node
+        kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1]).first()
+
+        file_obj = models.File(
+            checksum=file_hash[0],
+            contentnode=node,
+            file_format_id=file_hash[1],
+            original_filename=file_data[f]['original_filename'],
+            source_url=file_data[f]['source_url'],
+            file_size = file_data[f]['size'],
+            file_on_disk=DjFile(open(models.generate_file_on_disk_name(file_hash[0], f), 'rb')),
+            preset=kind_preset,
+        )
         file_obj.save()
 
 def update_channel(channel, root):
