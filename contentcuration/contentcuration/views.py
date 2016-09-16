@@ -216,10 +216,11 @@ def api_create_channel_endpoint(request):
 @login_required
 def api_open_channel(request, invitation_id, channel_id):
     if Invitation.objects.filter(id=invitation_id, channel_id=channel_id).exists():
-        Invitation.objects.get(id=invitation_id).delete()
         channel = Channel.objects.get(id=channel_id)
-        channel.editors = [request.user]
+        if not channel.editors.filter(id = request.user.pk).exists():
+            channel.editors.add(request.user)
         channel.save()
+        Invitation.objects.get(id=invitation_id).delete()
         return redirect('/channels/{0}/edit'.format(channel_id))
     else:
         return redirect('/open_fail')

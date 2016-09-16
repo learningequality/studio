@@ -143,12 +143,13 @@ def api_create_channel(channel_data, content_data, file_data):
         return channel # Return new channel
 
 def create_channel(channel_data):
-    return models.Channel.objects.create(
-        # id=channel_data['id'],
-        name=channel_data['name'],
-        description=channel_data['description'],
-        thumbnail=channel_data['thumbnail'],
-    )
+    channel = models.Channel.objects.get_or_create(id=channel_data['id'])[0]
+    channel.name = channel_data['name']
+    channel.description=channel_data['description']
+    channel.thumbnail=channel_data['thumbnail']
+    channel.deleted = False
+    channel.save()
+    return channel
 
 def init_staging_tree(channel):
     channel.staging_tree = models.ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
