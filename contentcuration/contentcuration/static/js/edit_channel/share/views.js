@@ -129,7 +129,6 @@ var ShareView = BaseViews.BaseView.extend({
         var user = new Models.UserModel();
         var self = this;
         user.send_invitation_email(email, this.model).then(function(invite){
-            console.log(invite);
             self.$("#share_invite_button").val("Invite");
             self.pending_view.add_to_pending_collection(invite);
         });

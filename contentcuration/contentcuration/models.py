@@ -199,6 +199,7 @@ class ContentNode(MPTTModel, models.Model):
     # content should be marked as such as well. We track these "substantially
     # similar" types of content by having them have the same content_id.
     content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
+    node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)

@@ -60,6 +60,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.onnew = options.onnew;
     this.onclose = options.onclose;
     this.render();
+    this.adjust_list_height();
   },
   events: {
     'click #metadata_details_btn' : 'render_details',
@@ -227,7 +228,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     this.container = options.container;
     this.selected_items = [];
     this.render();
-    if(!this.uploaded_files && !this.new_content && this.collection.length > 1){
+    if(!this.upload_files && !this.new_content && this.collection.length > 1){
       this.$("#uploader_select_all_check").attr("checked", true);
       this.check_all_wrapper(null);
     }
