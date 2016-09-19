@@ -11,6 +11,8 @@ from contentcuration.constants import content_kinds
 
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
+from kolibri.content.utils.search import fuzz
+
 
 import logging as logmodule
 logging = logmodule.getLogger(__name__)
@@ -132,6 +134,7 @@ def create_bare_contentnode(ccnode):
         kind=ccnode.kind.kind,
         license=kolibri_license,
         available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
+        stemmed_metaphone= ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
     )
 
     if ccnode.parent:

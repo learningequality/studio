@@ -166,7 +166,6 @@ var ContentNodeCollection = BaseCollection.extend({
     },
     duplicate:function(target_parent){
     	var self = this;
-    	console.log("CALLED 2")
     	var promise = new Promise(function(resolve, reject){
     		var copied_list = [];
 	    	self.forEach(function(node){
@@ -183,7 +182,6 @@ var ContentNodeCollection = BaseCollection.extend({
 	            url: window.Urls.duplicate_nodes(),
 	            data:  JSON.stringify(data),
 	            success: function(data) {
-	            	console.log("CALLED 3")
 	                copied_list = JSON.parse(data).node_ids.split(" ");
 	                self.get_all_fetch(copied_list).then(function(fetched){
 	    				resolve(fetched);
