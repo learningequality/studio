@@ -652,7 +652,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         return preset.get("associated_mimetypes").join(",");
     },
     file_uploaded:function(file){
-        console.log("Successfully added file!", file);
+        // console.log("Successfully added file!", file);
         //thumbnail: $(file.previewTemplate).find(".thumbnail_img").attr("src"),
         var new_file = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
         var self = this;

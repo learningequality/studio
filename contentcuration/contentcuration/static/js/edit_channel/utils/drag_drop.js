@@ -58,7 +58,6 @@ function addSortable(element, selected_class, callback){
         },
 		update: function(event, ui) {
 			if($(".drop-topic-hover").length === 0){
-				console.log("CALLED")
 				var view = window.workspace_manager.get(ui.item.context.id);
 				if(view){
 					var order = [];
