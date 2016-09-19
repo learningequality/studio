@@ -254,19 +254,6 @@
   {
     "model": "contentcuration.FormatPreset",
     "fields": {
-      "id" : "video_subtitle",
-      "readable_name": "Subtitle",
-      "multi_language" : false,
-      "supplementary" : true,
-      "thumbnail" : false,
-      "order" : 4,
-      "kind" : "video",
-      "allowed_formats" : ["srt", "vtt"]
-    }
-  },
-  {
-    "model": "contentcuration.FormatPreset",
-    "fields": {
       "id" : "aud",
       "readable_name": "Audio",
       "multi_language" : false,
