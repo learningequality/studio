@@ -364,7 +364,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	bind_workspace_functions: function(){
 		this.bind_edit_functions();
 		_.bindAll(this, 'copy_selected', 'delete_selected', 'add_topic','add_nodes', 'drop_in_container','handle_drop', 'refresh_droppable',
-			'import_content', 'add_files', 'add_to_clipboard', 'add_to_trash','make_droppable');
+			'import_content', 'add_files', 'add_to_clipboard', 'add_to_trash','make_droppable', 'add_exercise');
 	},
 
 	copy_selected:function(){
@@ -521,6 +521,15 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		this.container.add_to_trash(collection, message).then(function(){
 			self.handle_if_empty();
 		});
+	},
+	add_exercise:function(){
+		var Exercise = require("edit_channel/exercise_creation/views");
+	  	this.exercise_view = new Exercise.ExerciseModalView({
+	      parent_view: this,
+	      model:this.model,
+	      onsave: this.reload_ancestors,
+		  onnew:this.add_nodes
+	  	});
 	}
 });
 

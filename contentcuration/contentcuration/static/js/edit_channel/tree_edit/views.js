@@ -179,7 +179,8 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		'click .create_new_button':'add_topic',
 		'click .import_button':'import_content',
 		'click .back_button' :'close_container',
-		'click .upload_files_button': 'add_files'
+		'click .upload_files_button': 'add_files',
+		'click .create_exercise_button' : 'add_exercise'
 	},
 	render: function() {
 		this.$el.html(this.template({

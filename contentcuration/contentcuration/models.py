@@ -441,7 +441,7 @@ class AssessmentItem(models.Model):
     type = models.CharField(max_length=50, default="multiplechoice")
     question = models.TextField(blank=True)
     answers = models.TextField(default="[]")
-    exercise = models.ForeignKey('Exercise', related_name="all_assessment_items")
+    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items")
 
 class Invitation(models.Model):
     """ Invitation to edit channel """

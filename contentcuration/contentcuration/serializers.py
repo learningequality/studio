@@ -314,11 +314,11 @@ class ExerciseSerializer(serializers.ModelSerializer):
         fields = ('title', 'description', 'id')
 
 class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
-    exercise = serializers.PrimaryKeyRelatedField(queryset=Exercise.objects.all())
+    # contentnode = serializers.PrimaryKeyRelatedField(queryset=Exercise.objects.all())
 
     class Meta:
         model = AssessmentItem
-        fields = ('question', 'type', 'answers', 'id', 'exercise')
+        fields = ('question', 'type', 'answers', 'id', 'contentnode')
         list_serializer_class = BulkListSerializer
 
 class ChannelSerializer(serializers.ModelSerializer):
