@@ -48,6 +48,7 @@ var BaseView = Backbone.View.extend({
 				}
 				if(model.id === window.current_channel.get("main_tree").id){
 					self.check_if_published(model);
+					window.workspace_manager.get_main_view().handle_checked();
 				}
 			});
 		});

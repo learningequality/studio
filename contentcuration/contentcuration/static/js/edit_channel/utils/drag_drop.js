@@ -48,6 +48,14 @@ function addSortable(element, selected_class, callback){
             $("." + selectedClass + " input[type='checkbox']").prop("checked", false);
             $('.' + selectedClass).removeClass(selectedClass);
         },
+        beforeStop: function(event, ui) {
+            if ($(event.target).parent("#queue_content") && $("#queue").hasClass("closed")) {
+                $(this).sortable('cancel');
+                 ui.item.siblings('.' + selectedClass).removeClass('hidden');
+	            $("." + selectedClass + " input[type='checkbox']").prop("checked", false);
+	            $('.' + selectedClass).removeClass(selectedClass);
+            }
+        },
 		update: function(event, ui) {
 			if($(".drop-topic-hover").length === 0){
 				var view = window.workspace_manager.get(ui.item.context.id);
@@ -94,10 +102,7 @@ function addSortable(element, selected_class, callback){
 		}
 	}).droppable({
 		items : 'li',
-		revert: "valid",
-		revertDuration:100,
-		cursor:"move",
-		cancel: '.current_topic, .default-item, #preview li',
+		cancel: '.current_topic, .default-item, #preview, #queue',
 	}).disableSelection();
 }
 
