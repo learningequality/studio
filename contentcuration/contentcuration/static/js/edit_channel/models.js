@@ -381,12 +381,17 @@ var ContentKindCollection = BaseCollection.extend({
     }
 });
 
-var AssessmentItemModel = Backbone.Model.extend({
+var ExerciseModel = BaseModel.extend({
+	root_list:"exercise-list"
+});
 
-	urlRoot: function() {
-		return window.Urls["assessmentitem-list"]();
-	},
+var ExerciseCollection = BaseCollection.extend({
+	model: ExerciseModel,
+	list_name:"exercise-list"
+});
 
+var AssessmentItemModel =BaseModel.extend({
+	root_list:"assessmentitem-list",
 	defaults: {
 		question: "",
 		answers: "[]"
@@ -417,12 +422,8 @@ var AssessmentItemModel = Backbone.Model.extend({
 
 });
 
-var AssessmentItemCollection = Backbone.Collection.extend({
+var AssessmentItemCollection = BaseCollection.extend({
 	model: AssessmentItemModel,
-
-	save: function() {
-        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
-	}
 });
 
 module.exports = {
@@ -444,6 +445,8 @@ module.exports = {
 	UserCollection:UserCollection,
 	InvitationModel: InvitationModel,
 	InvitationCollection: InvitationCollection,
+	ExerciseModel:ExerciseModel,
+	ExerciseCollection:ExerciseCollection,
 	AssessmentItemModel:AssessmentItemModel,
 	AssessmentItemCollection:AssessmentItemCollection,
 }

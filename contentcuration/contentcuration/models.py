@@ -424,8 +424,8 @@ class RelatedContentRelationship(models.Model):
         super(RelatedContentRelationship, self).save(*args, **kwargs)
 
 class Exercise(models.Model):
-    contentnode = models.ForeignKey('ContentNode', related_name="exercise")
-    mastery_model = models.CharField(max_length=200, default="")
+    contentnode = models.ForeignKey('ContentNode', related_name="exercise", null=True)
+    mastery_model = models.CharField(max_length=200, default=constants.MM_DO_ALL, choices=constants.MASTERY_MODELS)
 
 class AssessmentItem(models.Model):
     type = models.CharField(max_length=50, default="multiplechoice")
