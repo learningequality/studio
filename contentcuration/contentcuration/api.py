@@ -11,7 +11,6 @@ from django.db.models.functions import Concat
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
-from kolibri.content.utils import validate
 from django.db import transaction
 import models
 
