@@ -50,6 +50,7 @@ INSTALLED_APPS = (
     'django_js_reverse',
     'kolibri.content',
     'email_extras',
+    'fle_utils',
 )
 
 MIDDLEWARE_CLASSES = (

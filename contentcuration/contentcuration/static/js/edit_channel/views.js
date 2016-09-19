@@ -443,7 +443,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 							resolve(true);
 						});
 					}).catch(function(error){
-		        		alert(error.message);
+		        		console.log(error);
 		        	});
 				});
 			}

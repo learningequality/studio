@@ -116,9 +116,11 @@
 					height:100%;
 					width: @channel-profile-width;
 					margin: 5px 15px 5px 5px;
+
 					img{
 						width:@channel-profile-width * .9;
 						height:@channel-profile-width * .9;
+						object-fit: cover;
 					}
 				}
 				#dropzone{
@@ -128,6 +130,7 @@
 					#dz-placeholder{
 						width:@channel-profile-width * .9;
 						height:@channel-profile-width * .9;
+						object-fit: cover;
 						cursor:pointer;
 						border:4px dashed @gray-400;
 						font-style:italic;
