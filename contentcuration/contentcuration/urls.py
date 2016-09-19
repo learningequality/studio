@@ -40,7 +40,7 @@ class ChannelViewSet(viewsets.ModelViewSet):
     queryset = Channel.objects.all()
     serializer_class = serializers.ChannelSerializer
 
-class FileViewSet(viewsets.ModelViewSet):
+class FileViewSet(BulkModelViewSet):
     queryset = File.objects.all()
     serializer_class = serializers.FileSerializer
 
@@ -87,7 +87,6 @@ router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'exercise', ExerciseViewSet)
-router.register(r'file', FileViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
@@ -98,6 +97,7 @@ router.register(r'invitation', InvitationViewSet)
 bulkrouter = BulkRouter(trailing_slash=False)
 bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
 bulkrouter.register(r'contentnode', ContentNodeViewSet)
+bulkrouter.register(r'file', FileViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
@@ -105,13 +105,13 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
-    url(r'^api/duplicate_node/$', views.duplicate_node, name='duplicate_node'),
     url(r'^api/duplicate_nodes/$', views.duplicate_nodes, name='duplicate_nodes'),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),
     url(r'^file_upload/', views.file_upload, name="file_upload"),
+    url(r'^file_create/', views.file_create, name="file_create"),
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
     url(r'^accounts/password/reset/$',auth_views.password_reset,{'post_reset_redirect': reverse_lazy('auth_password_reset_done'),'html_email_template_name': 'registration/password_reset_email.html'}, name='auth_password_reset'),
     url(r'^accounts/register/$', views.UserRegistrationView.as_view(), name='registration_register'),

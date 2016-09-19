@@ -1,6 +1,6 @@
 Django==1.9.7
 django-filter==0.9.2
-django-mptt==0.7.3
+django-mptt==0.8.5
 djangorestframework==3.3.3
 factory-boy==2.7.0
 pytest==2.9.2
@@ -15,4 +15,4 @@ django-registration==2.1.2
 django-hashedfilenamestorage==1.0.0
 djangorestframework-bulk==0.2.1
 django-email-extras==0.3.3
-https://github.com/learningequality/kolibri/tarball/master#egg=kolibri
+kolibri-0.0.1.dev20160731203156-py2.py3-none-any.whl

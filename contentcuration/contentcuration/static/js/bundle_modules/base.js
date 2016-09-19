@@ -8,7 +8,8 @@ require("handlebars/helpers");
 
 require("../../less/styles.less");
 require("bootstrap/dist/js/npm.js");
-require("jquery-sortable");
+require("../../js/jquery-ui.min");
+
 
 var csrftoken = get_cookie("csrftoken") || "";
 
@@ -41,6 +42,19 @@ $.ajaxSetup({
             xhr.setRequestHeader("X-CSRFToken", csrftoken);
         }
 	}
+});
+
+$.extend( $.expr[ ":" ], {
+    data: $.expr.createPseudo ?
+        $.expr.createPseudo(function( dataName ) {
+            return function( elem ) {
+                return !!$.data( elem, dataName );
+            };
+        }) :
+        // support: jQuery <1.8
+        function( elem, i, match ) {
+            return !!$.data( elem, match[ 3 ] );
+        }
 });
 
 $(function() {

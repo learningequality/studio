@@ -35,6 +35,7 @@
     "hbsfy": "^2.2.1",
     "jquery": "^2.1.4",
     "jquery-sortable": "^0.9.13",
+    "jquery-ui" : "^1.12.0",
     "jszip": "^2.5.0",
     "jszip-utils": "0.0.2",
     "marked": "^0.3.5",

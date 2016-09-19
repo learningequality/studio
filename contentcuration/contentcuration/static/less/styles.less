@@ -6,13 +6,27 @@
 @search-bg-color: #f4edf5;
 @searchtext-color: #444444;
 @search-border: #56367f;
+@placeholder-color:#666666;
 
 /* GLOBAL STYLES */
 *{margin:0;padding:0;}
 body {
 	font-family: "Noto Sans", Verdana, sans-serif;
-	overflow-x:hidden;
 	letter-spacing: 0.03em;
+	overflow-x:hidden;
+}
+
+#channel-edit-content-wrapper{
+	overflow-x:hidden !important;
+	overflow-y:auto;
+	height:100vh;
+	position:fixed;
+}
+
+#channel-edit-sortable-boundary{
+	width:100vw;
+	height:100%;
+	position:fixed;
 }
 
 /* NAVIGATION BAR */
@@ -140,17 +154,25 @@ body {
 
 /* LOGIN STYLING */
 #login-container{
-	@login-background: rgba(145,81,148,.8); /*#915194*/
+	@login-background: rgba(145,81,148,.6); /*#915194*/
 	@login-secondary-color: rgba(255,255,255,.85); /*#DEEDE9*/
 	@login-text-bg-color: rgba(85,170,147,.5); /*#55AA93*/
 	@login-btn-color:  #067C7B;
 
-	background: url('/static/img/login_background.jpg');
+	/* Image background */
+	/*background: url('/static/img/kolibri_login.png');*/
+
+	/* Gradient background */
+	background: white; /* For browsers that do not support gradients */
+    background: -webkit-linear-gradient(black, white); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(black, white); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(black, white); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(black, white); /* Standard syntax */
+
 	background-size: 100vw 100vh;
 	width:100vw;
 	height:100vh;
 	margin:0;
-	margin-top:-20px;
 
 	#login_le{
 		margin-left:400px;
@@ -172,7 +194,6 @@ body {
 			height:36px;
 		}
 	}
-
 
 	#login-overlay{
 		background:@login-background;
@@ -377,5 +398,56 @@ body {
 			margin-left:10px;
 		}
 
+	}
+}
+
+
+@placeholder-width: 230px;
+@placeholder-color:#666666;
+.ui-sortable-helper, .ui-sorting-list li{
+	input[type=checkbox], .unpublished, .clipboard-topic-count{visibility:hidden !important;}
+	.description, .options, .queue-options, .tog_folder, .filler, .metadata_to_hide, .subdirectory { display:none !important; margin:0;}
+	background-color:@gray-200 !important;
+	border-top:1px solid white;
+	cursor:move;
+	height:60px !important;
+	padding:0 !important;
+	width:@placeholder-width * 1.5 !important;
+	z-index:999999999999 !important;
+
+	.title{
+		font-size:13pt;
+		padding:0px !important;
+		margin:0px !important;
+		width:@placeholder-width !important;
+		position:relative;
+		font-weight:bold;
+	}
+	.content_metadata_summary{
+		margin:0px !important;
+		padding:0px !important;
+	}
+}
+.sorting-placeholder{
+	width: 100%;
+	background-color: @placeholder-color !important;
+	opacity: 0.4;
+}
+
+.drop-topic-hover{
+	margin-top: 25px !important;
+	margin-bottom: 25px !important;
+	background-color: @blue-100 !important;
+}
+
+@icon-size:15px;
+.content-item-icon{
+	height:100%;
+	width:@icon-size;
+	font-size:@icon-size;
+	margin-right:10px;
+	img{
+		width:@icon-size;
+		height:auto;
 	}
 }

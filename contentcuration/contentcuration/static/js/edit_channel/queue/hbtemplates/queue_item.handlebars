@@ -1,25 +1,18 @@
-<input type="checkbox" id="queue_file_{{node.id}}"></input>
+<input type="checkbox" id="queue_file_{{node.id}}" {{#if checked}}checked{{/if}}></input>
 <label for="queue_file_{{node.id}}" class="queue_item">
-	{{#if allow_edit}}
-		<p class="error_msg"></p>
-		<input type="text" placeholder="Press 'Enter' to save" value="{{node.attributes.title}}" class="queue_title_input" maxlength="200"/>
-		<span class="pull-right submit_content glyphicon glyphicon-ok" aria-hidden="true"></span>
-	{{else}}
-		<span class="pull-right delete_content glyphicon glyphicon-trash" aria-hidden="true"></span>
-		{{#if is_clipboard}}<span class="pull-right edit_content glyphicon glyphicon-pencil" aria-hidden="true"></span>{{/if}}
-		{{#if isfolder}}<div class="pull-left tog_folder"><span id="menu_toggle_{{node.id}}" class="glyphicon glyphicon-menu-up"></span></div>{{/if}}
-		<!--<span class="glyphicon glyphicon-{{file_icon}}"></span>-->
-		<h6>{{to_upper_case node.attributes.kind}}</h6>
-		<h4><div class="queue_item_title truncate" title="{{node.attributes.title}}">{{node.attributes.title}}</div>{{#if isfolder}}<div class="badge clipboard-topic-count">{{node.attributes.metadata.resource_count}}</div>{{/if}}</h4>
-	{{/if}}
-</label>
-{{#if isfolder}}<div id="{{node.id}}_sub" class="subdirectory">
-	<ul class="list-unstyled content-list">
-		{{#each sub_list}}
-			<li id="{{this}}" class="queue_item"></li>
-		{{else}}
-			<li><em>No items found.</em></li>
-		{{/each}}
-	</ul>
+	<div class="pull-right queue-options">
+		{{#if is_clipboard}}<span class="edit_content glyphicon glyphicon-pencil" aria-hidden="true"></span>{{/if}}
+		<span class="delete_content glyphicon glyphicon-trash" aria-hidden="true"></span>
 	</div>
-{{/if}}
+	{{#if isfolder}}<div class="pull-left tog_folder"><span id="menu_toggle_{{node.id}}" class="glyphicon glyphicon-menu-up"></span></div>{{/if}}
+	<h4>
+		<div class="queue_item_title title truncate" title="{{node.title}}">
+			{{#unless isfolder}}
+				<span class="content-item-icon {{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
+			{{/unless}}
+			{{node.title}}
+		</div>
+		{{#if isfolder}}<div class="badge clipboard-topic-count">{{node.metadata.resource_count}}</div>{{/if}}
+	</h4>
+</label>
+{{#if isfolder}}<div id="{{node.id}}_sub" class="subdirectory wrapper"></div>{{/if}}

@@ -12,13 +12,31 @@ from kolibri.content import models as KolibriContent
 from django.db import transaction
 import models
 
+def recurse(node, level=0):
+    print ('\t' * level), node.id, node.lft, node.rght, node.title
+    for child in ContentNode.objects.filter(parent=node).order_by('sort_order'):
+        recurse(child, level + 1)
+
+def clean_db():
+    print "*********** CLEANING DATABASE ***********"
+    for file_obj in models.File.objects.filter(Q(preset = None) | Q(contentnode=None)):
+        print "Deletng unreferenced file", file_obj
+        file_obj.delete()
+    for node_obj in models.ContentNode.objects.filter(Q(parent=None) & Q(channel_main=None) & Q(channel_trash=None) & Q(user_clipboard=None)):
+        print "Deletng unreferenced node", node_obj.pk
+        node_obj.delete()
+    for tag_obj in models.ContentTag.objects.filter(tagged_content=None):
+        print "Deleting unreferenced tag", tag_obj.tag_name
+        tag_obj.delete()
+    print "*********** DONE ***********"
+
 def calculate_node_metadata(node):
     metadata = {
         "total_count" : node.children.count(),
         "resource_count" : 0,
         "max_sort_order" : 1,
         "resource_size" : 0,
-        "has_changed_descendant" : node.changed and not node.is_root_node()
+        "has_changed_descendant" : node.changed
     }
 
     if node.kind_id == "topic":
@@ -73,7 +91,7 @@ def get_node_siblings(node):
 
 def get_node_ancestors(node):
     ancestors = []
-    for n in node.get_ancestors(include_self=True):
+    for n in node.get_ancestors():
         ancestors.append(n.id)
     return ancestors
 

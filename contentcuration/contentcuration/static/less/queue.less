@@ -1,8 +1,9 @@
 @import "global-variables.less";
 
+@queue-width:400px;
+
 #queue{
 	@queue-background-color:#EFEFEF;
-	@queue-width:400px;
 	@queue-height: 75vh;
 	@queue-min-height: 600px;
 	@queue-button-width: 110px;
@@ -13,7 +14,7 @@
 	@manage-clipboard-btn-height : 50px;
 	@placeholder-color:#666666;
 	right:0em;
-	top: 6.7em;
+	top:0em;
 	position:absolute;
 	pointer-events:none;
 	z-index:999;
@@ -124,8 +125,8 @@
 			}
 
 			.trash_options, .clipboard_options{
-					background: @gray-400;
-					padding: 15px 0 10px 0;
+				background: @gray-400;
+				padding: 15px 0 10px 0;
 				.toolbar-button {
 					width: 50px;
 					display: inline-block;
@@ -135,6 +136,13 @@
 			.trash_options {
 				.toolbar-button {
 					margin: 0 47px;
+				}
+			}
+
+			.disabled{
+				opacity:0.5;
+				* {
+					cursor:not-allowed !important;
 				}
 			}
 
@@ -148,8 +156,12 @@
 			.manage_clipboard{
 				margin-right:20px;
 			}
+			.loading_placeholder_item{
+				font-size:13pt;
+				font-weight:bold;
+			}
 			#queue_content{
-				width:@queue-width - 30px;
+				width:@queue-width - 32px;
 				height:@queue-height * 0.94;
 				min-height:@queue-min-height * 0.94;
 
@@ -187,16 +199,16 @@
 						font-size:10pt;
 						cursor:pointer;
 					}
-					.placeholder{
-						width: 100%;
-						background-color: @placeholder-color;
-						opacity: 0.4;
-						height: @queue-list-item-height;
+
+					.default-item{
+						padding:20px;
 					}
+
 					li{
 						padding-top:5px;
 						padding-left:5px;
-						width:@queue-width - 30px;
+						width:@queue-width - 32px;
+						background-color: white;
 						input[type=checkbox]{
 							display:inline-block;
 							width:20px;
@@ -206,20 +218,28 @@
 						}
 
 						label{
+							*{
+								display:inline-block;
+								vertical-align: middle;
+							}
 							font-size:16px;
 							vertical-align:middle;
 							cursor:pointer;
 							height:@queue-list-item-height;
 							width:@queue-width - 70px;
+							.content-item-icon{
+								padding-right:5px;
+							}
 							.edit_content, .delete_content{
 								visibility:hidden;
 								margin: 15px 10px 0 0;
 							}
 							.queue_item_title{
 								overflow:hidden;
-								max-width:@queue-width / 2;
+								max-width:@queue-width / 1.8;
 								display:inline-block;
 								margin-right:5px;
+								margin-top:10px;
 							}
 							.clipboard-topic-count{
 								background-color:@blue-200;
@@ -237,10 +257,10 @@
 					}
 					.subdirectory{
 						display:none;
-						margin-left:20px;
+						padding-left:20px;
 					}
 
-					li label:hover{
+					li:hover{
 						background-color: @highlight-color;
 						.glyphicon{
 							visibility:visible;
@@ -249,5 +269,20 @@
 				}
 			}
 		}
+	}
+}
+
+#queue.closed{
+	transition:200ms;
+	transform: translateX(@queue-width);
+	.content-list{
+		display: none;
+	}
+}
+#queue.opened{
+	transition:200ms;
+	transform: translateX(0);
+	.content-list{
+		display: block;
 	}
 }

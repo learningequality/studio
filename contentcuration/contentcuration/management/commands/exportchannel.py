@@ -68,7 +68,6 @@ def increment_channel_version(channel):
     channel.version += 1
     channel.save()
 
-
 def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
 
@@ -214,7 +213,7 @@ def raise_if_nodes_are_all_unchanged(channel):
 def mark_all_nodes_as_changed(channel):
     logging.debug("Marking all nodes as changed.")
 
-    channel.main_tree.get_family().update(changed=False)
+    channel.main_tree.get_family().update(changed=False, published=True)
 
     logging.info("Marked all nodes as changed.")
 

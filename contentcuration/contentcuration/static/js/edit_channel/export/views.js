@@ -6,94 +6,95 @@ require("export.less");
 
 var ExportModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/export_modal.handlebars"),
-    license_template: require("./hbtemplates/export_license.handlebars"),
-
     initialize: function(options) {
-        _.bindAll(this, "close_exporter", "publish");
+        _.bindAll(this, "publish");
         this.modal = true;
-        this.render();
-        this.callback = options.callback;
-        this.export_view = new ExportListView({
-            el: this.$("#export_preview"),
-            container: this,
-            model: this.model
-        });
-        this.select_license = null;
-    },
-    events:{
-      "click #publish_btn" : "publish"
-    },
-
-    render: function() {
-        this.$el.html(this.template({
+        this.render(this.close, {
             channel: window.current_channel.toJSON(),
             licenses: window.licenses.toJSON(),
             version: window.current_channel.get("version") + 1,
             node: this.model.toJSON()
-        }));
-        $("body").append(this.el);
-        this.$(".modal").modal({show: true});
-        this.$(".modal").on("hide.bs.modal", this.close);
+        });
+        this.onpublish = options.onpublish;
+        this.export_view = new ExportListView({
+            el: this.$("#export_preview"),
+            container: this,
+            model: this.model,
+            onpublish:this.onpublish
+        });
     },
-    close_exporter:function(){
-      this.close();
+    events:{
+      "click #publish_btn" : "publish"
     },
     publish:function(){
         var self = this;
-        this.display_load("Publishing...", function(){
-            window.current_channel.publish(function(){
-                self.callback();
-                self.close_exporter();
+        this.display_load("Publishing...", function(resolve, reject){
+            window.current_channel.publish().then(function(){
+                self.onpublish(window.workspace_manager.get_published_collection());
+                self.close();
+                resolve("Success!");
+            }).catch(function(error){
+                reject(error);
             });
-
         });
     }
 });
 
 var ExportListView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/export_list.handlebars"),
-    views:[],
+    default_item:">.export_list >.default-item",
+    list_selector: ">.export_list",
+
     initialize: function(options) {
-        this.container = options.container;
         this.collection = new Models.ContentNodeCollection();
-        this.collection.get_all_fetch(this.model.get("children"));
+        this.container = options.container;
         this.render();
     },
 
     render: function() {
         this.$el.html(this.template({id: this.model.get("id")}));
-        this.load_content();
-    },
-    load_content:function(){
         var self = this;
-        this.collection.forEach(function(entry){
-            var export_item = new ExportItem({
-                model: entry,
-                containing_list_view : self
+        this.fetch_model(this.model).then(function(fetched){
+            self.collection.get_all_fetch(fetched.get("children")).then(function(fetchedCollection){
+                self.load_content(fetchedCollection);
             });
-            self.$("#export_list_" + self.model.get("id")).append(export_item.el);
-            self.views.push(export_item);
+        })
+
+    },
+    create_new_view:function(model){
+        var export_item = new ExportItem({
+            model: model,
+            containing_list_view : this,
+            container: this.container
         });
-        if(this.collection.length ==0){
-            this.$("#export_list_" + self.model.get("id")).append("<em>No files found.</em>");
-        }
+        this.views.push(export_item);
+        return export_item;
     }
 });
 
 var ExportItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/export_item.handlebars"),
     className: "export_item",
+    selectedClass: "export-selected",
+    collapsedClass: "glyphicon-menu-right",
+    expandedClass: "glyphicon-menu-down",
+    list_selector: ">.export_list",
+    item_to_import: false,
+
+    getToggler: function () { return this.$("#menu_toggle_" + this.model.id); },
+    getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },
     'id': function() {
         return "export_item_" + this.model.get("id");
     },
 
     initialize: function(options) {
-        _.bindAll(this, "toggle_subfiles");
+        this.bind_node_functions();
+        this.container = options.container;
         this.containing_list_view = options.containing_list_view;
         this.render();
     },
     events:{
-      "click .export_folder" : "toggle_subfiles"
+      "click .export_folder" : "toggle"
     },
     render: function() {
         this.$el.html(this.template({
@@ -101,27 +102,15 @@ var ExportItem = BaseViews.BaseListNodeItemView.extend({
             isfolder: this.model.get("kind") === "topic",
             isempty:this.model.get("children").length ===0
         }));
-        this.$el.data("data", this);
     },
-    toggle_subfiles:function(event){
-        event.stopPropagation();
-        event.preventDefault();
-        var el =  this.$el.find("#menu_toggle_" + this.model.id);
-        if(!this.export_view){
-            this.export_view = new ExportListView({
-                el: this.$("#export_item_" + this.model.get("id") + "_sub"),
-                container: this,
-                model: this.model
-            });
+    load_subfiles:function(){
+        var data = {
+            model : this.model,
+            el: $(this.getSubdirectory()),
+            container: this.container
         }
-        if(el.hasClass("glyphicon-menu-right")){
-            this.$("#export_item_" + this.model.get("id") + "_sub").slideDown();
-            el.removeClass("glyphicon-menu-right").addClass("glyphicon-menu-down");
-        }else{
-            this.$("#export_item_" + this.model.get("id") + "_sub").slideUp();
-            el.removeClass("glyphicon-menu-down").addClass("glyphicon-menu-right");
-        }
-    }
+        this.subcontent_view = new ExportListView(data);
+    },
 });
 
 module.exports = {

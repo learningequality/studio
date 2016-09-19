@@ -1,18 +1,18 @@
-<div id="queue">
+<div id="queue" class="closed">
 	<a class="btn btn-default queue-button pull-left">
 		CLIPBOARD
 		<br/>
-		<span class="badge queue-badge"></span>
+		<span class="badge queue-badge">Loading...</span>
 	</a>
 	<div id="main-queue">
 		<div class="queue_header">
 			<ul>
-				<li class="queue-tab switch_to_queue active-queue-tab">Clipboard</li>
-				<li class="queue-tab switch_to_trash">Trash</li>
+				<li class="queue-tab active-queue-tab" id="switch_to_queue">Clipboard</li>
+				<li class="queue-tab" id="switch_to_trash">Trash</li>
 				<span class="badge trash-badge"></span>
 			</ul>
 		</div>
 		<div id="trash-queue" class="queue-interior"></div>
 		<div id="clipboard-queue" class="queue-interior"></div>
 	</div>
-</div>	
+</div>

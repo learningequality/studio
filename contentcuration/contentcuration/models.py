@@ -2,13 +2,15 @@ import logging
 import os
 import uuid
 import hashlib
+import functools
 
 from django.conf import settings
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connections, models
+from django.db.models import Q
 from django.db.utils import ConnectionDoesNotExist
-from mptt.models import MPTTModel, TreeForeignKey
+from mptt.models import MPTTModel, TreeForeignKey, TreeManager
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
@@ -153,8 +155,8 @@ class Channel(models.Model):
         if not self.main_tree:
             self.main_tree = ContentNode.objects.create(title=self.name + " main root", kind_id="topic", sort_order=0)
             self.main_tree.save()
-            self.clipboard_tree = ContentNode.objects.create(title=self.name + " clipboard root", kind_id="topic", sort_order=0)
-            self.clipboard_tree.save()
+            self.save()
+        if not self.trash_tree:
             self.trash_tree = ContentNode.objects.create(title=self.name + " trash root", kind_id="topic", sort_order=0)
             self.trash_tree.save()
             self.save()
@@ -173,6 +175,17 @@ class ContentTag(models.Model):
     class Meta:
         unique_together = ['tag_name', 'channel']
 
+def delegate_manager(method):
+    """
+    Delegate method calls to base manager, if exists.
+    """
+    @functools.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        if self._base_manager:
+            return getattr(self._base_manager, method.__name__)(*args, **kwargs)
+        return method(self, *args, **kwargs)
+    return wrapped
+
 class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
@@ -186,7 +199,7 @@ class ContentNode(MPTTModel, models.Model):
     # content should be marked as such as well. We track these "substantially
     # similar" types of content by having them have the same content_id.
     content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
-
+    node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
@@ -196,7 +209,7 @@ class ContentNode(MPTTModel, models.Model):
     is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship', symmetrical=False, blank=True)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
-    sort_order = models.FloatField(max_length=50, default=0, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
+    sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
     copyright_holder = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
     author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"))
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
@@ -204,8 +217,32 @@ class ContentNode(MPTTModel, models.Model):
 
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
+    published = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
+
+    objects = TreeManager()
+
+    def __init__(self, *args, **kwargs):
+        super(ContentNode, self).__init__(*args, **kwargs)
+        self.original_parent = self.parent
+
+    def save(self, *args, **kwargs):
+        isNew = self.pk is None
+
+        # Detect if model has been moved to a different tree
+        if self.original_parent and self.original_parent.id != self.parent_id:
+            self.original_parent.changed = True
+            self.original_parent.save()
+            self.original_parent = self.parent
+
+        super(ContentNode, self).save(*args, **kwargs)
+        if isNew:
+            if self.original_node is None:
+                self.original_node = self.pk
+            if self.cloned_source is None:
+                self.cloned_source = self.pk
+            self.save()
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']

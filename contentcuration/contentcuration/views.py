@@ -5,6 +5,7 @@ import os
 import urlparse
 import base64
 import zlib
+import re
 from rest_framework import status
 from django.core.mail import send_mail
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
@@ -12,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import FormView
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
 from django.contrib.sites.shortcuts import get_current_site
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core import paginator
@@ -32,8 +33,11 @@ from contentcuration.forms import InvitationForm, InvitationAcceptForm, Registra
 from registration.backends.hmac.views import RegistrationView
 
 def base(request):
-    return redirect('channels')    # redirect to the channel list page
-
+    print request.user
+    if request.user.is_authenticated():
+        return redirect('channels')
+    else:
+        return redirect('accounts/login')
 
 def testpage(request):
     return render(request, 'test.html')
@@ -71,7 +75,7 @@ def channel(request, channel_id):
     contentkinds = ContentKind.objects.all()
     contentkind_serializer = ContentKindSerializer(contentkinds, many=True)
 
-    channel_tags = ContentTag.objects.all()
+    channel_tags = ContentTag.objects.filter(channel = channel)
     channel_tags_serializer = TagSerializer(channel_tags, many=True)
 
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
@@ -123,16 +127,34 @@ def exercise(request, exercise_id):
 # TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
 @csrf_exempt
 def file_upload(request):
-
     if request.method == 'POST':
+        preset = FormatPreset.objects.get(id=request.META.get('HTTP_PRESET'))
+        #Implement logic for switching out files without saving it yet
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
         original_filename = request.FILES.values()[0]._name
-        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename)
+        size = request.FILES.values()[0]._size
+        file_object = File(file_size=size, file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, preset=preset)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
             "filename": str(file_object),
             "object_id": file_object.pk
+        }))
+
+def file_create(request):
+    if request.method == 'POST':
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
+        size = request.FILES.values()[0]._size
+        kind = FormatPreset.objects.filter(allowed_formats__extension__contains=ext).first().kind
+        original_filename = request.FILES.values()[0]._name
+        new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=settings.DEFAULT_LICENSE, author=request.user.get_full_name())
+        new_node.save()
+        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, contentnode=new_node, file_size=size)
+        file_object.save()
+
+        return HttpResponse(json.dumps({
+            "success": True,
+            "object_id": new_node.pk
         }))
 
 @csrf_exempt
@@ -169,34 +191,9 @@ def duplicate_nodes(request):
             new_nodes.append(new_node.pk)
             sort_order+=1
 
-        print " ".join(new_nodes)
         return HttpResponse(json.dumps({
             "success": True,
             "node_ids": " ".join(new_nodes)
-        }))
-
-@csrf_exempt
-def duplicate_node(request):
-    logging.debug("Entering the copy_node endpoint")
-
-    if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-    else:
-        data = json.loads(request.body)
-
-        try:
-            node_id = data["node_id"]
-            sort_order = data["sort_order"]
-            target_parent = data["target_parent"]
-        except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-        logging.info("Copying node id %s", node_id)
-
-        new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent)
-        return HttpResponse(json.dumps({
-            "success": True,
-            "node_id": new_node.pk
         }))
 
 def _duplicate_node(node, sort_order=1, parent=None):
@@ -288,8 +285,13 @@ def send_invitation_email(request):
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
         return HttpResponse(json.dumps({
-                "success": True,
-                "invitation_id": invitation.id
+                "id": invitation.pk,
+                "invited": invitation.invited_id,
+                "email": invitation.email,
+                "sender": invitation.sender_id,
+                "channel": invitation.channel_id,
+                "first_name": invitation.first_name,
+                "last_name": invitation.last_name,
             }))
 
 class InvitationAcceptView(FormView):
@@ -423,7 +425,7 @@ def decline_invitation(request, invitation_link):
     return render(request, 'permissions/permissions_decline.html')
 
 def fail_invitation(request):
-    return redirect("/invitation_fail")
+    return render(request, 'permissions/permissions_fail.html')
 
 class UserRegistrationView(RegistrationView):
     email_body_template = 'registration/activation_email.txt'
@@ -437,8 +439,7 @@ class UserRegistrationView(RegistrationView):
         context.update({
             'user': user
         })
-        subject = render_to_string(self.email_subject_template,
-                                   context)
+        subject = render_to_string(self.email_subject_template, context)
         subject = ''.join(subject.splitlines())
         message = render_to_string(self.email_body_template, context)
         # message_html = render_to_string(self.email_html_template, context)
