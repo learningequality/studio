@@ -421,27 +421,14 @@ class RelatedContentRelationship(models.Model):
         super(RelatedContentRelationship, self).save(*args, **kwargs)
 
 class Exercise(models.Model):
-
-    title = models.CharField(
-        max_length=50,
-        verbose_name=_("title"),
-        default=_("Title"),
-        help_text=_("Title of the content item"),
-    )
-
-    description = models.TextField(
-        max_length=200,
-        verbose_name=_("description"),
-        default=_("Description"),
-        help_text=_("Brief description of what this content item is"),
-    )
+    contentnode = models.ForeignKey('ContentNode', related_name="exercise")
+    mastery_model = models.CharField(max_length=200, default="")
 
 class AssessmentItem(models.Model):
-
     type = models.CharField(max_length=50, default="multiplechoice")
     question = models.TextField(blank=True)
     answers = models.TextField(default="[]")
-    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items")
+    exercise = models.ForeignKey('Exercise', related_name="all_assessment_items")
 
 class Invitation(models.Model):
     """ Invitation to edit channel """
