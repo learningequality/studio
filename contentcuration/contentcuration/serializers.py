@@ -182,7 +182,7 @@ class CustomListSerializer(serializers.ListSerializer):
                             ret.append(node)
         # print "*********** FINAL: ***********"
         # recurse(ContentNode.objects.get(id__startswith='f1a03d6'))
-        clean_db()
+        # clean_db()
         # print "*********** END ***********\n\n\n\n"
         return ret
 
