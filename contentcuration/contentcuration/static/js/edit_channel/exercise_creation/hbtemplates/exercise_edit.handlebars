@@ -1,0 +1,36 @@
+<div class="container-fluid" id="exercisecreation">
+	<input type="text" id="exercise_title" placeholder="Exercise Name" value="{{title}}">
+	<textarea id="exercise_description" rows="2" placeholder="Description">{{ description }}</textarea>
+
+	<div class="panel-group" id="exercise_list" role="tablist" aria-multiselectable="true">
+		<div class="default-item">Loading...</div>
+	</div>
+	<div class="btn-group btn-group-justified" role="group" aria-label="Question Types">
+		<div class="btn-group" role="group">
+			<button class="btn multiplechoice add_question" title="Multiple Choice">
+			<span class="glyphicon glyphicon-plus"></span>
+				Multiple Choice
+			</button>
+		</div>
+		<div class="btn-group" role="group">
+			<button class="btn truefalse add_question" title="True/False">
+			<span class="glyphicon glyphicon-plus"></span>
+				True/False
+			</button>
+		</div>
+		<div class="btn-group" role="group">
+			<button class="btn freeresponse add_question" title="Free Response">
+			<span class="glyphicon glyphicon-plus"></span>
+				Free Response
+			</button>
+		</div>
+	</div>
+	<hr/>
+	<div id="exercise_buttons">
+		<a class="action-text">Cancel</a>
+		<span class="pull-right">
+			<span class="action-text download glyphicon glyphicon-download-alt" title="Download"></span>
+			<button class="action-button">CREATE</button>
+		</span>
+	</div>
+</div>

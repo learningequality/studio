@@ -1,16 +1,42 @@
-nav.exercise_page {
-	text-align: center;
-}
+@import "global-variables.less";
+@import "modal-styles.less";
 
-div#dropzone {
-	min-height: 150px;
-}
+#exercisecreation{
+	input[type="text"], textarea {
+		padding: 2px 0;
+		margin-bottom: 25px;
+		font-size: @larger-body-text;
+		width:100%;
+		.input-form;
+		resize:none;
+	}
+	.add_question{
+		background-color: @blue-700;
+		color:white;
+		margin:5px;
+		border:1px solid white;
+	}
 
-li.list-group-item.header-item {
-	background-color: #d9edf7;
-}
+	.add_question:hover{
+		font-weight:bold;
+		background-color: @blue-200;
+		color:black;
+	}
 
-.editable:empty:not(:focus):before{
-    content:attr(data-ph);
-    color: #BBBBBB;
+	div#dropzone{
+		min-height: 150px;
+	}
+
+	#exercise_list {
+		min-height: 50px;
+	}
+
+	li.list-group-item.header-item {
+		background-color: #d9edf7;
+	}
+
+	.editable:empty:not(:focus):before{
+	    content:attr(data-ph);
+	    color: #BBBBBB;
+	}
 }

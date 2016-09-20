@@ -1,8 +1,13 @@
 <div id="exercise_list_wrapper">
 	<div>
 		Mastery at:
-		<input type="number" max={{total_questions}} min=0 value=0>
-		/ {{total_questions}}
+		<select id="mastery_models_select">
+			<option value="do-all" selected>Do All</option>
+			<option value="num_correct_in_a_row_3">3 in a Row</option>
+			<option value="num_correct_in_a_row_5">5 in a Row</option>
+			<option value="num_correct_in_a_row_10">10 in a Row</option>
+			<option value="skill-check">Skill Check</option>
+		</select>
 	</div>
 	<ul class="list-unstyled" id="exercise_list">
 		<li class="default-item">Loading...</li>

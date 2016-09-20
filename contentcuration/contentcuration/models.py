@@ -230,6 +230,7 @@ class ContentNode(MPTTModel, models.Model):
     published = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
+    extra_fields = models.TextField(blank=True, null=True)
 
     objects = TreeManager()
 
@@ -430,8 +431,10 @@ class Exercise(models.Model):
 class AssessmentItem(models.Model):
     type = models.CharField(max_length=50, default="multiplechoice")
     question = models.TextField(blank=True)
+    help_text = models.TextField(blank=True)
     answers = models.TextField(default="[]")
-    exercise = models.ForeignKey('Exercise', related_name="all_assessment_items")
+    order = models.IntegerField(default=1)
+    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
 
 class Invitation(models.Model):
     """ Invitation to edit channel """

@@ -306,19 +306,19 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
                  'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets',
-                 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published')
+                 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields')
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exercise
-        fields = ('contentnode', 'mastery_model', 'id', 'all_assessment_items')
+        fields = ('contentnode', 'mastery_model', 'id')
 
 class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     # contentnode = serializers.PrimaryKeyRelatedField(queryset=Exercise.objects.all())
 
     class Meta:
         model = AssessmentItem
-        fields = ('question', 'type', 'answers', 'id', 'exercise')
+        fields = ('question', 'type', 'answers', 'id', 'contentnode')
         list_serializer_class = BulkListSerializer
 
 class ChannelSerializer(serializers.ModelSerializer):
