@@ -154,13 +154,14 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     add_assessment_item: function(type, data) {
         var model_data = {
             type: type,
-            exercise: this.model.get("id")
+            exercise: this.model.get("id"),
+            order: this.collection.length + 1
         };
         if (data) {
             model_data = _.extend(model_data, data);
         }
         this.create_new_item(model_data, true, "").then(function(assessment_item){
-            console.log("Assessment:", assessment_item);
+            assessment_item.toggle_focus();
         });
     },
 
@@ -176,6 +177,11 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
 
     freeresponse: function() {
         this.add_assessment_item("freeresponse");
+    },
+    set_focus:function(){
+        this.views.forEach(function(view){
+            view.remove_focus();
+        })
     }
 });
 
@@ -321,12 +327,12 @@ var EditorView = Backbone.View.extend({
     }
 });
 
-
 var AssessmentItemAnswerView = Backbone.View.extend({
 
     initialize: function(options) {
-        _.bindAll(this, "render", "set_editor");
+        _.bindAll(this, "render", "set_editor", "set_open");
         this.open = options.open || false;
+        this.containing_list_view = options.containing_list_view;
         this.render();
     },
 
@@ -335,9 +341,9 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_open.handlebars"),
 
     events: {
-        "click .edit": "toggle_editor",
         "click .delete": "delete",
-        "change .correct": "toggle_correct"
+        "change .correct": "toggle_correct",
+        "click .answer_item": "set_open"
     },
 
     render: function() {
@@ -353,6 +359,16 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     toggle_editor: function() {
         this.open = !this.open;
         this.set_editor(true);
+    },
+    set_open:function(){
+        this.containing_list_view.set_focus();
+        this.set_toolbar_open();
+        this.editor_view.activate_editor();
+    },
+    set_closed:function(){
+        this.set_toolbar_closed();
+        this.editor_view.deactivate_editor();
+        // exerciseSaveDispatcher.trigger("save");
     },
 
     set_editor: function(save) {
@@ -380,21 +396,21 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         this.$(".answer-toolbar").html(this.closed_toolbar_template());
     },
 
-    delete: function() {
+    delete: function(event) {
+        event.stopPropagation();
         this.model.destroy();
         exerciseSaveDispatcher.trigger("save");
         this.remove();
     }
-
 });
 
-
-var AssessmentItemAnswerListView = Backbone.View.extend({
+var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
 
     template: require("./hbtemplates/assessment_item_answer_list.handlebars"),
 
     initialize: function() {
-        _.bindAll(this, "render");
+        _.bindAll(this, "render", "add_answer_view");
+        this.bind_edit_functions();
         this.render();
         this.listenTo(this.collection, "add", this.add_answer_view);
         this.listenTo(this.collection, "remove", this.render);
@@ -405,6 +421,7 @@ var AssessmentItemAnswerListView = Backbone.View.extend({
     },
 
     render: function() {
+        this.views=[];
         this.$el.html(this.template());
         for (var i = 0; i < this.collection.length; i++) {
             this.add_answer_view(this.collection.at(i));
@@ -412,23 +429,34 @@ var AssessmentItemAnswerListView = Backbone.View.extend({
     },
 
     add_answer: function() {
+        this.set_focus();
         this.collection.add({answer: "", correct: false});
     },
 
     add_answer_view: function(model, open) {
         open = open ? true : false;
-        var view = new AssessmentItemAnswerView({model: model, open: open});
-        this.$(".list-group").append(view.el);
+        var view = new AssessmentItemAnswerView({
+            model: model,
+            open: open,
+            containing_list_view:this
+        });
+        this.views.push(view);
+        this.$(".addanswer").before(view.el);
+
+    },
+    set_focus:function(){
+        this.views.forEach(function(view){
+            view.set_closed();
+        })
     }
-
 });
-
 
 var AssessmentItemView = Backbone.View.extend({
 
     initialize: function(options) {
-        _.bindAll(this, "set_toolbar_open", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_undo_redo");
+        _.bindAll(this, "set_toolbar_open", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus", "toggle_undo_redo", "add_focus", "remove_focus");
         this.number = options.number;
+        this.containing_list_view = options.containing_list_view;
         this.undo_manager = new UndoManager({
             track: true,
             register: [this.model, this.model.get("answers")]
@@ -445,7 +473,8 @@ var AssessmentItemView = Backbone.View.extend({
         "click .cancel": "cancel",
         "click .undo": "undo",
         "click .redo": "redo",
-        "click .delete": "delete"
+        "click .delete": "delete",
+        "click .toggle_exercise": "toggle_focus"
     },
 
     delete: function() {
@@ -482,11 +511,7 @@ var AssessmentItemView = Backbone.View.extend({
     },
 
     render: function() {
-        // Clean up any previous event listeners just to be tidy.
-        // this.$(".collapse").off("show.bs.collapse");
-        // this.$(".collapse").off("hidden.bs.collapse");
-
-        this.$el.html(this.template({model: this.model.attributes, number: this.number}));
+        this.$el.html(this.template({model: this.model.toJSON()}));
         this.set_toolbar_closed();
         if (this.model.get("type") === "multiplechoice") {
             if (!this.answer_editor) {
@@ -499,12 +524,6 @@ var AssessmentItemView = Backbone.View.extend({
         } else {
             this.$(".question").append(this.editor_view.el);
         }
-        // this.$(".collapse").on("show.bs.collapse", this.editor_view.activate_editor);
-        // this.$(".collapse").on("hidden.bs.collapse", this.editor_view.save_and_close);
-        // this.$(".collapse").on("show.bs.collapse", this.set_toolbar_open);
-        // this.$(".collapse").on("hidden.bs.collapse", this.save);
-        // this.$(".collapse").on("show.bs.collapse", this.set_undo_redo_listener);
-        // this.$(".collapse").on("hidden.bs.collapse", this.unset_undo_redo_listener);
     },
 
     set_undo_redo_listener: function() {
@@ -517,13 +536,36 @@ var AssessmentItemView = Backbone.View.extend({
         this.stopListening(this.undo_manager);
     },
 
-    // set_toolbar_open: function() {
-    //     this.$(".toolbar").html(this.open_toolbar_template({model: this.model.attributes, undo: this.undo, redo: this.redo}));
-    // },
+    set_toolbar_open: function() {
+        this.$(".toolbar").html(this.open_toolbar_template({model: this.model.attributes, undo: this.undo, redo: this.redo}));
+    },
 
-    // set_toolbar_closed: function() {
-    //     this.$(".toolbar").html(this.closed_toolbar_template({model: this.model.attributes}));
-    // }
+    set_toolbar_closed: function() {
+        this.$(".toolbar").html(this.closed_toolbar_template({model: this.model.attributes}));
+    },
+    toggle_focus:function(){
+        if(!this.$(".assessment_item").hasClass("active")){
+           this.containing_list_view.set_focus();
+           this.add_focus();
+        }
+    },
+    add_focus:function(){
+        this.$(".assessment_item").addClass("active");
+        this.editor_view.activate_editor();
+        this.set_toolbar_open();
+        this.set_undo_redo_listener();
+    },
+    remove_focus:function(){
+        this.$(".assessment_item").removeClass("active");
+        // this.editor_view.save_and_close();
+        this.editor_view.deactivate_editor();
+        // this.save();
+        this.set_toolbar_closed();
+        this.unset_undo_redo_listener();
+        if (this.answer_editor) {
+            this.answer_editor.set_focus();
+        }
+    }
 });
 
 

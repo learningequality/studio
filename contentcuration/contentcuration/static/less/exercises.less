@@ -29,14 +29,81 @@
 
 	#exercise_list {
 		min-height: 50px;
+		.assessment_item{
+			margin:0px 5px 15px 5px;
+			width:100%;
+			.remove_area{
+				display:inline-block;
+				/*vertical-align: middle;*/
+				width:3%;
+				.delete{
+					font-size:12pt;
+					cursor:pointer;
+					margin-left:10px;
+				}
+			}
+			.question_number_area{
+				display:inline-block;
+				vertical-align: middle;
+				width:5%;
+				label{
+					margin-right:5px;
+					color:@gray-400;
+					font-size:14pt;
+				}
+			}
+			.main_edit_area{
+				width:90%;
+				display:inline-block;
+				vertical-align: middle;
+				.question_area{
+					padding:5px;
+					cursor:pointer;
+					background-color:@gray-200;
+					.move{
+						font-size:12pt;
+					}
+				}
+				.answer_item{
+					cursor:pointer;
+					.correct{
+						cursor:pointer;
+						width:15px;
+						height:15px;
+					}
+				}
+				.show_on_focus{
+					display:none;
+				}
+			}
+		}
+		.assessment_item.active{
+			.main_edit_area{
+				background-color: @blue-100;
+				border-left:3px solid @blue-500;
+				.show_on_focus{
+					display:inline-block;
+				}
+				.question_area{
+					background-color: transparent;
+				}
+				.answers{
+					margin-bottom:5px;
+					.addanswer{
+						cursor:pointer;
+					}
+					.addanswer:hover{
+						font-weight:bold;
+					}
+					li{
+						width:100%;
+					}
+				}
+			}
+		}
 	}
-
-	li.list-group-item.header-item {
-		background-color: #d9edf7;
-	}
-
 	.editable:empty:not(:focus):before{
 	    content:attr(data-ph);
-	    color: #BBBBBB;
+	    color: @gray-700;
 	}
 }

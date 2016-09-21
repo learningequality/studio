@@ -1,16 +1,26 @@
-<div class="container assessment_item collapsed">
-	<span class="badge">#{{ model.order }}</span>
-	<span class="glyphicon glyphicon-remove delete pull-right"></span>
-	<div class="row">
-		<div class="col-sm-9">
-		  <div class="question editable" data-ph="Question">
-		  </div>
-	    </div>
-	    <div class="col-sm-3">
-	    <div class="toolbar pull-right"></div>
+<div class="assessment_item toggle_exercise">
+	<div class="question_number_area text-center">
+		<label>{{ model.order }}</label>
+	</div>
+	<div class="main_edit_area container" >
+		<div class="row question_area ">
+			<div class="col-sm-1">
+				<span class="glyphicon glyphicon-triangle-top move_up move" title="Move up"></span>
+				<br/>
+				<span class="glyphicon glyphicon-triangle-bottom move_down move" title="Move down"></span>
+			</div>
+			<div class="col-sm-9">
+			  	<div class="question editable" data-ph="Question"></div>
+		    </div>
+		    <div class="col-sm-2">
+		    	<div class="toolbar pull-right"></div>
+			</div>
+		</div>
+		<div id="{{ model.id }}">
+		  	<div class="answers"></div>
 		</div>
 	</div>
-	<div id="{{ model.id }}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
-	  	<div class="answers"></div>
+	<div class="remove_area">
+		<span class="glyphicon glyphicon-remove delete pull-right" title="Delete"></span>
 	</div>
 </div>
