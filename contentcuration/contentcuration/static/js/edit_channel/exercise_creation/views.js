@@ -17,20 +17,23 @@ require("dropzone/dist/dropzone.css");
 var ExerciseModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/exercise_modal.handlebars"),
     initialize: function(options) {
-        _.bindAll(this, "close_exercise_uploader");
+        _.bindAll(this, "close_exercise_uploader", "close");
         this.render(this.close_exercise_uploader, {});
         this.exercise_view = new ExerciseView({
             el: this.$(".modal-body"),
             container: this,
             model:this.model,
-            onsave: options.onsave,
+            parentnode:options.parentnode,
+            onclose: this.close_exercise_uploader,
             onnew: options.onnew,
             collection: new Models.AssessmentItemCollection()
         });
     },
     close_exercise_uploader:function(event){
-        if(this.exercise_view.collection.length === 0){
+        if(this.exercise_view.collection.length === 0 || !event){
             this.close();
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
         }else if(confirm("Unsaved Metadata Detected! Exiting now will"
             + " undo any new changes. \n\nAre you sure you want to exit?")){
             // this.exercise_view.reset();
@@ -42,6 +45,145 @@ var ExerciseModalView = BaseViews.BaseModalView.extend({
     }
 });
 
+var FileUploadView = Backbone.View.extend({
+
+    initialize: function(options) {
+        _.bindAll(this, "file_uploaded");
+        this.callback = options.callback;
+        this.modal = options.modal;
+        this.render();
+    },
+
+    template: require("./hbtemplates/file_upload.handlebars"),
+
+    modal_template: require("./hbtemplates/file_upload_modal.handlebars"),
+
+    render: function() {
+
+        if (this.modal) {
+            this.$el.html(this.modal_template());
+            this.$(".modal-body").append(this.template());
+            $("body").append(this.el);
+            this.$(".modal").modal({show: true});
+            this.$(".modal").on("hide.bs.modal", this.close);
+        } else {
+            this.$el.html(this.template());
+        }
+
+        // TODO parameterize to allow different file uploads depending on initialization.
+        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {maxFiles: 1, clickable: ["#dropzone", ".fileinput-button"], acceptedFiles: "image/*", url: window.Urls.file_upload(), headers: {"X-CSRFToken": get_cookie("csrftoken")}});
+        this.dropzone.on("success", this.file_uploaded);
+
+    },
+
+    file_uploaded: function(file) {
+        this.callback(JSON.parse(file.xhr.response).filename);
+        this.close();
+    },
+
+    close: function() {
+        if (this.modal) {
+            this.$(".modal").modal('hide');
+        }
+        this.remove();
+    }
+});
+
+/**
+ * Replace local 'media' urls with 'web+local://'.
+ * @param {string} Markdown containing image URLs.
+ * Should take a string of markdown like:
+ * "something![foo](/media/bar/baz)otherthings"
+ * and turn it into:
+ * "something![foo](web+local://bar/baz)otherthings"
+ */
+var set_image_urls_for_export = function(text) {
+    return text.replace(/(\!\[[^\]]*\]\()(\/media\/)([^\)]*\))/g, "$1web+local://$3");
+};
+
+
+/**
+ * Return all image URLs from Markdown.
+ * @param {string} Markdown containing image URLs.
+ * Should take a string of markdown like:
+ * "something![foo](/media/bar/baz.png)otherthings something![foo](/media/bar/foo.jpg)otherthings"
+ * and return:
+ * ["/media/bar/baz.png", "/media/bar/foo.jpg"]
+ */
+var return_image_urls_for_export = function(text) {
+    var match, output = [];
+    var Re = /\!\[[^\]]*\]\((\/media\/[^\)]*)\)/g;
+    while (match = Re.exec(text)) {
+        output.push(match[1]);
+    }
+    return output;
+};
+
+/**
+ * Return all image URLs from an assessment item.
+ * @param {object} Backbone Model.
+ * Should take a model with a "question" attribute that is a string of Markdown,
+ * and an "answers" attribute that is a Backbone Collection, with each
+ * model having an "answer" attribute that is also a string of markdown
+ * and return all the image URLs embedded inside all the Markdown texts.
+ */
+var return_all_assessment_item_image_urls = function(model) {
+    var output = return_image_urls_for_export(model.get("question"));
+    var output = model.get("answers").reduce(function(memo, model) {
+        memo = memo.concat(return_image_urls_for_export(model.get("answer")));
+        return memo;
+    }, output);
+
+    output = _.map(output, function(item) {
+        return {
+            name: item.replace(/\/media\//g, ""),
+            path: item
+        }
+    });
+    return output;
+}
+
+/**
+ * Return JSON object in Perseus format.
+ * @param {object} Backbone Model - AssessmentItem.
+ */
+var convert_assessment_item_to_perseus = function(model) {
+    var multiplechoice_template = require("./hbtemplates/assessment_item_multiple.handlebars");
+    var freeresponse_template = require("./hbtemplates/assessment_item_free.handlebars");
+    var output = "";
+    switch (model.get("type")) {
+        case "freeresponse":
+            output = freeresponse_template(model.attributes);
+            break;
+        case "multiplechoice":
+            output = multiplechoice_template({
+                question: set_image_urls_for_export(model.get("question")),
+                randomize: true,
+                multipleSelect: (model.get("answers").reduce(function(memo, model) {
+                    if (model.get("correct")) {
+                        memo += 1;
+                    }
+                    return memo;
+                    }, 0) || 0) > 1,
+                answer: model.get("answers").toJSON()
+            });
+            break;
+    }
+    return $.parseJSON(output);
+};
+
+
+var slugify = function(text) {
+    // https://gist.github.com/mathewbyrne/1280286
+    return text.toString().toLowerCase()
+        .replace(/\s+/g, '-')           // Replace spaces with -
+        .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+        .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+        .replace(/^-+/, '')             // Trim - from start of text
+        .replace(/-+$/, '');            // Trim - from end of text
+    }
+
+
 var exerciseSaveDispatcher = _.clone(Backbone.Events);
 
 var ExerciseView = BaseViews.BaseEditableListView.extend({
@@ -49,9 +191,10 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     default_item:"#exercise_list .default-item",
 
     initialize: function(options) {
-        _.bindAll(this, "save");
+        _.bindAll(this, "save", "createexercise");
         this.bind_edit_functions();
-        this.onsave = options.onsave;
+        this.parentnode = options.parentnode;
+        this.onclose = options.onclose;
         this.onnew = options.onnew;
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(exerciseSaveDispatcher, "save", this.save);
@@ -62,12 +205,12 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
         "click .multiplechoice": "multiplechoice",
         "click .truefalse": "truefalse",
         "click .freeresponse": "freeresponse",
-        "change #title": "set_title",
-        "change #description": "set_description",
+        "change #exercise_title": "set_title",
+        "change #exercise_description": "set_description",
         "click .save": "save",
-        "click .download": "download"
+        "click .download": "download",
+        "click #createexercise": "createexercise"
     },
-
     download: function() {
         var self = this;
         var zip = new JSZip();
@@ -117,11 +260,11 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     },
 
     set_title: function(){
-        this.model.set("title", this.$("#title").prop("value"));
+        this.model.set("title", this.$("#exercise_title").prop("value"));
     },
 
     set_description: function(){
-        this.model.set("description", this.$("#description").prop("value"));
+        this.model.set("description", this.$("#exercise_description").prop("value"));
     },
 
     template: require("./hbtemplates/exercise_edit.handlebars"),
@@ -129,19 +272,7 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     render: function() {
         this.$el.html(this.template(this.model.attributes));
         this.load_content(this.collection, "Select a question type below");
-        // _.defer(this.add_all_assessment_items);
     },
-
-    // add_all_assessment_items: function() {
-    //     for (var i = 0; i < this.collection.length; i++){
-    //         this.add_assessment_item_view(this.collection.at(i), i);
-    //     }
-    // },
-
-    // add_assessment_item_view: function(model, i) {
-    //     var view = new AssessmentItemView({model: model, number: i + 1});
-    //     this.$("#accordion").append(view.el);
-    // },
     create_new_view:function(model){
         var new_exercise_item = new AssessmentItemView({
             model: model,
@@ -154,8 +285,8 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     add_assessment_item: function(type, data) {
         var model_data = {
             type: type,
-            exercise: this.model.get("id"),
-            order: this.collection.length + 1
+            contentnode: this.model.get("id"),
+            order: this.collection.length + 1,
         };
         if (data) {
             model_data = _.extend(model_data, data);
@@ -182,6 +313,23 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
         this.views.forEach(function(view){
             view.remove_focus();
         })
+    },
+    createexercise:function(){
+        var self = this;
+        this.model.set({
+            parent:this.parentnode.get("id"),
+            extra_fields:JSON.stringify({mastery_model:$("#mastery_model_select").val()})
+        });
+        this.model.save(this.model.toJSON(), {
+            success:function(new_model){
+                console.log("node", self.model);
+                console.log("collection", self.collection);
+                exerciseSaveDispatcher.trigger("save");
+                var new_collection = new Models.ContentNodeCollection(self.model);
+                self.onnew(new_collection);
+                self.onclose();
+            }
+        });
     }
 });
 
@@ -190,7 +338,7 @@ var EditorView = Backbone.View.extend({
     tagName: "div",
 
     initialize: function(options) {
-        _.bindAll(this, "return_markdown", "deactivate_editor", "activate_editor", "save_and_close", "save", "render");
+        _.bindAll(this, "return_markdown", "add_image", "deactivate_editor", "activate_editor", "save_and_close", "save", "render");
         this.edit_key = options.edit_key;
         this.editing = false;
         this.render();
@@ -199,6 +347,15 @@ var EditorView = Backbone.View.extend({
 
     events: {
         "click .ql-image": "add_image_popup"
+    },
+
+    add_image_popup: function() {
+        var view = new FileUploadView({callback: this.add_image, modal: true});
+    },
+
+    add_image: function(filename) {
+        this.editor.insertEmbed(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "image", "/media/" + filename);
+        this.save();
     },
 
     edit_template: require("./hbtemplates/editor.handlebars"),
@@ -330,7 +487,7 @@ var EditorView = Backbone.View.extend({
 var AssessmentItemAnswerView = Backbone.View.extend({
 
     initialize: function(options) {
-        _.bindAll(this, "render", "set_editor", "set_open");
+        _.bindAll(this, "render", "set_editor", "set_open", "toggle");
         this.open = options.open || false;
         this.containing_list_view = options.containing_list_view;
         this.render();
@@ -343,7 +500,8 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     events: {
         "click .delete": "delete",
         "change .correct": "toggle_correct",
-        "click .answer_item": "set_open"
+        "click .answer_item": "set_open",
+        "click .toggle": "toggle"
     },
 
     render: function() {
@@ -364,11 +522,16 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         this.containing_list_view.set_focus();
         this.set_toolbar_open();
         this.editor_view.activate_editor();
+        this.containing_list_view.container.toggle_focus();
     },
     set_closed:function(){
         this.set_toolbar_closed();
         this.editor_view.deactivate_editor();
         // exerciseSaveDispatcher.trigger("save");
+    },
+    toggle:function(event){
+        event.stopPropagation();
+        this.set_closed();
     },
 
     set_editor: function(save) {
@@ -408,10 +571,11 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
 
     template: require("./hbtemplates/assessment_item_answer_list.handlebars"),
 
-    initialize: function() {
+    initialize: function(options) {
         _.bindAll(this, "render", "add_answer_view");
         this.bind_edit_functions();
         this.render();
+        this.container = options.container;
         this.listenTo(this.collection, "add", this.add_answer_view);
         this.listenTo(this.collection, "remove", this.render);
     },
@@ -447,14 +611,14 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
     set_focus:function(){
         this.views.forEach(function(view){
             view.set_closed();
-        })
+        });
     }
 });
 
 var AssessmentItemView = Backbone.View.extend({
 
     initialize: function(options) {
-        _.bindAll(this, "set_toolbar_open", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus", "toggle_undo_redo", "add_focus", "remove_focus");
+        _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus", "toggle_undo_redo", "add_focus", "remove_focus");
         this.number = options.number;
         this.containing_list_view = options.containing_list_view;
         this.undo_manager = new UndoManager({
@@ -474,10 +638,15 @@ var AssessmentItemView = Backbone.View.extend({
         "click .undo": "undo",
         "click .redo": "redo",
         "click .delete": "delete",
-        "click .toggle_exercise": "toggle_focus"
+        "click .toggle_exercise": "toggle_focus",
+        "click .toggle" : "toggle"
     },
-
-    delete: function() {
+    toggle:function(event){
+        event.stopPropagation();
+        this.remove_focus();
+    },
+    delete: function(event) {
+        event.stopPropagation();
         this.model.destroy();
         exerciseSaveDispatcher.trigger("save");
         this.remove();
@@ -488,8 +657,9 @@ var AssessmentItemView = Backbone.View.extend({
         this.set_toolbar_closed();
     },
 
-    cancel: function() {
+    cancel: function(event) {
         this.undo_manager.undoAll();
+        this.toggle(event)
     },
 
     undo: function() {
@@ -515,7 +685,7 @@ var AssessmentItemView = Backbone.View.extend({
         this.set_toolbar_closed();
         if (this.model.get("type") === "multiplechoice") {
             if (!this.answer_editor) {
-                this.answer_editor = new AssessmentItemAnswerListView({collection: this.model.get("answers")});
+                this.answer_editor = new AssessmentItemAnswerListView({collection: this.model.get("answers"), container:this});
             }
             this.$(".answers").append(this.answer_editor.el);
         }

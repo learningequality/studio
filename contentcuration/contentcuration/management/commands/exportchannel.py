@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
-from contentcuration.constants import content_kinds
+from fle_utils import constants
 
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
@@ -112,7 +112,7 @@ def map_content_nodes(root_node):
 
             kolibrinode = create_bare_contentnode(node)
 
-            if node.kind.kind != content_kinds.TOPIC:
+            if node.kind.kind != constants.CK_TOPIC:
                 create_associated_file_objects(kolibrinode, node)
 
 

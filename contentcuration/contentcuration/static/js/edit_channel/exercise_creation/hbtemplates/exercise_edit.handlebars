@@ -1,7 +1,21 @@
 <div class="container-fluid" id="exercisecreation">
-	<input type="text" id="exercise_title" placeholder="Exercise Name" value="{{title}}">
-	<textarea id="exercise_description" rows="2" placeholder="Description">{{ description }}</textarea>
+	<div class="row">
+		<div class="col-sm-8">
+			<input type="text" id="exercise_title" placeholder="Exercise Name" value="{{title}}">
+		</div>
+		<div class="col-sm-4">
+			<label for="mastery_model_select">Mastery at:</label>
+			<select id="mastery_model_select">
+				<option value="do-all" selected>Do All</option>
+				<option value="num_correct_in_a_row_3">3 in a Row</option>
+				<option value="num_correct_in_a_row_5">5 in a Row</option>
+				<option value="num_correct_in_a_row_10">10 in a Row</option>
+				<option value="skill-check">Skill Check</option>
+			</select>
+		</div>
+	</div>
 
+	<textarea id="exercise_description" rows="2" placeholder="Description">{{ description }}</textarea>
 	<div class="panel-group" id="exercise_list" role="tablist" aria-multiselectable="true">
 		<div class="default-item">Loading...</div>
 	</div>
@@ -27,10 +41,10 @@
 	</div>
 	<hr/>
 	<div id="exercise_buttons">
-		<a class="action-text">CANCEL</a>
+		<a class="action-text" data-dismiss="modal" aria-label="Close">CANCEL</a>
 		<span class="pull-right">
 			<span class="action-text download glyphicon glyphicon-download-alt" title="Download"></span>
-			<button class="action-button">CREATE</button>
+			<button class="action-button" id="createexercise">CREATE</button>
 		</span>
 	</div>
 </div>

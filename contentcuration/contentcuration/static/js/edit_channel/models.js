@@ -120,6 +120,7 @@ var ContentNodeModel = BaseModel.extend({
 		title:"Untitled",
 		children:[],
 		tags:[],
+		assessment_items:[],
 		metadata:{
 			"resource_size":0,
 			"resource_count":0,

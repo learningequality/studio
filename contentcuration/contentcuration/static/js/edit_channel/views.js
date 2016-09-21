@@ -525,12 +525,28 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	},
 	add_exercise:function(){
 		var Exercise = require("edit_channel/exercise_creation/views");
-	  	this.exercise_view = new Exercise.ExerciseModalView({
-	      parent_view: this,
-	      model:this.model,
-	      onsave: this.reload_ancestors,
-		  onnew:this.add_nodes
-	  	});
+		var self = this;
+		var new_exercise = this.collection.create({
+            "kind":"exercise",
+            "title": "New Exercise",
+            "sort_order" : this.collection.length,
+            "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+        }, {
+        	success:function(new_node){
+		        var exercise_view = new Exercise.ExerciseModalView({
+			      parent_view: self,
+			      model:new_node,
+			      onsave: self.reload_ancestors,
+				  onnew:self.add_nodes,
+				  parentnode: self.model
+			  	});
+        	},
+        	error:function(obj, error){
+            	console.log("Error message:", error);
+        	}
+        });
+
+
 	}
 });
 

@@ -306,7 +306,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
                  'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets',
-                 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields')
+                 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items')
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:

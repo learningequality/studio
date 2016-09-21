@@ -32,7 +32,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     });
   },
   close_uploader:function(event){
-    if(!this.metadata_view.check_for_changes()){
+    if(!this.metadata_view.check_for_changes() || !event){
       this.close();
       $(".modal-backdrop").remove();
     }else if(confirm("Unsaved Metadata Detected! Exiting now will"
@@ -148,7 +148,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.editor_view.add_tag(null);
     this.save("Saving Content...", this.save_nodes).then(function(collection){
       self.process_updated_collection(collection);
-      self.onclose(event);
+      self.onclose();
     });
   },
   save_nodes:function(){

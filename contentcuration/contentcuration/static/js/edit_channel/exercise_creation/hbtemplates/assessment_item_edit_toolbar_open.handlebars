@@ -1,5 +1,17 @@
-<div class="btn-group" role="group" aria-label="Edit Tools">
-<a class="cancel" {{#unless undo}}disabled="disabled"{{/unless}} title="Cancel"><span class="glyphicon glyphicon-ban-circle"></span></a>
-<a class="undo" {{#unless undo}}disabled="disabled"{{/unless}} title="Undo"><span class="glyphicon glyphicon-arrow-left"></span></a>
-<a class="redo" {{#unless redo}}disabled="disabled"{{/unless}} title="Redo"><span class="glyphicon glyphicon-arrow-right"></span></a>
+<div class="btn-group-vertical pull-right open_toolbar" role="group" aria-label="Edit Tools">
+	 <button type="button" class="btn btn-default toggle" title="Ok">
+	 	<span class="glyphicon glyphicon-ok option" ></span>
+	 </button>
+	 <button type="button" class="btn btn-default cancel" {{#unless undo}}disabled="disabled"{{/unless}} title="Cancel">
+	 	<span class="glyphicon glyphicon-ban-circle option"></span>
+	 </button>
+	 <button type="button" class="btn btn-default undo" {{#unless undo}}disabled="disabled"{{/unless}} title="Undo">
+	 	<span class="glyphicon glyphicon-share-alt option"></span>
+	 </button>
+	 <button type="button" class="btn btn-default redo" {{#unless redo}}disabled="disabled"{{/unless}} title="Redo">
+	 	<span class="glyphicon glyphicon-share-alt option"></span>
+	 </button>
+	 <button type="button" class="btn btn-default delete" title="Delete">
+	 	<span class="glyphicon glyphicon-trash option"></span>
+	 </button>
 </div>

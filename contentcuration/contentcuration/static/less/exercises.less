@@ -34,12 +34,17 @@
 			width:100%;
 			.remove_area{
 				display:inline-block;
-				/*vertical-align: middle;*/
-				width:3%;
-				.delete{
+				vertical-align: top;
+				width:5%;
+				.option{
 					font-size:12pt;
-					cursor:pointer;
-					margin-left:10px;
+				}
+				.undo {
+				  -moz-transform: scaleX(-1);    /* Gecko */
+				  -o-transform: scaleX(-1);      /* Opera */
+				  -webkit-transform: scaleX(-1); /* Webkit */
+				  transform: scaleX(-1);         /* Standard */
+				  filter: FlipH;                 /* IE 6/7/8 */
 				}
 			}
 			.question_number_area{
@@ -53,11 +58,11 @@
 				}
 			}
 			.main_edit_area{
-				width:90%;
+				width:88%;
 				display:inline-block;
-				vertical-align: middle;
+				vertical-align: top;
 				.question_area{
-					padding:5px;
+					padding:7px;
 					cursor:pointer;
 					background-color:@gray-200;
 					.move{
@@ -97,6 +102,9 @@
 					}
 					li{
 						width:100%;
+						.toggle{
+							margin-right:10px;
+						}
 					}
 				}
 			}
