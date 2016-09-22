@@ -127,7 +127,6 @@ def exercise(request, exercise_id):
 
     return render(request, 'exercise_edit.html', {"exercise": JSONRenderer().render(serializer.data), "assessment_items": JSONRenderer().render(assessment_serialize.data)})
 
-
 # TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
 @csrf_exempt
 def file_upload(request):
@@ -235,6 +234,16 @@ def thumbnail_upload(request):
         return HttpResponse(json.dumps({
             "success": True,
             "filename": filename
+        }))
+
+def exercise_image_upload(request):
+    if request.method == 'POST':
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
+        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext))
+        file_object.save()
+        return HttpResponse(json.dumps({
+            "success": True,
+            "filename": str(file_object),
         }))
 
 def duplicate_nodes(request):

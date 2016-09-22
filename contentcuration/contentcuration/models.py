@@ -196,6 +196,22 @@ def delegate_manager(method):
         return method(self, *args, **kwargs)
     return wrapped
 
+class License(models.Model):
+    """
+    Normalize the license of ContentNode model
+    """
+    license_name = models.CharField(max_length=50)
+    license_url = models.URLField(blank=True)
+    license_description = models.TextField(blank=True)
+    exists = models.BooleanField(
+        default=False,
+        verbose_name=_("license exists"),
+        help_text=_("Tells whether or not a content item is licensed to share"),
+    )
+
+    def __str__(self):
+        return self.license_name
+
 class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
@@ -214,7 +230,7 @@ class ContentNode(MPTTModel, models.Model):
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
-    license = models.ForeignKey('License', null=True)
+    license = models.ForeignKey('License', null=True, default=License.objects.get(id=settings.DEFAULT_LICENSE))
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
     is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship', symmetrical=False, blank=True)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
@@ -356,22 +372,6 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
         print file_on_disk_path
         if os.path.isfile(file_on_disk_path):
             os.remove(file_on_disk_path)
-
-class License(models.Model):
-    """
-    Normalize the license of ContentNode model
-    """
-    license_name = models.CharField(max_length=50)
-    license_url = models.URLField(blank=True)
-    license_description = models.TextField(blank=True)
-    exists = models.BooleanField(
-        default=False,
-        verbose_name=_("license exists"),
-        help_text=_("Tells whether or not a content item is licensed to share"),
-    )
-
-    def __str__(self):
-        return self.license_name
 
 class PrerequisiteContentRelationship(models.Model):
     """

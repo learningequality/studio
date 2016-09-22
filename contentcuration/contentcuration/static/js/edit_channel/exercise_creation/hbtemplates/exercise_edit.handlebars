@@ -1,7 +1,9 @@
 <div class="container-fluid" id="exercisecreation">
 	<div class="row">
 		<div class="col-sm-8">
-			<input type="text" id="exercise_title" placeholder="Exercise Name" value="{{title}}">
+			{{#if show_metadata}}
+			<input type="text" id="exercise_title" placeholder="Exercise Name" value="{{node.title}}">
+			{{/if}}
 		</div>
 		<div class="col-sm-4">
 			<label for="mastery_model_select">Mastery at:</label>
@@ -14,37 +16,49 @@
 			</select>
 		</div>
 	</div>
-
-	<textarea id="exercise_description" rows="2" placeholder="Description">{{ description }}</textarea>
-	<div class="panel-group" id="exercise_list" role="tablist" aria-multiselectable="true">
+	{{#if show_metadata}}
+		<div class="metadata_toggle">
+			<b class="text">More Details</b>
+			<span class="glyphicon glyphicon-menu-up toggler_icon" aria-hidden="true"></span>
+		</div>
+		<div id="exercise_extra_metadata" class="container-fluid">
+			<div class="row">
+				<div class="col-sm-12">
+					<h4>Description</h4>
+					<textarea id="exercise_description" rows="2" placeholder="Description">{{ node.description }}</textarea>
+				</div>
+			</div>
+		</div>
+		<hr/>
+		<h3><b>Questions</b></h3>
+	{{/if}}
+	<div class="show_question_toggle">
+		<input type="checkbox" id="exercise_show_answers"/>
+		<label for="exercise_show_answers">Show questions only</label>
+	</div>
+	<ol class="panel-group" id="exercise_list" role="tablist" aria-multiselectable="true">
 		<div class="default-item">Loading...</div>
+	</ol>
+	<div class="dropup">
+	  	<button type="button" class="btn btn-default add_question" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Question Types">
+	  		<span class="glyphicon glyphicon-plus"></span>
+			ADD QUESTION
+		</button>
+	    <span class="sr-only">Add Question</span>
+	  </button>
+	  <ul class="dropdown-menu add_question_dropdown">
+	    <li class="multiplechoice"><a >Multiple Choice</a></li>
+	    <li class="truefalse"><a >True/False</a></li>
+	    <li class="freeresponse"><a >Free Response</a></li>
+	  </ul>
 	</div>
-	<div class="btn-group btn-group-justified" role="group" aria-label="Question Types">
-		<div class="btn-group" role="group">
-			<button class="btn multiplechoice add_question" title="Multiple Choice">
-			<span class="glyphicon glyphicon-plus"></span>
-				Multiple Choice
-			</button>
-		</div>
-		<div class="btn-group" role="group">
-			<button class="btn truefalse add_question" title="True/False">
-			<span class="glyphicon glyphicon-plus"></span>
-				True/False
-			</button>
-		</div>
-		<div class="btn-group" role="group">
-			<button class="btn freeresponse add_question" title="Free Response">
-			<span class="glyphicon glyphicon-plus"></span>
-				Free Response
-			</button>
-		</div>
-	</div>
-	<hr/>
+	{{#if show_metadata}}
 	<div id="exercise_buttons">
 		<a class="action-text" data-dismiss="modal" aria-label="Close">CANCEL</a>
 		<span class="pull-right">
 			<span class="action-text download glyphicon glyphicon-download-alt" title="Download"></span>
-			<button class="action-button" id="createexercise">CREATE</button>
+			<button class="action-button" id="createexercise">SAVE</button>
 		</span>
 	</div>
+	{{/if}}
 </div>

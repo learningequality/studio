@@ -10,28 +10,65 @@
 		.input-form;
 		resize:none;
 	}
-	.add_question{
-		background-color: @blue-700;
-		color:white;
-		margin:5px;
-		border:1px solid white;
+	h4 {
+		font-size: 12px;
+		color: @gray-800;
+		margin-top: 5px;
+		font-weight: bold;
 	}
 
-	.add_question:hover{
-		font-weight:bold;
-		background-color: @blue-200;
-		color:black;
-	}
 
 	div#dropzone{
 		min-height: 150px;
 	}
+	.show_question_toggle{
+		padding:5px;
+		margin-left:5px;
+		font-size:11pt;
+		margin-bottom:20px;
+		*{
+			cursor:pointer;
+		}
+		label{
+			font-weight:normal;
+		}
+	}
+	.metadata_toggle{
+		cursor:pointer;
+		font-weight:bold;
+		color:@blue-500;
+		margin-bottom:10px;
+		font-size:10pt;
+	}
+	#exercise_extra_metadata{
+		display:none;
+	}
 
 	#exercise_list {
 		min-height: 50px;
+		list-style-type: none;
+		.assessment_li{
+			counter-increment: step-counter;
+		}
+		.assessment_li::before {
+		    content: counter(step-counter);
+		    font-weight: bold;
+			margin-right:5px;
+			width:5%;
+			color:@gray-400;
+			font-size:14pt;
+			float:left;
+			text-align: center;
+		}
+
 		.assessment_item{
 			margin:0px 5px 15px 5px;
 			width:100%;
+
+			.toolbar{
+				display:none;
+			}
+
 			.remove_area{
 				display:inline-block;
 				vertical-align: top;
@@ -47,16 +84,6 @@
 				  filter: FlipH;                 /* IE 6/7/8 */
 				}
 			}
-			.question_number_area{
-				display:inline-block;
-				vertical-align: middle;
-				width:5%;
-				label{
-					margin-right:5px;
-					color:@gray-400;
-					font-size:14pt;
-				}
-			}
 			.main_edit_area{
 				width:88%;
 				display:inline-block;
@@ -65,6 +92,14 @@
 					padding:7px;
 					cursor:pointer;
 					background-color:@gray-200;
+					.question_type{
+						color:@gray-700;
+						font-size:9pt;
+						margin-bottom:2px;
+					}
+					.question{
+						font-size:13pt;
+					}
 					.move{
 						font-size:12pt;
 					}
@@ -82,6 +117,7 @@
 				}
 			}
 		}
+
 		.assessment_item.active{
 			.main_edit_area{
 				background-color: @blue-100;
@@ -102,11 +138,55 @@
 					}
 					li{
 						width:100%;
-						.toggle{
-							margin-right:10px;
+						.answer-toolbar{
+							text-align:right;
+							.toggle{
+								a{
+									padding:0;
+									text-decoration: none;
+								}
+								margin-top:135px;
+								font-size:13pt;
+							}
 						}
+
 					}
 				}
+			}
+		}
+		.assessment_item:hover .toolbar{
+			display:block;
+		}
+	}
+	#exercise_list.hide_answers{
+		.answers{
+			display:none;
+		}
+		.assessment_item.active .answers{
+			display:block;
+		}
+	}
+	.dropup{
+		margin-bottom:20px;
+		.add_question{
+			background-color: @blue-700;
+			color:white;
+			margin:5px;
+			margin-left:10px;
+			padding:5px 30px;
+		}
+
+		.add_question:hover{
+			font-weight:bold;
+			background-color: @blue-200;
+			color:black;
+		}
+		.add_question_dropdown{
+			margin-left:35px;
+			padding:0;
+			li a{
+				padding:10px 15px;
+				width:100%;
 			}
 		}
 	}

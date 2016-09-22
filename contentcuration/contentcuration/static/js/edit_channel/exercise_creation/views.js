@@ -19,18 +19,17 @@ var ExerciseModalView = BaseViews.BaseModalView.extend({
     initialize: function(options) {
         _.bindAll(this, "close_exercise_uploader", "close");
         this.render(this.close_exercise_uploader, {});
-        this.exercise_view = new ExerciseView({
+         this.exercise_view = new ExerciseView({
             el: this.$(".modal-body"),
             container: this,
             model:this.model,
             parentnode:options.parentnode,
             onclose: this.close_exercise_uploader,
-            onnew: options.onnew,
-            collection: new Models.AssessmentItemCollection()
+            onsave: options.onsave,
         });
     },
     close_exercise_uploader:function(event){
-        if(this.exercise_view.collection.length === 0 || !event){
+        if(!event || !this.exercise_view.check_for_changes()){
             this.close();
             $('body').removeClass('modal-open');
             $('.modal-backdrop').remove();
@@ -71,7 +70,7 @@ var FileUploadView = Backbone.View.extend({
         }
 
         // TODO parameterize to allow different file uploads depending on initialization.
-        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {maxFiles: 1, clickable: ["#dropzone", ".fileinput-button"], acceptedFiles: "image/*", url: window.Urls.file_upload(), headers: {"X-CSRFToken": get_cookie("csrftoken")}});
+        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {maxFiles: 1, clickable: ["#dropzone", ".fileinput-button"], acceptedFiles: "image/*", url: window.Urls.exercise_image_upload(), headers: {"X-CSRFToken": get_cookie("csrftoken")}});
         this.dropzone.on("success", this.file_uploaded);
 
     },
@@ -191,14 +190,19 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     default_item:"#exercise_list .default-item",
 
     initialize: function(options) {
-        _.bindAll(this, "save", "createexercise");
+        _.bindAll(this, "save", "createexercise", 'toggle_answers','toggle_details');
         this.bind_edit_functions();
         this.parentnode = options.parentnode;
         this.onclose = options.onclose;
-        this.onnew = options.onnew;
+        this.onsave = options.onsave;
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(exerciseSaveDispatcher, "save", this.save);
-        this.render();
+        this.collection = new Models.AssessmentItemCollection();
+        var self = this;
+        this.collection.get_all_fetch(this.model.get("assessment_items")).then(function(fetched){
+            this.collection = fetched;
+            self.render();
+        });
     },
 
     events: {
@@ -209,7 +213,23 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
         "change #exercise_description": "set_description",
         "click .save": "save",
         "click .download": "download",
-        "click #createexercise": "createexercise"
+        "click #createexercise": "createexercise",
+        "change #exercise_show_answers" : "toggle_answers",
+        "click .metadata_toggle": "toggle_details"
+    },
+    toggle_answers:function(){
+        this.$(this.list_selector).toggleClass("hide_answers");
+    },
+    toggle_details:function(){
+        if(this.$(".toggler_icon").hasClass("glyphicon-menu-up")){
+            this.$(".metadata_toggle .text").text("Fewer Details");
+            this.$(".toggler_icon").removeClass("glyphicon-menu-up").addClass("glyphicon-menu-down");
+            this.$("#exercise_extra_metadata").slideDown();
+        }else{
+            this.$(".metadata_toggle .text").text("More Details");
+            this.$(".toggler_icon").removeClass("glyphicon-menu-down").addClass("glyphicon-menu-up");
+            this.$("#exercise_extra_metadata").slideUp();
+        }
     },
     download: function() {
         var self = this;
@@ -270,7 +290,10 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     template: require("./hbtemplates/exercise_edit.handlebars"),
 
     render: function() {
-        this.$el.html(this.template(this.model.attributes));
+        this.$el.html(this.template({
+            node: this.model.toJSON(),
+            show_metadata: this.parentnode
+        }));
         this.load_content(this.collection, "Select a question type below");
     },
     create_new_view:function(model){
@@ -317,19 +340,24 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     createexercise:function(){
         var self = this;
         this.model.set({
-            parent:this.parentnode.get("id"),
+            parent: (this.parentnode)? this.parentnode.get("id") : this.model.get("parent"),
             extra_fields:JSON.stringify({mastery_model:$("#mastery_model_select").val()})
         });
         this.model.save(this.model.toJSON(), {
             success:function(new_model){
-                console.log("node", self.model);
-                console.log("collection", self.collection);
                 exerciseSaveDispatcher.trigger("save");
                 var new_collection = new Models.ContentNodeCollection(self.model);
-                self.onnew(new_collection);
+                self.onsave(new_collection);
                 self.onclose();
             }
         });
+    },
+    check_for_changes:function(){
+        var is_changed = false;
+        this.views.forEach(function(view){
+            is_changed = is_changed || view.undo;
+        });
+        return is_changed;
     }
 });
 
@@ -406,6 +434,7 @@ var EditorView = Backbone.View.extend({
                 }
             }
         });
+        console.log(this.editor)
         this.render_editor();
         this.editor.on("text-change", _.debounce(this.save, 500));
         this.editing = true;
@@ -615,8 +644,8 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
     }
 });
 
-var AssessmentItemView = Backbone.View.extend({
-
+var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
+    className:"assessment_li",
     initialize: function(options) {
         _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus", "toggle_undo_redo", "add_focus", "remove_focus");
         this.number = options.number;

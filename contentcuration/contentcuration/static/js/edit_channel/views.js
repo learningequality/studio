@@ -80,7 +80,7 @@ var BaseView = Backbone.View.extend({
 			$("#channel-publish-button").text("No changes detected");
 			$("#channel-publish-button").addClass("disabled");
 		}
-	},
+	}
 });
 
 var BaseWorkspaceView = BaseView.extend({
@@ -536,8 +536,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		        var exercise_view = new Exercise.ExerciseModalView({
 			      parent_view: self,
 			      model:new_node,
-			      onsave: self.reload_ancestors,
-				  onnew:self.add_nodes,
+			      onsave: self.add_nodes,
 				  parentnode: self.model
 			  	});
         	},
@@ -545,8 +544,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
             	console.log("Error message:", error);
         	}
         });
-
-
 	}
 });
 
@@ -719,7 +716,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			el: $("#dialog"),
 			new_content: false,
 			model: this.model,
-		  onsave: this.reload_ancestors
+		  	onsave: this.reload_ancestors
 		});
 	},
 	handle_hover:function(event){

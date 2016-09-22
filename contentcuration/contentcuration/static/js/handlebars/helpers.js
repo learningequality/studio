@@ -91,3 +91,16 @@ Handlebars.registerHelper('get_icon', function(kind){
           return "glyphicon glyphicon-exclamation-sign";
   }
 });
+
+Handlebars.registerHelper('format_question_type', function(type){
+  switch (type){
+      case "multiplechoice":
+          return "Multiple Choice";
+      case "truefalse":
+          return "True/False";
+      case "freeresponse":
+          return "Free Response";
+      default:
+          return "Unknown Question Type";
+  }
+});

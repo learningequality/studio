@@ -1,7 +1,4 @@
 <div class="assessment_item toggle_exercise">
-	<div class="question_number_area text-center">
-		<label>{{ model.order }}</label>
-	</div>
 	<div class="main_edit_area container" >
 		<div class="row question_area ">
 			<!-- <div class="col-sm-1">
@@ -10,6 +7,7 @@
 				<span class="glyphicon glyphicon-triangle-bottom move_down move" title="Move down"></span>
 			</div> -->
 			<div class="col-sm-12">
+				<div class="question_type">{{#format_question_type model.type}}{{/format_question_type}}</div>
 			  	<div class="question editable wordwrap" data-ph="Question"></div>
 		    </div>
 		</div>

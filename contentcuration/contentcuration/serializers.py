@@ -314,7 +314,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
         fields = ('contentnode', 'mastery_model', 'id')
 
 class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
-    # contentnode = serializers.PrimaryKeyRelatedField(queryset=Exercise.objects.all())
+    contentnode = serializers.PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
 
     class Meta:
         model = AssessmentItem
