@@ -139,6 +139,12 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				load_reject(error);
 			});
 		});
+	},
+	close_all_popups:function(){
+		$('.content-options-dropdown').each(function() {
+            $(this).popover('hide');
+            $(this).removeClass("active-popover");
+        });
 	}
 });
 
@@ -218,7 +224,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	close_container:function(){
 		var self = this;
-		this.$el.removeClass("post_animation").addClass("remove_animation");
+		this.$el.addClass("remove_animation");
 		this.container.remove_containers_from(this.index - 1);
 		setTimeout(function(){
 			self.remove();
@@ -238,6 +244,9 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	set_current:function(model){
 		this.current_model = model;
+	},
+	close_all_popups:function(){
+		this.container.close_all_popups();
 	}
 });
 
@@ -249,15 +258,15 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 // reject (function): function to call if failed to render
 var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
+	options_template:require("./hbtemplates/content_list_item_options.handlebars"),
 	selectedClass: "content-selected",
 	openedFolderClass: "current_topic",
-	className: "content-item",
 	'id': function() {
 		return this.model.get("id");
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder','preview_node', 'open_options');
+		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'add_new_subtopic', 'open_context_menu');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
@@ -279,23 +288,54 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
 		this.$el.removeClass(this.selectedClass);
+		this.create_popover();
+	},
+	create_popover:function(){
+		var self = this;
+		this.$el.find(".content-options-dropdown").popover({
+			animation:false,
+			trigger:"manual",
+			html: true,
+			selector: '[rel="popover"]',
+			content: function () {
+		        return $("#options_" + self.model.get("id")).html();
+		    }
+		}).click(function(event){
+			var hadClass = $(this).hasClass("active-popover");
+			self.containing_list_view.close_all_popups();
+			if(!hadClass){
+				$(this).popover('show');
+	        	$(this).addClass("active-popover");
+			}
+	        event.preventDefault();
+	        event.stopPropagation();
+		});
 	},
 	events: {
-		'click .edit_folder_button': 'open_edit',
+		'click .edit_item_button': 'open_edit',
 		'click .open_folder':'open_folder',
-		'click .folder' : "open_folder",
-		'click .preview_button': 'preview_node',
-		'click .file' : 'preview_node',
+		'click .open_file' : 'preview_node',
 		'change input[type=checkbox]': 'handle_checked',
-		'click .content-options-dropdown' : 'open_options'
+		'click .delete_item_button' : 'delete_node',
+		'click .copy_item_button': 'copy_node',
+		'click .add_subtopic_item_button': 'add_new_subtopic',
+		'contextmenu .list_item_wrapper' : 'open_context_menu'
 	},
-	open_options:function(event){
-		event.preventDefault();
-		event.stopPropagation();
+	open_context_menu:function(event){
+		if( event.button == 2 ) {
+			this.cancel_actions(event);
+			var contextmenu = this.$(".context-menu");
+			contextmenu.addClass("init");
+			contextmenu.offset({
+				left: event.pageX + 5,
+				top: event.pageY + 5,
+			});
+			contextmenu.focus();
+			contextmenu.removeClass("init");
+		}
 	},
 	open_folder:function(event){
-		event.preventDefault();
-		event.stopPropagation();
+		this.cancel_actions(event);
 		if(!this.$el.hasClass(this.openedFolderClass)){
 			this.containing_list_view.close_folders();
 			this.subcontent_view = this.containing_list_view.add_container(this);
@@ -304,8 +344,25 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		}
 	},
 	preview_node: function(event){
-		event.preventDefault();
+		this.cancel_actions(event);
 		(this.edit_mode)? this.open_edit(event) : this.open_preview();
+	},
+	copy_node:function(event){
+		this.cancel_actions(event);
+		this.copy_item();
+	},
+	delete_node:function(event){
+		this.cancel_actions(event);
+		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
+			this.add_to_trash();
+			if(this.subcontent_view){
+				this.subcontent_view.close_container();
+			}
+		}
+	},
+	add_new_subtopic:function(event){
+		this.cancel_actions(event);
+		this.add_topic();
 	}
 });
 
