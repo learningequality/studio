@@ -81,13 +81,20 @@ var BaseView = Backbone.View.extend({
 			$("#channel-publish-button").addClass("disabled");
 		}
 	},
+	cancel_actions:function(event){
+		event.preventDefault();
+		event.stopPropagation();
+		if(window.workspace_manager.get_main_view()){
+			window.workspace_manager.get_main_view().close_all_popups();
+		}
+	},
 });
 
 var BaseWorkspaceView = BaseView.extend({
 	lists: [],
 	bind_workspace_functions:function(){
 		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published',
-			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected');
+			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions');
 	},
 	publish:function(){
 		if(!$("#channel-publish-button").hasClass("disabled")){
@@ -194,7 +201,7 @@ var BaseListView = BaseView.extend({
 	views: [],			//List of item views to help with garbage collection
 
 	bind_list_functions:function(){
-		_.bindAll(this, 'load_content', 'handle_if_empty', 'check_all', 'get_selected', 'set_root_model', 'update_views');
+		_.bindAll(this, 'load_content', 'handle_if_empty', 'check_all', 'get_selected', 'set_root_model', 'update_views', 'cancel_actions');
 	},
 	set_root_model:function(model){
 		this.model.set(model.toJSON());
@@ -365,21 +372,22 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	bind_workspace_functions: function(){
 		this.bind_edit_functions();
 		_.bindAll(this, 'copy_selected', 'delete_selected', 'add_topic','add_nodes', 'drop_in_container','handle_drop', 'refresh_droppable',
-			'import_content', 'add_files', 'add_to_clipboard', 'add_to_trash','make_droppable');
+			'import_content', 'add_files', 'add_to_clipboard', 'add_to_trash','make_droppable', 'copy_collection');
 	},
 
 	copy_selected:function(){
 		var list = this.get_selected();
-		var clipboard_list = [];
-		var clipboard_root = window.current_user.get_clipboard();
 		var copyCollection = new Models.ContentNodeCollection();
 		for(var i = 0; i < list.length; i++){
 			copyCollection.add(list[i].model);
 		}
+		return this.copy_collection(copyCollection);
+	},
+	copy_collection:function(copyCollection){
 		var clipboard = window.workspace_manager.get_queue_view();
 		clipboard.switch_to_queue();
 		clipboard.open_queue();
-		return copyCollection.duplicate(clipboard_root);
+		return copyCollection.duplicate(clipboard.clipboard_queue.model);
 	},
 	delete_selected:function(){
 		var list = this.get_selected();
@@ -536,7 +544,7 @@ var BaseListItemView = BaseView.extend({
 	checked : false,
 
 	bind_list_functions:function(){
-		_.bindAll(this, 'handle_checked');
+		_.bindAll(this, 'handle_checked', 'cancel_actions');
 	},
 	handle_checked:function(){
 		this.checked = this.$el.find(">input[type=checkbox]").is(":checked");
@@ -633,8 +641,7 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 		this.bind_edit_functions();
 	},
 	toggle:function(event){
-		event.stopPropagation();
-		event.preventDefault();
+		this.cancel_actions(event);
 		(this.getToggler().hasClass(this.collapsedClass)) ? this.open_folder() : this.close_folder();
 		if(this.container){
 			var containing_element = this.container.$el.find(this.list_selector);
@@ -666,7 +673,9 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 
 	bind_workspace_functions:function(){
 		this.bind_node_functions();
-		_.bindAll(this, 'open_preview', 'open_edit', 'handle_drop', 'handle_checked', 'add_to_clipboard', 'add_to_trash', 'make_droppable');
+		_.bindAll(this, 'copy_item', 'open_preview', 'open_edit', 'handle_drop',
+			'handle_checked', 'add_to_clipboard', 'add_to_trash', 'make_droppable',
+			'add_nodes', 'add_topic');
 	},
 	make_droppable:function(){
 		if(this.model.get("kind") === "topic"){
@@ -684,8 +693,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		new Previewer.PreviewModalView(data);
 	},
 	open_edit:function(event){
-		event.stopPropagation();
-		event.preventDefault();
+		this.cancel_actions(event);
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var editCollection =  new Models.ContentNodeCollection([this.model]);
@@ -730,7 +738,57 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	},
 	add_to_clipboard:function(message="Moving to Clipboard..."){
 		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([this.model]),message);
+	},
+	copy_item:function(message="Copying to Clipboard..."){
+		var copyCollection = new Models.ContentNodeCollection();
+		copyCollection.add(this.model);
+		var self = this;
+		this.display_load(message, function(resolve, reject){
+			self.containing_list_view.copy_collection(copyCollection).then(function(collection){
+				self.containing_list_view.add_to_clipboard(collection, "");
+				resolve(collection);
+			});
+		});
+	},
+	add_topic: function(){
+		var UploaderViews = require("edit_channel/uploader/views");
+		var self = this;
+		var new_topic = new Models.ContentNodeModel();
+        new_topic.save({
+            "kind":"topic",
+            "title": "Topic",
+            "sort_order" : this.model.get("metadata").max_sort_order,
+            "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+        },{
+        	success:function(new_topic){
+		        var edit_collection = new Models.ContentNodeCollection([new_topic]);
+		        $("#main-content-area").append("<div id='dialog'></div>");
+
+		        var metadata_view = new UploaderViews.MetadataModalView({
+		            el : $("#dialog"),
+		            collection: edit_collection,
+		            model: self.model,
+		            new_content: true,
+		            onsave: self.reload_ancestors,
+		            onnew:self.add_nodes
+		        });
+        	},
+        	error:function(obj, error){
+            	console.log("Error message:", error);
+        	}
+        });
+	},
+	add_nodes:function(collection){
+		var self = this;
+		if(this.subcontent_view){
+			this.subcontent_view.add_nodes(collection);
+		}else{
+			this.fetch_model(this.model).then(function(fetched){
+				self.reload(fetched);
+			});
+		}
 	}
+
 });
 
 module.exports = {
