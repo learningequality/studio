@@ -28,6 +28,7 @@ class UserManager(BaseUserManager):
             email=self.normalize_email(email),
         )
 
+
         new_user.set_password(password)
         new_user.first_name = first_name
         new_user.last_name = last_name
