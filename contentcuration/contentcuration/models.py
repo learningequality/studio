@@ -17,7 +17,7 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 
-from fle_utils import constants
+from le_utils import constants
 
 class UserManager(BaseUserManager):
     def create_user(self, email, first_name, last_name, password=None):
