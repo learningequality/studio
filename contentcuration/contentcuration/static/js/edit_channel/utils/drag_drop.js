@@ -31,7 +31,7 @@ function addSortable(element, selected_class, callback){
 	    helper: function (e, item) {
             if(!item.hasClass(selectedClass))
                item.addClass(selectedClass);
-            var elements = $('.' + selectedClass).not('.sorting-placeholder').not('.current_topic').clone();
+            var elements = $('.' + selectedClass).not('.current_topic').clone();
             var helper = $('<ul class="list-unstyled ui-sorting-list" id="drag-list"/>');
             item.siblings('.'+ selectedClass).not('.current_topic').addClass('hidden');
             return helper.append(elements);
@@ -47,24 +47,14 @@ function addSortable(element, selected_class, callback){
             ui.item.siblings('.' + selectedClass).removeClass('hidden');
             $("." + selectedClass + " input[type='checkbox']").prop("checked", false);
             $('.' + selectedClass).removeClass(selectedClass);
-            $(".temporary_parent_for_placeholder").remove();
         },
         beforeStop: function(event, ui) {
             if ($(event.target).parent("#queue_content") && $("#queue").hasClass("closed")) {
-                $(this).sortable('cancel');
+                // $(this).sortable('cancel');
                  ui.item.siblings('.' + selectedClass).removeClass('hidden');
 	            $("." + selectedClass + " input[type='checkbox']").prop("checked", false);
 	            $('.' + selectedClass).removeClass(selectedClass);
             }
-            if($(ui.placeholder).parent().length === 0){
-            	$(ui.placeholder).wrap( "<div class='temporary_parent_for_placeholder'></div>" );
-            	// console.log(event)
-            }
-      //       var parent = $(ui.placeholder).parent();
-		    // if (parent.length=== 0 || parent[0] != this) {
-		    //     $(this).sortable('cancel');
-		    // }
-            // console.log($(this))
         },
 		update: function(event, ui) {
 			if($(".drop-topic-hover").length === 0){
@@ -108,7 +98,7 @@ function addSortable(element, selected_class, callback){
 			}
 	    },
 	    over: function (e, ui) {
-		  $(ui.sender).sortable('instance').scrollParent = $(e.target)
+		  // $(ui.sender).sortable('instance').scrollParent = $(e.target)
 		}
 	}).droppable({
 		items : 'li',

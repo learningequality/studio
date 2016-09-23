@@ -705,9 +705,6 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		  onsave: this.reload_ancestors
 		});
 	},
-	handle_hover:function(event){
-		this.hover_open_folder(event);
-	},
 	handle_drop:function(models){
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
