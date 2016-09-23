@@ -14,7 +14,6 @@ function addSortable(element, selected_class, callback){
 
 	element.$el.find(".content-list").sortable({
 	    revert:100,
-	    helper : 'clone',
 		placeholder: "sorting-placeholder",
 		forcePlaceholderSize: true,
 		scroll:true,
@@ -28,6 +27,7 @@ function addSortable(element, selected_class, callback){
 	   	containment: "#channel-edit-sortable-boundary, #queue.opened",
 	   	appendTo: "#channel-edit-content-wrapper",
 	   	bodyClass: "dragging",
+	   	// helper:"clone",
 	    helper: function (e, item) {
             if(!item.hasClass(selectedClass))
                item.addClass(selectedClass);
@@ -47,6 +47,7 @@ function addSortable(element, selected_class, callback){
             ui.item.siblings('.' + selectedClass).removeClass('hidden');
             $("." + selectedClass + " input[type='checkbox']").prop("checked", false);
             $('.' + selectedClass).removeClass(selectedClass);
+            $(".temporary_parent_for_placeholder").remove();
         },
         beforeStop: function(event, ui) {
             if ($(event.target).parent("#queue_content") && $("#queue").hasClass("closed")) {
@@ -55,6 +56,14 @@ function addSortable(element, selected_class, callback){
 	            $("." + selectedClass + " input[type='checkbox']").prop("checked", false);
 	            $('.' + selectedClass).removeClass(selectedClass);
             }
+            if($(ui.placeholder).parent().length === 0){
+            	$(ui.placeholder).wrap( "<div class='temporary_parent_for_placeholder'></div>" );
+            }
+      //       var parent = $(ui.placeholder).parent();
+		    // if (parent.length=== 0 || parent[0] != this) {
+		    //     $(this).sortable('cancel');
+		    // }
+            console.log($(this))
         },
 		update: function(event, ui) {
 			if($(".drop-topic-hover").length === 0){

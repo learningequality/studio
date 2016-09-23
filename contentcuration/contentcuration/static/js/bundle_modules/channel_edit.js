@@ -11,7 +11,7 @@ $(function() {
 		window.current_channel = new Models.ChannelModel(window.channel);
 		window.current_channel.fetch({async:false});
 	}
-	$("body").on("click", close_popups);
+	$("#channel-edit-content-wrapper").on("click", close_popups);
 });
 
 function close_popups(){

@@ -9,7 +9,7 @@ require("handlebars/helpers");
 require("../../less/styles.less");
 require("bootstrap/dist/js/npm.js");
 require("../../js/jquery-ui.min");
-
+// require("../../../../../node_modules/jquery-ui/ui/widgets/sortable");
 
 var csrftoken = get_cookie("csrftoken") || "";
 
