@@ -58,12 +58,13 @@ function addSortable(element, selected_class, callback){
             }
             if($(ui.placeholder).parent().length === 0){
             	$(ui.placeholder).wrap( "<div class='temporary_parent_for_placeholder'></div>" );
+            	// console.log(event)
             }
       //       var parent = $(ui.placeholder).parent();
 		    // if (parent.length=== 0 || parent[0] != this) {
 		    //     $(this).sortable('cancel');
 		    // }
-            console.log($(this))
+            // console.log($(this))
         },
 		update: function(event, ui) {
 			if($(".drop-topic-hover").length === 0){

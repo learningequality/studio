@@ -1,6 +1,5 @@
 """
 This module acts as the only interface point between other apps and the database backend for the content.
-It exposes several convenience functions for accessing content
 """
 import logging
 import os
@@ -134,12 +133,12 @@ def get_file_diff(file_list):
 
 """ CHANNEL CREATE FUNCTIONS """
 def api_create_channel(channel_data, content_data, file_data):
-        channel = create_channel(channel_data) # Set up initial channel
-        root_node = init_staging_tree(channel) # Set up initial staging tree
-        with transaction.atomic():
-            convert_data_to_nodes(content_data, root_node, file_data) # converts dict to django models
-            update_channel(channel, root_node)
-        return channel # Return new channel
+    channel = create_channel(channel_data) # Set up initial channel
+    root_node = init_staging_tree(channel) # Set up initial staging tree
+    with transaction.atomic():
+        convert_data_to_nodes(content_data, root_node, file_data) # converts dict to django models
+        update_channel(channel, root_node)
+    return channel # Return new channel
 
 def create_channel(channel_data):
     channel = models.Channel.objects.get_or_create(id=channel_data['id'])[0]
