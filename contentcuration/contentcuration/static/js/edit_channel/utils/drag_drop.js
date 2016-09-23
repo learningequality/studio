@@ -154,15 +154,15 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 			hoverOnItem = null;
 		},
 		over: function(event, ui){
-			hoverOnItem = $(this)[0];
-			if(!$(hoverOnItem).find("#menu_toggle_" + hoverOnItem.id).hasClass("glyphicon-menu-down")){
+			this.hoverOnItem = $(this)[0];
+			if(!$(this.hoverOnItem).find("#menu_toggle_" + this.hoverOnItem.id).hasClass("glyphicon-menu-down")){
 				$(".sorting-placeholder").css("display", "none");
-				var hoverItem = $(this)[0];
-				setTimeout(function(){
-					if(hoverOnItem === hoverItem && window.workspace_manager.get(ui.draggable.context.id).node){
-						hoverCallback(event);
-					}
-				}, hoverInterval);
+				this.hoverItem = $(this)[0];
+				// setTimeout(function(){
+				// 	if(this.hoverOnItem === this.hoverItem && window.workspace_manager.get(ui.draggable.context.id).node){
+				// 		hoverCallback(event);
+				// 	}
+				// }, hoverInterval);
 			}
 
 		},
