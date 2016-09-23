@@ -11,7 +11,12 @@ $(function() {
 		window.current_channel = new Models.ChannelModel(window.channel);
 		window.current_channel.fetch({async:false});
 	}
+	$("body").on("click", close_popups);
 });
+
+function close_popups(){
+	window.workspace_manager.get_main_view().close_all_popups();
+}
 
 function publish_nodes(){
 	window.workspace_manager.get_main_view().publish();
