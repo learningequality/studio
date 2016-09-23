@@ -108,7 +108,6 @@ function addSortable(element, selected_class, callback){
 
 function addTopicDragDrop(element, hoverCallback, dropCallback){
 	var hoverInterval = 2000;
-	var hoverOnItem = null;
 	element.$el.droppable({
 		items : 'li',
 		revert: false,
@@ -121,7 +120,7 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 					var selected_items = new Models.ContentNodeCollection();
 					var current_view = window.workspace_manager.get(ui.draggable.context.id);
 					var current_node = current_view.node.model;
-					hoverOnItem = null;
+					this.hoverOnItem = null;
 					$(".content-list").sortable( "disable" );
 
 			        var appended_items = new Models.ContentNodeCollection(); //Items from another container
@@ -151,18 +150,19 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
 		},
 		out: function(event, ui){
 			$(".sorting-placeholder").css("display", "block");
-			hoverOnItem = null;
+			this.hoverOnItem = null;
 		},
 		over: function(event, ui){
 			this.hoverOnItem = $(this)[0];
 			if(!$(this.hoverOnItem).find("#menu_toggle_" + this.hoverOnItem.id).hasClass("glyphicon-menu-down")){
 				$(".sorting-placeholder").css("display", "none");
-				this.hoverItem = $(this)[0];
-				// setTimeout(function(){
-				// 	if(this.hoverOnItem === this.hoverItem && window.workspace_manager.get(ui.draggable.context.id).node){
-				// 		hoverCallback(event);
-				// 	}
-				// }, hoverInterval);
+				var hoverItem = $(this)[0];
+				var self = this;
+				setTimeout(function(){
+					if(self.hoverOnItem === hoverItem && window.workspace_manager.get(ui.draggable.context.id).node){
+						hoverCallback(event);
+					}
+				}, hoverInterval);
 			}
 
 		},
