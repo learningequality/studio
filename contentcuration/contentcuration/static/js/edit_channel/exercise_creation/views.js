@@ -434,7 +434,6 @@ var EditorView = Backbone.View.extend({
                 }
             }
         });
-        console.log(this.editor)
         this.render_editor();
         this.editor.on("text-change", _.debounce(this.save, 500));
         this.editing = true;
