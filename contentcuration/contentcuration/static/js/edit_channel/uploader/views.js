@@ -355,7 +355,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   selected_items: [],
 
   initialize: function(options) {
-    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'openexercise');
+    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag');
     this.new_content = options.new_content;
     this.upload_files = options.upload_files;
     this.selected_items = options.selected_items;
@@ -372,7 +372,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       copyright_owner: (this.shared_data)? this.shared_data.shared_copyright_owner:null,
       author: (this.shared_data)? this.shared_data.shared_author:null,
       selected_count: this.selected_items.length,
-      is_exercise: (this.selected_items.length === 1)? this.selected_items[0].model.get("kind") === "exercise" : false,
+      is_exercise: this.selected_items.length === 1 && this.selected_items[0].model.get("kind") === "exercise",
       word_limit: this.description_limit
     }));
     this.update_count();
@@ -405,7 +405,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     "change #license_select" : "select_license",
     'keypress #tag_box' : 'add_tag',
     'click .delete_tag':'remove_tag',
-    'click .openexercise': 'openexercise'
   },
   load_tags:function(){
     this.$("#tag_area").html(this.tags_template({
@@ -466,9 +465,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
           view.set_node();
       })
     }
-  },
-  openexercise:function(){
-    this.edit_exercise(this.selected_items[0].model);
   }
 });
 
@@ -530,6 +526,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   set_edited:function(is_edited){
       this.edited = is_edited;
+      console.log("EDITED?", this.edited);
       this.isNew = is_edited && this.isNew;
       this.model.set("changed", this.model.get("changed") || is_edited);
       (is_edited)? this.$el.addClass("edited_node") : this.$el.removeClass("edited_node");

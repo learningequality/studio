@@ -583,7 +583,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
             this.set_toolbar_closed();
             this.editor_view.deactivate_editor();
             if (save) {
-                exerciseSaveDispatcher.trigger("save");
+                // exerciseSaveDispatcher.trigger("save");
             }
         }
     },
@@ -609,7 +609,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     delete: function(event) {
         event.stopPropagation();
         this.model.destroy();
-        exerciseSaveDispatcher.trigger("save");
+        // exerciseSaveDispatcher.trigger("save");
         this.remove();
     }
 });
@@ -704,7 +704,7 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
     delete: function(event) {
         event.stopPropagation();
         this.model.destroy();
-        exerciseSaveDispatcher.trigger("save");
+        // exerciseSaveDispatcher.trigger("save");
         this.remove();
     },
 

@@ -169,6 +169,7 @@ def create_node(node_data, parent_node):
     description=node_data['description']
     author = node_data['author']
     kind = models.ContentKind.objects.get(kind=node_data['kind'])
+    extra_fields = node_data['extra_fields']
     license = None
     license_name = node_data['license']
     if license_name is not None:
@@ -184,7 +185,8 @@ def create_node(node_data, parent_node):
         description = description,
         author=author,
         license=license,
-        parent = parent_node
+        parent = parent_node,
+        extra_fields=extra_fields,
     )
 
 def map_files_to_node(node, data, file_data):
