@@ -160,6 +160,7 @@ def convert_data_to_nodes(content_data, parent_node, file_data):
     for node_data in content_data:
         new_node = create_node(node_data, parent_node)
         map_files_to_node(new_node, node_data['files'], file_data)
+        create_exercises(new_node, node_data['questions'])
         convert_data_to_nodes(node_data['children'], new_node, file_data)
 
 def create_node(node_data, parent_node):
@@ -203,6 +204,22 @@ def map_files_to_node(node, data, file_data):
             preset=kind_preset,
         )
         file_obj.save()
+
+def create_exercises(node, data):
+    with transaction.atomic():
+        order = 0
+
+        for question in data:
+            question_obj = models.AssessmentItem(
+                type = question.get('type'),
+                question = question.get('question'),
+                help_text = question.get('help_text'),
+                answers = question.get('answers'),
+                order = ++order,
+                contentnode = node,
+                assessment_id = question.get('assessment_id'),
+            )
+            question_obj.save()
 
 def update_channel(channel, root):
     channel.main_tree = root

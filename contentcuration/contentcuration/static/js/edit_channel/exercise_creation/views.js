@@ -151,10 +151,10 @@ var convert_assessment_item_to_perseus = function(model) {
     var freeresponse_template = require("./hbtemplates/assessment_item_free.handlebars");
     var output = "";
     switch (model.get("type")) {
-        case "freeresponse":
+        case "free_response":
             output = freeresponse_template(model.attributes);
             break;
-        case "multiplechoice":
+        case "multiple_selection":
             output = multiplechoice_template({
                 question: set_image_urls_for_export(model.get("question")),
                 randomize: true,
@@ -320,17 +320,17 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     },
 
     multiplechoice: function() {
-        this.add_assessment_item("multiplechoice");
+        this.add_assessment_item("multiple_selection");
     },
 
     truefalse: function() {
-        this.add_assessment_item("multiplechoice", {
+        this.add_assessment_item("multiple_selection", {
             answers: "[{\"answer\": \"True\", \"correct\": true}, {\"answer\": \"False\", \"correct\": false}]"
         });
     },
 
     freeresponse: function() {
-        this.add_assessment_item("freeresponse");
+        this.add_assessment_item("free_response");
     },
     set_focus:function(){
         this.views.forEach(function(view){
@@ -533,7 +533,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     },
 
     render: function() {
-        this.$el.html(this.template(this.model.attributes));
+        this.$el.html(this.template(this.model.toJSON()));
         if (!this.editor_view) {
             this.editor_view = new EditorView({model: this.model, edit_key: "answer", el: this.$(".answer")});
         } else {
@@ -711,7 +711,7 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
     render: function() {
         this.$el.html(this.template({model: this.model.toJSON()}));
         this.set_toolbar_closed();
-        if (this.model.get("type") === "multiplechoice") {
+        if (this.model.get("type") === "multiple_selection") {
             if (!this.answer_editor) {
                 this.answer_editor = new AssessmentItemAnswerListView({collection: this.model.get("answers"), container:this});
             }
