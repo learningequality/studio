@@ -297,9 +297,8 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
             show_metadata: this.parentnode
         }));
         this.load_content(this.collection, "Select a question type below");
-        var exercise_data = JSON.parse(this.model.get("extra_fields"));
-        if(exercise_data.mastery_model){
-            this.$("#mastery_model_select").val(exercise_data.mastery_model)
+        if(this.model.get("extra_fields")){
+            this.$("#mastery_model_select").val(JSON.parse(this.model.get("extra_fields")).mastery_model)
         }
     },
     create_new_view:function(model){
