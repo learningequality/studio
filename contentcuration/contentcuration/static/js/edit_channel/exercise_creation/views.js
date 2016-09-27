@@ -206,9 +206,11 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     },
 
     events: {
-        "click .multiplechoice": "multiplechoice",
-        "click .truefalse": "truefalse",
-        "click .freeresponse": "freeresponse",
+        "click .multiple_selection": "multiplechoice",
+        "click .true_false": "truefalse",
+        "click .free_response": "freeresponse",
+        "click .single_selection": "singleselection",
+        "click .input_answer": "inputanswer",
         "change #exercise_title": "set_title",
         "change #exercise_description": "set_description",
         "click .save": "save",
@@ -327,6 +329,12 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
         this.add_assessment_item("multiple_selection", {
             answers: "[{\"answer\": \"True\", \"correct\": true}, {\"answer\": \"False\", \"correct\": false}]"
         });
+    },
+    singleselection: function() {
+        this.add_assessment_item("single_selection");
+    },
+    inputanswer: function() {
+        this.add_assessment_item("input_question");
     },
 
     freeresponse: function() {
@@ -518,6 +526,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         _.bindAll(this, "render", "set_editor", "set_open", "toggle");
         this.open = options.open || false;
         this.containing_list_view = options.containing_list_view;
+        this.assessment_item = options.assessment_item;
         this.render();
     },
 
@@ -533,7 +542,11 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     },
 
     render: function() {
-        this.$el.html(this.template(this.model.toJSON()));
+        this.$el.html(this.template({
+            answer: this.model.toJSON(),
+            input_answer: this.assessment_item.get("type") === "input_question",
+            single_selection: this.assessment_item.get("type") === "single_selection"
+        }));
         if (!this.editor_view) {
             this.editor_view = new EditorView({model: this.model, edit_key: "answer", el: this.$(".answer")});
         } else {
@@ -576,7 +589,13 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     },
 
     toggle_correct: function() {
-        this.model.set("correct", this.$(".correct").prop("checked"));
+        if(this.assessment_item.get("type") === "single_selection"){
+            this.containing_list_view.set_all_correct(false);
+        }
+        this.set_correct(this.$(".correct").prop("checked"));
+    },
+    set_correct:function(is_correct){
+        this.model.set("correct", is_correct);
     },
 
     set_toolbar_open: function() {
@@ -602,6 +621,7 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
     initialize: function(options) {
         _.bindAll(this, "render", "add_answer_view");
         this.bind_edit_functions();
+        this.assessment_item = options.assessment_item;
         this.render();
         this.container = options.container;
         this.listenTo(this.collection, "add", this.add_answer_view);
@@ -614,7 +634,9 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
 
     render: function() {
         this.views=[];
-        this.$el.html(this.template());
+        this.$el.html(this.template({
+            input_answer: this.assessment_item.get("type") === "input_question"
+        }));
         for (var i = 0; i < this.collection.length; i++) {
             this.add_answer_view(this.collection.at(i));
         }
@@ -630,7 +652,8 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
         var view = new AssessmentItemAnswerView({
             model: model,
             open: open,
-            containing_list_view:this
+            containing_list_view:this,
+            assessment_item: this.assessment_item
         });
         this.views.push(view);
         this.$(".addanswer").before(view.el);
@@ -640,6 +663,11 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
         this.views.forEach(function(view){
             view.set_closed();
         });
+    },
+    set_all_correct:function(is_correct){
+        this.views.forEach(function(view){
+            view.set_correct(is_correct);
+        })
     }
 });
 
@@ -711,9 +739,13 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
     render: function() {
         this.$el.html(this.template({model: this.model.toJSON()}));
         this.set_toolbar_closed();
-        if (this.model.get("type") === "multiple_selection") {
+        if (this.model.get("type") !== "free_response") {
             if (!this.answer_editor) {
-                this.answer_editor = new AssessmentItemAnswerListView({collection: this.model.get("answers"), container:this});
+                this.answer_editor = new AssessmentItemAnswerListView({
+                    collection: this.model.get("answers"),
+                    container:this,
+                    assessment_item: this.model
+                });
             }
             this.$(".answers").append(this.answer_editor.el);
         }

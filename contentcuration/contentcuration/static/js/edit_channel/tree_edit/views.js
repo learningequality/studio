@@ -280,7 +280,8 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			node: this.model.toJSON(),
 			isfolder: this.model.get("kind") === "topic",
 			edit_mode: this.edit_mode,
-			checked: this.checked
+			checked: this.checked,
+			isexercise: this.model.get("kind") === "exercise"
 		}));
 		this.handle_checked();
 		if(this.isSelected){

@@ -2,10 +2,13 @@
 <li class="header-item list-group-item show_on_focus">
 	<div class="row">
 		<div class="col-sm-8">
-			<b>Answer</b>
+			<b>{{#if input_answer}}Possible Answer(s)
+				{{else}}
+				Answer
+				{{/if}}</b>
 		 </div>
 		 <div class="col-sm-2 text-center">
-		 	<b>Correct?</b>
+		 	<b>{{#unless input_answer}}Correct?{{/unless}}</b>
 		 </div>
 		 <div class="col-sm-2">
 		 </div>
