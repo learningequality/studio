@@ -122,7 +122,7 @@ var ClipboardList = QueueList.extend({
 	list_wrapper_selector: "#clipboard-queue",
 
 	initialize: function(options) {
-		_.bindAll(this, 'delete_items', 'create_new_view', 'edit_items');
+		_.bindAll(this, 'delete_items', 'create_new_view', 'edit_items', 'handle_drop');
 		this.bind_queue_list_functions();
 		this.collection = options.collection;
 		this.container = options.container;
@@ -177,7 +177,8 @@ var ClipboardList = QueueList.extend({
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
 	// handle_drop:function(collection){
 	// 	this.$(this.default_item).css("display", "none");
-	// 	return collection.duplicate(window.workspace_manager.get_queue_view().clipboard_queue.model);
+	// 	console.log(this.model)
+	// 	return collection.duplicate(this.model);
  // 	},
 });
 

@@ -451,7 +451,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 							resolve(true);
 						});
 					}).catch(function(error){
-		        		alert(error.message);
+		        		console.log(error);
 		        	});
 				});
 			}
@@ -704,9 +704,6 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			model: this.model,
 		  onsave: this.reload_ancestors
 		});
-	},
-	handle_hover:function(event){
-		this.hover_open_folder(event);
 	},
 	handle_drop:function(models){
 		var self = this;

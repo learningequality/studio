@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
-from contentcuration.constants import content_kinds
+from le_utils import constants
 
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
@@ -112,13 +112,13 @@ def map_content_nodes(root_node):
 
             kolibrinode = create_bare_contentnode(node)
 
-            if node.kind.kind != content_kinds.TOPIC:
+            if node.kind.kind != constants.CK_TOPIC:
                 create_associated_file_objects(kolibrinode, node)
 
 
 def create_bare_contentnode(ccnode):
     logging.debug("Creating a Kolibri node for instance id {}".format(
-        ccnode.pk))
+        ccnode.node_id))
 
     kolibri_license = None
     if ccnode.license is not None:
@@ -126,7 +126,7 @@ def create_bare_contentnode(ccnode):
 
     kolibrinode = kolibrimodels.ContentNode.objects.create(
         title=ccnode.title,
-        pk=ccnode.pk,
+        pk=ccnode.node_id,
         content_id=ccnode.content_id,
         description=ccnode.description,
         sort_order=ccnode.sort_order,
@@ -140,12 +140,12 @@ def create_bare_contentnode(ccnode):
     if ccnode.parent:
         logging.debug("Associating {child} with parent {parent}".format(
             child=kolibrinode.pk,
-            parent=ccnode.parent.pk
+            parent=ccnode.parent.node_id
         ))
-        kolibrinode.parent = kolibrimodels.ContentNode.objects.get(pk=ccnode.parent.pk)
+        kolibrinode.parent = kolibrimodels.ContentNode.objects.get(pk=ccnode.parent.node_id)
 
     kolibrinode.save()
-    logging.debug("Created Kolibri ContentNode with instance id {}".format(ccnode.pk))
+    logging.debug("Created Kolibri ContentNode with node id {}".format(ccnode.node_id))
     logging.debug("Kolibri node count: {}".format(kolibrimodels.ContentNode.objects.all().count()))
 
     return kolibrinode
@@ -180,7 +180,7 @@ def map_channel_to_kolibri_channel(channel):
         description=channel.description,
         version=channel.version,
         thumbnail=channel.thumbnail,
-        root_pk=channel.main_tree_id,
+        root_pk=channel.main_tree.node_id,
     )
     logging.info("Generated the channel metadata.")
 

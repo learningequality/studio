@@ -1,12 +1,13 @@
 """
 This module acts as the only interface point between other apps and the database backend for the content.
-It exposes several convenience functions for accessing content
 """
 import logging
+import os
 from functools import wraps
-
 from django.core.files import File as DjFile
-from django.db.models import Q
+from django.db.models import Q, Value
+from django.db.models.functions import Concat
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
 from django.db import transaction
@@ -123,3 +124,86 @@ def batch_add_tags(request):
     ThroughModel.objects.bulk_create(bulk_list)
 
     return HttpResponse("Tags are successfully saved.", status=200)
+
+def get_file_diff(file_list):
+    in_db_list = models.File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=file_list).values_list('filename', flat=True)
+    to_return = list(set(file_list) - set(in_db_list))
+    return to_return
+
+
+""" CHANNEL CREATE FUNCTIONS """
+def api_create_channel(channel_data, content_data, file_data):
+    channel = create_channel(channel_data) # Set up initial channel
+    root_node = init_staging_tree(channel) # Set up initial staging tree
+    with transaction.atomic():
+        convert_data_to_nodes(content_data, root_node, file_data) # converts dict to django models
+        update_channel(channel, root_node)
+    return channel # Return new channel
+
+def create_channel(channel_data):
+    channel = models.Channel.objects.get_or_create(id=channel_data['id'])[0]
+    channel.name = channel_data['name']
+    channel.description=channel_data['description']
+    channel.thumbnail=channel_data['thumbnail']
+    channel.deleted = False
+    channel.save()
+    return channel
+
+def init_staging_tree(channel):
+    channel.staging_tree = models.ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
+    channel.staging_tree.save()
+    channel.save()
+    return channel.staging_tree
+
+def convert_data_to_nodes(content_data, parent_node, file_data):
+    for node_data in content_data:
+        new_node = create_node(node_data, parent_node)
+        map_files_to_node(new_node, node_data['files'], file_data)
+        convert_data_to_nodes(node_data['children'], new_node, file_data)
+
+def create_node(node_data, parent_node):
+    title=node_data['title']
+    node_id=node_data['id']
+    description=node_data['description']
+    author = node_data['author']
+    kind = models.ContentKind.objects.get(kind=node_data['kind'])
+    license = None
+    license_name = node_data['license']
+    if license_name is not None:
+        try:
+            license = models.License.objects.get(license_name__iexact=license_name)
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist("Invalid license found")
+
+    return models.ContentNode.objects.create(
+        title=title,
+        kind=kind,
+        node_id=node_id,
+        description = description,
+        author=author,
+        license=license,
+        parent = parent_node
+    )
+
+def map_files_to_node(node, data, file_data):
+
+    for f in data:
+        file_hash = f.split(".")
+        kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1]).first()
+
+        file_obj = models.File(
+            checksum=file_hash[0],
+            contentnode=node,
+            file_format_id=file_hash[1],
+            original_filename=file_data[f]['original_filename'],
+            source_url=file_data[f]['source_url'],
+            file_size = file_data[f]['size'],
+            file_on_disk=DjFile(open(models.generate_file_on_disk_name(file_hash[0], f), 'rb')),
+            preset=kind_preset,
+        )
+        file_obj.save()
+
+def update_channel(channel, root):
+    channel.main_tree = root
+    channel.version += 1
+    channel.save()

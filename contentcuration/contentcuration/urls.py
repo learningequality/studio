@@ -124,6 +124,11 @@ urlpatterns = [
     url(r'^new/accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)/(?P<channel_id>[^/]+)$', views.InvitationRegisterView.as_view(), name="accept_invitation_and_registration"),
     url(r'^decline_invitation/(?P<invitation_link>[^/]+)$', views.decline_invitation, name="decline_invitation"),
     url(r'^invitation_fail$', views.fail_invitation, name="fail_invitation"),
+    url(r'^api/internal/file_diff$', views.file_diff, name="file_diff"),
+    url(r'^api/internal/file_upload$', views.api_file_upload, name="api_file_upload"),
+    url(r'^api/internal/create_channel$', views.api_create_channel_endpoint, name="api_create_channel"),
+    url(r'^open_channel/(?P<invitation_id>[^/]+)/(?P<channel_id>[^/]+)$', views.api_open_channel, name="open_channel"),
+    url(r'^open_fail$', views.fail_open_channel, name="fail_open_channel"),
 ]
 
 urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]
