@@ -352,7 +352,10 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
         var self = this;
         this.model.set({
             parent: (this.parentnode)? this.parentnode.get("id") : this.model.get("parent"),
-            extra_fields:JSON.stringify({mastery_model:$("#mastery_model_select").val()})
+            extra_fields:JSON.stringify({
+                mastery_model:$("#mastery_model_select").val(),
+                randomize:$("#randomize_exercise").is(":checked")
+            })
         });
         this.model.save(this.model.toJSON(), {
             success:function(new_model){
@@ -687,7 +690,6 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
         this.toggle_undo_redo();
         this.render();
     },
-
     template: require("./hbtemplates/assessment_item_edit.handlebars"),
     closed_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_closed.handlebars"),
     open_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_open.handlebars"),

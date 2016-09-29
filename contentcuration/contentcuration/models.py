@@ -352,6 +352,7 @@ class File(models.Model):
                 md5.update(chunk)
 
             self.checksum = md5.hexdigest()
+            print self.checksum
             self.file_size = self.file_on_disk.size
             self.extension = os.path.splitext(self.file_on_disk.name)[1]
         else:

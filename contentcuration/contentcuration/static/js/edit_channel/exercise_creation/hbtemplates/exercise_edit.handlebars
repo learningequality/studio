@@ -5,7 +5,7 @@
 			<input type="text" id="exercise_title" placeholder="Exercise Name" value="{{node.title}}">
 			{{/if}}
 		</div>
-		<div class="col-sm-4">
+		<div class="col-sm-2">
 			<label for="mastery_model_select">Mastery at:</label>
 			<select id="mastery_model_select">
 				<option value="do_all" selected>Do All</option>
@@ -14,6 +14,11 @@
 				<option value="num_correct_in_a_row_10">10 in a Row</option>
 				<option value="skill_check">Skill Check</option>
 			</select>
+		</div>
+		<div class="col-sm-2">
+			<input id="randomize_exercise" type="checkbox" checked>
+			<label for="randomize_exercise">Randomize</label>
+			<!-- <span class="action-text download glyphicon glyphicon-download-alt" title="Download"></span> -->
 		</div>
 	</div>
 	{{#if show_metadata}}
@@ -58,7 +63,6 @@
 	<div id="exercise_buttons">
 		<a class="action-text" data-dismiss="modal" aria-label="Close">CANCEL</a>
 		<span class="pull-right">
-			<span class="action-text download glyphicon glyphicon-download-alt" title="Download"></span>
 			<button class="action-button" id="createexercise">SAVE</button>
 		</span>
 	</div>

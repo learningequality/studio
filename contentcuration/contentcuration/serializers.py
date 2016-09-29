@@ -318,7 +318,7 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
 
     class Meta:
         model = AssessmentItem
-        fields = ('question', 'type', 'answers', 'id', 'contentnode')
+        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id')
         list_serializer_class = BulkListSerializer
 
 class ChannelSerializer(serializers.ModelSerializer):
