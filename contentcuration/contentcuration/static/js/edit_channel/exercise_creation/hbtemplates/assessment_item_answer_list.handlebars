@@ -1,0 +1,20 @@
+<ul class="list-group">
+<li class="header-item list-group-item show_on_focus">
+	<div class="row">
+		<div class="col-sm-8">
+			<b>{{#if input_answer}}Possible Answer(s)
+				{{else}}
+				Answer
+				{{/if}}</b>
+		 </div>
+		 <div class="col-sm-2 text-center">
+		 	<b>{{#unless input_answer}}Correct?{{/unless}}</b>
+		 </div>
+		 <div class="col-sm-2">
+		 </div>
+	</div>
+</li>
+<li class="list-group-item addanswer show_on_focus">
+	<a class="action-text" title="Add Answer"><span class="glyphicon glyphicon-plus"></span> ADD ANSWER</a>
+</li>
+</ul>

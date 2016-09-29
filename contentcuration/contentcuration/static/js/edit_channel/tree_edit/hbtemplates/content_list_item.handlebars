@@ -16,7 +16,14 @@
 			<span class="metadata_to_hide">
 				{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
 				{{#if isfolder}}&nbsp;{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}{{/if}}
-				&nbsp;<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}
+				&nbsp;
+				{{#if isexercise}}
+					<span class="glyphicon glyphicon-check" aria-hidden="true"></span>
+					{{#format_count "Question" node.assessment_items.length}}{{/format_count}}
+				{{else}}
+					<span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+					{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}
+				{{/if}}
 				&nbsp;
 				{{#if node.changed}}
 					<em class="unpublished">{{#if node.published}}Updated{{else}}New{{/if}}</em>

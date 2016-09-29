@@ -17,7 +17,7 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 
-from le_utils import constants
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
 class UserManager(BaseUserManager):
     def create_user(self, email, first_name, last_name, password=None):
@@ -197,6 +197,22 @@ def delegate_manager(method):
         return method(self, *args, **kwargs)
     return wrapped
 
+class License(models.Model):
+    """
+    Normalize the license of ContentNode model
+    """
+    license_name = models.CharField(max_length=50)
+    license_url = models.URLField(blank=True)
+    license_description = models.TextField(blank=True)
+    exists = models.BooleanField(
+        default=False,
+        verbose_name=_("license exists"),
+        help_text=_("Tells whether or not a content item is licensed to share"),
+    )
+
+    def __str__(self):
+        return self.license_name
+
 class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
@@ -215,7 +231,7 @@ class ContentNode(MPTTModel, models.Model):
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
-    license = models.ForeignKey('License', null=True)
+    license = models.ForeignKey('License', null=True, default=settings.DEFAULT_LICENSE)
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
     is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship', symmetrical=False, blank=True)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
@@ -231,6 +247,7 @@ class ContentNode(MPTTModel, models.Model):
     published = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
+    extra_fields = models.TextField(blank=True, null=True)
 
     objects = TreeManager()
 
@@ -265,20 +282,20 @@ class ContentNode(MPTTModel, models.Model):
         #unique_together = ('parent', 'title')
 
 class ContentKind(models.Model):
-    kind = models.CharField(primary_key=True, max_length=200, choices=constants.kind_choices)
+    kind = models.CharField(primary_key=True, max_length=200, choices=content_kinds.choices)
 
     def __str__(self):
         return self.kind
 
 class FileFormat(models.Model):
-    extension = models.CharField(primary_key=True, max_length=40, choices=constants.format_choices)
+    extension = models.CharField(primary_key=True, max_length=40, choices=file_formats.choices)
     mimetype = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return self.extension
 
 class FormatPreset(models.Model):
-    id = models.CharField(primary_key=True, max_length=150, choices=constants.preset_choices)
+    id = models.CharField(primary_key=True, max_length=150, choices=format_presets.choices)
     readable_name = models.CharField(max_length=400)
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
@@ -336,6 +353,7 @@ class File(models.Model):
                 md5.update(chunk)
 
             self.checksum = md5.hexdigest()
+            print self.checksum
             self.file_size = self.file_on_disk.size
             self.extension = os.path.splitext(self.file_on_disk.name)[1]
         else:
@@ -356,22 +374,6 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
         print file_on_disk_path
         if os.path.isfile(file_on_disk_path):
             os.remove(file_on_disk_path)
-
-class License(models.Model):
-    """
-    Normalize the license of ContentNode model
-    """
-    license_name = models.CharField(max_length=50)
-    license_url = models.URLField(blank=True)
-    license_description = models.TextField(blank=True)
-    exists = models.BooleanField(
-        default=False,
-        verbose_name=_("license exists"),
-        help_text=_("Tells whether or not a content item is licensed to share"),
-    )
-
-    def __str__(self):
-        return self.license_name
 
 class PrerequisiteContentRelationship(models.Model):
     """
@@ -425,27 +427,17 @@ class RelatedContentRelationship(models.Model):
         super(RelatedContentRelationship, self).save(*args, **kwargs)
 
 class Exercise(models.Model):
-
-    title = models.CharField(
-        max_length=50,
-        verbose_name=_("title"),
-        default=_("Title"),
-        help_text=_("Title of the content item"),
-    )
-
-    description = models.TextField(
-        max_length=200,
-        verbose_name=_("description"),
-        default=_("Description"),
-        help_text=_("Brief description of what this content item is"),
-    )
+    contentnode = models.ForeignKey('ContentNode', related_name="exercise", null=True)
+    mastery_model = models.CharField(max_length=200, default=exercises.DO_ALL, choices=exercises.MASTERY_MODELS)
 
 class AssessmentItem(models.Model):
-
     type = models.CharField(max_length=50, default="multiplechoice")
     question = models.TextField(blank=True)
+    help_text = models.TextField(blank=True)
     answers = models.TextField(default="[]")
-    exercise = models.ForeignKey('Exercise', related_name="all_assessment_items")
+    order = models.IntegerField(default=1)
+    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
+    assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
 class Invitation(models.Model):
     """ Invitation to edit channel """

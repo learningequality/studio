@@ -1,0 +1,48 @@
+{
+    "question": {
+        "content": "{{ question }}[[☃ numeric-input 1]]",
+        "images": {},
+        "widgets": {
+            "numeric-input 1": {
+                "type": "numeric-input",
+                "alignment": "default",
+                "static": false,
+                "graded": true,
+                "options": {
+                    "static": false,
+                    "answers": [
+                        {% for answer in answers %}
+                        {
+                            "value": {{ answer.answer }},
+                            "status": "correct",
+                            "message": "{{ answer.help_text }}",
+                            "simplify": "required",
+                            "strict": false,
+                            "maxError": null
+                        }{% if forloop.last %}{% else %},{% endif %}
+                        {% endfor %}
+                    ],
+                    "size": "normal",
+                    "coefficient": false,
+                    "labelText": ""
+                },
+                "version": {
+                    "major": 0,
+                    "minor": 0
+                }
+            }
+        }
+    },
+    "answerArea": {
+        "calculator": false,
+        "chi2Table": false,
+        "periodicTable": false,
+        "tTable": false,
+        "zTable": false
+    },
+    "itemDataVersion": {
+        "major": 0,
+        "minor": 1
+    },
+    "hints": []
+}

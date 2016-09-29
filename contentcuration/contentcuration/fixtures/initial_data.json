@@ -20,7 +20,7 @@
     "model": "contentcuration.License",
     "pk": 1,
     "fields": {
-      "license_name": "CC-BY",
+      "license_name": "CC BY",
       "exists": true,
       "license_url": "https://creativecommons.org/licenses/by/4.0/",
       "license_description": "The Attribution License lets others distribute, remix, tweak, and build upon your work, even commercially, as long as they credit you for the original creation. This is the most accommodating of licenses offered. Recommended for maximum dissemination and use of licensed materials."
@@ -254,7 +254,7 @@
   {
     "model": "contentcuration.FormatPreset",
     "fields": {
-      "id" : "aud",
+      "id" : "audio",
       "readable_name": "Audio",
       "multi_language" : false,
       "supplementary" : false,
@@ -280,7 +280,7 @@
   {
     "model": "contentcuration.FormatPreset",
     "fields": {
-      "id" : "doc",
+      "id" : "document",
       "readable_name": "Document",
       "multi_language" : false,
       "supplementary" : false,
