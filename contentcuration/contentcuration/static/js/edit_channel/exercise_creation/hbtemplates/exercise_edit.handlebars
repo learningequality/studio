@@ -1,11 +1,11 @@
 <div class="container-fluid" id="exercisecreation">
 	<div class="row">
-		<div class="col-sm-8">
+		<div class="col-sm-7">
 			{{#if show_metadata}}
 			<input type="text" id="exercise_title" placeholder="Exercise Name" value="{{node.title}}">
 			{{/if}}
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-3">
 			<label for="mastery_model_select">Mastery at:</label>
 			<select id="mastery_model_select">
 				<option value="do_all" selected>Do All</option>
@@ -44,7 +44,7 @@
 	<ol class="panel-group" id="exercise_list" role="tablist" aria-multiselectable="true">
 		<div class="default-item">Loading...</div>
 	</ol>
-	<div class="dropup">
+	<!-- <div class="dropup">
 	  	<button type="button" class="btn btn-default add_question" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Question Types">
 	  		<span class="glyphicon glyphicon-plus"></span>
 			ADD QUESTION
@@ -58,7 +58,7 @@
 	    <li class="input_answer"><a >Input Answer</a></li>
 	    <li class="free_response"><a >Free Response</a></li>
 	  </ul>
-	</div>
+	</div> -->
 	{{#if show_metadata}}
 	<div id="exercise_buttons">
 		<a class="action-text" data-dismiss="modal" aria-label="Close">CANCEL</a>
