@@ -33,7 +33,6 @@ Handlebars.registerHelper('url', function(url_name) {
 
 // A little bit of magic to let us render markdown into a Handlebars template
 Handlebars.registerHelper('markdown', function(markdown) {
-
     if (markdown) {
         markdown = markdown.replace(/\n(\n)/g, "$1<br />");
         return marked(markdown);

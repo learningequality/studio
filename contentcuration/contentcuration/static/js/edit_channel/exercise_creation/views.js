@@ -425,7 +425,7 @@ var EditorView = Backbone.View.extend({
     },
 
     render_content: function() {
-        this.$el.html(this.view_template({content: this.model.get(this.edit_key)}));
+        this.$el.html(this.view_template({content: this.model.get(this.edit_key).toString()}));
     },
 
     render_editor: function() {

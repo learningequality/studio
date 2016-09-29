@@ -526,7 +526,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   set_edited:function(is_edited){
       this.edited = is_edited;
-      console.log("EDITED?", this.edited);
       this.isNew = is_edited && this.isNew;
       this.model.set("changed", this.model.get("changed") || is_edited);
       (is_edited)? this.$el.addClass("edited_node") : this.$el.removeClass("edited_node");
