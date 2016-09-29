@@ -19,17 +19,17 @@ def recurse(node, level=0):
         recurse(child, level + 1)
 
 def clean_db():
-    print "*********** CLEANING DATABASE ***********"
+    logging.debug("*********** CLEANING DATABASE ***********")
     for file_obj in models.File.objects.filter(Q(preset = None) | Q(contentnode=None)):
-        print "Deletng unreferenced file", file_obj
+        logging.debug("Deletng unreferenced file {0}".format(file_obj.__dict__))
         file_obj.delete()
     for node_obj in models.ContentNode.objects.filter(Q(parent=None) & Q(channel_main=None) & Q(channel_trash=None) & Q(user_clipboard=None)):
-        print "Deletng unreferenced node", node_obj.pk
+        logging.debug("Deletng unreferenced node: {0}".format(node_obj.pk))
         node_obj.delete()
     for tag_obj in models.ContentTag.objects.filter(tagged_content=None):
-        print "Deleting unreferenced tag", tag_obj.tag_name
+        logging.debug("Deleting unreferenced tag: {0}".format(tag_obj.tag_name))
         tag_obj.delete()
-    print "*********** DONE ***********"
+    logging.debug("*********** DONE ***********")
 
 def calculate_node_metadata(node):
     metadata = {

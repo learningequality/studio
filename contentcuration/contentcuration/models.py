@@ -353,7 +353,6 @@ class File(models.Model):
                 md5.update(chunk)
 
             self.checksum = md5.hexdigest()
-            print self.checksum
             self.file_size = self.file_on_disk.size
             self.extension = os.path.splitext(self.file_on_disk.name)[1]
         else:
@@ -371,7 +370,6 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     """
     if not File.objects.filter(file_on_disk=instance.file_on_disk.url):
         file_on_disk_path = os.path.join(settings.STORAGE_ROOT, instance.checksum[0:1], instance.checksum[1:2], instance.checksum + '.' + instance.file_format.extension)
-        print file_on_disk_path
         if os.path.isfile(file_on_disk_path):
             os.remove(file_on_disk_path)
 
