@@ -1,9 +1,6 @@
 <div class="container-fluid" id="exercisecreation">
 	<div class="row">
 		<div class="col-sm-6">
-			{{#if show_metadata}}
-			<input type="text" id="exercise_title" placeholder="Exercise Name" value="{{node.title}}">
-			{{/if}}
 		</div>
 		<div class="col-sm-4">
 			<label for="mastery_model_select">Mastery at:</label>
@@ -19,6 +16,13 @@
 			<input id="randomize_exercise" type="checkbox" checked>
 			<label for="randomize_exercise">Randomize</label>
 			<!-- <span class="action-text download glyphicon glyphicon-download-alt" title="Download"></span> -->
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+			{{#if show_metadata}}
+			<input type="text" id="exercise_title" placeholder="Exercise Name" value="{{node.title}}">
+			{{/if}}
 		</div>
 	</div>
 	{{#if show_metadata}}
