@@ -164,7 +164,7 @@ def convert_data_to_nodes(content_data, parent_node, file_data):
 
 def create_node(node_data, parent_node):
     title=node_data['title']
-    node_id=node_data['id']
+    node_id=node_data['node_id']
     description=node_data['description']
     author = node_data['author']
     kind = models.ContentKind.objects.get(kind=node_data['kind'])

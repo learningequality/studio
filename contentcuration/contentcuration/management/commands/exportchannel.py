@@ -190,7 +190,6 @@ def create_perseus_exercise(ccnode):
             original_filename=filename,
         )
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
-        print assessment_file_obj.__dict__
 
 def create_perseus_zip(ccnode, write_to_path):
     assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode)
