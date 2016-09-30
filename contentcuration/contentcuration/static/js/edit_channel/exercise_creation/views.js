@@ -705,6 +705,11 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
     toggle:function(event){
         event.stopPropagation();
         this.remove_focus();
+        this.$(".delete").css("display", "none");
+        var self = this;
+        setTimeout(function(){
+            self.$(".delete").css("display", "block")
+        }, 1000);
     },
     delete: function(event) {
         event.stopPropagation();
