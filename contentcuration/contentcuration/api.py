@@ -216,7 +216,7 @@ def create_exercises(node, data):
                 question = question.get('question'),
                 help_text = question.get('help_text'),
                 answers = question.get('answers'),
-                order = ++order,
+                order = order+=1,
                 contentnode = node,
                 assessment_id = question.get('assessment_id'),
             )
