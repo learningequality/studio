@@ -216,10 +216,11 @@ def create_exercises(node, data):
                 question = question.get('question'),
                 help_text = question.get('help_text'),
                 answers = question.get('answers'),
-                order = order+=1,
+                order = order,
                 contentnode = node,
                 assessment_id = question.get('assessment_id'),
             )
+            order += 1
             question_obj.save()
 
 def update_channel(channel, root):
