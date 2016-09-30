@@ -237,7 +237,7 @@ def thumbnail_upload(request):
 
 def exercise_image_upload(request):
     if request.method == 'POST':
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1] # gets file extension without leading period
         file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext))
         file_object.save()
         return HttpResponse(json.dumps({
