@@ -37,7 +37,6 @@ from contentcuration.api import get_file_diff, api_create_channel
 from registration.backends.hmac.views import RegistrationView
 
 def base(request):
-    print request.user
     if request.user.is_authenticated():
         return redirect('channels')
     else:
@@ -127,7 +126,6 @@ def exercise(request, exercise_id):
 
     return render(request, 'exercise_edit.html', {"exercise": JSONRenderer().render(serializer.data), "assessment_items": JSONRenderer().render(assessment_serialize.data)})
 
-
 # TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
 @csrf_exempt
 def file_upload(request):
@@ -149,7 +147,7 @@ def file_create(request):
     if request.method == 'POST':
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
         size = request.FILES.values()[0]._size
-        kind = FormatPreset.objects.get(allowed_formats__extension__contains=ext).kind
+        kind = FormatPreset.objects.filter(allowed_formats__extension__contains=ext).first().kind
         original_filename = request.FILES.values()[0]._name
         new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=settings.DEFAULT_LICENSE, author=request.user.get_full_name())
         new_node.save()
@@ -235,6 +233,16 @@ def thumbnail_upload(request):
         return HttpResponse(json.dumps({
             "success": True,
             "filename": filename
+        }))
+
+def exercise_image_upload(request):
+    if request.method == 'POST':
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1] # gets file extension without leading period
+        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext))
+        file_object.save()
+        return HttpResponse(json.dumps({
+            "success": True,
+            "filename": str(file_object),
         }))
 
 def duplicate_nodes(request):

@@ -89,6 +89,9 @@ var PreviewView = BaseViews.BaseView.extend({
                 case "mp4":
                     preview_template = require("./hbtemplates/preview_templates/video.handlebars");
                     break;
+                case "perseus":
+                    preview_template = require("./hbtemplates/preview_templates/exercise.handlebars");
+                    break;
                 default:
                     preview_template = require("./hbtemplates/preview_templates/default.handlebars");
             }

@@ -1,0 +1,5 @@
+{
+    "all_assessment_items":[{% for question in questions %}{{question.id}}{% if forloop.last %}{% else %},{% endif %}{% endfor %}],
+    "randomize": {% if exercise.randomize %}true{% else %}false{% endif %},
+    "mastery_model": "{{exercise.mastery_model}}"
+}

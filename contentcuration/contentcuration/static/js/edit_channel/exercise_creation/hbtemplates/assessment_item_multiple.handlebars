@@ -1,0 +1,47 @@
+{
+    "question": {
+        "content": "{{parse_newlines question}}\n\n[[☃ radio 1]]",
+        "images": {},
+        "widgets": {
+            "radio 1": {
+                "type": "radio",
+                "graded": true,
+                "options": {
+                    "choices": [
+                        {{#each answer}}
+                        {
+                            "correct": {{#if correct}}true{{else}}false{{/if}},
+                            "content": "{{parse_newlines answer }}"
+                        }{{#unless @last}},{{/unless}}
+                        {{/each}}
+                    ],
+                    "randomize": {{ randomize }},
+                    "multipleSelect": {{#if multipleSelect }}true{{else}}false{{/if}},
+                    "displayCount": null,
+                    "hasNoneOfTheAbove": false,
+                    "onePerLine": true,
+                    "deselectEnabled": false
+                },
+                "version": {
+                    "major": 1,
+                    "minor": 0
+                }
+            }
+        }
+    },
+    "answerArea": {
+        "type": "multiple",
+        "options": {
+            "content": "",
+            "images": {},
+            "widgets": {}
+        },
+        "calculator": false,
+        "periodicTable": false
+    },
+    "itemDataVersion": {
+        "major": 0,
+        "minor": 1
+    },
+    "hints": []
+}

@@ -120,6 +120,7 @@ var ContentNodeModel = BaseModel.extend({
 		title:"Untitled",
 		children:[],
 		tags:[],
+		assessment_items:[],
 		metadata:{
 			"resource_size":0,
 			"resource_count":0,
@@ -382,6 +383,51 @@ var ContentKindCollection = BaseCollection.extend({
     }
 });
 
+var ExerciseModel = BaseModel.extend({
+	root_list:"exercise-list"
+});
+
+var ExerciseCollection = BaseCollection.extend({
+	model: ExerciseModel,
+	list_name:"exercise-list"
+});
+
+var AssessmentItemModel =BaseModel.extend({
+	root_list:"assessmentitem-list",
+	defaults: {
+		question: "",
+		answers: "[]"
+	},
+
+	initialize: function () {
+		if (typeof this.get("answers") !== "object") {
+			this.set("answers", new Backbone.Collection(JSON.parse(this.get("answers"))), {silent: true});
+		}
+	},
+
+	parse: function(response) {
+	    if (response !== undefined) {
+	    	if (response.answers) {
+	    		response.answers = new Backbone.Collection(JSON.parse(response.answers));
+	    	}
+	    }
+	    return response;
+	},
+
+	toJSON: function() {
+	    var attributes = _.clone(this.attributes);
+	    if (typeof attributes.answers !== "string") {
+		    attributes.answers = JSON.stringify(attributes.answers.toJSON());
+		}
+	    return attributes;
+	}
+
+});
+
+var AssessmentItemCollection = BaseCollection.extend({
+	model: AssessmentItemModel,
+});
+
 module.exports = {
 	ContentNodeModel: ContentNodeModel,
 	ContentNodeCollection: ContentNodeCollection,
@@ -400,5 +446,9 @@ module.exports = {
 	UserModel:UserModel,
 	UserCollection:UserCollection,
 	InvitationModel: InvitationModel,
-	InvitationCollection: InvitationCollection
+	InvitationCollection: InvitationCollection,
+	ExerciseModel:ExerciseModel,
+	ExerciseCollection:ExerciseCollection,
+	AssessmentItemModel:AssessmentItemModel,
+	AssessmentItemCollection:AssessmentItemCollection,
 }

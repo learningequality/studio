@@ -119,6 +119,7 @@ urlpatterns = [
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^channels/(?P<channel_id>[^/]+)', views.channel, name='channel'),
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
+    url(r'^exercise_image_upload/', views.exercise_image_upload, name='exercise_image_upload'),
     url(r'^api/send_invitation_email/$', views.send_invitation_email, name='send_invitation_email'),
     url(r'^accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)/(?P<channel_id>[^/]+)$', views.InvitationAcceptView.as_view(), name="accept_invitation"),
     url(r'^new/accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)/(?P<channel_id>[^/]+)$', views.InvitationRegisterView.as_view(), name="accept_invitation_and_registration"),

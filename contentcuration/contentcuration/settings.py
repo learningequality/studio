@@ -98,9 +98,20 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgres',
+    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    # },
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': 'contentcuration',                      # Or path to database file if using sqlite3.
+        # The following settings are not used with sqlite3:
+        
+        # For dev purposes only
+        'USER': 'learningequality',
+        'PASSWORD': 'kolibri',
+        'HOST': 'localhost',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'PORT': '',                      # Set to empty string for default.
     },
     'export_staging': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -150,9 +161,6 @@ SITE_ID = 1
 # EMAIL_USE_TLS = False
 DEFAULT_FROM_EMAIL = 'Kolibri Content Curation <info@learningequality.org>'
 DEFAULT_LICENSE = 1
-
-HACK_HACK_HACK_UNICEF_CONTENT_ZIP_PATH = os.path.join(BASE_DIR, "unicef.zip")
-
 
 SERVER_EMAIL = 'curation-errors@learningequality.org'
 ADMINS = [('Errors', SERVER_EMAIL)]

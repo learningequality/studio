@@ -1,4 +1,3 @@
-
 var ExerciseModels = require("exercise_creation/models");
 var ExerciseViews = require("exercise_creation/views");
 var $ = require("jquery");

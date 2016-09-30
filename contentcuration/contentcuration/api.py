@@ -19,17 +19,17 @@ def recurse(node, level=0):
         recurse(child, level + 1)
 
 def clean_db():
-    print "*********** CLEANING DATABASE ***********"
+    logging.debug("*********** CLEANING DATABASE ***********")
     for file_obj in models.File.objects.filter(Q(preset = None) | Q(contentnode=None)):
-        print "Deletng unreferenced file", file_obj
+        logging.debug("Deletng unreferenced file {0}".format(file_obj.__dict__))
         file_obj.delete()
     for node_obj in models.ContentNode.objects.filter(Q(parent=None) & Q(channel_main=None) & Q(channel_trash=None) & Q(user_clipboard=None)):
-        print "Deletng unreferenced node", node_obj.pk
+        logging.debug("Deletng unreferenced node: {0}".format(node_obj.pk))
         node_obj.delete()
     for tag_obj in models.ContentTag.objects.filter(tagged_content=None):
-        print "Deleting unreferenced tag", tag_obj.tag_name
+        logging.debug("Deleting unreferenced tag: {0}".format(tag_obj.tag_name))
         tag_obj.delete()
-    print "*********** DONE ***********"
+    logging.debug("*********** DONE ***********")
 
 def calculate_node_metadata(node):
     metadata = {
@@ -159,14 +159,16 @@ def convert_data_to_nodes(content_data, parent_node, file_data):
     for node_data in content_data:
         new_node = create_node(node_data, parent_node)
         map_files_to_node(new_node, node_data['files'], file_data)
+        create_exercises(new_node, node_data['questions'])
         convert_data_to_nodes(node_data['children'], new_node, file_data)
 
 def create_node(node_data, parent_node):
     title=node_data['title']
-    node_id=node_data['id']
+    node_id=node_data['node_id']
     description=node_data['description']
     author = node_data['author']
     kind = models.ContentKind.objects.get(kind=node_data['kind'])
+    extra_fields = node_data['extra_fields']
     license = None
     license_name = node_data['license']
     if license_name is not None:
@@ -182,7 +184,8 @@ def create_node(node_data, parent_node):
         description = description,
         author=author,
         license=license,
-        parent = parent_node
+        parent = parent_node,
+        extra_fields=extra_fields,
     )
 
 def map_files_to_node(node, data, file_data):
@@ -202,6 +205,22 @@ def map_files_to_node(node, data, file_data):
             preset=kind_preset,
         )
         file_obj.save()
+
+def create_exercises(node, data):
+    with transaction.atomic():
+        order = 0
+
+        for question in data:
+            question_obj = models.AssessmentItem(
+                type = question.get('type'),
+                question = question.get('question'),
+                help_text = question.get('help_text'),
+                answers = question.get('answers'),
+                order = order+=1,
+                contentnode = node,
+                assessment_id = question.get('assessment_id'),
+            )
+            question_obj.save()
 
 def update_channel(channel, root):
     channel.main_tree = root

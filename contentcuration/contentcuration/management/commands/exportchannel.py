@@ -2,12 +2,17 @@ import collections
 import os
 import zipfile
 import shutil
+import tempfile
+import json
 
 from django.conf import settings
+from django.http import HttpResponse
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.files import File
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
-
-from le_utils import constants
+from django.template.loader import render_to_string
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
@@ -112,9 +117,10 @@ def map_content_nodes(root_node):
 
             kolibrinode = create_bare_contentnode(node)
 
-            if node.kind.kind != constants.CK_TOPIC:
+            if node.kind.kind == content_kinds.EXERCISE:
+                create_perseus_exercise(node)
+            if node.kind.kind != content_kinds.TOPIC:
                 create_associated_file_objects(kolibrinode, node)
-
 
 def create_bare_contentnode(ccnode):
     logging.debug("Creating a Kolibri node for instance id {}".format(
@@ -153,7 +159,6 @@ def create_bare_contentnode(ccnode):
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating File objects for Node {}".format(kolibrinode.id))
-
     for ccfilemodel in ccnode.files.all():
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
@@ -171,6 +176,66 @@ def create_associated_file_objects(kolibrinode, ccnode):
             thumbnail=preset.thumbnail,
         )
 
+def create_perseus_exercise(ccnode):
+    logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
+    filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
+    with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
+        create_perseus_zip(ccnode, tempf.name)
+
+        assessment_file_obj = ccmodels.File.objects.create(
+            file_on_disk=File(open(tempf.name, 'r'), name=filename),
+            contentnode=ccnode,
+            file_format_id=file_formats.PERSEUS,
+            preset_id=format_presets.EXERCISE,
+            original_filename=filename,
+        )
+        logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
+
+def create_perseus_zip(ccnode, write_to_path):
+    assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode)
+    with zipfile.ZipFile(write_to_path, "w") as zf:
+        exercise_context = {
+            'exercise': json.loads(ccnode.extra_fields),
+            'questions': assessment_items,
+        }
+        exercise_result = render_to_string('perseus/exercise.json', exercise_context).encode('utf-8', "ignore")
+        zf.writestr("exercise.json", exercise_result)
+        for item in assessment_items:
+            write_assessment_item(item, zf)
+
+def write_assessment_item(assessment_item, zf):
+    template=''
+    context = {}
+
+    if assessment_item.type == exercises.MULTIPLE_SELECTION:
+        template = 'perseus/multiple_selection.json'
+        context = {
+            'question' : assessment_item.question,
+            'answers':json.loads(assessment_item.answers),
+            'multipleSelect':True,
+        }
+    elif assessment_item.type == exercises.SINGLE_SELECTION:
+        template = 'perseus/multiple_selection.json'
+        context = {
+            'question' : assessment_item.question,
+            'answers':json.loads(assessment_item.answers),
+            'multipleSelect':False,
+        }
+    elif assessment_item.type == exercises.FREE_RESPONSE:
+        template = 'perseus/free_response.json'
+        context = {
+            'question' : assessment_item.question,
+        }
+    elif assessment_item.type == exercises.INPUT_QUESTION:
+        template = 'perseus/input_question.json'
+        context = {
+            'question' : assessment_item.question,
+            'answers': json.loads(assessment_item.answers),
+        }
+
+    result = render_to_string(template,  context).encode('utf-8', "ignore")
+    filename = "{0}.json".format(assessment_item.assessment_id)
+    zf.writestr(filename, result)
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")
