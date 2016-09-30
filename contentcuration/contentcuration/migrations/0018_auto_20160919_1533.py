@@ -40,9 +40,4 @@ class Migration(migrations.Migration):
             name='mastery_model',
             field=models.CharField(default=b'do-all', max_length=200),
         ),
-        migrations.AddField(
-            model_name='file',
-            name='source_url',
-            field=models.CharField(blank=True, max_length=400),
-        ),
     ]
