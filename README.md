@@ -28,6 +28,8 @@ If not, use these commands:
 
 * [Install pip](https://pypi.python.org/pypi/pip) if you don't have it already.
 
+* [Install postgres](https://www.postgresql.org/download/) if you don't have it already.
+
 * Set up your virtual environment
 
 	`pip install virtualenv` Installs your virtual environment
