@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('contentcuration', '0012_auto_20160907_1444'),
-        ('contentcuration', '0012_remove_file_source_url'),
     ]
 
     operations = [
