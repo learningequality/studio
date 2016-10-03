@@ -31,7 +31,8 @@ var BaseView = Backbone.View.extend({
   		$("#loading_modal").remove();
   	}
   },
-  	reload_ancestors:function(collection, include_collection = true){
+  	reload_ancestors:function(collection, include_collection){
+  		include_collection = include_collection==null || include_collection;
 		var list_to_reload = (include_collection) ? collection.pluck("id") : [];
 		var self = this;
 		collection.forEach(function(entry){
@@ -53,7 +54,8 @@ var BaseView = Backbone.View.extend({
 			});
 		});
 	},
-	retrieve_nodes:function(ids, force_fetch = false){
+	retrieve_nodes:function(ids, force_fetch){
+		force_fetch = (force_fetch)? true:false;
 		return window.channel_router.nodeCollection.get_all_fetch(ids, force_fetch);
 	},
 	fetch_model:function(model){
@@ -140,13 +142,16 @@ var BaseWorkspaceView = BaseView.extend({
 		    onsave: this.reload_ancestors
 		});
 	},
-	add_to_trash:function(collection, message="Deleting Content..."){
+	add_to_trash:function(collection, message){
+		message = (message)? message: "Deleting Content...";
 		return this.move_to_queue_list(collection, window.workspace_manager.get_queue_view().trash_queue, message);
 	},
-	add_to_clipboard:function(collection, message="Moving to Clipboard..."){
+	add_to_clipboard:function(collection, message){
+		message = (message)? message: "Moving to Clipboard...";
 		return this.move_to_queue_list(collection, window.workspace_manager.get_queue_view().clipboard_queue, message);
 	},
-	move_to_queue_list:function(collection, list_view, message="Moving Content..."){
+	move_to_queue_list:function(collection, list_view, message){
+		message = (message)? message: "Moving Content...";
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 			self.display_load(message, function(resolve_load, reject_load){
@@ -212,7 +217,9 @@ var BaseListView = BaseView.extend({
 			self.load_content(fetched);
 		});
 	},
-	load_content: function(collection=this.collection, default_text="No items found."){
+	load_content: function(collection, default_text){
+		collection = (collection)? collection : this.collection;
+		default_text = (default_text)? default_text : "No items found."
 		this.views = [];
 		var default_element = this.$(this.default_item);
 		default_element.text(default_text);
@@ -270,7 +277,9 @@ var BaseEditableListView = BaseListView.extend({
 		this.bind_list_functions();
 		_.bindAll(this, 'create_new_item', 'reset', 'save','delete_items_permanently', 'delete');
 	},
-	create_new_item: function(newModelData, appendToList = false, message="Creating..."){
+	create_new_item: function(newModelData, appendToList, message){
+		appendToList = (appendToList)? appendToList : false;
+		message = (message)? message: "Creating...";
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 			self.display_load(message, function(resolve_load, reject_load){
@@ -299,7 +308,8 @@ var BaseEditableListView = BaseListView.extend({
 			entry.model.unset();
 		});
 	},
-	save:function(message="Saving...", beforeSave=null){
+	save:function(message, beforeSave){
+		message = (message)? message: "Saving...";
 		var self = this;
 	    var promise = new Promise(function(resolve, reject){
 	        self.display_load(message, function(load_resolve, load_reject){
@@ -316,7 +326,8 @@ var BaseEditableListView = BaseListView.extend({
 	    })
 	  	return promise;
 	},
-	delete_items_permanently:function(message="Deleting"){
+	delete_items_permanently:function(message){
+		message = (message)? message: "Deleting...";
 		var self = this;
 		this.display_load(message, function(resolve_load, reject_load){
 			var list = self.get_selected();
@@ -519,13 +530,15 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	  onnew:this.add_nodes
   	});
   },
-  add_to_clipboard:function(collection, message="Moving to Clipboard..."){
+  add_to_clipboard:function(collection, message){
+  	message = (message)? message: "Moving to Clipboard...";
   	var self = this;
 		this.container.add_to_clipboard(collection, message).then(function(){
 			self.handle_if_empty();
 		});
 	},
-	add_to_trash:function(collection, message="Deleting Content..."){
+	add_to_trash:function(collection, message){
+		message = (message)? message: "Deleting Content...";
 		var self = this;
 		this.container.add_to_trash(collection, message).then(function(){
 			self.handle_if_empty();
@@ -590,7 +603,8 @@ var BaseListEditableItemView = BaseListItemView.extend({
 	unset:function(){
 		this.model.set(this.originalData);
 	},
-	save:function(data, message="Saving..."){
+	save:function(data, message){
+		message = (message)? message: "Saving...";
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 			self.originalData = data;
@@ -619,7 +633,8 @@ var BaseListEditableItemView = BaseListItemView.extend({
 		});
 		return promise;
 	},
-	delete:function(destroy_model, message="Deleting..."){
+	delete:function(destroy_model, message){
+		message = (message)? message: "Deleting...";
 		this.remove();
 		var self = this;
 		if(destroy_model){
@@ -670,14 +685,16 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 			containing_element.scrollLeft(containing_element.width());
 		}
 	},
-	open_folder:function(open_speed = 200){
+	open_folder:function(open_speed){
+		open_speed = (open_speed)? open_speed: 200;
 		this.getSubdirectory().slideDown(open_speed);
 		if(!this.subcontent_view){
 			this.load_subfiles();
 		}
 		this.getToggler().removeClass(this.collapsedClass).addClass(this.expandedClass);
 	},
-	close_folder:function(close_speed = 200){
+	close_folder:function(close_speed){
+		close_speed = (close_speed)? close_speed: 200;
 		this.getSubdirectory().slideUp(close_speed);
 		this.getToggler().removeClass(this.expandedClass).addClass(this.collapsedClass);
 	}
@@ -751,14 +768,17 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		});
 		return promise;
 	},
-	add_to_trash:function(message="Deleting Content..."){
+	add_to_trash:function(message){
+		message=(message)? message: "Deleting Content...";
 		this.containing_list_view.add_to_trash(new Models.ContentNodeCollection([this.model]), message);
 		this.remove();
 	},
-	add_to_clipboard:function(message="Moving to Clipboard..."){
+	add_to_clipboard:function(message){
+		message=(message)? message: "Moving to Clipboard...";
 		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([this.model]),message);
 	},
-	copy_item:function(message="Copying to Clipboard..."){
+	copy_item:function(message){
+		message=(message)? message: "Copying to Clipboard...";
 		var copyCollection = new Models.ContentNodeCollection();
 		copyCollection.add(this.model);
 		var self = this;

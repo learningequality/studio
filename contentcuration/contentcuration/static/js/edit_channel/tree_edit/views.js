@@ -55,7 +55,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		}));
 		this.add_container(this.lists.length, this.model);
 	},
-	add_container: function(index, topic, view = null){
+	add_container: function(index, topic, view){
 		/* Step 1: Close directories of children and siblings of opened topic*/
 			if(index < this.lists.length){
 				this.remove_containers_from(index);
