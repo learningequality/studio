@@ -181,6 +181,7 @@ def create_perseus_exercise(ccnode):
     filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
         create_perseus_zip(ccnode, tempf.name)
+        ccmodels.File.objects.filter(contentnode=ccnode, preset_id=format_presets.EXERCISE).delete()
 
         assessment_file_obj = ccmodels.File.objects.create(
             file_on_disk=File(open(tempf.name, 'r'), name=filename),
