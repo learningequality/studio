@@ -153,6 +153,10 @@ var convert_assessment_item_to_perseus = function(model) {
     var multiplechoice_template = require("./hbtemplates/assessment_item_multiple.handlebars");
     var freeresponse_template = require("./hbtemplates/assessment_item_free.handlebars");
     var output = "";
+    var answers = model.get("answers").toJSON();
+    answers.forEach(function(answer){
+        answer.answer = set_image_urls_for_export(answer.answer);
+    });
     switch (model.get("type")) {
         case "free_response":
             output = freeresponse_template(model.attributes);
@@ -167,21 +171,21 @@ var convert_assessment_item_to_perseus = function(model) {
                 //     }
                 //     return memo;
                 //     }, 0) || 0) > 1,
-                answer: model.get("answers").toJSON()
+                answer: answers
             });
             break;
         case "single_selection":
             output = multiplechoice_template({
                 question: set_image_urls_for_export(model.get("question")),
                 randomize: true,
-                answer: model.get("answers").toJSON()
+                answer: answers
             });
             break;
         case "input_question":
             output = multiplechoice_template({
                 question: set_image_urls_for_export(model.get("question")),
                 randomize: true,
-                answer: model.get("answers").toJSON()
+                answer: answers
             });
             break;
     }
@@ -278,7 +282,6 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
                     }
                     zip.file(item.name, data, {binary: true});
                     downloads += 1;
-                    console.log(downloads);
                     if (downloads === all_image_urls.length) {
                         var blob = zip.generate({type:"blob"});
 
