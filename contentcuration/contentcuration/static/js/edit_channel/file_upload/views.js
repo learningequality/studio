@@ -205,7 +205,7 @@ var FileUploadList = FileBaseList.extend({
             acceptedFiles: this.acceptedFiles,
             url: window.Urls.file_create(),
             previewTemplate:this.file_upload_template(),
-            parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads() / 2),
+            parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads()),
             //autoQueue: false, // Make sure the files aren't queued until manually added
             previewsContainer: this.list_selector, // Define the container to display the previews
             headers: {"X-CSRFToken": get_cookie("csrftoken")},

@@ -14,6 +14,8 @@ require("exercises.less");
 require("quilljs/dist/quill.snow.css");
 require("dropzone/dist/dropzone.css");
 
+var placeholder_text = "$1\${aronsfacehere}/$3"
+
 var ExerciseModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/exercise_modal.handlebars"),
     initialize: function(options) {
@@ -76,6 +78,7 @@ var FileUploadView = Backbone.View.extend({
     },
 
     file_uploaded: function(file) {
+        console.log(JSON.parse(file.xhr.response))
         this.callback(JSON.parse(file.xhr.response).filename);
         this.close();
     },
@@ -97,7 +100,7 @@ var FileUploadView = Backbone.View.extend({
  * "something![foo](web+local://bar/baz)otherthings"
  */
 var set_image_urls_for_export = function(text) {
-    return text.replace(/(\!\[[^\]]*\]\()(\/media\/)([^\)]*\))/g, "$1web+local://$3");
+    return text.replace(/(\!\[[^\]]*\]\()(\/storage\/)([^\)]*\))/g, placeholder_text);
 };
 
 
@@ -111,7 +114,7 @@ var set_image_urls_for_export = function(text) {
  */
 var return_image_urls_for_export = function(text) {
     var match, output = [];
-    var Re = /\!\[[^\]]*\]\((\/media\/[^\)]*)\)/g;
+    var Re = /\!\[[^\]]*\]\((\/storage\/[^\)]*)\)/g;
     while (match = Re.exec(text)) {
         output.push(match[1]);
     }
@@ -135,7 +138,7 @@ var return_all_assessment_item_image_urls = function(model) {
 
     output = _.map(output, function(item) {
         return {
-            name: item.replace(/\/media\//g, ""),
+            name: item.replace(/\/storage\//g, ""),
             path: item
         }
     });
@@ -158,16 +161,31 @@ var convert_assessment_item_to_perseus = function(model) {
             output = multiplechoice_template({
                 question: set_image_urls_for_export(model.get("question")),
                 randomize: true,
-                multipleSelect: (model.get("answers").reduce(function(memo, model) {
-                    if (model.get("correct")) {
-                        memo += 1;
-                    }
-                    return memo;
-                    }, 0) || 0) > 1,
+                // multipleSelect: (model.get("answers").reduce(function(memo, model) {
+                //     if (model.get("correct")) {
+                //         memo += 1;
+                //     }
+                //     return memo;
+                //     }, 0) || 0) > 1,
+                answer: model.get("answers").toJSON()
+            });
+            break;
+        case "single_selection":
+            output = multiplechoice_template({
+                question: set_image_urls_for_export(model.get("question")),
+                randomize: true,
+                answer: model.get("answers").toJSON()
+            });
+            break;
+        case "input_question":
+            output = multiplechoice_template({
+                question: set_image_urls_for_export(model.get("question")),
+                randomize: true,
                 answer: model.get("answers").toJSON()
             });
             break;
     }
+    console.log("EXERCISE", output);
     return $.parseJSON(output);
 };
 
@@ -264,14 +282,14 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
                     if (downloads === all_image_urls.length) {
                         var blob = zip.generate({type:"blob"});
 
-                        fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".exercise");
+                        fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".zip");
                     }
                 });
         });
         } else {
             var blob = zip.generate({type:"blob"});
 
-            fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".exercise");
+            fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".zip");
         }
 
     },
@@ -396,7 +414,7 @@ var EditorView = Backbone.View.extend({
     },
 
     add_image: function(filename) {
-        this.editor.insertEmbed(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "image", "/media/" + filename);
+        this.editor.insertEmbed(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "image", "/" + filename);
         this.save();
     },
 
@@ -574,7 +592,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     set_closed:function(){
         this.set_toolbar_closed();
         this.editor_view.deactivate_editor();
-        // exerciseSaveDispatcher.trigger("save");
+        exerciseSaveDispatcher.trigger("save");
     },
     toggle:function(event){
         event.stopPropagation();
@@ -714,7 +732,7 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
     delete: function(event) {
         event.stopPropagation();
         this.model.destroy();
-        // exerciseSaveDispatcher.trigger("save");
+        exerciseSaveDispatcher.trigger("save");
         this.remove();
     },
 
@@ -799,7 +817,7 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
         this.$(".assessment_item").removeClass("active");
         // this.editor_view.save_and_close();
         this.editor_view.deactivate_editor();
-        // this.save();
+        this.save();
         this.set_toolbar_closed();
         this.unset_undo_redo_listener();
         if (this.answer_editor) {
