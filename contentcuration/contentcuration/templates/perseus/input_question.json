@@ -1,10 +1,10 @@
 {
     "question": {
-        "content": "{{ question }}[[☃ numeric-input 1]]",
+        "content": "{{ question }}[[☃ text-input 1]]",
         "images": {},
         "widgets": {
-            "numeric-input 1": {
-                "type": "numeric-input",
+            "text-input 1": {
+                "type": "text-input",
                 "alignment": "default",
                 "static": false,
                 "graded": true,
@@ -13,7 +13,7 @@
                     "answers": [
                         {% for answer in answers %}
                         {
-                            "value": {{ answer.answer }},
+                            "value": "{{ answer.answer }}",
                             "status": "correct",
                             "message": "{{ answer.help_text }}",
                             "simplify": "required",

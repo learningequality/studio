@@ -293,6 +293,7 @@ def _duplicate_node(node, sort_order=1, parent=None):
         cloned_source=node,
         author=node.author,
         content_id=node.content_id,
+        extra_fields=node.extra_fields,
     )
 
     # add tags now
