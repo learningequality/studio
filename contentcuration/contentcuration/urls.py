@@ -20,8 +20,8 @@ from django.contrib.auth import views as auth_views
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
 from contentcuration.models import *    # TODO: Change this later?
-import contentcuration.serializers
-import contentcuration.views
+import contentcuration.serializers as serializers
+import contentcuration.views as views
 
 from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
