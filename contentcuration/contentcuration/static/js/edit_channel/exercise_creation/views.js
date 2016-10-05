@@ -586,10 +586,10 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_open.handlebars"),
 
     events: {
-        "click .delete": "delete",
-        "change .correct": "toggle_correct",
-        "click .answer_item": "set_open",
-        "click .toggle": "toggle"
+        // "click .delete": "delete",
+        // "change .correct": "toggle_correct",
+        // "click .answer_item": "set_open",
+        // "click .toggle": "toggle"
     },
 
     render: function() {
@@ -743,12 +743,12 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_open.handlebars"),
 
     events: {
-        "click .cancel": "cancel",
-        "click .undo": "undo",
-        "click .redo": "redo",
-        "click .delete": "delete",
-        "click .toggle_exercise": "toggle_focus",
-        "click .toggle" : "toggle"
+        // "click .cancel": "cancel",
+        // "click .undo": "undo",
+        // "click .redo": "redo",
+        // "click .delete": "delete",
+        // "click .toggle_exercise": "toggle_focus",
+        // "click .toggle" : "toggle"
     },
     toggle:function(event){
         event.stopPropagation();
