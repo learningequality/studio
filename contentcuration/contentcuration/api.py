@@ -12,6 +12,7 @@ from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
 from django.db import transaction
 import models
+from le_utils.constants import content_kinds
 
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
@@ -192,8 +193,9 @@ def map_files_to_node(node, data, file_data):
 
     for f in data:
         file_hash = f.split(".")
-        kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1]).first()
-
+        kind_preset = None
+        if file_data[f]['preset']:
+            kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1]).first()
         file_obj = models.File(
             checksum=file_hash[0],
             contentnode=node,
