@@ -300,8 +300,9 @@ class FormatPreset(models.Model):
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
+    display = models.BooleanField(default=True)
     order = models.IntegerField()
-    kind = models.ForeignKey(ContentKind, related_name='format_presets')
+    kind = models.ForeignKey(ContentKind, related_name='format_presets', null=True)
     allowed_formats = models.ManyToManyField(FileFormat, blank=True)
 
     def __str__(self):

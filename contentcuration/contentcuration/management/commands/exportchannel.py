@@ -4,6 +4,8 @@ import zipfile
 import shutil
 import tempfile
 import json
+from PIL import ImageFile
+from io import BytesIO
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -159,7 +161,7 @@ def create_bare_contentnode(ccnode):
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating File objects for Node {}".format(kolibrinode.id))
-    for ccfilemodel in ccnode.files.all():
+    for ccfilemodel in ccnode.files.exclude(preset__kind=None):
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
 
@@ -192,6 +194,8 @@ def create_perseus_exercise(ccnode):
         )
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
+placeholder='${aronsface}/'
+
 def create_perseus_zip(ccnode, write_to_path):
     assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode)
     with zipfile.ZipFile(write_to_path, "w") as zf:
@@ -201,40 +205,43 @@ def create_perseus_zip(ccnode, write_to_path):
         }
         exercise_result = render_to_string('perseus/exercise.json', exercise_context).encode('utf-8', "ignore")
         zf.writestr("exercise.json", exercise_result)
+        for image in ccnode.files.filter(preset__kind=None):
+            image_name = os.path.join("images", "{0}.{ext}".format(image.checksum, ext=image.file_format_id))
+            if image_name not in zf.namelist() and "80a94526688fe17317b3e2af9023d363" in image_name:
+                filestream = open(image.file_on_disk.url, "rb")
+                zf.writestr(image_name, filestream.read())
+                filestream.close()
         for item in assessment_items:
             write_assessment_item(item, zf)
+        import pdb; pdb.set_trace()
+        zf.testzip()
+        zf.printdir()
+
 
 def write_assessment_item(assessment_item, zf):
     template=''
-    context = {}
+    replacement_string = placeholder + "images/"
+    answer_data = json.loads(assessment_item.answers)
+    for answer in answer_data:
+        answer['answer'] = answer['answer'].replace(placeholder, replacement_string)
+
+    context = {
+        'question' : assessment_item.question.replace(placeholder, replacement_string),
+        'answers':answer_data,
+        'multipleSelect':assessment_item.type == exercises.MULTIPLE_SELECTION,
+    }
 
     if assessment_item.type == exercises.MULTIPLE_SELECTION:
         template = 'perseus/multiple_selection.json'
-        context = {
-            'question' : assessment_item.question,
-            'answers':json.loads(assessment_item.answers),
-            'multipleSelect':True,
-        }
     elif assessment_item.type == exercises.SINGLE_SELECTION:
         template = 'perseus/multiple_selection.json'
-        context = {
-            'question' : assessment_item.question,
-            'answers':json.loads(assessment_item.answers),
-            'multipleSelect':False,
-        }
     elif assessment_item.type == exercises.FREE_RESPONSE:
         template = 'perseus/free_response.json'
-        context = {
-            'question' : assessment_item.question,
-        }
     elif assessment_item.type == exercises.INPUT_QUESTION:
         template = 'perseus/input_question.json'
-        context = {
-            'question' : assessment_item.question,
-            'answers': json.loads(assessment_item.answers),
-        }
 
     result = render_to_string(template,  context).encode('utf-8', "ignore")
+
     filename = "{0}.json".format(assessment_item.assessment_id)
     zf.writestr(filename, result)
 

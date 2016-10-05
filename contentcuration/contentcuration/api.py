@@ -21,7 +21,7 @@ def recurse(node, level=0):
 
 def clean_db():
     logging.debug("*********** CLEANING DATABASE ***********")
-    for file_obj in models.File.objects.filter(Q(preset = None) | Q(contentnode=None)):
+    for file_obj in models.File.objects.filter(Q(preset = None) & Q(contentnode=None)):
         logging.debug("Deletng unreferenced file {0}".format(file_obj.__dict__))
         file_obj.delete()
     for node_obj in models.ContentNode.objects.filter(Q(parent=None) & Q(channel_main=None) & Q(channel_trash=None) & Q(user_clipboard=None)):
@@ -196,6 +196,8 @@ def map_files_to_node(node, data, file_data):
         kind_preset = None
         if file_data[f]['preset']:
             kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1]).first()
+        else:
+            kind_preset = models.FormatPreset.objects.get(kind=None)
         file_obj = models.File(
             checksum=file_hash[0],
             contentnode=node,

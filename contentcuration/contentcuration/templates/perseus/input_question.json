@@ -1,6 +1,6 @@
 {
     "question": {
-        "content": "{{ question }}[[☃ text-input 1]]",
+        "content": "{{ question }}\n\n[[☃ text-input 1]]",
         "images": {},
         "widgets": {
             "text-input 1": {
