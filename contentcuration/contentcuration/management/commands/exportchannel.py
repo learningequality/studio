@@ -4,8 +4,6 @@ import zipfile
 import shutil
 import tempfile
 import json
-from PIL import ImageFile
-from io import BytesIO
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -63,7 +61,6 @@ class Command(BaseCommand):
                 message=e.message))
             self.stdout.write("You can find your database in {path}".format(
                 path=e.db_path))
-
 
 def create_kolibri_license_object(license):
     return kolibrimodels.License.objects.get_or_create(
@@ -183,6 +180,7 @@ def create_perseus_exercise(ccnode):
     filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
         create_perseus_zip(ccnode, tempf.name)
+
         ccmodels.File.objects.filter(contentnode=ccnode, preset_id=format_presets.EXERCISE).delete()
 
         assessment_file_obj = ccmodels.File.objects.create(
@@ -206,17 +204,17 @@ def create_perseus_zip(ccnode, write_to_path):
         exercise_result = render_to_string('perseus/exercise.json', exercise_context).encode('utf-8', "ignore")
         zf.writestr("exercise.json", exercise_result)
         for image in ccnode.files.filter(preset__kind=None):
-            image_name = os.path.join("images", "{0}.{ext}".format(image.checksum, ext=image.file_format_id))
-            if image_name not in zf.namelist() and "80a94526688fe17317b3e2af9023d363" in image_name:
-                filestream = open(image.file_on_disk.url, "rb")
-                zf.writestr(image_name, filestream.read())
-                filestream.close()
+            image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
+            if image_name not in zf.namelist():
+                image.file_on_disk.open(mode="rb")
+                encoded_image_string = image.file_on_disk.read().encode('base64')
+                zf.writestr(image_name, 'data:image/png;base64,' + encoded_image_string)
         for item in assessment_items:
             write_assessment_item(item, zf)
-        import pdb; pdb.set_trace()
-        zf.testzip()
-        zf.printdir()
 
+        if zf.testzip() is not None:
+            zf.printdir()
+            raise ValueError("Error processing perseus file: '{0} is corrupted'".format(zf.testzip()))
 
 def write_assessment_item(assessment_item, zf):
     template=''
