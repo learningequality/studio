@@ -1,6 +1,7 @@
+{% load perseus_tags %}
 {
     "question": {
-        "content": "{{ question }}\n\n[[☃ text-input 1]]",
+        "content": "{{ question | escape_newline }}\n\n[[☃ text-input 1]]",
         "images": {},
         "widgets": {
             "text-input 1": {
@@ -13,7 +14,7 @@
                     "answers": [
                         {% for answer in answers %}
                         {
-                            "value": "{{ answer.answer }}",
+                            "value": "{{ answer.answer | escape_newline }}",
                             "status": "correct",
                             "message": "{{ answer.help_text }}",
                             "simplify": "required",

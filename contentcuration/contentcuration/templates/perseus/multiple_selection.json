@@ -1,6 +1,7 @@
+{% load perseus_tags %}
 {
     "question": {
-        "content": "{{ question }}\n\n[[☃ radio 1]]",
+        "content": "{{ question | escape_newline }}\n\n[[☃ radio 1]]",
         "images": {},
         "widgets": {
             "radio 1": {
@@ -11,7 +12,7 @@
                         {% for answer in answers %}
                         {
                             "correct": {% if answer.correct %}true{% else %}false{% endif %},
-                            "content": "{{ answer.answer }}"
+                            "content": "{{ answer.answer | escape_newline }}"
                         }{% if forloop.last %}{% else %},{% endif %}
                         {% endfor %}
                     ],

@@ -1,6 +1,7 @@
+{% load perseus_tags %}
 {
     "question": {
-        "content": "{{ question }}\n\n[[☃ free-text-input 1]]",
+        "content": "{{ question | escape_newline }}\n\n[[☃ free-text-input 1]]",
         "images": {},
         "widgets": {
             "free-text-input 1": {
