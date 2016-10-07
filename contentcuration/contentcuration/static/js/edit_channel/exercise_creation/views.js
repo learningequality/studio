@@ -14,6 +14,8 @@ require("exercises.less");
 require("quilljs/dist/quill.snow.css");
 require("dropzone/dist/dropzone.css");
 
+var placeholder_text = "$1\${\\u2623 IMAGEREPLACE}/$3"
+
 var ExerciseModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/exercise_modal.handlebars"),
     initialize: function(options) {
@@ -49,6 +51,7 @@ var FileUploadView = Backbone.View.extend({
     initialize: function(options) {
         _.bindAll(this, "file_uploaded");
         this.callback = options.callback;
+        this.nodeid = options.nodeid;
         this.modal = options.modal;
         this.render();
     },
@@ -70,12 +73,19 @@ var FileUploadView = Backbone.View.extend({
         }
 
         // TODO parameterize to allow different file uploads depending on initialization.
-        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {maxFiles: 1, clickable: ["#dropzone", ".fileinput-button"], acceptedFiles: "image/*", url: window.Urls.exercise_image_upload(), headers: {"X-CSRFToken": get_cookie("csrftoken")}});
+        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
+            maxFiles: 1,
+            clickable: ["#dropzone", ".fileinput-button"],
+            acceptedFiles: "image/*",
+            url: window.Urls.exercise_image_upload(),
+            headers: {"X-CSRFToken": get_cookie("csrftoken"), "Node" : this.nodeid}
+        });
         this.dropzone.on("success", this.file_uploaded);
 
     },
 
     file_uploaded: function(file) {
+        console.log(JSON.parse(file.xhr.response))
         this.callback(JSON.parse(file.xhr.response).filename);
         this.close();
     },
@@ -97,7 +107,7 @@ var FileUploadView = Backbone.View.extend({
  * "something![foo](web+local://bar/baz)otherthings"
  */
 var set_image_urls_for_export = function(text) {
-    return text.replace(/(\!\[[^\]]*\]\()(\/media\/)([^\)]*\))/g, "$1web+local://$3");
+    return text.replace(/(\!\[[^\]]*\]\()(\/storage\/)([^\)]*\))/g, placeholder_text);
 };
 
 
@@ -111,12 +121,26 @@ var set_image_urls_for_export = function(text) {
  */
 var return_image_urls_for_export = function(text) {
     var match, output = [];
-    var Re = /\!\[[^\]]*\]\((\/media\/[^\)]*)\)/g;
+    var Re = /\!\[[^\]]*\]\((\/storage\/[^\)]*)\)/g;
     while (match = Re.exec(text)) {
         output.push(match[1]);
     }
     return output;
 };
+
+var replace_image_paths = function(content){
+    var regExp = /\(\${\\u2623 IMAGEREPLACE}\/([^)]+)\)/g;
+    var matches = content.match(regExp);
+    if(matches){
+        matches.forEach(function(match){
+            var filename = match.split("/").slice(-1)[0]
+            var replace_str = "![](/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
+            content = content.replace(match, replace_str);
+        })
+    }
+    return content;
+};
+
 
 /**
  * Return all image URLs from an assessment item.
@@ -135,7 +159,7 @@ var return_all_assessment_item_image_urls = function(model) {
 
     output = _.map(output, function(item) {
         return {
-            name: item.replace(/\/media\//g, ""),
+            name: item.replace(/\/storage\//g, ""),
             path: item
         }
     });
@@ -150,6 +174,10 @@ var convert_assessment_item_to_perseus = function(model) {
     var multiplechoice_template = require("./hbtemplates/assessment_item_multiple.handlebars");
     var freeresponse_template = require("./hbtemplates/assessment_item_free.handlebars");
     var output = "";
+    var answers = model.get("answers").toJSON();
+    answers.forEach(function(answer){
+        answer.answer = set_image_urls_for_export(answer.answer);
+    });
     switch (model.get("type")) {
         case "free_response":
             output = freeresponse_template(model.attributes);
@@ -158,16 +186,31 @@ var convert_assessment_item_to_perseus = function(model) {
             output = multiplechoice_template({
                 question: set_image_urls_for_export(model.get("question")),
                 randomize: true,
-                multipleSelect: (model.get("answers").reduce(function(memo, model) {
-                    if (model.get("correct")) {
-                        memo += 1;
-                    }
-                    return memo;
-                    }, 0) || 0) > 1,
-                answer: model.get("answers").toJSON()
+                // multipleSelect: (model.get("answers").reduce(function(memo, model) {
+                //     if (model.get("correct")) {
+                //         memo += 1;
+                //     }
+                //     return memo;
+                //     }, 0) || 0) > 1,
+                answer: answers
+            });
+            break;
+        case "single_selection":
+            output = multiplechoice_template({
+                question: set_image_urls_for_export(model.get("question")),
+                randomize: true,
+                answer: answers
+            });
+            break;
+        case "input_question":
+            output = multiplechoice_template({
+                question: set_image_urls_for_export(model.get("question")),
+                randomize: true,
+                answer: answers
             });
             break;
     }
+    console.log("EXERCISE", output);
     return $.parseJSON(output);
 };
 
@@ -260,18 +303,17 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
                     }
                     zip.file(item.name, data, {binary: true});
                     downloads += 1;
-                    console.log(downloads);
                     if (downloads === all_image_urls.length) {
                         var blob = zip.generate({type:"blob"});
 
-                        fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".exercise");
+                        fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".zip");
                     }
                 });
         });
         } else {
             var blob = zip.generate({type:"blob"});
 
-            fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".exercise");
+            fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".zip");
         }
 
     },
@@ -304,7 +346,8 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     create_new_view:function(model){
         var new_exercise_item = new AssessmentItemView({
             model: model,
-            containing_list_view : this
+            containing_list_view : this,
+            nodeid:this.model.get("id")
         });
         this.views.push(new_exercise_item);
         return new_exercise_item;
@@ -385,6 +428,7 @@ var EditorView = Backbone.View.extend({
         this.editing = false;
         this.render();
         this.listenTo(this.model, "change:" + this.edit_key, this.render);
+        this.nodeid=options.nodeid;
     },
 
     events: {
@@ -392,11 +436,11 @@ var EditorView = Backbone.View.extend({
     },
 
     add_image_popup: function() {
-        var view = new FileUploadView({callback: this.add_image, modal: true});
+        var view = new FileUploadView({callback: this.add_image, modal: true, nodeid: this.nodeid});
     },
 
     add_image: function(filename) {
-        this.editor.insertEmbed(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "image", "/media/" + filename);
+        this.editor.insertEmbed(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "image", "/" + filename);
         this.save();
     },
 
@@ -425,11 +469,11 @@ var EditorView = Backbone.View.extend({
     },
 
     render_content: function() {
-        this.$el.html(this.view_template({content: this.model.get(this.edit_key)}));
+        this.$el.html(this.view_template({content: replace_image_paths(this.model.get(this.edit_key))}));
     },
 
     render_editor: function() {
-        this.editor.setHTML(this.view_template({content: this.model.get(this.edit_key)}));
+        this.editor.setHTML(this.view_template({content: replace_image_paths(this.model.get(this.edit_key))}));
     },
 
     activate_editor: function() {
@@ -533,6 +577,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         this.open = options.open || false;
         this.containing_list_view = options.containing_list_view;
         this.assessment_item = options.assessment_item;
+        this.nodeid=options.nodeid;
         this.render();
     },
 
@@ -541,10 +586,10 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_open.handlebars"),
 
     events: {
-        // "click .delete": "delete",
-        // "change .correct": "toggle_correct",
-        // "click .answer_item": "set_open",
-        // "click .toggle": "toggle"
+        "click .delete": "delete",
+        "change .correct": "toggle_correct",
+        "click .answer_item": "set_open",
+        "click .toggle": "toggle"
     },
 
     render: function() {
@@ -554,7 +599,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
             single_selection: this.assessment_item.get("type") === "single_selection"
         }));
         if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: "answer", el: this.$(".answer")});
+            this.editor_view = new EditorView({model: this.model, edit_key: "answer", el: this.$(".answer"), nodeid:this.nodeid});
         } else {
             this.$(".answer").append(this.editor_view.el);
         }
@@ -574,7 +619,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     set_closed:function(){
         this.set_toolbar_closed();
         this.editor_view.deactivate_editor();
-        // exerciseSaveDispatcher.trigger("save");
+        exerciseSaveDispatcher.trigger("save");
     },
     toggle:function(event){
         event.stopPropagation();
@@ -628,6 +673,7 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
         _.bindAll(this, "render", "add_answer_view");
         this.bind_edit_functions();
         this.assessment_item = options.assessment_item;
+        this.nodeid = options.nodeid;
         this.render();
         this.container = options.container;
         this.listenTo(this.collection, "add", this.add_answer_view);
@@ -659,7 +705,8 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
             model: model,
             open: open,
             containing_list_view:this,
-            assessment_item: this.assessment_item
+            assessment_item: this.assessment_item,
+            nodeid:this.nodeid
         });
         this.views.push(view);
         this.$(".addanswer").before(view.el);
@@ -682,6 +729,7 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
     initialize: function(options) {
         _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus", "toggle_undo_redo", "add_focus", "remove_focus");
         this.number = options.number;
+        this.nodeid=options.nodeid;
         this.containing_list_view = options.containing_list_view;
         this.undo_manager = new UndoManager({
             track: true,
@@ -695,21 +743,26 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_open.handlebars"),
 
     events: {
-        // "click .cancel": "cancel",
-        // "click .undo": "undo",
-        // "click .redo": "redo",
-        // "click .delete": "delete",
-        // "click .toggle_exercise": "toggle_focus",
-        // "click .toggle" : "toggle"
+        "click .cancel": "cancel",
+        "click .undo": "undo",
+        "click .redo": "redo",
+        "click .delete": "delete",
+        "click .toggle_exercise": "toggle_focus",
+        "click .toggle" : "toggle"
     },
     toggle:function(event){
         event.stopPropagation();
         this.remove_focus();
+        this.$(".delete").css("display", "none");
+        var self = this;
+        setTimeout(function(){
+            self.$(".delete").css("display", "block")
+        }, 1000);
     },
     delete: function(event) {
         event.stopPropagation();
         this.model.destroy();
-        // exerciseSaveDispatcher.trigger("save");
+        exerciseSaveDispatcher.trigger("save");
         this.remove();
     },
 
@@ -749,13 +802,14 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
                 this.answer_editor = new AssessmentItemAnswerListView({
                     collection: this.model.get("answers"),
                     container:this,
-                    assessment_item: this.model
+                    assessment_item: this.model,
+                    nodeid:this.nodeid
                 });
             }
             this.$(".answers").append(this.answer_editor.el);
         }
         if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: "question", el: this.$(".question")});
+            this.editor_view = new EditorView({model: this.model, edit_key: "question", el: this.$(".question"),nodeid:this.nodeid});
         } else {
             this.$(".question").append(this.editor_view.el);
         }
@@ -794,7 +848,7 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
         this.$(".assessment_item").removeClass("active");
         // this.editor_view.save_and_close();
         this.editor_view.deactivate_editor();
-        // this.save();
+        this.save();
         this.set_toolbar_closed();
         this.unset_undo_redo_listener();
         if (this.answer_editor) {
