@@ -36,8 +36,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # license_id = options['license_id']
         channel_id = options['channel_id']
-        test_content_node()
-        return
 
         # license = ccmodels.License.objects.get(pk=license_id)
         try:
@@ -63,20 +61,6 @@ class Command(BaseCommand):
                 message=e.message))
             self.stdout.write("You can find your database in {path}".format(
                 path=e.db_path))
-
-def test_content_node():
-    ccnode = ccmodels.ContentNode.objects.get(id="18eca80b18754b0d953ac53edbe2cea9")
-    kolibrinode = kolibrimodels.ContentNode.objects.get_or_create(
-        title=ccnode.title,
-        content_id=ccnode.content_id,
-        description=ccnode.description,
-        sort_order=ccnode.sort_order,
-        license_owner=ccnode.copyright_holder,
-        kind=ccnode.kind.kind,
-        available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
-        stemmed_metaphone= ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),)[0]
-    create_perseus_exercise(ccnode)
-    create_associated_file_objects(kolibrinode, ccnode)
 
 def create_kolibri_license_object(license):
     return kolibrimodels.License.objects.get_or_create(
@@ -221,19 +205,11 @@ def create_perseus_zip(ccnode, write_to_path):
     }
     exercise_result = render_to_string('perseus/exercise.json', exercise_context).encode('utf-8', "ignore")
     zf.writestr("exercise.json", exercise_result)
-    for image in ccnode.files.filter(preset__kind=None)[:1]:
+    for image in ccnode.files.filter(preset__kind=None):
         image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
         if image_name not in zf.namelist():
-            #image.file_on_disk.open(mode="rb")
-            #encoded_image_string = image.file_on_disk.read().encode('base64')
-            # zf.writestr(image_name, 'data:image/png;base64,' + encoded_image_string)
-            # zf.writestr(image_name, image.file_on_disk.read())
-
-            file_object = open("./blahblahrice.sqlite3", "rb")
-            zf.writestr(image_name, file_object.read())
-            # zf.write("./blahblahrice.sqlite3", image_name)
-            #zf.writestr(image_name, "hello"*20000)
-            file_object.close()
+            image.file_on_disk.open(mode="rb")
+            zf.writestr(image_name, image.file_on_disk.read())
     for item in assessment_items:
         write_assessment_item(item, zf)
 
