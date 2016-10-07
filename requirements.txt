@@ -16,6 +16,6 @@ django-hashedfilenamestorage==1.0.0
 djangorestframework-bulk==0.2.1
 django-email-extras==0.3.3
 https://github.com/learningequality/kolibri/tarball/master#egg=kolibri
-le-utils==0.0.8
 psycopg2==2.6.2
 validators
+https://github.com/jayoshih/fle-utils/tarball/master#egg=le_utils
