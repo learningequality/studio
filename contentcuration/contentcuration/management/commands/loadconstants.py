@@ -384,7 +384,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            self.stdout.write("***** Creating Constants *****")
+            self.stdout.write("***** Loading Constants *****")
             for constant_list in CONSTANTS:
                 current_model = ""
                 new_model_count = 0
@@ -396,7 +396,7 @@ class Command(BaseCommand):
                         setattr(obj, attr, value)
                     obj.save()
                 self.stdout.write("{0}: {1} constants saved ({2} new)".format(str(current_model), len(constant_list), new_model_count))
-            self.stdout.write("************ DONE ************")
+            self.stdout.write("************ DONE. ************")
 
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(
