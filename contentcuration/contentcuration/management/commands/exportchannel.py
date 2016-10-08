@@ -193,7 +193,7 @@ def create_perseus_exercise(ccnode):
         )
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
-placeholder='${aronsface}/'
+placeholder="${u'\u0420' IMAGEREPLACE}/".encode('utf-8')
 
 def create_perseus_zip(ccnode, write_to_path):
     assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode)
