@@ -193,37 +193,32 @@ def create_perseus_exercise(ccnode):
         )
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
-placeholder="${u'\u0420' IMAGEREPLACE}/".encode('utf-8')
-
 def create_perseus_zip(ccnode, write_to_path):
     assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode)
-    zf = zipfile.ZipFile(write_to_path, "w")
-    # with zipfile.ZipFile(write_to_path, "w") as zf:
-    exercise_context = {
-        'exercise': json.loads(ccnode.extra_fields),
-        'questions': assessment_items,
-    }
-    exercise_result = render_to_string('perseus/exercise.json', exercise_context).encode('utf-8', "ignore")
-    zf.writestr("exercise.json", exercise_result)
-    for image in ccnode.files.filter(preset__kind=None):
-        image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
-        if image_name not in zf.namelist():
-            image.file_on_disk.open(mode="rb")
-            zf.writestr(image_name, image.file_on_disk.read())
-    for item in assessment_items:
-        write_assessment_item(item, zf)
-
-    zf.close()
+    with zipfile.ZipFile(write_to_path, "w") as zf:
+        exercise_context = {
+            'exercise': json.loads(ccnode.extra_fields),
+            'questions': assessment_items,
+        }
+        exercise_result = render_to_string('perseus/exercise.json', exercise_context).encode('utf-8', "ignore")
+        zf.writestr("exercise.json", exercise_result)
+        # for image in ccnode.files.filter(preset__kind=None):
+        #     image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
+        #     if image_name not in zf.namelist():
+        #         image.file_on_disk.open(mode="rb")
+        #         zf.writestr(image_name, image.file_on_disk.read())
+        for item in assessment_items:
+            write_assessment_item(item, zf)
 
 def write_assessment_item(assessment_item, zf):
     template=''
-    replacement_string = placeholder + "images/"
+    replacement_string = exercises.IMG_PLACEHOLDER + "/images"
     answer_data = json.loads(assessment_item.answers)
     for answer in answer_data:
-        answer['answer'] = answer['answer'].replace(placeholder, replacement_string)
+        answer['answer'] = answer['answer'].replace(exercises.IMG_PLACEHOLDER, replacement_string)
 
     context = {
-        'question' : assessment_item.question.replace(placeholder, replacement_string),
+        'question' : assessment_item.question.replace(exercises.IMG_PLACEHOLDER, replacement_string),
         'answers':answer_data,
         'multipleSelect':assessment_item.type == exercises.MULTIPLE_SELECTION,
         'raw_data': assessment_item.raw_data,
