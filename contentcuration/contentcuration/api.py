@@ -11,8 +11,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
 from django.db import transaction
-import models
 from le_utils.constants import content_kinds
+import contentcuration.models as models
 
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title

@@ -164,7 +164,7 @@ def file_create(request):
 def file_diff(request):
     logging.debug("Entering the file_diff endpoint")
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
         return HttpResponse(json.dumps(get_file_diff(data)))

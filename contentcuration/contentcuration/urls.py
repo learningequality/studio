@@ -21,8 +21,8 @@ from django.core.urlresolvers import reverse_lazy
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
 from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem, ContentKind, Language, User, Invitation
-import serializers
-import views
+import contentcuration.serializers as serializers
+import contentcuration.views as views
 from contentcuration import api
 
 from rest_framework_bulk.routes import BulkRouter
