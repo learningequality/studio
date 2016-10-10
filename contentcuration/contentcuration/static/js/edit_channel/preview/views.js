@@ -49,7 +49,7 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     set_preview:function(event){
         var self = this;
-        _.reject(this.model.get("files"), {preset:null}).forEach(function(file){
+        _.reject(this.model.get("files"), {preset:{kind:null}}).forEach(function(file){
             var data = (file.attributes)? file.attributes : file;
             var preset_check = (data.preset.id)? data.preset.id : data.preset;
             if(preset_check === event.target.getAttribute("value")){
@@ -116,7 +116,9 @@ var PreviewView = BaseViews.BaseView.extend({
             var default_preview = null;
             var self = this;
             this.presets.reset();
-             _.reject(this.model.get("files"), {preset:null}).forEach(function(file){
+            console.log(this.model.get("files"))
+            console.log(_.reject(this.model.get("files"), {preset:{kind:null}}))
+             _.reject(this.model.get("files"), {preset:{kind:null}}).forEach(function(file){
                 var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
                 if(!default_preview || preset.get("order") === 1){
                     default_preview = file;
