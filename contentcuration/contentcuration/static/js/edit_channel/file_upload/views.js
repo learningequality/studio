@@ -422,7 +422,7 @@ var FormatEditorItem = FormatItem.extend({
         var main_count = 0;
         var size = 0;
         this.model.get("files").forEach(function(file){
-            if(file.preset){
+            if(file.preset && file.preset.kind){
                 if(!file.preset.id){
                     file.preset = window.formatpresets.get({id:file.preset}).toJSON();
                 }
@@ -430,8 +430,8 @@ var FormatEditorItem = FormatItem.extend({
                 if(!file.preset.supplementary){
                     main_count++;
                 }
+                size += file.file_size;
             }
-            size += file.file_size;
         });
         return {"count": count, "size": size, "main_file_count" : main_count};
     },

@@ -116,14 +116,14 @@ var PreviewView = BaseViews.BaseView.extend({
             var default_preview = null;
             var self = this;
             this.presets.reset();
-            console.log(this.model.get("files"))
-            console.log(_.reject(this.model.get("files"), {preset:{kind:null}}))
-             _.reject(this.model.get("files"), {preset:{kind:null}}).forEach(function(file){
+            this.model.get("files").forEach(function(file){
                 var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
-                if(!default_preview || preset.get("order") === 1){
-                    default_preview = file;
+                if(preset.kind){
+                    if(!default_preview || preset.get("order") === 1){
+                        default_preview = file;
+                    }
+                    self.presets.add(preset);
                 }
-                self.presets.add(preset);
             });
             this.load_preset_dropdown();
             this.set_current_preview(default_preview);

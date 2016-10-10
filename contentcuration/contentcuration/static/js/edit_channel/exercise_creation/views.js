@@ -14,7 +14,8 @@ require("exercises.less");
 require("quilljs/dist/quill.snow.css");
 require("dropzone/dist/dropzone.css");
 
-var placeholder_text = "$1\${\\u2623 IMAGEREPLACE}/$3"
+var placeholder_text = "$1\${\u2623 IMAGEREPLACE}/$3"
+var regExp = /\(\${\\u2623 IMAGEREPLACE}\/([^)]+)\)/g;
 
 var ExerciseModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/exercise_modal.handlebars"),
@@ -129,7 +130,6 @@ var return_image_urls_for_export = function(text) {
 };
 
 var replace_image_paths = function(content){
-    var regExp = /\(\${\\u2623 IMAGEREPLACE}\/([^)]+)\)/g;
     var matches = content.match(regExp);
     if(matches){
         matches.forEach(function(match){
