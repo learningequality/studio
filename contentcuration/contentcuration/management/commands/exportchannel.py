@@ -226,6 +226,7 @@ def write_assessment_item(assessment_item, zf):
         'question' : assessment_item.question.replace(placeholder, replacement_string),
         'answers':answer_data,
         'multipleSelect':assessment_item.type == exercises.MULTIPLE_SELECTION,
+        'raw_data': assessment_item.raw_data,
     }
 
     if assessment_item.type == exercises.MULTIPLE_SELECTION:
@@ -236,6 +237,8 @@ def write_assessment_item(assessment_item, zf):
         template = 'perseus/free_response.json'
     elif assessment_item.type == exercises.INPUT_QUESTION:
         template = 'perseus/input_question.json'
+    elif assessment_item.type == exercises.PERSEUS_QUESTION:
+        template = 'perseus/perseus_question.json'
 
     result = render_to_string(template,  context).encode('utf-8', "ignore")
 

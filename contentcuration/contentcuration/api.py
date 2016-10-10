@@ -218,11 +218,12 @@ def create_exercises(node, data):
             question_obj = models.AssessmentItem(
                 type = question.get('type'),
                 question = question.get('question'),
-                help_text = question.get('help_text'),
+                hint = question.get('hint'),
                 answers = question.get('answers'),
                 order = order,
                 contentnode = node,
                 assessment_id = question.get('assessment_id'),
+                raw_data = question.get('raw_data'),
             )
             order += 1
             question_obj.save()
