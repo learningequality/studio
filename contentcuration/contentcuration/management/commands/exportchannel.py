@@ -202,11 +202,11 @@ def create_perseus_zip(ccnode, write_to_path):
         }
         exercise_result = render_to_string('perseus/exercise.json', exercise_context).encode('utf-8', "ignore")
         zf.writestr("exercise.json", exercise_result)
-        # for image in ccnode.files.filter(preset__kind=None):
-        #     image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
-        #     if image_name not in zf.namelist():
-        #         image.file_on_disk.open(mode="rb")
-        #         zf.writestr(image_name, image.file_on_disk.read())
+        for image in ccnode.files.filter(preset__kind=None):
+            image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
+            if image_name not in zf.namelist():
+                image.file_on_disk.open(mode="rb")
+                zf.writestr(image_name, image.file_on_disk.read())
         for item in assessment_items:
             write_assessment_item(item, zf)
 
