@@ -42,7 +42,6 @@ class Command(BaseCommand):
             channel = ccmodels.Channel.objects.get(pk=channel_id)
             # increment the channel version
             raise_if_nodes_are_all_unchanged(channel)
-            mark_all_nodes_as_changed(channel)
             # assign_license_to_contentcuration_nodes(channel, license)
             # create_kolibri_license_object(license)
             increment_channel_version(channel)
@@ -53,6 +52,7 @@ class Command(BaseCommand):
             map_channel_to_kolibri_channel(channel)
             map_content_nodes(channel.main_tree,)
             save_export_database(channel_id)
+            mark_all_nodes_as_changed(channel)
             # use SQLite backup API to put DB into archives folder.
             # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -235,8 +235,7 @@ def write_assessment_item(assessment_item, zf):
     elif assessment_item.type == exercises.PERSEUS_QUESTION:
         template = 'perseus/perseus_question.json'
 
-    result = render_to_string(template,  context).encode('utf-8', "ignore")
-
+    result = render_to_string(template,  context).encode('utf-8', "ignore").replace('\u2623', u'\u2623'.encode('utf-8'))
     filename = "{0}.json".format(assessment_item.assessment_id)
     zf.writestr(filename, result)
 

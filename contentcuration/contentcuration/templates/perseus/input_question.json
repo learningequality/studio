@@ -1,5 +1,4 @@
-{% load perseus_tags %}
-{
+{% load perseus_tags %}{
     "question": {
         "content": "{{ question | escape_newline }}\n\n[[☃ text-input 1]]",
         "images": {},
