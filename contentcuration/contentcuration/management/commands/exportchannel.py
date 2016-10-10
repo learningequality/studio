@@ -116,7 +116,7 @@ def map_content_nodes(root_node):
 
             kolibrinode = create_bare_contentnode(node)
 
-            if node.kind.kind == content_kinds.EXERCISE:
+            if node.kind.kind == content_kinds.EXERCISE and node.files.filter(preset__kind=None).exists():
                 create_perseus_exercise(node)
             if node.kind.kind != content_kinds.TOPIC:
                 create_associated_file_objects(kolibrinode, node)
