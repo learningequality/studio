@@ -437,6 +437,7 @@ class AssessmentItem(models.Model):
     order = models.IntegerField(default=1)
     contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
     assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
+    raw_data = models.TextField(blank=True)
 
 class Invitation(models.Model):
     """ Invitation to edit channel """
