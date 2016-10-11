@@ -236,13 +236,15 @@ def thumbnail_upload(request):
         }))
 
 def exercise_image_upload(request):
+
     if request.method == 'POST':
+        node = ContentNode.objects.get(id=request.META.get('HTTP_NODE'))
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1] # gets file extension without leading period
-        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext))
+        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), contentnode=node)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
-            "filename": str(file_object),
+            "filename": file_object.file_on_disk.url,
         }))
 
 def duplicate_nodes(request):
@@ -291,6 +293,7 @@ def _duplicate_node(node, sort_order=1, parent=None):
         cloned_source=node,
         author=node.author,
         content_id=node.content_id,
+        extra_fields=node.extra_fields,
     )
 
     # add tags now
@@ -302,6 +305,13 @@ def _duplicate_node(node, sort_order=1, parent=None):
         fobj_copy.id = None
         fobj_copy.contentnode = new_node
         fobj_copy.save()
+
+    # copy assessment item object too
+    for aiobj in node.assessment_items.all():
+        aiobj_copy = copy.copy(aiobj)
+        aiobj_copy.id = None
+        aiobj_copy.contentnode = new_node
+        aiobj_copy.save()
 
     for c in node.children.all():
         _duplicate_node(c, parent=new_node.id)

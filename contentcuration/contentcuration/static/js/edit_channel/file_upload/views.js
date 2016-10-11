@@ -205,7 +205,7 @@ var FileUploadList = FileBaseList.extend({
             acceptedFiles: this.acceptedFiles,
             url: window.Urls.file_create(),
             previewTemplate:this.file_upload_template(),
-            parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads() / 2),
+            parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads()),
             //autoQueue: false, // Make sure the files aren't queued until manually added
             previewsContainer: this.list_selector, // Define the container to display the previews
             headers: {"X-CSRFToken": get_cookie("csrftoken")},
@@ -422,7 +422,7 @@ var FormatEditorItem = FormatItem.extend({
         var main_count = 0;
         var size = 0;
         this.model.get("files").forEach(function(file){
-            if(file.preset){
+            if(file.preset && file.preset.kind){
                 if(!file.preset.id){
                     file.preset = window.formatpresets.get({id:file.preset}).toJSON();
                 }
@@ -430,8 +430,8 @@ var FormatEditorItem = FormatItem.extend({
                 if(!file.preset.supplementary){
                     main_count++;
                 }
+                size += file.file_size;
             }
-            size += file.file_size;
         });
         return {"count": count, "size": size, "main_file_count" : main_count};
     },

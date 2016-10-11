@@ -42,7 +42,6 @@ class Command(BaseCommand):
             channel = ccmodels.Channel.objects.get(pk=channel_id)
             # increment the channel version
             raise_if_nodes_are_all_unchanged(channel)
-            mark_all_nodes_as_changed(channel)
             # assign_license_to_contentcuration_nodes(channel, license)
             # create_kolibri_license_object(license)
             increment_channel_version(channel)
@@ -53,6 +52,7 @@ class Command(BaseCommand):
             map_channel_to_kolibri_channel(channel)
             map_content_nodes(channel.main_tree,)
             save_export_database(channel_id)
+            mark_all_nodes_as_changed(channel)
             # use SQLite backup API to put DB into archives folder.
             # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -61,7 +61,6 @@ class Command(BaseCommand):
                 message=e.message))
             self.stdout.write("You can find your database in {path}".format(
                 path=e.db_path))
-
 
 def create_kolibri_license_object(license):
     return kolibrimodels.License.objects.get_or_create(
@@ -117,7 +116,7 @@ def map_content_nodes(root_node):
 
             kolibrinode = create_bare_contentnode(node)
 
-            if node.kind.kind == content_kinds.EXERCISE:
+            if node.kind.kind == content_kinds.EXERCISE and node.files.filter(preset__kind=None).exists():
                 create_perseus_exercise(node)
             if node.kind.kind != content_kinds.TOPIC:
                 create_associated_file_objects(kolibrinode, node)
@@ -159,7 +158,7 @@ def create_bare_contentnode(ccnode):
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating File objects for Node {}".format(kolibrinode.id))
-    for ccfilemodel in ccnode.files.all():
+    for ccfilemodel in ccnode.files.exclude(preset__kind=None):
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
 
@@ -180,7 +179,10 @@ def create_perseus_exercise(ccnode):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
-        create_perseus_zip(ccnode, tempf.name)
+        create_perseus_zip(ccnode, tempf)
+        tempf.flush()
+
+        ccmodels.File.objects.filter(contentnode=ccnode, preset_id=format_presets.EXERCISE).delete()
 
         assessment_file_obj = ccmodels.File.objects.create(
             file_on_disk=File(open(tempf.name, 'r'), name=filename),
@@ -200,42 +202,46 @@ def create_perseus_zip(ccnode, write_to_path):
         }
         exercise_result = render_to_string('perseus/exercise.json', exercise_context).encode('utf-8', "ignore")
         zf.writestr("exercise.json", exercise_result)
+        for image in ccnode.files.filter(preset__kind=None):
+            image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
+            if image_name not in zf.namelist():
+                image.file_on_disk.open(mode="rb")
+                zf.writestr(image_name, image.file_on_disk.read())
         for item in assessment_items:
             write_assessment_item(item, zf)
 
 def write_assessment_item(assessment_item, zf):
     template=''
-    context = {}
+    replacement_string = exercises.IMG_PLACEHOLDER + "/images"
+    answer_data = json.loads(assessment_item.answers)
+    for answer in answer_data:
+        answer['answer'] = answer['answer'].replace(exercises.IMG_PLACEHOLDER, replacement_string)
+
+    context = {
+        'question' : assessment_item.question.replace(exercises.IMG_PLACEHOLDER, replacement_string),
+        'answers':answer_data,
+        'multipleSelect':assessment_item.type == exercises.MULTIPLE_SELECTION,
+        'raw_data': assessment_item.raw_data.replace(exercises.IMG_PLACEHOLDER, replacement_string),
+    }
 
     if assessment_item.type == exercises.MULTIPLE_SELECTION:
         template = 'perseus/multiple_selection.json'
-        context = {
-            'question' : assessment_item.question,
-            'answers':json.loads(assessment_item.answers),
-            'multipleSelect':True,
-        }
     elif assessment_item.type == exercises.SINGLE_SELECTION:
         template = 'perseus/multiple_selection.json'
-        context = {
-            'question' : assessment_item.question,
-            'answers':json.loads(assessment_item.answers),
-            'multipleSelect':False,
-        }
     elif assessment_item.type == exercises.FREE_RESPONSE:
         template = 'perseus/free_response.json'
-        context = {
-            'question' : assessment_item.question,
-        }
     elif assessment_item.type == exercises.INPUT_QUESTION:
         template = 'perseus/input_question.json'
-        context = {
-            'question' : assessment_item.question,
-            'answers': json.loads(assessment_item.answers),
-        }
+    elif assessment_item.type == exercises.PERSEUS_QUESTION:
+        template = 'perseus/perseus_question.json'
 
-    result = render_to_string(template,  context).encode('utf-8', "ignore")
+    result = load_unicode(render_to_string(template,  context).encode('utf-8', "ignore"))
+    print result
     filename = "{0}.json".format(assessment_item.assessment_id)
     zf.writestr(filename, result)
+
+def load_unicode(value):
+    return value.replace('\u2623', u'\u2623'.encode('utf-8')).replace('\u2603', u'\u2603'.encode('utf-8'))
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")

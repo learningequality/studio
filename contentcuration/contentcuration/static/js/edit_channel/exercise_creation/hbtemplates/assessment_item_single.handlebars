@@ -1,6 +1,6 @@
-{% load perseus_tags %}{
+{
     "question": {
-        "content": "{{ question | escape_newline }}\n\n[[☃ radio 1]]",
+        "content": "{{parse_newlines question}}\n\n[[☃ radio 1]]",
         "images": {},
         "widgets": {
             "radio 1": {
@@ -8,15 +8,15 @@
                 "graded": true,
                 "options": {
                     "choices": [
-                        {% for answer in answers %}
+                        {{#each answer}}
                         {
-                            "correct": {% if answer.correct %}true{% else %}false{% endif %},
-                            "content": "{{ answer.answer | escape_newline }}"
-                        }{% if forloop.last %}{% else %},{% endif %}
-                        {% endfor %}
+                            "correct": {{#if correct}}true{{else}}false{{/if}},
+                            "content": "{{parse_newlines answer }}"
+                        }{{#unless @last}},{{/unless}}
+                        {{/each}}
                     ],
-                    "randomize": true,
-                    "multipleSelect": {% if multipleSelect %}true{% else %}false{% endif %},
+                    "randomize": {{ randomize }},
+                    "multipleSelect": false,
                     "displayCount": null,
                     "hasNoneOfTheAbove": false,
                     "onePerLine": true,

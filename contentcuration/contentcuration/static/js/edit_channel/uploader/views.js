@@ -131,7 +131,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1 && selected_items[0].model.get("kind") !== "topic";
     var is_exercise = is_individual && selected_items[0].model.get("assessment_items").length > 0;
-    var has_files = is_individual && selected_items[0].model.get("files").length > 0;
+    var has_files = false;
+    if(is_individual){
+      selected_items[0].model.get("files").forEach(function(file){
+        has_files = has_files || file.preset.kind != null;
+      });
+    }
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
     if(!is_individual){
@@ -365,6 +370,12 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.render();
   },
   render: function() {
+    var has_files = false;
+    if(this.selected_items.length === 1){
+      this.selected_items[0].model.get("files").forEach(function(file){
+        has_files = has_files || file.preset.kind != null;
+      });
+    }
     this.$el.html(this.template({
       node: (this.selected_items.length === 1)? this.selected_items[0].model.toJSON() : null,
       is_file: (this.shared_data)? this.shared_data.all_files : false,
@@ -373,7 +384,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       copyright_owner: (this.shared_data)? this.shared_data.shared_copyright_owner:null,
       author: (this.shared_data)? this.shared_data.shared_author:null,
       selected_count: this.selected_items.length,
-      is_exercise: this.selected_items.length === 1 && this.selected_items[0].model.get("files").length ===0,
+      has_files: has_files,
       word_limit: this.description_limit
     }));
     this.update_count();

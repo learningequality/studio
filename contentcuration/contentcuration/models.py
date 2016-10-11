@@ -300,8 +300,9 @@ class FormatPreset(models.Model):
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
+    display = models.BooleanField(default=True)
     order = models.IntegerField()
-    kind = models.ForeignKey(ContentKind, related_name='format_presets')
+    kind = models.ForeignKey(ContentKind, related_name='format_presets', null=True)
     allowed_formats = models.ManyToManyField(FileFormat, blank=True)
 
     def __str__(self):
@@ -431,11 +432,12 @@ class Exercise(models.Model):
 class AssessmentItem(models.Model):
     type = models.CharField(max_length=50, default="multiplechoice")
     question = models.TextField(blank=True)
-    help_text = models.TextField(blank=True)
+    hint = models.TextField(blank=True)
     answers = models.TextField(default="[]")
     order = models.IntegerField(default=1)
     contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
     assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
+    raw_data = models.TextField(blank=True)
 
 class Invitation(models.Model):
     """ Invitation to edit channel """

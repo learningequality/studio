@@ -14,7 +14,8 @@ require("exercises.less");
 require("quilljs/dist/quill.snow.css");
 require("dropzone/dist/dropzone.css");
 
-var placeholder_text = "$1\${\\u2623 IMAGEREPLACE}/$3"
+var placeholder_text = "$1\${\u2623 IMAGEREPLACE}/$3"
+var regExp = /\(\${\\u2623 IMAGEREPLACE}\/([^)]+)\)/g;
 
 var ExerciseModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/exercise_modal.handlebars"),
@@ -129,7 +130,6 @@ var return_image_urls_for_export = function(text) {
 };
 
 var replace_image_paths = function(content){
-    var regExp = /\(\${\\u2623 IMAGEREPLACE}\/([^)]+)\)/g;
     var matches = content.match(regExp);
     if(matches){
         matches.forEach(function(match){
@@ -586,10 +586,10 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_open.handlebars"),
 
     events: {
-        "click .delete": "delete",
-        "change .correct": "toggle_correct",
-        "click .answer_item": "set_open",
-        "click .toggle": "toggle"
+        // "click .delete": "delete",
+        // "change .correct": "toggle_correct",
+        // "click .answer_item": "set_open",
+        // "click .toggle": "toggle"
     },
 
     render: function() {
@@ -743,12 +743,12 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_open.handlebars"),
 
     events: {
-        "click .cancel": "cancel",
-        "click .undo": "undo",
-        "click .redo": "redo",
-        "click .delete": "delete",
-        "click .toggle_exercise": "toggle_focus",
-        "click .toggle" : "toggle"
+        // "click .cancel": "cancel",
+        // "click .undo": "undo",
+        // "click .redo": "redo",
+        // "click .delete": "delete",
+        // "click .toggle_exercise": "toggle_focus",
+        // "click .toggle" : "toggle"
     },
     toggle:function(event){
         event.stopPropagation();

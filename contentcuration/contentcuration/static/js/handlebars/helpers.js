@@ -101,6 +101,8 @@ Handlebars.registerHelper('format_question_type', function(type){
           return "Single Selection";
       case "input_question":
           return "Input Answer";
+      case "perseus_question":
+          return "Perseus Question";
       default:
           return "Unknown Question Type";
   }

@@ -222,6 +222,7 @@
       "thumbnail" : false,
       "order" : 1,
       "kind" : "video",
+      "display": true,
       "allowed_formats" : ["mp4"]
     }
   },
@@ -235,6 +236,7 @@
       "thumbnail" : false,
       "order" : 2,
       "kind" : "video",
+      "display": true,
       "allowed_formats" : ["mp4"]
     }
   },
@@ -248,6 +250,7 @@
       "thumbnail" : true,
       "order" : 3,
       "kind" : "video",
+      "display": true,
       "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },
@@ -261,6 +264,7 @@
       "thumbnail" : false,
       "order" : 1,
       "kind" : "audio",
+      "display": true,
       "allowed_formats" : ["wav", "mp3"]
     }
   },
@@ -274,6 +278,7 @@
       "thumbnail" : true,
       "order" : 2,
       "kind" : "audio",
+      "display": true,
       "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },
@@ -287,6 +292,7 @@
       "thumbnail" : false,
       "order" : 1,
       "kind" : "document",
+      "display": true,
       "allowed_formats" : ["pdf", "PDF"]
     }
   },
@@ -300,6 +306,7 @@
       "thumbnail" : true,
       "order" : 2,
       "kind" : "document",
+      "display": true,
       "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },
@@ -313,6 +320,7 @@
       "thumbnail" : false,
       "order" : 1,
       "kind" : "exercise",
+      "display": true,
       "allowed_formats" : ["perseus"]
     }
   },
@@ -326,6 +334,20 @@
       "thumbnail" : true,
       "order" : 2,
       "kind" : "exercise",
+      "display": true,
+      "allowed_formats" : ["png", "jpg", "jpeg"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "exercise_image",
+      "readable_name": "Image",
+      "multi_language" : false,
+      "supplementary" : true,
+      "thumbnail" : false,
+      "order" : 3,
+      "display": false,
       "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },

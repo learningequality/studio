@@ -3,9 +3,9 @@
 {{else}}
 	{{#unless node}}<h5 id="uploader-count-message">Editing data for {{selected_count}} items.</h5>{{/unless}}
 	{{#if is_file}}
-		{{#unless is_exercise}}
+		{{#if has_files}}
 			<ul id="editmetadata_format_section" class="list-unstyled"></ul>
-		{{/unless}}
+		{{/if}}
 	{{/if}}
 	{{#if node}}
 		<h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>

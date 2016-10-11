@@ -1,26 +1,26 @@
-{% load perseus_tags %}{
+{
     "question": {
-        "content": "{{ question | escape_newline }}\n\n[[☃ text-input 1]]",
+        "content": "{{ question }}[[☃ numeric-input 1]]",
         "images": {},
         "widgets": {
-            "text-input 1": {
-                "type": "text-input",
+            "numeric-input 1": {
+                "type": "numeric-input",
                 "alignment": "default",
                 "static": false,
                 "graded": true,
                 "options": {
                     "static": false,
                     "answers": [
-                        {% for answer in answers %}
+                        {{# each answers }}
                         {
-                            "value": "{{ answer.answer | escape_newline }}",
+                            "value": {{ answer }},
                             "status": "correct",
-                            "message": "{{ answer.help_text }}",
+                            "message": "{{ help_text }}",
                             "simplify": "required",
                             "strict": false,
                             "maxError": null
-                        }{% if forloop.last %}{% else %},{% endif %}
-                        {% endfor %}
+                        }{{#unless @last}},{{/unless}}
+                        {{/each}}
                     ],
                     "size": "normal",
                     "coefficient": false,
