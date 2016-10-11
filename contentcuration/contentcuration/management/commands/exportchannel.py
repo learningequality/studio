@@ -235,9 +235,12 @@ def write_assessment_item(assessment_item, zf):
     elif assessment_item.type == exercises.PERSEUS_QUESTION:
         template = 'perseus/perseus_question.json'
 
-    result = render_to_string(template,  context).encode('utf-8', "ignore").replace('\u2623', u'\u2623'.encode('utf-8'))
+    result = load_unicode(render_to_string(template,  context).encode('utf-8', "ignore"))
     filename = "{0}.json".format(assessment_item.assessment_id)
     zf.writestr(filename, result)
+
+def load_unicode(value):
+    return value.replace('\u2623', u'\u2623'.encode('utf-8')).replace('\u2603', u'\u2603'.encode('utf-8'))
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")
