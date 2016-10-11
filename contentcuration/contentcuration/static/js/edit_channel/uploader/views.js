@@ -134,7 +134,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var has_files = false;
     if(is_individual){
       selected_items[0].model.get("files").forEach(function(file){
-        has_files = has_files || window.formatpresets.get({id:file.preset}).get("kind") != null;
+        var preset = (file.preset.id)? file.preset.id:file.preset;
+        has_files = has_files || window.formatpresets.get({id:preset}).get("kind") != null;
       });
     }
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
@@ -373,7 +374,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     var has_files = false;
     if(this.selected_items.length === 1){
       this.selected_items[0].model.get("files").forEach(function(file){
-        has_files = has_files || window.formatpresets.get({id:file.preset}).get("kind") != null;
+        var preset = (file.preset.id)? file.preset.id:file.preset;
+        has_files = has_files || window.formatpresets.get({id:preset}).get("kind") != null;
       });
     }
     this.$el.html(this.template({
