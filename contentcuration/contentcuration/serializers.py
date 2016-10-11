@@ -43,7 +43,7 @@ class FileListSerializer(serializers.ListSerializer):
             contentnode = file_obj['contentnode'].pk
             preset = file_obj['preset'].pk
             file_id = file_obj['id']
-            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & Q(preset_id=preset) & ~Q(id=file_id))
+            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & Q(preset_id=preset) & ~Q(preset__kind = None) & ~Q(id=file_id))
             for to_delete in files_to_delete:
                 to_delete.delete()
 
@@ -318,7 +318,7 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
 
     class Meta:
         model = AssessmentItem
-        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id')
+        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hint')
         list_serializer_class = BulkListSerializer
 
 class ChannelSerializer(serializers.ModelSerializer):

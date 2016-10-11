@@ -118,7 +118,7 @@ var PreviewView = BaseViews.BaseView.extend({
             this.presets.reset();
             this.model.get("files").forEach(function(file){
                 var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
-                if(preset.kind){
+                if(preset.get("kind")){
                     if(!default_preview || preset.get("order") === 1){
                         default_preview = file;
                     }
