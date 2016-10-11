@@ -178,6 +178,7 @@ def api_file_upload(request):
         try:
             fobj = request.FILES["file"]
             file_path = generate_file_on_disk_name(fobj._name.split(".")[-2], fobj._name)
+            print file_path
 
             with open(file_path, 'wb') as destf:
                 shutil.copyfileobj(fobj, destf)
