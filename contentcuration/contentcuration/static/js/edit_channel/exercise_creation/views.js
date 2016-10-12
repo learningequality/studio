@@ -884,8 +884,7 @@ var AssessmentItemHintView = Backbone.View.extend({
 
     events: {
         // "click .delete": "delete",
-        // "change .correct": "toggle_correct",
-        // "click .answer_item": "set_open",
+        // "click .hint_item": "set_open",
         // "click .toggle": "toggle"
     },
 
