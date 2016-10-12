@@ -731,7 +731,6 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
         this.number = options.number;
         this.nodeid=options.nodeid;
         this.containing_list_view = options.containing_list_view;
-        console.log(this.model.get("answers"))
         this.undo_manager = new UndoManager({
             track: true,
             register: [this.model, this.model.get("answers"), this.model.get("hints")]
