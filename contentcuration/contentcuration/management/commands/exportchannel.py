@@ -228,7 +228,7 @@ def write_assessment_item(assessment_item, zf):
         'answers':answer_data,
         'multipleSelect':assessment_item.type == exercises.MULTIPLE_SELECTION,
         'raw_data': assessment_item.raw_data.replace(exercises.IMG_PLACEHOLDER, replacement_string),
-        'hints': json.loads(assessment_item.hint),
+        'hints': json.loads(assessment_item.hints),
     }
 
     if assessment_item.type == exercises.MULTIPLE_SELECTION:

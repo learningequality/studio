@@ -397,12 +397,16 @@ var AssessmentItemModel =BaseModel.extend({
 	root_list:"assessmentitem-list",
 	defaults: {
 		question: "",
-		answers: "[]"
+		answers: "[]",
+		hints: "[]"
 	},
 
 	initialize: function () {
 		if (typeof this.get("answers") !== "object") {
 			this.set("answers", new Backbone.Collection(JSON.parse(this.get("answers"))), {silent: true});
+		}
+		if (typeof this.get("hints") !== "object"){
+			this.set("hints", new Backbone.Collection(JSON.parse(this.get("hints"))), {silent:true});
 		}
 	},
 
@@ -410,6 +414,9 @@ var AssessmentItemModel =BaseModel.extend({
 	    if (response !== undefined) {
 	    	if (response.answers) {
 	    		response.answers = new Backbone.Collection(JSON.parse(response.answers));
+	    	}
+	    	if(response.hints){
+	    		response.hints = new Backbone.Collection(JSON.parse(response.hints));
 	    	}
 	    }
 	    return response;
@@ -419,6 +426,9 @@ var AssessmentItemModel =BaseModel.extend({
 	    var attributes = _.clone(this.attributes);
 	    if (typeof attributes.answers !== "string") {
 		    attributes.answers = JSON.stringify(attributes.answers.toJSON());
+		}
+		if (typeof attributes.hints !== "string") {
+		    attributes.hints = JSON.stringify(attributes.hints.toJSON());
 		}
 	    return attributes;
 	}

@@ -432,7 +432,7 @@ class Exercise(models.Model):
 class AssessmentItem(models.Model):
     type = models.CharField(max_length=50, default="multiplechoice")
     question = models.TextField(blank=True)
-    hint = models.TextField(blank=True)
+    hints = models.TextField(default="[]")
     answers = models.TextField(default="[]")
     order = models.IntegerField(default=1)
     contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
