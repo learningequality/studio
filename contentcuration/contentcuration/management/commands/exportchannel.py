@@ -11,6 +11,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files import File
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
+from django.core.exceptions import ObjectDoesNotExist
 from django.template.loader import render_to_string
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
@@ -196,17 +197,22 @@ def create_perseus_exercise(ccnode):
 def create_perseus_zip(ccnode, write_to_path):
     assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode)
     with zipfile.ZipFile(write_to_path, "w") as zf:
+        exercise_data = json.loads(ccnode.extra_fields)
+        if 'mastery_model' not in exercise_data or exercise_data['mastery_model'] is None:
+            raise ObjectDoesNotExist("ERROR: Exercises must have a mastery model")
+        exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items]})
         exercise_context = {
-            'exercise': json.loads(ccnode.extra_fields),
-            'questions': assessment_items,
+            'exercise': json.dumps(exercise_data)
         }
-        exercise_result = render_to_string('perseus/exercise.json', exercise_context).encode('utf-8', "ignore")
+        exercise_result = render_to_string('perseus/exercise.json', exercise_context)
         zf.writestr("exercise.json", exercise_result)
+
         for image in ccnode.files.filter(preset__kind=None):
             image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
             if image_name not in zf.namelist():
                 image.file_on_disk.open(mode="rb")
                 zf.writestr(image_name, image.file_on_disk.read())
+
         for item in assessment_items:
             write_assessment_item(item, zf)
 
