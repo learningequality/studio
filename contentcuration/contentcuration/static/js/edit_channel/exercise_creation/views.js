@@ -14,8 +14,8 @@ require("exercises.less");
 require("quilljs/dist/quill.snow.css");
 require("dropzone/dist/dropzone.css");
 
-var placeholder_text = "$1\${☣ LOCALPATH}/$3"
-var regExp = /\(\${☣ LOCALPATH}\/([^)]+)\)/g;
+var placeholder_text = "$1\${☣ CONTENTSTORAGE}/$3"
+var regExp = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
 
 var ExerciseModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/exercise_modal.handlebars"),
@@ -134,7 +134,7 @@ var replace_image_paths = function(content){
     if(matches){
         matches.forEach(function(match){
             var filename = match.split("/").slice(-1)[0]
-            var replace_str = "(/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
+            var replace_str = "/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
             content = content.replace(match, replace_str);
         })
     }

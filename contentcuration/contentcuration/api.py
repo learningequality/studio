@@ -194,10 +194,11 @@ def map_files_to_node(node, data, file_data):
     for f in data:
         file_hash = f.split(".")
         kind_preset = None
-        if file_data[f]['preset']:
-            kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1]).first()
+        if file_data[f]['preset'] is None:
+            kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1], display=True).first()
         else:
-            kind_preset = models.FormatPreset.objects.get(kind=None)
+            kind_preset = models.FormatPreset.objects.get(id=file_data[f]['preset'])
+
         file_obj = models.File(
             checksum=file_hash[0],
             contentnode=node,

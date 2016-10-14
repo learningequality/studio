@@ -49,12 +49,14 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     set_preview:function(event){
         var self = this;
-        _.reject(this.model.get("files"), {preset:{kind:null}}).forEach(function(file){
-            var data = (file.attributes)? file.attributes : file;
-            var preset_check = (data.preset.id)? data.preset.id : data.preset;
-            if(preset_check === event.target.getAttribute("value")){
-                self.set_current_preview(data);
-                return;
+        this.model.get("files").forEach(function(file){
+            if(window.formatpresets.get({id:file.preset}).get("display")){
+                var data = (file.attributes)? file.attributes : file;
+                var preset_check = (data.preset.id)? data.preset.id : data.preset;
+                if(preset_check === event.target.getAttribute("value")){
+                    self.set_current_preview(data);
+                    return;
+                }
             }
         });
         this.generate_preview(true);
@@ -118,7 +120,7 @@ var PreviewView = BaseViews.BaseView.extend({
             this.presets.reset();
             this.model.get("files").forEach(function(file){
                 var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
-                if(preset.get("kind")){
+                if(preset.get("display")){
                     if(!default_preview || preset.get("order") === 1){
                         default_preview = file;
                     }
