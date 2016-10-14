@@ -218,7 +218,7 @@ def create_exercises(node, data):
             question_obj = models.AssessmentItem(
                 type = question.get('type'),
                 question = question.get('question'),
-                hint = question.get('hint'),
+                hints = question.get('hints'),
                 answers = question.get('answers'),
                 order = order,
                 contentnode = node,

@@ -15,7 +15,7 @@
                         {
                             "value": "{{ answer.answer | escape_newline }}",
                             "status": "correct",
-                            "message": "{{ answer.help_text }}",
+                            "message": "{{ answer.hint }}",
                             "simplify": "required",
                             "strict": false,
                             "maxError": null
@@ -44,5 +44,14 @@
         "major": 0,
         "minor": 1
     },
-    "hints": []
+    "hints": [
+        {% for hint in hints %}
+        {
+            "widgets":{},
+            "images":{},
+            "content":"{{hint | escape_newline}}",
+            "replace":false
+        }{% if forloop.last %}{% else %},{% endif %}
+        {% endfor %}
+    ]
 }
