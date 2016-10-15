@@ -50,7 +50,6 @@ var PreviewView = BaseViews.BaseView.extend({
     set_preview:function(event){
         var self = this;
         this.model.get("files").forEach(function(file){
-            console.log(file)
             var preset_id = (file.preset && file.preset.id)? file.preset.id : file.preset;
             var selected_preset = window.formatpresets.get({id:preset_id});
             if(selected_preset && selected_preset.get("display")){
