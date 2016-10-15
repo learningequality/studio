@@ -400,11 +400,26 @@ PRESETS = [
             "readable_name": format_presets.EXERCISE_IMAGE_READABLE,
             "multi_language" : False,
             "supplementary" : True,
-            "thumbnail" : True,
+            "thumbnail" : False,
             "display": False,
             "order" : 3,
             "kind_id" : content_kinds.EXERCISE,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG, file_formats.SVG, file_formats.JSON],
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+        },
+    },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
+            "id" : format_presets.EXERCISE_GRAPHIE,
+            "readable_name": format_presets.EXERCISE_GRAPHIE_READABLE,
+            "multi_language" : False,
+            "supplementary" : True,
+            "thumbnail" : False,
+            "display": False,
+            "order" : 4,
+            "kind_id" : content_kinds.EXERCISE,
+            "allowed_formats" : [file_formats.SVG, file_formats.JSON],
         },
     },
 ]
@@ -434,6 +449,7 @@ class Command(BaseCommand):
                     new_model_count += 1 if isNew else 0
                     for attr, value in constant['fields'].items():
                         setattr(obj, attr, value)
+
                     obj.save()
                 self.stdout.write("{0}: {1} constants saved ({2} new)".format(str(current_model), len(constant_list), new_model_count))
             self.stdout.write("************ DONE. ************")

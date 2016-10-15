@@ -1,28 +1,38 @@
 {% load perseus_tags %}{
     "question": {
-        "content": "{{ question | escape_newline }}\n\n[[☃ text-input 1]]",
+        "content": "{{ question | escape_newline }}\n\n[[☃ free-text-input 1]]",
         "images": {},
         "widgets": {
-            "text-input 1": {
-                "type": "text-input",
+             "free-text-input 1": {
+                "type": "free-text-input",
                 "alignment": "default",
-                "static": false,
                 "graded": true,
                 "options": {
-                    "static": false,
                     "answers": [
+                        {% if freeresponse %}
+                        {
+                            "value": null,
+                            "status": "ungraded",
+                            "message": "",
+                            "answerForms": [],
+                            "strict": false,
+                            "maxError": null
+                        }
+                        {% else %}
                         {% for answer in answers %}
                         {
                             "value": "{{ answer.answer | escape_newline }}",
-                            "status": "correct",
-                            "message": "{{ answer.hint }}",
-                            "simplify": "required",
+                            "status": "graded",
+                            "message": "",
+                            "answerForms": [],
                             "strict": false,
                             "maxError": null
                         }{% if forloop.last %}{% else %},{% endif %}
                         {% endfor %}
+                        {% endif %}
                     ],
-                    "size": "normal",
+                    "cols": 50,
+                    "rows": 10,
                     "coefficient": false,
                     "labelText": ""
                 },
@@ -34,11 +44,14 @@
         }
     },
     "answerArea": {
+        "type": "multiple",
+        "options": {
+            "content": "",
+            "images": {},
+            "widgets": {}
+        },
         "calculator": false,
-        "chi2Table": false,
-        "periodicTable": false,
-        "tTable": false,
-        "zTable": false
+        "periodicTable": false
     },
     "itemDataVersion": {
         "major": 0,
@@ -49,7 +62,7 @@
         {
             "widgets":{},
             "images":{},
-            "content":"{{hint | escape_newline}}",
+            "content":"{{hint.hint | escape_newline}}",
             "replace":false
         }{% if forloop.last %}{% else %},{% endif %}
         {% endfor %}
