@@ -147,12 +147,12 @@ def create_channel(channel_data):
     channel.description=channel_data['description']
     channel.thumbnail=channel_data['thumbnail']
     channel.deleted = False
-    channel.published = not isNew
     channel.save()
     return channel
 
 def init_staging_tree(channel):
     channel.staging_tree = models.ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
+    channel.staging_tree.published = channel.version > 0
     channel.staging_tree.save()
     channel.save()
     return channel.staging_tree
