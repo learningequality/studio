@@ -48,7 +48,7 @@
         {
             "widgets":{},
             "images":{},
-            "content":"{{hint | escape_newline}}",
+            "content":"{{hint.hint | escape_newline}}",
             "replace":false
         }{% if forloop.last %}{% else %},{% endif %}
         {% endfor %}

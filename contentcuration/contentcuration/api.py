@@ -142,7 +142,7 @@ def api_create_channel(channel_data, content_data, file_data):
     return channel # Return new channel
 
 def create_channel(channel_data):
-    channel = models.Channel.objects.get_or_create(id=channel_data['id'])[0]
+    channel, isNew = models.Channel.objects.get_or_create(id=channel_data['id'])
     channel.name = channel_data['name']
     channel.description=channel_data['description']
     channel.thumbnail=channel_data['thumbnail']
@@ -152,6 +152,7 @@ def create_channel(channel_data):
 
 def init_staging_tree(channel):
     channel.staging_tree = models.ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
+    channel.staging_tree.published = channel.version > 0
     channel.staging_tree.save()
     channel.save()
     return channel.staging_tree
@@ -194,10 +195,11 @@ def map_files_to_node(node, data, file_data):
     for f in data:
         file_hash = f.split(".")
         kind_preset = None
-        if file_data[f]['preset']:
-            kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1]).first()
+        if file_data[f]['preset'] is None:
+            kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1], display=True).first()
         else:
-            kind_preset = models.FormatPreset.objects.get(kind=None)
+            kind_preset = models.FormatPreset.objects.get(id=file_data[f]['preset'])
+
         file_obj = models.File(
             checksum=file_hash[0],
             contentnode=node,

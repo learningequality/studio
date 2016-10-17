@@ -326,7 +326,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         return "format_item_" + this.model.filename;
     },
     init_collections:function(){
-        this.presets = new Models.FormatPresetCollection(this.model.get("associated_presets"));
+        this.presets = new Models.FormatPresetCollection(_.reject(this.model.get("associated_presets"),{display:false}));
         this.files=new Models.FileCollection(this.model.get("files"));
     },
     remove_item:function(){
@@ -422,8 +422,8 @@ var FormatEditorItem = FormatItem.extend({
         var main_count = 0;
         var size = 0;
         this.model.get("files").forEach(function(file){
-            var preset = (file.preset.id)? file.preset.id: file.preset;
-            if(preset && window.formatpresets.get({id:preset}).get("kind") != null){
+            var preset = (file.preset && file.preset.id)? file.preset.id: file.preset;
+            if(preset && window.formatpresets.get({id:preset}).get("display")){
                 if(!file.preset.id){
                     file.preset = window.formatpresets.get({id:preset}).toJSON();
                 }

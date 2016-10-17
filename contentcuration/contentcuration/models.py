@@ -300,8 +300,8 @@ class FormatPreset(models.Model):
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
-    display = models.BooleanField(default=True)
-    order = models.IntegerField()
+    display = models.BooleanField(default=True) # Render on client side
+    order = models.IntegerField(default=0)
     kind = models.ForeignKey(ContentKind, related_name='format_presets', null=True)
     allowed_formats = models.ManyToManyField(FileFormat, blank=True)
 
@@ -349,13 +349,14 @@ class File(models.Model):
             2. fill the other fields accordingly
         """
         if self.file_on_disk:  # if file_on_disk is supplied, hash out the file
-            md5 = hashlib.md5()
-            for chunk in self.file_on_disk.chunks():
-                md5.update(chunk)
+            if self.checksum is None or self.checksum == "":
+                md5 = hashlib.md5()
+                for chunk in self.file_on_disk.chunks():
+                    md5.update(chunk)
 
-            self.checksum = md5.hexdigest()
-            self.file_size = self.file_on_disk.size
-            self.extension = os.path.splitext(self.file_on_disk.name)[1]
+                self.checksum = md5.hexdigest()
+                self.file_size = self.file_on_disk.size
+                self.extension = os.path.splitext(self.file_on_disk.name)[1]
         else:
             self.checksum = None
             self.file_size = None
