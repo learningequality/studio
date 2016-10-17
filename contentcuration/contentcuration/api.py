@@ -158,11 +158,13 @@ def init_staging_tree(channel):
     return channel.staging_tree
 
 def convert_data_to_nodes(content_data, parent_node, file_data):
+    sort_order = 1
     for node_data in content_data:
-        new_node = create_node(node_data, parent_node)
+        new_node = create_node(node_data, parent_node, sort_order)
         map_files_to_node(new_node, node_data['files'], file_data)
         create_exercises(new_node, node_data['questions'])
         convert_data_to_nodes(node_data['children'], new_node, file_data)
+        sort_order += 1
 
 def create_node(node_data, parent_node):
     title=node_data['title']
