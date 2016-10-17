@@ -142,11 +142,12 @@ def api_create_channel(channel_data, content_data, file_data):
     return channel # Return new channel
 
 def create_channel(channel_data):
-    channel = models.Channel.objects.get_or_create(id=channel_data['id'])[0]
+    channel, isNew = models.Channel.objects.get_or_create(id=channel_data['id'])
     channel.name = channel_data['name']
     channel.description=channel_data['description']
     channel.thumbnail=channel_data['thumbnail']
     channel.deleted = False
+    channel.published = not isNew
     channel.save()
     return channel
 
