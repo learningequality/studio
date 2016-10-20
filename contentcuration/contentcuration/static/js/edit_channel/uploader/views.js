@@ -316,7 +316,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       "sort_order" : this.collection.length,
       "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
     };
-    this.create_new_item(data, true, "").then(function(newView){
+    this.create_new_item(data, true, " ").then(function(newView){
       newView.select_item();
     });
   },

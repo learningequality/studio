@@ -6,7 +6,7 @@ var Models = require("./models");
 var BaseView = Backbone.View.extend({
 	display_load:function(message, callback){
     	var self = this;
-    	if(message!=""){
+    	if(message.trim()!=""){
     		var load = '<div id="loading_modal" class="text-center fade">' +
             '<div id="kolibri_load_gif"></div>' +
             '<h4 id="kolibri_load_text" class="text-center">' + message + '</h4>' +
@@ -18,7 +18,7 @@ var BaseView = Backbone.View.extend({
 				callback(resolve, reject);
 			});
 			promise.then(function(){
-				if(message!=""){
+				if(message.trim()!=""){
 					$("#loading_modal").remove();
 				}
 			}).catch(function(error){
@@ -143,15 +143,15 @@ var BaseWorkspaceView = BaseView.extend({
 		});
 	},
 	add_to_trash:function(collection, message){
-		message = (message)? message: "Deleting Content...";
+		message = (message!=null)? message: "Deleting Content...";
 		return this.move_to_queue_list(collection, window.workspace_manager.get_queue_view().trash_queue, message);
 	},
 	add_to_clipboard:function(collection, message){
-		message = (message)? message: "Moving to Clipboard...";
+		message = (message!=null)? message: "Moving to Clipboard...";
 		return this.move_to_queue_list(collection, window.workspace_manager.get_queue_view().clipboard_queue, message);
 	},
 	move_to_queue_list:function(collection, list_view, message){
-		message = (message)? message: "Moving Content...";
+		message = (message!=null)? message: "Moving Content...";
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 			self.display_load(message, function(resolve_load, reject_load){
@@ -279,7 +279,7 @@ var BaseEditableListView = BaseListView.extend({
 	},
 	create_new_item: function(newModelData, appendToList, message){
 		appendToList = (appendToList)? appendToList : false;
-		message = (message)? message: "Creating...";
+		message = (message!=null)? message: "Creating...";
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 			self.display_load(message, function(resolve_load, reject_load){
@@ -309,7 +309,7 @@ var BaseEditableListView = BaseListView.extend({
 		});
 	},
 	save:function(message, beforeSave){
-		message = (message)? message: "Saving...";
+		message = (message!=null)? message: "Saving...";
 		var self = this;
 	    var promise = new Promise(function(resolve, reject){
 	        self.display_load(message, function(load_resolve, load_reject){
@@ -327,7 +327,7 @@ var BaseEditableListView = BaseListView.extend({
 	  	return promise;
 	},
 	delete_items_permanently:function(message){
-		message = (message)? message: "Deleting...";
+		message = (message!=null)? message: "Deleting...";
 		var self = this;
 		this.display_load(message, function(resolve_load, reject_load){
 			var list = self.get_selected();
@@ -531,14 +531,14 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
   	});
   },
   add_to_clipboard:function(collection, message){
-  	message = (message)? message: "Moving to Clipboard...";
+  	message = (message!=null)? message: "Moving to Clipboard...";
   	var self = this;
 		this.container.add_to_clipboard(collection, message).then(function(){
 			self.handle_if_empty();
 		});
 	},
 	add_to_trash:function(collection, message){
-		message = (message)? message: "Deleting Content...";
+		message = (message!=null)? message: "Deleting Content...";
 		var self = this;
 		this.container.add_to_trash(collection, message).then(function(){
 			self.handle_if_empty();
@@ -604,7 +604,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 		this.model.set(this.originalData);
 	},
 	save:function(data, message){
-		message = (message)? message: "Saving...";
+		message = (message!=null)? message: "Saving...";
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 			self.originalData = data;
@@ -634,7 +634,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 		return promise;
 	},
 	delete:function(destroy_model, message){
-		message = (message)? message: "Deleting...";
+		message = (message!=null)? message: "Deleting...";
 		this.remove();
 		var self = this;
 		if(destroy_model){
@@ -769,16 +769,16 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		return promise;
 	},
 	add_to_trash:function(message){
-		message=(message)? message: "Deleting Content...";
+		message=(message!=null)? message: "Deleting Content...";
 		this.containing_list_view.add_to_trash(new Models.ContentNodeCollection([this.model]), message);
 		this.remove();
 	},
 	add_to_clipboard:function(message){
-		message=(message)? message: "Moving to Clipboard...";
+		message=(message!=null)? message: "Moving to Clipboard...";
 		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([this.model]),message);
 	},
 	copy_item:function(message){
-		message=(message)? message: "Copying to Clipboard...";
+		message=(message!=null)? message: "Copying to Clipboard...";
 		var copyCollection = new Models.ContentNodeCollection();
 		copyCollection.add(this.model);
 		var self = this;
