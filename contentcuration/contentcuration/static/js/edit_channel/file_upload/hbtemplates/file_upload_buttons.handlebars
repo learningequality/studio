@@ -1,0 +1,21 @@
+{{#if uploading}}
+	<button disabled class="action-button pull-right go_to_formats disabled">
+		<span>Add files to continue</span>
+	</button>
+	<a class="action-text" data-dismiss="modal">
+		<span>CANCEL</span>
+	</a>
+{{else}}
+	{{#if formatting}}
+		<button disabled class="action-button pull-right go_to_metadata disabled">
+			<span>Assign formats to continue</span>
+		</button>
+		<a class="action-text go_to_upload">
+			<span>BACK</span>
+		</a>
+	{{else}}
+		<a class="action-text go_to_upload_from_metadata">
+			<span>ADD MORE</span>
+		</a>
+	{{/if}}
+{{/if}}

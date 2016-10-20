@@ -1,90 +1,181 @@
+var Models = require("edit_channel/models");
+
 /* handleDrop: adds dropping ability to a certain container
 *	Parameters:
 *		container: container to add dropping ability to
 */
-function addDragDrop(element){
+function addSortable(element, selected_class, callback){
 	var oldContainer;
 	var item_height = 0;
 	var target;
 	var isaboveclosest;
-	element.$el.find("ul.content-list").sortable({
-		group: 'sortable_list',
-	  	connectWith: '.content-list',
-	  	exclude: '.current_topic, .default-item, #preview li',
-	  	delay:100,
-	  	revert:true,
-	 	// animation on drop
-	 	/*
-  		start: function(event,ui) {
-			var element = $(ui.item[0]);
-			element.data('lastParent', element.parent());
+	var selectedClass = selected_class;
+	var yPosition = 0;
+
+	element.$el.find(".content-list").sortable({
+	    revert:100,
+		placeholder: "sorting-placeholder",
+		forcePlaceholderSize: true,
+		scroll:true,
+	   	scrollSpeed: 10,
+	   	connectWith: '.content-list',
+	   	tolerance: "pointer",
+	   	delay:100,
+	   	distance:5,
+	   	cursor:"move",
+	   	cancel: '.current_topic, .default-item, #preview li',
+	   	containment: "#channel-edit-sortable-boundary, #queue.opened",
+	   	appendTo: "#channel-edit-content-wrapper",
+	   	bodyClass: "dragging",
+	   	// helper:"clone",
+	    helper: function (e, item) {
+            if(!item.hasClass(selectedClass))
+               item.addClass(selectedClass);
+            var elements = $('.' + selectedClass).not('.current_topic').clone();
+            var helper = $('<ul class="list-unstyled ui-sorting-list" id="drag-list"/>');
+            item.siblings('.'+ selectedClass).not('.current_topic').addClass('hidden');
+            return helper.append(elements);
+        },
+        start: function (e, ui) {
+            var elements = $('.' + selectedClass + '.hidden').not('.current_topic').not('.sorting-placeholder');
+            ui.item.data('items', elements);
+        },
+        receive: function (e, ui) {
+            ui.item.before(ui.item.data('items'));
+        },
+        stop: function (e, ui) {
+            ui.item.siblings('.' + selectedClass).removeClass('hidden');
+            $("." + selectedClass + " input[type='checkbox']").prop("checked", false);
+            $('.' + selectedClass).removeClass(selectedClass);
+        },
+        beforeStop: function(event, ui) {
+            if ($(event.target).parent("#queue_content") && $("#queue").hasClass("closed")) {
+                // $(this).sortable('cancel');
+                 ui.item.siblings('.' + selectedClass).removeClass('hidden');
+	            $("." + selectedClass + " input[type='checkbox']").prop("checked", false);
+	            $('.' + selectedClass).removeClass(selectedClass);
+            }
+        },
+		update: function(event, ui) {
+			if($(".drop-topic-hover").length === 0){
+				var view = window.workspace_manager.get(ui.item.context.id);
+				if(view){
+					var order = [];
+					var selected_items = new Models.ContentNodeCollection();
+					var current_node = view.node.model;
+					$(".content-list").sortable( "disable" );
+			        element.$el.find(".queue-list-wrapper >.content-list >li, >.content-list >li").each( function(e, list_item) {
+			        	if($(list_item).attr('id') && !$(list_item).attr('id').includes("default_item")){
+			        		var node = window.workspace_manager.get($(list_item).attr('id')).node.model;
+			        		order.push(node);
+			        	}
+			       	});
+			        var appended_items = new Models.ContentNodeCollection(); //Items from another container
+			        if(ui.item.data('items')){
+			        	ui.item.data('items').each(function(e){
+				        	var view = window.workspace_manager.get(this.id);
+				        	if(view){
+				        		var node = view.node.model;
+					        	if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
+					        		selected_items.push(current_node);
+					        	}
+					        	(current_node.get("parent") === node.get("parent")) ? selected_items.push(node) : appended_items.push(node);
+				        	}
+				        });
+			        }
+
+			        if(!selected_items.contains(current_node)){
+		        		selected_items.push(current_node);
+		        	}
+
+		        	selected_items.add(appended_items.models, {at: selected_items.length});
+		        	callback(current_node, selected_items, order).then(function(){
+						$(".content-list").sortable( "enable" );
+						$(".content-list").sortable( "refresh" );
+		        	});
+				}
+
+			}
+	    },
+	    over: function (e, ui) {
+		  // $(ui.sender).sortable('instance').scrollParent = $(e.target)
+		}
+	}).droppable({
+		items : 'li',
+		cancel: '.current_topic, .default-item, #preview, #queue',
+	}).disableSelection();
+}
+
+function addTopicDragDrop(element, hoverCallback, dropCallback){
+	var hoverInterval = 2000;
+	element.$el.droppable({
+		items : 'li',
+		revert: false,
+		revertDuration:0,
+		cursor:"move",
+		hoverClass: "drop-topic-hover",
+		drop:function(event, ui){
+			if($(event.target).find(".drop-topic-hover").length === 0){
+				if($(".sorting-placeholder").css('display') === "none"){
+					var selected_items = new Models.ContentNodeCollection();
+					var current_view = window.workspace_manager.get(ui.draggable.context.id);
+					var current_node = current_view.node.model;
+					this.hoverOnItem = null;
+					$(".content-list").sortable( "disable" );
+
+			        var appended_items = new Models.ContentNodeCollection(); //Items from another container
+			        $("#drag-list li").each(function(index, item){
+			        	var view = window.workspace_manager.get(item.id);
+			        	if(view){
+			        		var node = view.node.model;
+				        	if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
+				        		selected_items.push(current_node);
+				        	}
+				        	(current_node.get("parent") === node.get("parent")) ? selected_items.push(node) : appended_items.push(node);
+				        	$(".content-list #"  + item.id).remove();
+			        	}
+			        })
+
+			        if(!selected_items.contains(current_node)){
+		        		selected_items.push(current_node);
+		        	}
+		        	selected_items.add(appended_items.models, {at: selected_items.length});
+		        	dropCallback(selected_items).then(function(){
+		        		$(ui.draggable.context).remove();
+		        		$(".content-list").sortable( "enable" );
+		        		$(".content-list").sortable( "refresh" );
+		        	});
+				}
+			}
 		},
-		update: function(event,ui) {
-			var element = $(ui.item[0]);
-			if (element.hasClass('loading')) return;
-			element.addClass('loading');
-			$.ajax({
-				    url:'/ajax',
-				    context:element,
-				    complete:function(xhr,status) {
-				    $(this).removeClass('loading');
-				    if (xhr.status != 200) {
-				    $($(this).data('lastParent')).append(this);
-				    }
-			    },
-			});
-		},*/
-
-		onDrop: function  ($item, container, _super) {
-			target.data("isbelow", isaboveclosest);
-			var $clonedItem = $('<li/>').css({height: 0});
-			$item.before($clonedItem);
-			$clonedItem.animate({'height': $item.height()});
-			$item.animate($clonedItem.position(), function  () {
-				$clonedItem.detach();
-				_super($item, container);
-			});
-			if(target.data("data"))
-				target.data("data").containing_list_view.drop_in_container(window.transfer_data, target);
-			else if(target.data("list"))
-				target.data("list").drop_in_container(window.transfer_data, target);
+		out: function(event, ui){
+			$(".sorting-placeholder").css("display", "block");
+			this.hoverOnItem = null;
 		},
+		over: function(event, ui){
+			this.hoverOnItem = $(this)[0];
+			if(!$(this.hoverOnItem).find("#menu_toggle_" + this.hoverOnItem.id).hasClass("glyphicon-menu-down")){
+				$(".sorting-placeholder").css("display", "none");
+				var hoverItem = $(this)[0];
+				var self = this;
+				setTimeout(function(){
+					if(self.hoverOnItem === hoverItem && window.workspace_manager.get(ui.draggable.context.id).node){
+						hoverCallback(event);
+					}
+				}, hoverInterval);
+			}
 
-	    // set $item relative to cursor position*/
-		onDragStart: function ($item, container, _super) {
-			window.transfer_data = $item.data("data");
-			$item.css("z-index", "99999999999999999999");
-			var offset = $item.offset(),
-			pointer = container.rootGroup.pointer;
-			adjustment = {
-				left: pointer.left - offset.left,
-				top: pointer.top - offset.top
-			};
-		    _super($item, container);
-	  	},
-	  	onDragEnd: function ($item, container, _super) {
-		    _super($item, container);
-	  	},
-
-		onDrag: function ($item, position) {
-			$item.css({
-				left: position.left - adjustment.left,
-				top: position.top - adjustment.top
-			});
 		},
-
-		afterMove: function (placeholder, container, $closestItemOrContainer) {
-			isaboveclosest = $closestItemOrContainer.offset().top > $(placeholder).offset().top;
-			target = $closestItemOrContainer;
-	    }
 	});
 }
 
 function removeDragDrop(element){
-	element.$el.find("ul.content-list").sortable("destroy");
+	element.$el.removeClass("droppable_container");
+	// element.$el.find("ul.content-list").sortable("destroy");
 }
 
 module.exports = {
-	addDragDrop : addDragDrop,
-	removeDragDrop : removeDragDrop
+	addSortable : addSortable,
+	removeDragDrop : removeDragDrop,
+	addTopicDragDrop:addTopicDragDrop
 }

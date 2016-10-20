@@ -6,13 +6,17 @@
 @channel-clipboard-btn-color: #F2F2F2;
 @channel-btn-border-color:#7A7A7A;
 
-.default-channel-item{
+.default-item{
 	color:gray;
 	padding:5px 10px;
 }
 
 #channel_area_wrapper{
 	padding:30px;
+	padding-bottom:200px;
+	overflow-y:auto;
+	height:90vh;
+	margin-top:20px;
 	#manage-channel-nav{
 		color: @body-font-color;
 		#search_channels_input{
@@ -112,9 +116,11 @@
 					height:100%;
 					width: @channel-profile-width;
 					margin: 5px 15px 5px 5px;
+
 					img{
 						width:@channel-profile-width * .9;
 						height:@channel-profile-width * .9;
+						object-fit: cover;
 					}
 				}
 				#dropzone{
@@ -124,6 +130,7 @@
 					#dz-placeholder{
 						width:@channel-profile-width * .9;
 						height:@channel-profile-width * .9;
+						object-fit: cover;
 						cursor:pointer;
 						border:4px dashed @gray-400;
 						font-style:italic;
@@ -227,7 +234,6 @@
 				input[type=text]:focus, textarea:focus {
 					outline: none;
 					border-bottom: 3px solid #BDBDBD;
-				    margin-top: 10px;
 				    .input-form;
 				}
 

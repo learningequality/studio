@@ -4,7 +4,7 @@ import re
 from contentcuration.models import *
 from rest_framework import serializers
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
-from contentcuration.api import get_total_size, get_node_ancestors, count_files, calculate_node_metadata
+from contentcuration.api import get_total_size, get_node_ancestors, count_files, calculate_node_metadata, clean_db, recurse
 from rest_framework.utils import model_meta
 from collections import OrderedDict
 from rest_framework.fields import set_value, SkipField
@@ -23,42 +23,51 @@ class LanguageSerializer(serializers.ModelSerializer):
         model = Language
         fields = ('lang_code', 'lang_subcode', 'id')
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id','clipboard_tree')
 
-class ChannelSerializer(serializers.ModelSerializer):
-    resource_count = serializers.SerializerMethodField('count_resources')
-    resource_size = serializers.SerializerMethodField('calculate_resources_size')
-    def count_resources(self, channel):
-        if not channel.main_tree:
-            return 0
-        else:
-            return count_files(channel.main_tree)
+class FileListSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+        file_mapping = {file_obj.id: file_obj for file_obj in instance}
+        node_file_mapping = []
+        ret = []
+        update_files = {}
 
-    def calculate_resources_size(self, channel):
-        if not channel.main_tree:
-            return 0
-        else:
-            return get_total_size(channel.main_tree)
+        with transaction.atomic():
+            for item in validated_data:
+                if 'id' in item:
+                    update_files[item['id']] = item
+                else:
+                    # create new nodes
+                    ret.append(File.objects.create(**item))
 
-    class Meta:
-        model = Channel
-        fields = ('id', 'name', 'description', 'editors', 'main_tree',
-                    'clipboard_tree', 'trash_tree','resource_count', 'resource_size',
-                    'version', 'thumbnail', 'deleted', 'public', 'pending_editors')
+        for file_obj in validated_data:
+            contentnode = file_obj['contentnode'].pk
+            preset = file_obj['preset'].pk
+            file_id = file_obj['id']
+            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & Q(preset_id=preset) & ~Q(preset__kind = None) & ~Q(id=file_id))
+            for to_delete in files_to_delete:
+                to_delete.delete()
 
-class FileSerializer(serializers.ModelSerializer):
+        if update_files:
+            with transaction.atomic():
+                for file_id, data in update_files.items():
+                    file_obj = file_mapping.get(file_id, None)
+
+                    if file_obj:
+                        # potential optimization opportunity
+                        for attr, value in data.items():
+                            setattr(file_obj, attr, value)
+                        file_obj.save()
+                        ret.append(file_obj)
+        return ret
+
+class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
     recommended_kind = serializers.SerializerMethodField('retrieve_recommended_kind')
     mimetype = serializers.SerializerMethodField('retrieve_extension')
+    id = serializers.CharField(required=False)
 
     def get(*args, **kwargs):
          return super.get(*args, **kwargs)
-    class Meta:
-        model = File
-        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'mimetype')
 
     def get_file_url(self, obj):
         return obj.file_on_disk.url
@@ -68,6 +77,11 @@ class FileSerializer(serializers.ModelSerializer):
 
     def retrieve_extension(self, obj):
         return obj.file_format.mimetype
+
+    class Meta:
+        model = File
+        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'mimetype', 'source_url')
+        list_serializer_class = FileListSerializer
 
 class FileFormatSerializer(serializers.ModelSerializer):
     class Meta:
@@ -86,7 +100,7 @@ class FormatPresetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FormatPreset
-        fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats','associated_mimetypes')
+        fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats','associated_mimetypes', 'display')
 
 class ContentKindSerializer(serializers.ModelSerializer):
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
@@ -102,12 +116,14 @@ class CustomListSerializer(serializers.ListSerializer):
         node_mapping = {node.id: node for node in instance}
         update_nodes = {}
         tag_mapping = {}
+        file_mapping = {}
         ret = []
         unformatted_input_tags = []
 
         with transaction.atomic():
             for item in validated_data:
                 item_tags = item.get('tags')
+
                 unformatted_input_tags += item.pop('tags')
                 if 'id' in item:
                     update_nodes[item['id']] = item
@@ -137,28 +153,30 @@ class CustomListSerializer(serializers.ListSerializer):
 
         # Perform updates.
         if update_nodes:
-            for node_id, data in update_nodes.items():
-                node = node_mapping.get(node_id, None)
-                if node:
-                    # potential optimization opportunity
-                    for attr, value in data.items():
-                        setattr(node, attr, value)
-                    taglist = []
-                    for tag_data in tag_mapping.get(node_id, None):
-                        # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
-                        if isinstance(tag_data, unicode):
-                            tag_data = json.loads(tag_data)
+            with transaction.atomic():
+                with ContentNode.objects.delay_mptt_updates():
+                    for node_id, data in update_nodes.items():
+                        node = node_mapping.get(node_id, None)
 
-                        # this requires optimization
-                        for tag_itm in all_tags:
-                            if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
-                                taglist.append(tag_itm)
+                        if node:
+                            # potential optimization opportunity
+                            for attr, value in data.items():
+                                setattr(node, attr, value)
+                            taglist = []
+                            for tag_data in tag_mapping.get(node_id, None):
+                                # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
+                                if isinstance(tag_data, unicode):
+                                    tag_data = json.loads(tag_data)
 
-                    setattr(node, 'tags', taglist)
+                                # this requires optimization
+                                for tag_itm in all_tags:
+                                    if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
+                                        taglist.append(tag_itm)
 
-                    node.save()
-                    ret.append(node)
-
+                            setattr(node, 'tags', taglist)
+                            node.save()
+                            ret.append(node)
+        # clean_db()
         return ret
 
 class TagSerializer(serializers.ModelSerializer):
@@ -168,12 +186,16 @@ class TagSerializer(serializers.ModelSerializer):
 
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    preset = FormatPresetSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True)
     id = serializers.CharField(required=False)
 
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
     metadata = serializers.SerializerMethodField('calculate_metadata')
+    associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
+
+    def retrieve_associated_presets(self, node):
+        return FormatPreset.objects.filter(kind = node.kind).values()
 
     def to_internal_value(self, data):
         """
@@ -283,21 +305,56 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
-                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','preset',
-                 'ancestors', 'tags', 'files', 'metadata')
+                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets',
+                 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items')
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exercise
-        fields = ('title', 'description', 'id')
+        fields = ('contentnode', 'mastery_model', 'id')
 
 class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
-    exercise = serializers.PrimaryKeyRelatedField(queryset=Exercise.objects.all())
+    contentnode = serializers.PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
 
     class Meta:
         model = AssessmentItem
-        fields = ('question', 'type', 'answers', 'id', 'exercise')
+        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hints', 'raw_data')
         list_serializer_class = BulkListSerializer
+
+class ChannelSerializer(serializers.ModelSerializer):
+    resource_count = serializers.SerializerMethodField('count_resources')
+    resource_size = serializers.SerializerMethodField('calculate_resources_size')
+    has_changed = serializers.SerializerMethodField('check_for_changes')
+    main_tree = ContentNodeSerializer(read_only=True)
+    trash_tree = ContentNodeSerializer(read_only=True)
+    def count_resources(self, channel):
+        if not channel.main_tree:
+            return 0
+        else:
+            return count_files(channel.main_tree)
+
+    def calculate_resources_size(self, channel):
+        if not channel.main_tree:
+            return 0
+        else:
+            return get_total_size(channel.main_tree)
+
+    def check_for_changes(self, channel):
+        if channel.main_tree:
+            return channel.main_tree.get_descendants().filter(changed=True).count() > 0
+        else:
+            return false
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'name', 'description', 'has_changed','editors', 'main_tree',
+                    'trash_tree','resource_count', 'resource_size',
+                    'version', 'thumbnail', 'deleted', 'public', 'pending_editors')
+class UserSerializer(serializers.ModelSerializer):
+    clipboard_tree = ContentNodeSerializer(read_only=True)
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id','clipboard_tree')
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:

@@ -1,5 +1,5 @@
+{{#if add_controls}}
 <div class="wrapper"> <!-- used for dragging/dropping -->
-	{{#if add_controls}}
 	<!--<input type="text" placeholder="Find in Queue... (under construction)" class="search_queue construction"/>
 	<div class="sort_box">
 		<label for="sort_queue">Sort by</label>
@@ -39,12 +39,12 @@
 					</div>
 
 				</div>
-				<div class="toolbar-button">
+				<div class="toolbar-button queue-disable-none-selected">
 					<div class="edit_items"><span class="glyphicon glyphicon-pencil"></span></div>
 					<a class="edit_items">Edit</a>
 				</div>
 				<!--<a class="col-xs-3 move_selected_queue btn btn-option construction">Move<br/>Selected</a>-->
-				<div class="toolbar-button">
+				<div class="toolbar-button queue-disable-none-selected">
 					<div class="delete_items"><span class="glyphicon glyphicon-remove"></span></div>
 					<a class="delete_items">Delete</a>
 				</div>
@@ -52,11 +52,11 @@
 			<div id="clipboard_list" class="list_content">
 		{{else}}
 			<div class="row trash_options text-center">
-				<div class="toolbar-button" title="Recover to your clipboard">
+				<div class="toolbar-button queue-disable-none-selected" title="Recover to your clipboard">
 					<div class="move_trash"><span class="glyphicon glyphicon-share-alt"></span></div>
 					<a class="move_trash">Recover</a>
 				</div>
-				<div class="toolbar-button">
+				<div class="toolbar-button queue-disable-none-selected">
 					<div class="delete_items"><span class="glyphicon glyphicon-remove-circle"></span></div>
 					<a class="delete_items">Clear</a>
 				</div>
@@ -73,13 +73,10 @@
 		<div class="queue-list-wrapper">
 	{{/if}}
 			<ul class="list-unstyled content-list" id="list_for_{{id}}">
-				{{#unless content_list}}
-					<li class="default-item"><h5>No items found.</h5></li>
-				{{/unless}}
+				<li class="default-item">Loading...</li>
 			</ul>
 	{{#if add_controls}}
 			</div>
 		</div>
-
-	{{/if}}
 </div>
+{{/if}}

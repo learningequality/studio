@@ -34,14 +34,67 @@
 		</ul>
 		<ul class="nav navbar-nav navbar-right" id="publish">
 			<!--<li id="channel-publish-button" class="text-center">Unpublish Selected</li>-->
-			<li id="publish-id">Publish ID (for importing into Kolibri): <b>{{ channel_id }}</b></li>
+			<li id="publish-id">
+				<span id="hide-if-unpublished">
+					ID: <input type="text" class="publish-id-text" value="{{ channel_id }}" readonly/>
+					<span id="publish-id-copy" class="glyphicon glyphicon-copy copy-id-btn" aria-hidden="true" title="Copy ID to clipboard"></span>
+				</span>
+				<!-- <span id="publish-id-help" class="glyphicon glyphicon-question-sign" aria-hidden="true" title="How do I export to Kolibri?"></span> -->
+			</li>
 			<li id="channel-publish-button" class="text-center">PUBLISH</li>
 		</ul>
 	</nav>
 	<div id="channel-edit-content-wrapper">
-		<div id="main-content-area" class="container-fluid"></div>
-		<div id="previewer-area" class="container pull-right"></div>
-		<div id="queue-area" class="container pull-right"></div>
+		<div id="channel-edit-sortable-boundary">
+			<div id="main-content-area" ></div>
+			<div id="queue-area" class="container pull-right"></div>
+		</div>
+	</div>
+
+	<div class="modal fade" tabindex="-1" id="publish-help-modal">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title">How to publish to Kolibri</h4>
+	      </div>
+	      <div class="modal-body">
+	      	<ol class="container">
+	      		<li>Click the "PUBLISH" button</li>
+	      		<li>Review your content</li>
+	      		<li>If everything looks good, click "PUBLISH" in the modal</li>
+	      		<li>Once your channel is ready, copy the ID</li>
+	      		<li>Open your command line terminal</li>
+	      		<li>Enter "kolibri manage importchannel -- [your-channel-id]"</li>
+	      		<li>Enter "kolibri manage importcontent -- network [your-channel-id]"</li>
+	      		<li>Run Kolibri (your channel should be listed now)</li>
+	      	</ol>
+	      	<div class="container-fluid">
+		      	<a data-dismiss="modal" class="pull-right btn action-button">GOT IT!</a>
+		     </div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	<div class="modal fade" tabindex="-1" id="publish-get-id-modal">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title">Channel Successfully Published!</h4>
+	      </div>
+	      <div class="modal-body">
+	      	<div class="container">
+	      		<p>Here is your published ID (for importing channel into Kolibri):</p>
+	      		<h4>
+		      		ID: <input type="text" class="publish-id-text" value="{{ channel_id }}" readonly/>
+		      		<a class="btn action-button copy-id-btn" id="modal-copy-btn">COPY</a>
+		      	</h4>
+	      	</div>
+	      </div>
+	    </div>
+	  </div>
 	</div>
 
 {% endblock content %}

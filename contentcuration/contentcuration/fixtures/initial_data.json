@@ -20,7 +20,7 @@
     "model": "contentcuration.License",
     "pk": 1,
     "fields": {
-      "license_name": "CC-BY",
+      "license_name": "CC BY",
       "exists": true,
       "license_url": "https://creativecommons.org/licenses/by/4.0/",
       "license_description": "The Attribution License lets others distribute, remix, tweak, and build upon your work, even commercially, as long as they credit you for the original creation. This is the most accommodating of licenses offered. Recommended for maximum dissemination and use of licensed materials."
@@ -84,6 +84,16 @@
       "exists": true,
       "license_url": "http://www.allrights-reserved.com/",
       "license_description": "The All Rights Reserved License indicates that the copyright holder reserves, or holds for their own use, all the rights provided by copyright law under one specific copyright treaty."
+    }
+  },
+  {
+    "model": "contentcuration.License",
+    "pk": 8,
+    "fields": {
+      "license_name": "Public Domain",
+      "exists": true,
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "license_description": "Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights."
     }
   },
 
@@ -159,6 +169,13 @@
       "mimetype" : "audio/wav"
     }
   },
+  {
+    "model": "contentcuration.FileFormat",
+    "fields": {
+      "extension": "perseus",
+      "mimetype" : ".perseus"
+    }
+  },
 
 
 
@@ -205,6 +222,7 @@
       "thumbnail" : false,
       "order" : 1,
       "kind" : "video",
+      "display": true,
       "allowed_formats" : ["mp4"]
     }
   },
@@ -218,6 +236,7 @@
       "thumbnail" : false,
       "order" : 2,
       "kind" : "video",
+      "display": true,
       "allowed_formats" : ["mp4"]
     }
   },
@@ -231,19 +250,21 @@
       "thumbnail" : true,
       "order" : 3,
       "kind" : "video",
+      "display": true,
       "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },
   {
     "model": "contentcuration.FormatPreset",
     "fields": {
-      "id" : "aud",
+      "id" : "audio",
       "readable_name": "Audio",
       "multi_language" : false,
       "supplementary" : false,
       "thumbnail" : false,
       "order" : 1,
       "kind" : "audio",
+      "display": true,
       "allowed_formats" : ["wav", "mp3"]
     }
   },
@@ -257,20 +278,22 @@
       "thumbnail" : true,
       "order" : 2,
       "kind" : "audio",
+      "display": true,
       "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },
   {
     "model": "contentcuration.FormatPreset",
     "fields": {
-      "id" : "doc",
+      "id" : "document",
       "readable_name": "Document",
       "multi_language" : false,
       "supplementary" : false,
       "thumbnail" : false,
       "order" : 1,
       "kind" : "document",
-      "allowed_formats" : ["vtt", "srt", "pdf", "PDF"]
+      "display": true,
+      "allowed_formats" : ["pdf", "PDF"]
     }
   },
   {
@@ -283,6 +306,48 @@
       "thumbnail" : true,
       "order" : 2,
       "kind" : "document",
+      "display": true,
+      "allowed_formats" : ["png", "jpg", "jpeg"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "exercise",
+      "readable_name": "Exercise",
+      "multi_language" : false,
+      "supplementary" : false,
+      "thumbnail" : false,
+      "order" : 1,
+      "kind" : "exercise",
+      "display": true,
+      "allowed_formats" : ["perseus"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "exercise_thumbnail",
+      "readable_name": "Thumbnail",
+      "multi_language" : false,
+      "supplementary" : true,
+      "thumbnail" : true,
+      "order" : 2,
+      "kind" : "exercise",
+      "display": true,
+      "allowed_formats" : ["png", "jpg", "jpeg"]
+    }
+  },
+  {
+    "model": "contentcuration.FormatPreset",
+    "fields": {
+      "id" : "exercise_image",
+      "readable_name": "Image",
+      "multi_language" : false,
+      "supplementary" : true,
+      "thumbnail" : false,
+      "order" : 3,
+      "display": false,
       "allowed_formats" : ["png", "jpg", "jpeg"]
     }
   },

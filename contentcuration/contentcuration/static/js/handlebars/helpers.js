@@ -33,9 +33,8 @@ Handlebars.registerHelper('url', function(url_name) {
 
 // A little bit of magic to let us render markdown into a Handlebars template
 Handlebars.registerHelper('markdown', function(markdown) {
-
     if (markdown) {
-        markdown = markdown.replace(/\n(\n)/g, "$1<br />");
+        markdown = markdown.toString().replace(/\n(\n)/g, "$1<br />");
         return marked(markdown);
     } else {
         return "";
@@ -56,7 +55,7 @@ Handlebars.registerHelper('to_upper_case', function(text){
 });
 
 Handlebars.registerHelper('check_is_topic', function(text){
-  return text.toLowerCase() == "topic";
+  return text === "topic";
 });
 
 Handlebars.registerHelper('get_filename', function(text){
@@ -76,18 +75,35 @@ Handlebars.registerHelper('format_count', function(text, count){
 Handlebars.registerHelper('get_icon', function(kind){
   switch (kind){
       case "topic":
-          return "folder-close";
+          return "glyphicon glyphicon-folder-close";
       case "video":
-          return "film";
+          return "glyphicon glyphicon-film";
       case "audio":
-          return "headphones";
+          return "glyphicon glyphicon-headphones";
       case "image":
-          return "picture";
+          return "glyphicon glyphicon-picture";
       case "exercise":
-          return "star";
+          return "glyphicon glyphicon-star";
       case "document":
-          return "file";
+          return "glyphicon glyphicon-file";
       default:
-          return "exclamation-sign";
+          return "glyphicon glyphicon-exclamation-sign";
+  }
+});
+
+Handlebars.registerHelper('format_question_type', function(type){
+  switch (type){
+      case "multiple_selection":
+          return "Multiple Selection";
+      case "free_response":
+          return "Free Response";
+      case "single_selection":
+          return "Single Selection";
+      case "input_question":
+          return "Input Answer";
+      case "perseus_question":
+          return "Perseus Question";
+      default:
+          return "Unknown Question Type";
   }
 });

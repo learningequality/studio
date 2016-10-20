@@ -1,10 +1,9 @@
-{{#unless is_modal}}<h3 title="{{node.attributes.title}}">{{node.attributes.title}}</h3>{{/unless}}
 <div id="preview_content_main">
 <div class="row">
     <div class="btn-group col-sm-6">
       <button class="btn btn-default btn-sm dropdown-toggle" id="preview_format_switch" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       	{{#if selected_preset}}
-      		{{selected_preset.attributes.readable_name}} <span class="caret"></span>
+      		{{selected_preset.readable_name}} <span class="caret"></span>
       	{{else}}No files found.
       	{{/if}}
       </button>

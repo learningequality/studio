@@ -50,6 +50,7 @@ INSTALLED_APPS = (
     'django_js_reverse',
     'kolibri.content',
     'email_extras',
+    'le_utils',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -97,9 +98,20 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgres',
+    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    # },
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': 'contentcuration',                      # Or path to database file if using sqlite3.
+        # The following settings are not used with sqlite3:
+
+        # For dev purposes only
+        'USER': 'learningequality',
+        'PASSWORD': 'kolibri',
+        'HOST': 'localhost',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'PORT': '',                      # Set to empty string for default.
     },
     'export_staging': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -112,6 +124,24 @@ DATABASE_ROUTERS = [
     "contentcuration.router.Router"
 ]
 
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': '/django.log',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['file'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#     },
+# }
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -147,10 +177,12 @@ SITE_ID = 1
 # EMAIL_HOST_USER = ''
 # EMAIL_HOST_PASSWORD = ''
 # EMAIL_USE_TLS = False
+# EMAIL_BACKEND = 'django_mailgun.MailgunBackend'
+# MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
+# MAILGUN_SERVER_NAME = 'SERVER-NAME'
+
 DEFAULT_FROM_EMAIL = 'Kolibri Content Curation <info@learningequality.org>'
-
-HACK_HACK_HACK_UNICEF_CONTENT_ZIP_PATH = os.path.join(BASE_DIR, "unicef.zip")
-
+DEFAULT_LICENSE = 1
 
 SERVER_EMAIL = 'curation-errors@learningequality.org'
 ADMINS = [('Errors', SERVER_EMAIL)]

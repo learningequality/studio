@@ -4,45 +4,42 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("modal-styles.less");
 
-var PreviewView = BaseViews.BaseModalView.extend({
+var PreviewModalView = BaseViews.BaseModalView.extend({
+    template: require("./hbtemplates/preview_modal.handlebars"),
+    initialize: function(options) {
+        _.bindAll(this, "close_preview");
+        this.modal = true;
+        this.render(this.close_preview, {node:this.model.toJSON()});
+        this.preview_view = new PreviewView({
+            model:this.model,
+            el: this.$(".modal-body"),
+        });
+        this.preview_view.switch_preview(this.model);
+    },
+    close_preview:function(){
+        this.remove();
+    },
+});
+
+var PreviewView = BaseViews.BaseView.extend({
     tabs_template: require("./hbtemplates/preview_templates/tabs.handlebars"),
     template: require("./hbtemplates/preview_dialog.handlebars"),
-    modal_template: require("./hbtemplates/preview_modal.handlebars"),
     current_preview:null,
     initialize: function(options) {
-        _.bindAll(this, 'set_preview','toggle_fullscreen', 'close_preview');
-        this.modal = options.modal;
+        _.bindAll(this, 'set_preview','toggle_fullscreen', 'load_preview');
         this.presets = new Models.FormatPresetCollection();
         this.render();
-        if(this.modal){
-             this.switch_preview(this.model);
-        }
     },
     events: {
         'click .preview_btn_tab' : 'set_preview',
         'click .view_fullscreen': 'toggle_fullscreen'
     },
     render: function() {
-        if(this.modal){
-            this.$el.html(this.modal_template({node:this.model.toJSON()}));
-            this.$(".modal-body").html(this.template({
-                node: this.model,
-                file: this.current_preview,
-                selected_preset: (this.current_preview) ? window.formatpresets.get(this.current_preview.preset) : null,
-                is_modal:true
-            }));
-            this.$el.append(this.el);
-            this.$(".modal").modal({show: true});
-            this.$(".modal").on("hide.bs.modal", this.close_preview);
-        }else{
-            this.$el.html(this.template({
-                node: this.model,
-                file: this.current_preview,
-                selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset) : null,
-                is_modal:false
-            }));
-        }
-        this.load_preset_dropdown();
+        this.$el.html(this.template({
+            node: (this.model)? this.model.toJSON() : null,
+            file: this.current_preview,
+            selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset).toJSON() : null,
+        }));
     },
     load_preset_dropdown:function(){
         this.presets.sort_by_order();
@@ -53,18 +50,19 @@ var PreviewView = BaseViews.BaseModalView.extend({
     set_preview:function(event){
         var self = this;
         this.model.get("files").forEach(function(file){
-            var data = (file.attributes)? file.attributes : file;
-
-            if(data.preset == event.target.getAttribute("value")){
-                self.set_current_preview(data);
-                return;
+            var preset_id = (file.preset && file.preset.id)? file.preset.id : file.preset;
+            var selected_preset = window.formatpresets.get({id:preset_id});
+            if(selected_preset && selected_preset.get("display")){
+                var data = (file.attributes)? file.attributes : file;
+                var preset_check = (data.preset.id)? data.preset.id : data.preset;
+                if(preset_check === event.target.getAttribute("value")){
+                    self.set_current_preview(data);
+                    return;
+                }
             }
         });
-        this.load_preset_dropdown();
         this.generate_preview(true);
-    },
-    close_preview:function(){
-        this.remove();
+        this.load_preset_dropdown();
     },
 
     generate_preview:function(force_load){
@@ -74,72 +72,76 @@ var PreviewView = BaseViews.BaseModalView.extend({
             location = "/" + this.current_preview.file_on_disk;
             extension = this.current_preview.file_format;
             mimetype = this.current_preview.mimetype;
-        }
 
-        var preview_template;
-        switch (extension){
-            case "png":
-            case "jpg":
-            case "jpeg":
-                preview_template = require("./hbtemplates/preview_templates/image.handlebars");
-                break;
-            case "pdf":
-            case "PDF":
-            case "vtt":
-            case "srt":
-                preview_template = require("./hbtemplates/preview_templates/document.handlebars");
-                break;
-            case "mp3":
-            case "wav":
-                preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
-                break;
-            case "mp4":
-                preview_template = require("./hbtemplates/preview_templates/video.handlebars");
-                break;
-            default:
-                preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+            var preview_template;
+            switch (extension){
+                case "png":
+                case "jpg":
+                case "jpeg":
+                    preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+                    break;
+                case "pdf":
+                case "PDF":
+                case "vtt":
+                case "srt":
+                    preview_template = require("./hbtemplates/preview_templates/document.handlebars");
+                    break;
+                case "mp3":
+                case "wav":
+                    preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
+                    break;
+                case "mp4":
+                    preview_template = require("./hbtemplates/preview_templates/video.handlebars");
+                    break;
+                case "perseus":
+                    preview_template = require("./hbtemplates/preview_templates/exercise.handlebars");
+                    break;
+                default:
+                    preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+            }
+            this.$("#preview_window").html(preview_template({
+                source: location,
+                extension:mimetype
+            }));
+            if(force_load && this.current_preview.recommended_kind === "video"){
+                $("#preview_window video").load();
+            }
         }
-        this.$("#preview_window").html(preview_template({
-            source: location,
-            extension:mimetype
-        }));
-        if(force_load && this.current_preview.recommended_kind === "video"){
-            $("#preview_window video").load();
-        }
-
     },
 
     load_preview:function(){
         if(this.model){
-            this.generate_preview(false);
+            this.switch_preview(this.model);
         }
     },
     switch_preview:function(model){
         this.model = model;
-        var default_preview = null;
-        if(this.model){
+        if(this.model && this.model.get("kind")!=="topic"){
+            var default_preview = null;
             var self = this;
-            this.presets = new Models.FormatPresetCollection();
-             if(this.model.get("files")){
-                this.model.get("files").forEach(function(file){
-                    var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
-                    self.presets.add(preset);
+            this.presets.reset();
+            this.model.get("files").forEach(function(file){
+                var preset = window.formatpresets.get((file.attributes)? file.get("preset") : file.preset)
+                if(preset.get("display")){
                     if(!default_preview || preset.get("order") === 1){
                         default_preview = file;
                     }
-                });
-            }
+                    self.presets.add(preset);
+                }
+            });
             this.load_preset_dropdown();
             this.set_current_preview(default_preview);
             this.generate_preview(true);
         }
     },
     set_current_preview:function(file){
-        this.current_preview = file;
-        if(this.current_preview.attributes){
-            this.current_preview = this.current_preview.attributes;
+        if(file){
+            this.current_preview = file;
+            if(this.current_preview.attributes){
+                this.current_preview = this.current_preview.toJSON();
+            }
+            $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
         }
-         $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
     },
     toggle_fullscreen:function(){
         var elem = document.getElementById("preview_content_main");
@@ -173,5 +175,6 @@ var PreviewView = BaseViews.BaseModalView.extend({
 });
 
 module.exports = {
+    PreviewModalView:PreviewModalView,
     PreviewView:PreviewView
 }

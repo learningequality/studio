@@ -2,20 +2,22 @@ import logging
 import os
 import uuid
 import hashlib
+import functools
 
 from django.conf import settings
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connections, models
+from django.db.models import Q
 from django.db.utils import ConnectionDoesNotExist
-from mptt.models import MPTTModel, TreeForeignKey
+from mptt.models import MPTTModel, TreeForeignKey, TreeManager
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 
-from constants import content_kinds, extensions, presets
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
 class UserManager(BaseUserManager):
     def create_user(self, email, first_name, last_name, password=None):
@@ -25,6 +27,7 @@ class UserManager(BaseUserManager):
         new_user = self.model(
             email=self.normalize_email(email),
         )
+
 
         new_user.set_password(password)
         new_user.first_name = first_name
@@ -106,8 +109,15 @@ def file_on_disk_name(instance, filename):
     :param filename: str
     :return: str
     """
-    h = instance.checksum
+    return generate_file_on_disk_name(instance.checksum, filename)
+
+def generate_file_on_disk_name(checksum, filename):
+    """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
+    h = checksum
     basename, ext = os.path.splitext(filename)
+    directory = os.path.join(settings.STORAGE_URL[1:-1], h[0], h[1])
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     return os.path.join(settings.STORAGE_URL[1:-1], h[0], h[1], h + ext.lower())
 
 class FileOnDiskStorage(FileSystemStorage):
@@ -130,16 +140,19 @@ class Channel(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     version = models.IntegerField(default=0)
-    thumbnail = models.TextField(blank=True)
+    thumbnail = models.TextField(blank=True, null=True)
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='editable_channels',
         verbose_name=_("editors"),
         help_text=_("Users with edit rights"),
+        blank=True,
     )
+    language =  models.ForeignKey('Language', null=True, blank=True, related_name='channel_language')
     trash_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_trash')
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
     main_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
+    staging_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_staging')
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='bookmarked_channels',
@@ -153,8 +166,8 @@ class Channel(models.Model):
         if not self.main_tree:
             self.main_tree = ContentNode.objects.create(title=self.name + " main root", kind_id="topic", sort_order=0)
             self.main_tree.save()
-            self.clipboard_tree = ContentNode.objects.create(title=self.name + " clipboard root", kind_id="topic", sort_order=0)
-            self.clipboard_tree.save()
+            self.save()
+        if not self.trash_tree:
             self.trash_tree = ContentNode.objects.create(title=self.name + " trash root", kind_id="topic", sort_order=0)
             self.trash_tree.save()
             self.save()
@@ -173,6 +186,33 @@ class ContentTag(models.Model):
     class Meta:
         unique_together = ['tag_name', 'channel']
 
+def delegate_manager(method):
+    """
+    Delegate method calls to base manager, if exists.
+    """
+    @functools.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        if self._base_manager:
+            return getattr(self._base_manager, method.__name__)(*args, **kwargs)
+        return method(self, *args, **kwargs)
+    return wrapped
+
+class License(models.Model):
+    """
+    Normalize the license of ContentNode model
+    """
+    license_name = models.CharField(max_length=50)
+    license_url = models.URLField(blank=True)
+    license_description = models.TextField(blank=True)
+    exists = models.BooleanField(
+        default=False,
+        verbose_name=_("license exists"),
+        help_text=_("Tells whether or not a content item is licensed to share"),
+    )
+
+    def __str__(self):
+        return self.license_name
+
 class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
@@ -186,26 +226,51 @@ class ContentNode(MPTTModel, models.Model):
     # content should be marked as such as well. We track these "substantially
     # similar" types of content by having them have the same content_id.
     content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
-
+    node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
-    license = models.ForeignKey('License', null=True)
+    license = models.ForeignKey('License', null=True, default=settings.DEFAULT_LICENSE)
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
     is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship', symmetrical=False, blank=True)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
-    sort_order = models.FloatField(max_length=50, default=0, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
+    sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
     copyright_holder = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
-    author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"))
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
 
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
+    published = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
+    extra_fields = models.TextField(blank=True, null=True)
+    author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"), null=True)
+
+    objects = TreeManager()
+
+    def __init__(self, *args, **kwargs):
+        super(ContentNode, self).__init__(*args, **kwargs)
+        self.original_parent = self.parent
+
+    def save(self, *args, **kwargs):
+        isNew = self.pk is None
+
+        # Detect if model has been moved to a different tree
+        if self.original_parent and self.original_parent.id != self.parent_id:
+            self.original_parent.changed = True
+            self.original_parent.save()
+            self.original_parent = self.parent
+
+        super(ContentNode, self).save(*args, **kwargs)
+        if isNew:
+            if self.original_node is None:
+                self.original_node = self.pk
+            if self.cloned_source is None:
+                self.cloned_source = self.pk
+            self.save()
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
@@ -216,7 +281,6 @@ class ContentNode(MPTTModel, models.Model):
         # Do not allow two nodes with the same name on the same level
         #unique_together = ('parent', 'title')
 
-
 class ContentKind(models.Model):
     kind = models.CharField(primary_key=True, max_length=200, choices=content_kinds.choices)
 
@@ -224,20 +288,21 @@ class ContentKind(models.Model):
         return self.kind
 
 class FileFormat(models.Model):
-    extension = models.CharField(primary_key=True, max_length=40, choices=extensions.choices)
+    extension = models.CharField(primary_key=True, max_length=40, choices=file_formats.choices)
     mimetype = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return self.extension
 
 class FormatPreset(models.Model):
-    id = models.CharField(primary_key=True, max_length=150, choices=presets.choices)
+    id = models.CharField(primary_key=True, max_length=150, choices=format_presets.choices)
     readable_name = models.CharField(max_length=400)
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
-    order = models.IntegerField()
-    kind = models.ForeignKey(ContentKind, related_name='format_presets')
+    display = models.BooleanField(default=True) # Render on client side
+    order = models.IntegerField(default=0)
+    kind = models.ForeignKey(ContentKind, related_name='format_presets', null=True)
     allowed_formats = models.ManyToManyField(FileFormat, blank=True)
 
     def __str__(self):
@@ -268,6 +333,7 @@ class File(models.Model):
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
     lang = models.ForeignKey(Language, blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
+    source_url = models.CharField(max_length=400, blank=True, null=True)
 
     class Admin:
         pass
@@ -283,13 +349,14 @@ class File(models.Model):
             2. fill the other fields accordingly
         """
         if self.file_on_disk:  # if file_on_disk is supplied, hash out the file
-            md5 = hashlib.md5()
-            for chunk in self.file_on_disk.chunks():
-                md5.update(chunk)
+            if self.checksum is None or self.checksum == "":
+                md5 = hashlib.md5()
+                for chunk in self.file_on_disk.chunks():
+                    md5.update(chunk)
 
-            self.checksum = md5.hexdigest()
-            self.file_size = self.file_on_disk.size
-            self.extension = os.path.splitext(self.file_on_disk.name)[1]
+                self.checksum = md5.hexdigest()
+                self.file_size = self.file_on_disk.size
+                self.extension = os.path.splitext(self.file_on_disk.name)[1]
         else:
             self.checksum = None
             self.file_size = None
@@ -305,25 +372,8 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     """
     if not File.objects.filter(file_on_disk=instance.file_on_disk.url):
         file_on_disk_path = os.path.join(settings.STORAGE_ROOT, instance.checksum[0:1], instance.checksum[1:2], instance.checksum + '.' + instance.file_format.extension)
-        print file_on_disk_path
         if os.path.isfile(file_on_disk_path):
             os.remove(file_on_disk_path)
-
-class License(models.Model):
-    """
-    Normalize the license of ContentNode model
-    """
-    license_name = models.CharField(max_length=50)
-    license_url = models.URLField(blank=True)
-    license_description = models.TextField(blank=True)
-    exists = models.BooleanField(
-        default=False,
-        verbose_name=_("license exists"),
-        help_text=_("Tells whether or not a content item is licensed to share"),
-    )
-
-    def __str__(self):
-        return self.license_name
 
 class PrerequisiteContentRelationship(models.Model):
     """
@@ -377,34 +427,25 @@ class RelatedContentRelationship(models.Model):
         super(RelatedContentRelationship, self).save(*args, **kwargs)
 
 class Exercise(models.Model):
-
-    title = models.CharField(
-        max_length=50,
-        verbose_name=_("title"),
-        default=_("Title"),
-        help_text=_("Title of the content item"),
-    )
-
-    description = models.TextField(
-        max_length=200,
-        verbose_name=_("description"),
-        default=_("Description"),
-        help_text=_("Brief description of what this content item is"),
-    )
+    contentnode = models.ForeignKey('ContentNode', related_name="exercise", null=True)
+    mastery_model = models.CharField(max_length=200, default=exercises.DO_ALL, choices=exercises.MASTERY_MODELS)
 
 class AssessmentItem(models.Model):
-
     type = models.CharField(max_length=50, default="multiplechoice")
     question = models.TextField(blank=True)
+    hints = models.TextField(default="[]")
     answers = models.TextField(default="[]")
-    exercise = models.ForeignKey('Exercise', related_name="all_assessment_items")
+    order = models.IntegerField(default=1)
+    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
+    assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
+    raw_data = models.TextField(blank=True)
 
 class Invitation(models.Model):
     """ Invitation to edit channel """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     invited = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name='sent_to')
-    email = models.EmailField(max_length=100)
-    sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_by')
+    email = models.EmailField(max_length=100, null=True)
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_by', null=True)
     channel = models.ForeignKey('Channel', null=True, related_name='pending_editors')
     first_name = models.CharField(max_length=100, default='Guest')
     last_name = models.CharField(max_length=100, blank=True, null=True)

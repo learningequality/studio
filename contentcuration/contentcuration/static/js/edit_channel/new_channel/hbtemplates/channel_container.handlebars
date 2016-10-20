@@ -27,7 +27,7 @@
 	<span class="channel_metadata">
 		<span class="resource_count">{{resource_count}}</span> Resource(s)
 		<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size total_file_size}}{{/format_file_size}}
-		&nbsp;ID: {{channel.id}}
+		&nbsp;ID: {{#if channel.main_tree.published}}{{channel.id}}{{else}}<em>(Unpublished)</em>{{/if}}
 	</span>
 	<h4>
 		<span class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right"></span>
