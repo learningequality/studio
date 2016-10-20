@@ -166,7 +166,7 @@ def convert_data_to_nodes(content_data, parent_node, file_data):
         convert_data_to_nodes(node_data['children'], new_node, file_data)
         sort_order += 1
 
-def create_node(node_data, parent_node):
+def create_node(node_data, parent_node, sort_order):
     title=node_data['title']
     node_id=node_data['node_id']
     description=node_data['description']
@@ -190,6 +190,7 @@ def create_node(node_data, parent_node):
         license=license,
         parent = parent_node,
         extra_fields=extra_fields,
+        sort_order = sort_order,
     )
 
 def map_files_to_node(node, data, file_data):
