@@ -3,6 +3,7 @@ This module acts as the only interface point between other apps and the database
 """
 import logging
 import os
+import re
 from functools import wraps
 from django.core.files import File as DjFile
 from django.db.models import Q, Value
@@ -158,13 +159,16 @@ def init_staging_tree(channel):
     return channel.staging_tree
 
 def convert_data_to_nodes(content_data, parent_node, file_data):
-    sort_order = 1
-    for node_data in content_data:
-        new_node = create_node(node_data, parent_node, sort_order)
-        map_files_to_node(new_node, node_data['files'], file_data)
-        create_exercises(new_node, node_data['questions'])
-        convert_data_to_nodes(node_data['children'], new_node, file_data)
-        sort_order += 1
+    try:
+        sort_order = 1
+        for node_data in content_data:
+            new_node = create_node(node_data, parent_node, sort_order)
+            map_files_to_node(new_node, node_data['files'], file_data)
+            create_exercises(new_node, node_data['questions'])
+            convert_data_to_nodes(node_data['children'], new_node, file_data)
+            sort_order += 1
+    except KeyError as e:
+        raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
 
 def create_node(node_data, parent_node, sort_order):
     title=node_data['title']
