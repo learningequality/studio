@@ -373,6 +373,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   render: function() {
     var has_files = false;
     if(this.selected_items.length === 1){
+      has_files = this.selected_items[0].model.get("kind") !== "topic" && this.selected_items[0].model.get("kind") !== "exercise";
       this.selected_items[0].model.get("files").forEach(function(file){
         var preset = (file.preset.id)? file.preset.id:file.preset;
         has_files = has_files || window.formatpresets.get({id:preset}).get("display");
@@ -586,6 +587,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   handle_change:function(){
     this.set_edited(true);
+    $("#metadata_preview_btn").css("display", "inline-block");
     this.container.preview_view.load_preview();
   },
   add_tag:function(tagname){
