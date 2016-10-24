@@ -5,7 +5,7 @@ import shutil
 import tempfile
 import json
 import sys
-
+import uuid
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -133,17 +133,20 @@ def create_bare_contentnode(ccnode):
     if ccnode.license is not None:
         kolibri_license = create_kolibri_license_object(ccnode.license)[0]
 
-    kolibrinode = kolibrimodels.ContentNode.objects.create(
-        title=ccnode.title,
+    # import pdb; pdb.set_trace()
+    # kolibrinode, is_new = kolibrimodels.ContentNode.objects.get_or_create(pk=ccnode.node_id, kind=ccnode.kind.kind)
+    kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
-        content_id=ccnode.content_id,
-        description=ccnode.description,
-        sort_order=ccnode.sort_order,
-        license_owner=ccnode.copyright_holder,
-        kind=ccnode.kind.kind,
-        license=kolibri_license,
-        available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
-        stemmed_metaphone= ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
+        defaults={'kind': ccnode.kind.kind,
+            'title': ccnode.title,
+            'content_id': ccnode.content_id,
+            'description': ccnode.description,
+            'sort_order': ccnode.sort_order,
+            'license_owner': ccnode.copyright_holder,
+            'license': kolibri_license,
+            'available': True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
+            'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
+        }
     )
 
     if ccnode.parent:
