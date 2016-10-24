@@ -2,6 +2,7 @@
 @import "modal-styles.less";
 
 #exercisecreation{
+	@hint-color:#FDFADF;
 	input[type="text"], textarea {
 		padding: 2px 5px;
 		margin-bottom: 25px;
@@ -55,7 +56,7 @@
 		}
 
 		.assessment_item{
-			margin:0px 5px 15px 5px;
+			margin:0px 5px 30px 15px;
 			width:100%;
 
 			.toolbar{
@@ -110,8 +111,17 @@
 						height:15px;
 					}
 				}
+				.hint_item{
+					cursor:pointer;
+					font-style:italic;
+					font-size:10pt;
+					background-color:@hint-color;
+				}
 				.show_on_focus{
 					display:none;
+				}
+				.list-group{
+					margin-bottom:0;
 				}
 			}
 		}
@@ -131,12 +141,12 @@
 					.addanswer{
 						cursor:pointer;
 					}
-					.addanswer:hover{
+					.addanswer:hover, .addhint:hover{
 						font-weight:bold;
 					}
 					li{
 						width:100%;
-						.answer-toolbar{
+						.answer-toolbar, .hint-toolbar{
 							text-align:right;
 							.toggle{
 								a{
@@ -158,6 +168,9 @@
 	}
 	#exercise_list.hide_answers{
 		.answers{
+			display:none;
+		}
+		.hints{
 			display:none;
 		}
 		.assessment_item.active .answers{

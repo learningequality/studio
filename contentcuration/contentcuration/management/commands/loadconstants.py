@@ -200,6 +200,22 @@ FILE_FORMATS = [
             "mimetype" : file_formats.PERSEUS_MIMETYPE,
         },
     },
+    {
+        "model": models.FileFormat,
+        "pk": "extension",
+        "fields": {
+            "extension": file_formats.SVG,
+            "mimetype" : file_formats.SVG_MIMETYPE,
+        },
+    },
+    {
+        "model": models.FileFormat,
+        "pk": "extension",
+        "fields": {
+            "extension": file_formats.JSON,
+            "mimetype" : file_formats.JSON_MIMETYPE,
+        },
+    },
 ]
 
 KINDS = [
@@ -250,6 +266,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "display": True,
             "order" : 1,
             "kind_id" : content_kinds.VIDEO,
             "allowed_formats" : [file_formats.MP4],
@@ -264,6 +281,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "display": True,
             "order" : 2,
             "kind_id" : content_kinds.VIDEO,
             "allowed_formats" : [file_formats.MP4],
@@ -278,6 +296,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "display": True,
             "order" : 3,
             "kind_id" : content_kinds.VIDEO,
             "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
@@ -292,6 +311,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "display": True,
             "order" : 1,
             "kind_id" : content_kinds.AUDIO,
             "allowed_formats" : [file_formats.WAV, file_formats.MP3],
@@ -306,6 +326,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "display": True,
             "order" : 2,
             "kind_id" : content_kinds.AUDIO,
             "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
@@ -320,6 +341,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "display": True,
             "order" : 1,
             "kind_id" : content_kinds.DOCUMENT,
             "allowed_formats" : [file_formats.PDF],
@@ -334,6 +356,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "display": True,
             "order" : 2,
             "kind_id" : content_kinds.DOCUMENT,
             "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG]
@@ -348,6 +371,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "display": True,
             "order" : 1,
             "kind_id" : content_kinds.EXERCISE,
             "allowed_formats" : [file_formats.PERSEUS],
@@ -362,9 +386,40 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "display": True,
             "order" : 2,
             "kind_id" : content_kinds.EXERCISE,
             "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+        },
+    },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
+            "id" : format_presets.EXERCISE_IMAGE,
+            "readable_name": format_presets.EXERCISE_IMAGE_READABLE,
+            "multi_language" : False,
+            "supplementary" : True,
+            "thumbnail" : False,
+            "display": False,
+            "order" : 3,
+            "kind_id" : content_kinds.EXERCISE,
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+        },
+    },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
+            "id" : format_presets.EXERCISE_GRAPHIE,
+            "readable_name": format_presets.EXERCISE_GRAPHIE_READABLE,
+            "multi_language" : False,
+            "supplementary" : True,
+            "thumbnail" : False,
+            "display": False,
+            "order" : 4,
+            "kind_id" : content_kinds.EXERCISE,
+            "allowed_formats" : [file_formats.SVG, file_formats.JSON],
         },
     },
 ]
@@ -394,6 +449,7 @@ class Command(BaseCommand):
                     new_model_count += 1 if isNew else 0
                     for attr, value in constant['fields'].items():
                         setattr(obj, attr, value)
+
                     obj.save()
                 self.stdout.write("{0}: {1} constants saved ({2} new)".format(str(current_model), len(constant_list), new_model_count))
             self.stdout.write("************ DONE. ************")

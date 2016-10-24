@@ -100,7 +100,7 @@ class FormatPresetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FormatPreset
-        fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats','associated_mimetypes')
+        fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats','associated_mimetypes', 'display')
 
 class ContentKindSerializer(serializers.ModelSerializer):
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
@@ -318,7 +318,7 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
 
     class Meta:
         model = AssessmentItem
-        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hint', 'raw_data')
+        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hints', 'raw_data')
         list_serializer_class = BulkListSerializer
 
 class ChannelSerializer(serializers.ModelSerializer):
