@@ -135,19 +135,19 @@ def create_bare_contentnode(ccnode):
 
     # import pdb; pdb.set_trace()
     # kolibrinode, is_new = kolibrimodels.ContentNode.objects.get_or_create(pk=ccnode.node_id, kind=ccnode.kind.kind)
-    kolibrinode = kolibrimodels.ContentNode.objects.update_or_create(
+    kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
         defaults={'kind': ccnode.kind.kind,
-            'title':ccnode.title,
-            'content_id':ccnode.content_id,
-            'description':ccnode.description,
-            'sort_order':ccnode.sort_order,
-            'license_owner':ccnode.copyright_holder,
-            'license':kolibri_license,
-            'available':True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
+            'title': ccnode.title,
+            'content_id': ccnode.content_id,
+            'description': ccnode.description,
+            'sort_order': ccnode.sort_order,
+            'license_owner': ccnode.copyright_holder,
+            'license': kolibri_license,
+            'available': True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
             'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
         }
-    )[0]
+    )
 
     if ccnode.parent:
         logging.debug("Associating {child} with parent {parent}".format(
