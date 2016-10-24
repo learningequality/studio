@@ -51,6 +51,8 @@ INSTALLED_APPS = (
     'kolibri.content',
     'email_extras',
     'le_utils',
+    'oauth2_provider',
+    'corsheaders',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -63,6 +65,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 )
 
 #REST_FRAMEWORK = {
@@ -159,9 +162,9 @@ SITE_ID = 1
 # EMAIL_HOST_USER = ''
 # EMAIL_HOST_PASSWORD = ''
 # EMAIL_USE_TLS = False
-EMAIL_BACKEND = 'django_mailgun.MailgunBackend'
-MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
-MAILGUN_SERVER_NAME = 'SERVER-NAME'
+# EMAIL_BACKEND = 'django_mailgun.MailgunBackend'
+# MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
+# MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
 DEFAULT_FROM_EMAIL = 'Kolibri Content Curation <info@learningequality.org>'
 DEFAULT_LICENSE = 1

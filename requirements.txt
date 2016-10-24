@@ -20,3 +20,4 @@ https://github.com/learningequality/kolibri/tarball/master#egg=kolibri
 validators
 le_utils==0.0.9rc1
 django-mailgun==0.9.1
+django-oauth-toolkit django-cors-headers==0.10.0

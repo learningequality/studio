@@ -130,6 +130,8 @@ urlpatterns = [
     url(r'^api/internal/create_channel$', views.api_create_channel_endpoint, name="api_create_channel"),
     url(r'^open_channel/(?P<invitation_id>[^/]+)/(?P<channel_id>[^/]+)$', views.api_open_channel, name="open_channel"),
     url(r'^open_fail$', views.fail_open_channel, name="fail_open_channel"),
+    url(r'^admin/', include(admin.site.urls)),
+    url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 ]
 
 urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]
