@@ -4,6 +4,8 @@ import zipfile
 import shutil
 import tempfile
 import json
+import sys
+import uuid
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -12,6 +14,7 @@ from django.core.files import File
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from django.template.loader import render_to_string
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
@@ -22,7 +25,8 @@ from kolibri.content.utils.search import fuzz
 
 import logging as logmodule
 logging = logmodule.getLogger(__name__)
-
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 class EarlyExit(BaseException):
     def __init__(self, message, db_path):
@@ -117,7 +121,7 @@ def map_content_nodes(root_node):
 
             kolibrinode = create_bare_contentnode(node)
 
-            if node.kind.kind == content_kinds.EXERCISE and node.files.filter(preset__kind=None).exists():
+            if node.kind.kind == content_kinds.EXERCISE and node.files.filter(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)).exists():
                 create_perseus_exercise(node)
             if node.kind.kind != content_kinds.TOPIC:
                 create_associated_file_objects(kolibrinode, node)
@@ -130,18 +134,21 @@ def create_bare_contentnode(ccnode):
     if ccnode.license is not None:
         kolibri_license = create_kolibri_license_object(ccnode.license)[0]
 
-    kolibrinode = kolibrimodels.ContentNode.objects.create(
-        title=ccnode.title,
+    # import pdb; pdb.set_trace()
+    # kolibrinode, is_new = kolibrimodels.ContentNode.objects.get_or_create(pk=ccnode.node_id, kind=ccnode.kind.kind)
+    kolibrinode = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
-        content_id=ccnode.content_id,
-        description=ccnode.description,
-        sort_order=ccnode.sort_order,
-        license_owner=ccnode.copyright_holder,
-        kind=ccnode.kind.kind,
-        license=kolibri_license,
-        available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
-        stemmed_metaphone= ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
-    )
+        defaults={'kind': ccnode.kind.kind,
+            'title':ccnode.title,
+            'content_id':ccnode.content_id,
+            'description':ccnode.description,
+            'sort_order':ccnode.sort_order,
+            'license_owner':ccnode.copyright_holder,
+            'license':kolibri_license,
+            'available':True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
+            'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
+        }
+    )[0]
 
     if ccnode.parent:
         logging.debug("Associating {child} with parent {parent}".format(
@@ -159,7 +166,7 @@ def create_bare_contentnode(ccnode):
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating File objects for Node {}".format(kolibrinode.id))
-    for ccfilemodel in ccnode.files.exclude(preset__kind=None):
+    for ccfilemodel in ccnode.files.exclude(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
 
@@ -196,6 +203,7 @@ def create_perseus_exercise(ccnode):
 
 def create_perseus_zip(ccnode, write_to_path):
     assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode)
+
     with zipfile.ZipFile(write_to_path, "w") as zf:
         exercise_data = json.loads(ccnode.extra_fields)
         if 'mastery_model' not in exercise_data or exercise_data['mastery_model'] is None:
@@ -207,7 +215,7 @@ def create_perseus_zip(ccnode, write_to_path):
         exercise_result = render_to_string('perseus/exercise.json', exercise_context)
         zf.writestr("exercise.json", exercise_result)
 
-        for image in ccnode.files.filter(preset__kind=None):
+        for image in ccnode.files.filter(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
             image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
             if image_name not in zf.namelist():
                 image.file_on_disk.open(mode="rb")
@@ -219,15 +227,22 @@ def create_perseus_zip(ccnode, write_to_path):
 def write_assessment_item(assessment_item, zf):
     template=''
     replacement_string = exercises.IMG_PLACEHOLDER + "/images"
+
     answer_data = json.loads(assessment_item.answers)
     for answer in answer_data:
-        answer['answer'] = answer['answer'].replace(exercises.IMG_PLACEHOLDER, replacement_string)
+        answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string)
+
+    hint_data = json.loads(assessment_item.hints)
+    for hint in hint_data:
+        hint['hint'] = hint['hint'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string)
 
     context = {
-        'question' : assessment_item.question.replace(exercises.IMG_PLACEHOLDER, replacement_string),
+        'question' : assessment_item.question.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string),
         'answers':answer_data,
         'multipleSelect':assessment_item.type == exercises.MULTIPLE_SELECTION,
-        'raw_data': assessment_item.raw_data.replace(exercises.IMG_PLACEHOLDER, replacement_string),
+        'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string),
+        'hints': hint_data,
+        'freeresponse':assessment_item.type == exercises.FREE_RESPONSE,
     }
 
     if assessment_item.type == exercises.MULTIPLE_SELECTION:
@@ -235,13 +250,13 @@ def write_assessment_item(assessment_item, zf):
     elif assessment_item.type == exercises.SINGLE_SELECTION:
         template = 'perseus/multiple_selection.json'
     elif assessment_item.type == exercises.FREE_RESPONSE:
-        template = 'perseus/free_response.json'
+        template = 'perseus/input_question.json'
     elif assessment_item.type == exercises.INPUT_QUESTION:
         template = 'perseus/input_question.json'
     elif assessment_item.type == exercises.PERSEUS_QUESTION:
         template = 'perseus/perseus_question.json'
 
-    result = render_to_string(template,  context).encode('utf-8', "ignore")
+    result = render_to_string(template, context).encode('utf-8', "ignore")
     filename = "{0}.json".format(assessment_item.assessment_id)
     zf.writestr(filename, result)
 
