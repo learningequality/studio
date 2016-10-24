@@ -238,7 +238,6 @@ class ContentNode(MPTTModel, models.Model):
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
     sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
     copyright_holder = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
-    author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"))
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
 
@@ -248,6 +247,7 @@ class ContentNode(MPTTModel, models.Model):
 
     changed = models.BooleanField(default=True)
     extra_fields = models.TextField(blank=True, null=True)
+    author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"), null=True)
 
     objects = TreeManager()
 
@@ -300,8 +300,8 @@ class FormatPreset(models.Model):
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
-    display = models.BooleanField(default=True)
-    order = models.IntegerField()
+    display = models.BooleanField(default=True) # Render on client side
+    order = models.IntegerField(default=0)
     kind = models.ForeignKey(ContentKind, related_name='format_presets', null=True)
     allowed_formats = models.ManyToManyField(FileFormat, blank=True)
 
@@ -333,7 +333,7 @@ class File(models.Model):
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
     lang = models.ForeignKey(Language, blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
-    source_url = models.CharField(max_length=400, blank=True)
+    source_url = models.CharField(max_length=400, blank=True, null=True)
 
     class Admin:
         pass
@@ -349,13 +349,14 @@ class File(models.Model):
             2. fill the other fields accordingly
         """
         if self.file_on_disk:  # if file_on_disk is supplied, hash out the file
-            md5 = hashlib.md5()
-            for chunk in self.file_on_disk.chunks():
-                md5.update(chunk)
+            if self.checksum is None or self.checksum == "":
+                md5 = hashlib.md5()
+                for chunk in self.file_on_disk.chunks():
+                    md5.update(chunk)
 
-            self.checksum = md5.hexdigest()
-            self.file_size = self.file_on_disk.size
-            self.extension = os.path.splitext(self.file_on_disk.name)[1]
+                self.checksum = md5.hexdigest()
+                self.file_size = self.file_on_disk.size
+                self.extension = os.path.splitext(self.file_on_disk.name)[1]
         else:
             self.checksum = None
             self.file_size = None
@@ -432,7 +433,7 @@ class Exercise(models.Model):
 class AssessmentItem(models.Model):
     type = models.CharField(max_length=50, default="multiplechoice")
     question = models.TextField(blank=True)
-    hint = models.TextField(blank=True)
+    hints = models.TextField(default="[]")
     answers = models.TextField(default="[]")
     order = models.IntegerField(default=1)
     contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)

@@ -43,5 +43,14 @@
         "major": 0,
         "minor": 1
     },
-    "hints": []
+    "hints": [
+        {% for hint in hints %}
+        {
+            "widgets":{},
+            "images":{},
+            "content":"{{hint.hint | escape_newline}}",
+            "replace":false
+        }{% if forloop.last %}{% else %},{% endif %}
+        {% endfor %}
+    ]
 }

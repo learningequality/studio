@@ -6,7 +6,6 @@ import tempfile
 import json
 import sys
 import uuid
-
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.files.uploadedfile import SimpleUploadedFile
