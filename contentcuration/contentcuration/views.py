@@ -179,8 +179,10 @@ def api_file_upload(request):
             fobj = request.FILES["file"]
             file_path = generate_file_on_disk_name(fobj._name.split(".")[-2], fobj._name)
 
-            with open(file_path, 'wb') as destf:
-                shutil.copyfileobj(fobj, destf)
+            # Write file if it doesn't already exist
+            if not os.path.isfile(file_path):
+                with open(file_path, 'wb') as destf:
+                    shutil.copyfileobj(fobj, destf)
 
             return HttpResponse(json.dumps({
                 "success": True,
