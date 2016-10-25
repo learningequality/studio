@@ -20,6 +20,7 @@ from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
 from rest_framework import routers, viewsets
 from rest_framework.permissions import AllowAny
+import oauth2_provider.views as oauth2_views
 from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem, ContentKind, Language, User, Invitation
 import contentcuration.serializers as serializers
 import contentcuration.views as views
@@ -99,6 +100,30 @@ bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
 bulkrouter.register(r'contentnode', ContentNodeViewSet)
 bulkrouter.register(r'file', FileViewSet)
 
+# OAuth2 provider endpoints
+oauth2_endpoint_views = [
+    url(r'^authorize/$', oauth2_views.AuthorizationView.as_view(), name="authorize"),
+    url(r'^token/$', oauth2_views.TokenView.as_view(), name="token"),
+    url(r'^revoke-token/$', oauth2_views.RevokeTokenView.as_view(), name="revoke-token"),
+]
+
+if settings.DEBUG:
+    # OAuth2 Application Management endpoints
+    oauth2_endpoint_views += [
+        url(r'^applications/$', oauth2_views.ApplicationList.as_view(), name="list"),
+        url(r'^applications/register/$', oauth2_views.ApplicationRegistration.as_view(), name="register"),
+        url(r'^applications/(?P<pk>\d+)/$', oauth2_views.ApplicationDetail.as_view(), name="detail"),
+        url(r'^applications/(?P<pk>\d+)/delete/$', oauth2_views.ApplicationDelete.as_view(), name="delete"),
+        url(r'^applications/(?P<pk>\d+)/update/$', oauth2_views.ApplicationUpdate.as_view(), name="update"),
+    ]
+
+    # OAuth2 Token Management endpoints
+    oauth2_endpoint_views += [
+        url(r'^authorized-tokens/$', oauth2_views.AuthorizedTokensListView.as_view(), name="authorized-token-list"),
+        url(r'^authorized-tokens/(?P<pk>\d+)/delete/$', oauth2_views.AuthorizedTokenDeleteView.as_view(),
+            name="authorized-token-delete"),
+    ]
+
 urlpatterns = [
     url(r'^$', views.base, name='base'),
     url(r'^test/', views.testpage, name='test'),
@@ -131,7 +156,11 @@ urlpatterns = [
     url(r'^open_channel/(?P<invitation_id>[^/]+)/(?P<channel_id>[^/]+)$', views.api_open_channel, name="open_channel"),
     url(r'^open_fail$', views.fail_open_channel, name="fail_open_channel"),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
-    url(r'^settings/', views.settings, name='settings'),
+    url(r'^settings/$', views.settings, name='settings'),
+    url(r'^settings/profile', views.profile_settings, name='profile_settings'),
+    url(r'^settings/account', views.account_settings, name='account_settings'),
+    url(r'^settings/tokens', views.tokens_settings, name='tokens_settings'),
+    url(r'^api/hello', views.AuthView.as_view()),  # an example resource endpoint
 ]
 
 urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]

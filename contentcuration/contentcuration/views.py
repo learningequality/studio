@@ -27,6 +27,7 @@ from django.core.context_processors import csrf
 from django.db.models import Q
 from django.template import RequestContext
 from django.template.loader import render_to_string
+from oauth2_provider.views.generic import ProtectedResourceView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
@@ -56,9 +57,6 @@ def channel_list(request):
                                                  "license_list" : JSONRenderer().render(license_serializer.data),
                                                  "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
 
-@login_required
-def settings(request):
-    return render(request, 'user.html', {"current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
 
 
 @login_required
@@ -540,3 +538,23 @@ class UserRegistrationView(RegistrationView):
         message = render_to_string(self.email_body_template, context)
         # message_html = render_to_string(self.email_html_template, context)
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, ) #html_message=message_html,)
+
+class AuthView(ProtectedResourceView):
+    def get(self, request, *args, **kwargs):
+        return HttpResponse('Hello, OAuth2!')
+
+@login_required
+def settings(request):
+    return redirect('settings/profile')
+
+@login_required
+def profile_settings(request):
+    return render(request, 'settings/profile.html', {"current_user" : request.user, "page": "profile"})
+
+@login_required
+def account_settings(request):
+    return render(request, 'settings/account.html', {"current_user" : request.user, "page": "account"})
+
+@login_required
+def tokens_settings(request):
+    return render(request, 'settings/tokens.html', {"current_user" : request.user, "page": "tokens"})

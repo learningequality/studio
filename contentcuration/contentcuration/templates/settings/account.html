@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+{% extends "settings/settings.html" %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block settingscontent %}
+<h4>My Account</h4>
+<p>Change your password or recover your current one.</p>
+<hr/>
+<div class="container-fluid">
+	<div class="input-group settings_field">
+	  <span class="input-group-addon">Current Password</span>
+	  <input type="password" class="form-control">
+	</div>
+	<div class="input-group settings_field">
+	  <span class="input-group-addon">New Password</span>
+	  <input type="password" class="form-control">
+	</div>
+	<div class="input-group settings_field">
+	  <span class="input-group-addon">Verify Password</span>
+	  <input type="password" class="form-control">
+	</div>
+</div>
+{% endblock settingscontent %}

@@ -24,6 +24,7 @@
 
 	#settings-page{
 		max-width:700px;
+		width:60vw;
 
 		h4{
 			font-size:16pt;
@@ -33,9 +34,9 @@
 		.settings_field{
 			margin-bottom: 20px;
 		}
-	}
-
-	#save_indicator{
-		display:none;
+		button[disabled]{
+			cursor: not-allowed !important;
+			opacity: 0.5;
+		}
 	}
 }
