@@ -55,6 +55,12 @@ def channel_list(request):
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
                                                  "license_list" : JSONRenderer().render(license_serializer.data),
                                                  "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
+
+@login_required
+def settings(request):
+    return render(request, 'user.html', {"current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
+
+
 @login_required
 def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)

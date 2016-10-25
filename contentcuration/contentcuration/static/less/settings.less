@@ -1,0 +1,41 @@
+@import "global-variables.less";
+
+#settings-area{
+	padding:30px;
+	padding-top:50px;
+
+	#settings-nav{
+		min-width: 200px;
+		margin-right:20px;
+		margin-top:5px;
+		font-size: 12pt;
+
+		#settings-options-heading{
+			font-size:13pt;
+			background-color: @blue-100;
+		}
+		#settings-options{
+			width:100%;
+			.active-option{
+				background-color: @gray-200;
+			}
+		}
+	}
+
+	#settings-page{
+		max-width:700px;
+
+		h4{
+			font-size:16pt;
+			font-weight:bold;
+		}
+
+		.settings_field{
+			margin-bottom: 20px;
+		}
+	}
+
+	#save_indicator{
+		display:none;
+	}
+}
