@@ -120,7 +120,7 @@ def map_content_nodes(root_node):
 
             kolibrinode = create_bare_contentnode(node)
 
-            if node.kind.kind == content_kinds.EXERCISE and node.files.filter(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)).exists():
+            if node.kind.kind == content_kinds.EXERCISE:
                 create_perseus_exercise(node)
             if node.kind.kind != content_kinds.TOPIC:
                 create_associated_file_objects(kolibrinode, node)
@@ -207,7 +207,7 @@ def create_perseus_zip(ccnode, write_to_path):
         exercise_data = json.loads(ccnode.extra_fields)
         if 'mastery_model' not in exercise_data or exercise_data['mastery_model'] is None:
             raise ObjectDoesNotExist("ERROR: Exercises must have a mastery model")
-        exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items]})
+        exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
         exercise_context = {
             'exercise': json.dumps(exercise_data)
         }
