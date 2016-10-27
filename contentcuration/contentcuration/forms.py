@@ -2,7 +2,7 @@ from contentcuration.models import User
 from django import forms
 from django.utils.translation import ugettext as _
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm
 
 class RegistrationForm(UserCreationForm):
     password1 = forms.CharField(widget=forms.PasswordInput, label='Password', required=True)
@@ -109,3 +109,25 @@ class InvitationAcceptForm(AuthenticationForm):
         else:
             self.confirm_login_allowed(self.user)
         return self.cleaned_data
+
+class ProfileSettingsForm(UserChangeForm):
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name')
+        exclude =  ('password', 'email')
+
+    def clean_password(self):
+        pass
+
+    def save(self, user):
+        user.first_name = self.cleaned_data["first_name"]
+        user.last_name = self.cleaned_data["last_name"]
+        user.save()
+        return user
+
+    def __init__(self, *args, **kwargs):
+        super(ProfileSettingsForm, self).__init__(*args, **kwargs)
+

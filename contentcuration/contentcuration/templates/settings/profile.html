@@ -8,21 +8,30 @@
 <p>Change your profile information.</p>
 <hr/>
 <div class="container-fluid">
-	<div class="input-group settings_field">
-	  <span class="input-group-addon">Username</span>
-	  <input type="text" class="form-control" value="{{user.email}}" disabled>
-	</div>
-	<div class="input-group settings_field">
-	  <span class="input-group-addon">First Name</span>
-	  <input type="text" class="form-control" value="{{user.first_name}}">
-	</div>
-	<div class="input-group settings_field">
-	  <span class="input-group-addon">Last Name</span>
-	  <input type="text" class="form-control" value="{{user.last_name}}">
-	</div>
-	<br>
-	<button class="action-button pull-right" id="save" disabled>
-		<span>No Changes Found</span>
-	</button>
+	<form action="/settings/profile/" method="post">
+		<div id="form-wrapper">
+			{% csrf_token %}
+			<div class="input-group settings_field">
+			  <span class="input-group-addon">Username</span>
+			  <input type="text" class="form-control setting_input" value="{{user.email}}" disabled>
+			</div>
+			<div class="input-group settings_field">
+			  <span class="input-group-addon">{{ form.first_name.label }}</span>
+			  {{ form.first_name }}
+			</div>
+			<div class="input-group settings_field">
+			  <span class="input-group-addon">{{ form.last_name.label }}</span>
+			  {{ form.last_name }}
+			</div>
+		</div>
+		<br>
+		<input id="save" class="action-button pull-right" type="submit" value="No Changes Found" disabled/>
+	</form>
 </div>
+<script>
+	$(".setting_input").on("keydown", function(event){
+		$("#save").attr("disabled", false)
+		$("#save").val("SAVE CHANGES")
+	});
+</script>
 {% endblock settingscontent %}

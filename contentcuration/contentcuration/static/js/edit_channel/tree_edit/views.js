@@ -15,7 +15,6 @@ var DragHelper = require("edit_channel/utils/drag_drop");
 var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	lists: [],
 	template: require("./hbtemplates/container_area.handlebars"),
-	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
 	initialize: function(options) {
 		_.bindAll(this, 'copy_content','delete_content' , 'add_container','toggle_details', 'handle_checked');
 		this.bind_workspace_functions();
@@ -49,10 +48,6 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 
 		(this.is_edit_page) ? $("#channel-edit-button").addClass("active") : $("#channel-preview-button").addClass("active");
 
-	 	$("#channel_select_dd_wrapper").html(this.dropdown_template({
-			channel_list: window.channels.toJSON(),
-			current_channel: window.current_channel.toJSON()
-		}));
 		this.add_container(this.lists.length, this.model);
 	},
 	add_container: function(index, topic, view){

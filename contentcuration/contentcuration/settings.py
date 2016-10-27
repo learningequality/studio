@@ -51,13 +51,8 @@ INSTALLED_APPS = (
     'kolibri.content',
     'email_extras',
     'le_utils',
-    'oauth2_provider',
-    'corsheaders',
+    'rest_framework.authtoken',
 )
-
-# AUTHENTICATION_BACKENDS = (
-#     'oauth2_provider.backends.OAuth2Backend',
-# )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -69,8 +64,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'oauth2_provider.middleware.OAuth2TokenMiddleware',
 )
 
 #REST_FRAMEWORK = {
