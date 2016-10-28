@@ -30,6 +30,11 @@ class ProfileView(FormView):
     form_class = ProfileSettingsForm
     template_name = 'settings/profile.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(ProfileView, self).get_context_data(**kwargs)
+        context.update({'channels': Channel.objects.filter(deleted=False, editors__email__contains= self.request.user)})
+        return context
+
     def get_initial(self):
         initial = self.initial.copy()
         initial.update({'first_name': self.request.user.first_name, 'last_name': self.request.user.last_name})

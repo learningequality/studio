@@ -16,7 +16,7 @@ from django.dispatch import receiver
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
-
+from rest_framework.authtoken.models import Token
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
 class UserManager(BaseUserManager):
@@ -27,7 +27,6 @@ class UserManager(BaseUserManager):
         new_user = self.model(
             email=self.normalize_email(email),
         )
-
 
         new_user.set_password(password)
         new_user.first_name = first_name

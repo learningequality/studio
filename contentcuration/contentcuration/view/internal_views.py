@@ -18,9 +18,26 @@ from django.db.models.functions import Concat
 from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db import transaction
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
 # TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
 @csrf_exempt
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def authenticate_user_internal(request):
+    logging.debug("Logging in user")
+    return HttpResponse(json.dumps({'success': True, 'token': unicode(request.auth), 'username':unicode(request.user)}))
+
+# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
+@csrf_exempt
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def file_diff(request):
     logging.debug("Entering the file_diff endpoint")
     if request.method != 'POST':
@@ -33,6 +50,9 @@ def file_diff(request):
 
 # TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
 @csrf_exempt
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def api_file_upload(request):
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
@@ -52,6 +72,9 @@ def api_file_upload(request):
 
 # TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
 @csrf_exempt
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def api_create_channel_endpoint(request):
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
@@ -63,31 +86,15 @@ def api_create_channel_endpoint(request):
             file_data = data['file_data']
 
             obj = api_create_channel(channel_data, content_data, file_data)
-            invitation = Invitation.objects.create(channel=obj)
+            obj.editors.add(request.user)
+            obj.save()
 
             return HttpResponse(json.dumps({
                 "success": True,
                 "new_channel": obj.pk,
-                "invite_id":invitation.pk,
             }))
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-@login_required
-def api_open_channel(request, invitation_id, channel_id):
-    if Invitation.objects.filter(id=invitation_id, channel_id=channel_id).exists():
-        channel = Channel.objects.get(id=channel_id)
-        if not channel.editors.filter(id = request.user.pk).exists():
-            channel.editors.add(request.user)
-        channel.save()
-        Invitation.objects.get(id=invitation_id).delete()
-        return redirect('/channels/{0}/edit'.format(channel_id))
-    else:
-        return redirect('/open_fail')
-
-def fail_open_channel(request):
-    return render(request, 'permissions/open_channel_fail.html')
-
 
 
 """ CHANNEL CREATE FUNCTIONS """

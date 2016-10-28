@@ -145,11 +145,10 @@ urlpatterns += [
 
 # Add internal endpoints
 urlpatterns += [
+    url(r'^api/internal/authenticate_user_internal$', internal_views.authenticate_user_internal, name="authenticate_user_internal"),
     url(r'^api/internal/file_diff$', internal_views.file_diff, name="file_diff"),
     url(r'^api/internal/file_upload$', internal_views.api_file_upload, name="api_file_upload"),
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),
-    url(r'^open_channel/(?P<invitation_id>[^/]+)/(?P<channel_id>[^/]+)$', internal_views.api_open_channel, name="open_channel"),
-    url(r'^open_fail$', internal_views.fail_open_channel, name="fail_open_channel"),
 ]
 
 urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]
@@ -159,3 +158,8 @@ if settings.DEBUG:
     urlpatterns += [
         url(r'^' + settings.STORAGE_URL[1:-1] + '(?P<path>.*)$', 'django.views.static.serve', {
         'document_root': settings.STORAGE_ROOT})]
+
+    # import debug_toolbar
+    # urlpatterns += [
+    #     url(r'^__debug__/', include(debug_toolbar.urls)),
+    # ]
