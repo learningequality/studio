@@ -139,13 +139,13 @@ urlpatterns += [
 urlpatterns += [
     url(r'^settings/$', settings_views.settings, name='settings'),
     url(r'^settings/profile', settings_views.ProfileView.as_view(), name='profile_settings'),
-    url(r'^settings/account', settings_views.account_settings, name='account_settings'),
+    url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
+    url(r'^settings/account/success', settings_views.account_settings_success, name='account_settings_success'),
     url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
 ]
 
 # Add internal endpoints
 urlpatterns += [
-    url(r'^api/internal/authenticate_user_internal$', internal_views.authenticate_user_internal, name="authenticate_user_internal"),
     url(r'^api/internal/file_diff$', internal_views.file_diff, name="file_diff"),
     url(r'^api/internal/file_upload$', internal_views.api_file_upload, name="api_file_upload"),
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),

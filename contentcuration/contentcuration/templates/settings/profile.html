@@ -8,6 +8,21 @@
 <p>Change your profile information.</p>
 <hr/>
 <div class="container-fluid">
+	{% if success %}
+		<div class="alert alert-success" role="alert">Your profile has been saved.</div>
+	{% else %}
+		{% if form.errors %}
+			<div class="alert alert-danger" role="alert">
+				<ul class="list-unstyled">
+					{% for field in form %}
+				        {% for error in field.errors %}
+				            <li>{{ error|escape }}</li>
+				        {% endfor %}
+				    {% endfor %}
+				</ul>
+			</div>
+		{% endif %}
+	{% endif %}
 	<form action="/settings/profile/" method="post">
 		<div id="form-wrapper">
 			{% csrf_token %}
