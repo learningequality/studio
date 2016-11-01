@@ -14,6 +14,7 @@ from kolibri.content import models as KolibriContent
 from django.db import transaction
 from le_utils.constants import content_kinds
 import contentcuration.models as models
+from django.core.cache import cache
 
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
@@ -33,7 +34,12 @@ def clean_db():
         tag_obj.delete()
     logging.debug("*********** DONE ***********")
 
-def calculate_node_metadata(node):
+def calculate_node_metadata(node, get_cache=False):
+    cache_name = 'metadata' + node.id
+    cached_data = cache.get(cache_name)
+    if get_cache and cached_data is not None:
+        return cached_data
+
     metadata = {
         "total_count" : node.children.count(),
         "resource_count" : 0,
@@ -45,7 +51,7 @@ def calculate_node_metadata(node):
     if node.kind_id == "topic":
         for n in node.children.all():
             metadata['max_sort_order'] = max(n.sort_order, metadata['max_sort_order'])
-            child_metadata = calculate_node_metadata(n)
+            child_metadata = calculate_node_metadata(n, True)
             metadata['total_count'] += child_metadata['total_count']
             metadata['resource_size'] += child_metadata['resource_size']
             metadata['resource_count'] += child_metadata['resource_count']
@@ -57,6 +63,7 @@ def calculate_node_metadata(node):
         for f in node.files.all():
             metadata['resource_size'] += f.file_size
         metadata['max_sort_order'] = node.sort_order
+    cache.set(cache_name, metadata, None)
     return metadata
 
 def count_files(node):
@@ -66,9 +73,6 @@ def count_files(node):
             count += count_files(n)
         return count
     return 1
-
-    # For some reason, this returns sibling desendants too
-    # return node.get_descendants(include_self=False).exclude(kind_id="topic").count()
 
 def count_all_children(node):
     count = node.children.count()

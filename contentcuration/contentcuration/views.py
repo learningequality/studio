@@ -31,10 +31,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
 from contentcuration.api import get_file_diff, api_create_channel
 from registration.backends.hmac.views import RegistrationView
+from contentcuration.serializers import ExerciseSerializer, ChannelListSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
+from django.core.cache import cache
+from le_utils.constants import format_presets
 
 def base(request):
     if request.user.is_authenticated():
@@ -48,35 +50,28 @@ def testpage(request):
 @login_required
 def channel_list(request):
     channel_list = Channel.objects.filter(deleted=False, editors__email__contains= request.user)
-    channel_serializer = ChannelSerializer(channel_list, many=True)
+    channel_list = ChannelListSerializer.setup_eager_loading(channel_list)
+    channel_serializer = ChannelListSerializer(channel_list, many=True)
 
-    licenses = License.objects.all()
-    license_serializer = LicenseSerializer(licenses, many=True)
+    licenses = get_or_set_cached_constants(License, LicenseSerializer)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
-                                                 "license_list" : JSONRenderer().render(license_serializer.data),
+                                                 "license_list" : licenses,
                                                  "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
+
 @login_required
 def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
     channel_serializer =  ChannelSerializer(channel)
 
-    channel_list = Channel.objects.filter(deleted=False, editors__email__contains= request.user)
-    channel_list_serializer = ChannelSerializer(channel_list, many=True)
-
     accessible_channel_list = Channel.objects.filter( Q(deleted=False, public=True) | Q(deleted=False, editors__email__contains= request.user))
-    accessible_channel_list_serializer = ChannelSerializer(accessible_channel_list, many=True)
+    channel_list = accessible_channel_list.filter(editors__email__contains= request.user)
+    accessible_channel_list = ChannelListSerializer.setup_eager_loading(accessible_channel_list)
+    accessible_channel_list_serializer = ChannelListSerializer(accessible_channel_list, many=True)
 
-    fileformats = FileFormat.objects.all()
-    fileformat_serializer = FileFormatSerializer(fileformats, many=True)
-
-    licenses = License.objects.all()
-    license_serializer = LicenseSerializer(licenses, many=True)
-
-    formatpresets = FormatPreset.objects.all()
-    formatpreset_serializer = FormatPresetSerializer(formatpresets, many=True)
-
-    contentkinds = ContentKind.objects.all()
-    contentkind_serializer = ContentKindSerializer(contentkinds, many=True)
+    fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
+    licenses = get_or_set_cached_constants(License, LicenseSerializer)
+    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
+    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
 
     channel_tags = ContentTag.objects.filter(channel = channel)
     channel_tags_serializer = TagSerializer(channel_tags, many=True)
@@ -84,13 +79,23 @@ def channel(request, channel_id):
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
                                                 "channel_id" : channel_id,
                                                 "accessible_channels" : JSONRenderer().render(accessible_channel_list_serializer.data),
-                                                "channels" : JSONRenderer().render(channel_list_serializer.data),
-                                                "fileformat_list" : JSONRenderer().render(fileformat_serializer.data),
-                                                 "license_list" : JSONRenderer().render(license_serializer.data),
-                                                 "fpreset_list" : JSONRenderer().render(formatpreset_serializer.data),
-                                                 "ckinds_list" : JSONRenderer().render(contentkind_serializer.data),
+                                                "channels" : channel_list,
+                                                "fileformat_list" : fileformats,
+                                                 "license_list" : licenses,
+                                                 "fpreset_list" : formatpresets,
+                                                 "ckinds_list" : contentkinds,
                                                  "ctags": JSONRenderer().render(channel_tags_serializer.data),
                                                  "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
+
+def get_or_set_cached_constants(constant, serializer):
+    cached_data = cache.get(constant.__name__)
+    if cached_data is not None:
+        return cached_data
+    constant_objects = constant.objects.all()
+    constant_serializer = serializer(constant_objects, many=True)
+    constant_data = JSONRenderer().render(constant_serializer.data)
+    cache.set(constant.__name__, constant_data, None)
+    return constant_data
 
 def exercise_list(request):
 
@@ -232,9 +237,12 @@ def fail_open_channel(request):
 def thumbnail_upload(request):
     if request.method == 'POST':
         filename = request.FILES.values()[0]._name
+        ext = os.path.splitext(filename)[1].split(".")[-1] # gets file extension without leading period
+        file_object = File(file_on_disk=request.FILES.values()[0], file_format_id=ext, preset_id=format_presets.CHANNEL_THUMBNAIL)
+        file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
-            "filename": filename
+            "filename": "{0}.{ext}".format(file_object.checksum, ext=ext),
         }))
 
 def exercise_image_upload(request):

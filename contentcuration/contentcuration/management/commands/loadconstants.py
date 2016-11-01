@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 from contentcuration import models
 import logging as logmodule
+from django.core.cache import cache
 logging = logmodule.getLogger(__name__)
 
 SITES = [
@@ -422,6 +423,21 @@ PRESETS = [
             "allowed_formats" : [file_formats.SVG, file_formats.JSON],
         },
     },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
+            "id" : format_presets.CHANNEL_THUMBNAIL,
+            "readable_name": format_presets.CHANNEL_THUMBNAIL_READABLE,
+            "multi_language" : False,
+            "supplementary" : True,
+            "thumbnail" : True,
+            "display": True,
+            "order" : 0,
+            "kind_id" : None,
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+        },
+    },
 ]
 
 
@@ -445,6 +461,8 @@ class Command(BaseCommand):
                 new_model_count = 0
                 for constant in constant_list:
                     current_model=constant['model'].__name__
+                    if cache.has_key(current_model):
+                        cache.delete(current_model)
                     obj, isNew = constant['model'].objects.update_or_create(**{constant['pk'] : constant['fields'][constant['pk']]})
                     new_model_count += 1 if isNew else 0
                     for attr, value in constant['fields'].items():

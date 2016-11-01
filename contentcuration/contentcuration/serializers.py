@@ -12,6 +12,7 @@ from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.conf import settings
+from django.core.cache import cache
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -174,7 +175,7 @@ class CustomListSerializer(serializers.ListSerializer):
                                         taglist.append(tag_itm)
 
                             setattr(node, 'tags', taglist)
-                            node.save()
+                            cache.set('metadata' + node.id, calculate_node_metadata(node), None)
                             ret.append(node)
         # clean_db()
         return ret
@@ -193,6 +194,13 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     files = FileSerializer(many=True, read_only=True)
     metadata = serializers.SerializerMethodField('calculate_metadata')
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.prefetch_related('children')
+        queryset = queryset.prefetch_related('files')
+        return queryset
 
     def retrieve_associated_presets(self, node):
         return FormatPreset.objects.filter(kind = node.kind).values()
@@ -322,34 +330,40 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
         list_serializer_class = BulkListSerializer
 
 class ChannelSerializer(serializers.ModelSerializer):
-    resource_count = serializers.SerializerMethodField('count_resources')
-    resource_size = serializers.SerializerMethodField('calculate_resources_size')
     has_changed = serializers.SerializerMethodField('check_for_changes')
     main_tree = ContentNodeSerializer(read_only=True)
     trash_tree = ContentNodeSerializer(read_only=True)
-    def count_resources(self, channel):
-        if not channel.main_tree:
-            return 0
-        else:
-            return count_files(channel.main_tree)
-
-    def calculate_resources_size(self, channel):
-        if not channel.main_tree:
-            return 0
-        else:
-            return get_total_size(channel.main_tree)
 
     def check_for_changes(self, channel):
         if channel.main_tree:
             return channel.main_tree.get_descendants().filter(changed=True).count() > 0
         else:
-            return false
+            return False
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.select_related('main_tree')
+        return queryset
 
     class Meta:
         model = Channel
         fields = ('id', 'name', 'description', 'has_changed','editors', 'main_tree',
-                    'trash_tree','resource_count', 'resource_size',
-                    'version', 'thumbnail', 'deleted', 'public', 'pending_editors')
+                    'trash_tree', 'thumbnail', 'version', 'deleted', 'public', 'pending_editors')
+
+class ChannelListSerializer(serializers.ModelSerializer):
+    main_tree = ContentNodeSerializer(read_only=True)
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.select_related('main_tree')
+        return queryset
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'name', 'thumbnail', 'description', 'main_tree','deleted')
+
 class UserSerializer(serializers.ModelSerializer):
     clipboard_tree = ContentNodeSerializer(read_only=True)
     class Meta:

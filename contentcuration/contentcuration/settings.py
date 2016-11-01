@@ -54,6 +54,7 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.common.BrokenLinkEmailsMiddleware',
@@ -63,6 +64,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
 #REST_FRAMEWORK = {
@@ -121,8 +123,17 @@ DATABASES = {
 
 
 DATABASE_ROUTERS = [
-    "contentcuration.router.Router"
+    "contentcuration.router.Router",
 ]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'contentcuration_cache',
+    }
+}
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # LOGGING = {
 #     'version': 1,
