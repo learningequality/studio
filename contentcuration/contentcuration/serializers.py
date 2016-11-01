@@ -114,28 +114,26 @@ class ContentKindSerializer(serializers.ModelSerializer):
 
 class CustomListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
-        node_mapping = {node.id: node for node in instance}
         update_nodes = {}
         tag_mapping = {}
         file_mapping = {}
         ret = []
         unformatted_input_tags = []
 
-        with transaction.atomic():
-            for item in validated_data:
-                item_tags = item.get('tags')
+        # with transaction.atomic():
+        for item in validated_data:
+            item_tags = item.get('tags')
 
-                unformatted_input_tags += item.pop('tags')
-                if 'id' in item:
-                    update_nodes[item['id']] = item
-                    tag_mapping[item['id']] = item_tags
-                else:
-                    # create new nodes
-                    ret.append(ContentNode.objects.create(**item))
+            unformatted_input_tags += item.pop('tags')
+            if 'id' in item:
+                update_nodes[item['id']] = item
+                tag_mapping[item['id']] = item_tags
+            else:
+                # create new nodes
+                ret.append(ContentNode.objects.create(**item))
 
         # get all ContentTag objects, if doesn't exist, create them.
         all_tags = []
-
         for tag_data in unformatted_input_tags:
             # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
             if isinstance(tag_data, unicode):
@@ -157,26 +155,26 @@ class CustomListSerializer(serializers.ListSerializer):
             with transaction.atomic():
                 with ContentNode.objects.delay_mptt_updates():
                     for node_id, data in update_nodes.items():
-                        node = node_mapping.get(node_id, None)
+                        node, is_new = ContentNode.objects.get_or_create(pk=node_id)
 
-                        if node:
-                            # potential optimization opportunity
-                            for attr, value in data.items():
-                                setattr(node, attr, value)
-                            taglist = []
-                            for tag_data in tag_mapping.get(node_id, None):
-                                # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
-                                if isinstance(tag_data, unicode):
-                                    tag_data = json.loads(tag_data)
+                        # potential optimization opportunity
+                        for attr, value in data.items():
+                            setattr(node, attr, value)
+                        taglist = []
+                        for tag_data in tag_mapping.get(node_id, None):
+                            # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
+                            if isinstance(tag_data, unicode):
+                                tag_data = json.loads(tag_data)
 
-                                # this requires optimization
-                                for tag_itm in all_tags:
-                                    if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
-                                        taglist.append(tag_itm)
+                            # this requires optimization
+                            for tag_itm in all_tags:
+                                if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
+                                    taglist.append(tag_itm)
 
-                            setattr(node, 'tags', taglist)
-                            cache.set('metadata' + node.id, calculate_node_metadata(node), None)
-                            ret.append(node)
+                        setattr(node, 'tags', taglist)
+                        node.save()
+                        cache.set('metadata' + node.id, calculate_node_metadata(node), None)
+                        ret.append(node)
         # clean_db()
         return ret
 

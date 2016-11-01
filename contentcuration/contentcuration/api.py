@@ -34,10 +34,10 @@ def clean_db():
         tag_obj.delete()
     logging.debug("*********** DONE ***********")
 
-def calculate_node_metadata(node, get_cache=False):
+def calculate_node_metadata(node):
     cache_name = 'metadata' + node.id
     cached_data = cache.get(cache_name)
-    if get_cache and cached_data is not None:
+    if cached_data is not None:
         return cached_data
 
     metadata = {
@@ -51,7 +51,7 @@ def calculate_node_metadata(node, get_cache=False):
     if node.kind_id == "topic":
         for n in node.children.all():
             metadata['max_sort_order'] = max(n.sort_order, metadata['max_sort_order'])
-            child_metadata = calculate_node_metadata(n, True)
+            child_metadata = calculate_node_metadata(n)
             metadata['total_count'] += child_metadata['total_count']
             metadata['resource_size'] += child_metadata['resource_size']
             metadata['resource_count'] += child_metadata['resource_count']

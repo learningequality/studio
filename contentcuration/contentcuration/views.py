@@ -64,7 +64,7 @@ def channel(request, channel_id):
     channel_serializer =  ChannelSerializer(channel)
 
     accessible_channel_list = Channel.objects.filter( Q(deleted=False, public=True) | Q(deleted=False, editors__email__contains= request.user))
-    channel_list = accessible_channel_list.filter(editors__email__contains= request.user)
+    channel_list = accessible_channel_list.filter(editors__email__contains= request.user).exclude(id=channel_id).values("id", "name")
     accessible_channel_list = ChannelListSerializer.setup_eager_loading(accessible_channel_list)
     accessible_channel_list_serializer = ChannelListSerializer(accessible_channel_list, many=True)
 
@@ -78,6 +78,7 @@ def channel(request, channel_id):
 
     return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
                                                 "channel_id" : channel_id,
+                                                "channel_name": channel.name,
                                                 "accessible_channels" : JSONRenderer().render(accessible_channel_list_serializer.data),
                                                 "channels" : channel_list,
                                                 "fileformat_list" : fileformats,
