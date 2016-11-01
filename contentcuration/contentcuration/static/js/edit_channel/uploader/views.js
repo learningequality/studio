@@ -184,7 +184,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
   },
   save_nodes:function(){
-    var sort_order = (this.model && (this.new_content || this.upload_files)) ? Math.ceil(this.model.get("metadata").max_sort_order) : null;
+    var sort_order = (this.model && (this.new_content || this.upload_files)) ? Math.ceil(this.model.get("metadata").max_sort_order) : 0;
     var self = this;
     this.edit_list.views.forEach(function(entry){
       var tags = [];
@@ -194,12 +194,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       entry.set({
         tags: tags
       });
-      if(sort_order){
-        entry.set({
-          parent:self.model.id,
-          sort_order:++sort_order
-        });
-      }
+      entry.set({
+        parent:self.model.id,
+        sort_order:++sort_order
+      });
     });
   },
   process_updated_collection:function(collection){

@@ -74,6 +74,8 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return obj.file_on_disk.url
 
     def retrieve_recommended_kind(self, obj):
+        if obj.contentnode and obj.contentnode.kind:
+            return obj.contentnode.kind.pk
         return FormatPreset.objects.filter(allowed_formats__extension__contains=obj.file_format).first().kind.pk
 
     def retrieve_extension(self, obj):
