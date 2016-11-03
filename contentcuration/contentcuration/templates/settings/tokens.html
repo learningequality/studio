@@ -25,7 +25,6 @@
 		try {
 	    	document.execCommand("copy");
 	    	$(event.target).val("Copied!");
-	    	console.log(copy_el)
 	    } catch(e) {
 	    	console.log(e)
 	        $(event.target).val("Copy Failed");
