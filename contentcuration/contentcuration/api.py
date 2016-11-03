@@ -3,6 +3,7 @@ This module acts as the only interface point between other apps and the database
 """
 import logging
 import os
+import re
 from functools import wraps
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
@@ -46,14 +47,14 @@ def calculate_node_metadata(node):
             metadata['total_count'] += child_metadata['total_count']
             metadata['resource_size'] += child_metadata['resource_size']
             metadata['resource_count'] += child_metadata['resource_count']
-            if child_metadata['has_changed_descendant']:
-                metadata['has_changed_descendant'] = True
+            metadata['has_changed_descendant'] = metadata['has_changed_descendant'] or child_metadata['has_changed_descendant']
 
     else:
         metadata['resource_count'] = 1
-        for f in node.files.all():
-            metadata['resource_size'] += f.file_size
+        for f in node.files.values_list('file_size'):
+            metadata['resource_size'] += f[0]
         metadata['max_sort_order'] = node.sort_order
+
     return metadata
 
 def count_files(node):
@@ -63,9 +64,6 @@ def count_files(node):
             count += count_files(n)
         return count
     return 1
-
-    # For some reason, this returns sibling desendants too
-    # return node.get_descendants(include_self=False).exclude(kind_id="topic").count()
 
 def count_all_children(node):
     count = node.children.count()

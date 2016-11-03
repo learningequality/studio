@@ -444,7 +444,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						if(node.get("parent") !== self.model.get("id")){
 							reload_list.push(node.get("parent"));
 						}
-						min = (min + max) / 2;
+						min += (max - min) / 2;
 						node.set({
 							"sort_order": min,
 							"changed" : true,
@@ -740,7 +740,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			collection: editCollection,
 			el: $("#dialog"),
 			new_content: false,
-			model: this.model,
+			model: this.containing_list_view.model,
 		  	onsave: this.reload_ancestors
 		});
 	},

@@ -72,8 +72,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   render: function() {
     this.$el.html(this.template());
     this.load_preview();
-    this.load_editor([]);
     this.load_list();
+    this.load_editor(this.edit_list.selected_items);
   },
   render_details:function(){
     this.switchPanel("details");
@@ -184,7 +184,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
   },
   save_nodes:function(){
-    var sort_order = (this.model && (this.new_content || this.upload_files)) ? Math.ceil(this.model.get("metadata").max_sort_order) : null;
+    var sort_order = (this.model && (this.new_content || this.upload_files)) ? Math.ceil(this.model.get("metadata").max_sort_order) : 0;
     var self = this;
     this.edit_list.views.forEach(function(entry){
       var tags = [];
@@ -194,7 +194,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       entry.set({
         tags: tags
       });
-      if(sort_order){
+      if(self.new_content || self.upload_files ){
         entry.set({
           parent:self.model.id,
           sort_order:++sort_order
@@ -373,6 +373,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   render: function() {
     var has_files = false;
     if(this.selected_items.length === 1){
+      has_files = this.selected_items[0].model.get("kind") !== "topic" && this.selected_items[0].model.get("kind") !== "exercise";
       this.selected_items[0].model.get("files").forEach(function(file){
         var preset = (file.preset.id)? file.preset.id:file.preset;
         has_files = has_files || window.formatpresets.get({id:preset}).get("display");
@@ -445,6 +446,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").length > 0 && this.$el.find("#tag_box").val().trim() != ""){
       var tag = this.$el.find("#tag_box").val().trim();
       if(this.shared_data.shared_tags.indexOf(tag) < 0){
+        this.shared_data.shared_tags.push(tag);
         this.selected_items.forEach(function(view){
           view.add_tag(tag);
         });
@@ -570,9 +572,11 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.tags = [];
       if(this.model.get("tags")){
           var self = this;
+          fetch_tags = [];
           this.model.get("tags").forEach(function(entry){
-              self.tags.push(window.contenttags.get_or_fetch(entry).get("tag_name"));
+              fetch_tags.push((entry.id)? entry.id : entry);
           });
+          this.tags = window.contenttags.get_all_fetch(fetch_tags).pluck('tag_name');
       }
   },
   load_file_displays:function(formats_el){
@@ -586,6 +590,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   handle_change:function(){
     this.set_edited(true);
+    $("#metadata_preview_btn").css("display", "inline-block");
     this.container.preview_view.load_preview();
   },
   add_tag:function(tagname){
