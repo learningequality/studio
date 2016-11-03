@@ -194,7 +194,6 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
-    # metadata = serializers.SerializerMethodField('calculate_metadata')
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
 
     @staticmethod
@@ -307,15 +306,6 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def get_node_ancestors(self,node):
         return get_node_ancestors(node)
 
-    def calculate_metadata(self, node):
-        return {
-            "total_count" : 0,
-            "resource_count" : 0,
-            "max_sort_order" : 0,
-            "resource_size" : 0,
-            "has_changed_descendant" : True
-        }
-
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
@@ -379,16 +369,9 @@ class UserSerializer(serializers.ModelSerializer):
 class CurrentUserSerializer(serializers.ModelSerializer):
     clipboard_tree = ContentNodeSerializer(read_only=True)
 
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary eager loading of data. """
-        queryset = queryset.select_related('clipboard_tree')
-        return queryset
-
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id','clipboard_tree')
-
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:

@@ -6,8 +6,6 @@ class Router(object):
 
     def db_for_read(self, model, **hints):
         db = None
-        model_label = None
-
         if issubclass(model, ContentDatabaseModel):
             db = 'export_staging'
         elif model.__module__ == 'contentcuration.models':
@@ -21,7 +19,6 @@ class Router(object):
 
     def db_for_write(self, model, **hints):
         db = None
-        model_label = None
         if issubclass(model, ContentDatabaseModel):
             db = 'export_staging'
         elif model.__module__ == 'contentcuration.models':

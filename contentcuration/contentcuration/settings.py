@@ -138,24 +138,6 @@ DATABASE_ROUTERS = [
     "contentcuration.router.Router",
 ]
 
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-#         'LOCATION': 'unique-snowflake',
-#     },
-#     'content': {
-#         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-#         'LOCATION': 'contentcuration_cache',
-#     },
-# }
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-#         'LOCATION': 'contentcuration_cache',
-#     },
-# }
-# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-
 # LOGGING = {
 #     'version': 1,
 #     'disable_existing_loggers': False,
