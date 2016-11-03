@@ -12,7 +12,6 @@ from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.conf import settings
-# from django.core.cache import get_cache, cache
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
