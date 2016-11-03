@@ -194,10 +194,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       entry.set({
         tags: tags
       });
-      entry.set({
-        parent:self.model.id,
-        sort_order:++sort_order
-      });
+      if(self.new_content || self.upload_files ){
+        entry.set({
+          parent:self.model.id,
+          sort_order:++sort_order
+        });
+      }
     });
   },
   process_updated_collection:function(collection){

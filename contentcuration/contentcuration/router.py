@@ -10,12 +10,12 @@ class Router(object):
 
         if issubclass(model, ContentDatabaseModel):
             db = 'export_staging'
-            model_label = model._meta.label
         elif model.__module__ == 'contentcuration.models':
             db = 'default'
-            model_label = model._meta.label
         else:
             db = None
+
+        model_label = model._meta.label
         # logging.debug("Reading {0} from {1}".format(model_label, db))
         return db
 
@@ -24,12 +24,11 @@ class Router(object):
         model_label = None
         if issubclass(model, ContentDatabaseModel):
             db = 'export_staging'
-            model_label = model._meta.label
         elif model.__module__ == 'contentcuration.models':
             db = 'default'
-            model_label = model._meta.label
         else:
             db = None
 
+        model_label = model._meta.label
         # logging.debug("Writing {0} into {1}".format(model_label, db))
         return db

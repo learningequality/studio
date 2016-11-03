@@ -14,7 +14,6 @@ from kolibri.content import models as KolibriContent
 from django.db import transaction
 from le_utils.constants import content_kinds
 import contentcuration.models as models
-# from django.core.cache import get_cache, cache
 
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
@@ -35,11 +34,6 @@ def clean_db():
     logging.debug("*********** DONE ***********")
 
 def calculate_node_metadata(node):
-    # content_cache = get_cache('content')
-    # cache_name = 'metadata_' + node.id
-    # if content_cache.has_key(cache_name):
-    #    return content_cache.get(cache_name)
-
     metadata = {
         "total_count" : node.children.count(),
         "resource_count" : 0,
@@ -62,8 +56,6 @@ def calculate_node_metadata(node):
         for f in node.files.values_list('file_size'):
             metadata['resource_size'] += f[0]
         metadata['max_sort_order'] = node.sort_order
-
-    # content_cache.set(cache_name, metadata, None)
 
     return metadata
 

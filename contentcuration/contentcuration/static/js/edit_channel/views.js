@@ -740,7 +740,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			collection: editCollection,
 			el: $("#dialog"),
 			new_content: false,
-			model: this.model,
+			model: this.containing_list_view.model,
 		  	onsave: this.reload_ancestors
 		});
 	},

@@ -268,25 +268,16 @@ class ContentNode(MPTTModel, models.Model):
 
     metadata = property(_get_metadata)
 
-    def __init__(self, *args, **kwargs):
-        super(ContentNode, self).__init__(*args, **kwargs)
-        self.original_parent = self.parent
-
     def save(self, *args, **kwargs):
         isNew = self.pk is None
 
-        # Detect if model has been moved to a different tree
-        # if self.original_parent and self.original_parent.id != self.parent_id:
-        #     self.original_parent.changed = True
-        #     self.original_parent.save()
-        #     self.original_parent = self.parent
-
         super(ContentNode, self).save(*args, **kwargs)
-        # import pdb; pdb.set_trace()
         if isNew:
             self.original_node = self.pk if self.original_node is None else self.original_node
             self.cloned_source = self.pk if self.cloned_source is None else self.cloned_source
             self.save()
+
+
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
