@@ -259,17 +259,21 @@ var TagModel = BaseModel.extend({
 var TagCollection = BaseCollection.extend({
 	model: TagModel,
 	list_name:"contenttag-list",
-	get_or_fetch:function(id){
-		var tag = this.get(id);
-		if(!tag){
-			tag = new TagModel({"id":id});
-			tag.fetch({async:false});
-			if(tag){
-				this.add(tag);
+	get_all_fetch:function(ids){
+		var self = this;
+		var fetched_collection = new TagCollection();
+		ids.forEach(function(id){
+			var tag = self.get(id);
+			if(!tag){
+				tag = new TagModel({"id":id});
+				tag.fetch({async:false});
+				if(tag){
+					self.add(tag);
+				}
 			}
-			this.fetch({async:false})
-		}
-		return tag;
+			fetched_collection.add(tag);
+		});
+		return fetched_collection;
 	}
 });
 

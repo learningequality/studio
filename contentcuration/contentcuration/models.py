@@ -271,6 +271,13 @@ class ContentNode(MPTTModel, models.Model):
     def save(self, *args, **kwargs):
         isNew = self.pk is None
 
+        # Detect if node has been moved to another tree
+        if not isNew and ContentNode.objects.filter(pk=self.pk).exists():
+            original = ContentNode.objects.get(pk=self.pk)
+            if original.parent and original.parent_id != self.parent_id:
+                original.parent.changed = True
+                original.parent.save()
+
         super(ContentNode, self).save(*args, **kwargs)
         if isNew:
             self.original_node = self.pk if self.original_node is None else self.original_node

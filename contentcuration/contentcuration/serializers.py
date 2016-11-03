@@ -42,7 +42,7 @@ class FileListSerializer(serializers.ListSerializer):
             contentnode = file_obj['contentnode'].pk
             preset = file_obj['preset'].pk
             file_id = file_obj['id']
-            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & Q(preset_id=preset) & ~Q(preset__kind = None) & ~Q(id=file_id))
+            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & (Q(preset_id=preset) | Q(preset=None)) & ~Q(id=file_id))
             for to_delete in files_to_delete:
                 to_delete.delete()
 
@@ -372,10 +372,23 @@ class ChannelListSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'thumbnail', 'description', 'main_tree','deleted')
 
 class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id')
+
+class CurrentUserSerializer(serializers.ModelSerializer):
     clipboard_tree = ContentNodeSerializer(read_only=True)
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.select_related('clipboard_tree')
+        return queryset
+
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id','clipboard_tree')
+
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:

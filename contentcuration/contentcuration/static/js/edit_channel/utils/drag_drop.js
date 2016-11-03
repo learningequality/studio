@@ -24,7 +24,7 @@ function addSortable(element, selected_class, callback){
 	   	distance:5,
 	   	cursor:"move",
 	   	cancel: '.current_topic, .default-item, #preview li',
-	   	containment: "#channel-edit-sortable-boundary, #queue.opened",
+	   	containment: "#container-wrapper, #queue.opened",
 	   	appendTo: "#channel-edit-content-wrapper",
 	   	bodyClass: "dragging",
 	   	// helper:"clone",

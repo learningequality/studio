@@ -39,6 +39,7 @@ var ImportView = BaseViews.BaseListView.extend({
         this.other_channels = window.access_channels;
         this.other_channels.remove(window.current_channel);
         this.collection = new Models.ContentNodeCollection();
+        this.lists=[];
         this.onimport = options.onimport;
         this.render();
     },

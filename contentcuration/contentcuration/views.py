@@ -34,7 +34,7 @@ from contentcuration.models import Exercise, AssessmentItem, Channel, License, F
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
 from contentcuration.api import get_file_diff, api_create_channel
 from registration.backends.hmac.views import RegistrationView
-from contentcuration.serializers import ExerciseSerializer, ChannelListSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
+from contentcuration.serializers import ExerciseSerializer, CurrentUserSerializer, ChannelListSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets
 from rest_framework.permissions import IsAuthenticated
@@ -96,7 +96,7 @@ def channel(request, channel_id):
                                                  "fpreset_list" : formatpresets,
                                                  "ckinds_list" : contentkinds,
                                                  "ctags": json_renderer.render(channel_tags_serializer.data),
-                                                 "current_user" : json_renderer.render(UserSerializer(request.user).data)})
+                                                 "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data)})
 
 def get_or_set_cached_constants(constant, serializer):
     cached_data = cache.get(constant.__name__)

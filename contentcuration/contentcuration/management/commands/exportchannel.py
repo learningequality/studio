@@ -121,7 +121,7 @@ def map_content_nodes(root_node):
 
             kolibrinode = create_bare_contentnode(node)
 
-            if node.kind.kind == content_kinds.EXERCISE and node.files.filter(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)).exists():
+            if node.kind.kind == content_kinds.EXERCISE:
                 create_perseus_exercise(node)
             if node.kind.kind != content_kinds.TOPIC:
                 create_associated_file_objects(kolibrinode, node)
@@ -284,6 +284,9 @@ def convert_channel_thumbnail(thumbnail):
         return None
     else:
         encoding = None
+        if 'static' in thumbnail:
+            return ""
+
         with open(ccmodels.generate_file_on_disk_name(thumbnail.split('.')[0], thumbnail), 'rb') as file_obj:
             encoding = base64.b64encode(file_obj.read()).decode('utf-8')
         return "data:image/png;base64," + encoding
