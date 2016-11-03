@@ -10,7 +10,6 @@ var stringHelper = require("edit_channel/utils/string_helper")
 
 var ChannelList  = BaseViews.BaseEditableListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
-	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
 	list_selector: "#channel_list",
 	default_item: ".default-item",
 
@@ -28,7 +27,6 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 			user: window.current_user
 		}));
 		this.load_content(this.collection.where({deleted:false}));
-		this.load_dropdown();
 	},
 	events: {
 		'click .new_channel_button' : 'new_channel'
@@ -53,12 +51,6 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 			newView.edit_channel();
 			newView.set_is_new(true);
 		});
-	},
-	load_dropdown:function(){
-		var self = this;
-		$("#channel_selection_dropdown_list").html(this.dropdown_template({
-			channel_list: this.collection.toJSON()
-		}));
 	},
 	set_editing: function(edit_mode_on){
 		$(".disable-on-edit").prop("disabled", edit_mode_on);

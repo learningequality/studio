@@ -14,7 +14,7 @@ from kolibri.content import models as KolibriContent
 from django.db import transaction
 from le_utils.constants import content_kinds
 import contentcuration.models as models
-from django.core.cache import cache
+# from django.core.cache import get_cache, cache
 
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
@@ -35,10 +35,10 @@ def clean_db():
     logging.debug("*********** DONE ***********")
 
 def calculate_node_metadata(node):
-    cache_name = 'metadata' + node.id
-    cached_data = cache.get(cache_name)
-    if cached_data is not None:
-        return cached_data
+    # content_cache = get_cache('content')
+    # cache_name = 'metadata_' + node.id
+    # if content_cache.has_key(cache_name):
+    #    return content_cache.get(cache_name)
 
     metadata = {
         "total_count" : node.children.count(),
@@ -55,15 +55,16 @@ def calculate_node_metadata(node):
             metadata['total_count'] += child_metadata['total_count']
             metadata['resource_size'] += child_metadata['resource_size']
             metadata['resource_count'] += child_metadata['resource_count']
-            if child_metadata['has_changed_descendant']:
-                metadata['has_changed_descendant'] = True
+            metadata['has_changed_descendant'] = metadata['has_changed_descendant'] or child_metadata['has_changed_descendant']
 
     else:
         metadata['resource_count'] = 1
-        for f in node.files.all():
-            metadata['resource_size'] += f.file_size
+        for f in node.files.values_list('file_size'):
+            metadata['resource_size'] += f[0]
         metadata['max_sort_order'] = node.sort_order
-    cache.set(cache_name, metadata, None)
+
+    # content_cache.set(cache_name, metadata, None)
+
     return metadata
 
 def count_files(node):
@@ -215,8 +216,8 @@ def map_files_to_node(node, data, file_data):
             checksum=file_hash[0],
             contentnode=node,
             file_format_id=file_hash[1],
-            original_filename=file_data[f]['original_filename'],
-            source_url=file_data[f]['source_url'],
+            original_filename=file_data[f].get('original_filename') or '',
+            source_url=file_data[f].get('source_url'),
             file_size = file_data[f]['size'],
             file_on_disk=DjFile(open(models.generate_file_on_disk_name(file_hash[0], f), 'rb')),
             preset=kind_preset,

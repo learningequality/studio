@@ -3,6 +3,7 @@ import os
 import uuid
 import hashlib
 import functools
+import json
 
 from django.conf import settings
 from django.contrib import admin
@@ -16,6 +17,7 @@ from django.dispatch import receiver
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.core.cache import cache
 
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
@@ -251,6 +253,21 @@ class ContentNode(MPTTModel, models.Model):
 
     objects = TreeManager()
 
+    def _get_metadata(self):
+        all_descendants = self.get_descendants(include_self=True)
+        resource_descendants = all_descendants.exclude(kind=content_kinds.TOPIC)
+        total_size = sum([s[0] for s in resource_descendants.exclude(files=None).values_list('files__file_size')])
+        max_sort_order = max([1] + [o[0] for o in self.children.values_list('sort_order')])
+        return {
+            "total_count" : all_descendants.exclude(pk=self.pk).count(),
+            "resource_count" : resource_descendants.count(),
+            "max_sort_order" : max_sort_order,
+            "resource_size" : total_size,
+            "has_changed_descendant" : all_descendants.filter(changed=True).exists()
+        }
+
+    metadata = property(_get_metadata)
+
     def __init__(self, *args, **kwargs):
         super(ContentNode, self).__init__(*args, **kwargs)
         self.original_parent = self.parent
@@ -259,17 +276,16 @@ class ContentNode(MPTTModel, models.Model):
         isNew = self.pk is None
 
         # Detect if model has been moved to a different tree
-        if self.original_parent and self.original_parent.id != self.parent_id:
-            self.original_parent.changed = True
-            self.original_parent.save()
-            self.original_parent = self.parent
+        # if self.original_parent and self.original_parent.id != self.parent_id:
+        #     self.original_parent.changed = True
+        #     self.original_parent.save()
+        #     self.original_parent = self.parent
 
         super(ContentNode, self).save(*args, **kwargs)
+        # import pdb; pdb.set_trace()
         if isNew:
-            if self.original_node is None:
-                self.original_node = self.pk
-            if self.cloned_source is None:
-                self.cloned_source = self.pk
+            self.original_node = self.pk if self.original_node is None else self.original_node
+            self.cloned_source = self.pk if self.cloned_source is None else self.cloned_source
             self.save()
 
     class MPTTMeta:

@@ -4,11 +4,10 @@
 {% load i18n %}
 
 {% block content %}
-	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
+	 <script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
 
 	<script>
 		var channel = JSON.parse("{{ channel|escapejs}}");
-		var channels = JSON.parse("{{ channels |escapejs }}");
 		var accessible_channels = JSON.parse("{{ accessible_channels |escapejs }}");
 		var license_list = JSON.parse("{{ license_list|escapejs}}");
 		var fformats = JSON.parse("{{ fileformat_list|escapejs }}");

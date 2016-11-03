@@ -51,6 +51,7 @@ INSTALLED_APPS = (
     'kolibri.content',
     'email_extras',
     'le_utils',
+    'rest_framework.authtoken',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -74,6 +75,17 @@ MIDDLEWARE_CLASSES = (
  #     'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
   # ]
 #}
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    )
+}
 
 ROOT_URLCONF = 'contentcuration.urls'
 
@@ -126,14 +138,23 @@ DATABASE_ROUTERS = [
     "contentcuration.router.Router",
 ]
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'contentcuration_cache',
-    }
-}
-
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+#         'LOCATION': 'unique-snowflake',
+#     },
+#     'content': {
+#         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+#         'LOCATION': 'contentcuration_cache',
+#     },
+# }
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+#         'LOCATION': 'contentcuration_cache',
+#     },
+# }
+# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # LOGGING = {
 #     'version': 1,

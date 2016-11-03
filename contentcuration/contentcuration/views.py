@@ -37,6 +37,9 @@ from registration.backends.hmac.views import RegistrationView
 from contentcuration.serializers import ExerciseSerializer, ChannelListSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 
 def base(request):
     if request.user.is_authenticated():
@@ -48,6 +51,8 @@ def testpage(request):
     return render(request, 'test.html')
 
 @login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def channel_list(request):
     channel_list = Channel.objects.filter(deleted=False, editors__email__contains= request.user)
     channel_list = ChannelListSerializer.setup_eager_loading(channel_list)
@@ -56,18 +61,21 @@ def channel_list(request):
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
                                                  "license_list" : licenses,
+                                                 "channel_list" : channel_list.values("id", "name"),
                                                  "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
 
 @login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
     channel_serializer =  ChannelSerializer(channel)
 
     accessible_channel_list = Channel.objects.filter( Q(deleted=False, public=True) | Q(deleted=False, editors__email__contains= request.user))
-    channel_list = accessible_channel_list.filter(editors__email__contains= request.user).exclude(id=channel_id).values("id", "name")
     accessible_channel_list = ChannelListSerializer.setup_eager_loading(accessible_channel_list)
     accessible_channel_list_serializer = ChannelListSerializer(accessible_channel_list, many=True)
 
+    channel_list = accessible_channel_list.filter(editors__email__contains= request.user).exclude(id=channel_id).values("id", "name")
     fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
@@ -76,17 +84,19 @@ def channel(request, channel_id):
     channel_tags = ContentTag.objects.filter(channel = channel)
     channel_tags_serializer = TagSerializer(channel_tags, many=True)
 
-    return render(request, 'channel_edit.html', {"channel" : JSONRenderer().render(channel_serializer.data),
+    json_renderer = JSONRenderer()
+
+    return render(request, 'channel_edit.html', {"channel" : json_renderer.render(channel_serializer.data),
                                                 "channel_id" : channel_id,
                                                 "channel_name": channel.name,
-                                                "accessible_channels" : JSONRenderer().render(accessible_channel_list_serializer.data),
-                                                "channels" : channel_list,
+                                                "accessible_channels" : json_renderer.render(accessible_channel_list_serializer.data),
+                                                "channel_list" : channel_list,
                                                 "fileformat_list" : fileformats,
                                                  "license_list" : licenses,
                                                  "fpreset_list" : formatpresets,
                                                  "ckinds_list" : contentkinds,
-                                                 "ctags": JSONRenderer().render(channel_tags_serializer.data),
-                                                 "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
+                                                 "ctags": json_renderer.render(channel_tags_serializer.data),
+                                                 "current_user" : json_renderer.render(UserSerializer(request.user).data)})
 
 def get_or_set_cached_constants(constant, serializer):
     cached_data = cache.get(constant.__name__)

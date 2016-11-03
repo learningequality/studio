@@ -1,9 +1,11 @@
 import tempfile
+import json
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from le_utils.constants import format_presets, file_formats
-from contentcuration.models import Channel, File
+from contentcuration.models import Channel, File, ContentNode
+from contentcuration.api import calculate_node_metadata
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 class EarlyExit(BaseException):
@@ -26,6 +28,15 @@ class Command(BaseCommand):
                     channel.thumbnail = "{0}.{ext}".format(file_object.checksum, ext=file_formats.PNG)
                     channel.save()
                     self.stdout.write("Channel {0} now has thumbnail {1}".format(channel.name, channel.thumbnail))
+            # self.stdout.write("***** Precalculating node metadata *****")
+            # for node in ContentNode.objects.all():
+            #     data = "{}" if node.extra_fields is None else node.extra_fields
+            #     data = json.loads(data)
+            #     data.update({'metadata':calculate_node_metadata(node)})
+            #     node.extra_fields = json.dumps(data)
+            #     node.save()
+            #     self.stdout.write("Node {0} now has metadata {1}".format(node.title, node.extra_fields))
+
             self.stdout.write("************ DONE. ************")
 
         except EarlyExit as e:

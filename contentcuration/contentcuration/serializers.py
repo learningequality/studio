@@ -12,7 +12,7 @@ from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.conf import settings
-from django.core.cache import cache
+# from django.core.cache import get_cache, cache
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,8 +27,6 @@ class LanguageSerializer(serializers.ModelSerializer):
 
 class FileListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
-        file_mapping = {file_obj.id: file_obj for file_obj in instance}
-        node_file_mapping = []
         ret = []
         update_files = {}
 
@@ -40,26 +38,58 @@ class FileListSerializer(serializers.ListSerializer):
                     # create new nodes
                     ret.append(File.objects.create(**item))
 
-        for file_obj in validated_data:
-            contentnode = file_obj['contentnode'].pk
-            preset = file_obj['preset'].pk
-            file_id = file_obj['id']
-            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & Q(preset_id=preset) & ~Q(preset__kind = None) & ~Q(id=file_id))
-            for to_delete in files_to_delete:
-                to_delete.delete()
+            for file_obj in validated_data:
+                contentnode = file_obj['contentnode'].pk
+                preset = file_obj['preset'].pk
+                file_id = file_obj['id']
+                files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & Q(preset_id=preset) & ~Q(preset__kind = None) & ~Q(id=file_id))
+                for to_delete in files_to_delete:
+                    to_delete.delete()
 
-        if update_files:
-            with transaction.atomic():
+            if update_files:
                 for file_id, data in update_files.items():
-                    file_obj = file_mapping.get(file_id, None)
-
-                    if file_obj:
-                        # potential optimization opportunity
-                        for attr, value in data.items():
-                            setattr(file_obj, attr, value)
-                        file_obj.save()
-                        ret.append(file_obj)
+                    file_obj, is_new = File.objects.get_or_create(pk=file_id)
+                    # potential optimization opportunity
+                    for attr, value in data.items():
+                        setattr(file_obj, attr, value)
+                    file_obj.save()
+                    ret.append(file_obj)
         return ret
+# class FileListSerializer(serializers.ListSerializer):
+#     def update(self, instance, validated_data):
+#         file_mapping = {file_obj.id: file_obj for file_obj in instance}
+#         node_file_mapping = []
+#         ret = []
+#         update_files = {}
+
+#         with transaction.atomic():
+#             for item in validated_data:
+#                 if 'id' in item:
+#                     update_files[item['id']] = item
+#                 else:
+#                     # create new nodes
+#                     ret.append(File.objects.create(**item))
+
+#         for file_obj in validated_data:
+#             contentnode = file_obj['contentnode'].pk
+#             preset = file_obj['preset'].pk
+#             file_id = file_obj['id']
+#             files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & Q(preset_id=preset) & ~Q(preset__kind = None) & ~Q(id=file_id))
+#             for to_delete in files_to_delete:
+#                 to_delete.delete()
+
+#         if update_files:
+#             with transaction.atomic():
+#                 for file_id, data in update_files.items():
+#                     file_obj = file_mapping.get(file_id, None)
+
+#                     if file_obj:
+#                         # potential optimization opportunity
+#                         for attr, value in data.items():
+#                             setattr(file_obj, attr, value)
+#                         file_obj.save()
+#                         ret.append(file_obj)
+#         return ret
 
 class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
@@ -159,9 +189,6 @@ class CustomListSerializer(serializers.ListSerializer):
                     for node_id, data in update_nodes.items():
                         node, is_new = ContentNode.objects.get_or_create(pk=node_id)
 
-                        # potential optimization opportunity
-                        for attr, value in data.items():
-                            setattr(node, attr, value)
                         taglist = []
                         for tag_data in tag_mapping.get(node_id, None):
                             # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
@@ -172,13 +199,81 @@ class CustomListSerializer(serializers.ListSerializer):
                             for tag_itm in all_tags:
                                 if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
                                     taglist.append(tag_itm)
-
-                        setattr(node, 'tags', taglist)
+                        # potential optimization opportunity
+                        for attr, value in data.items():
+                            setattr(node, attr, value)
+                        node.tags = taglist
                         node.save()
-                        cache.set('metadata' + node.id, calculate_node_metadata(node), None)
                         ret.append(node)
-        # clean_db()
         return ret
+
+# class CustomListSerializer(serializers.ListSerializer):
+#     def update(self, instance, validated_data):
+#         node_mapping = {node.id: node for node in instance}
+#         update_nodes = {}
+#         tag_mapping = {}
+#         file_mapping = {}
+#         ret = []
+#         unformatted_input_tags = []
+
+#         with transaction.atomic():
+#             for item in validated_data:
+#                 item_tags = item.get('tags')
+
+#                 unformatted_input_tags += item.pop('tags')
+#                 if 'id' in item:
+#                     update_nodes[item['id']] = item
+#                     tag_mapping[item['id']] = item_tags
+#                 else:
+#                     # create new nodes
+#                     ret.append(ContentNode.objects.create(**item))
+
+#         # get all ContentTag objects, if doesn't exist, create them.
+#         all_tags = []
+
+#         for tag_data in unformatted_input_tags:
+#             # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
+#             if isinstance(tag_data, unicode):
+#                 tag_data = json.loads(tag_data)
+#             tag_tuple = ContentTag.objects.get_or_create(tag_name=tag_data['tag_name'], channel_id=tag_data['channel'])
+#             all_tags.append(tag_tuple[0])
+
+#         if ret:
+#             # new nodes and tags have been created, now add tags to them
+#             bulk_adding_list = []
+#             ThroughModel = ContentNode.tags.through
+#             for tag in all_tags:
+#                 for node in ret:
+#                     bulk_adding_list.append(ThroughModel(node_id=node.pk, contenttag_id=tag.pk))
+#             ThroughModel.objects.bulk_create(bulk_adding_list)
+
+#         # Perform updates.
+#         if update_nodes:
+#             with transaction.atomic():
+#                 with ContentNode.objects.delay_mptt_updates():
+#                     for node_id, data in update_nodes.items():
+#                         node = node_mapping.get(node_id, None)
+
+#                         if node:
+#                             # potential optimization opportunity
+#                             for attr, value in data.items():
+#                                 setattr(node, attr, value)
+#                             taglist = []
+#                             for tag_data in tag_mapping.get(node_id, None):
+#                                 # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
+#                                 if isinstance(tag_data, unicode):
+#                                     tag_data = json.loads(tag_data)
+
+#                                 # this requires optimization
+#                                 for tag_itm in all_tags:
+#                                     if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
+#                                         taglist.append(tag_itm)
+
+#                             setattr(node, 'tags', taglist)
+#                             node.save()
+#                             ret.append(node)
+#         # clean_db()
+#         return ret
 
 class TagSerializer(serializers.ModelSerializer):
    class Meta:
@@ -192,14 +287,13 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
-    metadata = serializers.SerializerMethodField('calculate_metadata')
+    # metadata = serializers.SerializerMethodField('calculate_metadata')
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
 
     @staticmethod
     def setup_eager_loading(queryset):
         """ Perform necessary eager loading of data. """
-        queryset = queryset.prefetch_related('children')
-        queryset = queryset.prefetch_related('files')
+        queryset = queryset.prefetch_related('children').prefetch_related('files')
         return queryset
 
     def retrieve_associated_presets(self, node):
@@ -307,7 +401,13 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return get_node_ancestors(node)
 
     def calculate_metadata(self, node):
-        return calculate_node_metadata(node)
+        return {
+            "total_count" : 0,
+            "resource_count" : 0,
+            "max_sort_order" : 0,
+            "resource_size" : 0,
+            "has_changed_descendant" : True
+        }
 
     class Meta:
         list_serializer_class = CustomListSerializer
