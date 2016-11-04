@@ -126,17 +126,20 @@ def batch_add_tags(request):
 
 def get_file_diff(file_list):
     in_db_list = models.File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=file_list).values_list('filename', flat=True)
-    to_return = list(set(file_list) - set(in_db_list))
+    to_return = []
+    for f in list(set(file_list) - set(in_db_list)):
+        file_path = models.generate_file_on_disk_name(f.split(".")[-2],f)
+        # Write file if it doesn't already exist
+        if not os.path.isfile(file_path):
+            to_return += [f]
+
     return to_return
 
 
 """ CHANNEL CREATE FUNCTIONS """
-def api_create_channel(channel_data, content_data, file_data):
+def api_create_channel(channel_data):
     channel = create_channel(channel_data) # Set up initial channel
     root_node = init_staging_tree(channel) # Set up initial staging tree
-    with transaction.atomic():
-        convert_data_to_nodes(content_data, root_node, file_data) # converts dict to django models
-        update_channel(channel, root_node)
     return channel # Return new channel
 
 def create_channel(channel_data):
@@ -155,15 +158,18 @@ def init_staging_tree(channel):
     channel.save()
     return channel.staging_tree
 
-def convert_data_to_nodes(content_data, parent_node, file_data):
+def convert_data_to_nodes(content_data, parent_node):
     try:
+        root_mapping = {}
         sort_order = 1
-        for node_data in content_data:
-            new_node = create_node(node_data, parent_node, sort_order)
-            map_files_to_node(new_node, node_data['files'], file_data)
-            create_exercises(new_node, node_data['questions'])
-            convert_data_to_nodes(node_data['children'], new_node, file_data)
-            sort_order += 1
+        with transaction.atomic():
+            for node_data in content_data:
+                new_node = create_node(node_data, parent_node, sort_order)
+                map_files_to_node(new_node, node_data['files'])
+                create_exercises(new_node, node_data['questions'])
+                sort_order += 1
+                root_mapping.update({node_data['node_id'] : new_node.pk})
+            return root_mapping
     except KeyError as e:
         raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
 
@@ -189,29 +195,28 @@ def create_node(node_data, parent_node, sort_order):
         description = description,
         author=author,
         license=license,
-        parent = parent_node,
+        parent_id = parent_node,
         extra_fields=extra_fields,
         sort_order = sort_order,
     )
 
-def map_files_to_node(node, data, file_data):
-
-    for f in data:
-        file_hash = f.split(".")
+def map_files_to_node(node, data):
+    for file_data in data:
+        file_hash = file_data['filename'].split(".")
         kind_preset = None
-        if file_data[f]['preset'] is None:
+        if file_data['preset'] is None:
             kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1], display=True).first()
         else:
-            kind_preset = models.FormatPreset.objects.get(id=file_data[f]['preset'])
+            kind_preset = models.FormatPreset.objects.get(id=file_data['preset'])
 
         file_obj = models.File(
             checksum=file_hash[0],
             contentnode=node,
             file_format_id=file_hash[1],
-            original_filename=file_data[f].get('original_filename') or '',
-            source_url=file_data[f].get('source_url'),
-            file_size = file_data[f]['size'],
-            file_on_disk=DjFile(open(models.generate_file_on_disk_name(file_hash[0], f), 'rb')),
+            original_filename=file_data.get('original_filename') or '',
+            source_url=file_data.get('source_url'),
+            file_size = file_data['size'],
+            file_on_disk=DjFile(open(models.generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
             preset=kind_preset,
         )
         file_obj.save()

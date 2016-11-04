@@ -32,7 +32,7 @@ from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
-from contentcuration.api import get_file_diff, api_create_channel
+from contentcuration.api import get_file_diff, api_create_channel, convert_data_to_nodes
 from registration.backends.hmac.views import RegistrationView
 from contentcuration.serializers import ExerciseSerializer, CurrentUserSerializer, ChannelListSerializer, AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer
 from django.core.cache import cache
@@ -214,11 +214,33 @@ def api_create_channel_endpoint(request):
     else:
         data = json.loads(request.body)
         try:
-            content_data = data['content_data']
             channel_data = data['channel_data']
-            file_data = data['file_data']
 
-            obj = api_create_channel(channel_data, content_data, file_data)
+            obj = api_create_channel(channel_data)
+
+            return HttpResponse(json.dumps({
+                "success": True,
+                "root": obj.staging_tree.pk,
+                "channel_id": obj.pk,
+            }))
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
+@csrf_exempt
+def api_finish_channel(request):
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+        try:
+            channel_id = data['channel_id']
+
+            obj = Channel.objects.get(pk=channel_id)
+            obj.main_tree = obj.staging_tree
+            obj.version += 1
+            obj.save()
+
             invitation = Invitation.objects.create(channel=obj)
 
             return HttpResponse(json.dumps({
@@ -228,6 +250,25 @@ def api_create_channel_endpoint(request):
             }))
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
+@csrf_exempt
+def api_add_nodes_to_tree(request):
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+        try:
+            content_data = data['content_data']
+            parent_id = data['root_id']
+
+            return HttpResponse(json.dumps({
+                "success": True,
+                "root_ids": convert_data_to_nodes(content_data, parent_id)
+            }))
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
 
 @login_required
 def api_open_channel(request, invitation_id, channel_id):
