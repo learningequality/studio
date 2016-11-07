@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connections, models
-from django.db.models import Q
+from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
 from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager
 from django.utils.translation import ugettext as _
@@ -252,21 +252,6 @@ class ContentNode(MPTTModel, models.Model):
     author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"), null=True)
 
     objects = TreeManager()
-
-    def _get_metadata(self):
-        all_descendants = self.get_descendants(include_self=True)
-        resource_descendants = all_descendants.exclude(kind=content_kinds.TOPIC)
-        total_size = sum([s[0] for s in resource_descendants.exclude(files=None).values_list('files__file_size')])
-        max_sort_order = max([1] + [o[0] for o in self.children.values_list('sort_order')])
-        return {
-            "total_count" : all_descendants.exclude(pk=self.pk).count(),
-            "resource_count" : resource_descendants.count(),
-            "max_sort_order" : max_sort_order,
-            "resource_size" : total_size,
-            "has_changed_descendant" : all_descendants.filter(changed=True).exists()
-        }
-
-    metadata = property(_get_metadata)
 
     def save(self, *args, **kwargs):
         isNew = self.pk is None
