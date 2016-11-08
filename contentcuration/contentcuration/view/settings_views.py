@@ -34,7 +34,8 @@ class ProfileView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super(ProfileView, self).get_context_data(**kwargs)
-        context.update({'channels': Channel.objects.filter(deleted=False, editors__email__contains= self.request.user)})
+        channel_list = Channel.objects.filter( Q(deleted=False, editors__email__contains= self.request.user)).values("id", "name")
+        context.update({'channel_list': channel_list})
         return context
 
     def get_initial(self):
@@ -60,29 +61,29 @@ class ProfileView(FormView):
 
 @login_required
 def account_settings(request):
-    channel_list = Channel.objects.filter(deleted=False, editors__email__contains= request.user)
+    channel_list = Channel.objects.filter( Q(deleted=False, editors__email__contains= request.user)).values("id", "name")
     return views.password_change(request,
         template_name='settings/account.html',
         post_change_redirect="/settings/account/success",
         password_change_form=AccountSettingsForm,
-        extra_context={"channels" : channel_list,"current_user" : request.user, "page": "account"}
+        extra_context={"channel_list" : channel_list,"current_user" : request.user, "page": "account"}
     )
 
 @login_required
 def account_settings_success(request):
-    channel_list = Channel.objects.filter(deleted=False, editors__email__contains= request.user)
+    channel_list = Channel.objects.filter( Q(deleted=False, editors__email__contains= request.user)).values("id", "name")
     return views.password_change(request,
         template_name='settings/account_success.html',
         post_change_redirect="/settings/account/success",
         password_change_form=AccountSettingsForm,
-        extra_context={"channels" : channel_list,"current_user" : request.user, "page": "account"}
+        extra_context={"channel_list" : channel_list,"current_user" : request.user, "page": "account"}
     )
 
 @login_required
 def tokens_settings(request):
-    channel_list = Channel.objects.filter(deleted=False, editors__email__contains= request.user)
+    channel_list = Channel.objects.filter( Q(deleted=False, editors__email__contains= request.user)).values("id", "name")
     user_token, isNew = Token.objects.get_or_create(user=request.user)
-    return render(request, 'settings/tokens.html', {"channels" : channel_list,
+    return render(request, 'settings/tokens.html', {"channel_list" : channel_list,
                                                     "current_user" : request.user,
                                                     "page": "tokens",
                                                     "tokens":[str(user_token)]})
