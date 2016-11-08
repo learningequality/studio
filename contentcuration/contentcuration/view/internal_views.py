@@ -3,12 +3,13 @@ import logging
 import os
 import re
 import shutil
+import hashlib
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
 from django.core.context_processors import csrf
 from django.db.models import Q
 from django.template.loader import render_to_string
@@ -28,6 +29,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def authenticate_user_internal(request):
+    """ Verify user is valid """
     logging.debug("Logging in user")
     return HttpResponse(json.dumps({'success': True, 'token': unicode(request.auth), 'username':unicode(request.user)}))
 
@@ -35,6 +37,7 @@ def authenticate_user_internal(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def file_diff(request):
+    """ Determine which files don't exist on server """
     logging.debug("Entering the file_diff endpoint")
     data = json.loads(request.body)
     in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
@@ -50,9 +53,19 @@ def file_diff(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def api_file_upload(request):
+    """ Upload a file to the storage system """
     try:
         fobj = request.FILES["file"]
-        file_path = generate_file_on_disk_name(fobj._name.split(".")[-2], fobj._name)
+
+        # Check that hash is valid
+        hash_check = hashlib.md5()
+        for chunk in iter(lambda: fobj.read(4096), b""):
+            hash_check.update(chunk)
+        filename = os.path.splitext(fobj._name)[0]
+
+        assert hash_check.hexdigest() == filename, "Failed to upload file {0}: hash is invalid".format(fobj._name)
+
+        file_path = generate_file_on_disk_name(filename, fobj._name)
 
         # Write file if it doesn't already exist
         if not os.path.isfile(file_path):
@@ -63,17 +76,18 @@ def api_file_upload(request):
             "success": True,
         }))
     except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data")
+        raise SuspiciousOperation("Invalid file upload request")
 
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def api_create_channel_endpoint(request):
+    """ Create the channel node """
     data = json.loads(request.body)
     try:
         channel_data = data['channel_data']
 
-        obj = api_create_channel(channel_data)
+        obj = create_channel(channel_data)
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -87,6 +101,7 @@ def api_create_channel_endpoint(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def api_finish_channel(request):
+    """ Commit the channel with final touches """
     data = json.loads(request.body)
     try:
         channel_id = data['channel_id']
@@ -107,6 +122,7 @@ def api_finish_channel(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def api_add_nodes_to_tree(request):
+    """ Add child nodes to a parent node """
     data = json.loads(request.body)
     try:
         content_data = data['content_data']
@@ -121,28 +137,24 @@ def api_add_nodes_to_tree(request):
 
 
 """ CHANNEL CREATE FUNCTIONS """
-def api_create_channel(channel_data):
-    channel = create_channel(channel_data) # Set up initial channel
-    root_node = init_staging_tree(channel) # Set up initial staging tree
-    return channel # Return new channel
-
 def create_channel(channel_data):
+    """ Set up channel """
+    # Set up initial channel
     channel, isNew = Channel.objects.get_or_create(id=channel_data['id'])
     channel.name = channel_data['name']
     channel.description=channel_data['description']
     channel.thumbnail=channel_data['thumbnail']
     channel.deleted = False
-    channel.save()
-    return channel
 
-def init_staging_tree(channel):
+    # Set up initial staging tree
     channel.staging_tree = ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
     channel.staging_tree.published = channel.version > 0
     channel.staging_tree.save()
     channel.save()
-    return channel.staging_tree
+    return channel # Return new channel
 
 def convert_data_to_nodes(content_data, parent_node):
+    """ Parse dict and create nodes accordingly """
     try:
         root_mapping = {}
         sort_order = 1
@@ -158,6 +170,7 @@ def convert_data_to_nodes(content_data, parent_node):
         raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
 
 def create_node(node_data, parent_node, sort_order):
+    """ Generate node based on node dict """
     title=node_data['title']
     node_id=node_data['node_id']
     description=node_data['description']
@@ -185,6 +198,7 @@ def create_node(node_data, parent_node, sort_order):
     )
 
 def map_files_to_node(node, data):
+    """ Generate files that reference the content node """
     for file_data in data:
         file_hash = file_data['filename'].split(".")
         kind_preset = None
@@ -207,6 +221,7 @@ def map_files_to_node(node, data):
 
 
 def map_files_to_assessment_item(question, data):
+    """ Generate files that reference the content node's assessment items """
     for file_data in data:
         file_hash = file_data['filename'].split(".")
         kind_preset = FormatPreset.objects.get(id=file_data['preset'])
@@ -224,6 +239,7 @@ def map_files_to_assessment_item(question, data):
         file_obj.save()
 
 def create_exercises(node, data):
+    """ Generate exercise from data """
     with transaction.atomic():
         order = 0
 
