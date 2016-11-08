@@ -256,4 +256,3 @@ def create_exercises(node, data):
             order += 1
             question_obj.save()
             map_files_to_assessment_item(question_obj, question['files'])
-            # import pdb; pdb.set_trace()

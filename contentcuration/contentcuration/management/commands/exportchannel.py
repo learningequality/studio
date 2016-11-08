@@ -215,22 +215,25 @@ def create_perseus_zip(ccnode, write_to_path):
         exercise_result = render_to_string('perseus/exercise.json', exercise_context)
         zf.writestr("exercise.json", exercise_result)
 
-        for image in ccnode.files.filter(preset_id=format_presets.EXERCISE_IMAGE):
-            image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
-            if image_name not in zf.namelist():
-                image.file_on_disk.open(mode="rb")
-                zf.writestr(image_name, image.file_on_disk.read())
+        for question in ccnode.assessment_items.all():
+            for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE):
+                image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
+                if image_name not in zf.namelist():
+                    image.file_on_disk.open(mode="rb")
+                    zf.writestr(image_name, image.file_on_disk.read())
 
-        for image in ccnode.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE):
-            image_name = "images/{0}.{ext}".format(image.original_filename, ext=image.file_format_id)
-            if image_name not in zf.namelist():
-                image.file_on_disk.open(mode="rb")
-                zf.writestr(image_name, image.file_on_disk.read())
+            for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE):
+                svg_name = "images/{0}.svg".format(image.original_filename, ext=image.file_format_id)
+                json_name = "images/{0}-data.json".format(image.original_filename, ext=image.file_format_id)
+                if svg_name not in zf.namelist() or json_name not in zf.namelist():
+                    image.file_on_disk.open(mode="rb")
+                    content=image.file_on_disk.read()
+                    content = content.split(exercises.GRAPHIE_DELIMITER)
+                    zf.writestr(svg_name, content[0])
+                    zf.writestr(json_name, content[1])
 
         for item in assessment_items:
             write_assessment_item(item, zf)
-
-        zf.printdir()
 
 def write_assessment_item(assessment_item, zf):
     template=''
@@ -289,16 +292,13 @@ def convert_channel_thumbnail(thumbnail):
             thumbnail (str): file path or url to channel's thumbnail
         Returns: base64 encoding of thumbnail
     """
-    if thumbnail is None:
-        return None
-    else:
-        encoding = None
-        if 'static' in thumbnail:
-            return ""
+    encoding = None
+    if thumbnail is None or thumbnail=='' or 'static' in thumbnail:
+        return ""
 
-        with open(ccmodels.generate_file_on_disk_name(thumbnail.split('.')[0], thumbnail), 'rb') as file_obj:
-            encoding = base64.b64encode(file_obj.read()).decode('utf-8')
-        return "data:image/png;base64," + encoding
+    with open(ccmodels.generate_file_on_disk_name(thumbnail.split('.')[0], thumbnail), 'rb') as file_obj:
+        encoding = base64.b64encode(file_obj.read()).decode('utf-8')
+    return "data:image/png;base64," + encoding
 
 def prepare_export_database():
     call_command("flush", "--noinput", database='export_staging')  # clears the db!
