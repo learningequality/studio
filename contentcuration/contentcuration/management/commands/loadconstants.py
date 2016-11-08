@@ -217,6 +217,14 @@ FILE_FORMATS = [
             "mimetype" : file_formats.JSON_MIMETYPE,
         },
     },
+    {
+        "model": models.FileFormat,
+        "pk": "extension",
+        "fields": {
+            "extension": file_formats.GRAPHIE,
+            "mimetype" : file_formats.GRAPHIE_MIMETYPE,
+        },
+    },
 ]
 
 KINDS = [

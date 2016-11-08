@@ -221,6 +221,23 @@ def map_files_to_node(node, data):
         )
         file_obj.save()
 
+def map_files_to_assessment_item(question, data):
+    for file_data in data:
+        file_hash = file_data['filename'].split(".")
+        kind_preset = models.FormatPreset.objects.get(id=file_data['preset'])
+
+        file_obj = models.File(
+            checksum=file_hash[0],
+            assessment_item=question,
+            file_format_id=file_hash[1],
+            original_filename=file_data.get('original_filename') or 'file',
+            source_url=file_data.get('source_url'),
+            file_size = file_data['size'],
+            file_on_disk=DjFile(open(models.generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
+            preset=kind_preset,
+        )
+        file_obj.save()
+
 def create_exercises(node, data):
     with transaction.atomic():
         order = 0
@@ -238,8 +255,5 @@ def create_exercises(node, data):
             )
             order += 1
             question_obj.save()
-
-def update_channel(channel, root):
-    channel.main_tree = root
-    channel.version += 1
-    channel.save()
+            map_files_to_assessment_item(question_obj, question['files'])
+            # import pdb; pdb.set_trace()

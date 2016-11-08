@@ -238,7 +238,6 @@ def api_finish_channel(request):
 
             obj = Channel.objects.get(pk=channel_id)
             obj.main_tree = obj.staging_tree
-            obj.version += 1
             obj.save()
 
             invitation = Invitation.objects.create(channel=obj)

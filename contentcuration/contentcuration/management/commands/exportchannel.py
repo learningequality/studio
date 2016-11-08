@@ -215,14 +215,22 @@ def create_perseus_zip(ccnode, write_to_path):
         exercise_result = render_to_string('perseus/exercise.json', exercise_context)
         zf.writestr("exercise.json", exercise_result)
 
-        for image in ccnode.files.filter(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
+        for image in ccnode.files.filter(preset_id=format_presets.EXERCISE_IMAGE):
             image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
+            if image_name not in zf.namelist():
+                image.file_on_disk.open(mode="rb")
+                zf.writestr(image_name, image.file_on_disk.read())
+
+        for image in ccnode.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE):
+            image_name = "images/{0}.{ext}".format(image.original_filename, ext=image.file_format_id)
             if image_name not in zf.namelist():
                 image.file_on_disk.open(mode="rb")
                 zf.writestr(image_name, image.file_on_disk.read())
 
         for item in assessment_items:
             write_assessment_item(item, zf)
+
+        zf.printdir()
 
 def write_assessment_item(assessment_item, zf):
     template=''
@@ -257,6 +265,7 @@ def write_assessment_item(assessment_item, zf):
         template = 'perseus/perseus_question.json'
 
     result = render_to_string(template, context).encode('utf-8', "ignore")
+    print result.encode('utf-8')
     filename = "{0}.json".format(assessment_item.assessment_id)
     zf.writestr(filename, result)
 

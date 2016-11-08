@@ -333,6 +333,16 @@ class Language(models.Model):
     def __str__(self):
         return self.ietf_name
 
+class AssessmentItem(models.Model):
+    type = models.CharField(max_length=50, default="multiplechoice")
+    question = models.TextField(blank=True)
+    hints = models.TextField(default="[]")
+    answers = models.TextField(default="[]")
+    order = models.IntegerField(default=1)
+    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
+    assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
+    raw_data = models.TextField(blank=True)
+
 class File(models.Model):
     """
     The bottom layer of the contentDB schema, defines the basic building brick for content.
@@ -343,6 +353,7 @@ class File(models.Model):
     file_size = models.IntegerField(blank=True, null=True)
     file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500, blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True)
+    assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
     lang = models.ForeignKey(Language, blank=True, null=True)
@@ -443,16 +454,6 @@ class RelatedContentRelationship(models.Model):
 class Exercise(models.Model):
     contentnode = models.ForeignKey('ContentNode', related_name="exercise", null=True)
     mastery_model = models.CharField(max_length=200, default=exercises.DO_ALL, choices=exercises.MASTERY_MODELS)
-
-class AssessmentItem(models.Model):
-    type = models.CharField(max_length=50, default="multiplechoice")
-    question = models.TextField(blank=True)
-    hints = models.TextField(default="[]")
-    answers = models.TextField(default="[]")
-    order = models.IntegerField(default=1)
-    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
-    assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
-    raw_data = models.TextField(blank=True)
 
 class Invitation(models.Model):
     """ Invitation to edit channel """
