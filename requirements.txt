@@ -19,6 +19,6 @@ django-email-extras==0.3.3
 https://github.com/learningequality/kolibri/tarball/master#egg=kolibri
 validators
 django-mailgun==0.9.1
-le_utils==0.0.9rc8
+le_utils==0.0.9rc10
 gunicorn==19.6.0
 django-mailgun==0.9.1
