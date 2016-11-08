@@ -40,7 +40,7 @@ def file_diff(request):
     in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
     to_return = []
     for f in list(set(data) - set(in_db_list)):
-        file_path = generate_file_on_disk_name(f.split(".")[-2],f)
+        file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
         # Write file if it doesn't already exist
         if not os.path.isfile(file_path):
             to_return += [f]
