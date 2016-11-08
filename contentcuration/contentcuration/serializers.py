@@ -194,6 +194,26 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
+    metadata = serializers.SerializerMethodField('retrieve_metadata')
+
+    def retrieve_metadata(self, node):
+        if node.kind_id == content_kinds.TOPIC:
+            resource_descendants = node.get_descendants().exclude(kind=content_kinds.TOPIC)
+            return {
+                "total_count" : node.get_descendant_count(),
+                "resource_count" : resource_descendants.count(),
+                "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'],
+                "resource_size" : resource_descendants.aggregate(resource_size=Sum('files__file_size'))['resource_size'],
+                "has_changed_descendant" : node.get_descendants(include_self=True).filter(changed=True).exists()
+            }
+        else:
+            return {
+                "total_count" : 1,
+                "resource_count" : 1,
+                "max_sort_order" : node.sort_order,
+                "resource_size" : node.files.aggregate(resource_size=Sum('file_size'))['resource_size'],
+                "has_changed_descendant" : node.changed
+            }
 
     @staticmethod
     def setup_eager_loading(queryset):
