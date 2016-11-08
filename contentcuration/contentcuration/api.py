@@ -5,13 +5,11 @@ import logging
 import os
 import re
 from functools import wraps
-from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
-from django.db import transaction
 from le_utils.constants import content_kinds
 import contentcuration.models as models
 
@@ -123,136 +121,3 @@ def batch_add_tags(request):
     ThroughModel.objects.bulk_create(bulk_list)
 
     return HttpResponse("Tags are successfully saved.", status=200)
-
-def get_file_diff(file_list):
-    in_db_list = models.File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=file_list).values_list('filename', flat=True)
-    to_return = []
-    for f in list(set(file_list) - set(in_db_list)):
-        file_path = models.generate_file_on_disk_name(f.split(".")[-2],f)
-        # Write file if it doesn't already exist
-        if not os.path.isfile(file_path):
-            to_return += [f]
-
-    return to_return
-
-
-""" CHANNEL CREATE FUNCTIONS """
-def api_create_channel(channel_data):
-    channel = create_channel(channel_data) # Set up initial channel
-    root_node = init_staging_tree(channel) # Set up initial staging tree
-    return channel # Return new channel
-
-def create_channel(channel_data):
-    channel, isNew = models.Channel.objects.get_or_create(id=channel_data['id'])
-    channel.name = channel_data['name']
-    channel.description=channel_data['description']
-    channel.thumbnail=channel_data['thumbnail']
-    channel.deleted = False
-    channel.save()
-    return channel
-
-def init_staging_tree(channel):
-    channel.staging_tree = models.ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
-    channel.staging_tree.published = channel.version > 0
-    channel.staging_tree.save()
-    channel.save()
-    return channel.staging_tree
-
-def convert_data_to_nodes(content_data, parent_node):
-    try:
-        root_mapping = {}
-        sort_order = 1
-        with transaction.atomic():
-            for node_data in content_data:
-                new_node = create_node(node_data, parent_node, sort_order)
-                map_files_to_node(new_node, node_data['files'])
-                create_exercises(new_node, node_data['questions'])
-                sort_order += 1
-                root_mapping.update({node_data['node_id'] : new_node.pk})
-            return root_mapping
-    except KeyError as e:
-        raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
-
-def create_node(node_data, parent_node, sort_order):
-    title=node_data['title']
-    node_id=node_data['node_id']
-    description=node_data['description']
-    author = node_data['author']
-    kind = models.ContentKind.objects.get(kind=node_data['kind'])
-    extra_fields = node_data['extra_fields']
-    license = None
-    license_name = node_data['license']
-    if license_name is not None:
-        try:
-            license = models.License.objects.get(license_name__iexact=license_name)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("Invalid license found")
-
-    return models.ContentNode.objects.create(
-        title=title,
-        kind=kind,
-        node_id=node_id,
-        description = description,
-        author=author,
-        license=license,
-        parent_id = parent_node,
-        extra_fields=extra_fields,
-        sort_order = sort_order,
-    )
-
-def map_files_to_node(node, data):
-    for file_data in data:
-        file_hash = file_data['filename'].split(".")
-        kind_preset = None
-        if file_data['preset'] is None:
-            kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1], display=True).first()
-        else:
-            kind_preset = models.FormatPreset.objects.get(id=file_data['preset'])
-
-        file_obj = models.File(
-            checksum=file_hash[0],
-            contentnode=node,
-            file_format_id=file_hash[1],
-            original_filename=file_data.get('original_filename') or '',
-            source_url=file_data.get('source_url'),
-            file_size = file_data['size'],
-            file_on_disk=DjFile(open(models.generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
-            preset=kind_preset,
-        )
-        file_obj.save()
-
-def map_files_to_assessment_item(question, data):
-    for file_data in data:
-        file_hash = file_data['filename'].split(".")
-        kind_preset = models.FormatPreset.objects.get(id=file_data['preset'])
-
-        file_obj = models.File(
-            checksum=file_hash[0],
-            assessment_item=question,
-            file_format_id=file_hash[1],
-            original_filename=file_data.get('original_filename') or 'file',
-            source_url=file_data.get('source_url'),
-            file_size = file_data['size'],
-            file_on_disk=DjFile(open(models.generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
-            preset=kind_preset,
-        )
-        file_obj.save()
-
-def create_exercises(node, data):
-    with transaction.atomic():
-        order = 0
-
-        for question in data:
-            question_obj = models.AssessmentItem(
-                type = question.get('type'),
-                question = question.get('question'),
-                hints = question.get('hints'),
-                answers = question.get('answers'),
-                order = order,
-                contentnode = node,
-                assessment_id = question.get('assessment_id'),
-                raw_data = question.get('raw_data'),
-            )
-            order += 1
-            question_obj.save()
-            map_files_to_assessment_item(question_obj, question['files'])

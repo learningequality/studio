@@ -2,7 +2,7 @@ from contentcuration.models import User
 from django import forms
 from django.utils.translation import ugettext as _
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm
 
 class RegistrationForm(UserCreationForm):
     password1 = forms.CharField(widget=forms.PasswordInput, label='Password', required=True)
@@ -109,3 +109,68 @@ class InvitationAcceptForm(AuthenticationForm):
         else:
             self.confirm_login_allowed(self.user)
         return self.cleaned_data
+
+class ProfileSettingsForm(UserChangeForm):
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name')
+        exclude =  ('password', 'email')
+
+    def clean_password(self):
+        pass
+
+    def clean(self):
+        cleaned_data = super(ProfileSettingsForm, self).clean()
+
+        if 'first_name' not in self.cleaned_data:
+            self.errors['first_name'] = self.error_class()
+            self.add_error('first_name', 'First name is required.')
+
+        if 'last_name' not in self.cleaned_data:
+            self.errors['last_name'] = self.error_class()
+            self.add_error('last_name', 'Last name is required.')
+
+        return self.cleaned_data
+
+    def save(self, user):
+        user.first_name = self.cleaned_data["first_name"]
+        user.last_name = self.cleaned_data["last_name"]
+        user.save()
+        return user
+
+    def __init__(self, *args, **kwargs):
+        super(ProfileSettingsForm, self).__init__(*args, **kwargs)
+
+
+class AccountSettingsForm(PasswordChangeForm):
+    old_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control setting_input'}))
+    new_password1 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control setting_input'}))
+    new_password2 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control setting_input'}))
+
+    class Meta:
+        model = User
+        fields = ('old_password', 'new_password1', 'new_password2')
+
+    def clean(self):
+        cleaned_data = super(AccountSettingsForm, self).clean()
+
+        self.check_field('old_password', 'Current password is required.')
+
+        if self.check_field('new_password1', 'New password is required.'):
+            if 'new_password2' not in self.cleaned_data or self.cleaned_data['new_password1'] != self.cleaned_data['new_password2']:
+                self.errors['new_password2'] = self.error_class()
+                self.add_error('new_password2', 'New passwords don\'t match.')
+        else:
+            self.errors['new_password2'] = self.error_class()
+
+        return self.cleaned_data
+
+    def check_field(self, field, error):
+        if field not in self.cleaned_data:
+            self.errors[field] = self.error_class()
+            self.add_error(field, error)
+            return False
+        return True
