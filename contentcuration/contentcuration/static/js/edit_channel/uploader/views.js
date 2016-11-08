@@ -60,6 +60,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.onnew = options.onnew;
     this.onclose = options.onclose;
     this.render();
+    this.render_details();
     this.adjust_list_height();
   },
   events: {
