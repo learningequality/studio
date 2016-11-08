@@ -197,7 +197,7 @@ SITE_ID = 1
 
 DEFAULT_FROM_EMAIL = 'Kolibri Content Curation <info@learningequality.org>'
 DEFAULT_LICENSE = 1
-CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_ALLOW_ALL = True
 
 SERVER_EMAIL = 'curation-errors@learningequality.org'
 ADMINS = [('Errors', SERVER_EMAIL)]

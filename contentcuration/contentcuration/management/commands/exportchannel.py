@@ -223,8 +223,8 @@ def create_perseus_zip(ccnode, write_to_path):
                     zf.writestr(image_name, image.file_on_disk.read())
 
             for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE):
-                svg_name = "images/{0}.svg".format(image.original_filename, ext=image.file_format_id)
-                json_name = "images/{0}-data.json".format(image.original_filename, ext=image.file_format_id)
+                svg_name = "images/{0}.svg".format(image.original_filename)
+                json_name = "images/{0}-data.json".format(image.original_filename)
                 if svg_name not in zf.namelist() or json_name not in zf.namelist():
                     image.file_on_disk.open(mode="rb")
                     content=image.file_on_disk.read()

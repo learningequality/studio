@@ -24,8 +24,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
-# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
-@csrf_exempt
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -33,8 +31,6 @@ def authenticate_user_internal(request):
     logging.debug("Logging in user")
     return HttpResponse(json.dumps({'success': True, 'token': unicode(request.auth), 'username':unicode(request.user)}))
 
-# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
-@csrf_exempt
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -53,8 +49,6 @@ def file_diff(request):
                 to_return += [f]
         return HttpResponse(json.dumps(to_return))
 
-# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
-@csrf_exempt
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -77,8 +71,6 @@ def api_file_upload(request):
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data")
 
-# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
-@csrf_exempt
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -100,7 +92,6 @@ def api_create_channel_endpoint(request):
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-@csrf_exempt
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -124,7 +115,6 @@ def api_finish_channel(request):
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-@csrf_exempt
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
