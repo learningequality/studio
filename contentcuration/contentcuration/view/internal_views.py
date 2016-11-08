@@ -36,103 +36,88 @@ def authenticate_user_internal(request):
 @permission_classes((IsAuthenticated,))
 def file_diff(request):
     logging.debug("Entering the file_diff endpoint")
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-    else:
-        data = json.loads(request.body)
-        in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
-        to_return = []
-        for f in list(set(data) - set(in_db_list)):
-            file_path = generate_file_on_disk_name(f.split(".")[-2],f)
-            # Write file if it doesn't already exist
-            if not os.path.isfile(file_path):
-                to_return += [f]
-        return HttpResponse(json.dumps(to_return))
+    data = json.loads(request.body)
+    in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
+    to_return = []
+    for f in list(set(data) - set(in_db_list)):
+        file_path = generate_file_on_disk_name(f.split(".")[-2],f)
+        # Write file if it doesn't already exist
+        if not os.path.isfile(file_path):
+            to_return += [f]
+    return HttpResponse(json.dumps(to_return))
 
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def api_file_upload(request):
-    if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-    else:
-        try:
-            fobj = request.FILES["file"]
-            file_path = generate_file_on_disk_name(fobj._name.split(".")[-2], fobj._name)
+    try:
+        fobj = request.FILES["file"]
+        file_path = generate_file_on_disk_name(fobj._name.split(".")[-2], fobj._name)
 
-            # Write file if it doesn't already exist
-            if not os.path.isfile(file_path):
-                with open(file_path, 'wb') as destf:
-                    shutil.copyfileobj(fobj, destf)
+        # Write file if it doesn't already exist
+        if not os.path.isfile(file_path):
+            with open(file_path, 'wb') as destf:
+                shutil.copyfileobj(fobj, destf)
 
-            return HttpResponse(json.dumps({
-                "success": True,
-            }))
-        except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data")
+        return HttpResponse(json.dumps({
+            "success": True,
+        }))
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data")
 
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def api_create_channel_endpoint(request):
-    if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-    else:
-        data = json.loads(request.body)
-        try:
-            channel_data = data['channel_data']
+    data = json.loads(request.body)
+    try:
+        channel_data = data['channel_data']
 
-            obj = api_create_channel(channel_data)
+        obj = api_create_channel(channel_data)
 
-            return HttpResponse(json.dumps({
-                "success": True,
-                "root": obj.staging_tree.pk,
-                "channel_id": obj.pk,
-            }))
-        except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        return HttpResponse(json.dumps({
+            "success": True,
+            "root": obj.staging_tree.pk,
+            "channel_id": obj.pk,
+        }))
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def api_finish_channel(request):
-    if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-    else:
-        data = json.loads(request.body)
-        try:
-            channel_id = data['channel_id']
+    data = json.loads(request.body)
+    try:
+        channel_id = data['channel_id']
 
-            obj = Channel.objects.get(pk=channel_id)
-            obj.main_tree = obj.staging_tree
-            obj.editors.add(request.user)
-            obj.save()
+        obj = Channel.objects.get(pk=channel_id)
+        obj.main_tree = obj.staging_tree
+        obj.editors.add(request.user)
+        obj.save()
 
-            return HttpResponse(json.dumps({
-                "success": True,
-                "new_channel": obj.pk,
-            }))
-        except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        return HttpResponse(json.dumps({
+            "success": True,
+            "new_channel": obj.pk,
+        }))
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def api_add_nodes_to_tree(request):
-    if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-    else:
-        data = json.loads(request.body)
-        try:
-            content_data = data['content_data']
-            parent_id = data['root_id']
+    data = json.loads(request.body)
+    try:
+        content_data = data['content_data']
+        parent_id = data['root_id']
 
-            return HttpResponse(json.dumps({
-                "success": True,
-                "root_ids": convert_data_to_nodes(content_data, parent_id)
-            }))
-        except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        return HttpResponse(json.dumps({
+            "success": True,
+            "root_ids": convert_data_to_nodes(content_data, parent_id)
+        }))
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
 """ CHANNEL CREATE FUNCTIONS """
