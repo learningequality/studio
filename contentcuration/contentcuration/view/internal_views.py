@@ -46,8 +46,8 @@ def file_diff(request):
         data = json.loads(request.body)
         in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
         to_return = []
-        for f in list(set(file_list) - set(in_db_list)):
-            file_path = models.generate_file_on_disk_name(f.split(".")[-2],f)
+        for f in list(set(data) - set(in_db_list)):
+            file_path = generate_file_on_disk_name(f.split(".")[-2],f)
             # Write file if it doesn't already exist
             if not os.path.isfile(file_path):
                 to_return += [f]
@@ -114,14 +114,12 @@ def api_finish_channel(request):
 
             obj = Channel.objects.get(pk=channel_id)
             obj.main_tree = obj.staging_tree
+            obj.editors.add(request.user)
             obj.save()
-
-            invitation = Invitation.objects.create(channel=obj)
 
             return HttpResponse(json.dumps({
                 "success": True,
                 "new_channel": obj.pk,
-                "invite_id":invitation.pk,
             }))
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -154,7 +152,7 @@ def api_create_channel(channel_data):
     return channel # Return new channel
 
 def create_channel(channel_data):
-    channel, isNew = models.Channel.objects.get_or_create(id=channel_data['id'])
+    channel, isNew = Channel.objects.get_or_create(id=channel_data['id'])
     channel.name = channel_data['name']
     channel.description=channel_data['description']
     channel.thumbnail=channel_data['thumbnail']
@@ -163,7 +161,7 @@ def create_channel(channel_data):
     return channel
 
 def init_staging_tree(channel):
-    channel.staging_tree = models.ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
+    channel.staging_tree = ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
     channel.staging_tree.published = channel.version > 0
     channel.staging_tree.save()
     channel.save()
@@ -189,17 +187,17 @@ def create_node(node_data, parent_node, sort_order):
     node_id=node_data['node_id']
     description=node_data['description']
     author = node_data['author']
-    kind = models.ContentKind.objects.get(kind=node_data['kind'])
+    kind = ContentKind.objects.get(kind=node_data['kind'])
     extra_fields = node_data['extra_fields']
     license = None
     license_name = node_data['license']
     if license_name is not None:
         try:
-            license = models.License.objects.get(license_name__iexact=license_name)
+            license = License.objects.get(license_name__iexact=license_name)
         except ObjectDoesNotExist:
             raise ObjectDoesNotExist("Invalid license found")
 
-    return models.ContentNode.objects.create(
+    return ContentNode.objects.create(
         title=title,
         kind=kind,
         node_id=node_id,
@@ -216,18 +214,18 @@ def map_files_to_node(node, data):
         file_hash = file_data['filename'].split(".")
         kind_preset = None
         if file_data['preset'] is None:
-            kind_preset = models.FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1], display=True).first()
+            kind_preset = FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1], display=True).first()
         else:
-            kind_preset = models.FormatPreset.objects.get(id=file_data['preset'])
+            kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
-        file_obj = models.File(
+        file_obj = File(
             checksum=file_hash[0],
             contentnode=node,
             file_format_id=file_hash[1],
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size = file_data['size'],
-            file_on_disk=DjFile(open(models.generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
+            file_on_disk=DjFile(open(generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
             preset=kind_preset,
         )
         file_obj.save()
@@ -236,16 +234,16 @@ def map_files_to_node(node, data):
 def map_files_to_assessment_item(question, data):
     for file_data in data:
         file_hash = file_data['filename'].split(".")
-        kind_preset = models.FormatPreset.objects.get(id=file_data['preset'])
+        kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
-        file_obj = models.File(
+        file_obj = File(
             checksum=file_hash[0],
             assessment_item=question,
             file_format_id=file_hash[1],
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size = file_data['size'],
-            file_on_disk=DjFile(open(models.generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
+            file_on_disk=DjFile(open(generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
             preset=kind_preset,
         )
         file_obj.save()
@@ -255,7 +253,7 @@ def create_exercises(node, data):
         order = 0
 
         for question in data:
-            question_obj = models.AssessmentItem(
+            question_obj = AssessmentItem(
                 type = question.get('type'),
                 question = question.get('question'),
                 hints = question.get('hints'),

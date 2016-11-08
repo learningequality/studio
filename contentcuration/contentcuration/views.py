@@ -15,9 +15,6 @@ from django.core.context_processors import csrf
 from django.db.models import Q
 from rest_framework.renderers import JSONRenderer
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name
-from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
-from contentcuration.api import get_file_diff, api_create_channel, convert_data_to_nodes
-from registration.backends.hmac.views import RegistrationView
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets
