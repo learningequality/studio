@@ -268,7 +268,6 @@ def write_assessment_item(assessment_item, zf):
         template = 'perseus/perseus_question.json'
 
     result = render_to_string(template, context).encode('utf-8', "ignore")
-    print result.encode('utf-8')
     filename = "{0}.json".format(assessment_item.assessment_id)
     zf.writestr(filename, result)
 
