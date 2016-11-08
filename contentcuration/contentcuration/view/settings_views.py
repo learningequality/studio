@@ -18,7 +18,9 @@ from rest_framework.renderers import JSONRenderer
 from contentcuration.models import User, Channel
 from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm
 from rest_framework.authtoken.models import Token
+from django.core.urlresolvers import reverse_lazy
 import contentcuration.urls
+
 
 @login_required
 def settings(request):
@@ -26,9 +28,9 @@ def settings(request):
 
 class ProfileView(FormView):
     """
-    Base class for user registration views.
+    Base class for user settings views.
     """
-    success_url = '/settings/profile'
+    success_url = reverse_lazy('profile_settings')
     form_class = ProfileSettingsForm
     template_name = 'settings/profile.html'
 
@@ -64,7 +66,7 @@ def account_settings(request):
     channel_list = Channel.objects.filter( Q(deleted=False, editors__email__contains= request.user)).values("id", "name")
     return views.password_change(request,
         template_name='settings/account.html',
-        post_change_redirect="/settings/account/success",
+        post_change_redirect=reverse_lazy('account_settings_success'),
         password_change_form=AccountSettingsForm,
         extra_context={"channel_list" : channel_list,"current_user" : request.user, "page": "account"}
     )
@@ -74,7 +76,7 @@ def account_settings_success(request):
     channel_list = Channel.objects.filter( Q(deleted=False, editors__email__contains= request.user)).values("id", "name")
     return views.password_change(request,
         template_name='settings/account_success.html',
-        post_change_redirect="/settings/account/success",
+        post_change_redirect=reverse_lazy('account_settings_success'),
         password_change_form=AccountSettingsForm,
         extra_context={"channel_list" : channel_list,"current_user" : request.user, "page": "account"}
     )

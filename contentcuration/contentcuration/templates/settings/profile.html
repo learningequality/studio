@@ -23,7 +23,7 @@
 			</div>
 		{% endif %}
 	{% endif %}
-	<form action="/settings/profile/" method="post">
+	<form action="{% url 'profile_settings' %}" method="post">
 		<div id="form-wrapper">
 			{% csrf_token %}
 			<div class="input-group settings_field">

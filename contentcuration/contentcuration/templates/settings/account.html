@@ -22,7 +22,7 @@
 		</div>
 	{% endif %}
 	{% endblock accountmessage %}
-	<form method="post" action="/settings/account">
+	<form method="post" action="{% url 'account_settings' %}">
 		<div id="form-wrapper">
 		  	{% csrf_token %}
 			<div class="input-group settings_field">

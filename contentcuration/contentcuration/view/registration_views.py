@@ -14,6 +14,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
 from django.db.models import Q
 from django.template.loader import render_to_string
+from django.core.urlresolvers import reverse_lazy
 from contentcuration.models import Channel, User, Invitation
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
 from registration.backends.hmac.views import RegistrationView
@@ -80,7 +81,7 @@ class InvitationAcceptView(FormView):
         return kwargs
 
     def get_success_url(self):
-        return "/channels/" + self.kwargs["channel_id"] + "/edit"
+        return reverse_lazy('channel', kwargs={'channel_id':self.kwargs['channel_id']}) + "/edit"
 
     def dispatch(self, *args, **kwargs):
         user = self.user()
@@ -91,7 +92,7 @@ class InvitationAcceptView(FormView):
             channel = Channel.objects.get(id=self.kwargs["channel_id"])
             if user in channel.editors.all():
                 return super(InvitationAcceptView, self).dispatch(*args, **kwargs)
-            return redirect("/invitation_fail")
+            return redirect(reverse_lazy('fail_invitation'))
 
         return super(InvitationAcceptView, self).dispatch(*args, **kwargs)
 
@@ -136,10 +137,10 @@ class InvitationRegisterView(FormView):
         return {'email': self.user().email}
 
     def get_success_url(self):
-        return "/accept_invitation/" + self.kwargs["user_id"] + "/" + self.kwargs["invitation_link"] + "/" + self.kwargs["channel_id"]
+        return reverse_lazy('accept_invitation', kwargs={'user_id': self.kwargs["user_id"], 'invitation_link': self.kwargs["invitation_link"] , 'channel_id': self.kwargs["channel_id"]})
 
     def get_login_url(self):
-        return "/channels/" + self.kwargs["channel_id"] + "/edit"
+        return reverse_lazy('channel', kwargs={'channel_id':self.kwargs['channel_id']}) + "/edit"
 
     def dispatch(self, *args, **kwargs):
         user = self.user()
@@ -150,7 +151,7 @@ class InvitationRegisterView(FormView):
             channel = Channel.objects.get(id=self.kwargs["channel_id"])
             if user in channel.editors.all():
                 return redirect(self.get_success_url())
-            return redirect("/invitation_fail")
+            return redirect(reverse_lazy('fail_invitation'))
 
         if not getattr(settings, 'REGISTRATION_OPEN', True):
             return redirect(self.disallowed_url)
