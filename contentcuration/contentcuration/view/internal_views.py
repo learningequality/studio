@@ -63,7 +63,8 @@ def api_file_upload(request):
             hash_check.update(chunk)
         filename = os.path.splitext(fobj._name)[0]
 
-        assert hash_check.hexdigest() == filename, "Failed to upload file {0}: hash is invalid".format(fobj._name)
+        if hash_check.hexdigest() != filename:
+            raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(fobj._name))
 
         file_path = generate_file_on_disk_name(filename, fobj._name)
 
