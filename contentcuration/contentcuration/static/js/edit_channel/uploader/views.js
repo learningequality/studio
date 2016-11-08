@@ -72,8 +72,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   render: function() {
     this.$el.html(this.template());
     this.load_preview();
-    this.load_editor([]);
     this.load_list();
+    this.load_editor(this.edit_list.selected_items);
   },
   render_details:function(){
     this.switchPanel("details");
@@ -184,7 +184,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
   },
   save_nodes:function(){
-    var sort_order = (this.model && (this.new_content || this.upload_files)) ? Math.ceil(this.model.get("metadata").max_sort_order) : null;
+    var sort_order = (this.model && (this.new_content || this.upload_files)) ? Math.ceil(this.model.get("metadata").max_sort_order) : 0;
     var self = this;
     this.edit_list.views.forEach(function(entry){
       var tags = [];
@@ -194,7 +194,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       entry.set({
         tags: tags
       });
-      if(sort_order){
+      if(self.new_content || self.upload_files ){
         entry.set({
           parent:self.model.id,
           sort_order:++sort_order
@@ -446,6 +446,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").length > 0 && this.$el.find("#tag_box").val().trim() != ""){
       var tag = this.$el.find("#tag_box").val().trim();
       if(this.shared_data.shared_tags.indexOf(tag) < 0){
+        this.shared_data.shared_tags.push(tag);
         this.selected_items.forEach(function(view){
           view.add_tag(tag);
         });
@@ -571,9 +572,11 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.tags = [];
       if(this.model.get("tags")){
           var self = this;
+          fetch_tags = [];
           this.model.get("tags").forEach(function(entry){
-              self.tags.push(window.contenttags.get_or_fetch(entry).get("tag_name"));
+              fetch_tags.push((entry.id)? entry.id : entry);
           });
+          this.tags = window.contenttags.get_all_fetch(fetch_tags).pluck('tag_name');
       }
   },
   load_file_displays:function(formats_el){

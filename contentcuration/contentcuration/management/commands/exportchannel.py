@@ -6,6 +6,7 @@ import tempfile
 import json
 import sys
 import uuid
+import base64
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -266,13 +267,29 @@ def map_channel_to_kolibri_channel(channel):
         name=channel.name,
         description=channel.description,
         version=channel.version,
-        thumbnail=channel.thumbnail,
+        thumbnail=convert_channel_thumbnail(channel.thumbnail),
         root_pk=channel.main_tree.node_id,
     )
     logging.info("Generated the channel metadata.")
 
     return kolibri_channel
 
+def convert_channel_thumbnail(thumbnail):
+    """ encode_thumbnail: gets base64 encoding of thumbnail
+        Args:
+            thumbnail (str): file path or url to channel's thumbnail
+        Returns: base64 encoding of thumbnail
+    """
+    if thumbnail is None:
+        return None
+    else:
+        encoding = None
+        if 'static' in thumbnail:
+            return ""
+
+        with open(ccmodels.generate_file_on_disk_name(thumbnail.split('.')[0], thumbnail), 'rb') as file_obj:
+            encoding = base64.b64encode(file_obj.read()).decode('utf-8')
+        return "data:image/png;base64," + encoding
 
 def prepare_export_database():
     call_command("flush", "--noinput", database='export_staging')  # clears the db!

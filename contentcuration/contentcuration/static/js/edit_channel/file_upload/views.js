@@ -191,7 +191,7 @@ var FileUploadList = FileBaseList.extend({
     get_accepted_files:function(){
         var list = [];
         window.formatpresets.forEach(function(preset){
-            if(!preset.get("supplementary")){
+            if(!preset.get("supplementary") && preset.get('kind') !== 'exercise' && preset.get('kind') !== null){
                 list.push(preset.get("associated_mimetypes"));
             }
         });

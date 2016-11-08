@@ -51,8 +51,14 @@
                       <span class="glyphicon glyphicon-search" id="main-search-button" aria-hidden="true"></span>
                 </li>-->
                  <li class="dropdown" id="channel_select_dd_wrapper">
-                    <a href="#" id="channel_selection_dropdown" class="dropdown-toggle truncate" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Select a Channel... <span class="caret"></span></a>
-                    <ul class="dropdown-menu" id="channel_selection_dropdown_list"></ul>
+                    <a href="#" id="channel_selection_dropdown" class="dropdown-toggle truncate" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{%if channel_name %}{{channel_name}} {% else %}Select a Channel... {% endif %}<span class="caret"></span></a>
+                    <ul class="dropdown-menu" id="channel_selection_dropdown_list">
+                      {% for channel in channel_list %}
+                      <li><a href="/channels/{{channel.id}}/edit" class="truncate">{{channel.name}}</a></li>
+                      {% empty %}
+                      <li class='default-channel-item'><em>No channels found.</em></li>
+                      {% endfor %}
+                    </ul>
                 </li>
               </ul>
 

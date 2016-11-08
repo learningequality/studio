@@ -3,12 +3,13 @@ import os
 import uuid
 import hashlib
 import functools
+import json
 
 from django.conf import settings
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connections, models
-from django.db.models import Q
+from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
 from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager
 from django.utils.translation import ugettext as _
@@ -16,6 +17,7 @@ from django.dispatch import receiver
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.core.cache import cache
 
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
@@ -251,26 +253,23 @@ class ContentNode(MPTTModel, models.Model):
 
     objects = TreeManager()
 
-    def __init__(self, *args, **kwargs):
-        super(ContentNode, self).__init__(*args, **kwargs)
-        self.original_parent = self.parent
-
     def save(self, *args, **kwargs):
         isNew = self.pk is None
 
-        # Detect if model has been moved to a different tree
-        if self.original_parent and self.original_parent.id != self.parent_id:
-            self.original_parent.changed = True
-            self.original_parent.save()
-            self.original_parent = self.parent
+        # Detect if node has been moved to another tree
+        if not isNew and ContentNode.objects.filter(pk=self.pk).exists():
+            original = ContentNode.objects.get(pk=self.pk)
+            if original.parent and original.parent_id != self.parent_id:
+                original.parent.changed = True
+                original.parent.save()
 
         super(ContentNode, self).save(*args, **kwargs)
         if isNew:
-            if self.original_node is None:
-                self.original_node = self.pk
-            if self.cloned_source is None:
-                self.cloned_source = self.pk
+            self.original_node = self.pk if self.original_node is None else self.original_node
+            self.cloned_source = self.pk if self.cloned_source is None else self.cloned_source
             self.save()
+
+
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']

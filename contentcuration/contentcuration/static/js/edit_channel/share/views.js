@@ -62,8 +62,9 @@ var ShareView = BaseViews.BaseView.extend({
                 model: self.model,
                 current_user: this.current_user
             });
+            collections[1].reject({email:null})
             self.pending_view = new SharePendingList({
-                collection: collections[1].reject({email:null}),
+                collection: collections[1],
                 el: self.$("#pending_list_wrapper"),
                 model: self.model
             });
@@ -142,6 +143,7 @@ var ShareCurrentList = BaseViews.BaseEditableListView.extend({
 
     initialize: function(options) {
         this.bind_edit_functions();
+        _.bindAll(this, 'remove_editor');
         this.collection = options.collection;
         this.current_user = options.current_user;
         this.render();
@@ -176,6 +178,7 @@ var SharePendingList = BaseViews.BaseEditableListView.extend({
 
     initialize: function(options) {
         this.bind_edit_functions();
+        _.bindAll(this, 'add_to_pending_collection');
         this.collection = options.collection;
         this.render();
     },

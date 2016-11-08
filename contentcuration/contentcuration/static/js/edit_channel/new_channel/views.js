@@ -6,10 +6,10 @@ require("dropzone/dist/dropzone.css");
 var Models = require("edit_channel/models");
 var BaseViews = require("edit_channel/views");
 var get_cookie = require("utils/get_cookie");
+var stringHelper = require("edit_channel/utils/string_helper")
 
 var ChannelList  = BaseViews.BaseEditableListView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
-	dropdown_template: require("./hbtemplates/channel_dropdown.handlebars"),
 	list_selector: "#channel_list",
 	default_item: ".default-item",
 
@@ -27,7 +27,6 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 			user: window.current_user
 		}));
 		this.load_content(this.collection.where({deleted:false}));
-		this.load_dropdown();
 	},
 	events: {
 		'click .new_channel_button' : 'new_channel'
@@ -46,18 +45,12 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 			name: "New Channel",
 			description: "Description of channel",
 			editors: [window.current_user.id],
-			thumbnail:"/static/img/kolibri_placeholder.png"
+			thumbnail:"static/img/kolibri_placeholder.png"
 		};
 		this.create_new_item(data, true, "Creating Channel...").then(function(newView){
 			newView.edit_channel();
 			newView.set_is_new(true);
 		});
-	},
-	load_dropdown:function(){
-		var self = this;
-		$("#channel_selection_dropdown_list").html(this.dropdown_template({
-			channel_list: this.collection.toJSON()
-		}));
 	},
 	set_editing: function(edit_mode_on){
 		$(".disable-on-edit").prop("disabled", edit_mode_on);
@@ -99,10 +92,10 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.$el.html(this.template({
 			edit: this.edit,
 			channel: this.model.toJSON(),
-			total_file_size: this.model.get("resource_size"),
-			resource_count: this.model.get("resource_count"),
+			total_file_size: this.model.get("main_tree").metadata.resource_size,
+			resource_count: this.model.get("main_tree").metadata.resource_count,
 			channel_link : this.model.get("id"),
-			picture : this.thumbnail
+			picture : stringHelper.get_file_path(this.thumbnail)
 		}));
 	},
 	events: {
@@ -197,12 +190,11 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.thumbnail = JSON.parse(thumbnail.xhr.response).filename;
 	},
 	thumbnail_completed:function(){
-		if(!this.thumbnail_error){
-			this.thumbnail = $("#urlize_me")[0].src;
-		}else{
+		if(this.thumbnail_error){
 			alert(this.thumbnail_error);
+		}else{
+			this.set_channel();
 		}
-		this.set_channel();
 		this.render();
 		this.enable_submit();
 	},

@@ -51,9 +51,11 @@ INSTALLED_APPS = (
     'kolibri.content',
     'email_extras',
     'le_utils',
+    'rest_framework.authtoken',
 )
 
 MIDDLEWARE_CLASSES = (
+    # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.common.BrokenLinkEmailsMiddleware',
@@ -63,6 +65,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
 #REST_FRAMEWORK = {
@@ -72,6 +75,17 @@ MIDDLEWARE_CLASSES = (
  #     'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
   # ]
 #}
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    )
+}
 
 ROOT_URLCONF = 'contentcuration.urls'
 
@@ -121,7 +135,7 @@ DATABASES = {
 
 
 DATABASE_ROUTERS = [
-    "contentcuration.router.Router"
+    "contentcuration.router.Router",
 ]
 
 # LOGGING = {

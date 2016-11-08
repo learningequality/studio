@@ -49,14 +49,14 @@ def calculate_node_metadata(node):
             metadata['total_count'] += child_metadata['total_count']
             metadata['resource_size'] += child_metadata['resource_size']
             metadata['resource_count'] += child_metadata['resource_count']
-            if child_metadata['has_changed_descendant']:
-                metadata['has_changed_descendant'] = True
+            metadata['has_changed_descendant'] = metadata['has_changed_descendant'] or child_metadata['has_changed_descendant']
 
     else:
         metadata['resource_count'] = 1
-        for f in node.files.all():
-            metadata['resource_size'] += f.file_size
+        for f in node.files.values_list('file_size'):
+            metadata['resource_size'] += f[0]
         metadata['max_sort_order'] = node.sort_order
+
     return metadata
 
 def count_files(node):
@@ -66,9 +66,6 @@ def count_files(node):
             count += count_files(n)
         return count
     return 1
-
-    # For some reason, this returns sibling desendants too
-    # return node.get_descendants(include_self=False).exclude(kind_id="topic").count()
 
 def count_all_children(node):
     count = node.children.count()
@@ -211,8 +208,8 @@ def map_files_to_node(node, data, file_data):
             checksum=file_hash[0],
             contentnode=node,
             file_format_id=file_hash[1],
-            original_filename=file_data[f]['original_filename'],
-            source_url=file_data[f]['source_url'],
+            original_filename=file_data[f].get('original_filename') or '',
+            source_url=file_data[f].get('source_url'),
             file_size = file_data[f]['size'],
             file_on_disk=DjFile(open(models.generate_file_on_disk_name(file_hash[0], f), 'rb')),
             preset=kind_preset,

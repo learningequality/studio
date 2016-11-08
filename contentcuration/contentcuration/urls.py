@@ -60,6 +60,12 @@ class ContentNodeViewSet(BulkModelViewSet):
     queryset = ContentNode.objects.all()
     serializer_class = serializers.ContentNodeSerializer
 
+    def get_queryset(self):
+        queryset = ContentNode.objects.all()
+        # Set up eager loading to avoid N+1 selects
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        return queryset
+
 class TagViewSet(viewsets.ModelViewSet):
     queryset = ContentTag.objects.all()
     serializer_class = serializers.TagSerializer
@@ -139,3 +145,8 @@ if settings.DEBUG:
     urlpatterns += [
         url(r'^' + settings.STORAGE_URL[1:-1] + '(?P<path>.*)$', 'django.views.static.serve', {
         'document_root': settings.STORAGE_ROOT})]
+
+    import debug_toolbar
+    urlpatterns += [
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    ]
