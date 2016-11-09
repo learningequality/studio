@@ -169,7 +169,7 @@ if settings.DEBUG:
         url(r'^' + settings.STORAGE_URL[1:-1] + '(?P<path>.*)$', 'django.views.static.serve', {
         'document_root': settings.STORAGE_ROOT})]
 
-    import debug_toolbar
-    urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
-    ]
+    # import debug_toolbar
+    # urlpatterns += [
+    #     url(r'^__debug__/', include(debug_toolbar.urls)),
+    # ]

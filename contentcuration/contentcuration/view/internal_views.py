@@ -68,6 +68,7 @@ def api_file_upload(request):
         for chunk in iter(lambda: fobj.read(4096), b""):
             hash_check.update(chunk)
         filename = os.path.splitext(fobj._name)[0]
+        fobj.seek(0)
 
         if hash_check.hexdigest() != filename:
             raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(fobj._name))
@@ -116,14 +117,15 @@ def api_commit_channel(request):
 
         obj = Channel.objects.get(pk=channel_id)
 
-        # Delete main tree if it already exists
-        if obj.previous_tree is not None:
-            obj.previous_tree.delete()
-
+        old_tree = obj.previous_tree
         obj.previous_tree = obj.main_tree
         obj.main_tree = obj.staging_tree
         obj.staging_tree = None
         obj.save()
+
+        # Delete previous tree if it already exists
+        if old_tree is not None:
+            old_tree.delete()
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -195,6 +197,7 @@ def create_channel(channel_data, user):
     channel.staging_tree = ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
     channel.staging_tree.save()
     channel.save()
+
     return channel # Return new channel
 
 def convert_data_to_nodes(content_data, parent_node):
