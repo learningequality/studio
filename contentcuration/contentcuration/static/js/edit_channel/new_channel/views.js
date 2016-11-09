@@ -111,7 +111,10 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.create_dropzone();
 	},
 	delete_channel: function(event){
-		if(confirm("WARNING: All content under this channel will be permanently deleted."
+		if(this.isNew){
+			this.delete(true, " ");
+		}
+		else if(confirm("WARNING: All content under this channel will be permanently deleted."
 					+ "\nAre you sure you want to delete this channel?")){
 			var self = this;
 			this.save({"deleted":true}, "Deleting Channel...").then(function(){
