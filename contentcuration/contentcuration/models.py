@@ -17,8 +17,7 @@ from django.dispatch import receiver
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
-from django.core.cache import cache
-
+from rest_framework.authtoken.models import Token
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
 class UserManager(BaseUserManager):
@@ -29,7 +28,6 @@ class UserManager(BaseUserManager):
         new_user = self.model(
             email=self.normalize_email(email),
         )
-
 
         new_user.set_password(password)
         new_user.first_name = first_name
@@ -155,6 +153,7 @@ class Channel(models.Model):
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
     main_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
     staging_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_staging')
+    previous_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_previous')
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='bookmarked_channels',
@@ -318,6 +317,16 @@ class Language(models.Model):
     def __str__(self):
         return self.ietf_name
 
+class AssessmentItem(models.Model):
+    type = models.CharField(max_length=50, default="multiplechoice")
+    question = models.TextField(blank=True)
+    hints = models.TextField(default="[]")
+    answers = models.TextField(default="[]")
+    order = models.IntegerField(default=1)
+    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
+    assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
+    raw_data = models.TextField(blank=True)
+
 class File(models.Model):
     """
     The bottom layer of the contentDB schema, defines the basic building brick for content.
@@ -328,6 +337,7 @@ class File(models.Model):
     file_size = models.IntegerField(blank=True, null=True)
     file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500, blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True)
+    assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
     lang = models.ForeignKey(Language, blank=True, null=True)
@@ -428,16 +438,6 @@ class RelatedContentRelationship(models.Model):
 class Exercise(models.Model):
     contentnode = models.ForeignKey('ContentNode', related_name="exercise", null=True)
     mastery_model = models.CharField(max_length=200, default=exercises.DO_ALL, choices=exercises.MASTERY_MODELS)
-
-class AssessmentItem(models.Model):
-    type = models.CharField(max_length=50, default="multiplechoice")
-    question = models.TextField(blank=True)
-    hints = models.TextField(default="[]")
-    answers = models.TextField(default="[]")
-    order = models.IntegerField(default=1)
-    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
-    assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
-    raw_data = models.TextField(blank=True)
 
 class Invitation(models.Model):
     """ Invitation to edit channel """

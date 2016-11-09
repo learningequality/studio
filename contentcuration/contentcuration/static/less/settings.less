@@ -1,0 +1,53 @@
+@import "global-variables.less";
+
+#settings-area{
+	padding:30px;
+	padding-top:50px;
+
+	#settings-nav{
+		min-width: 200px;
+		margin-right:20px;
+		margin-top:5px;
+		font-size: 12pt;
+
+		#settings-options-heading{
+			font-size:13pt;
+			background-color: @blue-100;
+		}
+		#settings-options{
+			width:100%;
+			.active-option{
+				background-color: @gray-200;
+			}
+		}
+	}
+
+	#settings-page{
+		max-width:700px;
+		width:60vw;
+
+		h4{
+			font-size:16pt;
+			font-weight:bold;
+		}
+
+		.settings_field{
+			margin-bottom: 20px;
+		}
+
+
+		input[type=submit][disabled]{
+			cursor: not-allowed !important;
+			opacity: 0.5;
+		}
+	}
+	.token{
+		min-height:55px;
+		font-size:14pt;
+		input[type=text]{
+			outline:none;
+			border:none;
+			width:100%;
+		}
+	}
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+{% extends "settings/settings.html" %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block settingscontent %}
+<h4>My Profile</h4>
+<p>Change your profile information.</p>
+<hr/>
+<div class="container-fluid">
+	{% if success %}
+		<div class="alert alert-success" role="alert">Your profile has been saved.</div>
+	{% else %}
+		{% if form.errors %}
+			<div class="alert alert-danger" role="alert">
+				<ul class="list-unstyled">
+					{% for field in form %}
+				        {% for error in field.errors %}
+				            <li>{{ error|escape }}</li>
+				        {% endfor %}
+				    {% endfor %}
+				</ul>
+			</div>
+		{% endif %}
+	{% endif %}
+	<form action="{% url 'profile_settings' %}" method="post">
+		<div id="form-wrapper">
+			{% csrf_token %}
+			<div class="input-group settings_field">
+			  <span class="input-group-addon">Username</span>
+			  <input type="text" class="form-control setting_input" value="{{user.email}}" disabled>
+			</div>
+			<div class="input-group settings_field">
+			  <span class="input-group-addon">{{ form.first_name.label }}</span>
+			  {{ form.first_name }}
+			</div>
+			<div class="input-group settings_field">
+			  <span class="input-group-addon">{{ form.last_name.label }}</span>
+			  {{ form.last_name }}
+			</div>
+		</div>
+		<br>
+		<input id="save" class="action-button pull-right" type="submit" value="No Changes Found" disabled/>
+	</form>
+</div>
+<script>
+	$(".setting_input").on("keydown", function(event){
+		$("#save").attr("disabled", false)
+		$("#save").val("SAVE CHANGES")
+	});
+</script>
+{% endblock settingscontent %}
