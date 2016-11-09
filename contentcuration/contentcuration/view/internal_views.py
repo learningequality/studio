@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
 from django.core.context_processors import csrf
+from django.core.management import call_command
 from django.db.models import Q
 from django.template.loader import render_to_string
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, generate_file_on_disk_name
@@ -39,13 +40,18 @@ def file_diff(request):
     """ Determine which files don't exist on server """
     logging.debug("Entering the file_diff endpoint")
     data = json.loads(request.body)
+
+    # Filter by file objects first to save on performance
     in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
     to_return = []
+
+    # Add files that don't exist in storage
     for f in list(set(data) - set(in_db_list)):
         file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
         # Write file if it doesn't already exist
         if not os.path.isfile(file_path):
             to_return += [f]
+
     return HttpResponse(json.dumps(to_return))
 
 @api_view(['POST'])
@@ -65,6 +71,7 @@ def api_file_upload(request):
         if hash_check.hexdigest() != filename:
             raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(fobj._name))
 
+        # Get location of file
         file_path = generate_file_on_disk_name(filename, fobj._name)
 
         # Write file if it doesn't already exist
@@ -87,7 +94,7 @@ def api_create_channel_endpoint(request):
     try:
         channel_data = data['channel_data']
 
-        obj = create_channel(channel_data)
+        obj = create_channel(channel_data, request.user)
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -100,15 +107,21 @@ def api_create_channel_endpoint(request):
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
-def api_finish_channel(request):
-    """ Commit the channel with final touches """
+def api_commit_channel(request):
+    """ Commit the channel staging tree to the main tree """
     data = json.loads(request.body)
     try:
         channel_id = data['channel_id']
 
         obj = Channel.objects.get(pk=channel_id)
+
+        # Delete main tree if it already exists
+        if obj.previous_tree is not None:
+            delete_tree(obj.previous_tree)
+
+        obj.previous_tree = obj.main_tree
         obj.main_tree = obj.staging_tree
-        obj.editors.add(request.user)
+        obj.staging_tree = None
         obj.save()
 
         return HttpResponse(json.dumps({
@@ -135,20 +148,50 @@ def api_add_nodes_to_tree(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def api_publish_channel(request):
+    logging.debug("Entering the publish_channel endpoint")
+    data = json.loads(request.body)
+
+    try:
+        channel_id = data["channel_id"]
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+    call_command("exportchannel", channel_id)
+
+    return HttpResponse(json.dumps({
+        "success": True,
+        "channel": channel_id
+    }))
+
 
 """ CHANNEL CREATE FUNCTIONS """
-def create_channel(channel_data):
+def create_channel(channel_data, user):
     """ Set up channel """
     # Set up initial channel
     channel, isNew = Channel.objects.get_or_create(id=channel_data['id'])
+
+    # Add user as editor if channel is new or channel has no editors
+    # Otherwise, check if user is an editor
+    if isNew or channel.editors.count() == 0:
+        channel.editors.add(user)
+    elif user not in channel.editors.all():
+        raise SuspiciousOperation("User is not authorized to edit this channel")
+
     channel.name = channel_data['name']
-    channel.description=channel_data['description']
-    channel.thumbnail=channel_data['thumbnail']
+    channel.description = channel_data['description']
+    channel.thumbnail = channel_data['thumbnail']
     channel.deleted = False
+
+    # Delete staging tree if it already exists
+    if channel.staging_tree is not None and channel.staging_tree != channel.main_tree:
+        delete_tree(channel.staging_tree)
 
     # Set up initial staging tree
     channel.staging_tree = ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
-    channel.staging_tree.published = channel.version > 0
     channel.staging_tree.save()
     channel.save()
     return channel # Return new channel
@@ -160,10 +203,17 @@ def convert_data_to_nodes(content_data, parent_node):
         sort_order = 1
         with transaction.atomic():
             for node_data in content_data:
+                # Create the node
                 new_node = create_node(node_data, parent_node, sort_order)
+
+                # Create files associated with node
                 map_files_to_node(new_node, node_data['files'])
+
+                # Create questions associated with node
                 create_exercises(new_node, node_data['questions'])
                 sort_order += 1
+
+                # Track mapping between newly created node and node id
                 root_mapping.update({node_data['node_id'] : new_node.pk})
             return root_mapping
     except KeyError as e:
@@ -177,6 +227,8 @@ def create_node(node_data, parent_node, sort_order):
     author = node_data['author']
     kind = ContentKind.objects.get(kind=node_data['kind'])
     extra_fields = node_data['extra_fields']
+
+    # Make sure license is valid
     license = None
     license_name = node_data['license']
     if license_name is not None:
@@ -201,6 +253,8 @@ def map_files_to_node(node, data):
     """ Generate files that reference the content node """
     for file_data in data:
         file_hash = file_data['filename'].split(".")
+
+        # Determine a preset if none is given
         kind_preset = None
         if file_data['preset'] is None:
             kind_preset = FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1], display=True).first()
@@ -257,3 +311,8 @@ def create_exercises(node, data):
             order += 1
             question_obj.save()
             map_files_to_assessment_item(question_obj, question['files'])
+
+def delete_tree(node):
+    for child in node.children.all():
+        delete_tree(child)
+    node.delete()

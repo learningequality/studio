@@ -272,4 +272,3 @@ def publish_channel(request):
             "channel": channel_id
         }))
 
-

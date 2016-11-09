@@ -153,6 +153,7 @@ class Channel(models.Model):
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
     main_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
     staging_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_staging')
+    previous_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_previous')
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='bookmarked_channels',
