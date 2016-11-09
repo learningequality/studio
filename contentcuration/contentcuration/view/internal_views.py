@@ -12,6 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
 from django.core.context_processors import csrf
 from django.core.management import call_command
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, generate_file_on_disk_name
 from le_utils.constants import content_kinds
@@ -19,22 +20,22 @@ from django.db.models.functions import Concat
 from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db import transaction
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
 @api_view(['POST'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def authenticate_user_internal(request):
     """ Verify user is valid """
     logging.debug("Logging in user")
-    return HttpResponse(json.dumps({'success': True, 'token': unicode(request.auth), 'username':unicode(request.user)}))
+    return HttpResponse(json.dumps({'success': True, 'username':unicode(request.user)}))
 
 @api_view(['POST'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def file_diff(request):
     """ Determine which files don't exist on server """
@@ -55,7 +56,7 @@ def file_diff(request):
     return HttpResponse(json.dumps(to_return))
 
 @api_view(['POST'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_file_upload(request):
     """ Upload a file to the storage system """
@@ -86,7 +87,7 @@ def api_file_upload(request):
         raise SuspiciousOperation("Invalid file upload request")
 
 @api_view(['POST'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_create_channel_endpoint(request):
     """ Create the channel node """
@@ -105,7 +106,7 @@ def api_create_channel_endpoint(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 @api_view(['POST'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_commit_channel(request):
     """ Commit the channel staging tree to the main tree """
@@ -117,7 +118,7 @@ def api_commit_channel(request):
 
         # Delete main tree if it already exists
         if obj.previous_tree is not None:
-            delete_tree(obj.previous_tree)
+            obj.previous_tree.delete()
 
         obj.previous_tree = obj.main_tree
         obj.main_tree = obj.staging_tree
@@ -132,7 +133,7 @@ def api_commit_channel(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 @api_view(['POST'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_add_nodes_to_tree(request):
     """ Add child nodes to a parent node """
@@ -149,7 +150,7 @@ def api_add_nodes_to_tree(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 @api_view(['POST'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
@@ -188,7 +189,7 @@ def create_channel(channel_data, user):
 
     # Delete staging tree if it already exists
     if channel.staging_tree is not None and channel.staging_tree != channel.main_tree:
-        delete_tree(channel.staging_tree)
+        channel.staging_tree.delete()
 
     # Set up initial staging tree
     channel.staging_tree = ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
@@ -312,7 +313,3 @@ def create_exercises(node, data):
             question_obj.save()
             map_files_to_assessment_item(question_obj, question['files'])
 
-def delete_tree(node):
-    for child in node.children.all():
-        delete_tree(child)
-    node.delete()
