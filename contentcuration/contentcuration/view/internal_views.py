@@ -50,7 +50,7 @@ def file_diff(request):
     for f in list(set(data) - set(in_db_list)):
         file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
         # Write file if it doesn't already exist
-        if not os.path.isfile(file_path):
+        if not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
             to_return += [f]
 
     return HttpResponse(json.dumps(to_return))
@@ -77,9 +77,8 @@ def api_file_upload(request):
         file_path = generate_file_on_disk_name(filename, fobj._name)
 
         # Write file if it doesn't already exist
-        if not os.path.isfile(file_path):
-            with open(file_path, 'wb') as destf:
-                shutil.copyfileobj(fobj, destf)
+        with open(file_path, 'wb') as destf:
+            shutil.copyfileobj(fobj, destf)
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -189,14 +188,17 @@ def create_channel(channel_data, user):
     channel.thumbnail = channel_data['thumbnail']
     channel.deleted = False
 
-    # Delete staging tree if it already exists
-    if channel.staging_tree is not None and channel.staging_tree != channel.main_tree:
-        channel.staging_tree.delete()
 
+    old_staging_tree = channel.staging_tree
     # Set up initial staging tree
     channel.staging_tree = ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
     channel.staging_tree.save()
+
     channel.save()
+
+    # Delete staging tree if it already exists
+    if old_staging_tree is not None and old_staging_tree != channel.main_tree:
+        old_staging_tree.delete()
 
     return channel # Return new channel
 
