@@ -188,13 +188,11 @@ def create_channel(channel_data, user):
     channel.thumbnail = channel_data['thumbnail']
     channel.deleted = False
 
-
     old_staging_tree = channel.staging_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
     # Set up initial staging tree
-    channel.staging_tree = ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0, published=is_published)
+    channel.staging_tree = ContentNode.objects.create(title=channel.name + " root", kind_id="topic", sort_order=0, published=is_published)
     channel.staging_tree.save()
-
     channel.save()
 
     # Delete staging tree if it already exists
