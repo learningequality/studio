@@ -267,6 +267,10 @@ def map_files_to_node(node, data):
         else:
             kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
+        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError('{} not found'.format(file_path))
+
         file_obj = File(
             checksum=file_hash[0],
             contentnode=node,
@@ -274,7 +278,7 @@ def map_files_to_node(node, data):
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size = file_data['size'],
-            file_on_disk=DjFile(open(generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
+            file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
         )
         file_obj.save()
@@ -286,6 +290,10 @@ def map_files_to_assessment_item(question, data):
         file_hash = file_data['filename'].split(".")
         kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
+        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError('{} not found'.format(file_path))
+
         file_obj = File(
             checksum=file_hash[0],
             assessment_item=question,
@@ -293,7 +301,7 @@ def map_files_to_assessment_item(question, data):
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size = file_data['size'],
-            file_on_disk=DjFile(open(generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
+            file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
         )
         file_obj.save()
