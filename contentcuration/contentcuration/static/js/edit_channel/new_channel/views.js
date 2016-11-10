@@ -47,7 +47,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 			editors: [window.current_user.id],
 			thumbnail:"static/img/kolibri_placeholder.png"
 		};
-		this.create_new_item(data, true, "Creating Channel...").then(function(newView){
+		this.create_new_item(data, true, "").then(function(newView){
 			newView.edit_channel();
 			newView.set_is_new(true);
 		});
@@ -111,7 +111,10 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.create_dropzone();
 	},
 	delete_channel: function(event){
-		if(confirm("WARNING: All content under this channel will be permanently deleted."
+		if(this.isNew){
+			this.delete(true, " ");
+		}
+		else if(confirm("WARNING: All content under this channel will be permanently deleted."
 					+ "\nAre you sure you want to delete this channel?")){
 			var self = this;
 			this.save({"deleted":true}, "Deleting Channel...").then(function(){
@@ -127,7 +130,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.thumbnail = this.original_thumbnail;
 		this.containing_list_view.set_editing(false);
 		if(this.isNew){
-			this.delete(true, "Deleting Channel...");
+			this.delete(true, " ");
 		}else{
 			this.unset();
 			this.edit = false;

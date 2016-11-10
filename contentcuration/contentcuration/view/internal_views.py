@@ -50,7 +50,7 @@ def file_diff(request):
     for f in list(set(data) - set(in_db_list)):
         file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
         # Write file if it doesn't already exist
-        if not os.path.isfile(file_path):
+        if not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
             to_return += [f]
 
     return HttpResponse(json.dumps(to_return))
@@ -68,6 +68,7 @@ def api_file_upload(request):
         for chunk in iter(lambda: fobj.read(4096), b""):
             hash_check.update(chunk)
         filename = os.path.splitext(fobj._name)[0]
+        fobj.seek(0)
 
         if hash_check.hexdigest() != filename:
             raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(fobj._name))
@@ -76,9 +77,8 @@ def api_file_upload(request):
         file_path = generate_file_on_disk_name(filename, fobj._name)
 
         # Write file if it doesn't already exist
-        if not os.path.isfile(file_path):
-            with open(file_path, 'wb') as destf:
-                shutil.copyfileobj(fobj, destf)
+        with open(file_path, 'wb') as destf:
+            shutil.copyfileobj(fobj, destf)
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -116,14 +116,15 @@ def api_commit_channel(request):
 
         obj = Channel.objects.get(pk=channel_id)
 
-        # Delete main tree if it already exists
-        if obj.previous_tree is not None:
-            obj.previous_tree.delete()
-
+        old_tree = obj.previous_tree
         obj.previous_tree = obj.main_tree
         obj.main_tree = obj.staging_tree
         obj.staging_tree = None
         obj.save()
+
+        # Delete previous tree if it already exists
+        if old_tree is not None:
+            old_tree.delete()
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -187,14 +188,17 @@ def create_channel(channel_data, user):
     channel.thumbnail = channel_data['thumbnail']
     channel.deleted = False
 
-    # Delete staging tree if it already exists
-    if channel.staging_tree is not None and channel.staging_tree != channel.main_tree:
-        channel.staging_tree.delete()
-
+    old_staging_tree = channel.staging_tree
+    is_published = channel.main_tree is not None and channel.main_tree.published
     # Set up initial staging tree
-    channel.staging_tree = ContentNode.objects.create(title=channel.name + " staging", kind_id="topic", sort_order=0)
+    channel.staging_tree = ContentNode.objects.create(title=channel.name + " root", kind_id="topic", sort_order=0, published=is_published)
     channel.staging_tree.save()
     channel.save()
+
+    # Delete staging tree if it already exists
+    if old_staging_tree is not None and old_staging_tree != channel.main_tree:
+        old_staging_tree.delete()
+
     return channel # Return new channel
 
 def convert_data_to_nodes(content_data, parent_node):
@@ -262,6 +266,10 @@ def map_files_to_node(node, data):
         else:
             kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
+        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError('{} not found'.format(file_path))
+
         file_obj = File(
             checksum=file_hash[0],
             contentnode=node,
@@ -269,7 +277,7 @@ def map_files_to_node(node, data):
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size = file_data['size'],
-            file_on_disk=DjFile(open(generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
+            file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
         )
         file_obj.save()
@@ -281,6 +289,10 @@ def map_files_to_assessment_item(question, data):
         file_hash = file_data['filename'].split(".")
         kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
+        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError('{} not found'.format(file_path))
+
         file_obj = File(
             checksum=file_hash[0],
             assessment_item=question,
@@ -288,7 +300,7 @@ def map_files_to_assessment_item(question, data):
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size = file_data['size'],
-            file_on_disk=DjFile(open(generate_file_on_disk_name(file_hash[0], file_data['filename']), 'rb')),
+            file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
         )
         file_obj.save()
