@@ -36,7 +36,7 @@ def testpage(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def channel_list(request):
-    channel_list = Channel.objects.filter(deleted=False, editors__email__contains= request.user.email)
+    channel_list = Channel.objects.filter(deleted=False, editors= request.user)
     channel_list = ChannelListSerializer.setup_eager_loading(channel_list)
     channel_serializer = ChannelListSerializer(channel_list, many=True)
 
@@ -53,12 +53,11 @@ def channel_list(request):
 def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
     channel_serializer =  ChannelSerializer(channel)
-
-    accessible_channel_list = Channel.objects.filter( Q(deleted=False, public=True) | Q(deleted=False, editors__email__contains= request.user.email))
+    accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors= request.user))
     accessible_channel_list = ChannelListSerializer.setup_eager_loading(accessible_channel_list)
     accessible_channel_list_serializer = ChannelListSerializer(accessible_channel_list, many=True)
 
-    channel_list = accessible_channel_list.filter(editors__email__contains= request.user.email).exclude(id=channel_id).values("id", "name")
+    channel_list = accessible_channel_list.filter(editors= request.user).exclude(id=channel_id).values("id", "name")
     fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
