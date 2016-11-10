@@ -1,1 +1,1 @@
-{% load perseus_tags %}{% autoescape off %}{{raw_data | escape_chars}}{% endautoescape %}
+{% load perseus_tags %}{% autoescape off %}{{raw_data}}{% endautoescape %}
