@@ -11,7 +11,6 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
 from django.core.context_processors import csrf
 from django.core.management import call_command
-from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, generate_file_on_disk_name
@@ -43,11 +42,17 @@ def file_diff(request):
     data = json.loads(request.body)
 
     # Filter by file objects first to save on performance
+    difference = []
     in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
+
+    for f in in_db_list:
+        file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
+        if os.path.getsize(file_path) > 0:
+            difference += [f]
     to_return = []
 
     # Add files that don't exist in storage
-    for f in list(set(data) - set(in_db_list)):
+    for f in list(set(data) - set(difference)):
         file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
         # Write file if it doesn't already exist
         if not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
