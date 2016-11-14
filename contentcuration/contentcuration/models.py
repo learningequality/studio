@@ -120,6 +120,15 @@ def generate_file_on_disk_name(checksum, filename):
         os.makedirs(directory)
     return os.path.join(directory, h + ext.lower())
 
+def generate_storage_path(checksum, filename):
+    """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
+    h = checksum
+    basename, ext = os.path.splitext(filename)
+    directory = os.path.join(settings.STORAGE_URL[1:-1], h[0], h[1])
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    return os.path.join(directory, h + ext.lower())
+
 class FileOnDiskStorage(FileSystemStorage):
     """
     Overrider FileSystemStorage's default save method to ignore duplicated file.

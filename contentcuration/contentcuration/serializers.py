@@ -58,6 +58,7 @@ class FileListSerializer(serializers.ListSerializer):
 
 class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
+    storage_url = serializers.SerializerMethodField('get_storage_path')
     recommended_kind = serializers.SerializerMethodField('retrieve_recommended_kind')
     mimetype = serializers.SerializerMethodField('retrieve_extension')
     id = serializers.CharField(required=False)
@@ -68,17 +69,23 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def get_file_url(self, obj):
         return obj.file_on_disk.url
 
+    def get_storage_path(self, obj):
+        return generate_storage_path(obj.checksum, obj.checksum + '.' + obj.file_format.extension)
+
     def retrieve_recommended_kind(self, obj):
-        if obj.contentnode and obj.contentnode.kind:
+        if obj.contentnode is not None and obj.contentnode.kind:
             return obj.contentnode.kind.pk
-        return FormatPreset.objects.filter(allowed_formats__extension__contains=obj.file_format).first().kind.pk
+        preset = FormatPreset.objects.filter(allowed_formats__extension__contains=obj.file_format.extension).first()
+        if preset is not None:
+            return preset.kind.pk
+        return None
 
     def retrieve_extension(self, obj):
         return obj.file_format.mimetype
 
     class Meta:
         model = File
-        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'mimetype', 'source_url')
+        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'storage_url', 'mimetype', 'source_url')
         list_serializer_class = FileListSerializer
 
 class FileFormatSerializer(serializers.ModelSerializer):
