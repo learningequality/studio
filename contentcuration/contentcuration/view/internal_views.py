@@ -43,13 +43,14 @@ def file_diff(request):
 
     # Filter by file objects first to save on performance
     difference = []
+    to_return = []
     in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
 
+    # Double check that files are not corrupted
     for f in in_db_list:
         file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
-        if os.path.getsize(file_path) > 0:
+        if not os.path.isfile(file_path):
             difference += [f]
-    to_return = []
 
     # Add files that don't exist in storage
     for f in list(set(data) - set(difference)):
