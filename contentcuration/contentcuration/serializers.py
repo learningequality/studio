@@ -70,12 +70,12 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return obj.file_on_disk.url
 
     def get_storage_path(self, obj):
-        return generate_storage_path(obj.checksum, obj.checksum + '.' + obj.file_format.extension)
+        return generate_storage_url(obj.checksum + '.' + obj.file_format.extension)
 
     def retrieve_recommended_kind(self, obj):
         if obj.contentnode is not None and obj.contentnode.kind:
             return obj.contentnode.kind.pk
-        preset = FormatPreset.objects.filter(allowed_formats__extension__contains=obj.file_format.extension).first()
+        preset = FormatPreset.objects.filter(allowed_formats__extension=obj.file_format.extension).first()
         if preset is not None:
             return preset.kind.pk
         return None

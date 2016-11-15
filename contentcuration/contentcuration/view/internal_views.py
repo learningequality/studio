@@ -42,18 +42,19 @@ def file_diff(request):
     data = json.loads(request.body)
 
     # Filter by file objects first to save on performance
-    difference = []
+    # difference = []
     to_return = []
-    in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
+    # in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
 
     # Double check that files are not corrupted
-    for f in in_db_list:
-        file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
-        if not os.path.isfile(file_path):
-            difference += [f]
+    # for f in in_db_list:
+    #     file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
+    #     if not os.path.isfile(file_path):
+    #         difference += [f]
 
     # Add files that don't exist in storage
-    for f in list(set(data) - set(difference)):
+    for f in data:
+        # for f in data:
         file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
         # Write file if it doesn't already exist
         if not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
@@ -274,7 +275,7 @@ def map_files_to_node(node, data):
 
         file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
-            raise FileNotFoundError('{} not found'.format(file_path))
+            raise IOError('{} not found'.format(file_path))
 
         file_obj = File(
             checksum=file_hash[0],
@@ -297,7 +298,7 @@ def map_files_to_assessment_item(question, data):
 
         file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
-            raise FileNotFoundError('{} not found'.format(file_path))
+            raise IOError('{} not found'.format(file_path))
 
         file_obj = File(
             checksum=file_hash[0],
