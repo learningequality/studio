@@ -29,10 +29,12 @@ function update_word_count(input, counter, limit){
 }
 
 function get_file_path(filename){
-    if(filename.indexOf("static") >= 0){
-      return filename
+    if (!filename) {
+      return 'static/img/kolibri_placeholder.png';
+    } else if(filename.indexOf("static") >= 0){
+      return filename;
     }
-    return ["storage",filename[0], filename[1], filename].join("/")
+    return ["storage",filename[0], filename[1], filename].join("/");
 }
 
 module.exports = {
