@@ -58,7 +58,7 @@ class FileListSerializer(serializers.ListSerializer):
 
 class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
-    storage_url = serializers.SerializerMethodField('get_storage_path')
+    storage_url = serializers.SerializerMethodField('retrieve_storage_url')
     recommended_kind = serializers.SerializerMethodField('retrieve_recommended_kind')
     mimetype = serializers.SerializerMethodField('retrieve_extension')
     id = serializers.CharField(required=False)
@@ -69,7 +69,7 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def get_file_url(self, obj):
         return obj.file_on_disk.url
 
-    def get_storage_path(self, obj):
+    def retrieve_storage_url(self, obj):
         return generate_storage_url(obj.checksum + '.' + obj.file_format.extension)
 
     def retrieve_recommended_kind(self, obj):

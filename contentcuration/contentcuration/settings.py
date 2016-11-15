@@ -176,7 +176,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STORAGE_URL = '/storage/'
+STORAGE_URL = 'https://contentworkshop.learningequality.org/storage/'
 
 LOGIN_REDIRECT_URL = '/channels/'
 

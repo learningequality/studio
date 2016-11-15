@@ -45,7 +45,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 			name: "New Channel",
 			description: "Description of channel",
 			editors: [window.current_user.id],
-			thumbnail:"static/img/kolibri_placeholder.png"
+			thumbnail:"/static/img/kolibri_placeholder.png"
 		};
 		this.create_new_item(data, true, "").then(function(newView){
 			newView.edit_channel();

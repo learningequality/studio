@@ -123,7 +123,7 @@ def generate_file_on_disk_name(checksum, filename):
 def generate_storage_url(filename):
     """ Returns place where file is stored """
     h, ext = os.path.splitext(filename)
-    return "{}/{}/{}/{}".format(settings.STORAGE_URL[1:-1], h[0], h[1], h + ext.lower())
+    return "{}/{}/{}/{}".format(settings.STORAGE_URL.rstrip('/'), h[0], h[1], h + ext.lower())
 
 class FileOnDiskStorage(FileSystemStorage):
     """
