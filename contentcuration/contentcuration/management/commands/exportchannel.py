@@ -49,7 +49,6 @@ class Command(BaseCommand):
             raise_if_nodes_are_all_unchanged(channel)
             # assign_license_to_contentcuration_nodes(channel, license)
             # create_kolibri_license_object(license)
-            increment_channel_version(channel)
             prepare_export_database()
             # TODO: increment channel version numbers when we mark nodes as changed as well
             map_content_tags(channel)
@@ -57,6 +56,7 @@ class Command(BaseCommand):
             map_channel_to_kolibri_channel(channel)
             map_content_nodes(channel.main_tree,)
             save_export_database(channel_id)
+            increment_channel_version(channel)
             mark_all_nodes_as_changed(channel)
             # use SQLite backup API to put DB into archives folder.
             # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
