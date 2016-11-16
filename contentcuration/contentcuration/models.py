@@ -168,7 +168,14 @@ class Channel(models.Model):
     public = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
+        original_node = Channel.objects.get(pk=self.pk)
         super(Channel, self).save(*args, **kwargs)
+
+        # Check if original thumbnail is no longer referenced
+        if original_node and original_node.thumbnail and 'static' not in original_node.thumbnail:
+            filename, ext = os.path.splitext(original_node.thumbnail)
+            delete_empty_file_reference(filename, ext[1:])
+
         if not self.main_tree:
             self.main_tree = ContentNode.objects.create(title=self.name + " main root", kind_id="topic", sort_order=0)
             self.main_tree.save()
@@ -384,22 +391,12 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     when corresponding `File` object is deleted.
     Be careful! we don't know if this will work when perform bash delete on File obejcts.
     """
-    filename = instance.checksum + '.' + instance.file_format.extension
-    if not File.objects.filter(checksum=instance.checksum).exists() and not Channel.objects.filter(thumbnail=filename).exists():
-        file_on_disk_path = generate_file_on_disk_name(instance.checksum, filename)
-        if os.path.isfile(file_on_disk_path):
-            os.remove(file_on_disk_path)
+    delete_empty_file_reference(instance.checksum, instance.file_format.extension)
 
-@receiver(models.signals.post_delete, sender=Channel)
-def auto_delete_thumbnail_on_delete(sender, instance, **kwargs):
-    """
-    Deletes file from filesystem if no other File objects are referencing the same file on disk
-    when corresponding `File` object is deleted.
-    Be careful! we don't know if this will work when perform bash delete on File obejcts.
-    """
-    import pdb; pdb.set_trace()
-    if not File.objects.filter(file_on_disk__url=instance.file_on_disk.url):
-        file_on_disk_path = generate_file_on_disk_name(instance.checksum, instance.checksum + '.' + instance.file_format.extension)
+def delete_empty_file_reference(checksum, extension):
+    filename = checksum + '.' + extension
+    if not File.objects.filter(checksum=checksum).exists() and not Channel.objects.filter(thumbnail=filename).exists():
+        file_on_disk_path = generate_file_on_disk_name(checksum, filename)
         if os.path.isfile(file_on_disk_path):
             os.remove(file_on_disk_path)
 
