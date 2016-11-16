@@ -384,8 +384,22 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     when corresponding `File` object is deleted.
     Be careful! we don't know if this will work when perform bash delete on File obejcts.
     """
-    if not File.objects.filter(file_on_disk=instance.file_on_disk.url):
-        file_on_disk_path = os.path.join(settings.STORAGE_ROOT, instance.checksum[0:1], instance.checksum[1:2], instance.checksum + '.' + instance.file_format.extension)
+    filename = instance.checksum + '.' + instance.file_format.extension
+    if not File.objects.filter(checksum=instance.checksum).exists() and not Channel.objects.filter(thumbnail=filename).exists():
+        file_on_disk_path = generate_file_on_disk_name(instance.checksum, filename)
+        if os.path.isfile(file_on_disk_path):
+            os.remove(file_on_disk_path)
+
+@receiver(models.signals.post_delete, sender=Channel)
+def auto_delete_thumbnail_on_delete(sender, instance, **kwargs):
+    """
+    Deletes file from filesystem if no other File objects are referencing the same file on disk
+    when corresponding `File` object is deleted.
+    Be careful! we don't know if this will work when perform bash delete on File obejcts.
+    """
+    import pdb; pdb.set_trace()
+    if not File.objects.filter(file_on_disk__url=instance.file_on_disk.url):
+        file_on_disk_path = generate_file_on_disk_name(instance.checksum, instance.checksum + '.' + instance.file_format.extension)
         if os.path.isfile(file_on_disk_path):
             os.remove(file_on_disk_path)
 
