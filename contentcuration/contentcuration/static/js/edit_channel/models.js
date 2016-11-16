@@ -218,7 +218,8 @@ var ChannelModel = BaseModel.extend({
 		pending_editors: [],
 		author: "Anonymous",
 		license_owner: "No license found",
-		description:" "
+		description:" ",
+		thumbnail_url: "/static/img/kolibri_placeholder.png"
     },
 
     get_root:function(tree_name){

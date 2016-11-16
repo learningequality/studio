@@ -28,16 +28,8 @@ function update_word_count(input, counter, limit){
       counter.css("color", (char_length == 0)? "red" : "gray");
 }
 
-function get_file_path(filename){
-    if(filename.indexOf("static") >= 0){
-      return filename
-    }
-    return ["storage",filename[0], filename[1], filename].join("/")
-}
-
 module.exports = {
   format_size : format_size,
   escape_str:escape_str,
-  update_word_count:update_word_count,
-  get_file_path:get_file_path
+  update_word_count:update_word_count
 }

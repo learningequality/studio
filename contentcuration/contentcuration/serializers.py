@@ -58,6 +58,7 @@ class FileListSerializer(serializers.ListSerializer):
 
 class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     file_on_disk = serializers.SerializerMethodField('get_file_url')
+    storage_url = serializers.SerializerMethodField('retrieve_storage_url')
     recommended_kind = serializers.SerializerMethodField('retrieve_recommended_kind')
     mimetype = serializers.SerializerMethodField('retrieve_extension')
     id = serializers.CharField(required=False)
@@ -68,17 +69,23 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def get_file_url(self, obj):
         return obj.file_on_disk.url
 
+    def retrieve_storage_url(self, obj):
+        return generate_storage_url(obj.checksum + '.' + obj.file_format.extension)
+
     def retrieve_recommended_kind(self, obj):
-        if obj.contentnode and obj.contentnode.kind:
+        if obj.contentnode is not None and obj.contentnode.kind:
             return obj.contentnode.kind.pk
-        return FormatPreset.objects.filter(allowed_formats__extension__contains=obj.file_format).first().kind.pk
+        preset = FormatPreset.objects.filter(allowed_formats__extension=obj.file_format.extension).first()
+        if preset is not None:
+            return preset.kind.pk
+        return None
 
     def retrieve_extension(self, obj):
         return obj.file_format.mimetype
 
     class Meta:
         model = File
-        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'mimetype', 'source_url')
+        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'storage_url', 'mimetype', 'source_url')
         list_serializer_class = FileListSerializer
 
 class FileFormatSerializer(serializers.ModelSerializer):
@@ -364,11 +371,17 @@ class ChannelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'name', 'description', 'has_changed','editors', 'main_tree',
-                    'trash_tree', 'thumbnail', 'version', 'deleted', 'public', 'pending_editors')
+        fields = ('id', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree',
+                'thumbnail', 'version', 'deleted', 'public', 'pending_editors')
 
 class ChannelListSerializer(serializers.ModelSerializer):
     main_tree = ContentNodeSerializer(read_only=True)
+    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+
+    def generate_thumbnail_url(self, channel):
+        if channel.thumbnail and 'static' not in channel.thumbnail:
+            return generate_storage_url(channel.thumbnail)
+        return '/static/img/kolibri_placeholder.png'
 
     @staticmethod
     def setup_eager_loading(queryset):
@@ -378,7 +391,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'name', 'thumbnail', 'description', 'main_tree','deleted')
+        fields = ('id', 'name', 'thumbnail', 'thumbnail_url', 'description', 'main_tree','deleted')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

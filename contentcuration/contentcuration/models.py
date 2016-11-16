@@ -120,6 +120,11 @@ def generate_file_on_disk_name(checksum, filename):
         os.makedirs(directory)
     return os.path.join(directory, h + ext.lower())
 
+def generate_storage_url(filename):
+    """ Returns place where file is stored """
+    h, ext = os.path.splitext(filename)
+    return "{}/{}/{}/{}".format(settings.STORAGE_URL.rstrip('/'), h[0], h[1], h + ext.lower())
+
 class FileOnDiskStorage(FileSystemStorage):
     """
     Overrider FileSystemStorage's default save method to ignore duplicated file.

@@ -3,6 +3,8 @@ import json
 import logging
 import os
 import re
+import hashlib
+import shutil
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
@@ -14,7 +16,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
 from django.db.models import Q
 from rest_framework.renderers import JSONRenderer
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets
@@ -160,13 +162,28 @@ def file_create(request):
 @csrf_exempt
 def thumbnail_upload(request):
     if request.method == 'POST':
-        filename = request.FILES.values()[0]._name
-        ext = os.path.splitext(filename)[1].split(".")[-1] # gets file extension without leading period
-        file_object = File(file_on_disk=request.FILES.values()[0], file_format_id=ext, preset_id=format_presets.CHANNEL_THUMBNAIL)
-        file_object.save()
+        fobj = request.FILES.values()[0]
+
+        # Check that hash is valid
+        checksum = hashlib.md5()
+        for chunk in iter(lambda: fobj.read(4096), b""):
+            checksum.update(chunk)
+        filename, ext = os.path.splitext(fobj._name)
+        hashed_filename = checksum.hexdigest()
+        full_filename = "{}{}".format(hashed_filename, ext)
+        fobj.seek(0)
+
+        # Get location of file
+        file_path = generate_file_on_disk_name(hashed_filename, full_filename)
+
+        # Write file if it doesn't already exist
+        with open(file_path, 'wb') as destf:
+            shutil.copyfileobj(fobj, destf)
+
         return HttpResponse(json.dumps({
             "success": True,
-            "filename": "{0}.{ext}".format(file_object.checksum, ext=ext),
+            "filename": full_filename,
+            "file_url": generate_storage_url(full_filename),
         }))
 
 def exercise_image_upload(request):

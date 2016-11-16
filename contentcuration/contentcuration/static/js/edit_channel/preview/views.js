@@ -69,7 +69,7 @@ var PreviewView = BaseViews.BaseView.extend({
         var location ="";
         var extension = "";
         if(this.current_preview){
-            location = "/" + this.current_preview.file_on_disk;
+            location = this.current_preview.storage_url;
             extension = this.current_preview.file_format;
             mimetype = this.current_preview.mimetype;
 
