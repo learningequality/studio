@@ -78,6 +78,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.edit = false;
 		this.containing_list_view = options.containing_list_view;
 		this.original_thumbnail = this.model.get("thumbnail");
+		this.original_thumbnail_url = this.model.get("thumbnail_url");
+		this.thumbnail_url = this.original_thumbnail_url;
 		this.thumbnail = this.original_thumbnail;
 		this.originalData = (this.model)? this.model.toJSON() : null;
 		this.render();
@@ -95,7 +97,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			total_file_size: this.model.get("main_tree").metadata.resource_size,
 			resource_count: this.model.get("main_tree").metadata.resource_count,
 			channel_link : this.model.get("id"),
-			picture : stringHelper.get_file_path(this.thumbnail)
+			picture : this.thumbnail_url
 		}));
 	},
 	events: {
@@ -120,7 +122,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.save({"deleted":true}, "Deleting Channel...").then(function(){
 				self.containing_list_view.set_editing(false);
 				self.containing_list_view.collection.remove(self.model);
-				self.containing_list_view.load_content();
+				self.containing_list_view.render();
 			});
 		}else{
 			this.cancel_actions(event);
@@ -128,6 +130,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	toggle_channel: function(){
 		this.thumbnail = this.original_thumbnail;
+		this.thumbnail_url = this.original_thumbnail_url;
 		this.containing_list_view.set_editing(false);
 		if(this.isNew){
 			this.delete(true, " ");
@@ -150,13 +153,13 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		};
 		this.originalData = data;
 		this.original_thumbnail = this.thumbnail;
+		this.original_thumbnail_url = this.thumbnail_url;
 		this.edit = false;
 
 		var self = this;
 		this.save(data, "Saving Channel...").then(function(channel){
-			self.model = new Models.ChannelModel(channel);
-			self.containing_list_view.load_content();
-			self.remove();
+			self.model = channel;
+			self.render();
 		});
 	},
 	set_channel:function(){
@@ -190,7 +193,9 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	thumbnail_uploaded:function(thumbnail){
 		this.thumbnail_error = null;
-		this.thumbnail = JSON.parse(thumbnail.xhr.response).filename;
+		result = JSON.parse(thumbnail.xhr.response)
+		this.thumbnail = result.filename;
+		this.thumbnail_url = result.file_url;
 	},
 	thumbnail_completed:function(){
 		if(this.thumbnail_error){
