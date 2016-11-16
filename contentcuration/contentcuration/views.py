@@ -17,7 +17,7 @@ from django.core.context_processors import csrf
 from django.db.models import Q
 from rest_framework.renderers import JSONRenderer
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
+from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -109,16 +109,16 @@ def exercise_list(request):
         # If page is out of range (e.g. 9999), deliver last page of results.
         exercises = paged_list.page(paginator.num_pages)
 
-    serializer = ExerciseSerializer(exercises.object_list, many=True)
+    # serializer = ExerciseSerializer(exercises.object_list, many=True)
 
     return render(request, 'exercise_list.html', {"exercises": exercises, "blob": JSONRenderer().render(serializer.data)})
 
 
 def exercise(request, exercise_id):
 
-    exercise = get_object_or_404(Exercise, id=exercise_id)
+    exercise = get_object_or_404(ContentNode, id=exercise_id)
 
-    serializer = ExerciseSerializer(exercise)
+    serializer = ContentNodeSerializer(exercise)
 
     assessment_items = AssessmentItem.objects.filter(exercise=exercise)
 
