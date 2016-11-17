@@ -353,7 +353,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
 			this.add_to_trash();
 			if(this.subcontent_view){
-				this.subcontent_view.close_container();
+				this.subcontent_view.remove();
 			}
 		}
 	},
