@@ -13,6 +13,7 @@ from django.core.context_processors import csrf
 from django.core.management import call_command
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
+from contentcuration.api import write_file_to_storage
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, generate_file_on_disk_name
 from le_utils.constants import content_kinds
 from django.db.models.functions import Concat
@@ -62,7 +63,7 @@ def api_file_upload(request):
     """ Upload a file to the storage system """
     try:
         fobj = request.FILES["file"]
-        formatted_filename = write_file_to_storage(fobj)
+        formatted_filename = write_file_to_storage(fobj, check_valid=True)
 
         return HttpResponse(json.dumps({
             "success": True,

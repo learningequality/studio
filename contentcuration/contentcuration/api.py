@@ -9,13 +9,13 @@ import shutil
 from functools import wraps
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
 from le_utils.constants import content_kinds
 import contentcuration.models as models
 
-def write_file_to_storage(fobj):
+def write_file_to_storage(fobj, check_valid = False):
     # Check that hash is valid
     checksum = hashlib.md5()
     for chunk in iter(lambda: fobj.read(4096), b""):
@@ -25,11 +25,11 @@ def write_file_to_storage(fobj):
     full_filename = "{}{}".format(hashed_filename, ext)
     fobj.seek(0)
 
-    if checksum.hexdigest() != filename:
+    if check_valid and checksum.hexdigest() != filename:
         raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(fobj._name))
 
     # Get location of file
-    file_path = generate_file_on_disk_name(hashed_filename, full_filename)
+    file_path = models.generate_file_on_disk_name(hashed_filename, full_filename)
 
     # Write file if it doesn't already exist
     with open(file_path, 'wb') as destf:
