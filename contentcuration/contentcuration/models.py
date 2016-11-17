@@ -168,11 +168,14 @@ class Channel(models.Model):
     public = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        original_node = Channel.objects.get(pk=self.pk)
+        original_node = None
+        if self.pk and Channel.objects.filter(pk=self.pk).exists():
+            original_node = Channel.objects.get(pk=self.pk)
+
         super(Channel, self).save(*args, **kwargs)
 
         # Check if original thumbnail is no longer referenced
-        if original_node and original_node.thumbnail and 'static' not in original_node.thumbnail:
+        if original_node is not None and original_node.thumbnail and 'static' not in original_node.thumbnail:
             filename, ext = os.path.splitext(original_node.thumbnail)
             delete_empty_file_reference(filename, ext[1:])
 

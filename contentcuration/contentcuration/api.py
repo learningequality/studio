@@ -20,18 +20,18 @@ def write_file_to_storage(fobj, check_valid = False):
     checksum = hashlib.md5()
     for chunk in iter(lambda: fobj.read(4096), b""):
         checksum.update(chunk)
-    filename, ext = os.path.splitext(fobj._name)
+    filename, ext = os.path.splitext(fobj._name) if fobj._name is not None else ("", "")
     hashed_filename = checksum.hexdigest()
     full_filename = "{}{}".format(hashed_filename, ext)
     fobj.seek(0)
 
-    if check_valid and checksum.hexdigest() != filename:
+    if check_valid and hashed_filename != filename:
         raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(fobj._name))
 
     # Get location of file
     file_path = models.generate_file_on_disk_name(hashed_filename, full_filename)
 
-    # Write file if it doesn't already exist
+    # Write file
     with open(file_path, 'wb') as destf:
         shutil.copyfileobj(fobj, destf)
     return full_filename
