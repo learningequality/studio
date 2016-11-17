@@ -21,7 +21,7 @@ from le_utils.constants import content_kinds,file_formats, format_presets, licen
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
 from kolibri.content.utils.search import fuzz
-
+from django.db import transaction
 
 import logging as logmodule
 logging = logmodule.getLogger(__name__)
@@ -108,23 +108,23 @@ def map_content_nodes(root_node):
 
 
     # kolibri_license = kolibrimodels.License.objects.get(license_name=license.license_name)
+    with transaction.atomic():
+        with ccmodels.ContentNode.objects.delay_mptt_updates():
+            for node in iter(queue_get_return_none_when_empty, None):
+                logging.debug("Mapping node with id {id}".format(
+                    id=node.pk))
 
-    with ccmodels.ContentNode.objects.delay_mptt_updates():
-        for node in iter(queue_get_return_none_when_empty, None):
-            logging.debug("Mapping node with id {id}".format(
-                id=node.pk))
+                children = (node.children.
+                            # select_related('parent', 'files__preset', 'files__file_format').
+                            all())
+                node_queue.extend(children)
 
-            children = (node.children.
-                        # select_related('parent', 'files__preset', 'files__file_format').
-                        all())
-            node_queue.extend(children)
+                kolibrinode = create_bare_contentnode(node)
 
-            kolibrinode = create_bare_contentnode(node)
-
-            if node.kind.kind == content_kinds.EXERCISE:
-                create_perseus_exercise(node)
-            if node.kind.kind != content_kinds.TOPIC:
-                create_associated_file_objects(kolibrinode, node)
+                if node.kind.kind == content_kinds.EXERCISE:
+                    create_perseus_exercise(node)
+                if node.kind.kind != content_kinds.TOPIC:
+                    create_associated_file_objects(kolibrinode, node)
 
 def create_bare_contentnode(ccnode):
     logging.debug("Creating a Kolibri node for instance id {}".format(
