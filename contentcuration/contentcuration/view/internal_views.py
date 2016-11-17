@@ -40,25 +40,18 @@ def file_diff(request):
     """ Determine which files don't exist on server """
     logging.debug("Entering the file_diff endpoint")
     data = json.loads(request.body)
-
-    # Filter by file objects first to save on performance
-    # difference = []
     to_return = []
-    # in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
 
-    # Double check that files are not corrupted
-    # for f in in_db_list:
-    #     file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
-    #     if not os.path.isfile(file_path):
-    #         difference += [f]
+    # Might want to use this once assumption that file exists is true (save on performance)
+    # in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
+    # for f in list(set(data) - set(in_db_list)):
 
     # Add files that don't exist in storage
     for f in data:
-        # for f in data:
         file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
-        # Write file if it doesn't already exist
+        # Add file if it doesn't already exist
         if not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
-            to_return += [f]
+            to_return.append(f)
 
     return HttpResponse(json.dumps(to_return))
 
@@ -69,23 +62,7 @@ def api_file_upload(request):
     """ Upload a file to the storage system """
     try:
         fobj = request.FILES["file"]
-
-        # Check that hash is valid
-        hash_check = hashlib.md5()
-        for chunk in iter(lambda: fobj.read(4096), b""):
-            hash_check.update(chunk)
-        filename = os.path.splitext(fobj._name)[0]
-        fobj.seek(0)
-
-        if hash_check.hexdigest() != filename:
-            raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(fobj._name))
-
-        # Get location of file
-        file_path = generate_file_on_disk_name(filename, fobj._name)
-
-        # Write file if it doesn't already exist
-        with open(file_path, 'wb') as destf:
-            shutil.copyfileobj(fobj, destf)
+        formatted_filename = write_file_to_storage(fobj)
 
         return HttpResponse(json.dumps({
             "success": True,

@@ -4,6 +4,8 @@ This module acts as the only interface point between other apps and the database
 import logging
 import os
 import re
+import hashlib
+import shutil
 from functools import wraps
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
@@ -12,6 +14,28 @@ from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
 from le_utils.constants import content_kinds
 import contentcuration.models as models
+
+def write_file_to_storage(fobj):
+    # Check that hash is valid
+    checksum = hashlib.md5()
+    for chunk in iter(lambda: fobj.read(4096), b""):
+        checksum.update(chunk)
+    filename, ext = os.path.splitext(fobj._name)
+    hashed_filename = checksum.hexdigest()
+    full_filename = "{}{}".format(hashed_filename, ext)
+    fobj.seek(0)
+
+    if checksum.hexdigest() != filename:
+        raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(fobj._name))
+
+    # Get location of file
+    file_path = generate_file_on_disk_name(hashed_filename, full_filename)
+
+    # Write file if it doesn't already exist
+    with open(file_path, 'wb') as destf:
+        shutil.copyfileobj(fobj, destf)
+    return full_filename
+
 
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
