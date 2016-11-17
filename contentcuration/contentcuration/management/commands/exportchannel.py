@@ -21,7 +21,7 @@ from le_utils.constants import content_kinds,file_formats, format_presets, licen
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
 from kolibri.content.utils.search import fuzz
-
+from django.db import transaction
 
 import logging as logmodule
 logging = logmodule.getLogger(__name__)
@@ -49,7 +49,6 @@ class Command(BaseCommand):
             raise_if_nodes_are_all_unchanged(channel)
             # assign_license_to_contentcuration_nodes(channel, license)
             # create_kolibri_license_object(license)
-            increment_channel_version(channel)
             prepare_export_database()
             # TODO: increment channel version numbers when we mark nodes as changed as well
             map_content_tags(channel)
@@ -57,6 +56,7 @@ class Command(BaseCommand):
             map_channel_to_kolibri_channel(channel)
             map_content_nodes(channel.main_tree,)
             save_export_database(channel_id)
+            increment_channel_version(channel)
             mark_all_nodes_as_changed(channel)
             # use SQLite backup API to put DB into archives folder.
             # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
@@ -108,23 +108,23 @@ def map_content_nodes(root_node):
 
 
     # kolibri_license = kolibrimodels.License.objects.get(license_name=license.license_name)
+    with transaction.atomic():
+        with ccmodels.ContentNode.objects.delay_mptt_updates():
+            for node in iter(queue_get_return_none_when_empty, None):
+                logging.debug("Mapping node with id {id}".format(
+                    id=node.pk))
 
-    with ccmodels.ContentNode.objects.delay_mptt_updates():
-        for node in iter(queue_get_return_none_when_empty, None):
-            logging.debug("Mapping node with id {id}".format(
-                id=node.pk))
+                children = (node.children.
+                            # select_related('parent', 'files__preset', 'files__file_format').
+                            all())
+                node_queue.extend(children)
 
-            children = (node.children.
-                        # select_related('parent', 'files__preset', 'files__file_format').
-                        all())
-            node_queue.extend(children)
+                kolibrinode = create_bare_contentnode(node)
 
-            kolibrinode = create_bare_contentnode(node)
-
-            if node.kind.kind == content_kinds.EXERCISE:
-                create_perseus_exercise(node)
-            if node.kind.kind != content_kinds.TOPIC:
-                create_associated_file_objects(kolibrinode, node)
+                if node.kind.kind == content_kinds.EXERCISE:
+                    create_perseus_exercise(node)
+                if node.kind.kind != content_kinds.TOPIC:
+                    create_associated_file_objects(kolibrinode, node)
 
 def create_bare_contentnode(ccnode):
     logging.debug("Creating a Kolibri node for instance id {}".format(

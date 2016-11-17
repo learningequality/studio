@@ -4,7 +4,6 @@ import logging
 
 DEBUG = True
 ALLOWED_HOSTS = []
-STORAGE_URL = '/storage/'
 
 ACCOUNT_ACTIVATION_DAYS=7
 # EMAIL_BACKEND = 'email_extras.backends.BrowsableEmailBackend'

@@ -170,7 +170,6 @@ var ContentNodeCollection = BaseCollection.extend({
 	    	});
 			var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
 	        var parent_id = target_parent.get("id");
-	        console.log(target_parent)
 
 	        var data = {"node_ids": copied_list.join(" "),
 	                    "sort_order": sort_order,

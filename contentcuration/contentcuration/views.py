@@ -16,6 +16,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
 from django.db.models import Q
 from rest_framework.renderers import JSONRenderer
+from contentcuration.api import write_file_to_storage
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
@@ -163,27 +164,12 @@ def file_create(request):
 def thumbnail_upload(request):
     if request.method == 'POST':
         fobj = request.FILES.values()[0]
-
-        # Check that hash is valid
-        checksum = hashlib.md5()
-        for chunk in iter(lambda: fobj.read(4096), b""):
-            checksum.update(chunk)
-        filename, ext = os.path.splitext(fobj._name)
-        hashed_filename = checksum.hexdigest()
-        full_filename = "{}{}".format(hashed_filename, ext)
-        fobj.seek(0)
-
-        # Get location of file
-        file_path = generate_file_on_disk_name(hashed_filename, full_filename)
-
-        # Write file if it doesn't already exist
-        with open(file_path, 'wb') as destf:
-            shutil.copyfileobj(fobj, destf)
+        formatted_filename = write_file_to_storage(fobj)
 
         return HttpResponse(json.dumps({
             "success": True,
-            "filename": full_filename,
-            "file_url": generate_storage_url(full_filename),
+            "filename": formatted_filename,
+            "file_url": generate_storage_url(formatted_filename),
         }))
 
 def exercise_image_upload(request):

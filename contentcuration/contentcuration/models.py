@@ -168,7 +168,17 @@ class Channel(models.Model):
     public = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
+        original_node = None
+        if self.pk and Channel.objects.filter(pk=self.pk).exists():
+            original_node = Channel.objects.get(pk=self.pk)
+
         super(Channel, self).save(*args, **kwargs)
+
+        # Check if original thumbnail is no longer referenced
+        if original_node is not None and original_node.thumbnail and 'static' not in original_node.thumbnail:
+            filename, ext = os.path.splitext(original_node.thumbnail)
+            delete_empty_file_reference(filename, ext[1:])
+
         if not self.main_tree:
             self.main_tree = ContentNode.objects.create(title=self.name + " main root", kind_id="topic", sort_order=0)
             self.main_tree.save()
@@ -384,8 +394,12 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     when corresponding `File` object is deleted.
     Be careful! we don't know if this will work when perform bash delete on File obejcts.
     """
-    if not File.objects.filter(file_on_disk=instance.file_on_disk.url):
-        file_on_disk_path = os.path.join(settings.STORAGE_ROOT, instance.checksum[0:1], instance.checksum[1:2], instance.checksum + '.' + instance.file_format.extension)
+    delete_empty_file_reference(instance.checksum, instance.file_format.extension)
+
+def delete_empty_file_reference(checksum, extension):
+    filename = checksum + '.' + extension
+    if not File.objects.filter(checksum=checksum).exists() and not Channel.objects.filter(thumbnail=filename).exists():
+        file_on_disk_path = generate_file_on_disk_name(checksum, filename)
         if os.path.isfile(file_on_disk_path):
             os.remove(file_on_disk_path)
 

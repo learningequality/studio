@@ -4,14 +4,38 @@ This module acts as the only interface point between other apps and the database
 import logging
 import os
 import re
+import hashlib
+import shutil
 from functools import wraps
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
 from le_utils.constants import content_kinds
 import contentcuration.models as models
+
+def write_file_to_storage(fobj, check_valid = False):
+    # Check that hash is valid
+    checksum = hashlib.md5()
+    for chunk in iter(lambda: fobj.read(4096), b""):
+        checksum.update(chunk)
+    filename, ext = os.path.splitext(fobj._name) if fobj._name is not None else ("", "")
+    hashed_filename = checksum.hexdigest()
+    full_filename = "{}{}".format(hashed_filename, ext)
+    fobj.seek(0)
+
+    if check_valid and hashed_filename != filename:
+        raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(fobj._name))
+
+    # Get location of file
+    file_path = models.generate_file_on_disk_name(hashed_filename, full_filename)
+
+    # Write file
+    with open(file_path, 'wb') as destf:
+        shutil.copyfileobj(fobj, destf)
+    return full_filename
+
 
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
