@@ -28,6 +28,7 @@ var PreviewView = BaseViews.BaseView.extend({
     initialize: function(options) {
         _.bindAll(this, 'set_preview','toggle_fullscreen', 'load_preview');
         this.presets = new Models.FormatPresetCollection();
+        this.is_fullscreen = false;
         this.render();
     },
     events: {
@@ -146,8 +147,8 @@ var PreviewView = BaseViews.BaseView.extend({
     toggle_fullscreen:function(){
         var elem = document.getElementById("preview_content_main");
 
-        if(this.$(".view_fullscreen").text() === "Show Fullscreen"){
-            $(elem).addClass("preview_on");
+        if(!this.is_fullscreen){
+            this.is_fullscreen = true;
             if (elem.requestFullscreen) {
               elem.requestFullscreen();
             } else if (elem.msRequestFullscreen) {
@@ -157,9 +158,8 @@ var PreviewView = BaseViews.BaseView.extend({
             } else if (elem.webkitRequestFullscreen) {
               elem.webkitRequestFullscreen();
             }
-            this.$(".view_fullscreen").text("Hide Fullscreen");
         }else{
-            $(elem).removeClass("preview_on");
+            this.is_fullscreen = false;
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             } else if (document.webkitExitFullscreen) {
@@ -169,7 +169,6 @@ var PreviewView = BaseViews.BaseView.extend({
             } else if (document.msExitFullscreen) {
                 document.msExitFullscreen();
             }
-            this.$(".view_fullscreen").text("Show Fullscreen");
         }
     }
 });

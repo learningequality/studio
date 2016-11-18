@@ -134,8 +134,6 @@ def create_bare_contentnode(ccnode):
     if ccnode.license is not None:
         kolibri_license = create_kolibri_license_object(ccnode.license)[0]
 
-    # import pdb; pdb.set_trace()
-    # kolibrinode, is_new = kolibrimodels.ContentNode.objects.get_or_create(pk=ccnode.node_id, kind=ccnode.kind.kind)
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
         defaults={'kind': ccnode.kind.kind,

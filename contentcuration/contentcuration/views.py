@@ -14,6 +14,7 @@ from django.core import paginator
 from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
+from django.db import transaction
 from django.db.models import Q
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage
@@ -204,10 +205,11 @@ def duplicate_nodes(request):
         nodes = node_ids.split()
         new_nodes = []
 
-        for node_id in nodes:
-            new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent)
-            new_nodes.append(new_node.pk)
-            sort_order+=1
+        with transaction.atomic():
+            for node_id in nodes:
+                new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent)
+                new_nodes.append(new_node.pk)
+                sort_order+=1
 
         return HttpResponse(json.dumps({
             "success": True,
