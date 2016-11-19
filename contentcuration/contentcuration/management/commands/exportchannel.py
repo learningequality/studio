@@ -125,6 +125,7 @@ def map_content_nodes(root_node):
                     create_perseus_exercise(node)
                 if node.kind.kind != content_kinds.TOPIC:
                     create_associated_file_objects(kolibrinode, node)
+                map_tags_to_node(kolibrinode, node)
 
 def create_bare_contentnode(ccnode):
     logging.debug("Creating a Kolibri node for instance id {}".format(
@@ -134,8 +135,6 @@ def create_bare_contentnode(ccnode):
     if ccnode.license is not None:
         kolibri_license = create_kolibri_license_object(ccnode.license)[0]
 
-    # import pdb; pdb.set_trace()
-    # kolibrinode, is_new = kolibrimodels.ContentNode.objects.get_or_create(pk=ccnode.node_id, kind=ccnode.kind.kind)
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
         defaults={'kind': ccnode.kind.kind,
@@ -298,6 +297,15 @@ def convert_channel_thumbnail(thumbnail):
     with open(ccmodels.generate_file_on_disk_name(thumbnail.split('.')[0], thumbnail), 'rb') as file_obj:
         encoding = base64.b64encode(file_obj.read()).decode('utf-8')
     return "data:image/png;base64," + encoding
+
+def map_tags_to_node(kolibrinode, ccnode):
+    tags_to_add = []
+
+    for tag in ccnode.tags.all():
+        tags_to_add.append(kolibrimodels.ContentTag.objects.get(pk=tag.pk))
+
+    kolibrinode.tags = tags_to_add
+    kolibrinode.save()
 
 def prepare_export_database():
     call_command("flush", "--noinput", database='export_staging')  # clears the db!
