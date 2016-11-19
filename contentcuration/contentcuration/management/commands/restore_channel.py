@@ -7,6 +7,7 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import transaction
+from django.core.files import File as DJFile
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 from contentcuration import models
 from contentcuration.api import write_file_to_storage
@@ -163,23 +164,30 @@ def create_files(cursor, contentnode, indent=0):
     file_list = []
     query = cursor.execute(sql_command).fetchall()
     for checksum, extension, file_size, contentnode_id, lang_id, preset in query:
-        sys.stderr.write("\n{indent} * FILE {filename}...".format(indent="   |" * indent, filename="{}.{}".format(checksum, extension)))
-        import pdb; pdb.set_trace()
-        # Save values to new or existing file object
-        file_obj = models.File.objects.create(
-            checksum = checksum,
-            file_format_id = extension,
-            file_size = file_size,
-            contentnode = contentnode,
-            lang_id = lang_id,
-            preset_id = preset or "",
-        )
+        filename = "{}.{}".format(checksum, extension)
+        sys.stderr.write("\n{indent} * FILE {filename}...".format(indent="   |" * indent, filename=filename))
+        file_path = models.generate_file_on_disk_name(checksum, filename)
 
-        # Update file stat
-        global FILE_COUNT
-        FILE_COUNT += 1
-        sys.stderr.write(" DONE")
+        try:
+            # Save values to new or existing file object
+            with open(file_path, 'rb') as fobj:
+                file_obj = models.File.objects.create(
+                    file_on_disk = DJFile(fobj),
+                    file_format_id = extension,
+                    file_size = file_size,
+                    contentnode = contentnode,
+                    lang_id = lang_id,
+                    preset_id = preset or "",
+                )
 
+            # Update file stat
+            global FILE_COUNT
+            FILE_COUNT += 1
+            sys.stderr.write(" DONE")
+
+        except IOError as e:
+            sys.stderr.write(" FAILED ({})".format(os.strerror(e.errno)))
+            continue
 
 def create_tags(cursor, contentnode, target_id, indent=0):
 
