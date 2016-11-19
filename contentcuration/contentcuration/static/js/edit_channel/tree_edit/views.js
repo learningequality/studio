@@ -276,12 +276,15 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.listenTo(this.model, 'change:metadata', this.render);
 	},
 	render:function(){
+		var description = this.model.get("description");
 		this.$el.html(this.template({
 			node: this.model.toJSON(),
 			isfolder: this.model.get("kind") === "topic",
 			edit_mode: this.edit_mode,
 			checked: this.checked,
-			isexercise: this.model.get("kind") === "exercise"
+			isexercise: this.model.get("kind") === "exercise",
+			description_first: description.substring(0, Math.min(49, description.length)),
+			description_overflow: (description.length > 50) ? description.substring(50, description.length) : null
 		}));
 		this.handle_checked();
 		if(this.isSelected){

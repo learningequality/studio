@@ -115,6 +115,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	delete_channel: function(event){
 		if(this.isNew){
 			this.delete(true, " ");
+			this.containing_list_view.set_editing(false);
 		}
 		else if(confirm("WARNING: All content under this channel will be permanently deleted."
 					+ "\nAre you sure you want to delete this channel?")){
