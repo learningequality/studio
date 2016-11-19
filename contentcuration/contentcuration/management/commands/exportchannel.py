@@ -299,7 +299,12 @@ def convert_channel_thumbnail(thumbnail):
     return "data:image/png;base64," + encoding
 
 def map_tags_to_node(kolibrinode, ccnode):
-    """ Assign tags to nodes (creates fk relationship) """
+    """ map_tags_to_node: assigns tags to nodes (creates fk relationship)
+        Args:
+            kolibrinode (kolibri.models.ContentNode): node to map tag to
+            ccnode (contentcuration.models.ContentNode): node with tags to map
+        Returns: None
+    """
     tags_to_add = []
 
     for tag in ccnode.tags.all():
