@@ -108,7 +108,7 @@ def write_to_thumbnail_file(raw_thumbnail):
             raw_thumbnail (str): base64 encoded thumbnail
         Returns: thumbnail filename
     """
-    if raw_thumbnail and raw_thumbnail != "":
+    if raw_thumbnail and isinstance(raw_thumbnail, str) and raw_thumbnail != "":
         with SimpleUploadedFile('temp.png',raw_thumbnail.replace('data:image/png;base64,', '').decode('base64')) as tempf:
             filename = write_file_to_storage(tempf, check_valid=False)
             logging.info("\tCreated thumbnail {}".format(filename))
