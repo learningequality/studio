@@ -92,7 +92,7 @@ def create_channel(cursor, target_id):
             target_id (str): channel_id to write to
         Returns: channel model created and id of root node
     """
-    id, name, description, author, thumbnail, root_pk, version = cursor.execute('SELECT * FROM {table}'.format(table=CHANNEL_TABLE)).fetchone()
+    id, name, description, thumbnail, root_pk, version = cursor.execute('SELECT id, name, description, thumbnail, root_pk, version FROM {table}'.format(table=CHANNEL_TABLE)).fetchone()
     channel, is_new = models.Channel.objects.get_or_create(pk=target_id)
     channel.name = name
     channel.description = description
