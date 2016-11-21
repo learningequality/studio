@@ -50,7 +50,7 @@ class Command(BaseCommand):
             channel = ccmodels.Channel.objects.get(pk=channel_id)
             # increment the channel version
             raise_if_nodes_are_all_unchanged(channel)
-            count, tempdb = tempfile.mkstemp(suffix=".sqlite3")
+            index, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
             with using_content_database(tempdb):
                 prepare_export_database(tempdb)
@@ -316,7 +316,6 @@ def map_tags_to_node(kolibrinode, ccnode):
     kolibrinode.save()
 
 def prepare_export_database(tempdb):
-    # database_path = getattr(THREAD_LOCAL, 'ACTIVE_CONTENT_DB_ALIAS', None)
     call_command("flush", "--noinput", database=get_active_content_database())  # clears the db!
     call_command("migrate",
                  run_syncdb=True,
