@@ -355,7 +355,7 @@ def save_export_database(channel_id):
     except OSError:
         logging.debug("{} directory already exists".format(settings.DB_ROOT))
 
-    shutil.copy(current_export_db_location, target_export_db_location)
+    shutil.copyfile(current_export_db_location, target_export_db_location)
     logging.info("Successfully copied to {}".format(target_export_db_location))
 
 def get_active_content_database():
