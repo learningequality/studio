@@ -267,10 +267,27 @@
 					.description{
 						display:block;
 						font-weight:normal;
-						// max-height:@description-font-size * 4;
-						// overflow-y:auto;
 						color: @annotation-gray;
+						.description_main{
+							display:inline;
+							margin:0;
+						}
+						.description_overflow{
+							-moz-transition: all 1s ease;
+						    -ms-transition: all 1s ease;
+						    -o-transition: all 1s ease;
+						    -webkit-transition: all 1s ease;
+						    transition: all 1s;
+							display:none;
+						}
+						.toggle_description{
+							display:inline;
+							font-weight:bold;
+							color:@gray-700;
+							text-decoration: none;
+						}
 					}
+
 					h3, p, h6{
 						color : @item-last-font-color;
 					}

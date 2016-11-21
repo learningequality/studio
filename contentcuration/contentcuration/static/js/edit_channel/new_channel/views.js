@@ -42,8 +42,8 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 	new_channel: function(){
 		var self = this;
 		var data = {
-			name: "New Channel",
-			description: "Description of channel",
+			name: "",
+			description: "",
 			editors: [window.current_user.id],
 			thumbnail:"/static/img/kolibri_placeholder.png"
 		};
@@ -72,7 +72,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	dropzone_template: require("./hbtemplates/channel_profile_dropzone.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded',
+		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded', 'update_title',
 						'thumbnail_added','thumbnail_removed','create_dropzone', 'thumbnail_completed','thumbnail_failed');
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = false;
@@ -89,6 +89,11 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	set_is_new:function(isNew){
 		this.isNew = isNew;
+		if (this.isNew){
+			this.$(".save_channel").attr("disabled", "disabled");
+	  		this.$(".save_channel").prop("disabled", true);
+	  		this.$(".save_channel").css("cursor", "not-allowed");
+		}
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -104,7 +109,23 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		'click .edit_channel':'edit_channel',
 		'click .delete_channel' : 'delete_channel',
 		'click .channel_toggle': 'toggle_channel',
-		'click .save_channel': 'save_channel'
+		'click .save_channel': 'save_channel',
+		'keyup #new_channel_name': 'update_title',
+		'keyup #new_channel_name': 'update_title',
+		'paste #new_channel_name': 'update_title',
+	},
+	update_title:function(event){
+		if (event.target.value.length === 0){
+			this.$("#channel_name_error").css("visibility", "visible");
+			this.$(".save_channel").attr("disabled", "disabled");
+      		this.$(".save_channel").prop("disabled", true);
+      		this.$(".save_channel").css("cursor", "not-allowed");
+		} else{
+			this.$("#channel_name_error").css("visibility", "hidden");
+			this.$(".save_channel").removeAttr("disabled");
+	        this.$(".save_channel").prop("disabled", false);
+	        this.$(".save_channel").css("cursor", "pointer");
+		}
 	},
 	edit_channel: function(){
 		this.containing_list_view.set_editing(true);
@@ -144,7 +165,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	save_channel: function(event){
 		this.containing_list_view.set_editing(false);
 		this.set_is_new(false);
-		var title = (this.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : this.$el.find("#new_channel_name").val().trim();
+		var title = this.$el.find("#new_channel_name").val().trim();
 		var description = this.$el.find("#new_channel_description").val();
 		var data = {
 			name: title,

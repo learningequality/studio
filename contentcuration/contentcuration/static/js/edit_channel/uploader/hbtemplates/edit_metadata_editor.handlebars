@@ -34,7 +34,7 @@
 	{{/if}}
 	{{#if node}}
 		<h4>Description {{#if node}}<i id="description_counter" class="pull-right">{{word_limit}} chars left</i>{{/if}}</h4>
-		<textarea id="input_description" class="upload_input input_listener" placeholder="Enter a description of your content" maxlength={{word_limit}} value="{{node.description}}"/>
+		<textarea id="input_description" class="upload_input input_listener" placeholder="Enter a description of your content" maxlength={{word_limit}} value='{{node.description}}'>{{node.description}}</textarea>
 	{{/if}}
 	<h4>Tags (press 'Enter' to add) <span id="tag_error">Invalid characters found.</span></h4>
 	<input type="text" id="tag_box" class="tag_input" placeholder="Enter tag" maxlength="30"/>

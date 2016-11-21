@@ -142,7 +142,7 @@ class FileOnDiskStorage(FileSystemStorage):
 class Channel(models.Model):
     """ Permissions come from association with organizations """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, blank=True)
     description = models.CharField(max_length=400, blank=True)
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True, null=True)

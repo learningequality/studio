@@ -267,16 +267,17 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'add_new_subtopic', 'open_context_menu');
+		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'add_new_subtopic', 'open_context_menu', 'toggle_description');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
+		this.expanded=false;
 		this.render();
 		this.isSelected = false;
 		this.listenTo(this.model, 'change:metadata', this.render);
 	},
 	render:function(){
-		var description = this.model.get("description");
+		var description = this.model.get("description").trim();
 		this.$el.html(this.template({
 			node: this.model.toJSON(),
 			isfolder: this.model.get("kind") === "topic",
@@ -284,7 +285,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			checked: this.checked,
 			isexercise: this.model.get("kind") === "exercise",
 			description_first: description.substring(0, Math.min(49, description.length)),
-			description_overflow: (description.length > 50) ? description.substring(50, description.length) : null
+			description_overflow: (description.length > 50) ? description.substring(49, description.length) : null
 		}));
 		this.handle_checked();
 		if(this.isSelected){
@@ -324,7 +325,21 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'click .delete_item_button' : 'delete_node',
 		'click .copy_item_button': 'copy_node',
 		'click .add_subtopic_item_button': 'add_new_subtopic',
-		'contextmenu .list_item_wrapper' : 'open_context_menu'
+		'contextmenu .list_item_wrapper' : 'open_context_menu',
+		'click .toggle_description' : 'toggle_description'
+	},
+	toggle_description:function(event){
+		event.stopPropagation();
+		event.preventDefault();
+		if (this.expanded) {
+			this.expanded = false;
+			this.$('.toggle_description').text("... More");
+			this.$(".description_overflow").css("display", "none");
+		} else {
+			this.expanded = true;
+			this.$(".description_overflow").css("display", "inline");
+			this.$('.toggle_description').text(" Less");
+		}
 	},
 	open_context_menu:function(event){
 		if( event.button == 2 ) {

@@ -438,7 +438,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     })
   },
   update_count:function(){
-    if(this.$("#input_description").is(":visible")){
+    if(this.selected_items.length === 1){
       stringHelper.update_word_count(this.$("#input_description"), this.$("#description_counter"), this.description_limit);
     }
   },

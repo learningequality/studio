@@ -9,7 +9,6 @@
 			<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
 				<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
 			</a>
-<!-- 			<span class="edit_folder_button disable-on-edit glyphicon glyphicon-pencil" aria-hidden="true"></span> -->
 			{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
 		</div>
 		<h6 class="content_metadata_summary {{#unless isfolder}}open_file{{/unless}}">
@@ -42,11 +41,11 @@
 				{{#if node}}{{node.title}}{{else}}<em>[Untitled]</em>{{/if}}
 			</h3>
 			<div class="description_wrapper">
-				<p class="description wordwrap" title="{{node.description}}">
-					{{description_first}}
-					<span class="description_overflow">{{description_overflow}}</span>
-					{{#if description_overflow}}<a class="toggle_description">See More...</a>{{/if}}
-				</p>
+				<div class="description" title="{{node.description}}">
+					<span class="description_main wordwrap">{{description_first}}</span>
+					<span class="description_overflow wordwrap">{{description_overflow}}</span>
+					{{#if description_overflow}}<a class="toggle_description">... More</a>{{/if}}
+				</div>
 			</div>
 		</div>
 </label>

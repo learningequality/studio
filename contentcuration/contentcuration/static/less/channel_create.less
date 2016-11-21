@@ -106,7 +106,8 @@
 			.channel_container {
 				background-color: @panel-container-color;
 				width: @channel-container-width;
-				height: @channel-container-height;
+				min-height: @channel-container-height;
+				height:auto;
 				box-shadow: @box-shadow;
 				margin-bottom: 10px;
 				margin: 3px 0 10px 3px;
@@ -188,6 +189,13 @@
 						padding: 0 3px 0 10px;
 					}
 				}
+				#channel_name_error{
+					color:@red-error-color;
+					font-weight:bold;
+					margin:0;
+					padding:0;
+					visibility: hidden;
+				}
 				h4{
 					font-size: @channel-font-size;
 					font-weight: bold;
@@ -268,7 +276,7 @@
 				textarea{
 					font-size: 16px;
 					resize: none;
-					height: @channel-container-height * 0.4;
+					height: @channel-container-height * 0.3;
 					margin-top: 25px;
 				}
 
