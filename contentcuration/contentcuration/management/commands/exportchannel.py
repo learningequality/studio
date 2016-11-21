@@ -137,8 +137,6 @@ def create_bare_contentnode(ccnode):
     if ccnode.license is not None:
         kolibri_license = create_kolibri_license_object(ccnode.license)[0]
 
-    # import pdb; pdb.set_trace()
-    # kolibrinode, is_new = kolibrimodels.ContentNode.objects.get_or_create(pk=ccnode.node_id, kind=ccnode.kind.kind)
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
         defaults={'kind': ccnode.kind.kind,
@@ -211,7 +209,7 @@ def create_perseus_zip(ccnode, write_to_path):
         exercise_data = json.loads(ccnode.extra_fields)
         if 'mastery_model' not in exercise_data or exercise_data['mastery_model'] is None:
             raise ObjectDoesNotExist("ERROR: Exercises must have a mastery model")
-        exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items]})
+        exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
         exercise_context = {
             'exercise': json.dumps(exercise_data)
         }
@@ -303,6 +301,12 @@ def convert_channel_thumbnail(thumbnail):
     return "data:image/png;base64," + encoding
 
 def map_tags_to_node(kolibrinode, ccnode):
+    """ map_tags_to_node: assigns tags to nodes (creates fk relationship)
+        Args:
+            kolibrinode (kolibri.models.ContentNode): node to map tag to
+            ccnode (contentcuration.models.ContentNode): node with tags to map
+        Returns: None
+    """
     tags_to_add = []
 
     for tag in ccnode.tags.all():
