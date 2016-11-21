@@ -7,6 +7,7 @@ import json
 import sys
 import uuid
 import base64
+import sqlite3
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -21,7 +22,9 @@ from le_utils.constants import content_kinds,file_formats, format_presets, licen
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
 from kolibri.content.utils.search import fuzz
-from django.db import transaction
+from kolibri.content.content_db_router import using_content_database, THREAD_LOCAL
+from django.db import transaction, connections
+from django.db.utils import ConnectionDoesNotExist
 
 import logging as logmodule
 logging = logmodule.getLogger(__name__)
@@ -47,19 +50,18 @@ class Command(BaseCommand):
             channel = ccmodels.Channel.objects.get(pk=channel_id)
             # increment the channel version
             raise_if_nodes_are_all_unchanged(channel)
-            # assign_license_to_contentcuration_nodes(channel, license)
-            # create_kolibri_license_object(license)
-            prepare_export_database()
-            # TODO: increment channel version numbers when we mark nodes as changed as well
-            map_content_tags(channel)
+            count, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
-            map_channel_to_kolibri_channel(channel)
-            map_content_nodes(channel.main_tree,)
-            save_export_database(channel_id)
-            increment_channel_version(channel)
-            mark_all_nodes_as_changed(channel)
-            # use SQLite backup API to put DB into archives folder.
-            # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
+            with using_content_database(tempdb):
+                prepare_export_database(tempdb)
+                map_content_tags(channel)
+                map_channel_to_kolibri_channel(channel)
+                map_content_nodes(channel.main_tree,)
+                save_export_database(channel_id)
+                increment_channel_version(channel)
+                mark_all_nodes_as_changed(channel)
+                # use SQLite backup API to put DB into archives folder.
+                # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(
@@ -307,11 +309,12 @@ def map_tags_to_node(kolibrinode, ccnode):
     kolibrinode.tags = tags_to_add
     kolibrinode.save()
 
-def prepare_export_database():
-    call_command("flush", "--noinput", database='export_staging')  # clears the db!
+def prepare_export_database(tempdb):
+    # database_path = getattr(THREAD_LOCAL, 'ACTIVE_CONTENT_DB_ALIAS', None)
+    call_command("flush", "--noinput", database=get_active_content_database())  # clears the db!
     call_command("migrate",
                  run_syncdb=True,
-                 database="export_staging",
+                 database=get_active_content_database(),
                  noinput=True)
     logging.info("Prepared the export database.")
 
@@ -339,12 +342,31 @@ def mark_all_nodes_as_changed(channel):
 
 def save_export_database(channel_id):
     logging.debug("Saving export database")
-    current_export_db_location = settings.DATABASES["export_staging"]["NAME"]
+    current_export_db_location = get_active_content_database()
     target_export_db_location = os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
     try:
         os.mkdir(settings.DB_ROOT)
     except OSError:
         logging.debug("{} directory already exists".format(settings.DB_ROOT))
 
-    shutil.copyfile(current_export_db_location, target_export_db_location)
+    shutil.copy(current_export_db_location, target_export_db_location)
     logging.info("Successfully copied to {}".format(target_export_db_location))
+
+def get_active_content_database():
+
+    # retrieve the temporary thread-local variable that `using_content_database` sets
+    alias = getattr(THREAD_LOCAL, 'ACTIVE_CONTENT_DB_ALIAS', None)
+
+    # try to connect to the content database, and if connection doesn't exist, create it
+    try:
+        connections[alias]
+    except ConnectionDoesNotExist:
+        if not os.path.isfile(alias):
+            raise KeyError("Content DB '%s' doesn't exist!!" % alias)
+        connections.databases[alias] = {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': alias,
+        }
+
+    return alias
+
