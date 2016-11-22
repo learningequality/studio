@@ -127,15 +127,11 @@ DATABASES = {
         'HOST': 'localhost',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': '',                      # Set to empty string for default.
     },
-    'export_staging': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'export_staging.sqlite3')
-    }
 }
 
 
 DATABASE_ROUTERS = [
-    "contentcuration.router.Router",
+    "kolibri.content.content_db_router.ContentDBRouter",
 ]
 
 # LOGGING = {
