@@ -277,15 +277,15 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.listenTo(this.model, 'change:metadata', this.render);
 	},
 	render:function(){
-		var description = this.model.get("description").trim();
+		var description = this.get_split_description();
 		this.$el.html(this.template({
 			node: this.model.toJSON(),
 			isfolder: this.model.get("kind") === "topic",
 			edit_mode: this.edit_mode,
 			checked: this.checked,
 			isexercise: this.model.get("kind") === "exercise",
-			description_first: description.substring(0, Math.min(49, description.length)),
-			description_overflow: (description.length > 50) ? description.substring(49, description.length) : null
+			description_first: description[0],
+			description_overflow: description[1]
 		}));
 		this.handle_checked();
 		if(this.isSelected){
@@ -295,6 +295,19 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.make_droppable();
 		this.$el.removeClass(this.selectedClass);
 		this.create_popover();
+	},
+	get_split_description:function(){
+		var description = this.model.get("description").trim();
+		var split_index = 49;
+		while (description.charAt(split_index) != " " && split_index < 60){
+			split_index ++;
+		}
+		if (description.length - split_index <= 15){
+			split_index = description.length;
+		}
+		first_part = description.substring(0, Math.min(split_index, description.length));
+		last_part = (description.length > split_index) ? description.substring(split_index, description.length) : null;
+		return [first_part, last_part];
 	},
 	create_popover:function(){
 		var self = this;
@@ -331,15 +344,12 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	toggle_description:function(event){
 		event.stopPropagation();
 		event.preventDefault();
-		if (this.expanded) {
-			this.expanded = false;
-			this.$('.toggle_description').text("... More");
-			this.$(".description_overflow").css("display", "none");
-		} else {
-			this.expanded = true;
-			this.$(".description_overflow").css("display", "inline");
-			this.$('.toggle_description').text(" Less");
+		if(!this.expanded){
+			this.$(".description_overflow").fadeIn(200);
 		}
+		this.$('.toggle_description').text((this.expanded) ? "... More" : " Less");
+		this.$(".description_overflow").css('display', (this.expanded)? "none" : "inline");
+		this.expanded = !this.expanded;
 	},
 	open_context_menu:function(event){
 		if( event.button == 2 ) {

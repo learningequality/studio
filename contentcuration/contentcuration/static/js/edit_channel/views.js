@@ -23,9 +23,9 @@ var BaseView = Backbone.View.extend({
 				}
 			}).catch(function(error){
 				if(message!=""){
-					$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+					$("#kolibri_load_text").text("Error with asynchronous call. Please refresh the page");
 				}
-				console.log("Error with asychronous call", error);
+				console.log("Error with asynchronous call", error);
 			});
   	}else{
   		$("#loading_modal").remove();

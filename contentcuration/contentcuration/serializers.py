@@ -12,6 +12,7 @@ from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.conf import settings
+from django.core.files import File as DjFile
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,6 +53,11 @@ class FileListSerializer(serializers.ListSerializer):
                     # potential optimization opportunity
                     for attr, value in data.items():
                         setattr(file_obj, attr, value)
+                    file_path = generate_file_on_disk_name(file_obj.checksum, str(file_obj))
+                    if os.path.isfile(file_path):
+                        file_obj.file_on_disk = DjFile(open(file_path, 'rb'))
+                    else:
+                        raise FileNotFoundError("Error: file {} was not found".format(str(file_obj)))
                     file_obj.save()
                     ret.append(file_obj)
         return ret

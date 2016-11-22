@@ -381,10 +381,6 @@ class File(models.Model):
                 self.checksum = md5.hexdigest()
                 self.file_size = self.file_on_disk.size
                 self.extension = os.path.splitext(self.file_on_disk.name)[1]
-        else:
-            self.checksum = None
-            self.file_size = None
-            self.extension = None
         super(File, self).save(*args, **kwargs)
 
 @receiver(models.signals.post_delete, sender=File)
