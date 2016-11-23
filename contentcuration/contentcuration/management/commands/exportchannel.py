@@ -50,7 +50,7 @@ class Command(BaseCommand):
             channel = ccmodels.Channel.objects.get(pk=channel_id)
             # increment the channel version
             raise_if_nodes_are_all_unchanged(channel)
-            count, tempdb = tempfile.mkstemp(suffix=".sqlite3")
+            index, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
             with using_content_database(tempdb):
                 prepare_export_database(tempdb)
@@ -209,7 +209,7 @@ def create_perseus_zip(ccnode, write_to_path):
         exercise_data = json.loads(ccnode.extra_fields)
         if 'mastery_model' not in exercise_data or exercise_data['mastery_model'] is None:
             raise ObjectDoesNotExist("ERROR: Exercises must have a mastery model")
-        exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items]})
+        exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
         exercise_context = {
             'exercise': json.dumps(exercise_data)
         }
@@ -301,6 +301,12 @@ def convert_channel_thumbnail(thumbnail):
     return "data:image/png;base64," + encoding
 
 def map_tags_to_node(kolibrinode, ccnode):
+    """ map_tags_to_node: assigns tags to nodes (creates fk relationship)
+        Args:
+            kolibrinode (kolibri.models.ContentNode): node to map tag to
+            ccnode (contentcuration.models.ContentNode): node with tags to map
+        Returns: None
+    """
     tags_to_add = []
 
     for tag in ccnode.tags.all():
@@ -310,7 +316,6 @@ def map_tags_to_node(kolibrinode, ccnode):
     kolibrinode.save()
 
 def prepare_export_database(tempdb):
-    # database_path = getattr(THREAD_LOCAL, 'ACTIVE_CONTENT_DB_ALIAS', None)
     call_command("flush", "--noinput", database=get_active_content_database())  # clears the db!
     call_command("migrate",
                  run_syncdb=True,
