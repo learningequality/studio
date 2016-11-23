@@ -380,13 +380,28 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         has_files = has_files || window.formatpresets.get({id:preset}).get("display");
       });
     }
+
+    // Set license, author, copyright values based on whether selected items have been copied from another source
+    var alloriginal = true;
+    this.selected_items.forEach(function(item){
+      alloriginal = alloriginal && item.isoriginal;
+    });
+
+    var original_source_license = "---";
+    if(this.shared_data && this.shared_data.shared_license){
+      original_source_license = window.licenses.get(this.shared_data.shared_license).get("license_name");
+    }
+    var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
+    var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
+
     this.$el.html(this.template({
       node: (this.selected_items.length === 1)? this.selected_items[0].model.toJSON() : null,
+      isoriginal: alloriginal,
       is_file: (this.shared_data)? this.shared_data.all_files : false,
       none_selected: this.selected_items.length === 0,
       licenses: window.licenses.toJSON(),
-      copyright_owner: (this.shared_data)? this.shared_data.shared_copyright_owner:null,
-      author: (this.shared_data)? this.shared_data.shared_author:null,
+      copyright_owner: copyright_owner,
+      author: author,
       selected_count: this.selected_items.length,
       has_files: has_files,
       word_limit: this.description_limit
@@ -395,7 +410,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.handle_if_individual();
     if(this.shared_data){
       this.load_tags();
-      $("#license_select").val(this.shared_data.shared_license);
+      (!alloriginal)? $("#license_select").text(original_source_license) : $("#license_select").val(this.shared_data.shared_license);
       this.$("#license_about").css("display", (this.shared_data.shared_license > 0)? "inline" : "none");
     }
   },
@@ -433,8 +448,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     });
   },
   load_license:function(){
+    iscopied = this.selected_items.length === 1 && !this.selected_items[0].isoriginal
     var license_modal = new LicenseModalView({
-      select_license : window.licenses.get({id: $("#license_select").val()})
+      select_license : window.licenses.get({id: (iscopied)? this.selected_items[0].model.get("license") : $("#license_select").val()})
     })
   },
   update_count:function(){
@@ -507,6 +523,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.set_edited(this.isNew);
       this.load_tags();
       this.uploads_in_progress = 0;
+      this.isoriginal = this.model.get("original_channel").id == window.current_channel.id;
       this.listenTo(this.model, "change:title", this.update_name);
   },
   render: function() {
@@ -542,9 +559,9 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.check_item();
   },
   set_edited:function(is_edited){
-      this.edited = is_edited;
+      this.edited = this.originalData == this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files");
       this.isNew = is_edited && this.isNew;
-      this.model.set("changed", this.model.get("changed") || is_edited);
+      this.model.set("changed", this.model.get("changed") || this.edited);
       (is_edited)? this.$el.addClass("edited_node") : this.$el.removeClass("edited_node");
       if(!is_edited){
           this.originalData = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files");

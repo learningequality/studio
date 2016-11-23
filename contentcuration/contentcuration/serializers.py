@@ -208,6 +208,16 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     files = FileSerializer(many=True, read_only=True)
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
     metadata = serializers.SerializerMethodField('retrieve_metadata')
+    original_channel = serializers.SerializerMethodField('retrieve_original_channel')
+
+    def retrieve_original_channel(self, node):
+        if node.original_node is None:
+            return None
+        root = node.original_node.get_root()
+        root_channel = root.channel_main or root.channel_trash or root.channel_clipboard or root.channel_staging or root.channel_previous
+        if root_channel.first():
+            return {"id": root_channel.first().pk, "name": root_channel.first().name}
+        return None
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
@@ -341,7 +351,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
-        fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
+        fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel',
                  'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets',
                  'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items')
 

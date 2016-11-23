@@ -47,7 +47,8 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 			editors: [window.current_user.id],
 			thumbnail:"/static/img/kolibri_placeholder.png"
 		};
-		this.create_new_item(data, true, "").then(function(newView){
+		this.create_new_item(data, false, "").then(function(newView){
+			self.$(self.list_selector).prepend(newView.el);
 			newView.edit_channel();
 			newView.set_is_new(true);
 		});
@@ -56,6 +57,9 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		$(".disable-on-edit").prop("disabled", edit_mode_on);
 		$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
 		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
+		(edit_mode_on)? $(".new_channel_button").addClass("disabled") : $(".new_channel_button").removeClass("disabled");
+		$(".new_channel_button").html( (edit_mode_on)? '<i>Edit in progress...</i>' : "ADD CHANNEL");
+		$(".new_channel_button").prop('title', (edit_mode_on)? 'Cannot create a new channel while another channel is being edited.' : "Create a new channel");
 	},
 });
 
