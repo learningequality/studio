@@ -206,9 +206,20 @@ def create_perseus_zip(ccnode, write_to_path):
     assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode)
 
     with zipfile.ZipFile(write_to_path, "w") as zf:
+
+        # Get mastery model information, set to default if none provided
         exercise_data = json.loads(ccnode.extra_fields)
-        if 'mastery_model' not in exercise_data or exercise_data['mastery_model'] is None:
-            raise ObjectDoesNotExist("ERROR: Exercises must have a mastery model")
+        exercise_data = {} if exercise_data is None else exercise_data
+        exercise_data.update({
+            'mastery_model': exercise_data.get('mastery_model') or exercises.M_OF_N,
+            'randomize': exercise_data.get('randomize') or True,
+        })
+        if exercise_data['mastery_model'] == exercises.M_OF_N:
+            if 'n' not in exercise_data:
+                exercise_data.update({'n':exercise_data.get('m') or max(len(self.questions), 1)})
+            if 'm' not in exercise_data:
+                exercise_data.update({'m':exercise_data.get('n') or max(len(self.questions), 1)})
+
         exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
         exercise_context = {
             'exercise': json.dumps(exercise_data)
