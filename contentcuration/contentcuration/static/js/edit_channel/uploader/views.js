@@ -524,7 +524,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.set_edited(this.isNew);
       this.load_tags();
       this.uploads_in_progress = 0;
-      this.isoriginal = this.model.get("original_channel").id == window.current_channel.id;
+      this.isoriginal = !this.model.get("original_channel") || this.model.get("original_channel").id == window.current_channel.id;
       this.listenTo(this.model, "change:title", this.update_name);
   },
   render: function() {
@@ -560,13 +560,15 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.check_item();
   },
   set_edited:function(is_edited){
-      this.edited = this.originalData == this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files");
-      this.isNew = is_edited && this.isNew;
-      this.model.set("changed", this.model.get("changed") || this.edited);
-      (is_edited)? this.$el.addClass("edited_node") : this.$el.removeClass("edited_node");
+      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files")
+      // Handle unsetting node
       if(!is_edited){
-          this.originalData = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files");
+          this.originalData = edited_data;
       }
+      this.edited = JSON.stringify(this.originalData) != JSON.stringify(edited_data);
+      this.isNew =  is_edited && this.isNew;
+      (this.edited)? this.$el.addClass("edited_node") : this.$el.removeClass("edited_node");
+      this.model.set("changed", this.model.get("changed") || this.edited);
   },
   set_node:function(){
     var individual_selected = this.containing_list_view.selected_items.length === 1;
