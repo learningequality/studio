@@ -99,7 +99,6 @@ def create_channel(cursor, target_id):
     channel.thumbnail = write_to_thumbnail_file(thumbnail)
     channel.version = version
     channel.save()
-
     logging.info("\tCreated channel {} with name {}".format(target_id, name))
     return channel, root_pk
 
