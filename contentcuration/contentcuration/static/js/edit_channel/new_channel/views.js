@@ -61,6 +61,25 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		$(".new_channel_button").html( (edit_mode_on)? '<i>Edit in progress...</i>' : "ADD CHANNEL");
 		$(".new_channel_button").prop('title', (edit_mode_on)? 'Cannot create a new channel while another channel is being edited.' : "Create a new channel");
 	},
+	update_dropdown:function(channel, deleted){
+		if(deleted){
+			$("#channel_dd_" + channel.id).remove();
+		}else{
+			if($("#channel_dd_" + channel.id).length > 0){
+				$("#channel_dd_" + channel.id + " a").text(channel.get("name"));
+			}else{
+				var new_channel = document.createElement('li');
+				new_channel.id = "channel_dd_" + channel.id;
+				var new_channel_link = document.createElement("a");
+				new_channel_link.class = "truncate";
+				new_channel_link.text = channel.get("name");
+				new_channel_link.href = "/channels/" + channel.get("id") + "/edit";
+				new_channel.appendChild(new_channel_link);
+				$("#channel_selection_dropdown_list").append(new_channel)
+			}
+
+		}
+	}
 });
 
 /*
@@ -149,6 +168,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				self.containing_list_view.set_editing(false);
 				self.containing_list_view.collection.remove(self.model);
 				self.containing_list_view.render();
+				self.containing_list_view.update_dropdown(self.model, true);
 			});
 		}else{
 			this.cancel_actions(event);
@@ -186,6 +206,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.save(data, "Saving Channel...").then(function(channel){
 			self.model = channel;
 			self.render();
+			self.containing_list_view.update_dropdown(channel, false);
 		});
 	},
 	set_channel:function(){
