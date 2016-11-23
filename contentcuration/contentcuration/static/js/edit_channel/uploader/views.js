@@ -460,7 +460,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   add_tag: function(event){
     $("#tag_error").css("display", "none");
-    if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#tag_box").length > 0 && this.$el.find("#tag_box").val().trim() != ""){
+    var code = (!event)? null : event.keyCode ? event.keyCode : event.which;
+    if((!event || (!code || code ==13)) && this.$el.find("#tag_box").length > 0 && this.$el.find("#tag_box").val().trim() != ""){
       var tag = this.$el.find("#tag_box").val().trim();
       if(this.shared_data.shared_tags.indexOf(tag) < 0){
         this.shared_data.shared_tags.push(tag);
