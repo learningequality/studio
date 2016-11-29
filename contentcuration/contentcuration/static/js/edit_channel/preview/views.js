@@ -54,42 +54,53 @@ var PreviewView = BaseViews.BaseView.extend({
         var location ="";
         var extension = "";
         if(this.current_preview){
-            location = this.current_preview.storage_url;
-            extension = this.current_preview.file_format;
-            mimetype = this.current_preview.mimetype;
+            if(this.current_preview.assessment_id){
+                var ExerciseView = require("edit_channel/exercise_creation/views");
+                var assessment_item = new Models.AssessmentItemModel(this.current_preview);
+                var exercise_item = new ExerciseView.AssessmentItemDisplayView({
+                    model: assessment_item,
+                    containing_list_view : null,
+                    nodeid:(this.model)? this.model.get('id') : null,
+                    el: this.$("#preview_window")
+                });
+            }else{
+                location = this.current_preview.storage_url;
+                extension = this.current_preview.file_format;
+                mimetype = this.current_preview.mimetype;
 
-            var preview_template;
-            switch (extension){
-                case "png":
-                case "jpg":
-                case "jpeg":
-                    preview_template = require("./hbtemplates/preview_templates/image.handlebars");
-                    break;
-                case "pdf":
-                case "PDF":
-                case "vtt":
-                case "srt":
-                    preview_template = require("./hbtemplates/preview_templates/document.handlebars");
-                    break;
-                case "mp3":
-                case "wav":
-                    preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
-                    break;
-                case "mp4":
-                    preview_template = require("./hbtemplates/preview_templates/video.handlebars");
-                    break;
-                case "perseus":
-                    preview_template = require("./hbtemplates/preview_templates/exercise.handlebars");
-                    break;
-                default:
-                    preview_template = require("./hbtemplates/preview_templates/default.handlebars");
-            }
-            this.$("#preview_window").html(preview_template({
-                source: location,
-                extension:mimetype
-            }));
-            if(force_load && this.current_preview.recommended_kind === "video"){
-                $("#preview_window video").load();
+                var preview_template;
+                switch (extension){
+                    case "png":
+                    case "jpg":
+                    case "jpeg":
+                        preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+                        break;
+                    case "pdf":
+                    case "PDF":
+                    case "vtt":
+                    case "srt":
+                        preview_template = require("./hbtemplates/preview_templates/document.handlebars");
+                        break;
+                    case "mp3":
+                    case "wav":
+                        preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
+                        break;
+                    case "mp4":
+                        preview_template = require("./hbtemplates/preview_templates/video.handlebars");
+                        break;
+                    case "perseus":
+                        preview_template = require("./hbtemplates/preview_templates/exercise.handlebars");
+                        break;
+                    default:
+                        preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+                }
+                this.$("#preview_window").html(preview_template({
+                    source: location,
+                    extension:mimetype
+                }));
+                if(force_load && this.current_preview.recommended_kind === "video"){
+                    $("#preview_window video").load();
+                }
             }
         }
     },
@@ -110,7 +121,7 @@ var PreviewView = BaseViews.BaseView.extend({
         if(this.model && this.model.get("kind")!=="topic"){
             var self = this;
             this.presets.reset();
-            var default_preview = load_preview_data(null);
+            var default_preview = this.load_preview_data(null);
             this.set_current_preview(default_preview);
             this.generate_preview(true);
         }
@@ -139,7 +150,7 @@ var PreviewView = BaseViews.BaseView.extend({
             }
         });
         this.model.get("assessment_items").forEach(function(item){
-            var current_assessment = new Model.AssessmentItemModel(item);
+            var current_assessment = new Models.AssessmentItemModel(item);
             if (load_selected_value){
                 if(current_assessment.get('assessment_id') === load_selected_value){
                     self.set_current_preview(current_assessment);
