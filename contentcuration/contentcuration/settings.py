@@ -68,6 +68,12 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
+SUPPORTED_BROWSERS = [
+    'Chrome',
+    'Firefox',
+    'Safari',
+]
+
 #REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.

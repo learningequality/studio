@@ -126,6 +126,7 @@ urlpatterns = [
     url(r'^channels/(?P<channel_id>[^/]+)', views.channel, name='channel'),
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^exercise_image_upload/', views.exercise_image_upload, name='exercise_image_upload'),
+    url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
 ]
 
 # Add account/registration endpoints
