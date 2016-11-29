@@ -37,7 +37,7 @@ class ProfileView(FormView):
     def get_context_data(self, **kwargs):
         context = super(ProfileView, self).get_context_data(**kwargs)
         channel_list = Channel.objects.filter( Q(deleted=False, editors= self.request.user)).values("id", "name")
-        context.update({'channel_list': channel_list, "page": "profile", 'channel_name': False})
+        context.update({'channel_list': channel_list, "page": "profile", 'channel_name': False, "success":False})
         return context
 
     def get_initial(self):

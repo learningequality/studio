@@ -127,15 +127,11 @@ DATABASES = {
         'HOST': 'localhost',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': '',                      # Set to empty string for default.
     },
-    'export_staging': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'export_staging.sqlite3')
-    }
 }
 
 
 DATABASE_ROUTERS = [
-    "contentcuration.router.Router",
+    "kolibri.content.content_db_router.ContentDBRouter",
 ]
 
 # LOGGING = {
@@ -176,7 +172,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STORAGE_URL = 'https://contentworkshop.learningequality.org/storage/'
+STORAGE_URL = '/content/storage/'
+
+#CONTENT_DATABASE_URL = '/content/databases/''
 
 LOGIN_REDIRECT_URL = '/channels/'
 

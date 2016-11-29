@@ -23,9 +23,9 @@ var BaseView = Backbone.View.extend({
 				}
 			}).catch(function(error){
 				if(message!=""){
-					$("#kolibri_load_text").text("Error with asychronous call. Please refresh the page");
+					$("#kolibri_load_text").text("Error with asynchronous call. Please refresh the page");
 				}
-				console.log("Error with asychronous call", error);
+				console.log("Error with asynchronous call", error);
 			});
   	}else{
   		$("#loading_modal").remove();
@@ -463,6 +463,12 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						});
 					}).catch(function(error){
 		        		console.log(error);
+		        		alert(error);
+
+		        		// Revert back to original positions
+		        		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
+							self.reload_ancestors(fetched);
+						});
 		        	});
 				});
 			}

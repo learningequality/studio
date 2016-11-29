@@ -157,7 +157,7 @@ class AccountSettingsForm(PasswordChangeForm):
     def clean(self):
         cleaned_data = super(AccountSettingsForm, self).clean()
 
-        self.check_field('old_password', 'Current password is required.')
+        self.check_field('old_password', 'Current password is incorrect.')
 
         if self.check_field('new_password1', 'New password is required.'):
             if 'new_password2' not in self.cleaned_data or self.cleaned_data['new_password1'] != self.cleaned_data['new_password2']:

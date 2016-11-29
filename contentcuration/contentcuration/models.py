@@ -142,7 +142,7 @@ class FileOnDiskStorage(FileSystemStorage):
 class Channel(models.Model):
     """ Permissions come from association with organizations """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, blank=True)
     description = models.CharField(max_length=400, blank=True)
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True, null=True)
@@ -168,11 +168,14 @@ class Channel(models.Model):
     public = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        original_node = Channel.objects.get(pk=self.pk)
+        original_node = None
+        if self.pk and Channel.objects.filter(pk=self.pk).exists():
+            original_node = Channel.objects.get(pk=self.pk)
+
         super(Channel, self).save(*args, **kwargs)
 
         # Check if original thumbnail is no longer referenced
-        if original_node and original_node.thumbnail and 'static' not in original_node.thumbnail:
+        if original_node is not None and original_node.thumbnail and 'static' not in original_node.thumbnail:
             filename, ext = os.path.splitext(original_node.thumbnail)
             delete_empty_file_reference(filename, ext[1:])
 
@@ -265,22 +268,23 @@ class ContentNode(MPTTModel, models.Model):
     objects = TreeManager()
 
     def save(self, *args, **kwargs):
-        isNew = self.pk is None
-
         # Detect if node has been moved to another tree
-        if not isNew and ContentNode.objects.filter(pk=self.pk).exists():
+        if self.pk is not None and ContentNode.objects.filter(pk=self.pk).exists():
             original = ContentNode.objects.get(pk=self.pk)
             if original.parent and original.parent_id != self.parent_id:
                 original.parent.changed = True
                 original.parent.save()
 
         super(ContentNode, self).save(*args, **kwargs)
-        if isNew:
-            self.original_node = self.pk if self.original_node is None else self.original_node
-            self.cloned_source = self.pk if self.cloned_source is None else self.cloned_source
+        post_save_changes = False
+        if self.original_node is None:
+            self.original_node = self
+            post_save_changes = True
+        if self.cloned_source is None:
+            self.cloned_source = self
+            post_save_changes = True
+        if post_save_changes:
             self.save()
-
-
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
@@ -378,10 +382,6 @@ class File(models.Model):
                 self.checksum = md5.hexdigest()
                 self.file_size = self.file_on_disk.size
                 self.extension = os.path.splitext(self.file_on_disk.name)[1]
-        else:
-            self.checksum = None
-            self.file_size = None
-            self.extension = None
         super(File, self).save(*args, **kwargs)
 
 @receiver(models.signals.post_delete, sender=File)

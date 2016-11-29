@@ -6,7 +6,8 @@ var ChannelEditRouter = require("edit_channel/router");
 $(function() {
 	$("#channel-publish-button").on("click", publish_nodes);
 	$("#publish-id-help").on("click", show_publish_help);
-	$(".copy-id-btn").on("click", copy_publish_id);
+	$("#publish-id-copy").on("click", function(){ copy_publish_id($("#publish_id_text")[0]); });
+	$("#modal-copy-btn").on("click", function(){ copy_publish_id($("#modal-copy-text")[0]); });
 	if(window.channel){
 		window.current_channel = new Models.ChannelModel(window.channel);
 		window.current_channel.fetch({async:false});
@@ -26,9 +27,9 @@ function show_publish_help(){
 	$("#publish-help-modal").modal("show");
 }
 
-function copy_publish_id(){
-	$(".publish-id-text")[0].focus();
-	$(".publish-id-text")[0].select();
+function copy_publish_id(text_element){
+	text_element.focus();
+	text_element.select();
 	try {
     	document.execCommand("copy");
     	$("#publish-id-copy").removeClass("glyphicon-copy").addClass("glyphicon-ok");

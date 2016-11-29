@@ -1,7 +1,10 @@
 {{#if none_selected}}
 	<div id="uploader-default-prompt" class="text-center container-fluid">Please select an item to edit.</div>
 {{else}}
-	{{#unless node}}<h5 id="uploader-count-message">Editing data for {{selected_count}} items.</h5>{{/unless}}
+	{{#unless node}}
+		<h5 id="uploader-count-message">Editing data for {{selected_count}} items.</h5>
+		{{#unless isoriginal}}<p class="text-center uploader-copied-warning"><i>Detected item(s) imported from another channel - fields disabled accordingly</i></p>{{/unless}}
+	{{/unless}}
 	{{#if is_file}}
 		{{#if has_files}}
 			<ul id="editmetadata_format_section" class="list-unstyled"></ul>
@@ -11,30 +14,57 @@
 		<h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>
 		<input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required/>
 	{{/if}}
-	<h4>Author</h4>
-	<input type="text" id="author_field" class="upload_input input_listener" value="{{author}}" placeholder="Enter author name" disabled/>
-	{{#if is_file}}
-	<div class="row">
-		<div class="content_nodes_only col-sm-5">
-			<h4>License</h4>
-			<select id="license_select">
-	            <option selected disabled value=0>-</option>
-	            {{#each licenses}}
-	                <option value={{id}}>{{license_name}}</option>
-	            {{/each}}
-	        </select>
-	        <span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" ></span>
+	{{#if isoriginal}}
+		<h4>Author</h4>
+		<input type="text" id="author_field" class="upload_input input_listener" value="{{author}}" placeholder="Enter author name"/>
+		{{#if is_file}}
+		<div class="row">
+			<div class="content_nodes_only col-sm-5">
+				<h4>License</h4>
+				<select id="license_select">
+		            <option selected disabled value=0>---</option>
+		            {{#each licenses}}
+		                <option value={{id}}>{{license_name}}</option>
+		            {{/each}}
+		        </select>
+		        <span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" ></span>
+			</div>
+			<!-- <div class="col-sm-1">&nbsp;</div> -->
+			<div class="content_nodes_only col-sm-7">
+				<h4>Copyright Holder</h4>
+				<input type="text" id="input_license_owner" class="license_input input_listener" placeholder="Enter license owner name" maxlength="200"value="{{copyright_owner}}"/>
+			</div>
 		</div>
-		<!-- <div class="col-sm-1">&nbsp;</div> -->
-		<div class="content_nodes_only col-sm-7">
-			<h4>Copyright Holder</h4>
-			<input type="text" id="input_license_owner" class="license_input input_listener" placeholder="Enter license owner name" maxlength="200"value="{{copyright_owner}}"/>
+		{{/if}}
+	{{else}}
+		{{#if node}}
+		<hr/>
+		<p class="uploader-copied-warning">Read-Only: Imported from <b>{{node.original_channel.name}}</b></p>
+		{{/if}}
+		<div class="row">
+			<div class="col-xs-4">
+				<h4>Author</h4>
+				<p class="upload_input">{{author}}</p>
+			</div>
+			<div class="col-xs-4">
+				<h4>License</h4>
+				<p class="upload_input">
+					<span id="license_select">{{license}}</span>
+					<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" ></span>
+				</p>
+			</div>
+			<div class="col-xs-4">
+				<h4>Copyright Holder</h4>
+				<p class="upload_input">{{copyright_owner}}</p>
+			</div>
 		</div>
-	</div>
+		<hr/>
+		<br/>
 	{{/if}}
+
 	{{#if node}}
 		<h4>Description {{#if node}}<i id="description_counter" class="pull-right">{{word_limit}} chars left</i>{{/if}}</h4>
-		<textarea id="input_description" class="upload_input input_listener" placeholder="Enter a description of your content" maxlength={{word_limit}} value="{{node.description}}"/>
+		<textarea id="input_description" class="upload_input input_listener" placeholder="Enter a description of your content" maxlength={{word_limit}} value='{{node.description}}'>{{node.description}}</textarea>
 	{{/if}}
 	<h4>Tags (press 'Enter' to add) <span id="tag_error">Invalid characters found.</span></h4>
 	<input type="text" id="tag_box" class="tag_input" placeholder="Enter tag" maxlength="30"/>

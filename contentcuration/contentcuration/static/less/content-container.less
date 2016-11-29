@@ -1,10 +1,5 @@
 @import "global-variables.less";
 
-.disabled{
-	opacity:0.5;
-	cursor:not-allowed !important;
-}
-
 .publish-id-text{
 	border:none;
 	outline:none;
@@ -267,10 +262,25 @@
 					.description{
 						display:block;
 						font-weight:normal;
-						max-height:@description-font-size * 4;
-						overflow-y:auto;
 						color: @annotation-gray;
+						.description_main{
+							display:inline;
+							margin:0;
+						}
+						.description_overflow{
+							display:none;
+						}
+						.description_overflow.expanded{
+							display:inline;
+						}
+						.toggle_description{
+							display:inline;
+							font-weight:bold;
+							color:@gray-700;
+							text-decoration: none;
+						}
 					}
+
 					h3, p, h6{
 						color : @item-last-font-color;
 					}

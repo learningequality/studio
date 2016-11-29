@@ -71,7 +71,8 @@ var ShareView = BaseViews.BaseView.extend({
         });
     },
     send_invite:function(event){
-        if((!event || (!event.keyCode || event.keyCode ==13)) && this.$el.find("#share_email_address").val().trim() != ""){
+        var code = (!event)? null : event.keyCode ? event.keyCode : event.which;
+        if((!event || (!code || code ==13)) && this.$el.find("#share_email_address").val().trim() != ""){
             var email = this.$("#share_email_address").val().trim();
             this.$(".share_list_item").removeClass("error_share_list_item");
             this.$("#share_error").text("");

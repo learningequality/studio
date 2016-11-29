@@ -97,16 +97,21 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			var deleteCollection = new Models.ContentNodeCollection();
 			for(var i = 0; i < this.lists.length; i++){
 				var list = this.lists[i].get_selected();
+				var open_folder = null;
 				for(var j = 0; j < list.length; j++){
 					var view = list[j];
 					if(view){
 						deleteCollection.add(view.model);
 						view.remove();
 					}
-				}
-				if(this.lists[i].current_node){
-					this.remove_containers_from(this.lists[i].index);
+					if(view.subcontent_view){
+						open_folder = view.subcontent_view;
 						break;
+	    			}
+				}
+				if(open_folder){
+					this.remove_containers_from(open_folder.index-1);
+					break;
     			}
 			}
 			this.add_to_trash(deleteCollection, "Deleting Content...");
@@ -262,21 +267,25 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'add_new_subtopic', 'open_context_menu');
+		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'add_new_subtopic', 'open_context_menu', 'toggle_description');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
+		this.expanded=false;
 		this.render();
 		this.isSelected = false;
 		this.listenTo(this.model, 'change:metadata', this.render);
 	},
 	render:function(){
+		var description = this.get_split_description();
 		this.$el.html(this.template({
 			node: this.model.toJSON(),
 			isfolder: this.model.get("kind") === "topic",
 			edit_mode: this.edit_mode,
 			checked: this.checked,
-			isexercise: this.model.get("kind") === "exercise"
+			isexercise: this.model.get("kind") === "exercise",
+			description_first: description[0],
+			description_overflow: description[1]
 		}));
 		this.handle_checked();
 		if(this.isSelected){
@@ -286,6 +295,19 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.make_droppable();
 		this.$el.removeClass(this.selectedClass);
 		this.create_popover();
+	},
+	get_split_description:function(){
+		var description = this.model.get("description").trim();
+		var split_index = 49;
+		while (description.charAt(split_index) != " " && split_index < 60){
+			split_index ++;
+		}
+		if (description.length - split_index <= 15){
+			split_index = description.length;
+		}
+		first_part = description.substring(0, Math.min(split_index, description.length));
+		last_part = (description.length > split_index) ? description.substring(split_index, description.length) : null;
+		return [first_part, last_part];
 	},
 	create_popover:function(){
 		var self = this;
@@ -316,7 +338,18 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'click .delete_item_button' : 'delete_node',
 		'click .copy_item_button': 'copy_node',
 		'click .add_subtopic_item_button': 'add_new_subtopic',
-		'contextmenu .list_item_wrapper' : 'open_context_menu'
+		'contextmenu .list_item_wrapper' : 'open_context_menu',
+		'click .toggle_description' : 'toggle_description'
+	},
+	toggle_description:function(event){
+		event.stopPropagation();
+		event.preventDefault();
+		if(!this.expanded){
+			this.$(".description_overflow").fadeIn(200);
+		}
+		this.$('.toggle_description').text((this.expanded) ? "... More" : " Less");
+		this.$(".description_overflow").css('display', (this.expanded)? "none" : "inline");
+		this.expanded = !this.expanded;
 	},
 	open_context_menu:function(event){
 		if( event.button == 2 ) {
@@ -353,7 +386,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
 			this.add_to_trash();
 			if(this.subcontent_view){
-				this.subcontent_view.close_container();
+				this.subcontent_view.remove();
 			}
 		}
 	},

@@ -12,6 +12,7 @@ from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.conf import settings
+from django.core.files import File as DjFile
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,6 +53,11 @@ class FileListSerializer(serializers.ListSerializer):
                     # potential optimization opportunity
                     for attr, value in data.items():
                         setattr(file_obj, attr, value)
+                    file_path = generate_file_on_disk_name(file_obj.checksum, str(file_obj))
+                    if os.path.isfile(file_path):
+                        file_obj.file_on_disk = DjFile(open(file_path, 'rb'))
+                    else:
+                        raise FileNotFoundError("Error: file {} was not found".format(str(file_obj)))
                     file_obj.save()
                     ret.append(file_obj)
         return ret
@@ -211,6 +217,16 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     assessment_items = AssessmentItemSerializer(many=True, read_only=True)
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
     metadata = serializers.SerializerMethodField('retrieve_metadata')
+    original_channel = serializers.SerializerMethodField('retrieve_original_channel')
+
+    def retrieve_original_channel(self, node):
+        if node.original_node is None:
+            return None
+        root = node.original_node.get_root()
+        root_channel = root.channel_main or root.channel_trash or root.channel_clipboard or root.channel_staging or root.channel_previous
+        if root_channel.first():
+            return {"id": root_channel.first().pk, "name": root_channel.first().name}
+        return None
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
@@ -344,7 +360,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
-        fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source',
+        fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel',
                  'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets',
                  'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items')
 
