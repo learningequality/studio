@@ -1,9 +1,5 @@
 <div class="row {{#unless initial}}hide_assigned{{/unless}}">
-    <div class="inline col-xs-3 preview_section text-center">
-        <object class="thumbnail_fallback" data="/static/img/{{node.kind}}_placeholder.png" type="image/png" width=130 height=130>
-            <img class="thumbnail_img" data-dz-thumbnail alt="No Preview Available" src="{{thumbnail}}"/>
-        </object>
-    </div>
+    <div class="inline col-xs-3 preview_section text-center"><div class="preview_thumbnail"></div></div>
     <div class="inline col-xs-8 format_section">
         <input type="text" placeholder="Title *" class="name_content_input" value="{{node.title}}"/>
         {{#if initial}}
