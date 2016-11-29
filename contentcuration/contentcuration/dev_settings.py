@@ -35,3 +35,13 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.redirects.RedirectsPanel',
     # 'debug_toolbar.panels.profiling.ProfilingPanel',
 ]
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "data.sqlite",
+        "OPTIONS": {
+            "timeout": 60,
+        },
+    }
+}
