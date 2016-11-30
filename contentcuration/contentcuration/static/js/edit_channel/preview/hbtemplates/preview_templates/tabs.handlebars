@@ -1,3 +1,6 @@
 {{#each presets}}
     <li class="btn preview_btn_tab" value="{{id}}">{{readable_name}}</li>
   {{/each}}
+ {{#each questions}}
+    <li class="btn preview_btn_tab" value="{{assessment_id}}">Question {{order}}</li>
+  {{/each}}
