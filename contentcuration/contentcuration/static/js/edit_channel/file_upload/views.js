@@ -181,12 +181,12 @@ var FileUploadList = FileBaseList.extend({
         this.acceptedFiles = this.get_accepted_files();
         this.onsave = options.onsave;
         this.onnew = options.onnew;
-        this.upload_in_progress = false;
+        this.uploads_in_progress = 0;
         this.render();
     },
     handle_if_empty:function(){
         this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
-        this.disable_next(this.upload_in_progress);
+        this.disable_next(this.uploads_in_progress > 0);
     },
     get_accepted_files:function(){
         var list = [];
@@ -242,30 +242,31 @@ var FileUploadList = FileBaseList.extend({
             self.collection.add(fetched);
             var new_view = self.create_new_view(fetched);
             $(request.previewTemplate).html(new_view.el);
-            if(!self.upload_in_progress){
+            if(self.uploads_in_progress===0){
                 self.enable_next();
             }
         });
     },
     file_failed:function(file, error){
+        this.uploads_in_progress --;
         $(file.previewTemplate).find(".dropzone_remove").css("display", "inline-block");
     },
     all_files_uploaded: function() {
-        this.upload_in_progress = false;
+        this.uploads_in_progress = 0;
     },
     file_added: function(file) {
-        this.upload_in_progress = true;
+        this.uploads_in_progress ++;
         this.$(this.default_item).css("display", "none");
-        this.disable_next(this.upload_in_progress);
+        this.disable_next(this.uploads_in_progress > 0);
     },
     file_removed: function(file) {
         if (this.views.length === 0) {
-            this.disable_next(this.upload_in_progress);
+            this.disable_next(this.uploads_in_progress > 0);
             this.load_content(this.collection, "Drop files here to add them to your channel");
         }
     },
     handle_completed:function(){
-        if(this.check_completed() && !this.upload_in_progress){
+        if(this.check_completed() && this.uploads_in_progress === 0){
             this.enable_next();
         }
     }
@@ -652,8 +653,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         return preset.get("associated_mimetypes").join(",");
     },
     file_uploaded:function(file){
-        // console.log("Successfully added file!", file);
-        //thumbnail: $(file.previewTemplate).find(".thumbnail_img").attr("src"),
         var new_file = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
         var self = this;
         this.fetch_model(new_file).then(function(fetched){

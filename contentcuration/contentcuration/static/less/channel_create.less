@@ -70,24 +70,13 @@
 		}
 
 		.new_channel_button {
-			color: @body-font-color;
 			cursor: pointer;
 			font-size: 18px;
-			vertical-align: middle;
+			text-decoration: none;
+			margin-right:100px;
 		}
-
-		.round-plus {
-			background: @panel-container-color;
-			box-shadow: @box-shadow;
-			border-radius: 100%;
-			font-size: 50px;
-			font-weight: bold;
-			text-align: center;
-			margin: 20px auto;
-			width: 75px;
-		    height: 75px;
-		    font-weight: bold;
-		    .inline-block;
+		.new_channel_button:hover{
+			color:white;
 		}
 
 		.new-channel {
@@ -106,7 +95,8 @@
 			.channel_container {
 				background-color: @panel-container-color;
 				width: @channel-container-width;
-				height: @channel-container-height;
+				min-height: @channel-container-height;
+				height:auto;
 				box-shadow: @box-shadow;
 				margin-bottom: 10px;
 				margin: 3px 0 10px 3px;
@@ -188,6 +178,13 @@
 						padding: 0 3px 0 10px;
 					}
 				}
+				#channel_name_error{
+					color:@red-error-color;
+					font-weight:bold;
+					margin:0;
+					padding:0;
+					visibility: hidden;
+				}
 				h4{
 					font-size: @channel-font-size;
 					font-weight: bold;
@@ -253,11 +250,6 @@
 					.save_channel {
 						.action-button;
 					}
-					.channel_toggle {
-						position: relative;
-						top: 7px;
-						left: 375px;
-					}
 				}
 				input[type=text] {
 					font-size: 20px;
@@ -268,7 +260,7 @@
 				textarea{
 					font-size: 16px;
 					resize: none;
-					height: @channel-container-height * 0.4;
+					height: @channel-container-height * 0.3;
 					margin-top: 25px;
 				}
 

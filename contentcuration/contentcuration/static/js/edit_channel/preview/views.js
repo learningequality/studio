@@ -26,7 +26,7 @@ var PreviewView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/preview_dialog.handlebars"),
     current_preview:null,
     initialize: function(options) {
-        _.bindAll(this, 'set_preview','toggle_fullscreen', 'load_preview');
+        _.bindAll(this, 'set_preview','toggle_fullscreen', 'load_preview', 'exit_fullscreen');
         this.presets = new Models.FormatPresetCollection();
         this.render();
     },
@@ -146,8 +146,9 @@ var PreviewView = BaseViews.BaseView.extend({
     toggle_fullscreen:function(){
         var elem = document.getElementById("preview_content_main");
 
-        if(this.$(".view_fullscreen").text() === "Show Fullscreen"){
-            $(elem).addClass("preview_on");
+        if (!this.check_fullscreen()){
+            this.$("#preview_content_main").addClass('preview_on');
+            this.$(".view_fullscreen").html("Hide Fullscreen");
             if (elem.requestFullscreen) {
               elem.requestFullscreen();
             } else if (elem.msRequestFullscreen) {
@@ -157,9 +158,10 @@ var PreviewView = BaseViews.BaseView.extend({
             } else if (elem.webkitRequestFullscreen) {
               elem.webkitRequestFullscreen();
             }
-            this.$(".view_fullscreen").text("Hide Fullscreen");
+            $(document).on('webkitfullscreenchange', this.exit_fullscreen);
+            $(document).on('mozfullscreenchange', this.exit_fullscreen);
+            $(document).on('fullscreenchange', this.exit_fullscreen);
         }else{
-            $(elem).removeClass("preview_on");
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             } else if (document.webkitExitFullscreen) {
@@ -169,8 +171,23 @@ var PreviewView = BaseViews.BaseView.extend({
             } else if (document.msExitFullscreen) {
                 document.msExitFullscreen();
             }
-            this.$(".view_fullscreen").text("Show Fullscreen");
         }
+    },
+    exit_fullscreen:function(){
+        if (!this.check_fullscreen()){
+            this.$("#preview_content_main").removeClass('preview_on');
+            this.$(".view_fullscreen").html("Show Fullscreen");
+            $(document).off('webkitfullscreenchange');
+            $(document).off('mozfullscreenchange');
+            $(document).off('fullscreenchange');
+            $(document).off('MSFullscreenChange');
+        }
+    },
+    check_fullscreen: function() {
+        return !((document.fullScreenElement !== undefined && document.fullScreenElement === null) ||
+         (document.msFullscreenElement !== undefined && document.msFullscreenElement === null) ||
+         (document.mozFullScreen !== undefined && !document.mozFullScreen) ||
+         (document.webkitIsFullScreen !== undefined && !document.webkitIsFullScreen));
     }
 });
 

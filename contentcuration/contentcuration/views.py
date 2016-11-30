@@ -14,7 +14,9 @@ from django.core import paginator
 from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
+from django.db import transaction
 from django.db.models import Q
+from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
@@ -136,7 +138,7 @@ def file_upload(request):
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
         original_filename = request.FILES.values()[0]._name
         size = request.FILES.values()[0]._size
-        file_object = File(file_size=size, file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, preset=preset)
+        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, preset=preset)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
@@ -152,7 +154,7 @@ def file_create(request):
         original_filename = request.FILES.values()[0]._name
         new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=settings.DEFAULT_LICENSE, author=request.user.get_full_name())
         new_node.save()
-        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, contentnode=new_node, file_size=size)
+        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, contentnode=new_node, file_size=size)
         file_object.save()
 
         return HttpResponse(json.dumps({
@@ -204,10 +206,11 @@ def duplicate_nodes(request):
         nodes = node_ids.split()
         new_nodes = []
 
-        for node_id in nodes:
-            new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent)
-            new_nodes.append(new_node.pk)
-            sort_order+=1
+        with transaction.atomic():
+            for node_id in nodes:
+                new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent)
+                new_nodes.append(new_node.pk)
+                sort_order+=1
 
         return HttpResponse(json.dumps({
             "success": True,
