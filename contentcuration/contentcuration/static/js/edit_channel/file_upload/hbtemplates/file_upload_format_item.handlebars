@@ -16,11 +16,11 @@
                     </select>
                  </div>
                 <div class="init_format_name_wrapper">
-                    <p class="init_format_name truncate">{{files.0.original_filename}}</p>
+                    <p class="init_format_name truncate">{{initial_file.original_filename}}</p>
                 </div>
 
             </h5>
-            <p class="init_format_size" >({{#format_file_size files.0.file_size}}{{/format_file_size}})</p>
+            <p class="init_format_size" >({{#format_file_size initial_file.file_size}}{{/format_file_size}})</p>
         {{else}}
             <h4 class="format_editor_header">
                 Formats

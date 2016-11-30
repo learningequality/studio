@@ -18,11 +18,11 @@ from django.db import transaction
 from django.db.models import Q
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import write_file_to_storage
+from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
-from le_utils.constants import format_presets
+from le_utils.constants import format_presets, content_kinds
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -156,6 +156,8 @@ def file_create(request):
         new_node.save()
         file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, contentnode=new_node, file_size=size)
         file_object.save()
+        if kind.pk == content_kinds.VIDEO:
+            thumbnail_obj = extract_thumbnail_from_video(file_object)
 
         return HttpResponse(json.dumps({
             "success": True,
