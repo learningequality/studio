@@ -19,6 +19,7 @@ from le_utils.constants import format_presets, content_kinds, file_formats
 import contentcuration.models as models
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 def check_supported_browsers(user_agent_string):
     for browser in settings.SUPPORTED_BROWSERS:
         if browser in user_agent_string:
@@ -27,6 +28,9 @@ def check_supported_browsers(user_agent_string):
 
 
 def write_file_to_storage(fobj, check_valid = False):
+=======
+def write_file_to_storage(fobj, check_valid = False, name=None):
+>>>>>>> 2902798... Added automatically extracted thumbnails for videos
 =======
 def write_file_to_storage(fobj, check_valid = False, name=None):
 >>>>>>> 2902798... Added automatically extracted thumbnails for videos

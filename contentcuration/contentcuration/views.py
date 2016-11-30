@@ -20,7 +20,11 @@ from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 <<<<<<< HEAD
+<<<<<<< HEAD
 from contentcuration.api import write_file_to_storage, check_supported_browsers
+=======
+from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video
+>>>>>>> 2902798... Added automatically extracted thumbnails for videos
 =======
 from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video
 >>>>>>> 2902798... Added automatically extracted thumbnails for videos
