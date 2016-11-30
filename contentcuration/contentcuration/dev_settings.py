@@ -36,3 +36,13 @@ DEBUG_TOOLBAR_PANELS = [
     # 'pympler.panels.MemoryPanel',
     # 'debug_toolbar.panels.profiling.ProfilingPanel',
 ]
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "data.sqlite",
+        "OPTIONS": {
+            "timeout": 60,
+        },
+    }
+}

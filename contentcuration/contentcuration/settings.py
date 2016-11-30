@@ -174,7 +174,7 @@ STATIC_URL = '/static/'
 
 STORAGE_URL = '/content/storage/'
 
-#CONTENT_DATABASE_URL = '/content/databases/''
+CONTENT_DATABASE_URL = '/content/databases/'
 
 LOGIN_REDIRECT_URL = '/channels/'
 
