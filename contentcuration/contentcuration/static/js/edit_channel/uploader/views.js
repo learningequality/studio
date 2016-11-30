@@ -461,13 +461,15 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   add_tag: function(event){
     $("#tag_error").css("display", "none");
     var code = (!event)? null : event.keyCode ? event.keyCode : event.which;
-    if((!event || (!code || code ==13)) && this.$el.find("#tag_box").length > 0 && this.$el.find("#tag_box").val().trim() != ""){
+    if(!code || code ==13){
       $(".ui-menu-item").hide();
-      var tag = this.$el.find("#tag_box").val().trim();
-      if(!window.contenttags.findWhere({'tag_name':tag})){
-        window.contenttags.add(new Models.TagModel({tag_name: tag, channel: window.current_channel.id}));
+      if(this.$el.find("#tag_box").length > 0 && this.$el.find("#tag_box").val().trim() != ""){
+        var tag = this.$el.find("#tag_box").val().trim();
+        if(!window.contenttags.findWhere({'tag_name':tag})){
+          window.contenttags.add(new Models.TagModel({tag_name: tag, channel: window.current_channel.id}));
+        }
+        this.assign_tag(tag);
       }
-      this.assign_tag(tag);
     }
   },
   assign_tag:function(tag){
