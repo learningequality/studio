@@ -12,7 +12,7 @@ from django.http.response import FileResponse, HttpResponseNotModified
 from django.utils.http import http_date
 from django.views.generic.base import View
 from le_utils.constants import exercises
-from contentcuration.models import generate_storage_url
+from contentcuration.models import generate_file_on_disk_name
 
 try:
     from urlparse import urljoin
@@ -29,37 +29,17 @@ POSSIBLE_ZIPPED_FILE_EXTENSIONS = set([".perseus", ".zip", ".epub", ".epub3"])
 
 # DISK PATHS
 
-def get_content_folder_path(datafolder):
-    return os.path.join(
-        datafolder,
-        "content",
-    )
-
-def get_content_storage_folder_path(datafolder=None):
-    return os.path.join(
-        get_content_folder_path(datafolder),
-        "storage",
-    ) if datafolder else settings.STORAGE_ROOT
-
-def get_content_storage_file_path(filename, datafolder=None):
-    assert VALID_STORAGE_FILENAME.match(filename), "'{}' is not a valid content storage filename".format(filename)
-    return os.path.join(
-        get_content_storage_folder_path(datafolder),
-        filename[0],
-        filename[1],
-        filename,
-    )
-
 class ZipContentView(View):
 
     def get(self, request, zipped_filename, embedded_filepath):
         """
         Handles GET requests and serves a static file from within the zip file.
         """
-        assert VALID_STORAGE_FILENAME.match(zipped_filename), "'{}' is not a valid content storage filename".format(filename)
+        assert VALID_STORAGE_FILENAME.match(zipped_filename), "'{}' is not a valid content storage filename".format(zipped_filename)
 
         # calculate the local file path to the zip file
-        zipped_path = generate_storage_url(zipped_filename).lstrip('/')
+        filename, ext = os.path.splitext(zipped_filename)
+        zipped_path = generate_file_on_disk_name(filename, zipped_filename)
 
         # file size
         file_size = 0
@@ -108,7 +88,7 @@ class ZipContentView(View):
         response["Expires"] = "Sun, 17-Jan-2038 19:14:07 GMT"
 
         # set the content-length header to the size of the embedded file
-        if info.file_size:
+        if file_size:
             response["Content-Length"] = file_size
 
         # ensure the browser knows not to try byte-range requests, as we don't support them here
