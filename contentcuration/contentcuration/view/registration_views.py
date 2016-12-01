@@ -176,18 +176,18 @@ class InvitationRegisterView(FormView):
 
 def add_editor_to_channel(invitation, channel_id, user):
     channel = Channel.objects.get(id=channel_id)
-    if user not in channel.editors.all():
-        channel.editors.add(user)
+    current_editors = [e for e in channel.editors.all()]
+    current_editors.append(user)
 
-        # Ensure invitation sender wasn't removed from list
-        if invitation.sender not in channel.editors.all():
-            channel.editors.add(invitation.sender)
+    # Ensure all editors are still in channel after save
+    for editor in current_editors:
+        if editor not in channel.editors.all():
+            channel.editors.add(editor)
+    channel.save()
 
-        channel.save()
-
-        # Remove invitation automatically
-        if invitation is not None:
-            invitation.delete()
+    # Remove invitation if adding editor was successful
+    if invitation is not None and user in channel.editors.all():
+        invitation.delete()
 
 def decline_invitation(request, invitation_link):
     try:
