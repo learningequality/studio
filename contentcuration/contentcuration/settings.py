@@ -68,6 +68,12 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
+SUPPORTED_BROWSERS = [
+    'Chrome',
+    'Firefox',
+    'Safari',
+]
+
 #REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
@@ -174,7 +180,7 @@ STATIC_URL = '/static/'
 
 STORAGE_URL = '/content/storage/'
 
-#CONTENT_DATABASE_URL = '/content/databases/''
+CONTENT_DATABASE_URL = '/content/databases/'
 
 LOGIN_REDIRECT_URL = '/channels/'
 

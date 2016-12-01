@@ -82,12 +82,6 @@ class InvitationViewSet(viewsets.ModelViewSet):
     queryset = Invitation.objects.all()
     serializer_class = serializers.InvitationSerializer
 
-class ExerciseViewSet(viewsets.ModelViewSet):
-    queryset = Exercise.objects.all()
-    serializer_class = serializers.ExerciseSerializer
-    permission_classes = [AllowAny]
-
-
 class AssessmentItemViewSet(BulkModelViewSet):
     queryset = AssessmentItem.objects.all()
     serializer_class = serializers.AssessmentItemSerializer
@@ -96,7 +90,6 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
-router.register(r'exercise', ExerciseViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
@@ -126,6 +119,7 @@ urlpatterns = [
     url(r'^channels/(?P<channel_id>[^/]+)', views.channel, name='channel'),
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^exercise_image_upload/', views.exercise_image_upload, name='exercise_image_upload'),
+    url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
 ]
 
 # Add account/registration endpoints
@@ -166,8 +160,9 @@ urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js
 if settings.DEBUG:
     # static files (images, css, javascript, etc.)
     urlpatterns += [
-        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', 'django.views.static.serve', {
-        'document_root': settings.STORAGE_ROOT})]
+        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STORAGE_ROOT}),
+        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.DB_ROOT})
+    ]
 
     import debug_toolbar
     urlpatterns += [
