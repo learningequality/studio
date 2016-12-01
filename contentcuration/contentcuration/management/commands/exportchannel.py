@@ -50,7 +50,7 @@ class Command(BaseCommand):
             channel = ccmodels.Channel.objects.get(pk=channel_id)
             # increment the channel version
             raise_if_nodes_are_all_unchanged(channel)
-            index, tempdb = tempfile.mkstemp(suffix=".sqlite3")
+            fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
             with using_content_database(tempdb):
                 prepare_export_database(tempdb)
@@ -365,7 +365,7 @@ def save_export_database(channel_id):
     except OSError:
         logging.debug("{} directory already exists".format(settings.DB_ROOT))
 
-    shutil.copyfile(current_export_db_location, target_export_db_location)
+    shutil.copy(current_export_db_location, target_export_db_location)
     logging.info("Successfully copied to {}".format(target_export_db_location))
 
 def get_active_content_database():
