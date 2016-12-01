@@ -178,7 +178,14 @@ def add_editor_to_channel(invitation, channel_id, user):
     channel = Channel.objects.get(id=channel_id)
     if user not in channel.editors.all():
         channel.editors.add(user)
+
+        # Ensure invitation sender wasn't removed from list
+        if invitation.sender not in channel.editors.all():
+            channel.editors.add(invitation.sender)
+
         channel.save()
+
+        # Remove invitation automatically
         if invitation is not None:
             invitation.delete()
 
