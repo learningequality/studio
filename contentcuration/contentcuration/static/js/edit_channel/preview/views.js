@@ -68,10 +68,12 @@ var PreviewView = BaseViews.BaseView.extend({
     generate_preview:function(force_load){
         var location ="";
         var extension = "";
+        var checksum = "";
         if(this.current_preview){
             location = this.current_preview.storage_url;
             extension = this.current_preview.file_format;
             mimetype = this.current_preview.mimetype;
+            checksum = this.current_preview.checksum;
 
             var preview_template;
             switch (extension){
@@ -96,12 +98,16 @@ var PreviewView = BaseViews.BaseView.extend({
                 case "perseus":
                     preview_template = require("./hbtemplates/preview_templates/exercise.handlebars");
                     break;
+                case "zip":
+                    preview_template = require("./hbtemplates/preview_templates/html5.handlebars");
+                    break;
                 default:
                     preview_template = require("./hbtemplates/preview_templates/default.handlebars");
             }
             this.$("#preview_window").html(preview_template({
                 source: location,
-                extension:mimetype
+                extension:mimetype,
+                checksum:checksum
             }));
             if(force_load && this.current_preview.recommended_kind === "video"){
                 $("#preview_window video").load();

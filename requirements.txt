@@ -18,7 +18,6 @@ djangorestframework-bulk==0.2.1
 django-email-extras==0.3.3
 https://github.com/learningequality/kolibri/tarball/master#egg=kolibri
 validators
-django-mailgun==0.9.1
 le-utils==0.0.9rc13
 gunicorn==19.6.0
 django-mailgun==0.9.1
