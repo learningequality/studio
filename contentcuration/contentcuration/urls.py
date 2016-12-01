@@ -160,8 +160,9 @@ urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js
 if settings.DEBUG:
     # static files (images, css, javascript, etc.)
     urlpatterns += [
-        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', 'django.views.static.serve', {
-        'document_root': settings.STORAGE_ROOT})]
+        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STORAGE_ROOT}),
+        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.DB_ROOT})
+    ]
 
     import debug_toolbar
     urlpatterns += [
