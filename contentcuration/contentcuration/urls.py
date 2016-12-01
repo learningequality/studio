@@ -83,12 +83,6 @@ class InvitationViewSet(viewsets.ModelViewSet):
     queryset = Invitation.objects.all()
     serializer_class = serializers.InvitationSerializer
 
-class ExerciseViewSet(viewsets.ModelViewSet):
-    queryset = Exercise.objects.all()
-    serializer_class = serializers.ExerciseSerializer
-    permission_classes = [AllowAny]
-
-
 class AssessmentItemViewSet(BulkModelViewSet):
     queryset = AssessmentItem.objects.all()
     serializer_class = serializers.AssessmentItemSerializer
@@ -97,7 +91,6 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
-router.register(r'exercise', ExerciseViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
@@ -128,6 +121,7 @@ urlpatterns = [
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^exercise_image_upload/', views.exercise_image_upload, name='exercise_image_upload'),
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
+    url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
 ]
 
 # Add account/registration endpoints

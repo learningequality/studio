@@ -199,6 +199,14 @@ class TagSerializer(serializers.ModelSerializer):
     model = ContentTag
     fields = ('tag_name', 'channel', 'id')
 
+class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    contentnode = serializers.PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
+
+    class Meta:
+        model = AssessmentItem
+        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hints', 'raw_data', 'order')
+        list_serializer_class = BulkListSerializer
+
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     tags = TagSerializer(many=True)
@@ -206,6 +214,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     files = FileSerializer(many=True, read_only=True)
+    assessment_items = AssessmentItemSerializer(many=True, read_only=True)
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
     metadata = serializers.SerializerMethodField('retrieve_metadata')
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
@@ -241,7 +250,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     @staticmethod
     def setup_eager_loading(queryset):
         """ Perform necessary eager loading of data. """
-        queryset = queryset.prefetch_related('children').prefetch_related('files')
+        queryset = queryset.prefetch_related('children').prefetch_related('files').prefetch_related('assessment_items')
         return queryset
 
     def retrieve_associated_presets(self, node):
@@ -354,19 +363,6 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel',
                  'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets',
                  'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items')
-
-class ExerciseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Exercise
-        fields = ('contentnode', 'mastery_model', 'id')
-
-class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
-    contentnode = serializers.PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
-
-    class Meta:
-        model = AssessmentItem
-        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hints', 'raw_data')
-        list_serializer_class = BulkListSerializer
 
 class ChannelSerializer(serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')

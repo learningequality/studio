@@ -724,11 +724,47 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
     }
 });
 
-var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
+var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
     className:"assessment_li",
     initialize: function(options) {
+        this.nodeid=options.nodeid;
+        this.render();
+    },
+    template: require("./hbtemplates/assessment_item_edit.handlebars"),
+
+    render: function() {
+        this.$el.html(this.template({model: this.model.toJSON()}));
+        if (this.model.get("type") !== "free_response") {
+            if (!this.answer_editor) {
+                this.answer_editor = new AssessmentItemAnswerListView({
+                    collection: this.model.get("answers"),
+                    container:this,
+                    assessment_item: this.model,
+                    nodeid:this.nodeid
+                });
+            }
+            this.$(".answers").append(this.answer_editor.el);
+        }
+        if (!this.hint_editor) {
+            this.hint_editor = new AssessmentItemHintListView({
+                collection:this.model.get("hints"),
+                container:this,
+                assessment_item: this.model,
+                nodeid:this.nodeid
+            });
+        }
+        this.$(".hints").append(this.hint_editor.el);
+        if (!this.editor_view) {
+            this.editor_view = new EditorView({model: this.model, edit_key: "question", el: this.$(".question"),nodeid:this.nodeid});
+        } else {
+            this.$(".question").append(this.editor_view.el);
+        }
+    }
+});
+
+var AssessmentItemView = AssessmentItemDisplayView.extend({
+    initialize: function(options) {
         _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus", "toggle_undo_redo", "add_focus", "remove_focus");
-        this.number = options.number;
         this.nodeid=options.nodeid;
         this.containing_list_view = options.containing_list_view;
         this.undo_manager = new UndoManager({
@@ -737,8 +773,8 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
         });
         this.toggle_undo_redo();
         this.render();
+        this.set_toolbar_closed();
     },
-    template: require("./hbtemplates/assessment_item_edit.handlebars"),
     closed_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_closed.handlebars"),
     open_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_open.handlebars"),
 
@@ -791,36 +827,6 @@ var AssessmentItemView = BaseViews.BaseListEditableItemView.extend({
         this.redo = this.undo_manager.isAvailable("redo");
         if (undo !== this.undo || redo !== this.redo) {
             this.set_toolbar_open();
-        }
-    },
-
-    render: function() {
-        this.$el.html(this.template({model: this.model.toJSON()}));
-        this.set_toolbar_closed();
-        if (this.model.get("type") !== "free_response") {
-            if (!this.answer_editor) {
-                this.answer_editor = new AssessmentItemAnswerListView({
-                    collection: this.model.get("answers"),
-                    container:this,
-                    assessment_item: this.model,
-                    nodeid:this.nodeid
-                });
-            }
-            this.$(".answers").append(this.answer_editor.el);
-        }
-        if (!this.hint_editor) {
-            this.hint_editor = new AssessmentItemHintListView({
-                collection:this.model.get("hints"),
-                container:this,
-                assessment_item: this.model,
-                nodeid:this.nodeid
-            });
-        }
-        this.$(".hints").append(this.hint_editor.el);
-        if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: "question", el: this.$(".question"),nodeid:this.nodeid});
-        } else {
-            this.$(".question").append(this.editor_view.el);
         }
     },
 
@@ -1002,5 +1008,6 @@ var AssessmentItemHintListView = BaseViews.BaseEditableListView.extend({
 
 module.exports = {
     ExerciseView:ExerciseView,
-    ExerciseModalView:ExerciseModalView
+    ExerciseModalView:ExerciseModalView,
+    AssessmentItemDisplayView:AssessmentItemDisplayView
 }

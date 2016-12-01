@@ -20,10 +20,13 @@ from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm
 from rest_framework.authtoken.models import Token
 from django.core.urlresolvers import reverse_lazy
 import contentcuration.urls
+from contentcuration.api import check_supported_browsers
 
 
 @login_required
 def settings(request):
+    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
+        return redirect(reverse_lazy('unsupported_browser'))
     return redirect('settings/profile')
 
 class ProfileView(FormView):
