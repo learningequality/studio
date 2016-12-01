@@ -52,7 +52,6 @@ def send_invitation_email(request):
             message = render_to_string('permissions/permissions_email.txt', ctx_dict)
             # message_html = render_to_string('permissions/permissions_email.html', ctx_dict)
             recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL,) #html_message=message_html,)
-            # recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL,)
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
@@ -100,14 +99,8 @@ class InvitationAcceptView(FormView):
         return User.objects.get_or_create(id=self.kwargs["user_id"])[0]
 
     def form_valid(self, form):
-        channel = Channel.objects.get(id=self.kwargs["channel_id"])
         user = self.user()
-        if user not in channel.editors.all():
-            channel.editors.add(user)
-            channel.save()
-            if self.invitation is not None:
-                self.invitation.delete()
-
+        add_editor_to_channel(self.invitation, self.kwargs["channel_id"], user)
         user_cache = authenticate(username=user.email,
                             password=form.cleaned_data['password'],
                         )
@@ -163,12 +156,7 @@ class InvitationRegisterView(FormView):
 
     def form_valid(self, form):
         user = form.save(self.user())
-        channel = Channel.objects.get(id=self.kwargs["channel_id"])
-        if user not in channel.editors.all():
-            channel.editors.add(user)
-            channel.save()
-            if self.invitation is not None:
-                self.invitation.delete()
+        add_editor_to_channel(self.invitation, self.kwargs["channel_id"], user)
         user_cache = authenticate(username=user.email,
                              password=form.cleaned_data['password1'],
                          )
@@ -185,6 +173,14 @@ class InvitationRegisterView(FormView):
 
     def get_context_data(self, **kwargs):
         return super(InvitationRegisterView, self).get_context_data(**kwargs)
+
+def add_editor_to_channel(invitation, channel_id, user):
+    channel = Channel.objects.get(id=channel_id)
+    if user not in channel.editors.all():
+        channel.editors.add(user)
+        channel.save()
+        if invitation is not None:
+            invitation.delete()
 
 def decline_invitation(request, invitation_link):
     try:

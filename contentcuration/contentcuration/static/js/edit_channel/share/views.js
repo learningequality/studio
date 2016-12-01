@@ -49,7 +49,6 @@ var ShareView = BaseViews.BaseView.extend({
     },
     load_lists:function(){
         this.editor_list = this.model.get("editors");
-        this.editor_list.splice(this.editor_list.indexOf(this.current_user.id), 1);
         this.collection = new Models.UserCollection();
         this.pending_collection = new Models.InvitationCollection();
         var current_promise = this.collection.get_all_fetch(this.editor_list);
@@ -156,7 +155,7 @@ var ShareCurrentList = BaseViews.BaseEditableListView.extend({
     create_new_view: function(model){
         var share_item = new ShareCurrentItem({
             model:model,
-            containing_list_view:this,
+            containing_list_view:this
         });
         this.views.push(share_item);
         return share_item;
@@ -164,7 +163,6 @@ var ShareCurrentList = BaseViews.BaseEditableListView.extend({
     remove_editor:function(editor){
         this.collection.remove(editor);
         var editor_list = this.collection.pluck("id");
-        editor_list.push(this.current_user.id);
         this.model.save({
             "editors": editor_list,
             // "public": this.$("#share_public_channel").is(':checked')
@@ -217,6 +215,9 @@ var ShareItem = BaseViews.BaseListEditableItemView.extend({
         this.$el.html(this.template({
             editor:this.model.toJSON()
         }));
+        if(this.model.get("id") == window.current_user.id){
+            this.$el.css("display", "none");
+        }
     },
 });
 
