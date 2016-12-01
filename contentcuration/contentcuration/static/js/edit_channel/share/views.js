@@ -46,6 +46,7 @@ var ShareView = BaseViews.BaseView.extend({
             channel:this.model.toJSON(),
             user: this.current_user.toJSON()
         }));
+        $("#share_email_address").focus();
     },
     load_lists:function(){
         this.editor_list = this.model.get("editors");
