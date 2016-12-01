@@ -1,3 +1,4 @@
+<div class="input-tab-control" tabindex="1" data-next="#upload_save_finish_button"></div>
 {{#if none_selected}}
 	<div id="uploader-default-prompt" class="text-center container-fluid">Please select an item to edit.</div>
 {{else}}
@@ -11,32 +12,35 @@
 		{{/if}}
 	{{/if}}
 	{{#if node}}
+		<div class="input-tab-control" tabindex="11" data-next="#input_title"></div>
 		<h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>
-		<input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required/>
+		<input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required tabindex="2"/>
 	{{/if}}
 	{{#if isoriginal}}
+		{{#unless node}}<div class="input-tab-control" tabindex="11" data-next="#author_field"></div>{{/unless}}
 		<h4>Author</h4>
-		<input type="text" id="author_field" class="upload_input input_listener" value="{{author}}" placeholder="Enter author name"/>
+		<input type="text" id="author_field" class="upload_input input_listener" value="{{author}}" placeholder="Enter author name" tabindex="3"/>
 		{{#if is_file}}
 		<div class="row">
 			<div class="content_nodes_only col-sm-5">
 				<h4>License</h4>
-				<select id="license_select">
+				<select id="license_select" tabindex="4">
 		            <option selected disabled value=0>---</option>
 		            {{#each licenses}}
 		                <option value={{id}}>{{license_name}}</option>
 		            {{/each}}
 		        </select>
-		        <span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" ></span>
+		        <span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" tabindex="5"></span>
 			</div>
 			<!-- <div class="col-sm-1">&nbsp;</div> -->
 			<div class="content_nodes_only col-sm-7">
 				<h4>Copyright Holder</h4>
-				<input type="text" id="input_license_owner" class="license_input input_listener" placeholder="Enter license owner name" maxlength="200"value="{{copyright_owner}}"/>
+				<input type="text" id="input_license_owner" class="license_input input_listener" placeholder="Enter license owner name" maxlength="200"value="{{copyright_owner}}" tabindex="6"/>
 			</div>
 		</div>
 		{{/if}}
 	{{else}}
+		{{#unless node}}<div class="input-tab-control" tabindex="11" data-next="#author_field"></div>{{/unless}}
 		{{#if node}}
 		<hr/>
 		<p class="uploader-copied-warning">Read-Only: Imported from <b>{{node.original_channel.name}}</b></p>
@@ -64,10 +68,10 @@
 
 	{{#if node}}
 		<h4>Description {{#if node}}<i id="description_counter" class="pull-right">{{word_limit}} chars left</i>{{/if}}</h4>
-		<textarea id="input_description" class="upload_input input_listener" placeholder="Enter a description of your content" maxlength={{word_limit}} value='{{node.description}}'>{{node.description}}</textarea>
+		<textarea id="input_description" class="upload_input input_listener" placeholder="Enter a description of your content" maxlength={{word_limit}} value='{{node.description}}' tabindex="7">{{node.description}}</textarea>
 	{{/if}}
 	<h4>Tags (press 'Enter' to add) <span id="tag_error">Invalid characters found.</span></h4>
-	<input type="text" id="tag_box" class="tag_input" placeholder="Enter tag" maxlength="30"/>
+	<input type="text" id="tag_box" class="tag_input" placeholder="Enter tag" maxlength="30" tabindex="8"/>
 	<div class="container-fluid">
 		<div class="row" id="tag_area"></div>
 	</div>

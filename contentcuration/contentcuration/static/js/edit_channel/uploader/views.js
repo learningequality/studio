@@ -75,6 +75,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.load_preview();
     this.load_list();
     this.load_editor(this.edit_list.selected_items);
+    var self = this;
+    setTimeout(function() {
+      self.editor_view.set_initial_focus();
+    }, 500);
   },
   render_details:function(){
     this.switchPanel("details");
@@ -302,8 +306,8 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       if(!this.new_content && !this.uploaded_files){
         this.selected_items.push(this.views[0]);
         this.update_shared_values(true, this.views[0]);
-        this.container.load_editor(this.selected_items);
         this.container.switch_preview(this.selected_items[0].model);
+        this.container.load_editor(this.selected_items);
       }else{
         this.views[0].select_item();
       }
@@ -330,13 +334,13 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
             self.update_shared_values(self.selected_items.length === 1, view);
         }
     });
-    this.container.load_editor(this.selected_items);
     if(this.selected_items.length === 1){
       this.container.switch_preview(this.selected_items[0].model);
       if(this.selected_items[0].model.get("kind")==="exercise"){
         this.container.load_questions(this.selected_items[0].model);
       }
     }
+    this.container.load_editor(this.selected_items);
   },
   update_shared_values:function(reset, view){
     if(reset){
@@ -363,7 +367,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   selected_items: [],
 
   initialize: function(options) {
-    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag');
+    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'loop_focus');
     this.new_content = options.new_content;
     this.upload_files = options.upload_files;
     this.selected_items = options.selected_items;
@@ -413,6 +417,22 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       (!alloriginal)? $("#license_select").text(original_source_license) : $("#license_select").val(this.shared_data.shared_license);
       this.$("#license_about").css("display", (this.shared_data.shared_license > 0)? "inline" : "none");
     }
+    this.set_initial_focus();
+  },
+  set_initial_focus:function(){
+    var element = null;
+      if($("#input_title").length > 0){
+        element = $('#input_title');
+      }else if($("#author_field").length > 0){
+        element = $('#author_field');
+      }else if($("#tag_box").length > 0){
+        element = $('#tag_box');
+      }
+
+      if(element){
+        element.focus();
+        element.select();
+      }
   },
   handle_if_individual:function(){
     if(this.selected_items.length === 1){
@@ -436,6 +456,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     "change #license_select" : "select_license",
     'keypress #tag_box' : 'add_tag',
     'click .delete_tag':'remove_tag',
+    'focus .input-tab-control': 'loop_focus'
   },
   load_tags:function(){
     this.$("#tag_area").html(this.tags_template({
@@ -576,8 +597,8 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
           title: (individual_selected)? $("#input_title").val().trim() : this.model.get("title"),
           description: (individual_selected)? $("#input_description").val().trim() : this.model.get("description"),
           license: (this.model.get("kind") != "topic" && $("#license_select").val()!=0)? $("#license_select").val() : this.model.get("license"),
-          copyright_holder: (this.model.get("kind") != "topic" && (individual_selected || $("#input_license_owner").val() !== ""))? $("#input_license_owner").val().trim() : this.model.get("copyright_holder"),
-          author: (individual_selected || $("#author_field").val() !== "")? $("#author_field").val().trim() : this.model.get("author"),
+          copyright_holder: $("#input_license_owner").length > 0 && (this.model.get("kind") != "topic" && (individual_selected || $("#input_license_owner").val().trim() !== ""))? $("#input_license_owner").val().trim() : this.model.get("copyright_holder"),
+          author: $("#author_field").length > 0 && (individual_selected || $("#author_field").val().trim() !== "")? $("#author_field").val().trim() : this.model.get("author"),
       };
       this.set(data);
       this.set_edited(true);
