@@ -117,6 +117,7 @@ var FileUploadView = BaseViews.BaseView.extend({
         this.$(".go_to_formats").removeAttr("disabled");
         this.$(".go_to_formats").removeClass("disabled");
         this.$(".go_to_formats").text("NEXT");
+        this.$(".go_to_formats").focus();
     },
     disable_submit: function() {
         this.$(".go_to_metadata").attr("disabled", "disabled");
@@ -127,6 +128,9 @@ var FileUploadView = BaseViews.BaseView.extend({
         this.$(".go_to_metadata").removeAttr("disabled");
         this.$(".go_to_metadata").removeClass("disabled");
         this.$(".go_to_metadata").text("EDIT METADATA");
+        setTimeout(function(){
+            $(".go_to_metadata").focus();
+        }, 100);
     },
     reset:function(){
         if(this.current_view){
@@ -183,6 +187,9 @@ var FileUploadList = FileBaseList.extend({
         this.onnew = options.onnew;
         this.uploads_in_progress = 0;
         this.render();
+        setTimeout(function(){
+            $(".fileinput-button").focus();
+        }, 500);
     },
     handle_if_empty:function(){
         this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
@@ -281,14 +288,18 @@ var FileFormatList  = FileBaseList.extend({
         this.container = options.container;
         this.collection = options.collection;
         this.uploads_in_progress = 0;
+        this.index = 1;
         this.render();
     },
     events:{
       "click #show_unassigned" : "hide_assigned"
     },
     render: function() {
-        this.$el.html(this.template());
+        this.$el.html(this.template({last_tab_index: this.collection.length * 2 + 1}));
         this.load_content();
+        if(this.views.length > 0){
+            this.views[0].set_focus();
+        }
     },
     hide_assigned:function(){
         var to_hide = this.$el.find(".hide_assigned").parent("li");
@@ -300,10 +311,13 @@ var FileFormatList  = FileBaseList.extend({
         }
     },
     create_new_view:function(model){
+        this.index += 2; //Increment by 2 in case format dropdown is rendered
         var new_format_item = new FormatFormatItem({
             model: model,
             containing_list_view : this,
+            tab_index: this.index
         });
+
         this.views.push(new_format_item);
         return new_format_item;
     },
@@ -489,9 +503,10 @@ var FormatFormatItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_format_item.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, 'update_name', 'set_initial_format', 'remove_item');
+        _.bindAll(this, 'update_name', 'set_initial_format', 'remove_item', 'set_focus');
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
+        this.tab_index = options.tab_index;
         this.containing_list_view = options.containing_list_view;
         this.init_collections();
         this.render();
@@ -510,23 +525,31 @@ var FormatFormatItem = FormatEditorItem.extend({
     render: function() {
         // this.files.sort_by_preset(this.presets);
         this.presets.sort_by_order();
+        var initial = !this.check_for_completion();
 
         this.$el.html(this.template({
             presets:this.presets.toJSON(),
             files: this.files.toJSON(),
             node: this.model.toJSON(),
-            initial: !this.check_for_completion()
+            initial: initial,
+            tab_index:this.tab_index,
+            next_index: initial? ++this.tab_index:this.tab_index
         }));
         this.update_metadata();
         if(this.check_for_completion()){
             this.load_subfiles();
         }
     },
+    set_focus:function(){
+        this.$(".name_content_input").focus();
+        this.$(".name_content_input").select();
+    },
     set_initial_format:function(event){
         this.set_file_format(this.files.at(0), window.formatpresets.findWhere({id: event.target.value}));
         this.render();
         this.containing_list_view.handle_completed();
         this.containing_list_view.hide_assigned();
+        this.set_focus();
     },
     update_name:function(event){
         this.model.set("title", event.target.value);

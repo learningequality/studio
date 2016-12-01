@@ -5,12 +5,12 @@
         </object>
     </div>
     <div class="inline col-xs-8 format_section">
-        <input type="text" placeholder="Title *" class="name_content_input" value="{{node.title}}"/>
+        <input type="text" placeholder="Title *" class="name_content_input" value="{{node.title}}" tabindex="{{tab_index}}"/>
         {{#if initial}}
             <h5 class="init_format_area">
                 <div class="init_dropdown_wrapper pull-right">
                     <span class="required_input">*</span>
-                    <select class="format_options_dropdown text-center">
+                    <select class="format_options_dropdown text-center" tabindex="{{next_index}}">
                         <option selected disabled>-- Select a Format --</option>
                         {{#each presets}}
                             {{#unless supplementary}}
