@@ -10,6 +10,7 @@ import tempfile
 from functools import wraps
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
 from django.core.files import File as DjFile
 from django.http import HttpResponse
@@ -17,7 +18,14 @@ from kolibri.content import models as KolibriContent
 from le_utils.constants import format_presets, content_kinds, file_formats
 import contentcuration.models as models
 
-def write_file_to_storage(fobj, check_valid = False, name=None):
+def check_supported_browsers(user_agent_string):
+    for browser in settings.SUPPORTED_BROWSERS:
+        if browser in user_agent_string:
+            return True
+    return False
+
+
+def write_file_to_storage(fobj, check_valid = False):
     # Check that hash is valid
     checksum = hashlib.md5()
     for chunk in iter(lambda: fobj.read(4096), b""):

@@ -16,11 +16,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
 from django.db import transaction
 from django.db.models import Q
+from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video
+from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video, check_supported_browsers
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import ExerciseSerializer, AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
+from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets, content_kinds
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -29,6 +30,8 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from django.core.cache import cache
 
 def base(request):
+    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
+        return redirect(reverse_lazy('unsupported_browser'))
     if request.user.is_authenticated():
         return redirect('channels')
     else:
@@ -37,10 +40,16 @@ def base(request):
 def testpage(request):
     return render(request, 'test.html')
 
+def unsupported_browser(request):
+    return render(request, 'unsupported_browser.html')
+
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def channel_list(request):
+    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
+        return redirect(reverse_lazy('unsupported_browser'))
+
     channel_list = Channel.objects.filter(deleted=False, editors= request.user)
     channel_list = ChannelListSerializer.setup_eager_loading(channel_list)
     channel_serializer = ChannelListSerializer(channel_list, many=True)
@@ -56,6 +65,9 @@ def channel_list(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
+    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
+        return redirect(reverse_lazy('unsupported_browser'))
+
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
     channel_serializer =  ChannelSerializer(channel)
     accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors= request.user))
@@ -112,16 +124,16 @@ def exercise_list(request):
         # If page is out of range (e.g. 9999), deliver last page of results.
         exercises = paged_list.page(paginator.num_pages)
 
-    serializer = ExerciseSerializer(exercises.object_list, many=True)
+    # serializer = ExerciseSerializer(exercises.object_list, many=True)
 
     return render(request, 'exercise_list.html', {"exercises": exercises, "blob": JSONRenderer().render(serializer.data)})
 
 
 def exercise(request, exercise_id):
 
-    exercise = get_object_or_404(Exercise, id=exercise_id)
+    exercise = get_object_or_404(ContentNode, id=exercise_id)
 
-    serializer = ExerciseSerializer(exercise)
+    serializer = ContentNodeSerializer(exercise)
 
     assessment_items = AssessmentItem.objects.filter(exercise=exercise)
 
