@@ -68,7 +68,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'click #metadata_preview_btn' : 'render_preview',
     'click #metadata_questions_btn': 'render_questions',
     'click #upload_save_button' : 'save_and_keep_open',
-    'click #upload_save_finish_button' : 'save_and_finish'
+    'click #upload_save_finish_button' : 'save_and_finish',
+    'keypress #upload_save_finish_button': 'handle_save_and_finish_key'
   },
   render: function() {
     this.$el.html(this.template());
@@ -179,6 +180,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.save("Saving Content...", this.save_nodes).then(function(collection){
       self.process_updated_collection(collection);
     });
+  },
+  handle_save_and_finish_key:function(event){
+    var code = (!event)? null : event.keyCode ? event.keyCode : event.which;
+    if(code == 13){
+      this.save_and_finish(event);
+    }
   },
   save_and_finish: function(event){
     var self = this;
