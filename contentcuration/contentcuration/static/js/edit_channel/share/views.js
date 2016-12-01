@@ -26,7 +26,7 @@ var ShareView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/share_dialog.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, "send_invite");
+        _.bindAll(this, "send_invite", 'loop_focus');
         this.container = options.container;
         this.current_user = options.current_user;
         this.originalData = this.model.toJSON();
@@ -38,7 +38,8 @@ var ShareView = BaseViews.BaseView.extend({
     },
     events:{
         'keypress #share_email_address' : 'send_invite',
-         "click #share_invite_button" : "send_invite"
+         "click #share_invite_button" : "send_invite",
+         'focus .input-tab-control': "loop_focus"
     },
 
     render: function() {
@@ -47,6 +48,7 @@ var ShareView = BaseViews.BaseView.extend({
             user: this.current_user.toJSON()
         }));
         $("#share_email_address").focus();
+        $("#share_email_address").select();
     },
     load_lists:function(){
         this.editor_list = this.model.get("editors");

@@ -1,8 +1,10 @@
+<div class="input-tab-control" tabindex="1" data-next=".save_channel"></div>
+<div class="input-tab-control" tabindex="6" data-next="#new_channel_name"></div>
 <div class="profile pull-left text-center">
 	{{#if edit}}
 		<div class="new_channel_pic" id="dropzone">
 			<div id="finished_area">
-		        <a id="swap-thumbnail">Change Thumbnail</a>
+		        <a id="swap-thumbnail" tabindex='4'>Change Thumbnail</a>
 		    </div>
 			<img id="dz-placeholder" src="{{picture}}"/>
 		</div>
@@ -13,11 +15,11 @@
 </div>
 {{#if edit}}
 	<p id="channel_name_error">Channel must have a name</p>
-	<input type="text" id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}" maxlength="200"></input>
-	<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}"  maxlength="400">{{channel.description}}</textarea>
+	<input type="text" id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}" maxlength="200" tabindex='2'></input>
+	<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}"  maxlength="400" tabindex='3'>{{channel.description}}</textarea>
 	<div class="channel_options">
 		<a class="delete_channel">DELETE CHANNEL</a>
-		<a class="save_channel btn pull-right">SAVE</a>
+		<a class="save_channel btn pull-right" tabindex='5'>SAVE</a>
 		<a class="channel_toggle action-text pull-right">CANCEL</a>
 	</div>
 {{else}}

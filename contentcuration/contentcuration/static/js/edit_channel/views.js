@@ -4,6 +4,13 @@ var Models = require("./models");
 //var UndoManager = require("backbone-undo");
 
 var BaseView = Backbone.View.extend({
+	loop_focus:function(event){
+		var element = $(event.target);
+		if (element.data('next')){
+			this.$(element.data('next')).focus();
+			this.$(element.data('next')).select();
+		}
+	},
 	display_load:function(message, callback){
     	var self = this;
     	if(message.trim()!=""){

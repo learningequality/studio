@@ -95,7 +95,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	dropzone_template: require("./hbtemplates/channel_profile_dropzone.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded', 'update_title',
+		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded', 'update_title', 'loop_focus',
 						'thumbnail_added','thumbnail_removed','create_dropzone', 'thumbnail_completed','thumbnail_failed');
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = false;
@@ -110,6 +110,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.isNew = false;
 		this.thumbnail_success = true;
 	},
+
 	set_is_new:function(isNew){
 		this.isNew = isNew;
 		if (this.isNew){
@@ -127,6 +128,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			channel_link : this.model.get("id"),
 			picture : this.thumbnail_url
 		}));
+		this.$("#new_channel_name").focus();
+		this.$("#new_channel_name").select();
 	},
 	events: {
 		'click .edit_channel':'edit_channel',
@@ -136,6 +139,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		'keyup #new_channel_name': 'update_title',
 		'keyup #new_channel_name': 'update_title',
 		'paste #new_channel_name': 'update_title',
+		'focus .input-tab-control': 'loop_focus',
 	},
 	update_title:function(event){
 		if (event.target.value.length === 0){
