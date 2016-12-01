@@ -7,7 +7,7 @@ require("export.less");
 var ExportModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/export_modal.handlebars"),
     initialize: function(options) {
-        _.bindAll(this, "publish");
+        _.bindAll(this, "publish", 'loop_focus');
         this.modal = true;
         this.render(this.close, {
             channel: window.current_channel.toJSON(),
@@ -22,9 +22,13 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             model: this.model,
             onpublish:this.onpublish
         });
+        setTimeout(function(){
+            $("#publish_btn").focus();
+        }, 500);
     },
     events:{
-      "click #publish_btn" : "publish"
+      "click #publish_btn" : "publish",
+      'focus .input-tab-control': 'loop_focus'
     },
     publish:function(){
         var self = this;
