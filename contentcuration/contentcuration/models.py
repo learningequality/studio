@@ -246,6 +246,7 @@ class ContentNode(MPTTModel, models.Model):
 
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
+    full_description = models.TextField(blank=True, null=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
     license = models.ForeignKey('License', null=True, default=settings.DEFAULT_LICENSE)
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
@@ -274,6 +275,10 @@ class ContentNode(MPTTModel, models.Model):
             if original.parent and original.parent_id != self.parent_id:
                 original.parent.changed = True
                 original.parent.save()
+
+            # Set full description to match new description
+            self.full_description = self.description + (self.full_description[len(original.description):] if self.full_description else "")
+            self.description = self.full_description[:400]
 
         super(ContentNode, self).save(*args, **kwargs)
         post_save_changes = False

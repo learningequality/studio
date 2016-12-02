@@ -297,7 +297,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.create_popover();
 	},
 	get_split_description:function(){
-		var description = this.model.get("description").trim();
+		var description = (this.model.get("full_description"))? this.model.get("full_description").trim() : this.model.get("description");
 		var split_index = 49;
 		while (description.charAt(split_index) != " " && split_index < 60){
 			split_index ++;
