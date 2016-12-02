@@ -314,6 +314,7 @@ class FormatPreset(models.Model):
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
+    subtitle = models.BooleanField(default=False)
     display = models.BooleanField(default=True) # Render on client side
     order = models.IntegerField(default=0)
     kind = models.ForeignKey(ContentKind, related_name='format_presets', null=True)
@@ -356,7 +357,7 @@ class File(models.Model):
     assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
-    lang = models.ForeignKey(Language, blank=True, null=True)
+    language = models.ForeignKey(Language, blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
 
