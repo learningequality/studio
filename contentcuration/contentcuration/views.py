@@ -19,11 +19,11 @@ from django.db.models import Q
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import write_file_to_storage, check_supported_browsers
+from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video, check_supported_browsers, check_video_resolution
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
-from le_utils.constants import format_presets
+from le_utils.constants import format_presets, content_kinds
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -162,11 +162,20 @@ def file_create(request):
     if request.method == 'POST':
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
         size = request.FILES.values()[0]._size
-        kind = FormatPreset.objects.filter(allowed_formats__extension__contains=ext).first().kind
+        presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext)
+        kind = presets.first().kind
         original_filename = request.FILES.values()[0]._name
         new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=settings.DEFAULT_LICENSE, author=request.user.get_full_name())
         new_node.save()
         file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, contentnode=new_node, file_size=size)
+        file_object.save()
+
+        if kind.pk == content_kinds.VIDEO:
+            thumbnail_obj = extract_thumbnail_from_video(file_object)
+            file_object.preset_id = check_video_resolution(file_object)
+        elif presets.filter(supplementary=False).count() == 1:
+            file_object.preset = presets.filter(supplementary=False).first()
+
         file_object.save()
 
         return HttpResponse(json.dumps({

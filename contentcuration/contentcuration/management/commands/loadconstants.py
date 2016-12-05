@@ -290,6 +290,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.VIDEO,
@@ -305,6 +306,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.VIDEO,
@@ -320,6 +322,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 3,
             "kind_id" : content_kinds.VIDEO,
@@ -335,6 +338,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.AUDIO,
@@ -350,6 +354,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.AUDIO,
@@ -365,6 +370,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.DOCUMENT,
@@ -380,6 +386,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.DOCUMENT,
@@ -395,6 +402,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.EXERCISE,
@@ -410,6 +418,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.EXERCISE,
@@ -425,6 +434,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : False,
+            "subtitle": False,
             "display": False,
             "order" : 3,
             "kind_id" : content_kinds.EXERCISE,
@@ -440,6 +450,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : False,
+            "subtitle": False,
             "display": False,
             "order" : 4,
             "kind_id" : content_kinds.EXERCISE,
@@ -455,6 +466,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 0,
             "kind_id" : None,
@@ -470,6 +482,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 0,
             "kind_id" : content_kinds.HTML5,
@@ -508,6 +521,22 @@ class Command(BaseCommand):
 
                     obj.save()
                 self.stdout.write("{0}: {1} constants saved ({2} new)".format(str(current_model), len(constant_list), new_model_count))
+
+            with open('languages.json', 'r') as langs:
+                import json
+                languages = json.load(langs)
+                for code, names in languages.items():
+                    lang_code = code
+                    lang_subcode=None
+                    if '-' in lang_code:
+                        lang_code, lang_subcode = lang_code.split('-')
+
+                    obj, isNew = models.Language.objects.get_or_create(lang_code=lang_code[:1])
+                    obj.lang_subcode = lang_subcode[:1] if lang_subcode else None
+                    obj.readable_name = names['name'][:49]
+                    obj.native_name = names['native_name'][:49]
+                    obj.save()
+
             self.stdout.write("************ DONE. ************")
 
         except EarlyExit as e:
