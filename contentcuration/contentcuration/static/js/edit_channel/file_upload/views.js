@@ -235,14 +235,17 @@ var FileUploadList = FileBaseList.extend({
         return new_format_item;
     },
     file_uploaded: function(request) {
-        //thumbnail: $(file.previewTemplate).find(".thumbnail_img").attr("src"),
-        var new_node = new Models.ContentNodeModel({id: JSON.parse(request.xhr.response).object_id});
+        var data = JSON.parse(request.xhr.response)
+        var new_node = new Models.ContentNodeModel({id: data.object_id});
         var self = this;
         this.fetch_model(new_node).then(function(fetched){
             self.collection.add(fetched);
             var new_view = self.create_new_view(fetched);
+            if(data.preset){
+                new_view.set_preset(data.preset);
+            }
             $(request.previewTemplate).html(new_view.el);
-            if(self.uploads_in_progress===0){
+            if(self.uploads_in_progress<=0){
                 self.enable_next();
             }
         });
@@ -374,7 +377,7 @@ var FormatUploadItem = FormatItem.extend({
         this.containing_list_view = options.containing_list_view;
         this.originalData = this.model.toJSON();
         this.init_collections();
-        this.auto_assign_preset();
+        this.set_presets();
         this.render();
     },
     events: {
@@ -404,6 +407,12 @@ var FormatUploadItem = FormatItem.extend({
     check_for_completion:function(){
        return true;
     },
+    set_presets:function(){
+        var self = this;
+        this.files.forEach(function(file){
+            self.set_file_format(file, self.presets.get(file.get("preset")));
+        });
+    }
 });
 var FormatEditorItem = FormatItem.extend({
     expandedClass: "glyphicon-triangle-bottom",

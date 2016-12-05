@@ -162,7 +162,8 @@ def file_create(request):
     if request.method == 'POST':
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
         size = request.FILES.values()[0]._size
-        kind = FormatPreset.objects.filter(allowed_formats__extension__contains=ext).first().kind
+        presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext)
+        kind = presets.first().kind
         original_filename = request.FILES.values()[0]._name
         new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=settings.DEFAULT_LICENSE, author=request.user.get_full_name())
         new_node.save()
@@ -172,7 +173,10 @@ def file_create(request):
         if kind.pk == content_kinds.VIDEO:
             thumbnail_obj = extract_thumbnail_from_video(file_object)
             file_object.preset_id = check_video_resolution(file_object)
-            file_object.save()
+        elif presets.filter(supplementary=False).count() == 1:
+            file_object.preset = presets.filter(supplementary=False).first()
+
+        file_object.save()
 
         return HttpResponse(json.dumps({
             "success": True,
