@@ -72,6 +72,15 @@ def extract_thumbnail_from_video(fobj):
         os.close(fh)
         os.unlink(fd)
 
+def check_video_resolution(video):
+    import subprocess
+    result = subprocess.check_output(['ffprobe', '-v', 'error', '-print_format', 'json', '-show_entries', 'stream=width,height', '-of', 'default=noprint_wrappers=1', str(video.file_on_disk)])
+    pattern = re.compile('width=([0-9]*)[^height]+height=([0-9]*)')
+    resolution = pattern.search(result)
+    if resolution and int(resolution.group(2)) >= 720:
+        return format_presets.VIDEO_HIGH_RES
+    return format_presets.VIDEO_LOW_RES
+
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
     for child in ContentNode.objects.filter(parent=node).order_by('sort_order'):
