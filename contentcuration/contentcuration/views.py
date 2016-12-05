@@ -19,7 +19,7 @@ from django.db.models import Q
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video, check_supported_browsers
+from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video, check_supported_browsers, check_video_resolution
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
@@ -168,8 +168,11 @@ def file_create(request):
         new_node.save()
         file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, contentnode=new_node, file_size=size)
         file_object.save()
+
         if kind.pk == content_kinds.VIDEO:
             thumbnail_obj = extract_thumbnail_from_video(file_object)
+            file_object.preset_id = check_video_resolution(file_object)
+            file_object.save()
 
         return HttpResponse(json.dumps({
             "success": True,
