@@ -73,7 +73,7 @@ class InvitationAcceptView(FormView):
 
     def get_initial(self):
         initial = self.initial.copy()
-        return {'userid': self.kwargs["user_id"]}
+        return {'userid': self.invitation.invited.pk}
 
     def get_form_kwargs(self):
         kwargs = super(InvitationAcceptView, self).get_form_kwargs()
@@ -81,30 +81,24 @@ class InvitationAcceptView(FormView):
         return kwargs
 
     def get_success_url(self):
-        return reverse_lazy('channel', kwargs={'channel_id':self.kwargs['channel_id']}) + "/edit"
+        return reverse_lazy('channel', kwargs={'channel_id':self.invitation.channel.pk}) + "/edit"
 
     def dispatch(self, *args, **kwargs):
-        user = self.user()
         try:
             self.invitation = Invitation.objects.get(id = self.kwargs['invitation_link'])
         except ObjectDoesNotExist:
             logging.debug("No invitation found.")
-            channel = Channel.objects.get(id=self.kwargs["channel_id"])
-            if user in channel.editors.all():
-                return super(InvitationAcceptView, self).dispatch(*args, **kwargs)
             return redirect(reverse_lazy('fail_invitation'))
 
         return super(InvitationAcceptView, self).dispatch(*args, **kwargs)
 
     def user(self):
-        return User.objects.get_or_create(id=self.kwargs["user_id"])[0]
+        return self.invitation.invted
 
     def form_valid(self, form):
-        channel = Channel.objects.get(id=self.kwargs["channel_id"])
-        user = self.user()
-        add_editor_to_channel(self.invitation, self.kwargs["channel_id"], user)
+        add_editor_to_channel(self.invitation)
 
-        user_cache = authenticate(username=user.email,
+        user_cache = authenticate(username=self.invitation.invited.email,
                             password=form.cleaned_data['password'],
                         )
         login(self.request, user_cache)
@@ -133,34 +127,29 @@ class InvitationRegisterView(FormView):
         return {'email': self.user().email}
 
     def get_success_url(self):
-        return reverse_lazy('accept_invitation', kwargs={'user_id': self.kwargs["user_id"], 'invitation_link': self.kwargs["invitation_link"] , 'channel_id': self.kwargs["channel_id"]})
+        return reverse_lazy('accept_invitation', kwargs={'invitation_link': self.kwargs["invitation_link"]})
 
     def get_login_url(self):
-        return reverse_lazy('channel', kwargs={'channel_id':self.kwargs['channel_id']}) + "/edit"
+        return reverse_lazy('channel', kwargs={'channel_id':self.invitation.channel.pk}) + "/edit"
 
     def dispatch(self, *args, **kwargs):
-        user = self.user()
         try:
             self.invitation = Invitation.objects.get(id__exact = self.kwargs['invitation_link'])
         except ObjectDoesNotExist:
             logging.debug("No invitation found.")
-            channel = Channel.objects.get(id=self.kwargs["channel_id"])
-            if user in channel.editors.all():
-                return redirect(self.get_success_url())
             return redirect(reverse_lazy('fail_invitation'))
 
         if not getattr(settings, 'REGISTRATION_OPEN', True):
             return redirect(self.disallowed_url)
 
-        if user.is_active:
+        if self.invitation.invited.is_active:
             return redirect(self.get_success_url())
 
         return super(InvitationRegisterView, self).dispatch(*args, **kwargs)
 
     def form_valid(self, form):
-        user = form.save(self.user())
-        add_editor_to_channel(self.invitation, self.kwargs["channel_id"], user)
-        user_cache = authenticate(username=user.email,
+        add_editor_to_channel(self.invitation)
+        user_cache = authenticate(username=self.invitation.invited.email,
                              password=form.cleaned_data['password1'],
                          )
         login(self.request, user_cache)
@@ -209,11 +198,7 @@ class UserRegistrationView(RegistrationView):
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, ) #html_message=message_html,)
 
 
-def add_editor_to_channel(invitation, channel_id, user):
-    channel = Channel.objects.get(id=channel_id)
-    channel.editors.add(user)
-    channel.save()
-
-    # Remove invitation if adding editor was successful
-    if invitation is not None and user in channel.editors.all():
-        invitation.delete()
+def add_editor_to_channel(invitation):
+    invitation.channel.editors.add(invitation.invited)
+    invitation.channel.save()
+    invitation.delete()
