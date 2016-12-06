@@ -21,4 +21,3 @@ validators
 django-mailgun==0.9.1
 le-utils==0.0.9rc13
 gunicorn==19.6.0
-django-mailgun==0.9.1
