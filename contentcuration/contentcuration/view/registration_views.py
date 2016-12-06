@@ -93,7 +93,7 @@ class InvitationAcceptView(FormView):
         return super(InvitationAcceptView, self).dispatch(*args, **kwargs)
 
     def user(self):
-        return self.invitation.invted
+        return self.invitation.invited
 
     def form_valid(self, form):
         add_editor_to_channel(self.invitation)
@@ -148,8 +148,9 @@ class InvitationRegisterView(FormView):
         return super(InvitationRegisterView, self).dispatch(*args, **kwargs)
 
     def form_valid(self, form):
+        user = form.save(self.user())
         add_editor_to_channel(self.invitation)
-        user_cache = authenticate(username=self.invitation.invited.email,
+        user_cache = authenticate(username=user.email,
                              password=form.cleaned_data['password1'],
                          )
         login(self.request, user_cache)

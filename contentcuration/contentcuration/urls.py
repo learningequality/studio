@@ -120,6 +120,7 @@ urlpatterns = [
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^exercise_image_upload/', views.exercise_image_upload, name='exercise_image_upload'),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
+    url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
 ]
 
 # Add account/registration endpoints
