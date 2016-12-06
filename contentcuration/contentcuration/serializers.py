@@ -403,7 +403,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'name', 'thumbnail', 'thumbnail_url', 'description', 'main_tree','deleted')
+        fields = ('id', 'name', 'thumbnail', 'thumbnail_url', 'description', 'editors', 'main_tree','deleted')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

@@ -102,11 +102,7 @@ class InvitationAcceptView(FormView):
     def form_valid(self, form):
         channel = Channel.objects.get(id=self.kwargs["channel_id"])
         user = self.user()
-        if user not in channel.editors.all():
-            channel.editors.add(user)
-            channel.save()
-            if self.invitation is not None:
-                self.invitation.delete()
+        add_editor_to_channel(self.invitation, self.kwargs["channel_id"], user)
 
         user_cache = authenticate(username=user.email,
                             password=form.cleaned_data['password'],
@@ -163,12 +159,7 @@ class InvitationRegisterView(FormView):
 
     def form_valid(self, form):
         user = form.save(self.user())
-        channel = Channel.objects.get(id=self.kwargs["channel_id"])
-        if user not in channel.editors.all():
-            channel.editors.add(user)
-            channel.save()
-            if self.invitation is not None:
-                self.invitation.delete()
+        add_editor_to_channel(self.invitation, self.kwargs["channel_id"], user)
         user_cache = authenticate(username=user.email,
                              password=form.cleaned_data['password1'],
                          )
@@ -217,3 +208,12 @@ class UserRegistrationView(RegistrationView):
         # message_html = render_to_string(self.email_html_template, context)
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, ) #html_message=message_html,)
 
+
+def add_editor_to_channel(invitation, channel_id, user):
+    channel = Channel.objects.get(id=channel_id)
+    channel.editors.add(user)
+    channel.save()
+
+    # Remove invitation if adding editor was successful
+    if invitation is not None and user in channel.editors.all():
+        invitation.delete()
