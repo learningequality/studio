@@ -22,6 +22,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
 		this.render();
+		var dialog = require("edit_channel/utils/dialog");
+    dialog.dialog("Unsaved Changes", "Unsaved Metadata Detected! Exiting now will undo any new changes. \n\nAre you sure you want to exit?")
 	},
 	events: {
 		'click .copy_button' : 'copy_content',
