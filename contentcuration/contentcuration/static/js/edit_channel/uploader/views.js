@@ -442,7 +442,11 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.$("#tag_area").html(this.tags_template({
       tags:this.shared_data.shared_tags
     }));
-    autoCompleteHelper.addAutocomplete($( "#tag_box" ), window.contenttags.pluck("tag_name"), this.select_tag, "#tag_area_wrapper");
+    var self = this;
+    var tags = _.reject(window.contenttags.pluck("tag_name"), function(tag){
+      return self.shared_data.shared_tags.indexOf(tag) >= 0;
+    });
+    autoCompleteHelper.addAutocomplete($( "#tag_box" ), tags, this.select_tag, "#tag_area_wrapper");
   },
   load_license:function(){
     iscopied = this.selected_items.length === 1 && !this.selected_items[0].isoriginal
