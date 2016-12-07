@@ -57,7 +57,7 @@ class FileListSerializer(serializers.ListSerializer):
                     if os.path.isfile(file_path):
                         file_obj.file_on_disk = DjFile(open(file_path, 'rb'))
                     else:
-                        raise FileNotFoundError("Error: file {} was not found".format(str(file_obj)))
+                        raise OSError("Error: file {} was not found".format(str(file_obj)))
                     file_obj.save()
                     ret.append(file_obj)
         return ret
