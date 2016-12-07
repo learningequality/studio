@@ -456,7 +456,19 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   update_count:function(){
     if(this.selected_items.length === 1){
-      stringHelper.update_word_count(this.$("#input_description"), this.$("#description_counter"), this.description_limit);
+      var char_length = this.description_limit - this.$("#input_description").val().length;
+      if(this.$("#input_description").val() == ""){
+        char_length = this.description_limit;
+      }
+      if(char_length < 0){
+        char_length *= -1;
+        this.$("#description_counter").html("Too long - recommend removing " + char_length + ((char_length  == 1) ? " character" : " characters"));
+        this.$("#description_counter").css("color", "red");
+      }else{
+        this.$("#description_counter").html(char_length + ((char_length  == 1) ? " character left" : " characters left"));
+        this.$("#description_counter").css("color", "gray");
+      }
+
     }
   },
   select_tag:function(selected_tag){
