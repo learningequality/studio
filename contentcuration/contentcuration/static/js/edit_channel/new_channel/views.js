@@ -211,8 +211,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		var data = {
 			name: title,
 			description: description,
-			thumbnail : this.thumbnail,
-			editors: [window.current_user.id]
+			thumbnail : this.thumbnail
 		};
 		this.originalData = data;
 		this.original_thumbnail = this.thumbnail;
