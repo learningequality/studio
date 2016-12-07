@@ -4,6 +4,9 @@ function dialog(title, submessage, options){
   var dialog = document.createElement("div");
   dialog.setAttribute('id',"dialog-box");
   dialog.setAttribute('title',title);
+  var paragraph = document.createElement("p");
+  paragraph.innerHTML="submessage";
+  dialog.appendChild(paragraph);
   document.body.appendChild(dialog);
 
   $("#dialog-box").dialog({
