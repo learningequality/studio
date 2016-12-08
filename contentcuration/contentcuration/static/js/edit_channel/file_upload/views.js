@@ -549,6 +549,9 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         this.$el.html(this.template());
         this.load_content();
     },
+    update_metadata: function(model){
+        this.content_node_view.update_metadata();
+    },
     create_new_view: function(model){
         var associated_file = null;
         this.files.forEach(function(file){
@@ -674,9 +677,16 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.$(".add_format_button").css("display", "inline");
     },
     file_failed:function(file, error){
-        alert(error);
-        this.render();
-        this.set_uploading(false);
+        var self = this;
+        var dialog = require("edit_channel/utils/dialog");
+        dialog.dialog("Error uploading file", error, {
+            "OK":null
+        }, function(){
+            self.render();
+            self.set_uploading(false);
+            self.containing_list_view.update_metadata();
+        });
+
     },
     remove_item:function(){
         this.containing_list_view.set_file_format(null, this.model, this.file);

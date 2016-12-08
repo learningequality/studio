@@ -32,8 +32,6 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     });
   },
   close_uploader:function(event){
-    var dialog = require("edit_channel/utils/dialog");
-    dialog.dialog("Unsaved Changes", "Unsaved Metadata Detected! Exiting now will undo any new changes. \n\nAre you sure you want to exit?")
     if(!this.metadata_view.check_for_changes() || !event){
       this.close();
       $(".modal-backdrop").remove();

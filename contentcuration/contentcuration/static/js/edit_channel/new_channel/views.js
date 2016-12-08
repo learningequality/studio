@@ -246,12 +246,20 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	thumbnail_completed:function(){
 		if(this.thumbnail_error){
-			alert(this.thumbnail_error);
+			var self = this;
+	        var dialog = require("edit_channel/utils/dialog");
+	        dialog.dialog("Error uploading thumbnail", this.thumbnail_error, {
+	            "OK":null
+	        }, function(){
+	            self.render();
+				self.enable_submit();
+	        });
 		}else{
 			this.set_channel();
+			this.render();
+			this.enable_submit();
 		}
-		this.render();
-		this.enable_submit();
+
 	},
 	thumbnail_failed:function(data, error){
 		this.thumbnail_error = error;
