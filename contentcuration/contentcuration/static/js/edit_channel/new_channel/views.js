@@ -160,18 +160,22 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		if(this.isNew){
 			this.delete(true, " ");
 			this.containing_list_view.set_editing(false);
-		}
-		else if(confirm("WARNING: All content under this channel will be permanently deleted."
-					+ "\nAre you sure you want to delete this channel?")){
-			var self = this;
-			this.save({"deleted":true}, "Deleting Channel...").then(function(){
-				self.containing_list_view.set_editing(false);
-				self.containing_list_view.collection.remove(self.model);
-				self.containing_list_view.render();
-				self.containing_list_view.update_dropdown(self.model, true);
-			});
 		}else{
-			this.cancel_actions(event);
+			var self = this;
+            var dialog = require("edit_channel/utils/dialog");
+            dialog.dialog("WARNING", "All content under this channel will be permanently deleted."
+					+ "\nAre you sure you want to delete this channel?", {
+                "Cancel":function(){},
+                "Delete Channel": function(){
+					self.save({"deleted":true}, "Deleting Channel...").then(function(){
+						self.containing_list_view.set_editing(false);
+						self.containing_list_view.collection.remove(self.model);
+						self.containing_list_view.render();
+						self.containing_list_view.update_dropdown(self.model, true);
+					});
+                },
+            }, null);
+            self.cancel_actions(event);
 		}
 	},
 	toggle_channel: function(){
@@ -249,7 +253,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			var self = this;
 	        var dialog = require("edit_channel/utils/dialog");
 	        dialog.dialog("Error uploading thumbnail", this.thumbnail_error, {
-	            "OK":null
+	            "OK":function(){}
 	        }, function(){
 	            self.render();
 				self.enable_submit();

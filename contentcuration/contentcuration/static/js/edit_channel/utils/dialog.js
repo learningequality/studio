@@ -12,24 +12,13 @@ function dialog(title, submessage, actions, onclose){
   overlay.appendChild(dialog);
   document.body.appendChild(overlay);
 
-  var buttons = {}
-  for (var key in actions){
-    buttons[key] = function() {
-        if(actions[key]){
-          actions[key]();
-        }
-
-        $("#dialog-box").dialog( "close" );
-      }
-  }
-
   $("#dialog-box").dialog({
     autoOpen: false,
     resizable: false,
     height: "auto",
     width: 400,
     modal: false,
-    buttons: buttons,
+    buttons: actions,
     close:function(){
       if(onclose){
         onclose();
@@ -42,6 +31,9 @@ function dialog(title, submessage, actions, onclose){
 
   $("#dialog-box").dialog('open');
   $('.ui-widget-overlay').on('click', function() {
+       $('#dialog-box').dialog( "close" );
+  });
+  $('.ui-dialog').find("button").on('click', function() {
        $('#dialog-box').dialog( "close" );
   });
   $(document).on('keydown', function(event) {

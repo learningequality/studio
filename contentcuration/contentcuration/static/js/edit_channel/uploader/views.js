@@ -35,13 +35,23 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     if(!this.metadata_view.check_for_changes() || !event){
       this.close();
       $(".modal-backdrop").remove();
-    }else if(confirm("Unsaved Metadata Detected! Exiting now will"
-      + " undo any new changes. \n\nAre you sure you want to exit?")){
-      this.metadata_view.undo_changes();
-      this.close();
-      $(".modal-backdrop").remove();
     }else{
-      this.cancel_actions(event);
+      var t = event.target;
+      var self = this;
+      var dialog = require("edit_channel/utils/dialog");
+      dialog.dialog("Unsaved Changes!", "Exiting now will"
+      + " undo any new changes. Are you sure you want to exit?", {
+          "Don't Save": function(){
+              self.metadata_view.undo_changes();
+              self.close();
+              $(".modal-backdrop").remove();
+          },
+          "Keep Open":function(){},
+          "Save & Close":function(){
+            self.metadata_view.save_and_finish();
+          },
+      }, null);
+      self.cancel_actions(event);
     }
   }
 });

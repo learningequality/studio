@@ -463,12 +463,15 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						});
 					}).catch(function(error){
 		        		console.log(error);
-		        		alert(error);
-
-		        		// Revert back to original positions
-		        		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
-							self.reload_ancestors(fetched);
-						});
+				        var dialog = require("edit_channel/utils/dialog");
+				        dialog.dialog("Error moving content", error, {
+				            "OK":function(){}
+				        }, function(){
+				            // Revert back to original positions
+			        		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
+								self.reload_ancestors(fetched);
+							});
+				        });
 		        	});
 				});
 			}

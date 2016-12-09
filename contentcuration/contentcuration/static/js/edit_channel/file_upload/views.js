@@ -23,14 +23,21 @@ var FileModalView = BaseViews.BaseModalView.extend({
         });
     },
     close_file_uploader:function(event){
+        var self = this;
         if(this.file_upload_view.collection.length === 0){
             this.close();
-        }else if(confirm("Unsaved Metadata Detected! Exiting now will"
-            + " undo any new changes. \n\nAre you sure you want to exit?")){
-            this.file_upload_view.reset();
-            this.close();
         }else{
-            this.cancel_actions(event);
+            var dialog = require("edit_channel/utils/dialog");
+            dialog.dialog("Unsaved Changes!", "Exiting now will"
+            + " undo any new changes. Are you sure you want to exit?", {
+                "Don't Save": function(){
+                    self.file_upload_view.reset();
+                    self.close();
+                    $(".modal-backdrop").remove();
+                },
+                "Keep Open":function(){},
+            }, null);
+            self.cancel_actions(event);
         }
     }
 });
@@ -680,7 +687,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         var self = this;
         var dialog = require("edit_channel/utils/dialog");
         dialog.dialog("Error uploading file", error, {
-            "OK":null
+            "OK":function(){}
         }, function(){
             self.render();
             self.set_uploading(false);

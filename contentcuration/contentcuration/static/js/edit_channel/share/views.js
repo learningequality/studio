@@ -232,18 +232,28 @@ var SharePendingItem = ShareItem.extend({
         'click .reinvite_editor' : 'reinvite_editor'
     },
     remove_editor:function(){
-       if(confirm("Are you sure you want to uninvite " + this.model.get("email") + "?")){
-            this.model.destroy();
-            this.remove();
-        }
+        this.cancel_actions(event);
+        var self = this;
+        var dialog = require("edit_channel/utils/dialog");
+        dialog.dialog("Uninvite editor", "Are you sure you want to uninvite " + this.model.get("email") + "?", {
+            "Cancel":function(){},
+            "Uninvite": function(){
+                self.model.destroy();
+                self.remove();
+            },
+        }, null);
     },
     reinvite_editor:function(){
-        if(confirm("Send invitation to edit to " + this.model.get("first_name") + " " + this.model.get("last_name") + " again?")){
-            var self = this;
-            this.model.resend_invitation_email(this.containing_list_view.model).then(function(){
-                self.show_invitation_sent();
-            });
-        }
+        var self = this;
+        var dialog = require("edit_channel/utils/dialog");
+        dialog.dialog("Send Invitation", "Send invitation to edit to " + this.model.get("first_name") + " " + this.model.get("last_name") + " again?", {
+            "Cancel":function(){},
+            "Send": function(){
+                self.model.resend_invitation_email(self.containing_list_view.model).then(function(){
+                    self.show_invitation_sent();
+                });
+            },
+        }, null);
     },
     show_invitation_sent:function(){
         this.$el.addClass("adding_to_list");
@@ -269,11 +279,16 @@ var ShareCurrentItem = ShareItem.extend({
         'click .remove_editor' : 'remove_editor',
     },
     remove_editor:function(){
-        if(confirm("Are you sure you want to remove " + this.model.get("first_name")
-            + " " + this.model.get("last_name") + " from the list?")){
-            this.containing_list_view.remove_editor(this.model);
-            this.remove();
-        }
+        var self = this;
+        var dialog = require("edit_channel/utils/dialog");
+        dialog.dialog("Remove editor", "Are you sure you want to remove " + this.model.get("first_name")
+            + " " + this.model.get("last_name") + " from the list?", {
+            "Cancel":function(){},
+            "Remove": function(){
+                self.containing_list_view.remove_editor(self.model);
+                self.remove();
+            },
+        }, function(){});
     }
 });
 

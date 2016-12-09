@@ -32,17 +32,24 @@ var ExerciseModalView = BaseViews.BaseModalView.extend({
         });
     },
     close_exercise_uploader:function(event){
+        var self = this;
         if(!event || !this.exercise_view.check_for_changes()){
             this.close();
             $('body').removeClass('modal-open');
             $('.modal-backdrop').remove();
-        }else if(confirm("Unsaved Metadata Detected! Exiting now will"
-            + " undo any new changes. \n\nAre you sure you want to exit?")){
-            // this.exercise_view.reset();
-            this.close();
         }else{
-            event.stopPropagation();
-            event.preventDefault();
+            var dialog = require("edit_channel/utils/dialog");
+            dialog.dialog("Unsaved changes", "Unsaved Metadata Detected! Exiting now will"
+            + " undo any new changes. \n\nAre you sure you want to exit?", {
+                "Cancel":null,
+                "Don't Save": function(){
+                    // self.exercise_view.reset();
+                    self.close();
+                }
+            }, function(){
+                event.stopPropagation();
+                event.preventDefault();
+            });
         }
     }
 });

@@ -166,10 +166,15 @@ var ClipboardList = QueueList.extend({
 		'click .import_content' : 'import_content'
 	},
 	delete_items:function(){
-		if(confirm("Are you sure you want to delete these selected items?")){
-			this.delete_selected();
-			this.$(".select_all").attr("checked", false);
-		}
+		var self = this;
+        var dialog = require("edit_channel/utils/dialog");
+        dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
+            "Cancel":function(){},
+            "Delete Items": function(){
+				self.delete_selected();
+				self.$(".select_all").attr("checked", false);
+            },
+        }, null);
 	},
 	edit_items:function(){
 		this.container.edit_selected();
@@ -229,10 +234,15 @@ var TrashList = QueueList.extend({
 		return item_view;
 	},
 	delete_items:function(){
-		if(confirm("Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
-			this.delete_items_permanently("Deleting Content...");
-			this.$(".select_all").attr("checked", false);
-		}
+		var self = this;
+        var dialog = require("edit_channel/utils/dialog");
+        dialog.dialog("WARNING", "Are you sure you want to delete these selected items permanently? Changes cannot be undone!", {
+            "Cancel":function(){},
+            "Delete Items Permanently": function(){
+				self.delete_items_permanently("Deleting Content...");
+				self.$(".select_all").attr("checked", false);
+            },
+        }, null);
 	},
 	move_trash:function(){
 		var list = this.get_selected();
@@ -316,9 +326,14 @@ var ClipboardItem = QueueItem.extend({
 		}
 	},
 	delete_content:function(){
-		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
-			this.add_to_trash();
-		}
+		var self = this;
+        var dialog = require("edit_channel/utils/dialog");
+        dialog.dialog("WARNING", "Are you sure you want to delete " + this.model.get("title") + "?", {
+            "Cancel":function(){},
+            "Delete": function(){
+				self.add_to_trash();
+            },
+        }, null);
 	},
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
 	// handle_drop:function(collection){
@@ -366,9 +381,14 @@ var TrashItem = QueueItem.extend({
 		}
 	},
 	delete_content:function(){
-		if(confirm("Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!")){
-			this.delete(true, "Deleting Content...");
-		}
+		var self = this;
+        var dialog = require("edit_channel/utils/dialog");
+        dialog.dialog("WARNING", "Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!", {
+            "Cancel":function(){},
+            "Delete Permanently": function(){
+				self.delete(true, "Deleting Content...");
+            },
+        }, null);
 	}
 });
 
