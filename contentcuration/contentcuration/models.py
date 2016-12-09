@@ -245,7 +245,7 @@ class ContentNode(MPTTModel, models.Model):
     node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
     title = models.CharField(max_length=200)
-    description = models.CharField(max_length=400, blank=True)
+    description = models.TextField(blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
     license = models.ForeignKey('License', null=True, default=settings.DEFAULT_LICENSE)
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)

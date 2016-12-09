@@ -603,7 +603,8 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         this.$el.html(this.template({
             answer: this.model.toJSON(),
             input_answer: this.assessment_item.get("type") === "input_question",
-            single_selection: this.assessment_item.get("type") === "single_selection"
+            single_selection: this.assessment_item.get("type") === "single_selection",
+            groupName: this.assessment_item.get("id")
         }));
         if (!this.editor_view) {
             this.editor_view = new EditorView({model: this.model, edit_key: "answer", el: this.$(".answer"), nodeid:this.nodeid});
