@@ -16,7 +16,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	lists: [],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container','toggle_details', 'handle_checked');
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container','toggle_details', 'handle_checked', 'open_archive');
 		this.bind_workspace_functions();
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
@@ -29,7 +29,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		'click .edit_button' : 'edit_selected',
 		'click #hide_details_checkbox' :'toggle_details',
 		'change input[type=checkbox]' : 'handle_checked',
-		'click .permissions_button' : 'edit_permissions'
+		'click .permissions_button' : 'edit_permissions',
+		'click .archive_button' : 'open_archive'
 	},
 	render: function() {
 		this.$el.html(this.template({
