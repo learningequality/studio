@@ -7,6 +7,7 @@ import re
 import hashlib
 import shutil
 import tempfile
+import subprocess
 from functools import wraps
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
@@ -46,34 +47,15 @@ def write_file_to_storage(fobj, check_valid = False, name=None):
         shutil.copyfileobj(fobj, destf)
     return full_filename
 
-def extract_thumbnail_from_video(fobj):
+def extract_thumbnail_from_video(source_file_path, target_file, overwrite=False):
     from ffmpy import FFmpeg
-    fh, fd = tempfile.mkstemp(suffix=".{}".format(file_formats.PNG))
-    try:
-        ff = FFmpeg(
-            inputs={str(fobj.file_on_disk): None},
-            outputs={fd: "-vcodec png -ss 10 -vframes 1 -an -f rawvideo -y"}
-        )
-        ff.run()
-        filename = write_file_to_storage(open(fd, 'rb'), name=fd)
-        checksum, ext = os.path.splitext(filename)
-        file_location = models.generate_file_on_disk_name(checksum, filename)
-        thumbnail_object = models.File(
-            file_on_disk=DjFile(open(file_location, 'rb')),
-            file_format_id=file_formats.PNG,
-            original_filename = 'Extracted Thumbnail',
-            contentnode=fobj.contentnode,
-            file_size=os.path.getsize(file_location),
-            preset_id=format_presets.VIDEO_THUMBNAIL,
-        )
-        thumbnail_object.save()
-        return thumbnail_object
-    finally:
-        os.close(fh)
-        os.unlink(fd)
+    ff = FFmpeg(
+        inputs={source_file_path: "-y" if overwrite else "-n"},
+        outputs={target_file: "-vcodec png -ss 10 -vframes 1 -an -f rawvideo -y"}
+    )
+    ff.run()
 
 def check_video_resolution(video):
-    import subprocess
     result = subprocess.check_output(['ffprobe', '-v', 'error', '-print_format', 'json', '-show_entries', 'stream=width,height', '-of', 'default=noprint_wrappers=1', str(video.file_on_disk)])
     pattern = re.compile('width=([0-9]*)[^height]+height=([0-9]*)')
     resolution = pattern.search(result)
