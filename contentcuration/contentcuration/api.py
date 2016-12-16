@@ -82,6 +82,15 @@ def check_video_resolution(video):
         return format_presets.VIDEO_HIGH_RES
     return format_presets.VIDEO_LOW_RES
 
+def compress_video(source_file_path, target_file, target_size="320x240", target_bitrate=None):
+    import subprocess
+    # Construct command for compressing video
+    command = ["ffmpeg", "-y", "-i", source_file_path, "-s", target_size]
+    if target_bitrate:
+        command += ["-b", target_bitrate]
+    command += ["-vcodec", "mpeg4", "-acodec", "copy", target_file]
+    subprocess.call(command)
+
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
     for child in ContentNode.objects.filter(parent=node).order_by('sort_order'):

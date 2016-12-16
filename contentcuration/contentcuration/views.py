@@ -19,11 +19,11 @@ from django.db.models import Q
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video, check_supported_browsers, check_video_resolution
+from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video, compress_video, check_supported_browsers, check_video_resolution
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
-from le_utils.constants import format_presets, content_kinds
+from le_utils.constants import format_presets, content_kinds, file_formats
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -173,6 +173,28 @@ def file_create(request):
         if kind.pk == content_kinds.VIDEO:
             thumbnail_obj = extract_thumbnail_from_video(file_object)
             file_object.preset_id = check_video_resolution(file_object)
+
+            if file_object.preset_id == format_presets.VIDEO_HIGH_RES:
+                import tempfile
+                try:
+                    fh, fd = tempfile.mkstemp(suffix=".{}".format(file_formats.MP4))
+                    compress_video(str(file_object.file_on_disk), fd, target_size="320x240")
+                    filename = write_file_to_storage(open(fd, 'rb'), name=fd)
+                    checksum, ext = os.path.splitext(filename)
+                    file_location = generate_file_on_disk_name(checksum, filename)
+                    low_res_object = File(
+                        file_on_disk=DjFile(open(file_location, 'rb')),
+                        file_format_id=file_formats.MP4,
+                        original_filename = file_object.original_filename,
+                        contentnode=file_object.contentnode,
+                        file_size=os.path.getsize(file_location),
+                        preset_id=format_presets.VIDEO_LOW_RES,
+                    )
+                    low_res_object.save()
+                finally:
+                    os.close(fh)
+                    os.unlink(fd)
+
         elif presets.filter(supplementary=False).count() == 1:
             file_object.preset = presets.filter(supplementary=False).first()
 
