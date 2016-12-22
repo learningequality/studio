@@ -105,7 +105,7 @@ var ShareView = BaseViews.BaseView.extend({
     check_current_editors:function(email){
         var result = this.collection.findWhere({"email": email});
         if(result){
-            this.$("#share_error").text("This person already has editing permission.");
+            this.$("#share_error").text("This person already has access to this channel.");
             this.$("#share_item_" + result.get("id")).addClass("error_share_list_item");
             $('#editor_list_wrapper').animate({
                 scrollTop : this.$("#share_item_" + result.get("id")).position().top,
