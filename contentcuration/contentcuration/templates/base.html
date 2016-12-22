@@ -41,33 +41,6 @@
                 <label id="kolibri_label">Kolibri</label>
               </a>
             </div>
-
-            <!-- Collect the nav links, forms, and other content for toggling -->
-            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-              <ul class="nav navbar-nav">
-                <li class="active" id="main-nav-home-button"><a href="/channels" class="btn btn-main">Home</a></li>
-                <!--<li class="search" id="content-search">
-                      <input type="text" placeholder="Search for content in your channels..." aria-describedby="basic-addon2">
-                      <span class="glyphicon glyphicon-search" id="main-search-button" aria-hidden="true"></span>
-                </li>-->
-                 <li class="dropdown" id="channel_select_dd_wrapper">
-                    <a href="#" id="channel_selection_dropdown" class="dropdown-toggle truncate" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{%if channel_name %}{{channel_name}} {% else %}Select a Channel... {% endif %}<span class="caret"></span></a>
-                    <ul class="dropdown-menu" id="channel_selection_dropdown_list">
-                      {% for channel in channel_list %}
-                        <li>
-                          {% if channel.is_view_only %}
-                            <a href="/channels/{{channel.id}}/preview" class="truncate">{{channel.name}} <i>(View Only)</i></a>
-                          {% else %}
-                            <a href="/channels/{{channel.id}}/edit" class="truncate">{{channel.name}}</a>
-                          {% endif %}
-                        </li>
-                      {% empty %}
-                      <li class='default-channel-item'><em>No channels found.</em></li>
-                      {% endfor %}
-                    </ul>
-                </li>
-              </ul>
-
               <ul class="nav navbar-nav navbar-right">
                 <!-- <li> <a class="btn btn-main">Discover</a></li> -->
                 <li id="username_label">Hello, {{ user.first_name }}</li>
