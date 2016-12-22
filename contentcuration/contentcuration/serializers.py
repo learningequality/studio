@@ -407,4 +407,4 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Invitation
-        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name')
+        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode')
