@@ -4,6 +4,7 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var Previewer = require("edit_channel/preview/views");
 var stringHelper = require("edit_channel/utils/string_helper");
+var autoCompleteHelper = require("edit_channel/utils/autocomplete");
 require("uploader.less");
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -363,7 +364,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   selected_items: [],
 
   initialize: function(options) {
-    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag');
+    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'select_tag');
     this.new_content = options.new_content;
     this.upload_files = options.upload_files;
     this.selected_items = options.selected_items;
@@ -441,11 +442,11 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.$("#tag_area").html(this.tags_template({
       tags:this.shared_data.shared_tags
     }));
-    $( "#tag_box" ).autocomplete({
-      source: window.contenttags.pluck("tag_name"),
-      minLength: 1,
-      select: this.add_tag
+    var self = this;
+    var tags = _.reject(window.contenttags.pluck("tag_name"), function(tag){
+      return self.shared_data.shared_tags.indexOf(tag) >= 0;
     });
+    autoCompleteHelper.addAutocomplete($( "#tag_box" ), tags, this.select_tag, "#tag_area_wrapper");
   },
   load_license:function(){
     iscopied = this.selected_items.length === 1 && !this.selected_items[0].isoriginal
@@ -455,24 +456,48 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   update_count:function(){
     if(this.selected_items.length === 1){
-      stringHelper.update_word_count(this.$("#input_description"), this.$("#description_counter"), this.description_limit);
+      var char_length = this.description_limit - this.$("#input_description").val().length;
+      if(this.$("#input_description").val() == ""){
+        char_length = this.description_limit;
+      }
+      if(char_length < 0){
+        char_length *= -1;
+        this.$("#description_counter").html("Too long - recommend removing " + char_length + ((char_length  == 1) ? " character" : " characters"));
+        this.$("#description_counter").css("color", "red");
+      }else{
+        this.$("#description_counter").html(char_length + ((char_length  == 1) ? " character left" : " characters left"));
+        this.$("#description_counter").css("color", "gray");
+      }
+
     }
+  },
+  select_tag:function(selected_tag){
+    this.assign_tag(selected_tag.label);
   },
   add_tag: function(event){
     $("#tag_error").css("display", "none");
     var code = (!event)? null : event.keyCode ? event.keyCode : event.which;
-    if((!event || (!code || code ==13)) && this.$el.find("#tag_box").length > 0 && this.$el.find("#tag_box").val().trim() != ""){
-      var tag = this.$el.find("#tag_box").val().trim();
-      if(this.shared_data.shared_tags.indexOf(tag) < 0){
-        this.shared_data.shared_tags.push(tag);
-        this.selected_items.forEach(function(view){
-          view.add_tag(tag);
-        });
-        this.load_tags();
+    if(!code || code ==13){
+      $(".ui-menu-item").hide();
+      if(this.$el.find("#tag_box").length > 0 && this.$el.find("#tag_box").val().trim() != ""){
+        var tag = this.$el.find("#tag_box").val().trim();
+        if(!window.contenttags.findWhere({'tag_name':tag})){
+          window.contenttags.add(new Models.TagModel({tag_name: tag, channel: window.current_channel.id}));
+        }
+        this.assign_tag(tag);
       }
-      this.$el.find("#tag_box").val("");
-      this.container.adjust_list_height();
     }
+  },
+  assign_tag:function(tag){
+    if(this.shared_data.shared_tags.indexOf(tag) < 0){
+      this.shared_data.shared_tags.push(tag);
+      this.selected_items.forEach(function(view){
+        view.add_tag(tag);
+      });
+      this.load_tags();
+    }
+    this.$el.find("#tag_box").val("");
+    this.container.adjust_list_height();
   },
   remove_tag:function(event){
     var tagname = event.target.getAttribute("value");
@@ -481,6 +506,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     });
     this.load_tags();
     event.target.parentNode.remove();
+    window.contenttags.remove(window.contenttags.findWhere({'tag_name':tagname}));
   },
   select_license:function(){
     this.$("#license_about").css("display", "inline");
