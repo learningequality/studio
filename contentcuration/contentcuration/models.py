@@ -153,6 +153,13 @@ class Channel(models.Model):
         help_text=_("Users with edit rights"),
         blank=True,
     )
+    viewers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='view_only_channels',
+        verbose_name=_("viewers"),
+        help_text=_("Users with view only rights"),
+        blank=True,
+    )
     language =  models.ForeignKey('Language', null=True, blank=True, related_name='channel_language')
     trash_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_trash')
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')

@@ -384,7 +384,7 @@ class ChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree',
-                'thumbnail', 'version', 'deleted', 'public', 'pending_editors')
+                'thumbnail', 'version', 'deleted', 'public', 'pending_editors', 'viewers')
 
 class ChannelListSerializer(serializers.ModelSerializer):
     main_tree = ContentNodeSerializer(read_only=True)
