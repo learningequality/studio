@@ -11,7 +11,7 @@ var ArchiveModalView = BaseViews.BaseModalView.extend({
     initialize: function(options) {
         _.bindAll(this, "close_archive");
         this.modal = true;
-        this.render(this.close, {});
+        this.render(this.close, {channel:window.current_channel.toJSON()});
         this.archive_view = new ArchiveView({
             el: this.$(".modal-body"),
             modal : this,
@@ -26,8 +26,6 @@ var ArchiveModalView = BaseViews.BaseModalView.extend({
 
 var ArchiveView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/archive_dialog.handlebars"),
-    onimport:null,
-    lists: [],
 
     initialize: function(options) {
         // _.bindAll(this, 'import_content');
@@ -128,7 +126,7 @@ var ArchiveList = BaseViews.BaseListView.extend({
         this.load_content();
     },
     create_new_view:function(model){
-        var new_view = new ImportItem({
+        var new_view = new ArchiveItem({
             containing_list_view: this,
             model: model,
             is_channel : this.is_channel,
