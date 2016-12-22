@@ -121,6 +121,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.thumbnail_url = this.original_thumbnail_url;
 		this.thumbnail = this.original_thumbnail;
 		this.originalData = (this.model)? this.model.toJSON() : null;
+		this.isViewOnly = this.model.get("viewers").indexOf(window.current_user.get("id")) >= 0;
 		this.render();
 		this.dropzone = null;
 		this.isNew = false;
@@ -136,6 +137,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	render: function() {
 		this.$el.html(this.template({
+			view_only: this.isViewOnly,
 			edit: this.edit,
 			channel: this.model.toJSON(),
 			total_file_size: this.model.get("main_tree").metadata.resource_size,
@@ -157,7 +159,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	open_channel:function(event){
 		if(!this.edit){
-			window.location.href = '/channels/' + this.model.get("id") + '/edit';
+			window.location.href = '/channels/' + this.model.get("id") + ((this.isViewOnly)? '/view' : '/edit');
 		}
 	},
 	copy_id:function(event){
