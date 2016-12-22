@@ -70,7 +70,7 @@ def channel(request, channel_id):
 
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
     channel_serializer =  ChannelSerializer(channel)
-    accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors= request.user))
+    accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors= request.user) | Q(viewers= request.user))
     accessible_channel_list = ChannelListSerializer.setup_eager_loading(accessible_channel_list)
     accessible_channel_list_serializer = ChannelListSerializer(accessible_channel_list, many=True)
 
