@@ -137,7 +137,7 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
         this.render();
     },
     events: {
-        'click .move_channel_item' : 'toggle',
+        'dblclick .dblclick_toggle' : 'toggle',
         'click .tog_folder' : 'toggle',
         'click >.move_checkbox' : 'handle_checked'
     },

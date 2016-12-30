@@ -7,17 +7,22 @@
 	background-color:@gray-200;
 	padding:10px;
 
-	#move_arrow_indicator{
-		padding-top:15%;
-		font-size:20pt;
+	.move_section_wrapper {
+	    display: flex;
+  		flex-wrap: wrap;
+	    width:100%;
+	    .move_section{
+			min-height: 400px;
+			margin-bottom: 20px;
+			padding:0px;
+		    display: flex;
+  			flex-direction: column;
+		}
 	}
 
-	.move_section{
-		min-height: 400px;
-		margin-bottom: 20px;
-		display:inline-block;
-		padding:0px;
-		min-height: 400px;
+	#move_arrow_indicator{
+		padding-top:20%;
+		font-size:20pt;
 	}
 
 	.move_list_section{
@@ -27,6 +32,9 @@
 			height:auto;
 			margin:0px;
 			padding:0px;
+			width: -moz-max-content;
+			width: -webkit-max-content;
+			width: max-content;
 			li {
 				cursor:pointer;
 				padding-left:10px;
@@ -48,19 +56,24 @@
 				.move_item{
 					cursor:pointer;
 					font-size:16px;
-					vertical-align:middle;
 					height:@move-list-item-height;
 					font-weight:normal;
-					.toggler{
-						font-size:8pt;
-						padding:0px 5px;
+					.tog_folder{
+						font-size:11pt;
+						padding:5px;
 						display:inline-block;
 					}
 					.move_item_title{
-						max-width:inherit;
 						margin-right:15px;
 						font-size:13pt;
 						overflow:hidden;
+						max-width:200px;
+						-webkit-touch-callout: none;
+						-webkit-user-select: none;
+						-khtml-user-select: none;
+						-moz-user-select: none;
+						-ms-user-select: none;
+						user-select: none;
 					}
 					.move_empty{
 						font-size: 10pt;
@@ -77,10 +90,15 @@
 		}
 		.target-list{
 			border-left:2px solid @blue-500;
+			margin-left: 10px;
 		}
 		.to-move-list .move_item_title, .disabled{
 			color:@gray-700;
 		}
+	}
+
+	#target_list_area > .target-list{
+		margin-left: 0px;
 	}
 
 	#move_bottom_container{
