@@ -166,11 +166,15 @@ var BaseWorkspaceView = BaseView.extend({
 		});
 		return promise;
 	},
-	get_selected:function(){
+	get_selected:function(exclude_descendants){
 		var selected_list = [];
-		this.lists.forEach(function(list){
-			selected_list = $.merge(selected_list, list.get_selected());
-		});
+		// Use for loop to break if needed
+		for(var i = 0; i < this.lists.length; ++i){
+			selected_list = $.merge(selected_list, this.lists[i].get_selected());
+			if(exclude_descendants && selected_list.length > 0){
+				break;
+			}
+		}
 		return selected_list;
 	},
 	open_archive:function(){
@@ -178,6 +182,25 @@ var BaseWorkspaceView = BaseView.extend({
 		var archive = new ArchiveView.ArchiveModalView({
 			model : window.current_channel.get_root("trash_tree"),
 	 	});
+	},
+	move_content:function(){
+		var MoveView = require("edit_channel/move/views");
+		var list = this.get_selected(true);
+		var move_collection = new Models.ContentNodeCollection();
+		/* Create list of nodes to move */
+		for(var i = 0; i < list.length; i++){
+			var model = list[i].model;
+			model.view = list[i];
+			move_collection.add(model);
+		}
+		$("#main-content-area").append("<div id='dialog'></div>");
+
+		var move = new MoveView.MoveModalView({
+			collection: move_collection,
+			el: $("#dialog"),
+		    onmove: this.reload_ancestors,
+		    model: window.current_channel.get_root("main_tree")
+		});
 	}
 });
 

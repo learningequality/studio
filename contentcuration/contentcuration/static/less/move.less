@@ -1,0 +1,92 @@
+@import "global-variables.less";
+@import "modal-styles.less";
+
+#move_modal_content{
+	@move-list-item-height: 30px;
+	@highlight-color: #E6E6E6;
+	background-color:@gray-200;
+	padding:10px;
+
+	#move_arrow_indicator{
+		padding-top:15%;
+		font-size:20pt;
+	}
+
+	.move_section{
+		min-height: 400px;
+		margin-bottom: 20px;
+		display:inline-block;
+		padding:0px;
+		min-height: 400px;
+	}
+
+	.move_list_section{
+		background-color:white;
+		overflow:auto;
+		.move-list{
+			height:auto;
+			margin:0px;
+			padding:0px;
+			li {
+				cursor:pointer;
+				padding-left:10px;
+				input[type=radio]{
+					cursor:pointer;
+					display:inline-block;
+					width:16px;
+					height:16px;
+					vertical-align:middle;
+					margin: 0px 4px;
+				}
+				input[type=radio]:checked + label{
+					font-weight:bold;
+				}
+				label *{
+					display:inline-block;
+					vertical-align:middle;
+				}
+				.move_item{
+					cursor:pointer;
+					font-size:16px;
+					vertical-align:middle;
+					height:@move-list-item-height;
+					font-weight:normal;
+					.toggler{
+						font-size:8pt;
+						padding:0px 5px;
+						display:inline-block;
+					}
+					.move_item_title{
+						max-width:inherit;
+						margin-right:15px;
+						font-size:13pt;
+						overflow:hidden;
+					}
+					.move_empty{
+						font-size: 10pt;
+						color:gray;
+					}
+				}
+				.subdirectory{
+					display:none;
+				}
+			}
+		}
+		.to-move-list{
+			border-left:2px solid @gray-400;
+		}
+		.target-list{
+			border-left:2px solid @blue-500;
+		}
+		.to-move-list .move_item_title, .disabled{
+			color:@gray-700;
+		}
+	}
+
+	#move_bottom_container{
+		min-height:30px;
+		#move_content_button{
+			margin-right:20px;
+		}
+	}
+}

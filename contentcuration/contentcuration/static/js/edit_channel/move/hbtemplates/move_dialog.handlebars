@@ -1,0 +1,24 @@
+<div class="row">
+	<div class="move_section col-sm-5 move_list_section">
+		<div id="move_list_area"></div>
+	</div>
+	<div id="move_arrow_indicator" class="col-sm-1 move_section text-center">
+		<div class="glyphicon glyphicon-triangle-right"></div>
+	</div>
+	<div class="move_section col-sm-6 move_list_section">
+		{{#if is_empty}}
+			<div class="empty_default">No valid moves found...</div>
+		{{else}}
+			<div id="target_list_area"></div>
+		{{/if}}
+	</div>
+</div>
+<br/>
+<div id="move_bottom_container">
+	<a class="action-text" data-dismiss="modal">
+		<span>CANCEL</span>
+	</a>
+	<button disabled class="action-button pull-right disabled" id="move_content_button">
+		MOVE
+	</button>
+</div>
