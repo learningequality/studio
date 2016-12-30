@@ -30,6 +30,7 @@ var MoveView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/move_dialog.handlebars"),
     onmove:null,
     lists: [],
+    target_node:null,
 
     initialize: function(options) {
         _.bindAll(this, 'move_content');
@@ -81,6 +82,11 @@ var MoveView = BaseViews.BaseListView.extend({
             this.onmove(collection);
             this.remove();
         }
+    },
+    handle_target_selection:function(node){
+        this.target_node = node;
+        this.$("#move_content_button").prop("disabled", false);
+        this.$("#move_content_button").removeClass("disabled");
     }
 });
 
@@ -90,6 +96,7 @@ var MoveList = BaseViews.BaseListView.extend({
     list_selector: ">.move-list",
     initialize: function(options) {
         this.is_target = options.is_target;
+        this.container = options.container;
         this.collection = this.get_collection(options.collection);
         this.render();
     },
@@ -105,6 +112,7 @@ var MoveList = BaseViews.BaseListView.extend({
     },
     create_new_view:function(model){
         var new_view = new MoveItem({
+            container: this.container,
             containing_list_view : this,
             model : model,
             is_target : this.is_target
@@ -134,12 +142,13 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
         this.containing_list_view = options.containing_list_view;
         this.is_target = options.is_target;
         this.collection = new Models.ContentNodeCollection();
+        this.container = options.container;
         this.render();
     },
     events: {
         'dblclick .dblclick_toggle' : 'toggle',
         'click .tog_folder' : 'toggle',
-        'click >.move_checkbox' : 'handle_checked'
+        'change >.move_checkbox' : 'handle_checked'
     },
     render: function() {
         this.$el.html(this.template({
@@ -156,9 +165,13 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
                 model : self.model,
                 el: $(self.getSubdirectory()),
                 is_target: self.is_target,
-                collection: fetched
+                collection: fetched,
+                container: self.container
             });
         });
+    },
+    handle_checked:function(event){
+        this.container.handle_target_selection(this.model);
     }
 });
 
