@@ -13,14 +13,13 @@ var MoveModalView = BaseViews.BaseModalView.extend({
         this.render(this.close, {});
         this.move_view = new MoveView({
             el: this.$(".modal-body"),
-            onmove: this.onmove,
+            onmove: options.onmove,
             collection : options.collection,
             modal : this,
             model:this.model
         });
     },
-    close_move:function(collection){
-      this.onmove(collection);
+    close_move:function(){
       this.close();
     }
 });
@@ -35,18 +34,22 @@ var MoveView = BaseViews.BaseListView.extend({
     initialize: function(options) {
         _.bindAll(this, 'move_content');
         this.modal = options.modal;
-        this.collection = options.collection;
-        this.target_collection = this.collection;
         this.onmove = options.onmove;
+        this.collection = options.collection;
+
+        // Calculate how many nodes are being moved
+        this.total_count = 0;
+        var self = this;
+        this.collection.forEach(function(node){
+            self.total_count += node.get("metadata").total_count;
+        })
         this.render();
     },
     events: {
       "click #move_content_button" : "move_content"
     },
     render: function() {
-        this.$el.html(this.template({
-            is_empty:this.target_collection.length === 0
-        }));
+        this.$el.html(this.template());
         this.moveList = new MoveList({
             model : null,
             el:$("#move_list_area"),
@@ -54,32 +57,46 @@ var MoveView = BaseViews.BaseListView.extend({
             collection :  this.collection,
             container :this
         });
+        this.load_target_list();
+    },
+    load_target_list:function(){
+        var fetched = new Models.ContentNodeCollection();
+        // Add main tree root
+        var main_node = this.model.clone();
+        main_node.set({'title': window.current_channel.get("name")});
+        fetched.add(main_node);
+
+        // Add clipboard node
+        var clipboard_node = window.current_user.get_clipboard().clone();
+        clipboard_node.set({'title': 'My Clipboard'});
+        fetched.add(clipboard_node);
+
+        // Render list
         this.targetList = new MoveList({
             model : null,
             el:$("#target_list_area"),
             is_target: true,
-            collection :  this.target_collection,
+            collection :  fetched,
             container :this
         });
     },
-    fetch_target_list:function(){
-        return new Models.ContentNodeCollection();
-    },
     move_content:function(){
         var self = this;
-        console.log("MOVED!")
-        // this.display_load("Moving Content...", function(resolve, reject){
-        //     self.get_move_collection().duplicate(self.model).then(function(copied){
-        //         self.close_mover(copied);
-        //         resolve(true);
-        //     });
-        // });
+        this.display_load("Moving Content...", function(resolve, reject){
+            var sort_order = self.target_node.get('metadata').max_sort_order;
+            self.collection.move(self.target_node, sort_order).then(function(moved){
+                self.onmove(moved);
+                self.close_move();
+                resolve(true);
+            }).catch(function(exception){
+                reject(exception);
+            });
+        });
     },
-    close_move:function(collection){
+    close_move:function(){
         if(this.modal){
-            this.modal.close_move(collection);
+            this.modal.close();
         }else{
-            this.onmove(collection);
             this.remove();
         }
     },
@@ -87,6 +104,9 @@ var MoveView = BaseViews.BaseListView.extend({
         this.target_node = node;
         this.$("#move_content_button").prop("disabled", false);
         this.$("#move_content_button").removeClass("disabled");
+
+        // Calculate number of items
+        this.$("#move_status").text("Moving " + this.total_count + ((this.total_count === 1)? " item to " : " items to ") + this.target_node.get("title"));
     }
 });
 
@@ -101,7 +121,9 @@ var MoveList = BaseViews.BaseListView.extend({
         this.render();
     },
     get_collection:function(collection){
-        return (this.is_target)? collection.where({kind : "topic"}) : collection;
+        var to_return = (this.is_target)? collection.where({kind : "topic"}) : collection;
+
+        return to_return;
     },
     render: function() {
         this.$el.html(this.template({
