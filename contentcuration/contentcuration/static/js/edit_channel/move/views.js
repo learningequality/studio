@@ -37,12 +37,15 @@ var MoveView = BaseViews.BaseListView.extend({
         this.onmove = options.onmove;
         this.collection = options.collection;
 
-        // Calculate how many nodes are being moved
-        this.total_count = 0;
+        // Get ids of all descendants to help calculate valid moves
+        // and calculate how many nodes are being moved
+        this.to_move_ids = [];
         var self = this;
         this.collection.forEach(function(node){
-            self.total_count += node.get("metadata").total_count;
-        })
+            self.to_move_ids.push(node.id);
+            self.to_move_ids = $.merge(self.to_move_ids, node.get("descendants"));
+        });
+
         this.render();
     },
     events: {
@@ -106,7 +109,7 @@ var MoveView = BaseViews.BaseListView.extend({
         this.$("#move_content_button").removeClass("disabled");
 
         // Calculate number of items
-        this.$("#move_status").text("Moving " + this.total_count + ((this.total_count === 1)? " item to " : " items to ") + this.target_node.get("title"));
+        this.$("#move_status").text("Moving " + this.to_move_ids.length + ((this.to_move_ids.length === 1)? " item to " : " items to ") + this.target_node.get("title"));
     }
 });
 
@@ -121,9 +124,19 @@ var MoveList = BaseViews.BaseListView.extend({
         this.render();
     },
     get_collection:function(collection){
-        var to_return = (this.is_target)? collection.where({kind : "topic"}) : collection;
-
-        return to_return;
+        if(this.is_target){
+            var to_return = new Models.ContentNodeCollection();
+            var self = this;
+            collection.forEach(function(node){
+                // Filter out descendants and non-topics
+                if(node.get("kind") == "topic" && self.container.to_move_ids.indexOf(node.id) < 0){
+                    to_return.add(node);
+                }
+            });
+            return to_return;
+        } else {
+            return collection;
+        }
     },
     render: function() {
         this.$el.html(this.template({
