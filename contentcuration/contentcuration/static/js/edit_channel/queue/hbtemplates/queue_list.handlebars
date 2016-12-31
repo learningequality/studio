@@ -25,7 +25,7 @@
 	<div id="queue_content">
 		{{#if is_clipboard}}
 			<div class="row clipboard_options text-center">
-				<div class="toolbar-button">
+				<div class="toolbar-button col-xs-3">
 					<div class="dropdown" id="clipboard_dropdown">
 						<div data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" >
 							<div class="add_items"><span class="glyphicon glyphicon-plus-sign" id="clipboard_add_dd"></span></div>
@@ -37,14 +37,17 @@
 					    <li><a class="import_content">Import from Channel</a></li>
 					  </ul>
 					</div>
-
 				</div>
-				<div class="toolbar-button queue-disable-none-selected">
+				<div class="toolbar-button queue-disable-none-selected col-xs-3">
 					<div class="edit_items"><span class="glyphicon glyphicon-pencil"></span></div>
 					<a class="edit_items">Edit</a>
 				</div>
+				<div class="toolbar-button queue-disable-none-selected col-xs-3">
+					<div class="move_items"><span class="glyphicon glyphicon-move"></span></div>
+					<a class="move_items">Move</a>
+				</div>
 				<!--<a class="col-xs-3 move_selected_queue btn btn-option construction">Move<br/>Selected</a>-->
-				<div class="toolbar-button queue-disable-none-selected">
+				<div class="toolbar-button queue-disable-none-selected col-xs-3">
 					<div class="delete_items"><span class="glyphicon glyphicon-remove"></span></div>
 					<a class="delete_items">Delete</a>
 				</div>
