@@ -764,7 +764,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		this.bind_node_functions();
 		_.bindAll(this, 'copy_item', 'open_preview', 'open_edit', 'handle_drop',
 			'handle_checked', 'add_to_clipboard', 'add_to_trash', 'make_droppable',
-			'add_nodes', 'add_topic');
+			'add_nodes', 'add_topic', 'open_move', 'handle_move');
 	},
 	make_droppable:function(){
 		if(this.model.get("kind") === "topic"){
@@ -780,6 +780,31 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			model: this.model,
 		}
 		new Previewer.PreviewModalView(data);
+	},
+	open_move:function(){
+		var MoveView = require("edit_channel/move/views");
+		var move_collection = new Models.ContentNodeCollection();
+		move_collection.add(this.model);
+		$("#main-content-area").append("<div id='dialog'></div>");
+		new MoveView.MoveModalView({
+			collection: move_collection,
+			el: $("#dialog"),
+		    onmove: this.handle_move,
+		    model: window.current_channel.get_root("main_tree")
+		});
+	},
+	handle_move:function(target, moved, original_parents){
+		// Recalculate counts
+		this.reload_ancestors(original_parents, true);
+
+		// Remove where node originally was
+		window.workspace_manager.remove(this.model.id)
+
+		// Add nodes to correct place
+		var content = window.workspace_manager.get(target.id);
+		if(content.list){
+			content.list.add_nodes(moved);
+		}
 	},
 	open_edit:function(event){
 		this.cancel_actions(event);

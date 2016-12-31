@@ -261,7 +261,6 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 // reject (function): function to call if failed to render
 var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
-	options_template:require("./hbtemplates/content_list_item_options.handlebars"),
 	selectedClass: "content-selected",
 	openedFolderClass: "current_topic",
 	'id': function() {
@@ -269,7 +268,8 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'add_new_subtopic', 'open_context_menu', 'toggle_description');
+		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'move_node',
+				'add_new_subtopic', 'open_context_menu', 'toggle_description');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
@@ -339,6 +339,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'change input[type=checkbox]': 'handle_checked',
 		'click .delete_item_button' : 'delete_node',
 		'click .copy_item_button': 'copy_node',
+		'click .move_item_button': 'move_node',
 		'click .add_subtopic_item_button': 'add_new_subtopic',
 		'contextmenu .list_item_wrapper' : 'open_context_menu',
 		'click .toggle_description' : 'toggle_description'
@@ -382,6 +383,10 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	copy_node:function(event){
 		this.cancel_actions(event);
 		this.copy_item();
+	},
+	move_node:function(event){
+		this.cancel_actions(event);
+		this.open_move();
 	},
 	delete_node:function(event){
 		this.cancel_actions(event);
