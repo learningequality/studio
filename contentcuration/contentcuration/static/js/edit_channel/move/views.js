@@ -87,13 +87,22 @@ var MoveView = BaseViews.BaseListView.extend({
         var self = this;
         this.display_load("Moving Content...", function(resolve, reject){
             var sort_order = self.target_node.get('metadata').max_sort_order;
+            var original_parents = self.collection.pluck('parent');
+            // Get original parents
             self.collection.move(self.target_node, sort_order).then(function(moved){
-                self.onmove(moved);
-                self.close_move();
-                resolve(true);
+                var original_collection = new Models.ContentNodeCollection();
+                original_collection.get_all_fetch(original_parents).then(function(fetched){
+                    fetched.add(self.target_node);
+                    self.onmove(self.target_node, moved, fetched);
+                    self.close_move();
+                    resolve(true);
+                });
             }).catch(function(exception){
                 reject(exception);
             });
+
+
+
         });
     },
     close_move:function(){
@@ -120,23 +129,8 @@ var MoveList = BaseViews.BaseListView.extend({
     initialize: function(options) {
         this.is_target = options.is_target;
         this.container = options.container;
-        this.collection = this.get_collection(options.collection);
+        this.collection = options.collection;
         this.render();
-    },
-    get_collection:function(collection){
-        if(this.is_target){
-            var to_return = new Models.ContentNodeCollection();
-            var self = this;
-            collection.forEach(function(node){
-                // Filter out descendants and non-topics
-                if(node.get("kind") == "topic" && self.container.to_move_ids.indexOf(node.id) < 0){
-                    to_return.add(node);
-                }
-            });
-            return to_return;
-        } else {
-            return collection;
-        }
     },
     render: function() {
         this.$el.html(this.template({
@@ -173,12 +167,12 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
     },
 
     initialize: function(options) {
+        _.bindAll(this, "render");
         this.bind_node_functions();
         this.containing_list_view = options.containing_list_view;
         this.is_target = options.is_target;
-        this.collection = new Models.ContentNodeCollection();
         this.container = options.container;
-        this.render();
+        this.fetch_collection(this.render);
     },
     events: {
         'dblclick .dblclick_toggle' : 'toggle',
@@ -190,19 +184,39 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
             node:this.model.toJSON(),
             isfolder: this.model.get("kind") === "topic",
             is_target:this.is_target,
-            has_descendants: (this.is_target)? this.model.get("metadata").total_count != this.model.get("metadata").resource_count : this.model.get("children").length > 0
+            has_descendants: (this.is_target)? this.collection.length > 0 : this.model.get("children").length > 0
         }));
     },
-    load_subfiles:function(){
+    fetch_collection:function(callback){
         var self = this;
+        this.collection = new Models.ContentNodeCollection()
         this.collection.get_all_fetch(this.model.get("children")).then(function(fetched){
-            self.subcontent_view = new MoveList({
-                model : self.model,
-                el: $(self.getSubdirectory()),
-                is_target: self.is_target,
-                collection: fetched,
-                container: self.container
+            self.collection = self.filter_collection(fetched);
+            callback();
+        });
+    },
+    filter_collection:function(collection){
+        if(this.is_target){
+            var to_return = new Models.ContentNodeCollection();
+            var self = this;
+            collection.forEach(function(node){
+                // Filter out descendants and non-topics
+                if(node.get("kind") == "topic" && self.container.to_move_ids.indexOf(node.id) < 0){
+                    to_return.add(node);
+                }
             });
+            return to_return;
+        } else {
+            return collection;
+        }
+    },
+    load_subfiles:function(){
+        this.subcontent_view = new MoveList({
+            model : this.model,
+            el: $(this.getSubdirectory()),
+            is_target: this.is_target,
+            collection: this.collection,
+            container: this.container
         });
     },
     handle_checked:function(event){

@@ -95,7 +95,7 @@ var BaseView = Backbone.View.extend({
 var BaseWorkspaceView = BaseView.extend({
 	lists: [],
 	bind_workspace_functions:function(){
-		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published',
+		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move',
 			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions');
 	},
 	publish:function(){
@@ -198,9 +198,24 @@ var BaseWorkspaceView = BaseView.extend({
 		var move = new MoveView.MoveModalView({
 			collection: move_collection,
 			el: $("#dialog"),
-		    onmove: this.reload_ancestors,
+		    onmove: this.handle_move,
 		    model: window.current_channel.get_root("main_tree")
 		});
+	},
+	handle_move:function(target, moved, original_parents){
+		// Recalculate counts
+		this.reload_ancestors(original_parents, true);
+
+		// Remove where nodes originally were
+		moved.forEach(function(node){
+			window.workspace_manager.remove(node.id)
+		});
+
+		// Add nodes to correct place
+		var content = window.workspace_manager.get(target.id);
+		if(content.list){
+			content.list.add_nodes(moved);
+		}
 	}
 });
 
