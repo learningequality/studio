@@ -213,6 +213,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     id = serializers.CharField(required=False)
 
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
+    descendants = serializers.SerializerMethodField('get_node_descendants')
     files = FileSerializer(many=True, read_only=True)
     assessment_items = AssessmentItemSerializer(many=True, read_only=True)
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
@@ -355,13 +356,16 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return instance
 
     def get_node_ancestors(self,node):
-        return get_node_ancestors(node)
+        return node.get_ancestors().values_list('id', flat=True)
+
+    def get_node_descendants(self, node):
+        return node.get_descendants().values_list('id', flat=True)
 
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel',
-                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets',
+                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets', 'descendants',
                  'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items')
 
 class ChannelSerializer(serializers.ModelSerializer):

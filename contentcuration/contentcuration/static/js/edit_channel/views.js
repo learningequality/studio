@@ -95,7 +95,7 @@ var BaseView = Backbone.View.extend({
 var BaseWorkspaceView = BaseView.extend({
 	lists: [],
 	bind_workspace_functions:function(){
-		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published',
+		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move',
 			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions');
 	},
 	publish:function(){
@@ -166,11 +166,15 @@ var BaseWorkspaceView = BaseView.extend({
 		});
 		return promise;
 	},
-	get_selected:function(){
+	get_selected:function(exclude_descendants){
 		var selected_list = [];
-		this.lists.forEach(function(list){
-			selected_list = $.merge(selected_list, list.get_selected());
-		});
+		// Use for loop to break if needed
+		for(var i = 0; i < this.lists.length; ++i){
+			selected_list = $.merge(selected_list, this.lists[i].get_selected());
+			if(exclude_descendants && selected_list.length > 0){
+				break;
+			}
+		}
 		return selected_list;
 	},
 	open_archive:function(){
@@ -178,6 +182,40 @@ var BaseWorkspaceView = BaseView.extend({
 		var archive = new ArchiveView.ArchiveModalView({
 			model : window.current_channel.get_root("trash_tree"),
 	 	});
+	},
+	move_content:function(){
+		var MoveView = require("edit_channel/move/views");
+		var list = this.get_selected(true);
+		var move_collection = new Models.ContentNodeCollection();
+		/* Create list of nodes to move */
+		for(var i = 0; i < list.length; i++){
+			var model = list[i].model;
+			model.view = list[i];
+			move_collection.add(model);
+		}
+		$("#main-content-area").append("<div id='dialog'></div>");
+
+		var move = new MoveView.MoveModalView({
+			collection: move_collection,
+			el: $("#dialog"),
+		    onmove: this.handle_move,
+		    model: window.current_channel.get_root("main_tree")
+		});
+	},
+	handle_move:function(target, moved, original_parents){
+		// Recalculate counts
+		this.reload_ancestors(original_parents, true);
+
+		// Remove where nodes originally were
+		moved.forEach(function(node){
+			window.workspace_manager.remove(node.id)
+		});
+
+		// Add nodes to correct place
+		var content = window.workspace_manager.get(target.id);
+		if(content.list){
+			content.list.add_nodes(moved);
+		}
 	}
 });
 
@@ -727,7 +765,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		this.bind_node_functions();
 		_.bindAll(this, 'copy_item', 'open_preview', 'open_edit', 'handle_drop',
 			'handle_checked', 'add_to_clipboard', 'add_to_trash', 'make_droppable',
-			'add_nodes', 'add_topic');
+			'add_nodes', 'add_topic', 'open_move', 'handle_move');
 	},
 	make_droppable:function(){
 		// Temporarily disable dropping onto topics for now
@@ -744,6 +782,31 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			model: this.model,
 		}
 		new Previewer.PreviewModalView(data);
+	},
+	open_move:function(){
+		var MoveView = require("edit_channel/move/views");
+		var move_collection = new Models.ContentNodeCollection();
+		move_collection.add(this.model);
+		$("#main-content-area").append("<div id='dialog'></div>");
+		new MoveView.MoveModalView({
+			collection: move_collection,
+			el: $("#dialog"),
+		    onmove: this.handle_move,
+		    model: window.current_channel.get_root("main_tree")
+		});
+	},
+	handle_move:function(target, moved, original_parents){
+		// Recalculate counts
+		this.reload_ancestors(original_parents, true);
+
+		// Remove where node originally was
+		window.workspace_manager.remove(this.model.id)
+
+		// Add nodes to correct place
+		var content = window.workspace_manager.get(target.id);
+		if(content.list){
+			content.list.add_nodes(moved);
+		}
 	},
 	open_edit:function(event){
 		this.cancel_actions(event);
