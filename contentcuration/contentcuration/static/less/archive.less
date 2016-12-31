@@ -6,29 +6,52 @@
 	@highlight-color: #E6E6E6;
 
 	#delete_selected_button{
-		color:@red-error-color;
+		color:@red-error-color !important;
+	}
+	#select_all_area{
+		cursor:pointer;
 	}
 	#archive_content{
 		width: @archive-list-width;
 
 		.archive-list{
+			padding-left:5px;
+			margin-left: 15px;
 			li{
+				.item_wrapper{
+					min-width:@archive-list-width / 2;
+					width: -moz-max-content;
+					width: -webkit-max-content;
+					width: max-content;
+				}
 				.archive_item{
+					width:85%;
 					.archive_item_title{
-						max-width:@uploader-width * 0.5;
+						max-width:@archive-list-width;
 					}
 					.delete_content{
 						visibility:hidden;
-						margin: 15px 10px 0 0;
+						padding: 5px;
+    					margint-left: 20px;
+					}
+				}
+				.item_wrapper:hover{
+					background-color: @highlight-color;
+					>.archive_item .delete_content{
+						visibility:visible;
 					}
 				}
 			}
-			li:hover{
-				background-color: @highlight-color;
+			.disabled{
 				.delete_content{
-					visibility:visible;
+					visibility:hidden !important;
 				}
 			}
+
+
+		}
+		>.archive-list{
+			margin-left:0px;
 		}
 
 	}

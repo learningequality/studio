@@ -1,17 +1,19 @@
-<input type="checkbox" id="archive_item_{{node.id}}_check" class="archive_checkbox"></input>
-<label for="archive_item_{{node.id}}_check" class="archive_item {{#if node.children}}tog_folder{{/if}}" title="{{node.title}}">
-	{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
-	<div class="archive_item_title truncate modal-item-title-default">{{node.title}}</div>
-	{{#if isfolder}}
-		{{#if node.children}}
-			<div id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-triangle-top"></div>
-		{{else}}
-			<em class="archive_metadata modal-item-metadata-default">(empty)</em>
+<div class="item_wrapper">
+	<input type="checkbox" id="archive_item_{{node.id}}_check" class="archive_checkbox"></input>
+	<label for="archive_item_{{node.id}}_check" class="archive_item {{#if node.children}}tog_folder{{/if}}" title="{{node.title}}">
+		{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
+		<div class="archive_item_title truncate modal-item-title-default">{{node.title}}</div>
+		{{#if isfolder}}
+			{{#if node.children}}
+				<div id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-triangle-top"></div>
+			{{else}}
+				<em class="archive_metadata modal-item-metadata-default">(empty)</em>
+			{{/if}}
+			<i class="badge selected_counter" id="archive_item_{{node.id}}_count">{{node.metadata.resource_count}}</i>
 		{{/if}}
-		<i class="badge selected_counter" id="archive_item_{{node.id}}_count">{{node.metadata.resource_count}}</i>
-	{{/if}}
-	<span class="delete_content glyphicon glyphicon-trash" aria-hidden="true"></span>
-</label>
+		<div class="delete_content glyphicon glyphicon-trash" aria-hidden="true"></div>
+	</label>
+</div>
 
 {{#if node.children}}
 	<div id="archive_item_{{node.id}}_sub" class="subdirectory"><em class="default-item">Loading...</em></div>
