@@ -2,98 +2,25 @@
 @import "modal-styles.less";
 
 #archive_modal_content{
-	@archive-list-item-height: 30px;
 	@archive-list-width: @uploader-width - 30px;
 	@highlight-color: #E6E6E6;
-	background-color:@gray-200;
+
+	#delete_selected_button{
+		color:@red-error-color;
+	}
 	#archive_content{
-		min-height: 400px;
-		overflow:auto;
 		width: @archive-list-width;
-		background-color:white;
-		padding:0px;
-		margin-bottom: 20px;
-		display:inline-block;
-		#archive_empty_text{
-			margin-top:20%;
-			text-align: center;
-			color:@gray-400;
-			font-size:14pt;
-			font-weight:bold;
-			font-style:italic;
-		}
 
 		.archive-list{
-			height:auto;
-			margin:0px;
-			padding:0px;
-			border-left:2px solid @blue-500;
 			li{
-				input[type=checkbox]{
-					display:inline-block;
-					width:16px;
-					height:16px;
-					vertical-align:middle;
-					margin: 0px 4px;
-					cursor:pointer;
-					margin-left:20px;
-				}
-				input[type=checkbox]:checked + label{
-					font-weight:bold;
-					.selected_counter{
-						visibility:visible !important;
-					}
-				}
-				label{
-					cursor:pointer;
-				}
-				label *{
-					display:inline-block;
-					vertical-align:middle;
-				}
 				.archive_item{
-					font-size:16px;
-					vertical-align:middle;
-					height:@archive-list-item-height;
-					font-weight:normal;
-					.toggler{
-						font-size:8pt;
-					}
 					.archive_item_title{
 						max-width:@uploader-width * 0.5;
-						margin-right:15px;
-						font-size:13pt;
 					}
 					.delete_content{
 						visibility:hidden;
 						margin: 15px 10px 0 0;
 					}
-				}
-				.archive_item_title{
-					overflow:hidden;
-				}
-				.toggler{
-					padding:0px 5px;
-					display:inline-block;
-				}
-
-				.tog_folder{
-					cursor:pointer;
-				}
-
-				.selected_counter{
-					margin-left:10px;
-					background-color: @blue-500;
-					visibility:hidden;
-				}
-
-				.subdirectory{
-					display:none;
-				}
-
-				.archive_metadata{
-					font-size: 10pt;
-					color:gray;
 				}
 			}
 			li:hover{
@@ -102,27 +29,7 @@
 					visibility:visible;
 				}
 			}
-			.disabled{
-				color:@gray-700;
-				input[type=checkbox]{
-					cursor:not-allowed !important;
-				}
-				.selected_counter{
-					background-color:@gray-400 !important;
-				}
-			}
 		}
 
-	}
-	#archive_bottom_container{
-		height:50px;
-		#archive_content_submit{
-			margin-right:20px;
-		}
-		#archive_file_count{
-			margin-right:20px;
-			font-size:12pt;
-			margin-top:2px;
-		}
 	}
 }

@@ -74,7 +74,7 @@ var ExportListView = BaseViews.BaseListView.extend({
 
 var ExportItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/export_item.handlebars"),
-    className: "export_item",
+    className: "export_item modal-list-item-default",
     selectedClass: "export-selected",
     collapsedClass: "glyphicon-menu-right",
     expandedClass: "glyphicon-menu-down",

@@ -4,8 +4,8 @@
 		<div id="menu_toggle_{{node.id}}" class="tog_folder pull-right glyphicon glyphicon-triangle-top"></div>
 	{{/if}}
 	{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
-	<div class="move_item_title truncate">{{node.title}}</div>
-	{{#if isfolder}}{{#unless has_descendants}}<em class="move_empty">(empty)</em>{{/unless}}{{/if}}
+	<div class="move_item_title truncate modal-item-title-default">{{node.title}}</div>
+	{{#if isfolder}}{{#unless has_descendants}}<em class="modal-item-metadata-default">(empty)</em>{{/unless}}{{/if}}
 </label>
 
 {{#if node.children}}

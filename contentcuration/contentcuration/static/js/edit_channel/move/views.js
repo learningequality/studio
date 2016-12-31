@@ -154,7 +154,7 @@ var MoveList = BaseViews.BaseListView.extend({
 var MoveItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/move_list_item.handlebars"),
     tagName: "li",
-    className: "move_list_item",
+    className: "move_list_item modal-list-item-default",
     selectedClass: "move-selected",
     collapsedClass: "glyphicon-triangle-top",
     expandedClass: "glyphicon-triangle-bottom",

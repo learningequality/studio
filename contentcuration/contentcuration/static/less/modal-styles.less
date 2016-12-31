@@ -86,7 +86,11 @@
 .modal-dialog{
 	width: @uploader-width;
 	margin-top:5%;
+}
 
+.modal-dialog-default{
+	background-color:@gray-200;
+	padding:10px;
 	.empty_default{
 		margin-top:20%;
 		text-align: center;
@@ -94,6 +98,112 @@
 		font-size:14pt;
 		font-weight:bold;
 		font-style:italic;
+	}
+	.modal-content-default{
+		@modal-list-item-height: 30px;
+		min-height: 400px;
+		overflow:auto;
+		background-color:white;
+		padding:0px;
+		margin-bottom: 20px;
+		display:inline-block;
+
+		.modal-list-default{
+			height:auto;
+			margin:0px;
+			padding:0px;
+			list-style:none;
+			border-left:2px solid @blue-500;
+			width: -moz-max-content;
+			width: -webkit-max-content;
+			width: max-content;
+
+			.modal-list-item-default{
+				input[type=checkbox], input[type=radio]{
+					display:inline-block;
+					width:16px;
+					height:16px;
+					vertical-align:middle;
+					margin: 0px 4px;
+					cursor:pointer;
+					margin-left:10px;
+				}
+				input[type=radio]:checked + label, input[type=checkbox]:checked + label{
+					font-weight:bold;
+					.selected_counter{
+						visibility:visible !important;
+					}
+				}
+				label{
+					cursor:pointer;
+					font-size:16px;
+					vertical-align:middle;
+					margin:0px;
+					height:@modal-list-item-height;
+					font-weight:normal;
+					*{
+						display:inline-block;
+						vertical-align:middle;
+					}
+					.modal-item-title-default{
+						margin-right:15px;
+						font-size:13pt;
+						overflow:hidden;
+						-webkit-touch-callout: none;
+						-webkit-user-select: none;
+						-khtml-user-select: none;
+						-moz-user-select: none;
+						-ms-user-select: none;
+						user-select: none;
+					}
+					.tog_folder.glyphicon{
+						font-size:11pt;
+						padding: 5px;
+						display:inline-block;
+					}
+					.tog_folder{
+						cursor:pointer;
+					}
+					.selected_counter{
+						margin-left:10px;
+						background-color: @blue-500;
+						visibility:hidden;
+					}
+				}
+				.subdirectory{
+					display:none;
+				}
+
+				.modal-item-metadata-default{
+					font-size: 10pt;
+					color:gray;
+				}
+			}
+			.disabled{
+				color:@gray-700;
+				input[type=checkbox]{
+					cursor:not-allowed !important;
+				}
+				.selected_counter{
+					background-color:@gray-400 !important;
+				}
+			}
+		}
+	}
+
+	.modal-bottom-content-default{
+		height:50px;
+		.modal-main-action-button{
+			margin-right:20px;
+		}
+		.modal-status-text{
+			margin-right:20px;
+			font-size:12pt;
+			margin-top:2px;
+			font-style:italic;
+			max-width:@uploader-width / 2.5;
+			overflow:hidden;
+		}
 	}
 }
 

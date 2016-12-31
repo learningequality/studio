@@ -2,11 +2,6 @@
 @import "modal-styles.less";
 
 #move_modal_content{
-	@move-list-item-height: 30px;
-	@highlight-color: #E6E6E6;
-	background-color:@gray-200;
-	padding:10px;
-
 	.move_section_wrapper {
 	    display: flex;
   		flex-wrap: wrap;
@@ -26,93 +21,26 @@
 	}
 
 	.move_list_section{
-		background-color:white;
-		overflow:auto;
-		.move-list{
-			height:auto;
-			margin:0px;
-			padding:0px;
-			width: -moz-max-content;
-			width: -webkit-max-content;
-			width: max-content;
-			li {
-				cursor:pointer;
-				padding-left:10px;
-				input[type=radio]{
-					cursor:pointer;
-					display:inline-block;
-					width:16px;
-					height:16px;
-					vertical-align:middle;
-					margin: 0px 4px;
-				}
-				input[type=radio]:checked + label{
-					font-weight:bold;
-				}
-				label *{
-					display:inline-block;
-					vertical-align:middle;
-				}
-				.move_item{
-					cursor:pointer;
-					font-size:16px;
-					height:@move-list-item-height;
-					font-weight:normal;
-					.tog_folder{
-						font-size:11pt;
-						padding:5px;
-						display:inline-block;
-					}
-					.move_item_title{
-						margin-right:15px;
-						font-size:13pt;
-						overflow:hidden;
-						max-width:250px;
-						-webkit-touch-callout: none;
-						-webkit-user-select: none;
-						-khtml-user-select: none;
-						-moz-user-select: none;
-						-ms-user-select: none;
-						user-select: none;
-					}
-					.move_empty{
-						font-size: 10pt;
-						color:gray;
-					}
-				}
-				.subdirectory{
-					display:none;
-				}
+		.move-list li {
+			cursor:pointer;
+			padding-left:0px;
+			.move_item .move_item_title{
+				max-width:250px;
 			}
 		}
 		.to-move-list{
 			border-left:2px solid @gray-400;
+			padding-left:10px;
 		}
 		.target-list{
-			border-left:2px solid @blue-500;
-			margin-left: 10px;
+			margin-left: 15px;
 		}
-		.to-move-list .move_item_title, .disabled{
+		.to-move-list .move_item_title{
 			color:@gray-700;
 		}
 	}
 
 	#target_list_area > .target-list{
 		margin-left: 0px;
-	}
-
-	#move_bottom_container{
-		min-height:30px;
-		#move_status{
-			margin-right:20px;
-			font-size:12pt;
-			margin-top:2px;
-			font-style:italic;
-			max-width:@uploader-width / 2.5;
-			overflow:hidden;
-		}
-		#move_content_button{
-			margin-right:20px;
-		}
 	}
 }

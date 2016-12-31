@@ -47,21 +47,25 @@ var ArchiveView = BaseViews.BaseListView.extend({
     update_count:function(){
         var collection = this.get_selected_collection();
         if(collection.length ===0){
-            $("#archive_content_submit").text("Select content to restore...");
             $("#archive_content_submit").attr("disabled", "disabled");
+            $("#archive_content_submit").addClass("disabled");
         }else{
-            $("#archive_content_submit").text("RESTORE");
             $("#archive_content_submit").removeAttr("disabled");
+            $("#archive_content_submit").removeClass("disabled");
         }
         var totalCount = 0;
         collection.forEach(function(entry){
             totalCount += entry.get("metadata").total_count + 1;
         });
         var data = this.main_archive_list.get_metadata();
-        totalCount -= data.count;
-        this.$("#archive_selected_count").html(totalCount + " Topic" + ((totalCount == 1)? ", " : "s, ") + data.count + " Resource" + ((data.count == 1)? "   " : "s   ") + stringHelper.format_size(data.size));
+        if(totalCount > 0){
+            this.$("#archive_selected_count").html("Restoring " + totalCount + ((totalCount == 1)? " item, " : " items, ") + stringHelper.format_size(data.size));
+        }else{
+            this.$("#archive_selected_count").html("");
+        }
     },
     restore_content:function(){
+
     },
     delete_content:function(){
 
@@ -79,7 +83,7 @@ var ArchiveView = BaseViews.BaseListView.extend({
     }
 });
 
-var ArchiveList = BaseViews.BaseEditableListView.extend({
+var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
     template: require("./hbtemplates/archive_list.handlebars"),
     default_item:">.default-item",
     list_selector: ">.archive-list",
@@ -103,6 +107,7 @@ var ArchiveList = BaseViews.BaseEditableListView.extend({
             fetchedCollection.sort_by_order();
             self.load_content(fetchedCollection);
         });
+        window.workspace_manager.put_list(this.model.get("id"), this);
     },
     create_new_view:function(model){
         var new_view = new ArchiveItem({
@@ -161,17 +166,17 @@ var ArchiveList = BaseViews.BaseEditableListView.extend({
 });
 
 
-var ArchiveItem = BaseViews.BaseListEditableItemView.extend({
+var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     template: require("./hbtemplates/archive_list_item.handlebars"),
     tagName: "li",
-    className: "archive_list_item",
+    className: "archive_list_item modal-list-item-default",
     selectedClass: "archive-selected",
     collapsedClass: "glyphicon-triangle-top",
     expandedClass: "glyphicon-triangle-bottom",
     list_selector: ">.archive-list",
     item_to_archive: false,
 
-    getToggler: function () { return this.$("#menu_toggle_" + this.model..get("id")); },
+    getToggler: function () { return this.$("#menu_toggle_" + this.model.get("id")); },
     getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },
     'id': function() {
         return "archive_item_" + this.model.get("id");
@@ -201,6 +206,7 @@ var ArchiveItem = BaseViews.BaseListEditableItemView.extend({
         }));
         this.$el.find(".archive_checkbox").prop("checked", this.checked);
         this.set_disabled(this.checked);
+        window.workspace_manager.put_node(this.model.get("id"), this);
     },
     handle_checked:function(){
         this.checked =  this.$("#" + this.id() + "_check").is(":checked");

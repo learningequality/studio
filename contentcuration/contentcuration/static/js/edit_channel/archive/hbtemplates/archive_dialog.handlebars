@@ -1,11 +1,18 @@
-<div id="archive_content">{{#if is_empty}}<div id="archive_empty_text">Archive is empty</div>{{/if}}</div>
+<div id="archive_controls">
+	<div class="pull-right action-text" id="delete_selected_button"><a>Delete Selected</a></div>
+	<div class="select_all_fixed">
+		<input type="checkbox" class="select_all select_all_component" id="select_all_check_{{id}}"/>
+		<label for="select_all_check_{{id}}">Select All</label>
+	</div>
+</div>
+<div id="archive_content" class='modal-content-default'>
+	{{#if is_empty}}<div class="empty_default">Archive is empty</div>{{/if}}
+</div>
 <br/>
-<div id="archive_bottom_container">
+<div id="archive_bottom_container" class="modal-bottom-content-default">
 	<a class="action-text" data-dismiss="modal">
 		<span>CLOSE</span>
 	</a>
-	<button disabled class="action-button pull-right" id="restore_content">
-		Select content to restore...
-	</button>
-	<span id="archive_selected_count" class="pull-right"><em></em></span>
+	<button disabled class="action-button pull-right disabled modal-main-action-button" id="restore_content">RESTORE</button>
+	<span id="archive_selected_count" class="pull-right modal-status-text"><em></em></span>
 </div>
