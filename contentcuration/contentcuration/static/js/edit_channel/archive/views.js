@@ -192,7 +192,7 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     },
 
     initialize: function(options) {
-        _.bindAll(this, 'delete_content', 'update_count');
+        _.bindAll(this, 'delete_content', 'update_count', 'restore_content');
         this.bind_edit_functions();
         this.containing_list_view = options.containing_list_view;
         this.collection = new Models.ContentNodeCollection();
@@ -204,6 +204,7 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     },
     events: {
         'click .delete_content' : 'delete_content',
+        'click .restore_content' : 'restore_content',
         'click .tog_folder' : 'toggle',
         'click >.item_wrapper .archive_checkbox' : 'handle_checked'
     },
@@ -278,6 +279,13 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
             var self = this;
             this.delete(true, "Deleting Content...", function(){self.containing_list_view.update_count();});
         }
+    },
+    restore_content:function(event){
+        event.stopPropagation();
+        event.preventDefault();
+        var moveCollection = new Models.ContentNodeCollection();
+        moveCollection.add(this.model);
+        this.container.move_content(moveCollection);
     }
 });
 
