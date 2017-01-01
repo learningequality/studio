@@ -98,23 +98,20 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		if(confirm("Are you sure you want to delete these selected items?")){
 			var deleteCollection = new Models.ContentNodeCollection();
 			for(var i = 0; i < this.lists.length; i++){
-				var list = this.lists[i].get_selected();
-				var open_folder = null;
+				var list = this.lists[i].get_selected(true);
+				var current_model_id = null;
 				for(var j = 0; j < list.length; j++){
 					var view = list[j];
 					if(view){
 						deleteCollection.add(view.model);
+						current_model_id = view.model.id
 						view.remove();
 					}
-					if(view.subcontent_view){
-						open_folder = view.subcontent_view;
-						break;
-	    			}
 				}
-				if(open_folder){
-					this.remove_containers_from(open_folder.index-1);
+				if(this.lists[i].current_model && current_model_id === this.lists[i].current_model.id){
+					this.remove_containers_from(i + 1);
 					break;
-    			}
+				}
 			}
 			this.add_to_trash(deleteCollection, "Deleting Content...");
 		}
