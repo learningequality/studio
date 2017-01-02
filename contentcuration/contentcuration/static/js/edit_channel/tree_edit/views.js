@@ -16,7 +16,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	lists: [],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container','toggle_details', 'handle_checked', 'open_archive', 'move_content');
+		_.bindAll(this, 'copy_content','delete_content' , 'move_items' ,'add_container','toggle_details', 'handle_checked', 'open_archive');
 		this.bind_workspace_functions();
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
@@ -31,7 +31,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		'change input[type=checkbox]' : 'handle_checked',
 		'click .permissions_button' : 'edit_permissions',
 		'click .archive_button' : 'open_archive',
-		'click .move_button' : 'move_content',
+		'click .move_button' : 'move_items',
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -144,6 +144,17 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
             $(this).popover('hide');
             $(this).removeClass("active-popover");
         });
+	},
+	move_items:function(){
+		var list = this.get_selected(true);
+		var move_collection = new Models.ContentNodeCollection();
+		/* Create list of nodes to move */
+		for(var i = 0; i < list.length; i++){
+			var model = list[i].model;
+			model.view = list[i];
+			move_collection.add(model);
+		}
+		this.move_content(move_collection);
 	}
 });
 

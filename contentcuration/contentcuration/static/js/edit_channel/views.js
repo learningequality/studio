@@ -207,17 +207,6 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	move_content:function(move_collection){
 		var MoveView = require("edit_channel/move/views");
-		var list = this.get_selected(true);
-		if(!move_collection){
-			move_collection = new Models.ContentNodeCollection();
-			/* Create list of nodes to move */
-			for(var i = 0; i < list.length; i++){
-				var model = list[i].model;
-				model.view = list[i];
-				move_collection.add(model);
-			}
-		}
-
 		$("#main-content-area").append("<div id='dialog'></div>");
 
 		var move = new MoveView.MoveModalView({

@@ -68,6 +68,17 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 		this.clipboard_queue.handle_checked();
 		this.trash_queue.handle_checked();
 	},
+	move_items:function(){
+		var list = this.get_selected(true);
+		var move_collection = new Models.ContentNodeCollection();
+		/* Create list of nodes to move */
+		for(var i = 0; i < list.length; i++){
+			var model = list[i].model;
+			model.view = list[i];
+			move_collection.add(model);
+		}
+		this.move_content(move_collection);
+	}
 });
 
 
@@ -176,7 +187,7 @@ var ClipboardList = QueueList.extend({
 		this.container.edit_selected();
 	},
 	move_items:function(){
-		this.container.move_content();
+		this.container.move_items();
 	}
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
 	// handle_drop:function(collection){
