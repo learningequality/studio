@@ -2,14 +2,29 @@
 @import "modal-styles.less";
 
 #archive_modal_content{
-	@archive-list-width: @uploader-width - 30px;
+	@archive-list-width: @uploader-width - 55px;
 	@highlight-color: #E6E6E6;
-
-	#delete_selected_button{
-		color:@red-error-color !important;
+	#archive_controls{
+		margin-bottom:15px;
+		#archive_options *{
+			font-weight: bold;
+		}
+		#delete_selected_button{
+			color:@red-error-color !important;
+		}
+		#select_all_area{
+			padding-top:5px;
+			cursor:pointer;
+		}
 	}
-	#select_all_area{
-		cursor:pointer;
+
+
+	.restore_icon{
+		-moz-transform: scaleX(-1);    /* Gecko */
+		-o-transform: scaleX(-1);      /* Opera */
+		-webkit-transform: scaleX(-1); /* Webkit */
+		transform: scaleX(-1);         /* Standard */
+		filter: FlipH;                 /* IE 6/7/8 */
 	}
 	#archive_content{
 		width: @archive-list-width;
@@ -36,13 +51,7 @@
 						padding: 5px;
     					margin-left: 15px;
 					}
-					.restore_content{
-						-moz-transform: scaleX(-1);    /* Gecko */
-						-o-transform: scaleX(-1);      /* Opera */
-						-webkit-transform: scaleX(-1); /* Webkit */
-						transform: scaleX(-1);         /* Standard */
-						filter: FlipH;                 /* IE 6/7/8 */
-					}
+
 				}
 				.item_wrapper:hover{
 					background-color: @highlight-color;

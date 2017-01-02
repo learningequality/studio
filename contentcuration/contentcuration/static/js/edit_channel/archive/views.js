@@ -56,22 +56,29 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
     update_count:function(){
         var collection = this.get_selected_views();
         if(collection.length ===0){
-            $("#restore_content").attr("disabled", "disabled");
-            $("#restore_content").addClass("disabled");
+            $(".archive_option").attr("disabled", "disabled");
+            $(".archive_option").addClass("disabled");
         }else{
-            $("#restore_content").removeAttr("disabled");
-            $("#restore_content").removeClass("disabled");
+            $(".archive_option").removeAttr("disabled");
+            $(".archive_option").removeClass("disabled");
         }
         var totalCount = 0;
         collection.forEach(function(entry){
             totalCount += entry.model.get("metadata").total_count + 1;
         });
         var data = this.main_archive_list.get_metadata();
-        if(totalCount > 0){
-            this.$("#archive_selected_count").html(totalCount + ((totalCount == 1)? " item" : " items") + " selected, " + stringHelper.format_size(data.size));
-        }else{
-            this.$("#archive_selected_count").html("Select item(s) to restore...");
+        var status = "";
+        switch(totalCount){
+            case 0:
+                status = "";
+                break;
+            case 1:
+                status = totalCount + " item selected, " + stringHelper.format_size(data.size);
+                break;
+            default:
+                status = totalCount + " items selected, " + stringHelper.format_size(data.size);
         }
+        this.$("#archive_selected_count").html(status);
     },
     restore_content:function(){
         var list = this.get_selected_views();
