@@ -3,16 +3,14 @@
 	<label for="archive_item_{{node.id}}_check" class="archive_item {{#if node.children}}tog_folder{{/if}}" title="{{node.title}}">
 		{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
 		<div class="archive_item_title truncate modal-item-title-default">{{node.title}}</div>
+		<i class="modal-item-metadata-default size_counter" id="archive_item_{{node.id}}_count">&nbsp;</i>
 		{{#if isfolder}}
-			{{#if node.children}}
-				<div id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-triangle-top"></div>
-			{{else}}
-				<em class="archive_metadata modal-item-metadata-default">(empty)</em>
-			{{/if}}
-			<i class="badge selected_counter" id="archive_item_{{node.id}}_count">{{node.metadata.resource_count}}</i>
+			<div id="archive_item_{{node.id}}_options"></div>
 		{{/if}}
-		<div class="restore_content restore_icon glyphicon glyphicon-share-alt" aria-hidden="true" title="Restore"></div>
-		<div class="delete_content glyphicon glyphicon-trash" aria-hidden="true" title="Delete"></div>
+		<div class="archive_item_controls">
+			<div class="restore_content restore_icon glyphicon glyphicon-share-alt" aria-hidden="true" title="Restore"></div>
+			<div class="delete_content glyphicon glyphicon-trash" aria-hidden="true" title="Delete"></div>
+		</div>
 	</label>
 </div>
 

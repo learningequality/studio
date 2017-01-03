@@ -11,7 +11,7 @@ var ArchiveModalView = BaseViews.BaseModalView.extend({
     initialize: function(options) {
         this.modal = true;
         this.render(this.close, {channel:window.current_channel.toJSON()});
-        this.archive_view = new ArchiveView({
+        new ArchiveView({
             el: this.$(".modal-body"),
             modal : this,
             model:this.model
@@ -25,6 +25,7 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
     initialize: function(options) {
         _.bindAll(this, 'restore_content', 'delete_content', 'update_count', 'select_all');
         this.bind_workspace_functions();
+        this.lists = [];
         this.modal = options.modal;
         this.render();
     },
@@ -41,14 +42,12 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
             model : this.model,
             el: this.$("#archive_content"),
             container: this,
-            parent_node_view:null
+            content_node_view:null
         });
-        this.lists.push(this.main_archive_list);
     },
     select_all:function(event){
         var checked = this.$("#select_all_check").is(":checked");
         this.main_archive_list.views.forEach(function(view){
-            console.log($("#" + view.id() + "_check"))
             $("#" + view.id() + "_check").prop("checked", checked);
             view.handle_checked();
         })
@@ -62,21 +61,17 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
             $(".archive_option").removeAttr("disabled");
             $(".archive_option").removeClass("disabled");
         }
-        var totalCount = 0;
-        collection.forEach(function(entry){
-            totalCount += entry.model.get("metadata").total_count + 1;
-        });
         var data = this.main_archive_list.get_metadata();
         var status = "";
-        switch(totalCount){
+        switch(collection.length){
             case 0:
                 status = "";
                 break;
             case 1:
-                status = totalCount + " item selected, " + stringHelper.format_size(data.size);
+                status = collection.length + " item selected, " + stringHelper.format_size(data.size);
                 break;
             default:
-                status = totalCount + " items selected, " + stringHelper.format_size(data.size);
+                status = collection.length + " items selected, " + stringHelper.format_size(data.size);
         }
         this.$("#archive_selected_count").html(status);
     },
@@ -108,7 +103,13 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
             })
         });
         return views;
-    }
+    },
+    // handle_move:function(target, moved, original_parents){
+    //     this.reload_ancestors(original_parents, true);
+    //     moved.forEach(function(node){window.workspace_manager.remove(node.id)});
+    //     var content = window.workspace_manager.get(target.id);
+    //     if(content.list){content.list.add_nodes(moved);}
+    // },
 });
 
 var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
@@ -116,11 +117,12 @@ var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
     default_item:">.default-item",
     list_selector: ">.archive-list",
     initialize: function(options) {
-        _.bindAll(this, 'update_count');
+        _.bindAll(this, 'update_count', 'get_metadata');
         this.collection = new Models.ContentNodeCollection();
         this.container = options.container;
         this.metadata = {"count": 0, "size": 0};
-        this.parent_node_view = options.parent_node_view;
+        this.views = [];
+        this.content_node_view = options.content_node_view;
         this.render();
         this.container.lists.push(this);
     },
@@ -135,14 +137,14 @@ var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
             self.$(self.default_item).text("No items found.");
             fetchedCollection.sort_by_order();
             self.load_content(fetchedCollection);
+            window.workspace_manager.put_list(self.model.get("id"), self);
         });
-        window.workspace_manager.put_list(this.model.get("id"), this);
     },
     create_new_view:function(model){
         var new_view = new ArchiveItem({
             containing_list_view: this,
             model: model,
-            checked: (this.parent_node_view)? this.parent_node_view.checked : false,
+            checked: (this.content_node_view)? this.content_node_view.checked : false,
             container: this.container
         });
         this.views.push(new_view);
@@ -158,8 +160,8 @@ var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
         });
     },
     update_count:function(){
-        if(this.parent_node_view){
-            this.parent_node_view.update_count();
+        if(this.content_node_view){
+            this.content_node_view.update_count();
         }else{
             this.container.update_count();
         }
@@ -184,6 +186,7 @@ var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
 
 var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     template: require("./hbtemplates/archive_list_item.handlebars"),
+    options_template:require("./hbtemplates/archive_list_item_options.handlebars"),
     tagName: "li",
     className: "archive_list_item modal-list-item-default",
     selectedClass: "archive-selected",
@@ -205,7 +208,6 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         this.collection = new Models.ContentNodeCollection();
         this.container = options.container;
         this.checked = options.checked;
-
         this.metadata = {"count": 0, "size": 0};
         this.render();
     },
@@ -221,15 +223,29 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
             isfolder: this.model.get("kind") === "topic",
             checked: this.checked
         }));
+        this.load_folder_toggle();
         this.$el.find(".archive_checkbox").prop("checked", this.checked);
         this.set_disabled(this.checked);
         window.workspace_manager.put_node(this.model.get("id"), this);
+    },
+    reload:function(model){
+        this.model.set(model.attributes);
+        this.load_folder_toggle();
+        this.update_count();
+    },
+    load_folder_toggle:function(){
+        if(this.model.get("kind")==="topic"){
+            this.$("#" + this.id() + "_options").html(this.options_template({
+                node:this.model.toJSON(),
+                is_open:this.getSubdirectory().is(":visible")
+            }));
+        }
     },
     handle_checked:function(){
         this.checked =  this.$("#" + this.id() + "_check").is(":checked");
         if(this.checked){
             this.item_to_archive = true;
-            this.metadata = {"count" : this.model.get("metadata").resource_count, "size": this.model.get("metadata").resource_size};
+            this.metadata = {"count" : 1, "size": this.model.get("metadata").resource_size};
         }else{
             this.item_to_archive = false;
             this.metadata = {"count" : 0, "size": 0};
@@ -242,11 +258,12 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     check_item:function(checked){
         this.item_to_archive = false;
         this.metadata = (checked)?
-                        {"count": this.model.get("metadata").resource_count, "size": this.model.get("metadata").resource_size}
+                        {"count": 1, "size": this.model.get("metadata").resource_size}
                         : {"count": 0, "size": 0}
+        this.$("#" + this.id() + "_check").prop("indeterminate", false);
         this.$("#" + this.id() + "_check").prop("checked", checked);
-        this.$("#" + this.id() + "_count").text(this.model.get("metadata").resource_count);
-        this.$("#" + this.id() + "_count").css("visibility", (checked)?"visible" : "hidden" );
+        this.$("#" + this.id() + "_count").css("display", (this.metadata.size === 0)? "none" : "inline-block");
+        this.$("#" + this.id() + "_count").text(stringHelper.format_size(this.metadata.size));
         this.checked = checked;
     },
     load_subfiles:function(){
@@ -254,9 +271,9 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         this.collection.get_all_fetch(this.model.get("children")).then(function(fetched){
             var data = {
                 model : self.model,
-                el: $(self.getSubdirectory()),
+                el: self.getSubdirectory(),
                 collection: fetched,
-                parent_node_view:self,
+                content_node_view:self,
                 container: self.containing_list_view.container
             }
             self.subcontent_view = new ArchiveList(data);
@@ -272,11 +289,10 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         }
     },
     update_count:function(){
-        if(this.subcontent_view){
-            this.metadata = this.subcontent_view.get_metadata();
-        }
-        this.$("#" + this.id() + "_count").css("visibility", (this.metadata.count === 0)? "hidden" : "visible");
-        this.$("#" + this.id() + "_count").text(this.metadata.count);
+        this.metadata = (this.subcontent_view) ? this.subcontent_view.get_metadata() : this.metadata;
+        this.$("#" + this.id() + "_count").css("display", (this.metadata.size === 0)? "none" : "inline-block");
+        this.$("#" + this.id() + "_count").text(stringHelper.format_size(this.metadata.size));
+        this.$("#" + this.id() + "_check").prop("indeterminate", !this.checked && this.metadata.count > 0);
         this.containing_list_view.update_count();
     },
     delete_content:function(event){
@@ -284,15 +300,24 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         event.preventDefault();
         if(confirm("Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!")){
             var self = this;
-            this.delete(true, "Deleting Content...", function(){self.containing_list_view.update_count();});
+            this.delete(true, "Deleting Content...", function(){
+                self.metadata = {"count": 0, "size": 0};
+                self.item_to_archive = false;
+                self.containing_list_view.update_count();
+            });
         }
     },
     restore_content:function(event){
         event.stopPropagation();
         event.preventDefault();
         var moveCollection = new Models.ContentNodeCollection();
+        var self = this;
         moveCollection.add(this.model);
-        this.container.move_content(moveCollection);
+        this.container.move_content(moveCollection, function(){
+            self.metadata = {"count": 0, "size": 0};
+            self.item_to_archive = false;
+            self.containing_list_view.update_count();
+        });
     }
 });
 

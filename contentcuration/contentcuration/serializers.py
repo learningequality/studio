@@ -236,7 +236,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
                 "total_count" : node.get_descendant_count(),
                 "resource_count" : resource_descendants.count(),
                 "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'],
-                "resource_size" : resource_descendants.aggregate(resource_size=Sum('files__file_size'))['resource_size'],
+                "resource_size" : resource_descendants.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0,
                 "has_changed_descendant" : node.get_descendants(include_self=True).filter(changed=True).exists()
             }
         else:
@@ -244,7 +244,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
                 "total_count" : 1,
                 "resource_count" : 1,
                 "max_sort_order" : node.sort_order,
-                "resource_size" : node.files.aggregate(resource_size=Sum('file_size'))['resource_size'],
+                "resource_size" : node.files.aggregate(resource_size=Sum('file_size'))['resource_size']  or 0,
                 "has_changed_descendant" : node.changed
             }
 

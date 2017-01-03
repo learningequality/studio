@@ -28,7 +28,7 @@
 	}
 	#archive_content{
 		width: @archive-list-width;
-		overflow: hidden;
+		overflow-y: hidden;
 		height:auto;
 
 		.archive-list{
@@ -41,21 +41,27 @@
 					width: -webkit-max-content;
 					width: max-content;
 				}
+				.size_counter{
+					display:none;
+					margin-right:5px;
+				}
 				.archive_item{
-					width:85%;
+					padding-right:10px;
 					.archive_item_title{
-						max-width:@archive-list-width;
+						max-width:@archive-list-width / 2;
 					}
-					.restore_content, .delete_content{
+					.archive_item_controls{
+						margin-left:10px;
 						visibility:hidden;
-						padding: 5px;
-    					margin-left: 15px;
+						.restore_content, .delete_content{
+							padding: 5px;
+	    					margin-left: 10px;
+						}
 					}
-
 				}
 				.item_wrapper:hover{
 					background-color: @highlight-color;
-					>.archive_item .delete_content, >.archive_item .restore_content{
+					>.archive_item .archive_item_controls{
 						visibility:visible;
 					}
 				}

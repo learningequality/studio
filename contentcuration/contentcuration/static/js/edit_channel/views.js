@@ -218,7 +218,10 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	handle_move:function(target, moved, original_parents){
 		// Recalculate counts
-		this.reload_ancestors(original_parents, true);
+		var reloadCollection = new Models.ContentNodeCollection();
+		reloadCollection.add(original_parents.models);
+		reloadCollection.add(moved.models);
+		this.reload_ancestors(reloadCollection, true);
 
 		// Remove where nodes originally were
 		moved.forEach(function(node){
@@ -241,13 +244,13 @@ var BaseWorkspaceView = BaseView.extend({
 				var view = list[i];
 				if(view){
 					promise_list.push(new Promise(function(resolve, reject){
-						window.workspace_manager.remove(view.model.id);
 						reload.add(view.model);
 						if(view.containing_list_view){
 							reload.add(view.containing_list_view.model);
 						}
 						view.model.destroy({
 							success:function(data){
+								window.workspace_manager.remove(data.id);
 								resolve(data);
 							},
 							error:function(obj, error){
@@ -426,7 +429,7 @@ var BaseEditableListView = BaseListView.extend({
 	},
 	delete:function(view){
       	this.collection.remove(view.model);
-      	this.views.splice(view, 1);
+      	this.views = _.reject(this.views, function(el) { return el.model.id === view.model.id; });
       	this.handle_if_empty();
       	// this.update_views();
 	}
@@ -707,7 +710,6 @@ var BaseListEditableItemView = BaseListItemView.extend({
 	},
 	delete:function(destroy_model, message, callback){
 		message = (message!=null)? message: "Deleting...";
-		this.remove();
 		var self = this;
 		if(destroy_model){
 			this.display_load(message, function(resolve_load, reject_load){
