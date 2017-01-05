@@ -723,10 +723,11 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			'add_nodes', 'add_topic');
 	},
 	make_droppable:function(){
-		if(this.model.get("kind") === "topic"){
-			var DragHelper = require("edit_channel/utils/drag_drop");
-			DragHelper.addTopicDragDrop(this, this.open_folder, this.handle_drop);
-		}
+		// Temporarily disable dropping onto topics for now
+		// if(this.model.get("kind") === "topic"){
+		// 	var DragHelper = require("edit_channel/utils/drag_drop");
+		// 	DragHelper.addTopicDragDrop(this, this.open_folder, this.handle_drop);
+		// }
 	},
 	open_preview:function(){
 		var Previewer = require("edit_channel/preview/views");
