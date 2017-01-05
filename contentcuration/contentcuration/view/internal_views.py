@@ -31,7 +31,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 @permission_classes((IsAuthenticated,))
 def check_version(request):
     """ Get version of Ricecooker with which CC is compatible """
-    return HttpResponse("0.3.13")
+    return HttpResponse("0.3.12")
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
