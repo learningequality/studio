@@ -47,22 +47,6 @@ def write_file_to_storage(fobj, check_valid = False, name=None):
         shutil.copyfileobj(fobj, destf)
     return full_filename
 
-def extract_thumbnail_from_video(source_file_path, target_file, overwrite=False):
-    from ffmpy import FFmpeg
-    ff = FFmpeg(
-        inputs={source_file_path: "-y" if overwrite else "-n"},
-        outputs={target_file: "-vcodec png -ss 10 -vframes 1 -an -f rawvideo -y"}
-    )
-    ff.run()
-
-def check_video_resolution(video):
-    result = subprocess.check_output(['ffprobe', '-v', 'error', '-print_format', 'json', '-show_entries', 'stream=width,height', '-of', 'default=noprint_wrappers=1', str(video.file_on_disk)])
-    pattern = re.compile('width=([0-9]*)[^height]+height=([0-9]*)')
-    resolution = pattern.search(result)
-    if resolution and int(resolution.group(2)) >= 720:
-        return format_presets.VIDEO_HIGH_RES
-    return format_presets.VIDEO_LOW_RES
-
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
     for child in ContentNode.objects.filter(parent=node).order_by('sort_order'):

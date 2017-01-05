@@ -20,7 +20,7 @@ from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video, check_supported_browsers, check_video_resolution
+from contentcuration.api import write_file_to_storage, check_supported_browsers
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
@@ -28,6 +28,7 @@ from le_utils.constants import format_presets, content_kinds
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from pressurecooker.videos import check_video_resolution, extract_thumbnail_from_video, compress_video
 from django.core.cache import cache
 
 def base(request):
@@ -207,7 +208,7 @@ def file_create(request):
 
         if kind.pk == content_kinds.VIDEO:
             extract_thumbnail_wrapper(file_object)
-            file_object.preset_id = check_video_resolution(file_object)
+            file_object.preset_id = check_video_resolution(str(file_object.file_on_disk))
         elif presets.filter(supplementary=False).count() == 1:
             file_object.preset = presets.filter(supplementary=False).first()
 

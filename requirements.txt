@@ -21,4 +21,4 @@ validators
 le-utils==0.0.9rc14
 gunicorn==19.6.0
 django-mailgun==0.9.1
-ffmpy==0.2.2
+pressurecooker==0.0.6
