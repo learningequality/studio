@@ -314,6 +314,7 @@ class FormatPreset(models.Model):
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
+    subtitle = models.BooleanField(default=False)
     display = models.BooleanField(default=True) # Render on client side
     order = models.IntegerField(default=0)
     kind = models.ForeignKey(ContentKind, related_name='format_presets', null=True)
@@ -324,8 +325,9 @@ class FormatPreset(models.Model):
 
 class Language(models.Model):
     lang_code = models.CharField(max_length=2, db_index=True)
-    lang_subcode = models.CharField(max_length=2, db_index=True)
+    lang_subcode = models.CharField(max_length=2, db_index=True, null=True)
     readable_name = models.CharField(max_length=50, blank=True)
+    native_name = models.CharField(max_length=50, blank=True)
 
     def ietf_name(self):
         return "{code}-{subcode}".format(code=self.lang_code, subcode=self.lang_subcode)
@@ -356,7 +358,7 @@ class File(models.Model):
     assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
-    lang = models.ForeignKey(Language, blank=True, null=True)
+    language = models.ForeignKey(Language, blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
 

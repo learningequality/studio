@@ -1,4 +1,7 @@
 <video class="video_preview" id="selected_preview" controls="controls" preload="metadata">
   	<source src="{{source}}" type="{{extension}}"></source>
+  	{{#each subtitles}}
+  		<track label="{{language.readable_name}}" kind="subtitles" srclang="{{language.lang_code}}" src="{{storage_url}}">
+  	{{/each}}
 	Your browser does not support the video tag.
 </video>

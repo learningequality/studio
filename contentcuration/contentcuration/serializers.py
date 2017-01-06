@@ -22,7 +22,7 @@ class LicenseSerializer(serializers.ModelSerializer):
 class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Language
-        fields = ('lang_code', 'lang_subcode', 'id')
+        fields = ('lang_code', 'lang_subcode', 'id', 'readable_name', 'native_name')
 
 
 class FileListSerializer(serializers.ListSerializer):
@@ -76,7 +76,7 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return obj.file_on_disk.url
 
     def retrieve_storage_url(self, obj):
-        return generate_storage_url(obj.checksum + '.' + obj.file_format.extension)
+        return generate_storage_url(str(obj))
 
     def retrieve_recommended_kind(self, obj):
         if obj.contentnode is not None and obj.contentnode.kind:
