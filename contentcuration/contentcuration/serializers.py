@@ -67,6 +67,7 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     storage_url = serializers.SerializerMethodField('retrieve_storage_url')
     recommended_kind = serializers.SerializerMethodField('retrieve_recommended_kind')
     mimetype = serializers.SerializerMethodField('retrieve_extension')
+    language = LanguageSerializer(read_only=True)
     id = serializers.CharField(required=False)
 
     def get(*args, **kwargs):
@@ -91,7 +92,7 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     class Meta:
         model = File
-        fields = ('id', 'checksum', 'file_size', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'storage_url', 'mimetype', 'source_url')
+        fields = ('id', 'checksum', 'file_size', 'language', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'storage_url', 'mimetype', 'source_url')
         list_serializer_class = FileListSerializer
 
 class FileFormatSerializer(serializers.ModelSerializer):
@@ -111,7 +112,7 @@ class FormatPresetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FormatPreset
-        fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats','associated_mimetypes', 'display')
+        fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'subtitle', 'order', 'kind', 'allowed_formats','associated_mimetypes', 'display')
 
 class ContentKindSerializer(serializers.ModelSerializer):
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
