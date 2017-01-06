@@ -45,7 +45,7 @@ var PreviewView = BaseViews.BaseView.extend({
     load_preset_dropdown:function(){
         this.presets.sort_by_order();
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
-             presets: this.presets.toJSON(),
+             presets: _.reject(this.presets.toJSON(), {"subtitle" : true}),
              questions: this.questions.toJSON()
         }));
     },
@@ -95,14 +95,28 @@ var PreviewView = BaseViews.BaseView.extend({
                         preview_template = require("./hbtemplates/preview_templates/default.handlebars");
                 }
                 this.$("#preview_window").html(preview_template({
-                    source: location,
-                    extension:mimetype
+                    source : location,
+                    extension : mimetype,
+                    subtitles : this.get_subtitles()
                 }));
                 if(force_load && this.current_preview.recommended_kind === "video"){
                     $("#preview_window video").load();
                 }
             }
         }
+    },
+
+    get_subtitles:function(){
+        var subtitles = [];
+        this.model.get("files").forEach(function(file){
+            var file_json = (file.attributes)? file.attributes : file;
+            var preset_id = (file_json.preset && file_json.preset.id)? file_json.preset.id : file_json.preset;
+            var current_preset = window.formatpresets.get({id:preset_id});
+            if(current_preset && current_preset.get("subtitle")){
+                subtitles.push(file_json);
+            }
+        });
+        return subtitles;
     },
 
     load_preview:function(){
