@@ -318,6 +318,9 @@ var FileModel = BaseModel.extend({
 	root_list:"file-list",
     getName:function(){
 		return "FileModel";
+	},
+	get_preset:function(){
+		return window.formatpresets.get({'id':this.get("id")});
 	}
 });
 
