@@ -116,6 +116,7 @@ var PreviewView = BaseViews.BaseView.extend({
                 subtitles.push(file_json);
             }
         });
+        console.log("sub", subtitles)
         return subtitles;
     },
 

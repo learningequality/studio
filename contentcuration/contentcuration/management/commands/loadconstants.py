@@ -507,8 +507,30 @@ PRESETS = [
     },
 ]
 
+LANGUAGES = [
+    {
+        "model": models.Language,
+        "pk": "id",
+        "fields": {
+            "id": 1,
+            "lang_code": "EN",
+            "lang_subcode": "",
+            "readable_name": "English"
+        },
+    },
+    {
+        "model": models.Language,
+        "pk": "id",
+        "fields": {
+            "id": 2,
+            "lang_code": "ES",
+            "lang_subcode": "MX",
+            "readable_name": "Spanish"
+        },
+    }
+]
 
-CONSTANTS = [SITES, LICENSES, FILE_FORMATS, KINDS, PRESETS]
+CONSTANTS = [SITES, LICENSES, FILE_FORMATS, KINDS, PRESETS, LANGUAGES]
 
 class EarlyExit(BaseException):
     def __init__(self, message, db_path):

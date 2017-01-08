@@ -443,10 +443,7 @@ var FormatEditorItem = FormatItem.extend({
         this.containing_list_view.set_uploading(uploading);
     },
     load_languages:function(){
-        this.languages = [{id:"1", readable_name:"English"}, {id:"2", readable_name:"Spanish"}];
-    },
-    get_languages:function(){
-        return this.languages;
+        this.languages = window.languages.toJSON();
     }
 });
 var FormatInlineItem = FormatEditorItem.extend({
@@ -653,12 +650,11 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         if(language && this.file){
             var language_preset = this.model.clone();
             language_preset.set('readable_name', this.model.get("readable_name") + " (" + language_readable_name + ")");
-            this.file.set("language", language);
+            this.file.set("language", window.languages.findWhere(function(l){return l.id == language;}).toJSON());
             this.file.set("preset", language_preset);
             this.containing_list_view.add_slot(this.file, language_preset, this.$el);
             this.file = null;
-            this.languages = _.reject(this.languages, {'id':language});
-            console.log("LANGUAGE!", this.languages)
+            this.languages = _.reject(this.languages, function(l){ return l.id == language;});
             if(render){
                 this.render();
             }

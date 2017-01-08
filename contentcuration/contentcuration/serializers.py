@@ -22,7 +22,7 @@ class LicenseSerializer(serializers.ModelSerializer):
 class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Language
-        fields = ('lang_code', 'lang_subcode', 'id')
+        fields = ('lang_code', 'lang_subcode', 'id', 'readable_name')
 
 
 class FileListSerializer(serializers.ListSerializer):

@@ -427,6 +427,22 @@ var LicenseCollection = BaseCollection.extend({
     }
 });
 
+var LanguageModel = BaseModel.extend({
+	root_list:"language-list",
+	getName:function(){
+		return "LanguageModel";
+	},
+});
+
+var LanguageCollection = BaseCollection.extend({
+	model: LanguageModel,
+	list_name:"language-list",
+	getName:function(){
+		return "LanguageCollection";
+	},
+});
+
+
 var ContentKindModel = BaseModel.extend({
 	root_list:"contentkind-list",
 	defaults: {
@@ -565,6 +581,8 @@ module.exports = {
 	FileModel: FileModel,
 	FormatPresetModel: FormatPresetModel,
 	FormatPresetCollection: FormatPresetCollection,
+	LanguageModel : LanguageModel,
+	LanguageCollection : LanguageCollection,
 	ContentKindModel: ContentKindModel,
 	ContentKindCollection : ContentKindCollection,
 	UserModel:UserModel,
