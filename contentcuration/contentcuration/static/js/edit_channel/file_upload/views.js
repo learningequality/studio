@@ -405,8 +405,7 @@ var FormatEditorItem = FormatItem.extend({
             el: this.$el.find(".format_editor_list"),
             model: this.model,
             content_node_view:this,
-            to_delete: this.to_delete,
-            languages: this.languages
+            to_delete: this.to_delete
         }
         this.subcontent_view = new FormatSlotList(data);
         this.update_metadata();
@@ -441,9 +440,6 @@ var FormatEditorItem = FormatItem.extend({
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
-    },
-    load_languages:function(){
-        this.languages = window.languages.toJSON();
     }
 });
 var FormatInlineItem = FormatEditorItem.extend({
@@ -463,7 +459,6 @@ var FormatInlineItem = FormatEditorItem.extend({
         this.to_delete = new Models.ContentNodeCollection();
         this.init_collections();
         this.render();
-        this.load_languages();
         this.listenTo(this.files, "add", this.sync_file_changes);
         this.listenTo(this.files, "change", this.sync_file_changes);
         this.listenTo(this.files, "remove", this.sync_file_changes);
@@ -498,7 +493,6 @@ var FormatFormatItem = FormatEditorItem.extend({
         this.containing_list_view = options.containing_list_view;
         this.init_collections();
         this.render();
-        this.load_languages();
         this.listenTo(this.files, "add", this.sync_file_changes);
         this.listenTo(this.files, "change", this.sync_file_changes);
         this.listenTo(this.files, "remove", this.sync_file_changes);
@@ -546,7 +540,7 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         this.content_node_view = options.content_node_view;
         this.collection = options.collection;
         this.files = options.files;
-        this.languages = options.languages;
+        this.languages = window.languages.clone();
         this.index = 0;
         this.render();
 
@@ -635,7 +629,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
-            languages:this.languages,
+            languages:this.languages.models,
             show_dropdown: this.model.get("multi_language") && (!this.file || !this.file.get("language")),
             selector: this.id()
         }));
@@ -650,11 +644,11 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         if(language && this.file){
             var language_preset = this.model.clone();
             language_preset.set('readable_name', this.model.get("readable_name") + " (" + language_readable_name + ")");
-            this.file.set("language", window.languages.findWhere(function(l){return l.id == language;}).toJSON());
+            this.file.set("language", this.languages.findWhere(function(l){return l.id == language;}).toJSON());
             this.file.set("preset", language_preset);
             this.containing_list_view.add_slot(this.file, language_preset, this.$el);
             this.file = null;
-            this.languages = _.reject(this.languages, function(l){ return l.id == language;});
+            this.languages.models = _.reject(this.languages.models, function(l){ return l.id == language;});
             if(render){
                 this.render();
             }
@@ -731,12 +725,14 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
 });
 
 function get_preset_model(preset){
-    preset = (preset && !preset.id)? window.formatpresets.get({id:preset}) : preset;
-    preset = (preset && !preset.attributes)? new Models.FormatPresetModel(preset) : preset;
-    preset.set("associated_mimetypes",
-        (preset.get("associated_mimetypes"))?
-        preset.get("associated_mimetypes") :
-        window.formatpresets.get({id:preset.id}).get("associated_mimetypes"));
+    if(preset){
+        preset = (!preset.id)? window.formatpresets.get({id:preset}) : preset;
+        preset = (!preset.attributes)? new Models.FormatPresetModel(preset) : preset;
+        preset.set("associated_mimetypes",
+            (preset.get("associated_mimetypes"))?
+            preset.get("associated_mimetypes") :
+            window.formatpresets.get({id:preset.id}).get("associated_mimetypes"));
+    }
     return preset;
 }
 
