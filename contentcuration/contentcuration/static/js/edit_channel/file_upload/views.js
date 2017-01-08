@@ -442,9 +442,6 @@ var FormatEditorItem = FormatItem.extend({
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
-    },
-    load_languages:function(){
-        this.languages = window.languages.toJSON();
     }
 });
 var FormatInlineItem = FormatEditorItem.extend({
@@ -545,6 +542,8 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         this.content_node_view = options.content_node_view;
         this.collection = options.collection;
         this.files = options.files;
+        this.languages = window.languages.clone();
+        this.index = 0;
         this.render();
 
     },
@@ -619,9 +618,32 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
-            nodeid:this.nodeid
+            nodeid:this.nodeid,
+            languages:this.languages.models,
+            show_dropdown: this.model.get("multi_language") && (!this.file || !this.file.get("language")),
+            selector: this.id()
         }));
         setTimeout(this.create_dropzone, 100); // Wait for slide down animation to finish
+    },
+    check_set_language:function(event){
+        this.set_language(true);
+    },
+    set_language:function(render){
+        var language = this.$(".language_dropdown").val();
+        var language_readable_name = this.$(".language_dropdown option:selected").text();
+        if(language && this.file){
+            var language_preset = this.model.clone();
+            language_preset.set('readable_name', this.model.get("readable_name") + " (" + language_readable_name + ")");
+            this.file.set("language", this.languages.findWhere(function(l){return l.id == language;}).toJSON());
+            this.file.set("preset", language_preset);
+            this.containing_list_view.add_slot(this.file, language_preset, this.$el);
+            this.file = null;
+            this.languages.models = _.reject(this.languages.models, function(l){ return l.id == language;});
+            if(render){
+                this.render();
+            }
+
+        }
     },
     create_dropzone:function(){
         var dz_selector="#" + this.model.get("id") + "_"  + this.nodeid + "_dropzone" + ((this.file)? "_swap" : "");
@@ -691,6 +713,18 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     }
 
 });
+
+function get_preset_model(preset){
+    if(preset){
+        preset = (!preset.id)? window.formatpresets.get({id:preset}) : preset;
+        preset = (!preset.attributes)? new Models.FormatPresetModel(preset) : preset;
+        preset.set("associated_mimetypes",
+            (preset.get("associated_mimetypes"))?
+            preset.get("associated_mimetypes") :
+            window.formatpresets.get({id:preset.id}).get("associated_mimetypes"));
+    }
+    return preset;
+}
 
 module.exports = {
     FileUploadView:FileUploadView,

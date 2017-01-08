@@ -42,7 +42,8 @@ class FileListSerializer(serializers.ListSerializer):
             contentnode = file_obj['contentnode'].pk
             preset = file_obj['preset'].pk
             file_id = file_obj['id']
-            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & (Q(preset_id=preset) | Q(preset=None)) & ~Q(id=file_id))
+            language = file_obj['language_id']
+            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & (Q(preset_id=preset) & (Q(language_id=language)) | Q(preset=None)) & ~Q(id=file_id))
             for to_delete in files_to_delete:
                 to_delete.delete()
 
