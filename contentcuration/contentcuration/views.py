@@ -148,7 +148,8 @@ def exercise(request, exercise_id):
 def file_upload(request):
     if request.method == 'POST':
         preset = FormatPreset.objects.get(id=request.META.get('HTTP_PRESET'))
-        #Implement logic for switching out files without saving it yet
+
+        # Implement logic for switching out files without saving it yet
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
         original_filename = request.FILES.values()[0]._name
         size = request.FILES.values()[0]._size

@@ -5,7 +5,7 @@ var mail_helper = require("edit_channel/utils/mail");
 /**** BASE MODELS ****/
 var BaseModel = Backbone.Model.extend({
 	root_list:null,
-	name:"Model",
+	model_name:"Model",
 	urlRoot: function() {
 		return window.Urls[this.root_list]();
 	},
@@ -15,13 +15,13 @@ var BaseModel = Backbone.Model.extend({
 	  return json;
 	},
 	getName:function(){
-		return this.name;
+		return this.model_name;
 	}
 });
 
 var BaseCollection = Backbone.Collection.extend({
 	list_name:null,
-	name:"Collection",
+	model_name:"Collection",
 	url: function() {
 		return window.Urls[this.list_name]();
 	},
@@ -84,14 +84,14 @@ var BaseCollection = Backbone.Collection.extend({
     	});
     },
     getName:function(){
-		return this.name;
+		return this.model_name;
 	}
 });
 
 /**** USER-CENTERED MODELS ****/
 var UserModel = BaseModel.extend({
 	root_list : "user-list",
-	name:"UserModel",
+	model_name:"UserModel",
 	defaults: {
 		first_name: "Guest"
     },
@@ -106,12 +106,12 @@ var UserModel = BaseModel.extend({
 var UserCollection = BaseCollection.extend({
 	model: UserModel,
 	list_name:"user-list",
-	name:"UserCollection"
+	model_name:"UserCollection"
 });
 
 var InvitationModel = BaseModel.extend({
 	root_list : "invitation-list",
-	name:"InvitationModel",
+	model_name:"InvitationModel",
 	defaults: {
 		first_name: "Guest"
     },
@@ -123,13 +123,13 @@ var InvitationModel = BaseModel.extend({
 var InvitationCollection = BaseCollection.extend({
 	model: InvitationModel,
 	list_name:"invitation-list",
-	name:"InvitationCollection"
+	model_name:"InvitationCollection"
 });
 
 /**** CHANNEL AND CONTENT MODELS ****/
 var ContentNodeModel = BaseModel.extend({
 	root_list:"contentnode-list",
-	name:"ContentNodeModel",
+	model_name:"ContentNodeModel",
 	defaults: {
 		title:"Untitled",
 		children:[],
@@ -142,7 +142,7 @@ var ContentNodeCollection = BaseCollection.extend({
 	model: ContentNodeModel,
 	list_name:"contentnode-list",
 	highest_sort_order: 1,
-	name:"ContentNodeCollection",
+	model_name:"ContentNodeCollection",
 
 	save: function() {
 		var self = this;
@@ -150,10 +150,12 @@ var ContentNodeCollection = BaseCollection.extend({
 			var fileCollection = new FileCollection()
 			self.forEach(function(node){
 				node.get("files").forEach(function(file){
-					file.preset = file.preset.id ? file.preset.id : file.preset
+					file.preset.id = file.preset.name ? file.preset.name : file.preset.id;
 				});
+
 				fileCollection.add(node.get("files"));
 			});
+			console.log(fileCollection)
 			fileCollection.save().then(function(){
 				Backbone.sync("update", self, {
 		        	url: self.model.prototype.urlRoot(),
@@ -234,7 +236,7 @@ var ChannelModel = BaseModel.extend({
 		description:" ",
 		thumbnail_url: "/static/img/kolibri_placeholder.png"
     },
-    name:"ChannelModel",
+    model_name:"ChannelModel",
     get_root:function(tree_name){
     	return new ContentNodeModel(this.get(tree_name));
     },
@@ -261,12 +263,12 @@ var ChannelModel = BaseModel.extend({
 var ChannelCollection = BaseCollection.extend({
 	model: ChannelModel,
 	list_name:"channel-list",
-	name:"ChannelCollection"
+	model_name:"ChannelCollection"
 });
 
 var TagModel = BaseModel.extend({
 	root_list : "contenttag-list",
-	name:"TagModel",
+	model_name:"TagModel",
 	defaults: {
 		tag_name: "Untagged"
     }
@@ -275,7 +277,7 @@ var TagModel = BaseModel.extend({
 var TagCollection = BaseCollection.extend({
 	model: TagModel,
 	list_name:"contenttag-list",
-	name:"TagCollection",
+	model_name:"TagCollection",
 	get_all_fetch:function(ids){
 		var self = this;
 		var fetched_collection = new TagCollection();
@@ -297,7 +299,7 @@ var TagCollection = BaseCollection.extend({
 /**** MODELS SPECIFIC TO FILE NODES ****/
 var FileModel = BaseModel.extend({
 	root_list:"file-list",
-	name:"FileModel",
+	model_name:"FileModel",
 	get_preset:function(){
 		return window.formatpresets.get({'id':this.get("id")});
 	}
@@ -306,7 +308,7 @@ var FileModel = BaseModel.extend({
 var FileCollection = BaseCollection.extend({
 	model: FileModel,
 	list_name:"file-list",
-	name:"FileCollection",
+	model_name:"FileCollection",
 	get_or_fetch: function(data){
 		var newCollection = new FileCollection();
 		newCollection.fetch({
@@ -342,13 +344,13 @@ var FileCollection = BaseCollection.extend({
 var FormatPresetModel = BaseModel.extend({
 	root_list:"formatpreset-list",
 	attached_format: null,
-	name:"FormatPresetModel"
+	model_name:"FormatPresetModel"
 });
 
 var FormatPresetCollection = BaseCollection.extend({
 	model: FormatPresetModel,
 	list_name:"formatpreset-list",
-	name:"FormatPresetCollection",
+	model_name:"FormatPresetCollection",
 	sort_by_order:function(){
     	this.comparator = function(preset){
     		return preset.get("order");
@@ -361,7 +363,7 @@ var FormatPresetCollection = BaseCollection.extend({
 /**** PRESETS AUTOMATICALLY GENERATED UPON FIRST USE ****/
 var FileFormatModel = Backbone.Model.extend({
 	root_list: "fileformat-list",
-	name:"FileFormatModel",
+	model_name:"FileFormatModel",
 	defaults: {
 		extension:"invalid"
     }
@@ -370,12 +372,12 @@ var FileFormatModel = Backbone.Model.extend({
 var FileFormatCollection = BaseCollection.extend({
 	model: FileFormatModel,
 	list_name:"fileformat-list",
-	name:"FileFormatCollection"
+	model_name:"FileFormatCollection"
 });
 
 var LicenseModel = BaseModel.extend({
 	root_list:"license-list",
-	name:"LicenseModel",
+	model_name:"LicenseModel",
 	defaults: {
 		license_name:"Unlicensed",
 		exists: false
@@ -385,7 +387,7 @@ var LicenseModel = BaseModel.extend({
 var LicenseCollection = BaseCollection.extend({
 	model: LicenseModel,
 	list_name:"license-list",
-	name:"LicenseCollection",
+	model_name:"LicenseCollection",
 
     get_default:function(){
     	return this.findWhere({license_name:"CC-BY"});
@@ -394,19 +396,19 @@ var LicenseCollection = BaseCollection.extend({
 
 var LanguageModel = BaseModel.extend({
 	root_list:"language-list",
-	name:"LanguageModel"
+	model_name:"LanguageModel"
 });
 
 var LanguageCollection = BaseCollection.extend({
 	model: LanguageModel,
 	list_name:"language-list",
-	name:"LanguageCollection"
+	model_name:"LanguageCollection"
 });
 
 
 var ContentKindModel = BaseModel.extend({
 	root_list:"contentkind-list",
-	name:"ContentKindModel",
+	model_name:"ContentKindModel",
 	defaults: {
 		kind:"topic"
     },
@@ -418,7 +420,7 @@ var ContentKindModel = BaseModel.extend({
 var ContentKindCollection = BaseCollection.extend({
 	model: ContentKindModel,
 	list_name:"contentkind-list",
-	name:"ContentKindCollection",
+	model_name:"ContentKindCollection",
     get_default:function(){
     	return this.findWhere({kind:"topic"});
     }
@@ -426,18 +428,18 @@ var ContentKindCollection = BaseCollection.extend({
 
 var ExerciseModel = BaseModel.extend({
 	root_list:"exercise-list",
-	name:"ExerciseModel"
+	model_name:"ExerciseModel"
 });
 
 var ExerciseCollection = BaseCollection.extend({
 	model: ExerciseModel,
 	list_name:"exercise-list",
-	name:"ExerciseCollection"
+	model_name:"ExerciseCollection"
 });
 
 var AssessmentItemModel =BaseModel.extend({
 	root_list:"assessmentitem-list",
-	name:"AssessmentItemModel",
+	model_name:"AssessmentItemModel",
 	defaults: {
 		question: "",
 		answers: "[]",
@@ -480,7 +482,7 @@ var AssessmentItemModel =BaseModel.extend({
 
 var AssessmentItemCollection = BaseCollection.extend({
 	model: AssessmentItemModel,
-	name:"AssessmentItemCollection",
+	model_name:"AssessmentItemCollection",
 	get_all_fetch: function(ids, force_fetch){
 		force_fetch = (force_fetch)? true : false;
     	var self = this;
