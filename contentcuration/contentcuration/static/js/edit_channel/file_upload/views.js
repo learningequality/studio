@@ -621,7 +621,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             nodeid:this.nodeid,
             languages:this.languages.models,
             show_dropdown: this.model.get("multi_language") && (!this.file || !this.file.get("language")),
-            selector: this.id()
+            selector: this.id(),
+            preset_name : (this.file)? this.file.get("display_name") : this.model.get("readable_name")
         }));
         setTimeout(this.create_dropzone, 100); // Wait for slide down animation to finish
     },
@@ -633,12 +634,17 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         var language_readable_name = this.$(".language_dropdown option:selected").text();
         if(language && this.file){
             var language_preset = this.model.clone();
-            language_preset.set('readable_name', this.model.get("readable_name") + " (" + language_readable_name + ")");
+            var display_name = this.model.get("readable_name") + " (" + language_readable_name + ")";
+            language_preset.set('readable_name', display_name);
+            language_preset.set("id", this.model.id + "_" + language);
+            this.model.set("order", this.model.get("order") + 1);
             this.file.set("language", this.languages.findWhere(function(l){return l.id == language;}).toJSON());
             this.file.set("preset", language_preset);
+            this.file.set("display_name", display_name);
             this.containing_list_view.add_slot(this.file, language_preset, this.$el);
             this.file = null;
-            this.languages.models = _.reject(this.languages.models, function(l){ return l.id == language;});
+            // Use below code to remove language if already has associated file (desired behavior?)
+            // this.languages.models = _.reject(this.languages.models, function(l){ return l.id == language;});
             if(render){
                 this.render();
             }
@@ -662,7 +668,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                headers: {
                     "X-CSRFToken": get_cookie("csrftoken"),
                     "Node" : this.nodeid,
-                    "Preset": this.model.get("id")
+                    "Preset": this.model.get("name")
                 }
             });
             dropzone.on("success", this.file_uploaded);
@@ -716,12 +722,19 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
 
 function get_preset_model(preset){
     if(preset){
-        preset = (!preset.id)? window.formatpresets.get({id:preset}) : preset;
+        var preset_id = (preset.name)? preset.name :
+                        (preset.attributes && preset.get("name"))? preset.get("name") :
+                        (preset.id)? preset.id : preset;
+        preset = (!preset.id)? window.formatpresets.get({id:preset_id}) : preset;
         preset = (!preset.attributes)? new Models.FormatPresetModel(preset) : preset;
-        preset.set("associated_mimetypes",
-            (preset.get("associated_mimetypes"))?
-            preset.get("associated_mimetypes") :
-            window.formatpresets.get({id:preset.id}).get("associated_mimetypes"));
+
+        // Retain fields added by serializer
+        var mimetypes = (preset.get("associated_mimetypes"))? preset.get("associated_mimetypes") : window.formatpresets.get({id:preset_id}).get("associated_mimetypes");
+        var name = (preset.get("name"))? preset.get("name") : window.formatpresets.get({id:preset_id}).get("name");
+        preset.set({
+            "associated_mimetypes": mimetypes,
+            "name" : name
+        });
     }
     return preset;
 }
