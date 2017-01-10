@@ -150,10 +150,14 @@ var ContentNodeCollection = BaseCollection.extend({
 			var fileCollection = new FileCollection()
 			self.forEach(function(node){
 				node.get("files").forEach(function(file){
-					file.preset.id = file.preset.name ? file.preset.name : file.preset.id;
+					var to_add = new FileModel(file);
+					var preset_data = to_add.get("preset");
+					preset_data.id = file.preset.name ? file.preset.name : file.preset.id;
+					to_add.set('preset', preset_data);
+					to_add.set('contentnode', node.id);
+					fileCollection.add(to_add);
 				});
 
-				fileCollection.add(node.get("files"));
 			});
 			fileCollection.save().then(function(){
 				Backbone.sync("update", self, {

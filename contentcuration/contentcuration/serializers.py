@@ -88,7 +88,6 @@ class FileListSerializer(serializers.ListSerializer):
             for f in previous_files:
                 if f.id not in current_files:
                     files_to_delete.append(f)
-        import pdb; pdb.set_trace()
 
         for to_delete in files_to_delete:
             to_delete.delete()
