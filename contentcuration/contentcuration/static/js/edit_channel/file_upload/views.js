@@ -522,7 +522,6 @@ var FormatFormatItem = FormatEditorItem.extend({
         if(this.check_for_completion()){
             this.load_subfiles();
         }
-        console.log("PRESETs", this.presets)
     },
     set_initial_format:function(event){
         this.set_file_format(this.files.at(0), this.presets.findWhere({id: event.target.value}));
@@ -634,7 +633,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.languages = options.languages;
         this.nodeid = options.nodeid;
         this.render();
-        console.log("THIS IS", this.model.id, this)
     },
     events: {
         'click .format_editor_remove ' : 'remove_item',
@@ -670,7 +668,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             this.containing_list_view.add_slot(this.file, language_preset, this.$el);
             this.file = null;
             // Use below code to remove language if already has associated file (desired behavior?)
-            // this.languages.models = _.reject(this.languages.models, function(l){ return l.id == language;});
+            this.languages.models = _.reject(this.languages.models, function(l){ return l.id == language;});
             if(render){
                 this.render();
             }
