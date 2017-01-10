@@ -328,6 +328,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
     init_collections:function(){
         var all_presets = $.merge(this.model.get("associated_presets"), _.pluck(this.model.get("files"), "preset"));
+        all_presets = _.reject(all_presets, function(item){return item == null;});
         this.presets = new Models.FormatPresetCollection(_.reject(all_presets,{display:false}));
 
         this.files=new Models.FileCollection(this.model.get("files"));
@@ -521,9 +522,10 @@ var FormatFormatItem = FormatEditorItem.extend({
         if(this.check_for_completion()){
             this.load_subfiles();
         }
+        console.log("PRESETs", this.presets)
     },
     set_initial_format:function(event){
-        this.set_file_format(this.files.at(0), window.formatpresets.findWhere({id: event.target.value}));
+        this.set_file_format(this.files.at(0), this.presets.findWhere({id: event.target.value}));
         this.render();
         this.containing_list_view.handle_completed();
         this.containing_list_view.hide_assigned();
@@ -632,20 +634,20 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.languages = options.languages;
         this.nodeid = options.nodeid;
         this.render();
+        console.log("THIS IS", this.model.id, this)
     },
     events: {
         'click .format_editor_remove ' : 'remove_item',
         'change .language_dropdown' : 'check_set_language'
     },
     render: function() {
-        console.log(this.file)
         this.$el.html(this.template({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
             languages:this.languages.models,
             show_dropdown: this.model.get("multi_language") && (!this.file || !this.file.get("language")),
             selector: this.id(),
-            preset_name : (this.file)? this.file.get("display_name") : this.model.get("readable_name")
+            preset_name : (this.file && this.file.get("display_name")!="")? this.file.get("display_name") : this.model.get("readable_name")
         }));
         setTimeout(this.create_dropzone, 100); // Wait for slide down animation to finish
     },
@@ -664,6 +666,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             this.file.set("language", this.languages.findWhere(function(l){return l.id == language;}).toJSON());
             this.file.set("preset", language_preset);
             this.file.set("display_name", display_name);
+            this.containing_list_view.set_file_format(this.file, language_preset);
             this.containing_list_view.add_slot(this.file, language_preset, this.$el);
             this.file = null;
             // Use below code to remove language if already has associated file (desired behavior?)

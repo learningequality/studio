@@ -135,7 +135,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var has_files = false;
     if(is_individual){
       selected_items[0].model.get("files").forEach(function(file){
-        var preset = (file.preset.id)? file.preset.id:file.preset;
+        var preset = (file.preset.name)? file.preset.name:file.preset;
         has_files = has_files || window.formatpresets.get({id:preset}).get("display");
       });
     }

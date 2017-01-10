@@ -110,7 +110,7 @@ var PreviewView = BaseViews.BaseView.extend({
         var subtitles = [];
         this.model.get("files").forEach(function(file){
             var file_json = (file.attributes)? file.attributes : file;
-            var preset_id = (file_json.preset && file_json.preset.id)? file_json.preset.id : file_json.preset;
+            var preset_id = (file_json.preset && file_json.preset.name)? file_json.preset.name : file_json.preset;
             var current_preset = window.formatpresets.get({id:preset_id});
             if(current_preset && current_preset.get("subtitle")){
                 subtitles.push(file_json);
@@ -145,12 +145,12 @@ var PreviewView = BaseViews.BaseView.extend({
         var self = this;
         var return_data = null;
         this.model.get("files").forEach(function(file){
-            var preset_id = (file.attributes)? file.get("preset") : (file.preset && file.preset.id)? file.preset.id : file.preset;
+            var preset_id = (file.attributes)? file.get("preset") : (file.preset && file.preset.name)? file.preset.name : file.preset;
             var current_preset = window.formatpresets.get({id:preset_id});
             if(current_preset && current_preset.get("display")){
                 if (load_selected_value){
                     var data = (file.attributes)? file.attributes : file;
-                    var preset_check = (data.preset.id)? data.preset.id : data.preset;
+                    var preset_check = (data.preset.name)? data.preset.name : data.preset;
                     if(preset_check === load_selected_value){
                         self.set_current_preview(data);
                         return self.current_preview;
