@@ -54,7 +54,6 @@ class FileListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
         ret = []
         update_files = {}
-
         with transaction.atomic():
             for item in validated_data:
                 item.update({
@@ -70,15 +69,29 @@ class FileListSerializer(serializers.ListSerializer):
                     # create new nodes
                     ret.append(File.objects.create(**item))
 
+        files_to_delete = []
+        nodes_to_parse = []
+        current_files = [f['id'] for f in validated_data]
         for file_obj in validated_data:
-            import pdb; pdb.set_trace()
             contentnode = file_obj['contentnode']
             preset = file_obj['preset_id']
             file_id = file_obj['id']
             language = file_obj.get('language')
-            files_to_delete = File.objects.filter(Q(contentnode=contentnode) & (Q(preset_id=preset) | Q(preset=None)) & (Q(language_id=language)) & ~Q(id=file_id))
-            for to_delete in files_to_delete:
-                to_delete.delete()
+            delete_queryset = File.objects.filter(Q(contentnode=contentnode) & (Q(preset_id=preset) | Q(preset=None)) & (Q(language_id=language)) & ~Q(id=file_id))
+            files_to_delete += [f for f in delete_queryset.all()]
+            if file_obj['contentnode'] not in nodes_to_parse:
+                nodes_to_parse.append(file_obj['contentnode'])
+
+        # Delete removed files
+        for node in nodes_to_parse:
+            previous_files = node.files.all()
+            for f in previous_files:
+                if f.id not in current_files:
+                    files_to_delete.append(f)
+        import pdb; pdb.set_trace()
+
+        for to_delete in files_to_delete:
+            to_delete.delete()
 
         if update_files:
             with transaction.atomic():

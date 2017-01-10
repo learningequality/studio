@@ -154,6 +154,11 @@ def file_upload(request):
         original_filename = request.FILES.values()[0]._name
         size = request.FILES.values()[0]._size
         file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, preset=preset)
+
+        # Set language if provided
+        if 'HTTP_LANGUAGE' in request.META:
+            file_object.language = Language.objects.get(id=request.META.get('HTTP_LANGUAGE'))
+
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,

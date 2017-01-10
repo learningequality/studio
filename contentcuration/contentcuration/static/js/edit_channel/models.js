@@ -155,7 +155,6 @@ var ContentNodeCollection = BaseCollection.extend({
 
 				fileCollection.add(node.get("files"));
 			});
-			console.log(fileCollection)
 			fileCollection.save().then(function(){
 				Backbone.sync("update", self, {
 		        	url: self.model.prototype.urlRoot(),
@@ -302,7 +301,15 @@ var FileModel = BaseModel.extend({
 	model_name:"FileModel",
 	get_preset:function(){
 		return window.formatpresets.get({'id':this.get("id")});
-	}
+	},
+	initialize: function () {
+		if(this.get("preset") && this.get("language") &&
+			!this.get("preset").id.endsWith("_" + this.get("language").id)){
+			var preset_data = this.get("preset");
+			preset_data.id = preset_data.id + "_" + this.get("language").id;
+			this.set("preset", preset_data);
+		}
+	},
 });
 
 var FileCollection = BaseCollection.extend({

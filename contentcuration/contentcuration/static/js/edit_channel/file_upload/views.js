@@ -327,7 +327,9 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         return "format_item_" + this.model.filename;
     },
     init_collections:function(){
-        this.presets = new Models.FormatPresetCollection(_.reject(this.model.get("associated_presets"),{display:false}));
+        var all_presets = $.merge(this.model.get("associated_presets"), _.pluck(this.model.get("files"), "preset"));
+        this.presets = new Models.FormatPresetCollection(_.reject(all_presets,{display:false}));
+
         this.files=new Models.FileCollection(this.model.get("files"));
     },
     remove_item:function(){
@@ -589,6 +591,11 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
             this.files.push(file);
         }
     },
+    remove_file_format:function(file){
+        if(file){
+            this.files.remove(file);
+        }
+    },
     set_uploading:function(uploading){
         this.content_node_view.set_uploading(uploading);
     },
@@ -631,6 +638,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         'change .language_dropdown' : 'check_set_language'
     },
     render: function() {
+        console.log(this.file)
         this.$el.html(this.template({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
@@ -684,7 +692,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                headers: {
                     "X-CSRFToken": get_cookie("csrftoken"),
                     "Node" : this.nodeid,
-                    "Preset": this.model.get("name")
+                    "Preset": this.model.get("name"),
+                    "Language": (this.file && this.file.get("language"))? Number(this.file.get("language").id) : null
                 }
             });
             dropzone.on("success", this.file_uploaded);
@@ -725,9 +734,14 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.set_uploading(false);
     },
     remove_item:function(){
-        this.containing_list_view.set_file_format(null, this.model, this.file);
-        this.file = null;
-        this.render();
+        if(this.model.get("multi_language")){
+            this.containing_list_view.remove_file_format(this.file);
+            this.remove();
+        }else{
+            this.containing_list_view.set_file_format(null, this.model, this.file);
+            this.file = null;
+            this.render();
+        }
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
