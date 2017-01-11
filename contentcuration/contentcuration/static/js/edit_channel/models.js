@@ -235,14 +235,6 @@ var ContentNodeCollection = BaseCollection.extend({
 	        });
     	});
     	return promise;
-
-
-    	var self = this;
-		var promise = new Promise(function(resolve, reject){
-
-
-		});
-        return promise;
 	}
 });
 
