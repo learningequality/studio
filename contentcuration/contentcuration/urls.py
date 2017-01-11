@@ -26,6 +26,7 @@ import contentcuration.views as views
 import contentcuration.view.registration_views as registration_views
 import contentcuration.view.settings_views as settings_views
 import contentcuration.view.internal_views as internal_views
+import contentcuration.view.zip_views as zip_views
 from rest_framework.authtoken import views as auth_view
 from contentcuration import api
 
@@ -119,6 +120,7 @@ urlpatterns = [
     url(r'^channels/(?P<channel_id>[^/]+)', views.channel, name='channel'),
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^exercise_image_upload/', views.exercise_image_upload, name='exercise_image_upload'),
+    url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
 ]

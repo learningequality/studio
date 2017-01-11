@@ -515,7 +515,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   set_selected:function(){
     if(this.selected_items.length === 1 && this.$("#input_title").val().trim() == ""){
       this.$("#title_error").css("display", "inline-block");
-      if(this.collection.length === 1 && !this.new_content && !this.uploaded_files){
+      if(this.collection && this.collection.length === 1 && !this.new_content && !this.uploaded_files){
           this.container.disable_submit();
       }
     }else{
