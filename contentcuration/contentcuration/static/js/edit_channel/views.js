@@ -764,7 +764,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 				});
 				tempCollection.add(node);
 			});
-			tempCollection.save().then(function(savedCollection){
+			tempCollection.move(self.model).then(function(savedCollection){
 				self.retrieve_nodes(reload_list, true).then(function(fetched){
 					self.reload_ancestors(fetched);
 					resolve(true);
