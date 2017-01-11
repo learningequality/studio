@@ -217,7 +217,11 @@ var ContentNodeCollection = BaseCollection.extend({
     move:function(target_parent){
     	var self = this;
     	var promise = new Promise(function(resolve, reject){
-	        var data = {"node_ids": self.pluck('id').join(" "),
+    		var node_list = [];
+    		self.forEach(function(node){
+    			node_list.push('{"id":"' + node.get('id') + '","sort_order":' + node.get('sort_order') + '}');
+    		})
+	        var data = {"node_ids": node_list.join(" "),
 	                    "target_parent": target_parent.get("id"),
 	                    "channel_id": window.current_channel.id
 	        };

@@ -294,12 +294,12 @@ def move_nodes(request):
 
         logging.info("Moving node id %s", node_ids)
 
-        nodes = node_ids.split()
+        nodes = [json.loads(n) for n in node_ids.split()]
         nodes_list = []
 
         with transaction.atomic():
-            for node_id in nodes:
-                nodes_list.append(_move_node(node_id, parent=target_parent, channel_id=channel_id))
+            for node_data in nodes:
+                nodes_list.append(_move_node(node_data['id'], sort_order=node_data['sort_order'], parent=target_parent, channel_id=channel_id))
 
         nodes_serializer = ContentNodeSerializer(nodes_list, many=True)
         return HttpResponse(json.dumps({
@@ -307,13 +307,15 @@ def move_nodes(request):
             "nodes": JSONRenderer().render(nodes_serializer.data)
         }))
 
-def _move_node(node, parent=None, channel_id=None):
+def _move_node(node, sort_order=1, parent=None, channel_id=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
     node.parent = ContentNode.objects.get(pk=parent) if parent else None
     node.changed = True
+    node.sort_order = sort_order
     descendants = node.get_descendants(include_self=True)
+    to_save = [node]
     for tag in ContentTag.objects.filter(tagged_content__in=descendants):
         # If moving from another channel
         if tag.channel_id != channel_id:
@@ -327,8 +329,12 @@ def _move_node(node, parent=None, channel_id=None):
                 if n in descendants:
                     n.tags.remove(tag)
                     n.tags.add(t)
-                    n.save()
-    node.save()
+                    to_save.append(n)
+
+    # Save all updates to nodes with changed tags
+    for n in to_save:
+        n.save()
+
     return node
 
 @csrf_exempt
