@@ -759,7 +759,6 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	        	reload_list.push(node.get("parent"));
 	        	reload_list.push(node.get("id"));
 				node.set({
-					parent: self.model.id,
 					sort_order: ++sort_order
 				});
 				tempCollection.add(node);
