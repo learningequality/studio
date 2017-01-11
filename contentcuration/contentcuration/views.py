@@ -315,15 +315,19 @@ def _move_node(node, parent=None, channel_id=None):
     node.changed = True
     descendants = node.get_descendants(include_self=True)
     for tag in ContentTag.objects.filter(tagged_content__in=descendants):
+        # If moving from another channel
         if tag.channel_id != channel_id:
             t, is_new = ContentTag.objects.get_or_create(
                 tag_name=tag.tag_name,
                 channel_id=channel_id,
             )
+
+            # Set descendants with this tag to correct tag
             for n in descendants.filter(tags=tag):
                 if n in descendants:
                     n.tags.remove(tag)
                     n.tags.add(t)
+                    n.save()
     node.save()
     return node
 
