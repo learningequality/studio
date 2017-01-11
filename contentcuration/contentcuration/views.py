@@ -15,7 +15,7 @@ from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
@@ -207,21 +207,18 @@ def duplicate_nodes(request):
         data = json.loads(request.body)
 
         try:
-            node_ids = data["node_ids"]
+            nodes = data["nodes"]
             sort_order = data["sort_order"]
             target_parent = data["target_parent"]
             channel_id = data["channel_id"]
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        logging.info("Copying node id %s", node_ids)
-
-        nodes = node_ids.split()
         new_nodes = []
 
         with transaction.atomic():
-            for node_id in nodes:
-                new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent, channel_id=channel_id)
+            for node_data in nodes:
+                new_node = _duplicate_node(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
                 new_nodes.append(new_node.pk)
                 sort_order+=1
 
@@ -286,36 +283,29 @@ def move_nodes(request):
         data = json.loads(request.body)
 
         try:
-            node_ids = data["node_ids"]
-            target_parent = data["target_parent"]
+            nodes = data["nodes"]
+            target_parent = ContentNode.objects.get(pk=data["target_parent"])
             channel_id = data["channel_id"]
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        logging.info("Moving node id %s", node_ids)
-
-        nodes = [json.loads(n) for n in node_ids.split()]
-        nodes_list = []
-
         with transaction.atomic():
-            for node_data in nodes:
-                nodes_list.append(_move_node(node_data['id'], sort_order=node_data['sort_order'], parent=target_parent, channel_id=channel_id))
+            for n in nodes:
+                node = ContentNode.objects.get(pk=n['id'])
+                _move_node(node, parent=target_parent, sort_order=n['sort_order'], channel_id=channel_id)
 
-        nodes_serializer = ContentNodeSerializer(nodes_list, many=True)
         return HttpResponse(json.dumps({
             "success": True,
-            "nodes": JSONRenderer().render(nodes_serializer.data)
+            "nodes": [n['id'] for n in nodes]
         }))
 
-def _move_node(node, sort_order=1, parent=None, channel_id=None):
-    if isinstance(node, int) or isinstance(node, basestring):
-        node = ContentNode.objects.get(pk=node)
-
-    node.parent = ContentNode.objects.get(pk=parent) if parent else None
-    node.changed = True
+def _move_node(node, parent=None, sort_order=1, channel_id=None):
+    node.parent = parent
     node.sort_order = sort_order
+    node.changed = True
     descendants = node.get_descendants(include_self=True)
-    to_save = [node]
+    node.save()
+
     for tag in ContentTag.objects.filter(tagged_content__in=descendants):
         # If moving from another channel
         if tag.channel_id != channel_id:
@@ -326,14 +316,8 @@ def _move_node(node, sort_order=1, parent=None, channel_id=None):
 
             # Set descendants with this tag to correct tag
             for n in descendants.filter(tags=tag):
-                if n in descendants:
-                    n.tags.remove(tag)
-                    n.tags.add(t)
-                    to_save.append(n)
-
-    # Save all updates to nodes with changed tags
-    for n in to_save:
-        n.save()
+                n.tags.remove(tag)
+                n.tags.add(t)
 
     return node
 

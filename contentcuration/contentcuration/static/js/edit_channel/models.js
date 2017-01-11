@@ -178,21 +178,20 @@ var ContentNodeCollection = BaseCollection.extend({
 		});
         return promise;
 	},
+	comparator : function(node){
+    	return node.get("sort_order");
+    },
     sort_by_order:function(){
-    	this.comparator = function(node){
-    		return node.get("sort_order");
-    	};
     	this.sort();
     	this.highest_sort_order = (this.length > 0)? this.at(this.length - 1).get("sort_order") : 1;
     },
     duplicate:function(target_parent){
     	var self = this;
     	var promise = new Promise(function(resolve, reject){
-    		var copied_list = self.pluck('id');
 			var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
 	        var parent_id = target_parent.get("id");
 
-	        var data = {"node_ids": copied_list.join(" "),
+	        var data = {"nodes": self.toJSON(),
 	                    "sort_order": sort_order,
 	                    "target_parent": parent_id,
 	                    "channel_id": window.current_channel.id
@@ -217,21 +216,16 @@ var ContentNodeCollection = BaseCollection.extend({
     move:function(target_parent){
     	var self = this;
     	var promise = new Promise(function(resolve, reject){
-    		var node_list = [];
-    		self.forEach(function(node){
-    			node_list.push('{"id":"' + node.get('id') + '","sort_order":' + node.get('sort_order') + '}');
-    		})
-	        var data = {"node_ids": node_list.join(" "),
-	                    "target_parent": target_parent.get("id"),
-	                    "channel_id": window.current_channel.id
+	        var data = {"nodes" : self.toJSON(),
+	                    "target_parent" : target_parent.get("id"),
+	                    "channel_id" : window.current_channel.id
 	        };
 	        $.ajax({
 	        	method:"POST",
 	            url: window.Urls.move_nodes(),
 	            data:  JSON.stringify(data),
 	            success: function(data) {
-	                moved = new ContentNodeCollection(JSON.parse(data).nodes);
-		    		resolve(moved);
+	            	resolve(JSON.parse(data).nodes);
 	            },
 	            error:function(e){
 	            	reject(e);
