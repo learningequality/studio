@@ -15,7 +15,7 @@ from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
 from django.db import transaction
-from django.db.models import Q, Max
+from django.db.models import Q
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
