@@ -42,7 +42,7 @@ DEBUG_TOOLBAR_PANELS = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "data.sqlite3",
+        "NAME": "data.sqlite",
         "OPTIONS": {
             "timeout": 60,
         },
