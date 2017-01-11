@@ -756,13 +756,17 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 			var tempCollection = new Models.ContentNodeCollection();
+			var sort_order = self.model.get("metadata").max_sort_order;
 			var reload_list = [self.model.get("id")];
 	        models.forEach(function(node){
 	        	reload_list.push(node.get("parent"));
 	        	reload_list.push(node.get("id"));
+				node.set({
+					sort_order: ++sort_order
+				});
 				tempCollection.add(node);
 			});
-			tempCollection.move(self.model, null).then(function(savedCollection){
+			tempCollection.move(self.model.id).then(function(savedCollection){
 				self.retrieve_nodes(reload_list, true).then(function(fetched){
 					self.reload_ancestors(fetched);
 					resolve(true);
