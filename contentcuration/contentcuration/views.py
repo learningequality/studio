@@ -210,6 +210,7 @@ def duplicate_nodes(request):
             node_ids = data["node_ids"]
             sort_order = data["sort_order"]
             target_parent = data["target_parent"]
+            channel_id = data["channel_id"]
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
@@ -220,7 +221,7 @@ def duplicate_nodes(request):
 
         with transaction.atomic():
             for node_id in nodes:
-                new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent)
+                new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent, channel_id=channel_id)
                 new_nodes.append(new_node.pk)
                 sort_order+=1
 
@@ -229,7 +230,7 @@ def duplicate_nodes(request):
             "node_ids": " ".join(new_nodes)
         }))
 
-def _duplicate_node(node, sort_order=1, parent=None):
+def _duplicate_node(node, sort_order=1, parent=None, channel_id=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
     new_node = ContentNode.objects.create(
@@ -249,7 +250,12 @@ def _duplicate_node(node, sort_order=1, parent=None):
     )
 
     # add tags now
-    new_node.tags.add(*node.tags.all())
+    for tag in node.tags.all():
+        new_tag, is_new = ContentTag.objects.get_or_create(
+            tag_name=tag.tag_name,
+            channel_id=channel_id,
+        )
+        new_node.tags.add(new_tag)
 
     # copy file object too
     for fobj in node.files.all():
@@ -269,6 +275,57 @@ def _duplicate_node(node, sort_order=1, parent=None):
         _duplicate_node(c, parent=new_node.id)
 
     return new_node
+
+
+def move_nodes(request):
+    logging.debug("Entering the move_nodes endpoint")
+
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+
+        try:
+            node_ids = data["node_ids"]
+            target_parent = data["target_parent"]
+            channel_id = data["channel_id"]
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+        logging.info("Moving node id %s", node_ids)
+
+        nodes = node_ids.split()
+        nodes_list = []
+
+        with transaction.atomic():
+            for node_id in nodes:
+                nodes_list.append(_move_node(node_id, parent=target_parent, channel_id=channel_id))
+
+        nodes_serializer = ContentNodeSerializer(nodes_list, many=True)
+        return HttpResponse(json.dumps({
+            "success": True,
+            "nodes": JSONRenderer().render(nodes_serializer.data)
+        }))
+
+def _move_node(node, parent=None, channel_id=None):
+    if isinstance(node, int) or isinstance(node, basestring):
+        node = ContentNode.objects.get(pk=node)
+
+    node.parent = ContentNode.objects.get(pk=parent) if parent else None
+    node.changed = True
+    descendants = node.get_descendants(include_self=True)
+    for tag in ContentTag.objects.filter(tagged_content__in=descendants):
+        if tag.channel_id != channel_id:
+            t, is_new = ContentTag.objects.get_or_create(
+                tag_name=tag.tag_name,
+                channel_id=channel_id,
+            )
+            for n in descendants.filter(tags=tag):
+                if n in descendants:
+                    n.tags.remove(tag)
+                    n.tags.add(t)
+    node.save()
+    return node
 
 @csrf_exempt
 def publish_channel(request):

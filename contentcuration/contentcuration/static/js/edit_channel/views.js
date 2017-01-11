@@ -447,8 +447,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						min += (max - min) / 2;
 						node.set({
 							"sort_order": min,
-							"changed" : true,
-							"parent" : self.model.get("id")
+							"changed" : true
 						});
 						var to_delete = $("#" + node.id);
 						var item_view = self.create_new_view(node);
@@ -456,7 +455,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						last_elem = item_view.$el;
 						to_delete.remove();
 					});
-					collection.save().then(function(savedCollection){
+					collection.move(self.model).then(function(savedCollection){
 						self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
 							self.reload_ancestors(fetched);
 							resolve(true);

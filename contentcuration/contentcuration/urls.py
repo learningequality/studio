@@ -109,6 +109,7 @@ urlpatterns = [
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
     url(r'^api/duplicate_nodes/$', views.duplicate_nodes, name='duplicate_nodes'),
+    url(r'^api/move_nodes/$', views.move_nodes, name='move_nodes'),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
