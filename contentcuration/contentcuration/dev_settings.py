@@ -15,8 +15,6 @@ INSTALLED_APPS += ('debug_toolbar', 'pympler')
 
 MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
 
-STORAGE_URL = '/storage/'
-
 DEBUG_TOOLBAR_CONFIG = {
 	"SHOW_TOOLBAR_CALLBACK": lambda x: True,
 }
