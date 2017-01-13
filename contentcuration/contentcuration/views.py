@@ -21,7 +21,7 @@ from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
+from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -87,8 +87,8 @@ def channel_list(request):
         return redirect(reverse_lazy('unsupported_browser'))
 
     channel_list = Channel.objects.filter(deleted=False, editors= request.user)
-    channel_list = ChannelListSerializer.setup_eager_loading(channel_list)
-    channel_serializer = ChannelListSerializer(channel_list, many=True)
+    channel_list = ChannelSerializer.setup_eager_loading(channel_list)
+    channel_serializer = ChannelSerializer(channel_list, many=True)
 
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
@@ -101,10 +101,20 @@ def channel_list(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
+    # Check if browser is supported
     if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
         return redirect(reverse_lazy('unsupported_browser'))
 
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
+
+    # Check user has permission to view channel
+    if request.user not in channel.editors.all() and not request.user.is_admin:
+        return redirect(reverse_lazy('unauthorized'))
+
+    channel_serializer =  ChannelSerializer(channel)
+    accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors= request.user))
+    accessible_channel_list = ChannelSerializer.setup_eager_loading(accessible_channel_list)
+    accessible_channel_list_serializer = ChannelSerializer(accessible_channel_list, many=True)
 
     # Check user has permission to view channel
     if request.user not in channel.editors.all() and not request.user.is_admin:

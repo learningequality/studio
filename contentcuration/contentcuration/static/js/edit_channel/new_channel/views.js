@@ -60,6 +60,10 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		(edit_mode_on)? $(".new_channel_button").addClass("disabled") : $(".new_channel_button").removeClass("disabled");
 		$(".new_channel_button").prop('title', (edit_mode_on)? 'Cannot create a new channel while another channel is being edited.' : "Create a new channel");
 	},
+	handle_channel_change:function(channel, deleted){
+		this.update_channel_collection(channel, deleted);
+		this.update_dropdown(channel, deleted);
+	},
 	update_dropdown:function(channel, deleted){
 		if(deleted){
 			$("#channel_dd_" + channel.id).remove();
@@ -77,6 +81,19 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 				$("#channel_selection_dropdown_list").append(new_channel)
 			}
 
+		}
+	},
+	update_channel_collection:function(channel, deleted){
+		if(deleted){
+			window.channels = _.reject(window.channels, function(c){return c.id == channel.id});
+		}else{
+			var match = _.findWhere(window.channels, {id:channel.id});
+			if(match){
+				var index = window.channels.indexOf(match);
+				window.channels[index] = channel.toJSON();
+			}else{
+				window.channels.push(channel.toJSON());
+			}
 		}
 	}
 });
@@ -192,7 +209,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				self.containing_list_view.set_editing(false);
 				self.containing_list_view.collection.remove(self.model);
 				self.containing_list_view.render();
-				self.containing_list_view.update_dropdown(self.model, true);
+				self.containing_list_view.handle_channel_change(self.model, true);
 			});
 		}else{
 			this.cancel_actions(event);
@@ -220,8 +237,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		var data = {
 			name: title,
 			description: description,
-			thumbnail : this.thumbnail,
-			editors: [window.current_user.id]
+			thumbnail : this.thumbnail
 		};
 		this.originalData = data;
 		this.original_thumbnail = this.thumbnail;
@@ -232,7 +248,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.save(data, "Saving Channel...").then(function(channel){
 			self.model = channel;
 			self.render();
-			self.containing_list_view.update_dropdown(channel, false);
+			self.containing_list_view.handle_channel_change(channel, false);
 		});
 	},
 	set_channel:function(){

@@ -20,4 +20,3 @@ https://github.com/learningequality/kolibri/tarball/master#egg=kolibri
 validators
 le-utils==0.0.9rc14
 gunicorn==19.6.0
-django-mailgun==0.9.1

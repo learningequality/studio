@@ -7,9 +7,9 @@ Hello {% if is_new %}{{ user.email }}{% else %}{{ user.first_name }}{% endif %},
 
 Please follow this link to accept the invitation:
 {% if is_new %}
-http://{{ site.domain }}{% url 'accept_invitation_and_registration' user.id invitation_key channel_id %}
+http://{{ site.domain }}{% url 'accept_invitation_and_registration' user.id invitation_key %}
 {% else %}
-http://{{ site.domain }}{% url 'accept_invitation' user.id invitation_key channel_id %}
+http://{{ site.domain }}{% url 'accept_invitation' invitation_key %}
 {% endif %}
 
 or if you'd like to decline the invitation, follow this link:

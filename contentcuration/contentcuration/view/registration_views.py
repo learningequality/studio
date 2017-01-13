@@ -77,7 +77,7 @@ class InvitationAcceptView(FormView):
 
     def get_initial(self):
         initial = self.initial.copy()
-        return {'userid': self.kwargs["user_id"]}
+        return {'userid': self.invitation.invited.pk}
 
     def get_form_kwargs(self):
         kwargs = super(InvitationAcceptView, self).get_form_kwargs()
@@ -91,31 +91,21 @@ class InvitationAcceptView(FormView):
         return reverse_lazy(page_name, kwargs={'channel_id':self.invitation.channel.pk})
 
     def dispatch(self, *args, **kwargs):
-        user = self.user()
         try:
             self.invitation = Invitation.objects.get(id = self.kwargs['invitation_link'])
         except ObjectDoesNotExist:
             logging.debug("No invitation found.")
-            channel = Channel.objects.get(id=self.kwargs["channel_id"])
-            if user in channel.editors.all():
-                return super(InvitationAcceptView, self).dispatch(*args, **kwargs)
             return redirect(reverse_lazy('fail_invitation'))
 
         return super(InvitationAcceptView, self).dispatch(*args, **kwargs)
 
     def user(self):
-        return User.objects.get_or_create(id=self.kwargs["user_id"])[0]
+        return self.invitation.invited
 
     def form_valid(self, form):
-        channel = Channel.objects.get(id=self.kwargs["channel_id"])
-        user = self.user()
-        if user not in channel.editors.all():
-            channel.editors.add(user)
-            channel.save()
-            if self.invitation is not None:
-                self.invitation.delete()
+        add_editor_to_channel(self.invitation)
 
-        user_cache = authenticate(username=user.email,
+        user_cache = authenticate(username=self.invitation.invited.email,
                             password=form.cleaned_data['password'],
                         )
         login(self.request, user_cache)
@@ -144,7 +134,7 @@ class InvitationRegisterView(FormView):
         return {'email': self.user().email}
 
     def get_success_url(self):
-        return reverse_lazy('accept_invitation', kwargs={'user_id': self.kwargs["user_id"], 'invitation_link': self.kwargs["invitation_link"] , 'channel_id': self.kwargs["channel_id"]})
+        return reverse_lazy('accept_invitation', kwargs={'invitation_link': self.kwargs["invitation_link"]})
 
     def get_login_url(self):
         page_name = "channel"
@@ -153,32 +143,23 @@ class InvitationRegisterView(FormView):
         return reverse_lazy(page_name, kwargs={'channel_id':self.invitation.channel.pk})
 
     def dispatch(self, *args, **kwargs):
-        user = self.user()
         try:
             self.invitation = Invitation.objects.get(id__exact = self.kwargs['invitation_link'])
         except ObjectDoesNotExist:
             logging.debug("No invitation found.")
-            channel = Channel.objects.get(id=self.kwargs["channel_id"])
-            if user in channel.editors.all():
-                return redirect(self.get_success_url())
             return redirect(reverse_lazy('fail_invitation'))
 
         if not getattr(settings, 'REGISTRATION_OPEN', True):
             return redirect(self.disallowed_url)
 
-        if user.is_active:
+        if self.invitation.invited.is_active:
             return redirect(self.get_success_url())
 
         return super(InvitationRegisterView, self).dispatch(*args, **kwargs)
 
     def form_valid(self, form):
         user = form.save(self.user())
-        channel = Channel.objects.get(id=self.kwargs["channel_id"])
-        if user not in channel.editors.all():
-            channel.editors.add(user)
-            channel.save()
-            if self.invitation is not None:
-                self.invitation.delete()
+        add_editor_to_channel(self.invitation)
         user_cache = authenticate(username=user.email,
                              password=form.cleaned_data['password1'],
                          )

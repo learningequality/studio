@@ -50,7 +50,7 @@ class Command(BaseCommand):
             channel = ccmodels.Channel.objects.get(pk=channel_id)
             # increment the channel version
             raise_if_nodes_are_all_unchanged(channel)
-            index, tempdb = tempfile.mkstemp(suffix=".sqlite3")
+            fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
             with using_content_database(tempdb):
                 prepare_export_database(tempdb)
