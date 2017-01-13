@@ -1,10 +1,6 @@
 <div id={{#if is_clipboard}}"clipboard"{{else}}{{#if edit}}"edit"{{else}}"preview"{{/if}}{{/if}}>
-	<!--<h3 id="container_area_title">{{#if is_clipboard}}Clipboard{{else}}{{channel.attributes.name}}{{/if}}</h3>-->
-	<!-- <span class="glyphicon glyphicon-star" style="font-size:500pt; background-color:lightgray;padding:100px; color:gray"></span> -->
 	<nav id="button_bar">
 	{{#if edit}}
-
-		<!--{{#if is_clipboard}}<a class="btn btn-default disable-on-edit construction">Import to Channel</a>{{/if}}-->
 		{{#if is_clipboard}}
 		<div class="nav-button-container">
 			<a href="edit">
@@ -49,19 +45,12 @@
 		{{/if}}
 
 	{{else}}
-		<h1>Select content to preview.
+		<h1>View-Only
 			<input type="checkbox" id="hide_details_checkbox"/>
 			<label for="hide_details_checkbox">Hide details</label>
 		</h1>
 	{{/if}}
 	</nav>
-
-	<!--<ol id="container-breadcrumb">
-	  <li><a href="#">Home</a></li>
-	  <li><a href="#">Library</a></li>
-	  <li><a href="#">Library Library Library</a></li>
-	  <li class="active"><a href="#">Data</a></li>
-	</ol>-->
 
 	<div id="container-wrapper">
 		{{#if is_clipboard}}
