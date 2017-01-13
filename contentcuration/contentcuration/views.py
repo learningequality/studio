@@ -11,11 +11,12 @@ from django.shortcuts import render, get_object_or_404, redirect, render_to_resp
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core import paginator
+from django.core.cache import cache
 from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
@@ -27,7 +28,7 @@ from le_utils.constants import format_presets
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from django.core.cache import cache
+
 
 def base(request):
     if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
@@ -46,6 +47,39 @@ def unsupported_browser(request):
 def unauthorized(request):
     return render(request, 'unauthorized.html')
 
+def channel_page(request, channel, allow_edit=False):
+    channel_serializer =  ChannelSerializer(channel)
+    accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))
+    accessible_channel_list = ChannelSerializer.setup_eager_loading(accessible_channel_list)
+    accessible_channel_list_serializer = ChannelSerializer(accessible_channel_list, many=True)
+
+    channel_list = accessible_channel_list.filter(Q(editors=request.user) | Q(viewers=request.user))\
+                    .exclude(id=channel.pk)\
+                    .annotate(is_view_only=Case(When(viewers=request.user,then=Value(1)),default=Value(0),output_field=IntegerField()))\
+                    .values("id", "name", "is_view_only")
+    fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
+    licenses = get_or_set_cached_constants(License, LicenseSerializer)
+    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
+    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
+
+    channel_tags = ContentTag.objects.filter(channel = channel)
+    channel_tags_serializer = TagSerializer(channel_tags, many=True)
+
+    json_renderer = JSONRenderer()
+
+    return render(request, 'channel_edit.html', {"allow_edit":allow_edit,
+                                                "channel" : json_renderer.render(channel_serializer.data),
+                                                "channel_id" : channel.pk,
+                                                "channel_name": channel.name,
+                                                "accessible_channels" : json_renderer.render(accessible_channel_list_serializer.data),
+                                                "channel_list" : channel_list,
+                                                "fileformat_list" : fileformats,
+                                                 "license_list" : licenses,
+                                                 "fpreset_list" : formatpresets,
+                                                 "ckinds_list" : contentkinds,
+                                                 "ctags": json_renderer.render(channel_tags_serializer.data),
+                                                 "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data)})
+
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -53,7 +87,8 @@ def channel_list(request):
     if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
         return redirect(reverse_lazy('unsupported_browser'))
 
-    channel_list = Channel.objects.filter(deleted=False, editors= request.user)
+    channel_list = Channel.objects.filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
+                    .annotate(is_view_only=Case(When(viewers=request.user,then=Value(1)),default=Value(0),output_field=IntegerField()))
     channel_list = ChannelSerializer.setup_eager_loading(channel_list)
     channel_serializer = ChannelSerializer(channel_list, many=True)
 
@@ -61,7 +96,7 @@ def channel_list(request):
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
                                                  "channel_name" : False,
                                                  "license_list" : licenses,
-                                                 "channel_list" : channel_list.values("id", "name"),
+                                                 "channel_list" : channel_list.values("id", "name", "is_view_only"),
                                                  "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
 
 @login_required
@@ -78,33 +113,23 @@ def channel(request, channel_id):
     if request.user not in channel.editors.all() and not request.user.is_admin:
         return redirect(reverse_lazy('unauthorized'))
 
-    channel_serializer =  ChannelSerializer(channel)
-    accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors= request.user))
-    accessible_channel_list = ChannelSerializer.setup_eager_loading(accessible_channel_list)
-    accessible_channel_list_serializer = ChannelSerializer(accessible_channel_list, many=True)
+    return channel_page(request, channel, allow_edit=True)
 
-    channel_list = accessible_channel_list.filter(editors= request.user).exclude(id=channel_id).values("id", "name")
-    fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
-    licenses = get_or_set_cached_constants(License, LicenseSerializer)
-    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
-    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def channel_view_only(request, channel_id):
+    # Check if browser is supported
+    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
+        return redirect(reverse_lazy('unsupported_browser'))
 
-    channel_tags = ContentTag.objects.filter(channel = channel)
-    channel_tags_serializer = TagSerializer(channel_tags, many=True)
+    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
 
-    json_renderer = JSONRenderer()
+    # Check user has permission to view channel
+    if request.user not in channel.editors.all() and request.user not in channel.viewers.all() and not request.user.is_admin:
+        return redirect(reverse_lazy('unauthorized'))
 
-    return render(request, 'channel_edit.html', {"channel" : json_renderer.render(channel_serializer.data),
-                                                "channel_id" : channel_id,
-                                                "channel_name": channel.name,
-                                                "accessible_channels" : json_renderer.render(accessible_channel_list_serializer.data),
-                                                "channel_list" : channel_list,
-                                                "fileformat_list" : fileformats,
-                                                 "license_list" : licenses,
-                                                 "fpreset_list" : formatpresets,
-                                                 "ckinds_list" : contentkinds,
-                                                 "ctags": json_renderer.render(channel_tags_serializer.data),
-                                                 "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data)})
+    return channel_page(request, channel)
 
 def get_or_set_cached_constants(constant, serializer):
     cached_data = cache.get(constant.__name__)

@@ -1,8 +1,9 @@
-function send_mail(channel, email){
+function send_mail(channel, email, share_mode){
   return new Promise(function(resolve, reject){
     var data = {
       "channel_id": channel.get("id"),
-      "user_email": email
+      "user_email": email,
+      "share_mode": share_mode
     };
     $.ajax({
       method:"POST",

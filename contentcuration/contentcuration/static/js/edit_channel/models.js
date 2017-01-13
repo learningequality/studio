@@ -95,8 +95,8 @@ var UserModel = BaseModel.extend({
     getName:function(){
 		return "UserModel";
 	},
-    send_invitation_email:function(email, channel){
-    	return mail_helper.send_mail(channel, email);
+    send_invitation_email:function(email, channel, share_mode){
+    	return mail_helper.send_mail(channel, email, share_mode);
     },
     get_clipboard:function(){
     	return  new ContentNodeModel(this.get("clipboard_tree"));
@@ -120,7 +120,7 @@ var InvitationModel = BaseModel.extend({
 		return "InvitationModel";
 	},
     resend_invitation_email:function(channel){
-    	return mail_helper.send_mail(channel, this.get("email"));
+    	return mail_helper.send_mail(channel, this.get("email"), this.get("share_mode"));
     }
 });
 

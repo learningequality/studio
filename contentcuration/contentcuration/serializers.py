@@ -390,7 +390,7 @@ class ChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree',
-                'thumbnail', 'version', 'deleted', 'public', 'thumbnail_url', 'pending_editors')
+                'thumbnail', 'thumbnail_url', 'version', 'deleted', 'public', 'pending_editors', 'viewers')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -407,4 +407,4 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Invitation
-        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name')
+        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode')

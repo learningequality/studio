@@ -172,6 +172,12 @@ var BaseWorkspaceView = BaseView.extend({
 			selected_list = $.merge(selected_list, list.get_selected());
 		});
 		return selected_list;
+	},
+	open_archive:function(){
+		var ArchiveView = require("edit_channel/archive/views");
+		var archive = new ArchiveView.ArchiveModalView({
+			model : window.current_channel.get_root("trash_tree"),
+	 	});
 	}
 });
 
