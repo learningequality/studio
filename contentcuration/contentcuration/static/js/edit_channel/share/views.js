@@ -48,7 +48,7 @@ var ShareView = BaseViews.BaseView.extend({
         }));
     },
     load_lists:function(){
-        this.editor_list = this.model.get("editors");
+        this.editor_list = this.model.get("editors").concat(this.model.get("viewers"));
         this.editor_list.splice(this.editor_list.indexOf(this.current_user.id), 1);
         this.collection = new Models.UserCollection();
         this.pending_collection = new Models.InvitationCollection();
@@ -130,7 +130,7 @@ var ShareView = BaseViews.BaseView.extend({
         this.$("#share_email_address").val("");
         var user = new Models.UserModel();
         var self = this;
-        user.send_invitation_email(email, this.model).then(function(invite){
+        user.send_invitation_email(email, this.model, this.$("#share_mode").val()).then(function(invite){
             self.$("#share_invite_button").val("Invite");
             self.pending_view.add_to_pending_collection(invite);
         });
@@ -210,12 +210,14 @@ var ShareItem = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/share_editor_item.handlebars"),
     tagName: "li",
     className: "share_list_item",
+    share_mode: "edit",
     'id': function() {
         return "share_item_" + this.model.get("id");
     },
     render: function() {
         this.$el.html(this.template({
-            editor:this.model.toJSON()
+            editor:this.model.toJSON(),
+            isviewonly:this.share_mode=="view"
         }));
     },
 });
@@ -225,6 +227,7 @@ var SharePendingItem = ShareItem.extend({
         _.bindAll(this, 'remove_editor', 'reinvite_editor');
         this.bind_edit_functions();
         this.containing_list_view = options.containing_list_view;
+        this.share_mode = this.model.get("share_mode");
         this.render();
     },
     events: {
@@ -263,6 +266,9 @@ var ShareCurrentItem = ShareItem.extend({
         _.bindAll(this, 'remove_editor');
         this.bind_edit_functions();
         this.containing_list_view = options.containing_list_view;
+        if(window.current_channel.get("viewers").indexOf(this.model.get("id")) >= 0){
+            this.share_mode = "view";
+        }
         this.render();
     },
     events: {
