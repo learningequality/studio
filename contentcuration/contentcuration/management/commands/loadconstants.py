@@ -134,7 +134,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.VTT,
-            "mimetype" : file_formats.VTT_MIMETYPE,
+            "mimetype" :  ".vtt", # file_formats.VTT_MIMETYPE,
         },
     },
     {
@@ -285,11 +285,12 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.VIDEO_HIGH_RES,
-            "readable_name": format_presets.VIDEO_HIGH_RES_READABLE,
+            "id" : 1,
+            "name" : format_presets.VIDEO_HIGH_RES_READABLE,
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.VIDEO,
@@ -300,11 +301,13 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.VIDEO_LOW_RES,
+            "id" : 2,
+            "name" : format_presets.VIDEO_LOW_RES,
             "readable_name": format_presets.VIDEO_LOW_RES_READABLE,
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.VIDEO,
@@ -315,11 +318,13 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.VIDEO_THUMBNAIL,
+            "id" : 3,
+            "name" : format_presets.VIDEO_THUMBNAIL,
             "readable_name": format_presets.VIDEO_THUMBNAIL_READABLE,
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 3,
             "kind_id" : content_kinds.VIDEO,
@@ -330,11 +335,30 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.AUDIO,
+            "id" : 4,
+            "name" : format_presets.VIDEO_SUBTITLE,
+            "readable_name": format_presets.VIDEO_SUBTITLE_READABLE,
+            "multi_language" : True,
+            "supplementary" : True,
+            "thumbnail" : False,
+            "subtitle": True,
+            "display": True,
+            "order" : 4,
+            "kind_id" : content_kinds.VIDEO,
+            "allowed_formats" : [file_formats.VTT, file_formats.SRT],
+        },
+    },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
+            "id" : 5,
+            "name" : format_presets.AUDIO,
             "readable_name": format_presets.AUDIO_READABLE,
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.AUDIO,
@@ -345,11 +369,13 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.AUDIO_THUMBNAIL,
+            "id" : 6,
+            "name" : format_presets.AUDIO_THUMBNAIL,
             "readable_name": format_presets.AUDIO_THUMBNAIL_READABLE,
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.AUDIO,
@@ -360,11 +386,13 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.DOCUMENT,
+            "id" : 7,
+            "name" : format_presets.DOCUMENT,
             "readable_name": format_presets.DOCUMENT_READABLE,
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.DOCUMENT,
@@ -375,11 +403,13 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.DOCUMENT_THUMBNAIL,
+            "id" : 8,
+            "name" : format_presets.DOCUMENT_THUMBNAIL,
             "readable_name": format_presets.DOCUMENT_THUMBNAIL_READABLE,
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.DOCUMENT,
@@ -390,10 +420,12 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.EXERCISE,
+            "id" : 9,
+            "name" : format_presets.EXERCISE,
             "readable_name": format_presets.EXERCISE_READABLE,
             "multi_language" : False,
             "supplementary" : False,
+            "subtitle": False,
             "thumbnail" : False,
             "display": True,
             "order" : 1,
@@ -405,10 +437,12 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.EXERCISE_THUMBNAIL,
+            "id" : 10,
+            "name" : format_presets.EXERCISE_THUMBNAIL,
             "readable_name": format_presets.EXERCISE_THUMBNAIL_READABLE,
             "multi_language" : False,
             "supplementary" : True,
+            "subtitle": False,
             "thumbnail" : True,
             "display": True,
             "order" : 2,
@@ -420,10 +454,12 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.EXERCISE_IMAGE,
+            "id" : 11,
+            "name" : format_presets.EXERCISE_IMAGE,
             "readable_name": format_presets.EXERCISE_IMAGE_READABLE,
             "multi_language" : False,
             "supplementary" : True,
+            "subtitle": False,
             "thumbnail" : False,
             "display": False,
             "order" : 3,
@@ -435,10 +471,12 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.EXERCISE_GRAPHIE,
+            "id" : 12,
+            "name" : format_presets.EXERCISE_GRAPHIE,
             "readable_name": format_presets.EXERCISE_GRAPHIE_READABLE,
             "multi_language" : False,
             "supplementary" : True,
+            "subtitle": False,
             "thumbnail" : False,
             "display": False,
             "order" : 4,
@@ -450,10 +488,12 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.CHANNEL_THUMBNAIL,
+            "id" : 13,
+            "name" : format_presets.CHANNEL_THUMBNAIL,
             "readable_name": format_presets.CHANNEL_THUMBNAIL_READABLE,
             "multi_language" : False,
             "supplementary" : True,
+            "subtitle": False,
             "thumbnail" : True,
             "display": True,
             "order" : 0,
@@ -465,10 +505,12 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.HTML5_ZIP,
+            "id" : 14,
+            "name" : format_presets.HTML5_ZIP,
             "readable_name": format_presets.HTML5_ZIP_READABLE,
             "multi_language" : False,
             "supplementary" : False,
+            "subtitle": False,
             "thumbnail" : False,
             "display": True,
             "order" : 0,
@@ -493,8 +535,30 @@ PRESETS = [
     },
 ]
 
+LANGUAGES = [
+    {
+        "model": models.Language,
+        "pk": "id",
+        "fields": {
+            "id": 1,
+            "lang_code": "EN",
+            "lang_subcode": "",
+            "readable_name": "English"
+        },
+    },
+    {
+        "model": models.Language,
+        "pk": "id",
+        "fields": {
+            "id": 2,
+            "lang_code": "ES",
+            "lang_subcode": "MX",
+            "readable_name": "Spanish"
+        },
+    }
+]
 
-CONSTANTS = [SITES, LICENSES, FILE_FORMATS, KINDS, PRESETS]
+CONSTANTS = [SITES, LICENSES, FILE_FORMATS, KINDS, PRESETS, LANGUAGES]
 
 class EarlyExit(BaseException):
     def __init__(self, message, db_path):

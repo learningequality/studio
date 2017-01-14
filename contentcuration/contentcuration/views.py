@@ -20,8 +20,8 @@ from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, Language, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
+from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LanguageSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -88,6 +88,7 @@ def channel(request, channel_id):
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
     contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
+    languages = get_or_set_cached_constants(Language, LanguageSerializer)
 
     channel_tags = ContentTag.objects.filter(channel = channel)
     channel_tags_serializer = TagSerializer(channel_tags, many=True)
@@ -103,6 +104,7 @@ def channel(request, channel_id):
                                                  "license_list" : licenses,
                                                  "fpreset_list" : formatpresets,
                                                  "ckinds_list" : contentkinds,
+                                                 "langs_list" : languages,
                                                  "ctags": json_renderer.render(channel_tags_serializer.data),
                                                  "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data)})
 
@@ -150,16 +152,20 @@ def exercise(request, exercise_id):
 
     return render(request, 'exercise_edit.html', {"exercise": JSONRenderer().render(serializer.data), "assessment_items": JSONRenderer().render(assessment_serialize.data)})
 
-# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
-@csrf_exempt
 def file_upload(request):
     if request.method == 'POST':
         preset = FormatPreset.objects.get(id=request.META.get('HTTP_PRESET'))
-        #Implement logic for switching out files without saving it yet
+
+        # Implement logic for switching out files without saving it yet
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
         original_filename = request.FILES.values()[0]._name
         size = request.FILES.values()[0]._size
         file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, preset=preset)
+
+        # Set language if provided
+        if 'HTTP_LANGUAGE' in request.META:
+            file_object.language = Language.objects.get(id=request.META.get('HTTP_LANGUAGE'))
+
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,

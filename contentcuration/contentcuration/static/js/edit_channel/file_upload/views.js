@@ -327,7 +327,10 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         return "format_item_" + this.model.filename;
     },
     init_collections:function(){
-        this.presets = new Models.FormatPresetCollection(_.reject(this.model.get("associated_presets"),{display:false}));
+        var all_presets = $.merge(this.model.get("associated_presets"), _.pluck(this.model.get("files"), "preset"));
+        all_presets = _.reject(all_presets, function(item){return item == null;});
+        this.presets = new Models.FormatPresetCollection(_.reject(all_presets,{display:false}));
+
         this.files=new Models.FileCollection(this.model.get("files"));
     },
     remove_item:function(){
@@ -423,11 +426,9 @@ var FormatEditorItem = FormatItem.extend({
         var main_count = 0;
         var size = 0;
         this.model.get("files").forEach(function(file){
-            var preset = (file.preset && file.preset.id)? file.preset.id: file.preset;
-            if(preset && window.formatpresets.get({id:preset}).get("display")){
-                if(!file.preset.id){
-                    file.preset = window.formatpresets.get({id:preset}).toJSON();
-                }
+            var preset = get_preset_model(file.preset);
+            if(preset && preset.get("display")){
+                file.preset = preset.toJSON();
                 count ++;
                 if(!file.preset.supplementary){
                     main_count++;
@@ -442,7 +443,7 @@ var FormatEditorItem = FormatItem.extend({
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
-    },
+    }
 });
 var FormatInlineItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_inline_item.handlebars"),
@@ -523,7 +524,7 @@ var FormatFormatItem = FormatEditorItem.extend({
         }
     },
     set_initial_format:function(event){
-        this.set_file_format(this.files.at(0), window.formatpresets.findWhere({id: event.target.value}));
+        this.set_file_format(this.files.at(0), this.presets.findWhere({id: event.target.value}));
         this.render();
         this.containing_list_view.handle_completed();
         this.containing_list_view.hide_assigned();
@@ -542,6 +543,8 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         this.content_node_view = options.content_node_view;
         this.collection = options.collection;
         this.files = options.files;
+        this.languages = window.languages.clone();
+        this.index = 0;
         this.render();
 
     },
@@ -563,7 +566,9 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
             model: model,
             nodeid : this.model.get("id"),
             file: associated_file,
-            containing_list_view: this
+            containing_list_view: this,
+            languages: this.languages,
+            index: ++this.index
         });
         this.views.push(format_slot);
         return format_slot;
@@ -587,8 +592,23 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
             this.files.push(file);
         }
     },
+    remove_file_format:function(file){
+        if(file){
+            this.files.remove(file);
+        }
+    },
     set_uploading:function(uploading){
         this.content_node_view.set_uploading(uploading);
+    },
+    add_slot:function(file, preset, target_el){
+        this.files.push(file);
+
+        // Add preset to model's associated presets
+        var combined_presets = this.model.get('associated_presets');
+        combined_presets.push(preset.toJSON());
+        this.model.set('associated_presets',combined_presets);
+        var view = this.create_new_view(preset);
+        target_el.before(view.el);
     }
 });
 
@@ -596,32 +616,68 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/format_item.handlebars"),
     dropzone_template : require("./hbtemplates/format_dropzone_item.handlebars"),
     upload_in_progress:false,
+    file:null,
+    nodeid:null,
+    index:0,
 
     'id': function() {
-        return "format_slot_item_" + this.model.get("id");
+        return "slot_" + this.model.get("id") + "_" + this.nodeid + "_" + this.index;
     },
     className:"row format_editor_item",
     initialize: function(options) {
-        _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed','file_failed', 'create_dropzone');
+        _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed','file_failed', 'create_dropzone', 'set_language');
+        this.index = options.index;
         this.containing_list_view = options.containing_list_view;
         this.file = options.file;
         this.originalFile = this.file;
+        this.languages = options.languages;
         this.nodeid = options.nodeid;
         this.render();
     },
     events: {
-        'click .format_editor_remove ' : 'remove_item'
+        'click .format_editor_remove ' : 'remove_item',
+        'change .language_dropdown' : 'check_set_language'
     },
     render: function() {
         this.$el.html(this.template({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
-            nodeid:this.nodeid
+            languages:this.languages.models,
+            show_dropdown: this.model.get("multi_language") && (!this.file || !this.file.get("language")),
+            selector: this.id(),
+            preset_name : (this.file && this.file.get("display_name")!="")? this.file.get("display_name") : this.model.get("readable_name")
         }));
         setTimeout(this.create_dropzone, 100); // Wait for slide down animation to finish
     },
+    check_set_language:function(event){
+        this.set_language(true);
+    },
+    set_language:function(render){
+        var language = this.$(".language_dropdown").val();
+        var language_readable_name = this.$(".language_dropdown option:selected").text();
+        if(language && this.file){
+            var language_preset = this.model.clone();
+            var display_name = this.model.get("readable_name") + " (" + language_readable_name + ")";
+            language_preset.set('readable_name', display_name);
+            language_preset.set("id", this.model.id + "_" + language);
+            this.model.set("order", this.model.get("order") + 1);
+            this.file.set("language", this.languages.findWhere(function(l){return l.id == language;}).toJSON());
+            this.file.set("preset", language_preset);
+            this.file.set("display_name", display_name);
+            this.containing_list_view.set_file_format(this.file, language_preset);
+            this.containing_list_view.add_slot(this.file, language_preset, this.$el);
+            this.file = null;
+            // Use below code to remove language if already has associated file (desired behavior?)
+            this.languages.models = _.reject(this.languages.models, function(l){ return l.id == language;});
+            if(render){
+                this.render();
+            }
+
+        }
+    },
+
     create_dropzone:function(){
-        var dz_selector="#" + this.model.get("id") + "_"  + this.nodeid + "_dropzone" + ((this.file)? "_swap" : "");
+        var dz_selector="#" + this.id() + "_dropzone" + ((this.file)? "_swap" : "");
         if(this.$(dz_selector).is(":visible")){
             var clickables = [dz_selector + " .dz_click"];
             if(this.file){
@@ -637,7 +693,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                headers: {
                     "X-CSRFToken": get_cookie("csrftoken"),
                     "Node" : this.nodeid,
-                    "Preset": this.model.get("id")
+                    "Preset": this.model.get("name"),
+                    "Language": (this.file && this.file.get("language"))? Number(this.file.get("language").id) : null
                 }
             });
             dropzone.on("success", this.file_uploaded);
@@ -649,8 +706,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         }
     },
     get_accepted_files:function(){
-        var preset = window.formatpresets.findWhere({id: this.model.id});
-        return preset.get("associated_mimetypes").join(",");
+        return get_preset_model(this.model).get("associated_mimetypes").join(",");
     },
     file_uploaded:function(file){
         var new_file = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
@@ -658,8 +714,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.fetch_model(new_file).then(function(fetched){
             var originalFile = self.file;
             self.file = fetched;
+            (self.model.get("multi_language")) ? self.set_language(false) : self.containing_list_view.set_file_format(self.file, self.model, originalFile);
             self.render();
-            self.containing_list_view.set_file_format(self.file, self.model, originalFile);
             self.set_uploading(false);
         });
     },
@@ -679,15 +735,39 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.set_uploading(false);
     },
     remove_item:function(){
-        this.containing_list_view.set_file_format(null, this.model, this.file);
-        this.file = null;
-        this.render();
+        if(this.model.get("multi_language")){
+            this.containing_list_view.remove_file_format(this.file);
+            this.remove();
+        }else{
+            this.containing_list_view.set_file_format(null, this.model, this.file);
+            this.file = null;
+            this.render();
+        }
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
     }
 
 });
+
+function get_preset_model(preset){
+    if(preset){
+        var preset_id = (preset.name)? preset.name :
+                        (preset.attributes && preset.get("name"))? preset.get("name") :
+                        (preset.id)? preset.id : preset;
+        preset = (!preset.id)? window.formatpresets.get({id:preset_id}) : preset;
+        preset = (!preset.attributes)? new Models.FormatPresetModel(preset) : preset;
+
+        // Retain fields added by serializer
+        var mimetypes = (preset.get("associated_mimetypes"))? preset.get("associated_mimetypes") : window.formatpresets.get({id:preset_id}).get("associated_mimetypes");
+        var name = (preset.get("name"))? preset.get("name") : window.formatpresets.get({id:preset_id}).get("name");
+        preset.set({
+            "associated_mimetypes": mimetypes,
+            "name" : name
+        });
+    }
+    return preset;
+}
 
 module.exports = {
     FileUploadView:FileUploadView,
