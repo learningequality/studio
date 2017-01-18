@@ -1,1 +1,1 @@
-{% load i18n %}{% trans "You've been invited to help edit" %} {{ channel }}
+{% load i18n %}{% trans "You've been invited to" %} {{ share_mode }} {{ channel }}

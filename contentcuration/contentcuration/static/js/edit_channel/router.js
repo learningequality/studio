@@ -27,7 +27,7 @@ ChannelEditRouter  = Backbone.Router.extend({
   routes: {
 		"": "navigate_channel_home",
 		":channel/edit": "edit_page",
-		":channel/preview": "preview_page",
+		":channel/view": "preview_page",
 		":channel/clipboard": "clipboard_page"
   },
 

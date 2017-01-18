@@ -95,8 +95,8 @@ var UserModel = BaseModel.extend({
 	defaults: {
 		first_name: "Guest"
     },
-    send_invitation_email:function(email, channel){
-    	return mail_helper.send_mail(channel, email);
+    send_invitation_email:function(email, channel, share_mode){
+    	return mail_helper.send_mail(channel, email, share_mode);
     },
     get_clipboard:function(){
     	return  new ContentNodeModel(this.get("clipboard_tree"));
@@ -116,7 +116,7 @@ var InvitationModel = BaseModel.extend({
 		first_name: "Guest"
     },
     resend_invitation_email:function(channel){
-    	return mail_helper.send_mail(channel, this.get("email"));
+    	return mail_helper.send_mail(channel, this.get("email"), this.get("share_mode"));
     }
 });
 
@@ -135,6 +135,8 @@ var ContentNodeModel = BaseModel.extend({
 		children:[],
 		tags:[],
 		assessment_items:[],
+		metadata: {"resource_size" : 0, "resource_count" : 0},
+		created: new Date()
     }
 });
 
@@ -173,10 +175,10 @@ var ContentNodeCollection = BaseCollection.extend({
 		});
         return promise;
 	},
+	comparator:function(node){
+		return node.get("sort_order");
+	},
     sort_by_order:function(){
-    	this.comparator = function(node){
-    		return node.get("sort_order");
-    	};
     	this.sort();
     	this.highest_sort_order = (this.length > 0)? this.at(this.length - 1).get("sort_order") : 1;
     },
@@ -231,13 +233,15 @@ var ChannelModel = BaseModel.extend({
     //idAttribute: "channel_id",
 	root_list : "channel-list",
 	defaults: {
-		name: " ",
+		name: "",
 		editors: [],
+		viewers: [],
 		pending_editors: [],
 		author: "Anonymous",
 		license_owner: "No license found",
-		description:" ",
-		thumbnail_url: "/static/img/kolibri_placeholder.png"
+		description:"",
+		thumbnail_url: "/static/img/kolibri_placeholder.png",
+		main_tree: (new ContentNodeModel()).toJSON()
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
@@ -266,7 +270,10 @@ var ChannelModel = BaseModel.extend({
 var ChannelCollection = BaseCollection.extend({
 	model: ChannelModel,
 	list_name:"channel-list",
-	model_name:"ChannelCollection"
+	model_name:"ChannelCollection",
+	comparator:function(channel){
+		return -new Date(channel.get('main_tree').created);
+	}
 });
 
 var TagModel = BaseModel.extend({
