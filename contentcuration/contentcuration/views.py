@@ -43,6 +43,9 @@ def testpage(request):
 def unsupported_browser(request):
     return render(request, 'unsupported_browser.html')
 
+def unauthorized(request):
+    return render(request, 'unauthorized.html')
+
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -65,10 +68,16 @@ def channel_list(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
+    # Check if browser is supported
     if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
         return redirect(reverse_lazy('unsupported_browser'))
 
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
+
+    # Check user has permission to view channel
+    if request.user not in channel.editors.all() and not request.user.is_admin:
+        return redirect(reverse_lazy('unauthorized'))
+
     channel_serializer =  ChannelSerializer(channel)
     accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors= request.user))
     accessible_channel_list = ChannelSerializer.setup_eager_loading(accessible_channel_list)

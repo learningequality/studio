@@ -57,7 +57,7 @@ class FileListSerializer(serializers.ListSerializer):
                     if os.path.isfile(file_path):
                         file_obj.file_on_disk = DjFile(open(file_path, 'rb'))
                     else:
-                        raise FileNotFoundError("Error: file {} was not found".format(str(file_obj)))
+                        raise OSError("Error: file {} was not found".format(str(file_obj)))
                     file_obj.save()
                     ret.append(file_obj)
         return ret
@@ -370,6 +370,11 @@ class ChannelSerializer(serializers.ModelSerializer):
     trash_tree = ContentNodeSerializer(read_only=True)
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
 
+    def generate_thumbnail_url(self, channel):
+        if channel.thumbnail and 'static' not in channel.thumbnail:
+            return generate_storage_url(channel.thumbnail)
+        return '/static/img/kolibri_placeholder.png'
+
     def check_for_changes(self, channel):
         if channel.main_tree:
             return channel.main_tree.get_descendants().filter(changed=True).count() > 0
@@ -381,11 +386,6 @@ class ChannelSerializer(serializers.ModelSerializer):
         """ Perform necessary eager loading of data. """
         queryset = queryset.select_related('main_tree')
         return queryset
-
-    def generate_thumbnail_url(self, channel):
-        if channel.thumbnail and 'static' not in channel.thumbnail:
-            return generate_storage_url(channel.thumbnail)
-        return '/static/img/kolibri_placeholder.png'
 
     class Meta:
         model = Channel
