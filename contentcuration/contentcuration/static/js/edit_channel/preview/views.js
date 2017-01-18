@@ -102,7 +102,7 @@ var PreviewView = BaseViews.BaseView.extend({
                 this.$("#preview_window").html(preview_template({
                     source: location,
                     extension:mimetype,
-                    checksum:checksum
+                    checksum:checksum,
                     subtitles : this.get_subtitles()
                 }));
                 if(force_load && this.current_preview.recommended_kind === "video"){

@@ -285,8 +285,8 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 1,
-            "name" : format_presets.VIDEO_HIGH_RES_READABLE,
+            "id" : format_presets.VIDEO_HIGH_RES,
+            "readable_name": format_presets.VIDEO_HIGH_RES_READABLE,
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
@@ -301,8 +301,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 2,
-            "name" : format_presets.VIDEO_LOW_RES,
+            "id" : format_presets.VIDEO_LOW_RES,
             "readable_name": format_presets.VIDEO_LOW_RES_READABLE,
             "multi_language" : False,
             "supplementary" : False,
@@ -318,8 +317,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 3,
-            "name" : format_presets.VIDEO_THUMBNAIL,
+            "id" : format_presets.VIDEO_THUMBNAIL,
             "readable_name": format_presets.VIDEO_THUMBNAIL_READABLE,
             "multi_language" : False,
             "supplementary" : True,
@@ -335,8 +333,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 4,
-            "name" : format_presets.VIDEO_SUBTITLE,
+            "id" : format_presets.VIDEO_SUBTITLE,
             "readable_name": format_presets.VIDEO_SUBTITLE_READABLE,
             "multi_language" : True,
             "supplementary" : True,
@@ -352,8 +349,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 5,
-            "name" : format_presets.AUDIO,
+            "id" : format_presets.AUDIO,
             "readable_name": format_presets.AUDIO_READABLE,
             "multi_language" : False,
             "supplementary" : False,
@@ -369,8 +365,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 6,
-            "name" : format_presets.AUDIO_THUMBNAIL,
+            "id" : format_presets.AUDIO_THUMBNAIL,
             "readable_name": format_presets.AUDIO_THUMBNAIL_READABLE,
             "multi_language" : False,
             "supplementary" : True,
@@ -386,8 +381,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 7,
-            "name" : format_presets.DOCUMENT,
+            "id" : format_presets.DOCUMENT,
             "readable_name": format_presets.DOCUMENT_READABLE,
             "multi_language" : False,
             "supplementary" : False,
@@ -403,8 +397,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 8,
-            "name" : format_presets.DOCUMENT_THUMBNAIL,
+            "id" : format_presets.DOCUMENT_THUMBNAIL,
             "readable_name": format_presets.DOCUMENT_THUMBNAIL_READABLE,
             "multi_language" : False,
             "supplementary" : True,
@@ -420,8 +413,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 9,
-            "name" : format_presets.EXERCISE,
+            "id" : format_presets.EXERCISE,
             "readable_name": format_presets.EXERCISE_READABLE,
             "multi_language" : False,
             "supplementary" : False,
@@ -437,8 +429,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 10,
-            "name" : format_presets.EXERCISE_THUMBNAIL,
+            "id" : format_presets.EXERCISE_THUMBNAIL,
             "readable_name": format_presets.EXERCISE_THUMBNAIL_READABLE,
             "multi_language" : False,
             "supplementary" : True,
@@ -454,8 +445,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 11,
-            "name" : format_presets.EXERCISE_IMAGE,
+            "id" : format_presets.EXERCISE_IMAGE,
             "readable_name": format_presets.EXERCISE_IMAGE_READABLE,
             "multi_language" : False,
             "supplementary" : True,
@@ -471,8 +461,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 12,
-            "name" : format_presets.EXERCISE_GRAPHIE,
+            "id" : format_presets.EXERCISE_GRAPHIE,
             "readable_name": format_presets.EXERCISE_GRAPHIE_READABLE,
             "multi_language" : False,
             "supplementary" : True,
@@ -488,8 +477,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 13,
-            "name" : format_presets.CHANNEL_THUMBNAIL,
+            "id" : format_presets.CHANNEL_THUMBNAIL,
             "readable_name": format_presets.CHANNEL_THUMBNAIL_READABLE,
             "multi_language" : False,
             "supplementary" : True,
@@ -505,8 +493,7 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : 14,
-            "name" : format_presets.HTML5_ZIP,
+            "id" : format_presets.HTML5_ZIP,
             "readable_name": format_presets.HTML5_ZIP_READABLE,
             "multi_language" : False,
             "supplementary" : False,

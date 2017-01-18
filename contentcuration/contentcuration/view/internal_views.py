@@ -53,7 +53,6 @@ def file_diff(request):
         # Add file if it doesn't already exist
         if not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
             to_return.append(f)
-
     return HttpResponse(json.dumps(to_return))
 
 @api_view(['POST'])
@@ -252,7 +251,7 @@ def map_files_to_node(node, data):
             kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
         language = None
-        if 'language' in file_data:
+        if file_data.get('language'):
             language = Language.objects.get(pk=file_data['language'])
 
         file_path = generate_file_on_disk_name(file_hash[0], file_data['filename'])

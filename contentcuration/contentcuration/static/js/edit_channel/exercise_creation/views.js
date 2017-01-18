@@ -134,7 +134,7 @@ var replace_image_paths = function(content){
     if(matches){
         matches.forEach(function(match){
             var filename = match.split("/").slice(-1)[0]
-            var replace_str = "/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
+            var replace_str = "/content/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
             content = content.replace(match, replace_str);
         })
     }
