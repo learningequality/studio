@@ -102,6 +102,8 @@
 				margin: 3px 0 10px 3px;
 				padding: 10px;
 				border:4px solid @panel-container-color;
+				cursor:pointer;
+
 
 				.profile{
 					height:100%;
@@ -221,10 +223,15 @@
 						cursor:pointer;
 						display:inline-block;
 						font-size: @channel-font-size * .9;
-						margin-right: 10px;
-						color: @blue-500;
+						padding:20px;
+						padding-top:5px;
+						color: @gray-700;
 						position: relative;
 						top: -27px;
+					}
+
+					.edit_channel:hover{
+						color: @blue-500;
 					}
 				}
 				.description{
@@ -294,11 +301,10 @@
 					}
 				}
 			}
-			.open_channel:hover{
+			.highlight{
 				border:4px solid @blue-500;
-				cursor:pointer;
 				.channel_name{
-					color:@blue-500;
+					color:@blue-500 !important;
 				}
 			}
 		}

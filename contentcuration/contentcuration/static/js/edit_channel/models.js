@@ -140,6 +140,8 @@ var ContentNodeModel = BaseModel.extend({
 		children:[],
 		tags:[],
 		assessment_items:[],
+		metadata: {"resource_size" : 0, "resource_count" : 0},
+		created: new Date()
     },
     getName:function(){
 		return "ContentNodeModel";
@@ -178,10 +180,10 @@ var ContentNodeCollection = BaseCollection.extend({
 		});
         return promise;
 	},
+	comparator:function(node){
+		return node.get("sort_order");
+	},
     sort_by_order:function(){
-    	this.comparator = function(node){
-    		return node.get("sort_order");
-    	};
     	this.sort();
     	this.highest_sort_order = (this.length > 0)? this.at(this.length - 1).get("sort_order") : 1;
     },
@@ -242,7 +244,8 @@ var ChannelModel = BaseModel.extend({
 		author: "Anonymous",
 		license_owner: "No license found",
 		description:" ",
-		thumbnail_url: "/static/img/kolibri_placeholder.png"
+		thumbnail_url: "/static/img/kolibri_placeholder.png",
+		main_tree: new ContentNodeModel()
     },
     getName:function(){
 		return "ChannelModel";
@@ -276,6 +279,9 @@ var ChannelCollection = BaseCollection.extend({
 	list_name:"channel-list",
     getName:function(){
 		return "ChannelCollection";
+	},
+	comparator:function(channel){
+		return -new Date(channel.get('main_tree').created);
 	}
 });
 
