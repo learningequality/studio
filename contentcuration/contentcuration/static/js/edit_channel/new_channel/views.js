@@ -17,6 +17,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		_.bindAll(this, 'new_channel');
 		this.bind_edit_functions();
 		this.collection = options.channels;
+		this.collection.sort();
 		this.render();
 		this.user = options.user;
 	},
@@ -75,7 +76,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	dropzone_template: require("./hbtemplates/channel_profile_dropzone.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded', 'update_title', 'copy_id',
+		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded', 'update_title', 'copy_id', 'add_highlight',
 						'thumbnail_added','thumbnail_removed','create_dropzone', 'thumbnail_completed','thumbnail_failed', 'open_channel');
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = false;
@@ -110,6 +111,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	events: {
 		'click .edit_channel':'edit_channel',
+		'mouseover .edit_channel':'remove_highlight',
 		'click .delete_channel' : 'delete_channel',
 		'click .channel_toggle': 'toggle_channel',
 		'click .save_channel': 'save_channel',
@@ -117,7 +119,17 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		'keyup #new_channel_name': 'update_title',
 		'paste #new_channel_name': 'update_title',
 		'click .copy-id-btn' : 'copy_id',
-		'click .open_channel': 'open_channel'
+		'click .open_channel': 'open_channel',
+		'mouseover .open_channel': 'add_highlight',
+		'mouseleave .open_channel': 'remove_highlight',
+	},
+	remove_highlight:function(event){
+		event.stopPropagation();
+		event.preventDefault();
+		this.$('.channel-container-wrapper').removeClass('highlight');
+	},
+	add_highlight:function(event){
+		this.$('.channel-container-wrapper').addClass('highlight');
 	},
 	open_channel:function(event){
 		if(!this.edit){
@@ -208,7 +220,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		var self = this;
 		this.save(data, "Saving Channel...").then(function(channel){
 			self.model = channel;
-			console.log(self.model)
 			self.render();
 			if(!self.containing_list_view.collection.contains(self.model)){
 				self.containing_list_view.collection.add(self.model)

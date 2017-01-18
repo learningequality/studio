@@ -368,6 +368,7 @@ class ChannelSerializer(serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')
     main_tree = ContentNodeSerializer(read_only=True)
     trash_tree = ContentNodeSerializer(read_only=True)
+    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
 
     def check_for_changes(self, channel):
         if channel.main_tree:
@@ -381,29 +382,15 @@ class ChannelSerializer(serializers.ModelSerializer):
         queryset = queryset.select_related('main_tree')
         return queryset
 
-    class Meta:
-        model = Channel
-        fields = ('id', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree',
-                'thumbnail', 'version', 'deleted', 'public', 'pending_editors')
-
-class ChannelListSerializer(serializers.ModelSerializer):
-    main_tree = ContentNodeSerializer(read_only=True)
-    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
-
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
             return generate_storage_url(channel.thumbnail)
         return '/static/img/kolibri_placeholder.png'
 
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary eager loading of data. """
-        queryset = queryset.select_related('main_tree')
-        return queryset
-
     class Meta:
         model = Channel
-        fields = ('id', 'name', 'thumbnail', 'thumbnail_url', 'description', 'main_tree','deleted')
+        fields = ('id', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree',
+                'thumbnail', 'thumbnail_url', 'version', 'deleted', 'public', 'pending_editors')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
