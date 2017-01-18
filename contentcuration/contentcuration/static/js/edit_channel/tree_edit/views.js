@@ -16,7 +16,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	lists: [],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container','toggle_details', 'handle_checked', 'open_archive');
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container','toggle_details', 'handle_checked');
 		this.bind_workspace_functions();
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
