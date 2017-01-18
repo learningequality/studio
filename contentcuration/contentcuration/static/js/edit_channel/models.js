@@ -238,14 +238,15 @@ var ChannelModel = BaseModel.extend({
     //idAttribute: "channel_id",
 	root_list : "channel-list",
 	defaults: {
-		name: " ",
+		name: "",
 		editors: [],
+		viewers: [],
 		pending_editors: [],
 		author: "Anonymous",
 		license_owner: "No license found",
-		description:" ",
+		description:"",
 		thumbnail_url: "/static/img/kolibri_placeholder.png",
-		main_tree: new ContentNodeModel()
+		main_tree: (new ContentNodeModel()).toJSON()
     },
     getName:function(){
 		return "ChannelModel";

@@ -41,13 +41,8 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
   		return newView;
 	},
 	new_channel: function(){
-		var self = this;
 		var data = {
-			name: "",
-			description: "",
 			editors: [window.current_user.id],
-			thumbnail:"/static/img/kolibri_placeholder.png",
-			main_tree: (new Models.ContentNodeModel()).toJSON()
 		};
 		var newView = this.create_new_view(new Models.ChannelModel(data));
 		this.$(this.list_selector).prepend(newView.el);
@@ -229,7 +224,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		var data = {
 			name: title,
 			description: description,
-			thumbnail : this.thumbnail
+			thumbnail : this.thumbnail,
+			editors: this.model.get('editors')
 		};
 		this.original_thumbnail = this.thumbnail;
 		this.original_thumbnail_url = this.thumbnail_url;
