@@ -63,7 +63,6 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 	},
 	handle_channel_change:function(channel, deleted){
 		this.update_channel_collection(channel, deleted);
-		this.update_dropdown(channel, deleted);
 	},
 	update_channel_collection:function(channel, deleted){
 		if(deleted){
