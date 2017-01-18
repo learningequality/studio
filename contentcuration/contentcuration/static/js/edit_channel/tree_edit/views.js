@@ -29,7 +29,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		'click .edit_button' : 'edit_selected',
 		'click #hide_details_checkbox' :'toggle_details',
 		'change input[type=checkbox]' : 'handle_checked',
-		'click .permissions_button' : 'edit_permissions',
+		'click .permissions_button' : 'edit_permissions'
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -292,7 +292,6 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			this.$el.addClass(this.openedFolderClass);
 		}
 		window.workspace_manager.put_node(this.model.get("id"), this);
-		// this.make_droppable();
 		this.$el.removeClass(this.selectedClass);
 		this.create_popover();
 	},
