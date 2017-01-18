@@ -31,11 +31,13 @@ def send_invitation_email(request):
         try:
             user_email = data["user_email"]
             channel_id = data["channel_id"]
+            share_mode = data["share_mode"]
             retrieved_user = User.objects.get_or_create(email = user_email)
             recipient = retrieved_user[0]
             channel = Channel.objects.get(id=channel_id)
             invitation = Invitation.objects.get_or_create(invited = recipient,
                                                         email = user_email,
+                                                        share_mode=share_mode,
                                                         sender=request.user,
                                                         channel_id = channel_id,
                                                         first_name=recipient.first_name if recipient.is_active else "Guest",
@@ -43,6 +45,7 @@ def send_invitation_email(request):
             ctx_dict = {    'sender' : request.user,
                             'site' : get_current_site(request),
                             'user' : recipient,
+                            'share_mode' : share_mode,
                             'channel_id' : channel_id,
                             'invitation_key': invitation.id,
                             'is_new': recipient.is_active is False,
@@ -64,6 +67,7 @@ def send_invitation_email(request):
                 "channel": invitation.channel_id,
                 "first_name": invitation.first_name,
                 "last_name": invitation.last_name,
+                "share_mode": invitation.share_mode,
             }))
 
 class InvitationAcceptView(FormView):
@@ -81,7 +85,10 @@ class InvitationAcceptView(FormView):
         return kwargs
 
     def get_success_url(self):
-        return reverse_lazy('channel', kwargs={'channel_id':self.invitation.channel.pk}) + "/edit"
+        page_name = "channel"
+        if self.invitation.share_mode == "view":
+            page_name = "channel_view_only"
+        return reverse_lazy(page_name, kwargs={'channel_id':self.invitation.channel.pk})
 
     def dispatch(self, *args, **kwargs):
         try:
@@ -130,7 +137,10 @@ class InvitationRegisterView(FormView):
         return reverse_lazy('accept_invitation', kwargs={'invitation_link': self.kwargs["invitation_link"]})
 
     def get_login_url(self):
-        return reverse_lazy('channel', kwargs={'channel_id':self.invitation.channel.pk}) + "/edit"
+        page_name = "channel"
+        if self.invitation.share_mode == "view":
+            page_name = "channel_view_only"
+        return reverse_lazy(page_name, kwargs={'channel_id':self.invitation.channel.pk})
 
     def dispatch(self, *args, **kwargs):
         try:
@@ -200,6 +210,9 @@ class UserRegistrationView(RegistrationView):
 
 
 def add_editor_to_channel(invitation):
-    invitation.channel.editors.add(invitation.invited)
+    if invitation.share_mode == "view":
+        invitation.channel.viewers.add(invitation.invited)
+    else:
+        invitation.channel.editors.add(invitation.invited)
     invitation.channel.save()
     invitation.delete()

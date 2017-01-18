@@ -615,8 +615,8 @@ var BaseListEditableItemView = BaseListItemView.extend({
 		var promise = new Promise(function(resolve, reject){
 			self.originalData = data;
 			if(self.model.isNew()){
-				self.containing_list_view.create_new_item(self.model.attributes).then(function(newModel){
-					resolve(newModel);
+				self.containing_list_view.create_new_item(data).then(function(newView){
+					resolve(newView.model);
 				}).catch(function(error){
 					console.log("ERROR (edit_channel: save):", error);
 					reject(error);
