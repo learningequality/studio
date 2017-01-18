@@ -172,12 +172,6 @@ var BaseWorkspaceView = BaseView.extend({
 			selected_list = $.merge(selected_list, list.get_selected());
 		});
 		return selected_list;
-	},
-	open_archive:function(){
-		var ArchiveView = require("edit_channel/archive/views");
-		var archive = new ArchiveView.ArchiveModalView({
-			model : window.current_channel.get_root("trash_tree"),
-	 	});
 	}
 });
 
@@ -621,8 +615,8 @@ var BaseListEditableItemView = BaseListItemView.extend({
 		var promise = new Promise(function(resolve, reject){
 			self.originalData = data;
 			if(self.model.isNew()){
-				self.containing_list_view.create_new_item(self.model.attributes).then(function(newModel){
-					resolve(newModel);
+				self.containing_list_view.create_new_item(data).then(function(newView){
+					resolve(newView.model);
 				}).catch(function(error){
 					console.log("ERROR (edit_channel: save):", error);
 					reject(error);
