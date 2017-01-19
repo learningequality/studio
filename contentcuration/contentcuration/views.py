@@ -54,7 +54,7 @@ def channel_page(request, channel, allow_edit=False):
 
     channel_list = accessible_channel_list.filter(Q(editors=request.user) | Q(viewers=request.user))\
                     .exclude(id=channel.pk)\
-                    .annotate(is_view_only=Case(When(viewers=request.user,then=Value(1)),default=Value(0),output_field=IntegerField()))\
+                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
                     .values("id", "name", "is_view_only")
     fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
@@ -88,7 +88,7 @@ def channel_list(request):
 
     channel_list = Channel.objects.filter(deleted=False)\
                     .filter(Q(editors=request.user) | Q(viewers=request.user))\
-                    .annotate(is_view_only=Case(When(viewers=request.user,then=Value(1)),default=Value(0),output_field=IntegerField()))
+                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
 
     channel_list = ChannelSerializer.setup_eager_loading(channel_list)
     channel_serializer = ChannelSerializer(channel_list, many=True)
