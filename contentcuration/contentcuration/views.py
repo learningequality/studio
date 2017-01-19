@@ -252,6 +252,8 @@ def _duplicate_node(node, sort_order=1, parent=None):
         changed=True,
         original_node=node.original_node or node,
         cloned_source=node,
+        original_channel_id = node.original_channel_id or node.original_node.get_channel().id,
+        source_channel_id = node.get_channel().id,
         author=node.author,
         content_id=node.content_id,
         extra_fields=node.extra_fields,
