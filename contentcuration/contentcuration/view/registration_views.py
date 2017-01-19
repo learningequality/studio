@@ -212,8 +212,12 @@ class UserRegistrationView(RegistrationView):
 
 def add_editor_to_channel(invitation):
     if invitation.share_mode == "view":
+        if invitation.invited in invitation.channel.editors.all():
+            invitation.channel.editors.remove(invitation.invited)
         invitation.channel.viewers.add(invitation.invited)
     else:
+        if invitation.invited in invitation.channel.viewers.all():
+            invitation.channel.viewers.remove(invitation.invited)
         invitation.channel.editors.add(invitation.invited)
     invitation.channel.save()
     invitation.delete()
