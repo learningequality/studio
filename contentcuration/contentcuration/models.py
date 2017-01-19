@@ -274,7 +274,7 @@ class ContentNode(MPTTModel, models.Model):
 
     def get_channel(self):
         root = self.get_root()
-        channel = root.channel_main or root.channel_trash or root.channel_language or root.channel_previous or root.user_clipboard
+        channel = root.channel_main or root.channel_trash or root.channel_language or root.channel_previous
         if channel:
             return channel.first()
         return channel
@@ -295,6 +295,14 @@ class ContentNode(MPTTModel, models.Model):
         if self.cloned_source is None:
             self.cloned_source = self
             post_save_changes = True
+
+        if self.original_channel_id is None:
+            self.original_channel_id = self.get_channel().id
+            post_save_changes = True
+        if self.source_channel_id is None:
+            self.source_channel_id = self.get_channel().id
+            post_save_changes = True
+
         if post_save_changes:
             self.save()
 

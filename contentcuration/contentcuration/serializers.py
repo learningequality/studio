@@ -220,6 +220,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
 
     def retrieve_original_channel(self, node):
+        # TODO: update this once existing nodes are handled
         if node.original_node:
             root_channel = node.original_node.get_channel()
             if root_channel:
