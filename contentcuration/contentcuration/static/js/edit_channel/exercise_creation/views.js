@@ -144,11 +144,11 @@ var replace_image_paths = function(content){
 };
 
 var replace_mathjax = function(content){
-    var mathJaxRegex = /\$\$([^\$]+)\$\$/g;
+    var mathJaxRegex = /\$\$(.+)\$\$/g;
     var matches = content.match(mathJaxRegex);
     if(matches){
         matches.forEach(function(match){
-            var replace_str = Katex.renderToString(match.match(/\$\$([^\$]+)\$\$/)[1]);
+            var replace_str = Katex.renderToString(match.match(/\$\$(.+)\$\$/)[1]);
             content = content.replace(match, replace_str);
         });
     }
