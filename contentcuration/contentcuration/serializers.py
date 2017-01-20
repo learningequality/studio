@@ -57,7 +57,7 @@ class FileListSerializer(serializers.ListSerializer):
                     if os.path.isfile(file_path):
                         file_obj.file_on_disk = DjFile(open(file_path, 'rb'))
                     else:
-                        raise FileNotFoundError("Error: file {} was not found".format(str(file_obj)))
+                        raise OSError("Error: file {} was not found".format(str(file_obj)))
                     file_obj.save()
                     ret.append(file_obj)
         return ret
@@ -220,12 +220,11 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
 
     def retrieve_original_channel(self, node):
-        if node.original_node is None:
-            return None
-        root = node.original_node.get_root()
-        root_channel = root.channel_main or root.channel_trash or root.channel_clipboard or root.channel_staging or root.channel_previous
-        if root_channel.first():
-            return {"id": root_channel.first().pk, "name": root_channel.first().name}
+        # TODO: update this once existing nodes are handled
+        if node.original_node:
+            root_channel = node.original_node.get_channel()
+            if root_channel:
+                return {"id": root_channel.pk, "name": root_channel.name}
         return None
 
     def retrieve_metadata(self, node):
@@ -361,13 +360,19 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel',
-                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets',
+                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets', 'original_channel_id', 'source_channel_id',
                  'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items')
 
 class ChannelSerializer(serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')
     main_tree = ContentNodeSerializer(read_only=True)
     trash_tree = ContentNodeSerializer(read_only=True)
+    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+
+    def generate_thumbnail_url(self, channel):
+        if channel.thumbnail and 'static' not in channel.thumbnail:
+            return generate_storage_url(channel.thumbnail)
+        return '/static/img/kolibri_placeholder.png'
 
     def check_for_changes(self, channel):
         if channel.main_tree:
@@ -384,26 +389,7 @@ class ChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree',
-                'thumbnail', 'version', 'deleted', 'public', 'pending_editors')
-
-class ChannelListSerializer(serializers.ModelSerializer):
-    main_tree = ContentNodeSerializer(read_only=True)
-    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
-
-    def generate_thumbnail_url(self, channel):
-        if channel.thumbnail and 'static' not in channel.thumbnail:
-            return generate_storage_url(channel.thumbnail)
-        return '/static/img/kolibri_placeholder.png'
-
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary eager loading of data. """
-        queryset = queryset.select_related('main_tree')
-        return queryset
-
-    class Meta:
-        model = Channel
-        fields = ('id', 'name', 'thumbnail', 'thumbnail_url', 'description', 'main_tree','deleted')
+                'thumbnail', 'version', 'deleted', 'public', 'thumbnail_url', 'pending_editors', 'viewers')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -420,4 +406,4 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Invitation
-        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name')
+        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode')

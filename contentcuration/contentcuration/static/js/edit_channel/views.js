@@ -617,8 +617,8 @@ var BaseListEditableItemView = BaseListItemView.extend({
 		var promise = new Promise(function(resolve, reject){
 			self.originalData = data;
 			if(self.model.isNew()){
-				self.containing_list_view.create_new_item(self.model.attributes).then(function(newModel){
-					resolve(newModel);
+				self.containing_list_view.create_new_item(data).then(function(newView){
+					resolve(newView.model);
 				}).catch(function(error){
 					console.log("ERROR (edit_channel: save):", error);
 					reject(error);
@@ -725,10 +725,11 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			'add_nodes', 'add_topic');
 	},
 	make_droppable:function(){
-		if(this.model.get("kind") === "topic"){
-			var DragHelper = require("edit_channel/utils/drag_drop");
-			DragHelper.addTopicDragDrop(this, this.open_folder, this.handle_drop);
-		}
+		// Temporarily disable dropping onto topics for now
+		// if(this.model.get("kind") === "topic"){
+		// 	var DragHelper = require("edit_channel/utils/drag_drop");
+		// 	DragHelper.addTopicDragDrop(this, this.open_folder, this.handle_drop);
+		// }
 	},
 	open_preview:function(){
 		var Previewer = require("edit_channel/preview/views");

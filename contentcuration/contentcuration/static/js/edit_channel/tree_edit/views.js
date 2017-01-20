@@ -292,7 +292,6 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			this.$el.addClass(this.openedFolderClass);
 		}
 		window.workspace_manager.put_node(this.model.get("id"), this);
-		this.make_droppable();
 		this.$el.removeClass(this.selectedClass);
 		this.create_popover();
 	},
