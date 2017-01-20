@@ -446,9 +446,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						}
 						min += (max - min) / 2;
 						node.set({
-							"sort_order": min,
-							"changed" : true,
-							"parent" : self.model.get("id")
+							"sort_order": min
 						});
 						var to_delete = $("#" + node.id);
 						var item_view = self.create_new_view(node);
@@ -456,18 +454,22 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						last_elem = item_view.$el;
 						to_delete.remove();
 					});
-					collection.save().then(function(savedCollection){
+					collection.move(self.model).then(function(savedCollection){
 						self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
 							self.reload_ancestors(fetched);
 							resolve(true);
 						});
 					}).catch(function(error){
-		        		console.log(error);
-		        		alert(error);
+		        		// console.log(error.responseText);
+		        		alert(error.responseText);
+		        		$(".content-list").sortable( "cancel" );
+		        		$(".content-list").sortable( "enable" );
+		        		$(".content-list").sortable( "refresh" );
 
 		        		// Revert back to original positions
 		        		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
 							self.reload_ancestors(fetched);
+							self.render();
 						});
 		        	});
 				});
@@ -761,12 +763,11 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	        	reload_list.push(node.get("parent"));
 	        	reload_list.push(node.get("id"));
 				node.set({
-					parent: self.model.id,
 					sort_order: ++sort_order
 				});
 				tempCollection.add(node);
 			});
-			tempCollection.save().then(function(savedCollection){
+			tempCollection.move(self.model.id).then(function(savedCollection){
 				self.retrieve_nodes(reload_list, true).then(function(fetched){
 					self.reload_ancestors(fetched);
 					resolve(true);

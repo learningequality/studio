@@ -180,9 +180,9 @@ var ContentNodeCollection = BaseCollection.extend({
 		});
         return promise;
 	},
-	comparator:function(node){
-		return node.get("sort_order");
-	},
+	comparator : function(node){
+    	return node.get("sort_order");
+    },
     sort_by_order:function(){
     	this.sort();
     	this.highest_sort_order = (this.length > 0)? this.at(this.length - 1).get("sort_order") : 1;
@@ -190,16 +190,14 @@ var ContentNodeCollection = BaseCollection.extend({
     duplicate:function(target_parent){
     	var self = this;
     	var promise = new Promise(function(resolve, reject){
-    		var copied_list = [];
-	    	self.forEach(function(node){
-	    		copied_list.push(node.get("id"));
-	    	});
 			var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
 	        var parent_id = target_parent.get("id");
 
-	        var data = {"node_ids": copied_list.join(" "),
+	        var data = {"nodes": self.toJSON(),
 	                    "sort_order": sort_order,
-	                    "target_parent": parent_id};
+	                    "target_parent": parent_id,
+	                    "channel_id": window.current_channel.id
+	        };
 	        $.ajax({
 	        	method:"POST",
 	            url: window.Urls.duplicate_nodes(),
@@ -217,20 +215,26 @@ var ContentNodeCollection = BaseCollection.extend({
     	});
     	return promise;
     },
-    move:function(target_parent, sort_order){
+    move:function(target_parent){
     	var self = this;
-		var promise = new Promise(function(resolve, reject){
-			self.forEach(function(model){
-				model.set({
-					parent: target_parent.id,
-					sort_order:++sort_order
-				});
-	    	});
-	    	self.save().then(function(collection){
-	    		resolve(collection);
-	    	});
-		});
-        return promise;
+    	var promise = new Promise(function(resolve, reject){
+	        var data = {"nodes" : self.toJSON(),
+	                    "target_parent" : target_parent.get("id"),
+	                    "channel_id" : window.current_channel.id
+	        };
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.move_nodes(),
+	            data:  JSON.stringify(data),
+	            success: function(data) {
+	            	resolve(JSON.parse(data).nodes);
+	            },
+	            error:function(e){
+	            	reject(e);
+	            }
+	        });
+    	});
+    	return promise;
 	}
 });
 
