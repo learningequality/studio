@@ -9,7 +9,9 @@
 			</div>
 
 		{{else}}
-			<img class="channel_pic" alt="No picture found." src="{{picture}}"/>
+			{{#if picture}}
+				<img class="channel_pic" alt="{{channel.name}} logo" src="{{picture}}"/>
+			{{/if}}
 		{{/if}}
 	</div>
 	{{#if edit}}
@@ -32,9 +34,14 @@
 				<span class="glyphicon glyphicon-copy copy-id-btn" aria-hidden="true" title="Copy ID to clipboard"></span>
 			{{else}}<em>(Unpublished)</em>
 			{{/if}}
+			{{#if view_only}}
+				<b class="pull-right">&nbsp;View Only</b>
+			{{/if}}
 		</span>
 		<h4>
-			<span class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right"></span>
+			{{#unless view_only}}
+				<span class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right"></span>
+			{{/unless}}
 			<p class="truncate channel_name" title="{{channel.name}}">{{channel.name}}</p>
 		</h4>
 		<div class="description">

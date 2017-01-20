@@ -17,7 +17,6 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		_.bindAll(this, 'new_channel');
 		this.bind_edit_functions();
 		this.collection = options.channels;
-		this.collection.sort();
 		this.render();
 		this.user = options.user;
 	},
@@ -41,13 +40,8 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
   		return newView;
 	},
 	new_channel: function(){
-		var self = this;
 		var data = {
-			name: "",
-			description: "",
 			editors: [window.current_user.id],
-			thumbnail:"/static/img/kolibri_placeholder.png",
-			main_tree: (new Models.ContentNodeModel()).toJSON()
 		};
 		var newView = this.create_new_view(new Models.ChannelModel(data));
 		this.$(this.list_selector).prepend(newView.el);
@@ -92,7 +86,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	dropzone_template: require("./hbtemplates/channel_profile_dropzone.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded', 'update_title', 'copy_id', 'add_highlight',
+		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded', 'update_title', 'copy_id',
 						'thumbnail_added','thumbnail_removed','create_dropzone', 'thumbnail_completed','thumbnail_failed', 'open_channel');
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = false;
@@ -102,6 +96,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.thumbnail_url = this.original_thumbnail_url;
 		this.thumbnail = this.original_thumbnail;
 		this.originalData = (this.model)? this.model.toJSON() : null;
+		this.isViewOnly = this.model.get("viewers").indexOf(window.current_user.get("id")) >= 0;
 		this.render();
 		this.dropzone = null;
 		this.isNew = false;
@@ -117,6 +112,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	render: function() {
 		this.$el.html(this.template({
+			view_only: this.isViewOnly,
 			edit: this.edit,
 			channel: this.model.toJSON(),
 			total_file_size: this.model.get("main_tree").metadata.resource_size,
@@ -149,7 +145,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	open_channel:function(event){
 		if(!this.edit){
-			window.location.href = '/channels/' + this.model.get("id") + '/edit';
+			window.location.href = '/channels/' + this.model.get("id") + ((this.isViewOnly)? '/view' : '/edit');
 		}
 	},
 	copy_id:function(event){
@@ -227,7 +223,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		var data = {
 			name: title,
 			description: description,
-			thumbnail : this.thumbnail
+			thumbnail : this.thumbnail,
+			editors: this.model.get('editors')
 		};
 		this.original_thumbnail = this.thumbnail;
 		this.original_thumbnail_url = this.thumbnail_url;

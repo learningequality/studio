@@ -95,8 +95,8 @@ var UserModel = BaseModel.extend({
     getName:function(){
 		return "UserModel";
 	},
-    send_invitation_email:function(email, channel){
-    	return mail_helper.send_mail(channel, email);
+    send_invitation_email:function(email, channel, share_mode){
+    	return mail_helper.send_mail(channel, email, share_mode);
     },
     get_clipboard:function(){
     	return  new ContentNodeModel(this.get("clipboard_tree"));
@@ -120,7 +120,7 @@ var InvitationModel = BaseModel.extend({
 		return "InvitationModel";
 	},
     resend_invitation_email:function(channel){
-    	return mail_helper.send_mail(channel, this.get("email"));
+    	return mail_helper.send_mail(channel, this.get("email"), this.get("share_mode"));
     }
 });
 
@@ -238,14 +238,15 @@ var ChannelModel = BaseModel.extend({
     //idAttribute: "channel_id",
 	root_list : "channel-list",
 	defaults: {
-		name: " ",
+		name: "",
 		editors: [],
+		viewers: [],
 		pending_editors: [],
 		author: "Anonymous",
 		license_owner: "No license found",
-		description:" ",
+		description:"",
 		thumbnail_url: "/static/img/kolibri_placeholder.png",
-		main_tree: new ContentNodeModel()
+		main_tree: (new ContentNodeModel()).toJSON()
     },
     getName:function(){
 		return "ChannelModel";

@@ -29,16 +29,35 @@
 			<li><a href="/channels"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
 			<!-- Collect the nav links, forms, and other content for toggling -->
              <li class="dropdown" id="channel_select_dd_wrapper">
-                <a href="#" id="channel_selection_dropdown" class="dropdown-toggle truncate" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{%if channel_name %}{{channel_name}} {% else %}Select a Channel... {% endif %}<span class="caret"></span></a>
+                <a href="#" id="channel_selection_dropdown" class="dropdown-toggle truncate" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                	{%if channel_name %}
+                		{% if allow_edit %}
+                			{{channel_name}}
+                		{% else %}
+                			{{channel_name}} <i>(View Only)</i>
+                		{% endif %}
+                	{% else %}Select a Channel...
+                	{% endif %}
+                <span class="caret"></span></a>
                 <ul class="dropdown-menu" id="channel_selection_dropdown_list">
                   {% for channel in channel_list %}
-                  <li><a href="/channels/{{channel.id}}/edit" class="truncate">{{channel.name}}</a></li>
+
+              		{% if channel.is_view_only %}
+              		<li title="{{channel.name}} (View Only)">
+	                  	<a href="/channels/{{channel.id}}/view" class="viewonly_channel"><div class="truncate">{{channel.name}}</div> <i>(View Only)</i></a>
+	                </li>
+                    {% else %}
+                    <li title="{{channel.name}}">
+                      	<a href="/channels/{{channel.id}}/edit" class="truncate">{{channel.name}}</a>
+                    </li>
+                    {% endif %}
                   {% empty %}
                   <li class='default-channel-item'><em>No channels found.</em></li>
                   {% endfor %}
                 </ul>
             </li>
 		</ul>
+		{% if allow_edit %}
 		<ul class="nav navbar-nav navbar-right" id="publish">
 			<!--<li id="channel-publish-button" class="text-center">Unpublish Selected</li>-->
 			<li id="publish-id">
@@ -50,6 +69,7 @@
 			</li>
 			<li id="channel-publish-button" class="text-center">PUBLISH</li>
 		</ul>
+		{% endif %}
 	</nav>
 	<div id="channel-edit-content-wrapper">
 		<div id="channel-edit-sortable-boundary">

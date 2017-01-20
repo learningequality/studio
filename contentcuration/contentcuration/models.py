@@ -153,6 +153,13 @@ class Channel(models.Model):
         help_text=_("Users with edit rights"),
         blank=True,
     )
+    viewers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='view_only_channels',
+        verbose_name=_("viewers"),
+        help_text=_("Users with view only rights"),
+        blank=True,
+    )
     language =  models.ForeignKey('Language', null=True, blank=True, related_name='channel_language')
     trash_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_trash')
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
@@ -479,6 +486,7 @@ class Invitation(models.Model):
     """ Invitation to edit channel """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     invited = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name='sent_to')
+    share_mode = models.CharField(max_length=50, default='edit')
     email = models.EmailField(max_length=100, null=True)
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_by', null=True)
     channel = models.ForeignKey('Channel', null=True, related_name='pending_editors')
