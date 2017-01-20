@@ -153,6 +153,13 @@ class Channel(models.Model):
         help_text=_("Users with edit rights"),
         blank=True,
     )
+    viewers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='view_only_channels',
+        verbose_name=_("viewers"),
+        help_text=_("Users with view only rights"),
+        blank=True,
+    )
     language =  models.ForeignKey('Language', null=True, blank=True, related_name='channel_language')
     trash_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_trash')
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
@@ -244,6 +251,10 @@ class ContentNode(MPTTModel, models.Model):
     content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
+    # TODO: disallow nulls once existing models have been set
+    original_channel_id = UUIDField(primary_key=False, editable=False, null=True) # Original channel copied from
+    source_channel_id = UUIDField(primary_key=False, editable=False, null=True) # Immediate channel copied from
+
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
@@ -267,6 +278,14 @@ class ContentNode(MPTTModel, models.Model):
 
     objects = TreeManager()
 
+
+    def get_channel(self):
+        root = self.get_root()
+        channel = root.channel_main or root.channel_trash or root.channel_language or root.channel_previous
+        if channel:
+            return channel.first()
+        return channel
+
     def save(self, *args, **kwargs):
         # Detect if node has been moved to another tree
         if self.pk is not None and ContentNode.objects.filter(pk=self.pk).exists():
@@ -283,6 +302,14 @@ class ContentNode(MPTTModel, models.Model):
         if self.cloned_source is None:
             self.cloned_source = self
             post_save_changes = True
+
+        if self.original_channel_id is None and self.get_channel():
+            self.original_channel_id = self.get_channel().id
+            post_save_changes = True
+        if self.source_channel_id is None and self.get_channel():
+            self.source_channel_id = self.get_channel().id
+            post_save_changes = True
+
         if post_save_changes:
             self.save()
 
@@ -459,6 +486,7 @@ class Invitation(models.Model):
     """ Invitation to edit channel """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     invited = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name='sent_to')
+    share_mode = models.CharField(max_length=50, default='edit')
     email = models.EmailField(max_length=100, null=True)
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_by', null=True)
     channel = models.ForeignKey('Channel', null=True, related_name='pending_editors')
