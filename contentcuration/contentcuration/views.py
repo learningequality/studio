@@ -306,7 +306,7 @@ def _move_node(node, parent=None, sort_order=1, channel_id=None):
     descendants = node.get_descendants(include_self=True)
     node.save()
 
-    for tag in ContentTag.objects.filter(tagged_content__in=descendants):
+    for tag in ContentTag.objects.filter(tagged_content__in=descendants).distinct():
         # If moving from another channel
         if tag.channel_id != channel_id:
             t, is_new = ContentTag.objects.get_or_create(
