@@ -244,6 +244,10 @@ class ContentNode(MPTTModel, models.Model):
     content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
+    # TODO: disallow nulls once existing models have been set
+    original_channel_id = UUIDField(primary_key=False, editable=False, null=True) # Original channel copied from
+    source_channel_id = UUIDField(primary_key=False, editable=False, null=True) # Immediate channel copied from
+
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
@@ -267,6 +271,14 @@ class ContentNode(MPTTModel, models.Model):
 
     objects = TreeManager()
 
+
+    def get_channel(self):
+        root = self.get_root()
+        channel = root.channel_main or root.channel_trash or root.channel_language or root.channel_previous
+        if channel:
+            return channel.first()
+        return channel
+
     def save(self, *args, **kwargs):
         # Detect if node has been moved to another tree
         if self.pk is not None and ContentNode.objects.filter(pk=self.pk).exists():
@@ -283,6 +295,14 @@ class ContentNode(MPTTModel, models.Model):
         if self.cloned_source is None:
             self.cloned_source = self
             post_save_changes = True
+
+        if self.original_channel_id is None:
+            self.original_channel_id = self.get_channel().id
+            post_save_changes = True
+        if self.source_channel_id is None:
+            self.source_channel_id = self.get_channel().id
+            post_save_changes = True
+
         if post_save_changes:
             self.save()
 
