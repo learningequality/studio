@@ -17,7 +17,6 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		_.bindAll(this, 'new_channel');
 		this.bind_edit_functions();
 		this.collection = options.channels;
-		this.collection.sort();
 		this.render();
 		this.user = options.user;
 	},

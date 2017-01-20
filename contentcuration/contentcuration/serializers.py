@@ -259,12 +259,11 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return node.kind_id == content_kinds.TOPIC or node.kind_id == content_kinds.EXERCISE or node.files.exists()
 
     def retrieve_original_channel(self, node):
-        if node.original_node is None:
-            return None
-        root = node.original_node.get_root()
-        root_channel = root.channel_main or root.channel_trash or root.channel_clipboard or root.channel_staging or root.channel_previous
-        if root_channel.first():
-            return {"id": root_channel.first().pk, "name": root_channel.first().name}
+        # TODO: update this once existing nodes are handled
+        if node.original_node:
+            root_channel = node.original_node.get_channel()
+            if root_channel:
+                return {"id": root_channel.pk, "name": root_channel.name}
         return None
 
     def retrieve_metadata(self, node):
@@ -400,8 +399,8 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel',
-                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets', 'valid',
-                 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items')
+                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets', 'valid', 'original_channel_id',
+                 'source_channel_id', 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items')
 
 class ChannelSerializer(serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')

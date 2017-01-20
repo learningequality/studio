@@ -3,7 +3,7 @@
 {% autoescape off %}
 Hello {% if is_new %}{{ user.email }}{% else %}{{ user.first_name }}{% endif %},
 
-{{ sender.first_name }} {{ sender.last_name }} has invited you to {{ share_mode }} a channel at {{ site.name }}.
+{{ sender.first_name }} {{ sender.last_name }} has invited you to {% trans share_mode %} a channel at {{ site.name }}.
 
 Please follow this link to accept the invitation:
 {% if is_new %}

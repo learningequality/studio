@@ -9,7 +9,9 @@
 			</div>
 
 		{{else}}
-			<img class="channel_pic" alt="No picture found." src="{{picture}}"/>
+			{{#if picture}}
+				<img class="channel_pic" alt="{{channel.name}} logo" src="{{picture}}"/>
+			{{/if}}
 		{{/if}}
 	</div>
 	{{#if edit}}
