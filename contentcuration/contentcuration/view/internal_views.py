@@ -213,6 +213,7 @@ def create_node(node_data, parent_node, sort_order):
     """ Generate node based on node dict """
     title=node_data['title']
     node_id=node_data['node_id']
+    content_id=node_data['content_id']
     description=node_data['description']
     author = node_data['author']
     kind = ContentKind.objects.get(kind=node_data['kind'])
@@ -231,6 +232,7 @@ def create_node(node_data, parent_node, sort_order):
         title=title,
         kind=kind,
         node_id=node_id,
+        content_id=content_id,
         description = description,
         author=author,
         license=license,
