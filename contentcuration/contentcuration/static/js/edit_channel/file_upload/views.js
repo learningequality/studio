@@ -619,7 +619,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
             nodeid:this.nodeid,
-            languages:this.languages.models,
             show_dropdown: this.model.get("multi_language") && (!this.file || !this.file.get("language")),
             selector: this.id(),
             preset_name : (this.file)? this.file.get("display_name") : this.model.get("readable_name")
@@ -668,7 +667,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                headers: {
                     "X-CSRFToken": get_cookie("csrftoken"),
                     "Node" : this.nodeid,
-                    "Preset": this.model.get("name")
+                    "Preset": this.model.get("id")
                 }
             });
             dropzone.on("success", this.file_uploaded);

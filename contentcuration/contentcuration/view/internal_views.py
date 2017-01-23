@@ -14,7 +14,7 @@ from django.core.management import call_command
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from contentcuration.api import write_file_to_storage
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, generate_file_on_disk_name
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, Language, generate_file_on_disk_name
 from le_utils.constants import content_kinds
 from django.db.models.functions import Concat
 from django.core.files import File as DjFile
@@ -245,6 +245,7 @@ def map_files_to_node(node, data):
     """ Generate files that reference the content node """
     for file_data in data:
         file_hash = file_data['filename'].split(".")
+        print "FILE DATA:", file_data
 
         # Determine a preset if none is given
         kind_preset = None
@@ -252,6 +253,10 @@ def map_files_to_node(node, data):
             kind_preset = FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1], display=True).first()
         else:
             kind_preset = FormatPreset.objects.get(id=file_data['preset'])
+
+        language = None
+        if file_data.get('language'):
+            language = Language.objects.get(pk=file_data['language'])
 
         file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
@@ -266,6 +271,7 @@ def map_files_to_node(node, data):
             file_size = file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
+            language=language,
         )
         file_obj.save()
 

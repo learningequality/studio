@@ -157,7 +157,6 @@ var ContentNodeCollection = BaseCollection.extend({
 
 				fileCollection.add(node.get("files"));
 			});
-			console.log(fileCollection)
 			fileCollection.save().then(function(){
 				Backbone.sync("update", self, {
 		        	url: self.model.prototype.urlRoot(),
