@@ -245,7 +245,6 @@ def map_files_to_node(node, data):
     """ Generate files that reference the content node """
     for file_data in data:
         file_hash = file_data['filename'].split(".")
-        print "FILE DATA:", file_data
 
         # Determine a preset if none is given
         kind_preset = None
