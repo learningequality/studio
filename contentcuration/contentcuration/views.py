@@ -19,19 +19,7 @@ from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-from contentcuration.api import write_file_to_storage, check_supported_browsers
-=======
-from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video
->>>>>>> 2902798... Added automatically extracted thumbnails for videos
-=======
-from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video
->>>>>>> 2902798... Added automatically extracted thumbnails for videos
-=======
-from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video
->>>>>>> 2902798... Added automatically extracted thumbnails for videos
+from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video, check_supported_browsers
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
