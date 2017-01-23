@@ -9,7 +9,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('contentcuration', '0046_auto_20161222_1210'),
-        ('contentcuration', '0045_merge'),
         ('contentcuration', '0045_auto_20170119_1429'),
     ]
 

@@ -6,16 +6,19 @@ import os
 import re
 import hashlib
 import shutil
+import tempfile
 from functools import wraps
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
+from django.core.files import File as DjFile
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
-from le_utils.constants import content_kinds
+from le_utils.constants import format_presets, content_kinds, file_formats
 import contentcuration.models as models
 
+<<<<<<< HEAD
 def check_supported_browsers(user_agent_string):
     for browser in settings.SUPPORTED_BROWSERS:
         if browser in user_agent_string:
@@ -24,17 +27,21 @@ def check_supported_browsers(user_agent_string):
 
 
 def write_file_to_storage(fobj, check_valid = False):
+=======
+def write_file_to_storage(fobj, check_valid = False, name=None):
+>>>>>>> 2902798... Added automatically extracted thumbnails for videos
     # Check that hash is valid
     checksum = hashlib.md5()
     for chunk in iter(lambda: fobj.read(4096), b""):
         checksum.update(chunk)
-    filename, ext = os.path.splitext(fobj._name) if fobj._name is not None else ("", "")
+    name = name if name is not None else fobj._name if fobj._name else ""
+    filename, ext = os.path.splitext(name) if name is not None else ("", "")
     hashed_filename = checksum.hexdigest()
     full_filename = "{}{}".format(hashed_filename, ext)
     fobj.seek(0)
 
     if check_valid and hashed_filename != filename:
-        raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(fobj._name))
+        raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(name))
 
     # Get location of file
     file_path = models.generate_file_on_disk_name(hashed_filename, full_filename)
@@ -44,6 +51,31 @@ def write_file_to_storage(fobj, check_valid = False):
         shutil.copyfileobj(fobj, destf)
     return full_filename
 
+def extract_thumbnail_from_video(fobj):
+    from ffmpy import FFmpeg
+    fh, fd = tempfile.mkstemp(suffix=".{}".format(file_formats.PNG))
+    try:
+        ff = FFmpeg(
+            inputs={str(fobj.file_on_disk): None},
+            outputs={fd: "-vcodec png -ss 10 -vframes 1 -an -f rawvideo -y"}
+        )
+        ff.run()
+        filename = write_file_to_storage(open(fd, 'rb'), name=fd)
+        checksum, ext = os.path.splitext(filename)
+        file_location = models.generate_file_on_disk_name(checksum, filename)
+        thumbnail_object = models.File(
+            file_on_disk=DjFile(open(file_location, 'rb')),
+            file_format_id=file_formats.PNG,
+            original_filename = 'Extracted Thumbnail',
+            contentnode=fobj.contentnode,
+            file_size=os.path.getsize(file_location),
+            preset_id=format_presets.VIDEO_THUMBNAIL,
+        )
+        thumbnail_object.save()
+        return thumbnail_object
+    finally:
+        os.close(fh)
+        os.unlink(fd)
 
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
