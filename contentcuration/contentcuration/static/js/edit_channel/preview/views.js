@@ -43,7 +43,6 @@ var PreviewView = BaseViews.BaseView.extend({
         }));
     },
     load_preset_dropdown:function(){
-        this.presets.sort_by_order();
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
              presets: _.reject(this.presets.toJSON(), {"subtitle" : true}),
              questions: this.questions.toJSON()
@@ -153,7 +152,7 @@ var PreviewView = BaseViews.BaseView.extend({
         this.model.get("files").forEach(function(file){
             var preset_id = (file.attributes)? file.get("preset") : (file.preset && file.preset.name)? file.preset.name : file.preset;
             var current_preset = window.formatpresets.get({id:preset_id});
-            if(current_preset && current_preset.get("display")){
+            if(current_preset && current_preset.get("display") && !current_preset.get('subtitle')){
                 if (load_selected_value){
                     var data = (file.attributes)? file.attributes : file;
                     var preset_check = (data.preset.name)? data.preset.name : data.preset;
@@ -194,7 +193,8 @@ var PreviewView = BaseViews.BaseView.extend({
                 this.current_preview = this.current_preview.toJSON();
             }
             if (this.current_preview.preset){
-                $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
+                var preset_id = (this.current_preview.preset.id)? this.current_preview.preset.id : this.current_preview.preset;
+                $("#preview_format_switch").text(this.presets.get(preset_id).get("readable_name"));
             }else{
                 $("#preview_format_switch").text("Question " + this.current_preview.order);
             }

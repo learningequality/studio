@@ -372,11 +372,8 @@ var FormatPresetCollection = BaseCollection.extend({
 	model: FormatPresetModel,
 	list_name:"formatpreset-list",
 	model_name:"FormatPresetCollection",
-	sort_by_order:function(){
-    	this.comparator = function(preset){
-    		return preset.get("order");
-    	};
-    	this.sort();
+    comparator : function(preset){
+    	return preset.get("order");
     }
 });
 
@@ -423,7 +420,10 @@ var LanguageModel = BaseModel.extend({
 var LanguageCollection = BaseCollection.extend({
 	model: LanguageModel,
 	list_name:"language-list",
-	model_name:"LanguageCollection"
+	model_name:"LanguageCollection",
+	comparator : function(language){
+    	return language.get("readable_name");
+    }
 });
 
 

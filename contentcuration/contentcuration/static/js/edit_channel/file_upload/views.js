@@ -473,9 +473,6 @@ var FormatInlineItem = FormatEditorItem.extend({
         'click .expand_format_editor' : 'toggle'
     },
     render: function() {
-        // this.files.sort_by_preset(this.presets);
-        this.presets.sort_by_order();
-
         this.$el.html(this.template({
             node: this.model.toJSON()
         }));
@@ -509,9 +506,6 @@ var FormatFormatItem = FormatEditorItem.extend({
         'click .expand_format_editor' : 'toggle'
     },
     render: function() {
-        // this.files.sort_by_preset(this.presets);
-        this.presets.sort_by_order();
-
         this.$el.html(this.template({
             presets:this.presets.toJSON(),
             files: this.files.toJSON(),
@@ -543,10 +537,14 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         this.content_node_view = options.content_node_view;
         this.collection = options.collection;
         this.files = options.files;
-        this.languages = window.languages.clone();
+        var current_languages = this.get_current_languages();
+        this.languages = new Models.LanguageCollection(window.languages.reject(function(l){ return current_languages.indexOf(l.id) >= 0;}));
         this.index = 0;
         this.render();
 
+    },
+    get_current_languages: function(){
+        return _.pluck(_.filter(this.files.pluck('language'), function(l){ return l; }), "id");
     },
     render: function() {
         this.$el.html(this.template());
