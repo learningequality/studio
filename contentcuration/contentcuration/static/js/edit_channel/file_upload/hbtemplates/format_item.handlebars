@@ -4,7 +4,7 @@
 		<select id="{{selector}}_dropdown" class="language_dropdown text-center">
 			<option selected disabled>---</option>
 			{{#each languages}}
-				<option value="{{attributes.id}}">{{attributes.readable_name}} ({{attributes.ietf_name}})</option>
+				<option value="{{attributes.id}}" data-readable="{{attributes.readable_name}}" title="{{attributes.readable_name}} ({{attributes.ietf_name}})">{{attributes.readable_name}} ({{attributes.ietf_name}})</option>
 			{{/each}}
 		</select>
 	{{/if}}

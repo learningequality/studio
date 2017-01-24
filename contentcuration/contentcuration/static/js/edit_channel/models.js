@@ -321,6 +321,7 @@ var FileModel = BaseModel.extend({
 			!this.get("preset").id.endsWith("_" + this.get("language").id)){
 			var preset_data = this.get("preset");
 			preset_data.id = preset_data.id + "_" + this.get("language").id;
+			preset_data.readable_name = preset_data.readable_name + " (" + this.get("language").readable_name + ")";
 			this.set("preset", preset_data);
 		}
 	}
@@ -374,6 +375,13 @@ var FormatPresetCollection = BaseCollection.extend({
 	model_name:"FormatPresetCollection",
     comparator : function(preset){
     	return preset.get("order");
+    },
+    // Sort alphabetically when languages are involved
+    sort_presets : function(){
+    	this.comparator = function(preset){
+    		return Array(this.length - preset.get("order")).join('0') + preset.get("readable_name");
+    	}
+    	this.sort();
     }
 });
 
@@ -458,7 +466,7 @@ var ExerciseCollection = BaseCollection.extend({
 	model_name:"ExerciseCollection"
 });
 
-var AssessmentItemModel =BaseModel.extend({
+var AssessmentItemModel = BaseModel.extend({
 	root_list:"assessmentitem-list",
 	model_name:"AssessmentItemModel",
 	defaults: {
