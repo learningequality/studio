@@ -442,7 +442,7 @@ var FormatEditorItem = FormatItem.extend({
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
-    }
+    },
 });
 var FormatInlineItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_inline_item.handlebars"),
