@@ -264,7 +264,7 @@ class ContentNode(MPTTModel, models.Model):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
     sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
-    copyright_holder = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
+    copyright_holder = models.CharField(max_length=200, blank=True, null=True, help_text=_("Organization of person who holds the essential rights"))
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
 
@@ -351,9 +351,11 @@ class FormatPreset(models.Model):
         return self.id
 
 class Language(models.Model):
-    lang_code = models.CharField(max_length=2, db_index=True)
-    lang_subcode = models.CharField(max_length=2, db_index=True, blank=True)
-    readable_name = models.CharField(max_length=50, blank=True)
+    id = models.CharField(max_length=7, primary_key=True)
+    lang_code = models.CharField(max_length=3, db_index=True)
+    lang_subcode = models.CharField(max_length=3, db_index=True, blank=True, null=True)
+    readable_name = models.CharField(max_length=100, blank=True)
+    native_name = models.CharField(max_length=100, blank=True)
 
     def ietf_name(self):
         return "{code}-{subcode}".format(code=self.lang_code, subcode=self.lang_subcode)

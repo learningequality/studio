@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages
 from contentcuration import models
 import logging as logmodule
 from django.core.cache import cache
@@ -522,28 +522,17 @@ PRESETS = [
     },
 ]
 
-LANGUAGES = [
-    {
-        "model": models.Language,
-        "pk": "id",
-        "fields": {
-            "id": 1,
-            "lang_code": "EN",
-            "lang_subcode": "",
-            "readable_name": "English"
+LANGUAGES = [{
+    "model": models.Language,
+    "pk": "id",
+    "fields": {
+            "id": l.code,
+            "lang_code": l.primary_code,
+            "lang_subcode": l.subcode,
+            "readable_name": l.name,
+            "native_name" : l.native_name,
         },
-    },
-    {
-        "model": models.Language,
-        "pk": "id",
-        "fields": {
-            "id": 2,
-            "lang_code": "ES",
-            "lang_subcode": "MX",
-            "readable_name": "Spanish"
-        },
-    }
-]
+} for l in languages.LANGUAGELIST ]
 
 CONSTANTS = [SITES, LICENSES, FILE_FORMATS, KINDS, PRESETS, LANGUAGES]
 
