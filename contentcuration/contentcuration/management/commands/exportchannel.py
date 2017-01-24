@@ -142,6 +142,7 @@ def create_bare_contentnode(ccnode):
         defaults={'kind': ccnode.kind.kind,
             'title': ccnode.title,
             'content_id': ccnode.content_id,
+            'author' : ccnode.author,
             'description': ccnode.description,
             'sort_order': ccnode.sort_order,
             'license_owner': ccnode.copyright_holder,
@@ -180,7 +181,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
-            lang=None,          # TODO: fix this once we've implemented lang importing.
+            lang_id=ccfilemodel.language_id,          # TODO: fix this once we've implemented lang importing.
             thumbnail=preset.thumbnail,
         )
 

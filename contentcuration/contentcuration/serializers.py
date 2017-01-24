@@ -76,7 +76,7 @@ class FileListSerializer(serializers.ListSerializer):
             contentnode = file_obj['contentnode']
             preset = file_obj['preset_id']
             file_id = file_obj['id']
-            language = file_obj.get('language')
+            language = file_obj.get('language_id')
             delete_queryset = File.objects.filter(Q(contentnode=contentnode) & (Q(preset_id=preset) | Q(preset=None)) & (Q(language_id=language)) & ~Q(id=file_id))
             files_to_delete += [f for f in delete_queryset.all()]
             if file_obj['contentnode'] not in nodes_to_parse:
