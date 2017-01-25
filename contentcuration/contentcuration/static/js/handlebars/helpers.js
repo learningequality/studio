@@ -86,6 +86,8 @@ Handlebars.registerHelper('get_icon', function(kind){
           return "glyphicon glyphicon-star";
       case "document":
           return "glyphicon glyphicon-file";
+      case "html5":
+          return "glyphicon glyphicon-certificate";
       default:
           return "glyphicon glyphicon-exclamation-sign";
   }

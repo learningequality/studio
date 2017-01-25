@@ -11,36 +11,87 @@
 
 #secondary-nav {
 	@secondary-nav-btn-color:#F2F2F2;
-	padding:0px 20px;
+	padding:0px 10px 0px 20px;
 	margin: 0 0 0 27px;
 	background-color:transparent;
 	border:none;
 	width:100%;
 	min-height: 0;
 
+	*{
+		vertical-align: middle;
+	}
+
 	li {
 		font-size: @larger-body-text;
 		cursor:pointer;
 		color: @gray-700;
 	}
+	a{
+		color:@gray-700;
+		padding:7px;
+		margin-right:15px;
+	}
+	a:hover{
+		background-color: transparent;
+		color:@blue-500;
+	}
 
-	.navbar-left {
-		li {
-			margin-right: 40px;
-			padding-bottom: 6px;
+	#channel_select_dd_wrapper{
+		width:300px;
+		padding:3px;
+		.dropdown-menu{
+			width:100%;
+			margin-top:-10px;
+			margin-left:3px;
+			box-shadow: none;
+			border: 1px solid @gray-400;
+			border-top: none;
+			li a {
+				width:100%;
+				color:@gray-700;
+			}
+			li .viewonly_channel div{
+				max-width: 60%;
+				display:inline-block;
+			}
+			li:hover{
+				background-color: @gray-200;
+				cursor:pointer;
+				*{color:@gray-700;}
+			}
 		}
-		li:hover, .active {
-			color: @body-font-color;
+		.dropdown-toggle{
+			width: 300px;
+			padding:7px;
 			font-weight: bold;
+			background-color: white;
+			border: 1px solid @gray-400;
+			border-radius: 5px;
+			font-weight: bold;
+			color:@gray-700;
+			.caret {
+				color: gray;
+				height: 25px;
+				margin: 8px 7px 0 0;
+				position: absolute;
+				right: 0;
+			}
 		}
-		.active {
-			border-bottom: 3px solid @blue-500;
+
+		.default-channel-item{
+			color:@annotation-gray;
+			padding:2px 15px;
 		}
 	}
 
 	.navbar-right{
+		padding:5px;
+		*{
+			vertical-align: middle;
+		}
 		#channel-publish-button{
-			margin: -6px 40px 0 0;
+			margin: 0 40px 0 0;
 			.action-button;
 		}
 		#publish-id{
@@ -291,10 +342,14 @@
 					margin-top: 5px;
 				}
 			}
-			.unpublished{
+			.unpublished, .invalid{
 				border-radius:10px;
 				background-color:lightgray;
 				padding: 1px 10px;
+			}
+			.invalid{
+				background-color:#F2DEDE;
+				color: @red-error-color;
 			}
 			.content_metadata_summary{
 				color: @annotation-gray;

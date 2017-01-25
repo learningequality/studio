@@ -15,13 +15,13 @@ from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
+from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -43,38 +43,19 @@ def testpage(request):
 def unsupported_browser(request):
     return render(request, 'unsupported_browser.html')
 
-@login_required
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def channel_list(request):
-    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
-        return redirect(reverse_lazy('unsupported_browser'))
+def unauthorized(request):
+    return render(request, 'unauthorized.html')
 
-    channel_list = Channel.objects.filter(deleted=False, editors= request.user)
-    channel_list = ChannelListSerializer.setup_eager_loading(channel_list)
-    channel_serializer = ChannelListSerializer(channel_list, many=True)
-
-    licenses = get_or_set_cached_constants(License, LicenseSerializer)
-    return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
-                                                 "channel_name" : False,
-                                                 "license_list" : licenses,
-                                                 "channel_list" : channel_list.values("id", "name"),
-                                                 "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
-
-@login_required
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def channel(request, channel_id):
-    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
-        return redirect(reverse_lazy('unsupported_browser'))
-
-    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
+def channel_page(request, channel, allow_edit=False):
     channel_serializer =  ChannelSerializer(channel)
-    accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors= request.user))
-    accessible_channel_list = ChannelListSerializer.setup_eager_loading(accessible_channel_list)
-    accessible_channel_list_serializer = ChannelListSerializer(accessible_channel_list, many=True)
+    accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))
+    accessible_channel_list = ChannelSerializer.setup_eager_loading(accessible_channel_list)
+    accessible_channel_list_serializer = ChannelSerializer(accessible_channel_list, many=True)
 
-    channel_list = accessible_channel_list.filter(editors= request.user).exclude(id=channel_id).values("id", "name")
+    channel_list = accessible_channel_list.filter(Q(editors=request.user) | Q(viewers=request.user))\
+                    .exclude(id=channel.pk)\
+                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
+                    .values("id", "name", "is_view_only")
     fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
@@ -85,8 +66,9 @@ def channel(request, channel_id):
 
     json_renderer = JSONRenderer()
 
-    return render(request, 'channel_edit.html', {"channel" : json_renderer.render(channel_serializer.data),
-                                                "channel_id" : channel_id,
+    return render(request, 'channel_edit.html', {"allow_edit":allow_edit,
+                                                "channel" : json_renderer.render(channel_serializer.data),
+                                                "channel_id" : channel.pk,
                                                 "channel_name": channel.name,
                                                 "accessible_channels" : json_renderer.render(accessible_channel_list_serializer.data),
                                                 "channel_list" : channel_list,
@@ -96,6 +78,58 @@ def channel(request, channel_id):
                                                  "ckinds_list" : contentkinds,
                                                  "ctags": json_renderer.render(channel_tags_serializer.data),
                                                  "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data)})
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def channel_list(request):
+    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
+        return redirect(reverse_lazy('unsupported_browser'))
+
+    channel_list = Channel.objects.filter(deleted=False)\
+                    .filter(Q(editors=request.user) | Q(viewers=request.user))\
+                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
+
+    channel_list = ChannelSerializer.setup_eager_loading(channel_list)
+    channel_serializer = ChannelSerializer(channel_list, many=True)
+
+    licenses = get_or_set_cached_constants(License, LicenseSerializer)
+    return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
+                                                 "channel_name" : False,
+                                                 "license_list" : licenses,
+                                                 "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def channel(request, channel_id):
+    # Check if browser is supported
+    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
+        return redirect(reverse_lazy('unsupported_browser'))
+
+    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
+
+    # Check user has permission to view channel
+    if request.user not in channel.editors.all() and not request.user.is_admin:
+        return redirect(reverse_lazy('unauthorized'))
+
+    return channel_page(request, channel, allow_edit=True)
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def channel_view_only(request, channel_id):
+    # Check if browser is supported
+    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
+        return redirect(reverse_lazy('unsupported_browser'))
+
+    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
+
+    # Check user has permission to view channel
+    if request.user not in channel.editors.all() and request.user not in channel.viewers.all() and not request.user.is_admin:
+        return redirect(reverse_lazy('unauthorized'))
+
+    return channel_page(request, channel)
 
 def get_or_set_cached_constants(constant, serializer):
     cached_data = cache.get(constant.__name__)
@@ -207,20 +241,18 @@ def duplicate_nodes(request):
         data = json.loads(request.body)
 
         try:
-            node_ids = data["node_ids"]
+            nodes = data["nodes"]
             sort_order = data["sort_order"]
             target_parent = data["target_parent"]
+            channel_id = data["channel_id"]
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        logging.info("Copying node id %s", node_ids)
-
-        nodes = node_ids.split()
         new_nodes = []
 
         with transaction.atomic():
-            for node_id in nodes:
-                new_node = _duplicate_node(node_id, sort_order=sort_order, parent=target_parent)
+            for node_data in nodes:
+                new_node = _duplicate_node(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
                 new_nodes.append(new_node.pk)
                 sort_order+=1
 
@@ -229,7 +261,7 @@ def duplicate_nodes(request):
             "node_ids": " ".join(new_nodes)
         }))
 
-def _duplicate_node(node, sort_order=1, parent=None):
+def _duplicate_node(node, sort_order=1, parent=None, channel_id=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
     new_node = ContentNode.objects.create(
@@ -243,13 +275,20 @@ def _duplicate_node(node, sort_order=1, parent=None):
         changed=True,
         original_node=node.original_node or node,
         cloned_source=node,
+        original_channel_id = node.original_channel_id or node.original_node.get_channel().id if node.original_node.get_channel() else None,
+        source_channel_id = node.get_channel().id if node.get_channel() else None,
         author=node.author,
         content_id=node.content_id,
         extra_fields=node.extra_fields,
     )
 
     # add tags now
-    new_node.tags.add(*node.tags.all())
+    for tag in node.tags.all():
+        new_tag, is_new = ContentTag.objects.get_or_create(
+            tag_name=tag.tag_name,
+            channel_id=channel_id,
+        )
+        new_node.tags.add(new_tag)
 
     # copy file object too
     for fobj in node.files.all():
@@ -269,6 +308,54 @@ def _duplicate_node(node, sort_order=1, parent=None):
         _duplicate_node(c, parent=new_node.id)
 
     return new_node
+
+
+def move_nodes(request):
+    logging.debug("Entering the move_nodes endpoint")
+
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+
+        try:
+            nodes = data["nodes"]
+            target_parent = ContentNode.objects.get(pk=data["target_parent"])
+            channel_id = data["channel_id"]
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+        with transaction.atomic():
+            for n in nodes:
+                node = ContentNode.objects.get(pk=n['id'])
+                _move_node(node, parent=target_parent, sort_order=n['sort_order'], channel_id=channel_id)
+
+        return HttpResponse(json.dumps({
+            "success": True,
+            "nodes": [n['id'] for n in nodes]
+        }))
+
+def _move_node(node, parent=None, sort_order=1, channel_id=None):
+    node.parent = parent
+    node.sort_order = sort_order
+    node.changed = True
+    descendants = node.get_descendants(include_self=True)
+    node.save()
+
+    for tag in ContentTag.objects.filter(tagged_content__in=descendants).distinct():
+        # If moving from another channel
+        if tag.channel_id != channel_id:
+            t, is_new = ContentTag.objects.get_or_create(
+                tag_name=tag.tag_name,
+                channel_id=channel_id,
+            )
+
+            # Set descendants with this tag to correct tag
+            for n in descendants.filter(tags=tag):
+                n.tags.remove(tag)
+                n.tags.add(t)
+
+    return node
 
 @csrf_exempt
 def publish_channel(request):

@@ -153,6 +153,13 @@ class Channel(models.Model):
         help_text=_("Users with edit rights"),
         blank=True,
     )
+    viewers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='view_only_channels',
+        verbose_name=_("viewers"),
+        help_text=_("Users with view only rights"),
+        blank=True,
+    )
     language =  models.ForeignKey('Language', null=True, blank=True, related_name='channel_language')
     trash_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_trash')
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
@@ -180,13 +187,21 @@ class Channel(models.Model):
             delete_empty_file_reference(filename, ext[1:])
 
         if not self.main_tree:
-            self.main_tree = ContentNode.objects.create(title=self.name + " main root", kind_id="topic", sort_order=0)
+            self.main_tree = ContentNode.objects.create(title=self.name, kind_id="topic", sort_order=0)
             self.main_tree.save()
             self.save()
+        elif self.main_tree.title != self.name:
+            self.main_tree.title = self.name
+            self.main_tree.save()
+
         if not self.trash_tree:
-            self.trash_tree = ContentNode.objects.create(title=self.name + " trash root", kind_id="topic", sort_order=0)
+            self.trash_tree = ContentNode.objects.create(title=self.name, kind_id="topic", sort_order=0)
             self.trash_tree.save()
             self.save()
+        elif self.trash_tree.title != self.name:
+            self.trash_tree.title = self.name
+            self.trash_tree.save()
+
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
@@ -244,8 +259,12 @@ class ContentNode(MPTTModel, models.Model):
     content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
+    # TODO: disallow nulls once existing models have been set
+    original_channel_id = UUIDField(primary_key=False, editable=False, null=True) # Original channel copied from
+    source_channel_id = UUIDField(primary_key=False, editable=False, null=True) # Immediate channel copied from
+
     title = models.CharField(max_length=200)
-    description = models.CharField(max_length=400, blank=True)
+    description = models.TextField(blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes')
     license = models.ForeignKey('License', null=True, default=settings.DEFAULT_LICENSE)
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
@@ -253,7 +272,7 @@ class ContentNode(MPTTModel, models.Model):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
     sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
-    copyright_holder = models.CharField(max_length=200, blank=True, help_text=_("Organization of person who holds the essential rights"))
+    copyright_holder = models.CharField(max_length=200, blank=True, default="", help_text=_("Organization of person who holds the essential rights"))
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
 
@@ -263,9 +282,17 @@ class ContentNode(MPTTModel, models.Model):
 
     changed = models.BooleanField(default=True)
     extra_fields = models.TextField(blank=True, null=True)
-    author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"), null=True)
+    author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"), null=True)
 
     objects = TreeManager()
+
+
+    def get_channel(self):
+        root = self.get_root()
+        channel = root.channel_main or root.channel_trash or root.channel_language or root.channel_previous
+        if channel:
+            return channel.first()
+        return channel
 
     def save(self, *args, **kwargs):
         # Detect if node has been moved to another tree
@@ -283,6 +310,14 @@ class ContentNode(MPTTModel, models.Model):
         if self.cloned_source is None:
             self.cloned_source = self
             post_save_changes = True
+
+        if self.original_channel_id is None and self.get_channel():
+            self.original_channel_id = self.get_channel().id
+            post_save_changes = True
+        if self.source_channel_id is None and self.get_channel():
+            self.source_channel_id = self.get_channel().id
+            post_save_changes = True
+
         if post_save_changes:
             self.save()
 
@@ -356,7 +391,7 @@ class File(models.Model):
     assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
-    lang = models.ForeignKey(Language, blank=True, null=True)
+    language = models.ForeignKey(Language, blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
 
@@ -459,6 +494,7 @@ class Invitation(models.Model):
     """ Invitation to edit channel """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     invited = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name='sent_to')
+    share_mode = models.CharField(max_length=50, default='edit')
     email = models.EmailField(max_length=100, null=True)
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_by', null=True)
     channel = models.ForeignKey('Channel', null=True, related_name='pending_editors')

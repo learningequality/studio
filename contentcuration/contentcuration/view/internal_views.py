@@ -220,9 +220,11 @@ def create_node(node_data, parent_node, sort_order):
     """ Generate node based on node dict """
     title=node_data['title']
     node_id=node_data['node_id']
+    content_id=node_data['content_id']
     description=node_data['description']
     author = node_data['author']
     kind = ContentKind.objects.get(kind=node_data['kind'])
+    copyright_holder = node_data.get('copyright_holder') or ""
     extra_fields = node_data['extra_fields']
 
     # Make sure license is valid
@@ -238,9 +240,11 @@ def create_node(node_data, parent_node, sort_order):
         title=title,
         kind=kind,
         node_id=node_id,
+        content_id=content_id,
         description = description,
         author=author,
         license=license,
+        copyright_holder=copyright_holder,
         parent_id = parent_node,
         extra_fields=extra_fields,
         sort_order = sort_order,
