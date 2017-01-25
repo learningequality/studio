@@ -142,6 +142,7 @@ def create_bare_contentnode(ccnode):
         defaults={'kind': ccnode.kind.kind,
             'title': ccnode.title,
             'content_id': ccnode.content_id,
+            'author' : ccnode.author,
             'description': ccnode.description,
             'sort_order': ccnode.sort_order,
             'license_owner': ccnode.copyright_holder,

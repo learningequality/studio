@@ -219,6 +219,10 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
     metadata = serializers.SerializerMethodField('retrieve_metadata')
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
+    valid = serializers.SerializerMethodField('check_valid')
+
+    def check_valid(self, node):
+        return node.kind_id == content_kinds.TOPIC or node.kind_id == content_kinds.EXERCISE or node.files.exists()
 
     def retrieve_original_channel(self, node):
         # TODO: update this once existing nodes are handled
@@ -361,7 +365,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel',
-                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets', 'original_channel_id', 'source_channel_id',
+                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets', 'valid', 'original_channel_id', 'source_channel_id',
                  'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items')
 
 class ChannelSerializer(serializers.ModelSerializer):
