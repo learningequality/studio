@@ -443,9 +443,6 @@ var FormatEditorItem = FormatItem.extend({
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
     },
-    load_languages:function(){
-        this.languages = window.languages.toJSON();
-    }
 });
 var FormatInlineItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_inline_item.handlebars"),
