@@ -29,8 +29,8 @@ from collections import namedtuple
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
 VERSION_OK = VersionStatus(version="0.4.0", status=0, message="Ricecooker v{} is up-to-date.")
-VERSION_SOFT_WARNING = VersionStatus(version="0.3.141592", status=1, message="Warning: Ricecooker v{} is deprecated. It is recommended to upgrade to v{}.")
-VERSION_HARD_WARNING = VersionStatus(version="0.3.141592", status=2, message="Warning: Ricecooker v{} is deprecated. It is strongly recommended to upgrade to v{}.")
+VERSION_SOFT_WARNING = VersionStatus(version="0.3.141592", status=1, message="You are using Ricecooker v{}, however v{} is available. You should consider upgrading your Ricecooker.")
+VERSION_HARD_WARNING = VersionStatus(version="0.3.141592", status=2, message="Ricecooker v{} is deprecated. You are strongly recommended to upgrade to v{}.")
 VERSION_ERROR = VersionStatus(version="0.3.141592", status=3, message="Ricecooker v{} is no longer compatible. You must upgrade to v{} to continue.")
 
 
