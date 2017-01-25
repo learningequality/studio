@@ -25,13 +25,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from collections import namedtuple
 
-@api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
-def check_version(request):
-    """ Get version of Ricecooker with which CC is compatible """
-    return HttpResponse("0.3.12")
+VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
+VERSION_OK = VersionStatus(version="0.4.0", status=0, message="Ricecooker v{} is up-to-date.")
+VERSION_SOFT_WARNING = VersionStatus(version="0.3.141592", status=1, message="Warning: Ricecooker v{} is deprecated. It is recommended to upgrade to v{}.")
+VERSION_HARD_WARNING = VersionStatus(version="0.3.141592", status=2, message="Warning: Ricecooker v{} is deprecated. It is strongly recommended to upgrade to v{}.")
+VERSION_ERROR = VersionStatus(version="0.3.141592", status=3, message="Ricecooker v{} is no longer compatible. You must upgrade to v{} to continue.")
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
@@ -40,6 +41,30 @@ def authenticate_user_internal(request):
     """ Verify user is valid """
     logging.debug("Logging in user")
     return HttpResponse(json.dumps({'success': True, 'username':unicode(request.user)}))
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def check_version(request):
+    """ Get version of Ricecooker with which CC is compatible """
+    logging.debug("Entering the check_version endpoint")
+    version = json.loads(request.body)['version']
+    status = None
+
+    if str(version) >= VERSION_OK[0]:
+        status = VERSION_OK
+    elif str(version) >= VERSION_SOFT_WARNING[0]:
+        status = VERSION_SOFT_WARNING
+    elif str(version) >= VERSION_HARD_WARNING[0]:
+        status = VERSION_HARD_WARNING
+    else:
+        status = VERSION_ERROR
+
+    return HttpResponse(json.dumps({
+        'success': True,
+        'status':status[1],
+        'message':status[2].format(version, VERSION_OK[0]),
+    }))
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
