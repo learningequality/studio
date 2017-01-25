@@ -45,7 +45,7 @@ var PreviewView = BaseViews.BaseView.extend({
     load_preset_dropdown:function(){
         this.presets.sort_by_order();
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
-             presets: presets: this.presets.toJSON(),
+             presets: this.presets.toJSON(),
              questions: this.questions.toJSON()
         }));
     },
