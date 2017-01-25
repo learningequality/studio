@@ -340,7 +340,6 @@ class FormatPreset(models.Model):
     readable_name = models.CharField(max_length=400)
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
-    subtitle = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
     display = models.BooleanField(default=True) # Render on client side
     order = models.IntegerField(default=0)
