@@ -609,9 +609,11 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     remove_file_format:function(file){
         if(file){
             this.files.remove(file);
-            if(this.subtitle_base_view && this.subtitle_base_view.languages){
-                this.subtitle_base_view.languages.add(new Models.LanguageModel(file.get('language')))
-                this.subtitle_base_view.render();
+            if(file.get('language')){
+                if(file.get('preset').subtitle && this.subtitle_base_view){
+                    this.subtitle_base_view.languages.add(new Models.LanguageModel(file.get('language')))
+                    this.subtitle_base_view.render();
+                }
             }
 
         }
