@@ -124,6 +124,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	events: {
 		'click .edit_channel':'edit_channel',
 		'mouseover .edit_channel':'remove_highlight',
+		'mouseover .copy-id-btn':'remove_highlight',
 		'click .delete_channel' : 'delete_channel',
 		'click .channel_toggle': 'toggle_channel',
 		'click .save_channel': 'save_channel',
