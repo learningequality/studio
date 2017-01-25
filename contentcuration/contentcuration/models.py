@@ -366,9 +366,7 @@ class Language(models.Model):
     native_name = models.CharField(max_length=100, blank=True)
 
     def ietf_name(self):
-        if self.lang_subcode:
-            return "{code}-{subcode}".format(code=self.lang_code, subcode=self.lang_subcode)
-        return self.lang_code
+        return "{code}-{subcode}".format(code=self.lang_code, subcode=self.lang_subcode) if self.lang_subcode else self.lang_code
 
     def __str__(self):
         return self.ietf_name()

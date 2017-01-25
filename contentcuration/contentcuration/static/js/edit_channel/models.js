@@ -374,14 +374,7 @@ var FormatPresetCollection = BaseCollection.extend({
 	list_name:"formatpreset-list",
 	model_name:"FormatPresetCollection",
     comparator : function(preset){
-    	return preset.get("order");
-    },
-    // Sort alphabetically when languages are involved
-    sort_presets : function(){
-    	this.comparator = function(preset){
-    		return Array(this.length - preset.get("order")).join('0') + preset.get("readable_name");
-    	}
-    	this.sort();
+    	return [preset.get('order'), preset.get('readable_name')];
     }
 });
 

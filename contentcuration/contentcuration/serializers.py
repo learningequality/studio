@@ -64,8 +64,8 @@ class FileListSerializer(serializers.ListSerializer):
                     'preset_id' : item['preset']['id'],
                     'language_id' : item.get('language')['id'] if item.get('language') else None
                 })
-                del item['preset']
-                del item['language']
+                item.pop('preset', None)
+                item.pop('language', None)
 
                 if 'id' in item:
                     update_files[item['id']] = item
