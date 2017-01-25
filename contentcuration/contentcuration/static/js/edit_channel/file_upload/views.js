@@ -734,7 +734,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.fetch_model(new_file).then(function(fetched){
             var originalFile = self.file;
             self.file = fetched;
-            (self.model.get("multi_language")) ? self.set_language(false) : self.containing_list_view.set_file_format(self.file, self.model, originalFile);
+            (self.model.get("multi_language") && !originalFile) ? self.set_language(false) : self.containing_list_view.set_file_format(self.file, self.model, originalFile);
             self.render();
             self.set_uploading(false);
         });
