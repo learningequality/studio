@@ -142,10 +142,10 @@ def create_bare_contentnode(ccnode):
         defaults={'kind': ccnode.kind.kind,
             'title': ccnode.title,
             'content_id': ccnode.content_id,
-            'author' : ccnode.author,
+            'author' : ccnode.author or "",
             'description': ccnode.description,
             'sort_order': ccnode.sort_order,
-            'license_owner': ccnode.copyright_holder,
+            'license_owner': ccnode.copyright_holder or "",
             'license': kolibri_license,
             'available': True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
             'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),

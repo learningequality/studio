@@ -103,7 +103,6 @@ var PreviewView = BaseViews.BaseView.extend({
                     source: location,
                     extension:mimetype,
                     checksum:checksum
-                    subtitles : this.get_subtitles()
                 }));
                 if(force_load && this.current_preview.recommended_kind === "video"){
                     $("#preview_window video").load();
