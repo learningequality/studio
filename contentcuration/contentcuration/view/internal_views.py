@@ -14,7 +14,7 @@ from django.core.management import call_command
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from contentcuration.api import write_file_to_storage
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, Language, generate_file_on_disk_name
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, generate_file_on_disk_name
 from le_utils.constants import content_kinds
 from django.db.models.functions import Concat
 from django.core.files import File as DjFile
@@ -53,6 +53,7 @@ def file_diff(request):
         # Add file if it doesn't already exist
         if not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
             to_return.append(f)
+
     return HttpResponse(json.dumps(to_return))
 
 @api_view(['POST'])
@@ -216,7 +217,6 @@ def create_node(node_data, parent_node, sort_order):
     description=node_data['description']
     author = node_data['author']
     kind = ContentKind.objects.get(kind=node_data['kind'])
-    copyright_holder = node_data.get('copyright_holder')
     extra_fields = node_data['extra_fields']
 
     # Make sure license is valid
@@ -236,7 +236,6 @@ def create_node(node_data, parent_node, sort_order):
         description = description,
         author=author,
         license=license,
-        copyright_holder=copyright_holder,
         parent_id = parent_node,
         extra_fields=extra_fields,
         sort_order = sort_order,
@@ -254,11 +253,7 @@ def map_files_to_node(node, data):
         else:
             kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
-        language = None
-        if file_data.get('language'):
-            language = Language.objects.get(pk=file_data['language'])
-
-        file_path = generate_file_on_disk_name(file_hash[0], file_data['filename'])
+        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
 
@@ -271,7 +266,6 @@ def map_files_to_node(node, data):
             file_size = file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
-            language=language,
         )
         file_obj.save()
 

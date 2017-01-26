@@ -189,14 +189,6 @@ FILE_FORMATS = [
         "model": models.FileFormat,
         "pk": "extension",
         "fields": {
-            "extension": file_formats.WAV,
-            "mimetype" : file_formats.WAV_MIMETYPE,
-        },
-    },
-    {
-        "model": models.FileFormat,
-        "pk": "extension",
-        "fields": {
             "extension": file_formats.PERSEUS,
             "mimetype" : file_formats.PERSEUS_MIMETYPE,
         },
@@ -358,7 +350,7 @@ PRESETS = [
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.AUDIO,
-            "allowed_formats" : [file_formats.WAV, file_formats.MP3],
+            "allowed_formats" : [file_formats.MP3],
         },
     },
     {

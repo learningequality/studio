@@ -83,7 +83,6 @@ var PreviewView = BaseViews.BaseView.extend({
                         preview_template = require("./hbtemplates/preview_templates/document.handlebars");
                         break;
                     case "mp3":
-                    case "wav":
                         preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
                         break;
                     case "mp4":
