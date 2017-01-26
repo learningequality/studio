@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import hashlib
+from distutils.version import LooseVersion
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
 from django.contrib.auth.decorators import login_required
@@ -15,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from contentcuration.api import write_file_to_storage
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, generate_file_on_disk_name
+from contentcuration import ricecooker_versions as rc
 from le_utils.constants import content_kinds
 from django.db.models.functions import Concat
 from django.core.files import File as DjFile
@@ -28,11 +30,10 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from collections import namedtuple
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
-VERSION_OK = VersionStatus(version="0.4.0", status=0, message="Ricecooker v{} is up-to-date.")
-VERSION_SOFT_WARNING = VersionStatus(version="0.3.141592", status=1, message="You are using Ricecooker v{}, however v{} is available. You should consider upgrading your Ricecooker.")
-VERSION_HARD_WARNING = VersionStatus(version="0.3.141592", status=2, message="Ricecooker v{} is deprecated. You are strongly recommended to upgrade to v{}.")
-VERSION_ERROR = VersionStatus(version="0.3.141592", status=3, message="Ricecooker v{} is no longer compatible. You must upgrade to v{} to continue.")
-
+VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
+VERSION_SOFT_WARNING = VersionStatus(version=rc.VERSION_SOFT_WARNING, status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE)
+VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
+VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
@@ -51,11 +52,11 @@ def check_version(request):
     version = json.loads(request.body)['version']
     status = None
 
-    if str(version) >= VERSION_OK[0]:
+    if cmp(LooseVersion(version), LooseVersion(VERSION_OK[0])) >= 0:
         status = VERSION_OK
-    elif str(version) >= VERSION_SOFT_WARNING[0]:
+    elif cmp(LooseVersion(version), LooseVersion(VERSION_SOFT_WARNING[0])) >= 0:
         status = VERSION_SOFT_WARNING
-    elif str(version) >= VERSION_HARD_WARNING[0]:
+    elif cmp(LooseVersion(version), LooseVersion(VERSION_HARD_WARNING[0])) >= 0:
         status = VERSION_HARD_WARNING
     else:
         status = VERSION_ERROR
