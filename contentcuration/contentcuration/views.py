@@ -71,7 +71,7 @@ def channel_page(request, channel, allow_edit=False):
                                                 "channel_id" : channel.pk,
                                                 "channel_name": channel.name,
                                                 "accessible_channels" : json_renderer.render(accessible_channel_list_serializer.data),
-                                                "channel_list" : channel_list,
+                                                "channel_list" : set(channel_list),
                                                 "fileformat_list" : fileformats,
                                                  "license_list" : licenses,
                                                  "fpreset_list" : formatpresets,
