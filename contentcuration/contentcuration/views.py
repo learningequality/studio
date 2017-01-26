@@ -53,6 +53,7 @@ def channel_page(request, channel, allow_edit=False):
     accessible_channel_list_serializer = ChannelSerializer(accessible_channel_list, many=True)
 
     channel_list = accessible_channel_list.filter(Q(editors=request.user) | Q(viewers=request.user))\
+                    .distinct()\
                     .exclude(id=channel.pk)\
                     .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
                     .values("id", "name", "is_view_only")
@@ -71,7 +72,7 @@ def channel_page(request, channel, allow_edit=False):
                                                 "channel_id" : channel.pk,
                                                 "channel_name": channel.name,
                                                 "accessible_channels" : json_renderer.render(accessible_channel_list_serializer.data),
-                                                "channel_list" : set(channel_list),
+                                                "channel_list" : channel_list,
                                                 "fileformat_list" : fileformats,
                                                  "license_list" : licenses,
                                                  "fpreset_list" : formatpresets,
