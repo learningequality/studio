@@ -17,10 +17,14 @@
 		</p>
 	</div> -->
 	<div id="editor_list_area">
-		<h4>People who can edit this channel</h4>
+		<h4>People who can access this channel</h4>
 		<div id="share_email">
 			<p id="share_error"></p>
 			<input type="text" placeholder="Enter email address..." id="share_email_address" tabindex='2' autofocus>
+			<select id="share_mode">
+				<option value="view">Can view</option>
+				<option value="edit" selected>Can edit</option>
+			</select>
 			<input type="submit" class="action-button" value="Invite" id="share_invite_button" tabindex='3'>
 		</div>
 		<div id="editor_list_wrapper">
