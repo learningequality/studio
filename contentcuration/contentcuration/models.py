@@ -272,7 +272,7 @@ class ContentNode(MPTTModel, models.Model):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
     sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
-    copyright_holder = models.CharField(max_length=200, blank=True, null=True, help_text=_("Organization of person who holds the essential rights"))
+    copyright_holder = models.CharField(max_length=200, blank=True, default="", help_text=_("Organization of person who holds the essential rights"))
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
 
@@ -282,7 +282,7 @@ class ContentNode(MPTTModel, models.Model):
 
     changed = models.BooleanField(default=True)
     extra_fields = models.TextField(blank=True, null=True)
-    author = models.CharField(max_length=200, blank=True, help_text=_("Person who created content"), null=True)
+    author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"), null=True)
 
     objects = TreeManager()
 
@@ -348,7 +348,6 @@ class FormatPreset(models.Model):
     readable_name = models.CharField(max_length=400)
     multi_language = models.BooleanField(default=False)
     supplementary = models.BooleanField(default=False)
-    subtitle = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
     display = models.BooleanField(default=True) # Render on client side
     order = models.IntegerField(default=0)

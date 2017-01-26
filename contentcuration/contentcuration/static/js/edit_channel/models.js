@@ -106,7 +106,7 @@ var UserModel = BaseModel.extend({
 var UserCollection = BaseCollection.extend({
 	model: UserModel,
 	list_name:"user-list",
-	model_name:"UserCollection"
+    model_name:"UserCollection"
 });
 
 var InvitationModel = BaseModel.extend({
@@ -123,7 +123,7 @@ var InvitationModel = BaseModel.extend({
 var InvitationCollection = BaseCollection.extend({
 	model: InvitationModel,
 	list_name:"invitation-list",
-	model_name:"InvitationCollection"
+    model_name:"InvitationCollection"
 });
 
 /**** CHANNEL AND CONTENT MODELS ****/
@@ -144,7 +144,7 @@ var ContentNodeCollection = BaseCollection.extend({
 	model: ContentNodeModel,
 	list_name:"contentnode-list",
 	highest_sort_order: 1,
-	model_name:"ContentNodeCollection",
+    model_name:"ContentNodeCollection",
 
 	save: function() {
 		var self = this;
@@ -270,7 +270,7 @@ var ChannelModel = BaseModel.extend({
 var ChannelCollection = BaseCollection.extend({
 	model: ChannelModel,
 	list_name:"channel-list",
-	model_name:"ChannelCollection",
+    model_name:"ChannelCollection",
 	comparator:function(channel){
 		return -new Date(channel.get('main_tree').created);
 	}
@@ -287,7 +287,7 @@ var TagModel = BaseModel.extend({
 var TagCollection = BaseCollection.extend({
 	model: TagModel,
 	list_name:"contenttag-list",
-	model_name:"TagCollection",
+    model_name:"TagCollection",
 	get_all_fetch:function(ids){
 		var self = this;
 		var fetched_collection = new TagCollection();
@@ -318,7 +318,7 @@ var FileModel = BaseModel.extend({
 var FileCollection = BaseCollection.extend({
 	model: FileModel,
 	list_name:"file-list",
-	model_name:"FileCollection",
+    model_name:"FileCollection",
 	get_or_fetch: function(data){
 		var newCollection = new FileCollection();
 		newCollection.fetch({
@@ -354,13 +354,13 @@ var FileCollection = BaseCollection.extend({
 var FormatPresetModel = BaseModel.extend({
 	root_list:"formatpreset-list",
 	attached_format: null,
-	model_name:"FormatPresetModel"
+    model_name:"FormatPresetModel"
 });
 
 var FormatPresetCollection = BaseCollection.extend({
 	model: FormatPresetModel,
 	list_name:"formatpreset-list",
-	model_name:"FormatPresetCollection",
+    model_name:"FormatPresetCollection",
 	sort_by_order:function(){
     	this.comparator = function(preset){
     		return preset.get("order");
@@ -415,7 +415,6 @@ var LanguageCollection = BaseCollection.extend({
 	model_name:"LanguageCollection"
 });
 
-
 var ContentKindModel = BaseModel.extend({
 	root_list:"contentkind-list",
 	model_name:"ContentKindModel",
@@ -447,7 +446,7 @@ var ExerciseCollection = BaseCollection.extend({
 	model_name:"ExerciseCollection"
 });
 
-var AssessmentItemModel =BaseModel.extend({
+var AssessmentItemModel = BaseModel.extend({
 	root_list:"assessmentitem-list",
 	model_name:"AssessmentItemModel",
 	defaults: {
@@ -542,8 +541,6 @@ module.exports = {
 	FileModel: FileModel,
 	FormatPresetModel: FormatPresetModel,
 	FormatPresetCollection: FormatPresetCollection,
-	LanguageModel : LanguageModel,
-	LanguageCollection : LanguageCollection,
 	ContentKindModel: ContentKindModel,
 	ContentKindCollection : ContentKindCollection,
 	UserModel:UserModel,

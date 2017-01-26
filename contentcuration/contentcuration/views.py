@@ -20,8 +20,8 @@ from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, Language, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, LanguageSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
+from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -60,7 +60,6 @@ def channel_page(request, channel, allow_edit=False):
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
     contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
-    languages = get_or_set_cached_constants(Language, LanguageSerializer)
 
     channel_tags = ContentTag.objects.filter(channel = channel)
     channel_tags_serializer = TagSerializer(channel_tags, many=True)
@@ -77,7 +76,6 @@ def channel_page(request, channel, allow_edit=False):
                                                  "license_list" : licenses,
                                                  "fpreset_list" : formatpresets,
                                                  "ckinds_list" : contentkinds,
-                                                 "langs_list" : languages,
                                                  "ctags": json_renderer.render(channel_tags_serializer.data),
                                                  "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data)})
 

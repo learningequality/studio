@@ -217,7 +217,7 @@ def create_node(node_data, parent_node, sort_order):
     description=node_data['description']
     author = node_data['author']
     kind = ContentKind.objects.get(kind=node_data['kind'])
-    copyright_holder = node_data.get('copyright_holder')
+    copyright_holder = node_data.get('copyright_holder') or ""
     extra_fields = node_data['extra_fields']
 
     # Make sure license is valid

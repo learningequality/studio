@@ -45,7 +45,7 @@ var PreviewView = BaseViews.BaseView.extend({
     load_preset_dropdown:function(){
         this.presets.sort_by_order();
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
-             presets: _.reject(this.presets.toJSON(), {"subtitle" : true}),
+             presets: this.presets.toJSON(),
              questions: this.questions.toJSON()
         }));
     },
@@ -111,7 +111,6 @@ var PreviewView = BaseViews.BaseView.extend({
             }
         }
     },
-
     get_subtitles:function(){
         var subtitles = [];
         this.model.get("files").forEach(function(file){
@@ -124,7 +123,6 @@ var PreviewView = BaseViews.BaseView.extend({
         });
         return subtitles;
     },
-
     load_preview:function(){
         if(this.model){
             this.switch_preview(this.model);
