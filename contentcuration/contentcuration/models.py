@@ -187,7 +187,13 @@ class Channel(models.Model):
             delete_empty_file_reference(filename, ext[1:])
 
         if not self.main_tree:
-            self.main_tree = ContentNode.objects.create(title=self.name, kind_id="topic", sort_order=0)
+            self.main_tree = ContentNode.objects.create(
+                title=self.name,
+                kind_id="topic",
+                sort_order=0,
+                content_id=self.id,
+                node_id=self.id,
+            )
             self.main_tree.save()
             self.save()
         elif self.main_tree.title != self.name:
@@ -195,7 +201,13 @@ class Channel(models.Model):
             self.main_tree.save()
 
         if not self.trash_tree:
-            self.trash_tree = ContentNode.objects.create(title=self.name, kind_id="topic", sort_order=0)
+            self.trash_tree = ContentNode.objects.create(
+                title=self.name,
+                kind_id="topic",
+                sort_order=0,
+                content_id=self.id,
+                node_id=self.id,
+            )
             self.trash_tree.save()
             self.save()
         elif self.trash_tree.title != self.name:
