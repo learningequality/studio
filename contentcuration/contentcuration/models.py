@@ -189,7 +189,7 @@ class Channel(models.Model):
         if not self.main_tree:
             self.main_tree = ContentNode.objects.create(
                 title=self.name,
-                kind_id="topic",
+                kind_id=content_kinds.TOPIC,
                 sort_order=0,
                 content_id=self.id,
                 node_id=self.id,
@@ -203,7 +203,7 @@ class Channel(models.Model):
         if not self.trash_tree:
             self.trash_tree = ContentNode.objects.create(
                 title=self.name,
-                kind_id="topic",
+                kind_id=content_kinds.TOPIC,
                 sort_order=0,
                 content_id=self.id,
                 node_id=self.id,
