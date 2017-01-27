@@ -52,11 +52,11 @@ def check_version(request):
     version = json.loads(request.body)['version']
     status = None
 
-    if cmp(LooseVersion(version), LooseVersion(VERSION_OK[0])) >= 0:
+    if LooseVersion(version) >= LooseVersion(VERSION_OK[0]):
         status = VERSION_OK
-    elif cmp(LooseVersion(version), LooseVersion(VERSION_SOFT_WARNING[0])) >= 0:
+    elif LooseVersion(version) >= LooseVersion(VERSION_SOFT_WARNING[0]):
         status = VERSION_SOFT_WARNING
-    elif cmp(LooseVersion(version), LooseVersion(VERSION_HARD_WARNING[0])) >= 0:
+    elif LooseVersion(version) >= LooseVersion(VERSION_HARD_WARNING[0]):
         status = VERSION_HARD_WARNING
     else:
         status = VERSION_ERROR
