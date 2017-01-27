@@ -364,7 +364,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
-        fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel',
+        fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel','original_source_node_id', 'source_node_id', 'node_id',
                  'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets', 'valid', 'original_channel_id', 'source_channel_id',
                  'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items')
 
