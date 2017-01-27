@@ -262,6 +262,8 @@ class ContentNode(MPTTModel, models.Model):
     # TODO: disallow nulls once existing models have been set
     original_channel_id = UUIDField(primary_key=False, editable=False, null=True) # Original channel copied from
     source_channel_id = UUIDField(primary_key=False, editable=False, null=True) # Immediate channel copied from
+    original_source_node_id = UUIDField(primary_key=False, editable=False, null=True) # Original node_id of node copied from (TODO: original_node_id clashes with original_node field - temporary)
+    source_node_id = UUIDField(primary_key=False, editable=False, null=True) # Immediate node_id of node copied from
 
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -316,6 +318,13 @@ class ContentNode(MPTTModel, models.Model):
             post_save_changes = True
         if self.source_channel_id is None and self.get_channel():
             self.source_channel_id = self.get_channel().id
+            post_save_changes = True
+
+        if self.original_source_node_id is None:
+            self.original_source_node_id = self.node_id
+            post_save_changes = True
+        if self.source_node_id is None:
+            self.source_node_id = self.node_id
             post_save_changes = True
 
         if post_save_changes:
