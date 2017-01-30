@@ -53,6 +53,7 @@ def channel_page(request, channel, allow_edit=False):
     accessible_channel_list_serializer = ChannelSerializer(accessible_channel_list, many=True)
 
     channel_list = accessible_channel_list.filter(Q(editors=request.user) | Q(viewers=request.user))\
+                    .distinct()\
                     .exclude(id=channel.pk)\
                     .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
                     .values("id", "name", "is_view_only")
@@ -277,6 +278,8 @@ def _duplicate_node(node, sort_order=1, parent=None, channel_id=None):
         cloned_source=node,
         original_channel_id = node.original_channel_id or node.original_node.get_channel().id if node.original_node.get_channel() else None,
         source_channel_id = node.get_channel().id if node.get_channel() else None,
+        original_source_node_id = node.original_source_node_id or node.node_id,
+        source_node_id = node.node_id,
         author=node.author,
         content_id=node.content_id,
         extra_fields=node.extra_fields,
