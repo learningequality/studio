@@ -205,23 +205,28 @@ def create_channel(channel_data, user):
     channel.description = channel_data['description']
     channel.thumbnail = channel_data['thumbnail']
     channel.deleted = False
+    channel.source_id = channel_data['source_id']
+    channel.source_domain = channel_data['source_domain']
+    channel.ricecooker_version = channel_data['ricecooker_version']
 
     old_staging_tree = channel.staging_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
     # Set up initial staging tree
     channel.staging_tree = ContentNode.objects.create(
-        title=channel.name,
-        kind_id=content_kinds.TOPIC,
-        sort_order=0,
-        published=is_published,
-        content_id=channel.id,
-        node_id=channel.id,
+        title = channel.name,
+        kind_id = content_kinds.TOPIC,
+        sort_order = 0,
+        published = is_published,
+        content_id = channel.id,
+        node_id = channel.id,
+        source_id = channel.source_id,
+        source_domain = channel.source_domain,
     )
     channel.staging_tree.save()
     channel.save()
 
     # Delete staging tree if it already exists
-    if old_staging_tree is not None and old_staging_tree != channel.main_tree:
+    if old_staging_tree and old_staging_tree != channel.main_tree:
         old_staging_tree.delete()
 
     return channel # Return new channel
@@ -251,15 +256,6 @@ def convert_data_to_nodes(content_data, parent_node):
 
 def create_node(node_data, parent_node, sort_order):
     """ Generate node based on node dict """
-    title=node_data['title']
-    node_id=node_data['node_id']
-    content_id=node_data['content_id']
-    description=node_data['description']
-    author = node_data['author']
-    kind = ContentKind.objects.get(kind=node_data['kind'])
-    copyright_holder = node_data.get('copyright_holder') or ""
-    extra_fields = node_data['extra_fields']
-
     # Make sure license is valid
     license = None
     license_name = node_data['license']
@@ -270,17 +266,19 @@ def create_node(node_data, parent_node, sort_order):
             raise ObjectDoesNotExist("Invalid license found")
 
     return ContentNode.objects.create(
-        title=title,
-        kind=kind,
-        node_id=node_id,
-        content_id=content_id,
-        description = description,
-        author=author,
-        license=license,
-        copyright_holder=copyright_holder,
+        title = node_data['title'],
+        kind_id = node_data['kind'],
+        node_id = node_data['node_id'],
+        content_id = node_data['content_id'],
+        description = node_data['description'],
+        author = node_data['author'],
+        license = license,
+        copyright_holder = node_data.get('copyright_holder') or "",
         parent_id = parent_node,
-        extra_fields=extra_fields,
+        extra_fields = node_data['extra_fields'],
         sort_order = sort_order,
+        source_id = node_data['source_id'],
+        source_domain = node_data['source_domain'],
     )
 
 def map_files_to_node(node, data):
@@ -310,7 +308,6 @@ def map_files_to_node(node, data):
             preset=kind_preset,
         )
         file_obj.save()
-
 
 def map_files_to_assessment_item(question, data):
     """ Generate files that reference the content node's assessment items """
