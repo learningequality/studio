@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import hashlib
+from distutils.version import LooseVersion
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
 from django.contrib.auth.decorators import login_required
@@ -15,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from contentcuration.api import write_file_to_storage
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, generate_file_on_disk_name
+from contentcuration import ricecooker_versions as rc
 from le_utils.constants import content_kinds
 from django.db.models.functions import Concat
 from django.core.files import File as DjFile
@@ -25,6 +27,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from collections import namedtuple
+
+VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
+VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
+VERSION_SOFT_WARNING = VersionStatus(version=rc.VERSION_SOFT_WARNING, status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE)
+VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
+VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
@@ -33,6 +42,30 @@ def authenticate_user_internal(request):
     """ Verify user is valid """
     logging.debug("Logging in user")
     return HttpResponse(json.dumps({'success': True, 'username':unicode(request.user)}))
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def check_version(request):
+    """ Get version of Ricecooker with which CC is compatible """
+    logging.debug("Entering the check_version endpoint")
+    version = json.loads(request.body)['version']
+    status = None
+
+    if LooseVersion(version) >= LooseVersion(VERSION_OK[0]):
+        status = VERSION_OK
+    elif LooseVersion(version) >= LooseVersion(VERSION_SOFT_WARNING[0]):
+        status = VERSION_SOFT_WARNING
+    elif LooseVersion(version) >= LooseVersion(VERSION_HARD_WARNING[0]):
+        status = VERSION_HARD_WARNING
+    else:
+        status = VERSION_ERROR
+
+    return HttpResponse(json.dumps({
+        'success': True,
+        'status':status[1],
+        'message':status[2].format(version, VERSION_OK[0]),
+    }))
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
@@ -176,7 +209,14 @@ def create_channel(channel_data, user):
     old_staging_tree = channel.staging_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
     # Set up initial staging tree
-    channel.staging_tree = ContentNode.objects.create(title=channel.name + " root", kind_id="topic", sort_order=0, published=is_published)
+    channel.staging_tree = ContentNode.objects.create(
+        title=channel.name,
+        kind_id=content_kinds.TOPIC,
+        sort_order=0,
+        published=is_published,
+        content_id=channel.id,
+        node_id=channel.id,
+    )
     channel.staging_tree.save()
     channel.save()
 
@@ -217,6 +257,7 @@ def create_node(node_data, parent_node, sort_order):
     description=node_data['description']
     author = node_data['author']
     kind = ContentKind.objects.get(kind=node_data['kind'])
+    copyright_holder = node_data.get('copyright_holder') or ""
     extra_fields = node_data['extra_fields']
 
     # Make sure license is valid
@@ -236,6 +277,7 @@ def create_node(node_data, parent_node, sort_order):
         description = description,
         author=author,
         license=license,
+        copyright_holder=copyright_holder,
         parent_id = parent_node,
         extra_fields=extra_fields,
         sort_order = sort_order,
