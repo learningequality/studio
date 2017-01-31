@@ -30,8 +30,8 @@ def write_file_to_storage(fobj, check_valid = False, name=None):
     checksum = hashlib.md5()
     for chunk in iter(lambda: fobj.read(4096), b""):
         checksum.update(chunk)
-    name = name if name is not None else fobj._name if fobj._name else ""
-    filename, ext = os.path.splitext(name) if name is not None else ("", "")
+    name = name or fobj._name or ""
+    filename, ext = os.path.splitext(name)
     hashed_filename = checksum.hexdigest()
     full_filename = "{}{}".format(hashed_filename, ext)
     fobj.seek(0)
