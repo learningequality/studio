@@ -189,8 +189,8 @@ FILE_FORMATS = [
         "model": models.FileFormat,
         "pk": "extension",
         "fields": {
-            "extension": file_formats.WAV,
-            "mimetype" : file_formats.WAV_MIMETYPE,
+            "extension": file_formats.GIF,
+            "mimetype" : file_formats.GIF_MIMETYPE,
         },
     },
     {
@@ -358,7 +358,7 @@ PRESETS = [
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.AUDIO,
-            "allowed_formats" : [file_formats.WAV, file_formats.MP3],
+            "allowed_formats" : [file_formats.MP3],
         },
     },
     {
@@ -454,7 +454,7 @@ PRESETS = [
             "display": False,
             "order" : 3,
             "kind_id" : content_kinds.EXERCISE,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG, file_formats.GIF],
         },
     },
     {

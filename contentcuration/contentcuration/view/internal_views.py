@@ -209,7 +209,14 @@ def create_channel(channel_data, user):
     old_staging_tree = channel.staging_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
     # Set up initial staging tree
-    channel.staging_tree = ContentNode.objects.create(title=channel.name + " root", kind_id="topic", sort_order=0, published=is_published)
+    channel.staging_tree = ContentNode.objects.create(
+        title=channel.name,
+        kind_id=content_kinds.TOPIC,
+        sort_order=0,
+        published=is_published,
+        content_id=channel.id,
+        node_id=channel.id,
+    )
     channel.staging_tree.save()
     channel.save()
 
