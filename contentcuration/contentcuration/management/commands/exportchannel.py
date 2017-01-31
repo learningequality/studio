@@ -181,7 +181,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
-            lang_id=ccfilemodel.language_id,          # TODO: fix this once we've implemented lang importing.
+            lang_id=ccfilemodel.language_id,
             thumbnail=preset.thumbnail,
         )
 
