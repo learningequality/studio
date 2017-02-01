@@ -155,9 +155,13 @@ var replace_mathjax = function(content){
     return content;
 };
 
-var parse_content = function(content){
+var parse_content = function(content, source_url){
     parsed = replace_image_paths(content);
     parsed = replace_mathjax(parsed);
+    if (parsed === "" && source_url){
+        console.log(source_url)
+        parsed = "<a target='_blank' class='action-text' href='" + source_url + "'>Preview</a>"
+    }
     return parsed;
 };
 
@@ -489,7 +493,7 @@ var EditorView = Backbone.View.extend({
     },
 
     render_content: function() {
-        this.$el.html(this.view_template({content: parse_content(this.model.get(this.edit_key))}));
+        this.$el.html(this.view_template({content: parse_content(this.model.get(this.edit_key), this.model.get('source_url'))}));
     },
 
     parse_content:function(content){
@@ -499,7 +503,7 @@ var EditorView = Backbone.View.extend({
     },
 
     render_editor: function() {
-        this.editor.setHTML(this.view_template({content: parse_content(this.model.get(this.edit_key))}));
+        this.editor.setHTML(this.view_template({content: parse_content(this.model.get(this.edit_key), this.model.get('source_url'))}));
     },
 
     activate_editor: function() {

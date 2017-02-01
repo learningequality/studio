@@ -205,7 +205,7 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
 
     class Meta:
         model = AssessmentItem
-        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hints', 'raw_data', 'order')
+        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hints', 'raw_data', 'order', 'source_url')
         list_serializer_class = BulkListSerializer
 
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
