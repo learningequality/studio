@@ -205,9 +205,9 @@ def create_channel(channel_data, user):
     channel.description = channel_data['description']
     channel.thumbnail = channel_data['thumbnail']
     channel.deleted = False
-    channel.source_id = channel_data['source_id']
-    channel.source_domain = channel_data['source_domain']
-    channel.ricecooker_version = channel_data['ricecooker_version']
+    channel.source_id = channel_data.get('source_id')
+    channel.source_domain = channel_data.get('source_domain')
+    channel.ricecooker_version = channel_data.get('ricecooker_version')
 
     old_staging_tree = channel.staging_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
@@ -277,8 +277,8 @@ def create_node(node_data, parent_node, sort_order):
         parent_id = parent_node,
         extra_fields = node_data['extra_fields'],
         sort_order = sort_order,
-        source_id = node_data['source_id'],
-        source_domain = node_data['source_domain'],
+        source_id = node_data.get('source_id'),
+        source_domain = node_data.get('source_domain'),
     )
 
 def map_files_to_node(node, data):
