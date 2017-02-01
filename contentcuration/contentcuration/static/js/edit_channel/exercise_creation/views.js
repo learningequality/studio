@@ -155,13 +155,9 @@ var replace_mathjax = function(content){
     return content;
 };
 
-var parse_content = function(content, source_url){
+var parse_content = function(content){
     parsed = replace_image_paths(content);
     parsed = replace_mathjax(parsed);
-    if (parsed === "" && source_url){
-        console.log(source_url)
-        parsed = "<a target='_blank' class='action-text' href='" + source_url + "'>Preview</a>"
-    }
     return parsed;
 };
 
@@ -493,17 +489,23 @@ var EditorView = Backbone.View.extend({
     },
 
     render_content: function() {
-        this.$el.html(this.view_template({content: parse_content(this.model.get(this.edit_key), this.model.get('source_url'))}));
+        this.$el.html(this.view_template({
+            content: parse_content(this.model.get(this.edit_key)),
+            source_url:this.model.get('source_url')
+        }));
     },
 
     parse_content:function(content){
         parsed = replace_image_paths(this.model.get(this.edit_key));
-        parsed = Katex.renderToString("c = \\pm\\sqrt{a^2 + b^2}");
+        parsed = Katex.renderToString(parsed);
         return parsed;
     },
 
     render_editor: function() {
-        this.editor.setHTML(this.view_template({content: parse_content(this.model.get(this.edit_key), this.model.get('source_url'))}));
+        this.editor.setHTML(this.view_template({
+            content: parse_content(this.model.get(this.edit_key)),
+            source_url:this.model.get('source_url')
+        }));
     },
 
     activate_editor: function() {
