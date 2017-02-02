@@ -110,7 +110,7 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return obj.file_on_disk.url
 
     def retrieve_storage_url(self, obj):
-        return generate_storage_url(obj.checksum + '.' + obj.file_format.extension)
+        return generate_storage_url(str(obj))
 
     def retrieve_recommended_kind(self, obj):
         if obj.contentnode is not None and obj.contentnode.kind:
@@ -224,7 +224,7 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
 
     class Meta:
         model = AssessmentItem
-        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hints', 'raw_data', 'order')
+        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hints', 'raw_data', 'order', 'source_url')
         list_serializer_class = BulkListSerializer
 
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):

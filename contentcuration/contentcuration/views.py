@@ -5,6 +5,7 @@ import os
 import re
 import hashlib
 import shutil
+import tempfile
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
@@ -23,10 +24,11 @@ from contentcuration.api import write_file_to_storage, check_supported_browsers
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
-from le_utils.constants import format_presets
+from le_utils.constants import format_presets, content_kinds, file_formats
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from pressurecooker.videos import guess_video_preset_by_resolution, extract_thumbnail_from_video, compress_video
 from django.core.cache import cache
 
 def base(request):
@@ -197,17 +199,62 @@ def file_create(request):
     if request.method == 'POST':
         ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
         size = request.FILES.values()[0]._size
-        kind = FormatPreset.objects.filter(allowed_formats__extension__contains=ext).first().kind
+        presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext)
+        kind = presets.first().kind
         original_filename = request.FILES.values()[0]._name
         new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=settings.DEFAULT_LICENSE, author=request.user.get_full_name())
         new_node.save()
         file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, contentnode=new_node, file_size=size)
         file_object.save()
 
+        if kind.pk == content_kinds.VIDEO:
+            extract_thumbnail_wrapper(file_object)
+            file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))
+        elif presets.filter(supplementary=False).count() == 1:
+            file_object.preset = presets.filter(supplementary=False).first()
+
+        file_object.save()
+
         return HttpResponse(json.dumps({
             "success": True,
             "object_id": new_node.pk
         }))
+
+def extract_thumbnail_wrapper(file_object):
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(file_formats.PNG)) as tempf:
+        tempf.close()
+        extract_thumbnail_from_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
+        filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
+        checksum, ext = os.path.splitext(filename)
+        file_location = generate_file_on_disk_name(checksum, filename)
+        thumbnail_object = File(
+            file_on_disk=DjFile(open(file_location, 'rb')),
+            file_format_id=file_formats.PNG,
+            original_filename = 'Extracted Thumbnail',
+            contentnode=file_object.contentnode,
+            file_size=os.path.getsize(file_location),
+            preset_id=format_presets.VIDEO_THUMBNAIL,
+        )
+        thumbnail_object.save()
+        return thumbnail_object
+
+def compress_video_wrapper(file_object):
+    with tempfile.TemporaryFile(suffix=".{}".format(file_formats.MP4)) as tempf:
+        tempf.close()
+        compress_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
+        filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
+        checksum, ext = os.path.splitext(filename)
+        file_location = generate_file_on_disk_name(checksum, filename)
+        low_res_object = File(
+            file_on_disk=DjFile(open(file_location, 'rb')),
+            file_format_id=file_formats.MP4,
+            original_filename = file_object.original_filename,
+            contentnode=file_object.contentnode,
+            file_size=os.path.getsize(file_location),
+            preset_id=format_presets.VIDEO_LOW_RES,
+        )
+        low_res_object.save()
+        return low_res_object
 
 @csrf_exempt
 def thumbnail_upload(request):
