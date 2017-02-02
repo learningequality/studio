@@ -79,10 +79,16 @@ var ImportView = BaseViews.BaseListView.extend({
         }
         var totalCount = 0;
         collection.forEach(function(entry){
-            totalCount += entry.get("metadata").total_count + 1;
+            if(entry.get("kind") === "topic"){
+                totalCount += entry.get("metadata").total_count + 1;
+            }else{
+                totalCount += entry.get("metadata").total_count;
+            }
+
         });
         var data = this.importList.get_metadata();
-        totalCount -= data.count;
+        totalCount = totalCount - data.count;
+
         this.$("#import_file_count").html(totalCount + " Topic" + ((totalCount == 1)? ", " : "s, ") + data.count + " Resource" + ((data.count == 1)? "   " : "s   ") + stringHelper.format_size(data.size));
     },
     import_content:function(){

@@ -489,17 +489,23 @@ var EditorView = Backbone.View.extend({
     },
 
     render_content: function() {
-        this.$el.html(this.view_template({content: parse_content(this.model.get(this.edit_key))}));
+        this.$el.html(this.view_template({
+            content: parse_content(this.model.get(this.edit_key)),
+            source_url:this.model.get('source_url')
+        }));
     },
 
     parse_content:function(content){
         parsed = replace_image_paths(this.model.get(this.edit_key));
-        parsed = Katex.renderToString("c = \\pm\\sqrt{a^2 + b^2}");
+        parsed = Katex.renderToString(parsed);
         return parsed;
     },
 
     render_editor: function() {
-        this.editor.setHTML(this.view_template({content: parse_content(this.model.get(this.edit_key))}));
+        this.editor.setHTML(this.view_template({
+            content: parse_content(this.model.get(this.edit_key)),
+            source_url:this.model.get('source_url')
+        }));
     },
 
     activate_editor: function() {

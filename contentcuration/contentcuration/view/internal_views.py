@@ -349,6 +349,7 @@ def create_exercises(node, data):
                 contentnode = node,
                 assessment_id = question.get('assessment_id'),
                 raw_data = question.get('raw_data'),
+                source_url=question.get('source_url'),
             )
             order += 1
             question_obj.save()
