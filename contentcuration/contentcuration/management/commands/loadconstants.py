@@ -395,7 +395,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
-            "display": True,
+            "display": False,
             "order" : 1,
             "kind_id" : content_kinds.EXERCISE,
             "allowed_formats" : [file_formats.PERSEUS],
