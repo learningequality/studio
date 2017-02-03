@@ -22,9 +22,9 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             model: this.model,
             onpublish:this.onpublish
         });
-        setTimeout(function(){
+        this.listenTo(this.export_view, "loadFinish", function(){
             $("#publish_btn").focus();
-        }, 500);
+        });
     },
     events:{
       "click #publish_btn" : "publish",
@@ -61,6 +61,7 @@ var ExportListView = BaseViews.BaseListView.extend({
         this.fetch_model(this.model).then(function(fetched){
             self.collection.get_all_fetch(fetched.get("children")).then(function(fetchedCollection){
                 self.load_content(fetchedCollection);
+                self.trigger('loadFinish');
             });
         })
 
