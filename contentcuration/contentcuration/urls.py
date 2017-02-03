@@ -112,6 +112,7 @@ urlpatterns = [
     url(r'^api/duplicate_nodes/$', views.duplicate_nodes, name='duplicate_nodes'),
     url(r'^api/move_nodes/$', views.move_nodes, name='move_nodes'),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
+    url(r'^api/generate_thumbnail/$', views.generate_thumbnail, name='generate_thumbnail'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),

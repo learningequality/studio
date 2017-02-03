@@ -6,12 +6,13 @@ import re
 import hashlib
 import shutil
 import tempfile
+import random
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
-from django.core import paginator
+from django.core import paginator, serializers
 from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
@@ -29,6 +30,7 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from pressurecooker.videos import guess_video_preset_by_resolution, extract_thumbnail_from_video, compress_video
+from pressurecooker.images import create_tiled_image
 from django.core.cache import cache
 
 def base(request):
@@ -255,6 +257,55 @@ def compress_video_wrapper(file_object):
         )
         low_res_object.save()
         return low_res_object
+
+def create_tiled_image_wrapper(files, preset_id):
+    random.shuffle(files)
+    if len(files) >= 4:
+        files = files[:4]
+    elif len(files) >= 1:
+        files = files[:1]
+
+    with tempfile.TemporaryFile(suffix=".{}".format(file_formats.PNG)) as tempf:
+        tempf.close()
+        create_tiled_image(files, tempf.name)
+
+        filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
+        checksum, ext = os.path.splitext(filename)
+        file_location = generate_file_on_disk_name(checksum, filename)
+        thumbnail_object = File(
+            file_on_disk = DjFile(open(file_location, 'rb')),
+            file_format_id = file_formats.PNG,
+            file_size = os.path.getsize(file_location),
+            preset_id = preset_id,
+        )
+        thumbnail_object.save()
+        return thumbnail_object
+
+def generate_thumbnail(request):
+    logging.debug("Entering the generate_thumbnail endpoint")
+
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+        node = ContentNode.objects.get(pk=data["node_id"])
+
+        files = []
+        for n in node.get_descendants().all():
+            file_locations = n.files.filter(file_format_id__in=[file_formats.PNG, file_formats.JPG, file_formats.JPEG]).values_list('file_on_disk', flat=True)
+            files += [str(f) for f in file_locations]
+
+        assert node.kind.pk == content_kinds.TOPIC, "Thumbnail generation for this kind is not supported."
+        assert any(files), "No images available to generate thumbnail."
+
+        thumbnail_object = None
+        if node.kind.pk == content_kinds.TOPIC:
+            thumbnail_object = create_tiled_image_wrapper(list(set(files)), format_presets.TOPIC_THUMBNAIL)
+        return HttpResponse(json.dumps({
+            "success": True,
+            "file_id": thumbnail_object.pk if thumbnail_object else None
+        }))
+
 
 @csrf_exempt
 def thumbnail_upload(request):
