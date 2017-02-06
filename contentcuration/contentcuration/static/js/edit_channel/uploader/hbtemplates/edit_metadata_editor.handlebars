@@ -12,7 +12,21 @@
 	{{/if}}
 	{{#if node}}
 		<h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>
-		<input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required/>
+		{{#if exercises}}
+			<input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required/>
+			<div class="row">
+				<div class="col-sm-8">
+					<h4 for="mastery_model_select">Mastery at:</h4>
+					<input type="number" id="m_value" min="1" max="1" value="1"/>
+					&nbsp;of&nbsp;
+					<input type="number" id="n_value" min="1" max="1" value="1"/>
+				</div>
+				<div class="col-sm-4">
+					<input id="randomize_exercise" type="checkbox" checked>
+					<label for="randomize_exercise">Randomize</label>
+				</div>
+			</div>
+		{{/if}}
 	{{/if}}
 	{{#if isoriginal}}
 		<h4>Author</h4>

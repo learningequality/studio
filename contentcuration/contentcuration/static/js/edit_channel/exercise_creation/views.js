@@ -2,7 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var Quill = require("quill");
+var Quill = require("quilljs");
 var Dropzone = require("dropzone");
 var get_cookie = require("utils/get_cookie");
 var UndoManager = require("backbone-undo");
@@ -12,7 +12,7 @@ var JSZipUtils = require("jszip-utils");
 var Katex = require("katex");
 
 require("exercises.less");
-require("quill/dist/quill.snow.css");
+require("quilljs/dist/quill.snow.css");
 require("dropzone/dist/dropzone.css");
 require("../../../css/katex.min.css");
 
@@ -186,55 +186,6 @@ var return_all_assessment_item_image_urls = function(model) {
     return output;
 }
 
-/**
- * Return JSON object in Perseus format.
- * @param {object} Backbone Model - AssessmentItem.
- */
-var convert_assessment_item_to_perseus = function(model) {
-    var multiplechoice_template = require("./hbtemplates/assessment_item_multiple.handlebars");
-    var freeresponse_template = require("./hbtemplates/assessment_item_free.handlebars");
-    var output = "";
-    var answers = model.get("answers").toJSON();
-    answers.forEach(function(answer){
-        answer.answer = set_image_urls_for_export(answer.answer);
-    });
-    switch (model.get("type")) {
-        case "free_response":
-            output = freeresponse_template(model.attributes);
-            break;
-        case "multiple_selection":
-            output = multiplechoice_template({
-                question: set_image_urls_for_export(model.get("question")),
-                randomize: true,
-                // multipleSelect: (model.get("answers").reduce(function(memo, model) {
-                //     if (model.get("correct")) {
-                //         memo += 1;
-                //     }
-                //     return memo;
-                //     }, 0) || 0) > 1,
-                answer: answers
-            });
-            break;
-        case "single_selection":
-            output = multiplechoice_template({
-                question: set_image_urls_for_export(model.get("question")),
-                randomize: true,
-                answer: answers
-            });
-            break;
-        case "input_question":
-            output = multiplechoice_template({
-                question: set_image_urls_for_export(model.get("question")),
-                randomize: true,
-                answer: answers
-            });
-            break;
-    }
-    console.log("EXERCISE", output);
-    return $.parseJSON(output);
-};
-
-
 var slugify = function(text) {
     // https://gist.github.com/mathewbyrne/1280286
     return text.toString().toLowerCase()
@@ -358,10 +309,7 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
             node: this.model.toJSON(),
             show_metadata: this.parentnode
         }));
-        this.load_content(this.collection, "Select a question type below");
-        if(this.model.get("extra_fields")){
-            this.$("#mastery_model_select").val(JSON.parse(this.model.get("extra_fields")).mastery_model)
-        }
+        this.load_content(this.collection, "Select a question type to begin...");
     },
     create_new_view:function(model){
         var new_exercise_item = new AssessmentItemView({
@@ -467,6 +415,7 @@ var EditorView = Backbone.View.extend({
     edit_template: require("./hbtemplates/editor.handlebars"),
 
     view_template: require("./hbtemplates/editor_view.handlebars"),
+    default_template: require("./hbtemplates/editor_view_default.handlebars"),
 
     render: function() {
         if (this.editing) {
@@ -489,10 +438,12 @@ var EditorView = Backbone.View.extend({
     },
 
     render_content: function() {
-        this.$el.html(this.view_template({
-            content: parse_content(this.model.get(this.edit_key)),
-            source_url:this.model.get('source_url')
-        }));
+        if(this.model.get('source_url')){
+            this.$el.html(this.view_template({content: parse_content(this.model.get(this.edit_key))}));
+        }else{
+            this.$el.html(this.default_template({source_url: this.model.get('source_url')}));
+        }
+
     },
 
     parse_content:function(content){
@@ -503,8 +454,7 @@ var EditorView = Backbone.View.extend({
 
     render_editor: function() {
         this.editor.setHTML(this.view_template({
-            content: parse_content(this.model.get(this.edit_key)),
-            source_url:this.model.get('source_url')
+            content: parse_content(this.model.get(this.edit_key))
         }));
     },
 
@@ -512,7 +462,7 @@ var EditorView = Backbone.View.extend({
         this.$el.html(this.edit_template());
         this.editor = new Quill(this.$(".editor")[0], {
             modules: {
-                'toolbar': { container: this.$('#toolbar')[0] }
+                'toolbar': { container: this.$('.toolbar')[0] }
             },
             theme: 'snow',
             styles: {
@@ -619,10 +569,10 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_open.handlebars"),
 
     events: {
-        // "click .delete": "delete",
-        // "change .correct": "toggle_correct",
-        // "click .answer_item": "set_open",
-        // "click .toggle": "toggle"
+        "click .delete": "delete",
+        "change .correct": "toggle_correct",
+        "click .answer_item": "set_open",
+        "click .toggle": "toggle"
     },
 
     render: function() {
@@ -819,12 +769,12 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_open.handlebars"),
 
     events: {
-        // "click .cancel": "cancel",
-        // "click .undo": "undo",
-        // "click .redo": "redo",
-        // "click .delete": "delete",
-        // "click .toggle_exercise": "toggle_focus",
-        // "click .toggle" : "toggle"
+        "click .cancel": "cancel",
+        "click .undo": "undo",
+        "click .redo": "redo",
+        "click .delete": "delete",
+        "click .toggle_exercise": "toggle_focus",
+        "click .toggle" : "toggle"
     },
     toggle:function(event){
         event.stopPropagation();
@@ -920,7 +870,7 @@ var AssessmentItemHintView = Backbone.View.extend({
         this.open = options.open || false;
         this.containing_list_view = options.containing_list_view;
         this.assessment_item = options.assessment_item;
-        this.nodeid=options.nodeid;
+        this.nodeid = options.nodeid;
         this.render();
     },
 
@@ -929,9 +879,9 @@ var AssessmentItemHintView = Backbone.View.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_hint_toolbar_open.handlebars"),
 
     events: {
-        // "click .delete": "delete",
-        // "click .hint_item": "set_open",
-        // "click .toggle": "toggle"
+        "click .delete": "delete",
+        "click .hint_item": "set_open",
+        "click .toggle": "toggle"
     },
 
     render: function() {
