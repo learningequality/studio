@@ -602,8 +602,8 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
           title: (individual_selected)? $("#input_title").val().trim() : this.model.get("title"),
           description: (individual_selected)? $("#input_description").val().trim() : this.model.get("description"),
           license: (this.model.get("kind") != "topic" && $("#license_select").val()!=0)? $("#license_select").val() : this.model.get("license"),
-          copyright_holder: (this.model.get("kind") != "topic" && (individual_selected || $("#input_license_owner").val() !== ""))? $("#input_license_owner").val().trim() : this.model.get("copyright_holder"),
-          author: (individual_selected || $("#author_field").val() !== "")? $("#author_field").val().trim() : this.model.get("author"),
+          copyright_holder: ($("#input_license_owner").is(":visible") && (individual_selected || $("#input_license_owner").val() !== ""))? $("#input_license_owner").val().trim() : this.model.get("copyright_holder"),
+          author: ($("#author_field").is(":visible") && (individual_selected || $("#author_field").val() !== ""))? $("#author_field").val().trim() : this.model.get("author"),
       };
       this.set(data);
       this.set_edited(true);
