@@ -11,8 +11,9 @@ var fileSaver = require("browser-filesaver");
 var JSZipUtils = require("jszip-utils");
 var Katex = require("katex");
 
-require("exercises.less");
 require("quilljs/dist/quill.snow.css");
+require("exercises.less");
+
 require("dropzone/dist/dropzone.css");
 require("../../../css/katex.min.css");
 
@@ -462,7 +463,7 @@ var EditorView = Backbone.View.extend({
         this.$el.html(this.edit_template());
         this.editor = new Quill(this.$(".editor")[0], {
             modules: {
-                'toolbar': { container: this.$('.toolbar')[0] }
+                'toolbar': { container: this.$('.editor-toolbar')[0] }
             },
             theme: 'snow',
             styles: {

@@ -12,8 +12,8 @@
 	{{/if}}
 	{{#if node}}
 		<h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>
+		<input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required/>
 		{{#if exercises}}
-			<input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required/>
 			<div class="row">
 				<div class="col-sm-8">
 					<h4 for="mastery_model_select">Mastery at:</h4>
