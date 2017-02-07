@@ -1,25 +1,34 @@
 <div class="assessment_item toggle_exercise">
 	<div class="main_edit_area container" >
-		<div class="row question_area ">
-			<!-- <div class="col-sm-1">
-				<span class="glyphicon glyphicon-triangle-top move_up move" title="Move up"></span>
-				<br/>
-				<span class="glyphicon glyphicon-triangle-bottom move_down move" title="Move down"></span>
-			</div> -->
-			<div class="col-sm-12">
-				<div class="question_type">{{#format_question_type model.type}}{{/format_question_type}}</div>
-				<select class="question_type_select" value="{{model.type}}">
-					<option class="multiple_selection" value="multiple_selection">Multiple Selection</option>
-					<option class="single_selection" value="single_selection">Single Selection</option>
-					<option class="true_false" value="ture_false">True/False</option>
-					<option class="input_question" value="input_question">Input Question</option>
-					<option class="free_response" value="free_response">Free Response</option>
-				</select>
-			  	<div class="question editable wordwrap" data-ph="Question"></div>
-		    </div>
+		<div class="question_area">
+			<div class="row question_controls">
+				<div class="col-sm-9">
+					<div class="question_type">{{#format_question_type model.type}}{{/format_question_type}}</div>
+					<select class="question_type_select" value="{{model.type}}">
+						<option class="multiple_selection" value="multiple_selection">Multiple Selection</option>
+						<option class="single_selection" value="single_selection">Single Selection</option>
+						<option class="true_false" value="ture_false">True/False</option>
+						<option class="input_question" value="input_question">Input Question</option>
+						<option class="free_response" value="free_response">Free Response</option>
+					</select>
+			    </div>
+			    <div class="col-sm-2">
+					<div class="open_hints hint_link">
+						HINTS
+						<span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
+					</div>
+			    </div>
+			    <div class="col-sm-1 move_question_handle">
+			    	<span class="glyphicon glyphicon-resize-vertical" aria-hidden="true"></span>
+			    </div>
+			</div>
+			<div class="row">
+				<div class="col-sm-12">
+				  	<div class="question editable wordwrap" data-ph="Question"></div>
+			    </div>
+			</div>
 		</div>
 		<div id="{{ model.id }}" class="list_area">
-			<!-- <div class="hints"></div> -->
 		  	<div class="answers"></div>
 		</div>
 	</div>
@@ -27,3 +36,4 @@
 		<div class="toolbar pull-right"></div>
 	</div>
 </div>
+<div class="hints"></div>

@@ -159,7 +159,7 @@
 			background-color: @blue-700;
 			color:white;
 			margin:5px;
-			margin-left:10px;
+			margin-left:40px;
 			padding:5px 30px;
 		}
 
@@ -219,23 +219,36 @@
 			padding:7px;
 			cursor:pointer;
 			background-color:@gray-200;
-			.question_type{
-				color:@gray-700;
-				font-size:9pt;
-				margin-bottom:2px;
-			}
-			.question_type_select{
-				display:none;
-				font-size:11pt;
-				font-weight: normal;
-				margin-bottom:10px;
+			.question_controls{
+				.question_type{
+					color:@gray-700;
+					font-size:9pt;
+					margin-bottom:2px;
+				}
+				.question_type_select{
+					display:none;
+					font-size:11pt;
+					font-weight: normal;
+					margin-bottom:10px;
+				}
+				.move_question_handle{
+					font-size:17pt;
+					color: @gray-700;
+				}
+				.hint_link{
+					color: @gray-700;
+					padding: 3px;
+					font-weight:bold;
+				}
+				.move_question_handle:hover, .hint_link:hover{
+					color: @blue-500;
+				}
 			}
 			.question{
 				font-size:13pt;
+				padding:5px;
 			}
-			.move{
-				font-size:12pt;
-			}
+
 		}
 		.answer_item{
 			cursor:pointer;

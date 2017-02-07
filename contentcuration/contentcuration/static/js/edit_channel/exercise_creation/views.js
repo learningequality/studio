@@ -570,7 +570,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
 
     events: {
         "click .delete": "delete",
-        "change .correct": "toggle_correct",
+        "click .correct": "toggle_correct",
         "click .answer_item": "set_open",
         "click .toggle": "toggle"
     },
@@ -623,8 +623,8 @@ var AssessmentItemAnswerView = Backbone.View.extend({
             }
         }
     },
-
-    toggle_correct: function() {
+    toggle_correct: function(event) {
+        event.stopPropagation();
         if(this.assessment_item.get("type") === "single_selection"){
             this.containing_list_view.set_all_correct(false);
         }
@@ -729,13 +729,13 @@ var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
                     container:this,
                     assessment_item: this.model,
                     nodeid:this.nodeid,
-                    isdisplay:this.isdisplay
+                    isdisplay:this.isdisplay,
                 });
             }
             this.$(".answers").append(this.answer_editor.el);
         }
         if (!this.hint_editor) {
-            this.hint_editor = new AssessmentItemHintListView({
+            this.hint_editor = new HintModalView({
                 collection:this.model.get("hints"),
                 container:this,
                 assessment_item: this.model,
@@ -1001,6 +1001,31 @@ var AssessmentItemHintListView = BaseViews.BaseEditableListView.extend({
         });
     },
 });
+
+var HintModalView = BaseViews.BaseModalView.extend({
+    template: require("./hbtemplates/assessment_item_hint_modal.handlebars"),
+
+    initialize: function(options) {
+        this.modal = true;
+        this.data = options;
+        this.render();
+    },
+
+    render: function() {
+        this.$el.html(this.template({
+            license: this.select_license.toJSON()
+        }));
+        $("body").append(this.el);
+        this.$("#license_modal").modal({show: true});
+        this.$("#license_modal").on("hide.bs.modal", this.close);
+
+        if (!this.hint_editor) {
+            this.hint_editor = new AssessmentItemHintListView(this.data);
+        }
+        this.$(".hints").append(this.hint_editor.el);
+    }
+});
+
 
 module.exports = {
     ExerciseView:ExerciseView,
