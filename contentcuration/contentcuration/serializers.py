@@ -68,6 +68,9 @@ class FileListSerializer(serializers.ListSerializer):
                     # create new nodes
                     ret.append(File.objects.create(**item))
 
+        files_to_delete = []
+        nodes_to_parse = []
+        current_files = [f['id'] for f in validated_data]
         for file_obj in validated_data:
             delete_queryset = File.objects.filter(Q(contentnode=file_obj['contentnode']) & (Q(preset_id=file_obj['preset_id']) | Q(preset=None)) & Q(language_id=file_obj.get('language_id')) & ~Q(id=file_obj['id']))
             files_to_delete += [f for f in delete_queryset.all()]
