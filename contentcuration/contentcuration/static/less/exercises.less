@@ -69,17 +69,6 @@
 				.show_on_focus{
 					display:inline-block;
 				}
-				.editor-toolbar {
-					background-color:@gray-300;
-					padding:4px;
-					.ql-format-button{
-						margin-right:10px;
-					}
-				}
-				.editor{
-					height:80px;
-					border: 1px solid @gray-300;
-				}
 				.question_area{
 					background-color: transparent;
 					.question_type{
@@ -93,47 +82,6 @@
 					}
 					.editor-toolbar {
 						margin-bottom: -24px;
-					}
-				}
-				.answers{
-					margin:7px;
-					background-color: white;
-					.addanswer_wrapper{
-						background-color: @blue-700;
-						color:white;
-						font-size: 12pt;
-						padding:5px 10px;
-						.addanswer{
-							cursor:pointer;
-							background-color: @blue-700;
-							color:white;
-							padding:0px 20px;
-							border:2px solid white;
-						}
-						.addanswer:hover{
-							font-weight:bold;
-							background-color: white;
-							color:@blue-700;
-						}
-					}
-
-					.addanswer:hover, .addhint:hover{
-						font-weight:bold;
-					}
-					li{
-						width:100%;
-						.answer-toolbar, .hint-toolbar{
-							text-align:right;
-							.toggle{
-								a{
-									padding:0;
-									text-decoration: none;
-								}
-								margin-top:50px;
-								font-size:13pt;
-							}
-						}
-
 					}
 				}
 			}
@@ -275,4 +223,56 @@
 			margin-bottom:0;
 		}
 	}
+}
+
+.hint_modal, .assessment_item.active{
+	.editor-toolbar {
+		background-color:@gray-300;
+		padding:4px;
+		.ql-format-button{
+			margin-right:10px;
+		}
+	}
+	.editor{
+		height:80px;
+		border: 1px solid @gray-300;
+	}
+	.hints, .answers{
+		margin:7px;
+		background-color: white;
+		.addanswer_wrapper, .addhint_wrapper{
+			background-color: @blue-700;
+			color:white;
+			font-size: 12pt;
+			padding:5px 10px;
+			.addanswer, .addhint{
+				cursor:pointer;
+				background-color: @blue-700;
+				color:white;
+				padding:0px 20px;
+				border:2px solid white;
+			}
+			.addanswer:hover, .addhint:hover{
+				font-weight:bold;
+				background-color: white;
+				color:@blue-700;
+			}
+		}
+
+		li{
+			width:100%;
+			.answer-toolbar, .hint-toolbar{
+				text-align:right;
+				.toggle{
+					a{
+						padding:0;
+						text-decoration: none;
+					}
+					margin-top:50px;
+					font-size:13pt;
+				}
+			}
+		}
+	}
+
 }
