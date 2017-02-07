@@ -20,10 +20,35 @@ class LicenseSerializer(serializers.ModelSerializer):
         fields = ('license_name', 'exists', 'id', 'license_url', 'license_description')
 
 class LanguageSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(required=False)
+
     class Meta:
         model = Language
         fields = ('lang_code', 'lang_subcode', 'id', 'readable_name')
 
+class FileFormatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FileFormat
+        fields = ("__all__")
+
+class FormatPresetSerializer(serializers.ModelSerializer):
+   # files = FileSerializer(many=True, read_only=True)
+    associated_mimetypes = serializers.SerializerMethodField('retrieve_mimetypes')
+    # Handles multi-language content (Backbone won't allow duplicate ids in collection, so name retains id)
+    name = serializers.SerializerMethodField('retrieve_name')
+
+    def retrieve_mimetypes(self, preset):
+        mimetypes = []
+        for m in preset.allowed_formats.all():
+            mimetypes.append(m.mimetype)
+        return mimetypes
+
+    def retrieve_name(self, preset):
+        return preset.id
+
+    class Meta:
+        model = FormatPreset
+        fields = ('id', 'name', 'readable_name', 'multi_language', 'supplementary', 'thumbnail', 'subtitle', 'order', 'kind', 'allowed_formats','associated_mimetypes', 'display')
 
 class FileListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
@@ -32,6 +57,11 @@ class FileListSerializer(serializers.ListSerializer):
 
         with transaction.atomic():
             for item in validated_data:
+                item.update({
+                    'preset_id' : item['preset']['id'],
+                    'language_id' : item.get('language')['id'] if item.get('language') else None
+                })
+
                 if 'id' in item:
                     update_files[item['id']] = item
                 else:
@@ -39,10 +69,11 @@ class FileListSerializer(serializers.ListSerializer):
                     ret.append(File.objects.create(**item))
 
         for file_obj in validated_data:
-            contentnode = file_obj['contentnode'].pk
-            preset = file_obj['preset'].pk
+            contentnode = file_obj['contentnode']
+            preset = file_obj['preset_id']
             file_id = file_obj['id']
-            files_to_delete = File.objects.filter(Q(contentnode_id=contentnode) & (Q(preset_id=preset) | Q(preset=None)) & ~Q(id=file_id))
+            language = file_obj.get('language_id')
+            files_to_delete = File.objects.filter(Q(contentnode=contentnode) & (Q(preset_id=preset) | Q(preset=None)) & (Q(language_id=language)) & ~Q(id=file_id))
             for to_delete in files_to_delete:
                 to_delete.delete()
 
@@ -67,8 +98,10 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     storage_url = serializers.SerializerMethodField('retrieve_storage_url')
     recommended_kind = serializers.SerializerMethodField('retrieve_recommended_kind')
     mimetype = serializers.SerializerMethodField('retrieve_extension')
-    language = LanguageSerializer(read_only=True)
+    language = LanguageSerializer(many=False, required=False, allow_null=True)
+    display_name = serializers.SerializerMethodField('retrieve_display_name')
     id = serializers.CharField(required=False)
+    preset = FormatPresetSerializer(many=False)
 
     def get(*args, **kwargs):
          return super.get(*args, **kwargs)
@@ -90,29 +123,15 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def retrieve_extension(self, obj):
         return obj.file_format.mimetype
 
+    def retrieve_display_name(self, obj):
+        preset = obj.preset.readable_name if obj.preset else ""
+        language = " ({})".format(obj.language.readable_name) if obj.language else ""
+        return "{}{}".format(preset, language)
+
     class Meta:
         model = File
-        fields = ('id', 'checksum', 'file_size', 'language', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'storage_url', 'mimetype', 'source_url')
+        fields = ('id', 'checksum', 'display_name', 'file_size', 'language', 'file_on_disk', 'contentnode', 'file_format', 'preset', 'original_filename','recommended_kind', 'storage_url', 'mimetype', 'source_url')
         list_serializer_class = FileListSerializer
-
-class FileFormatSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FileFormat
-        fields = ("__all__")
-
-class FormatPresetSerializer(serializers.ModelSerializer):
-   # files = FileSerializer(many=True, read_only=True)
-    associated_mimetypes = serializers.SerializerMethodField('retrieve_mimetypes')
-
-    def retrieve_mimetypes(self, preset):
-        mimetypes = []
-        for m in preset.allowed_formats.all():
-            mimetypes.append(m.mimetype)
-        return mimetypes
-
-    class Meta:
-        model = FormatPreset
-        fields = ('id', 'readable_name', 'multi_language', 'supplementary', 'order', 'kind', 'allowed_formats','associated_mimetypes', 'display')
 
 class ContentKindSerializer(serializers.ModelSerializer):
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')

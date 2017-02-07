@@ -172,8 +172,9 @@ var ContentNodeCollection = BaseCollection.extend({
 			var fileCollection = new FileCollection()
 			self.forEach(function(node){
 				node.get("files").forEach(function(file){
-					file.preset = file.preset.id ? file.preset.id : file.preset
+					file.preset.id = file.preset.name ? file.preset.name : file.preset.id;
 				});
+
 				fileCollection.add(node.get("files"));
 			});
 			fileCollection.save().then(function(){
@@ -328,7 +329,10 @@ var TagCollection = BaseCollection.extend({
 /**** MODELS SPECIFIC TO FILE NODES ****/
 var FileModel = BaseModel.extend({
 	root_list:"file-list",
-    model_name:"FileModel"
+	model_name:"FileModel",
+	get_preset:function(){
+		return window.formatpresets.get({'id':this.get("id")});
+	}
 });
 
 var FileCollection = BaseCollection.extend({
@@ -418,6 +422,17 @@ var LicenseCollection = BaseCollection.extend({
     get_default:function(){
     	return this.findWhere({license_name:"CC-BY"});
     }
+});
+
+var LanguageModel = BaseModel.extend({
+	root_list:"language-list",
+	model_name:"LanguageModel"
+});
+
+var LanguageCollection = BaseCollection.extend({
+	model: LanguageModel,
+	list_name:"language-list",
+	model_name:"LanguageCollection"
 });
 
 var ContentKindModel = BaseModel.extend({

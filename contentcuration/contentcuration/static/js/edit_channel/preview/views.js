@@ -97,6 +97,7 @@ var PreviewView = BaseViews.BaseView.extend({
                     source: this.current_preview.storage_url,
                     extension:this.current_preview.mimetype,
                     checksum:this.current_preview.checksum,
+                    subtitles : this.get_subtitles()
                 }));
                 if(force_load && this.current_preview.recommended_kind === "video"){
                     $("#preview_window video").load();
@@ -104,7 +105,18 @@ var PreviewView = BaseViews.BaseView.extend({
             }
         }
     },
-
+    get_subtitles:function(){
+        var subtitles = [];
+        this.model.get("files").forEach(function(file){
+            var file_json = (file.attributes)? file.attributes : file;
+            var preset_id = (file_json.preset && file_json.preset.id)? file_json.preset.id : file_json.preset;
+            var current_preset = window.formatpresets.get({id:preset_id});
+            if(current_preset && current_preset.get("subtitle")){
+                subtitles.push(file_json);
+            }
+        });
+        return subtitles;
+    },
     load_preview:function(){
         if(this.model){
             this.switch_preview(this.model);
