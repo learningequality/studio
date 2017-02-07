@@ -56,7 +56,6 @@ def channel_page(request, channel, allow_edit=False):
                     .exclude(id=channel.pk)\
                     .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
                     .values("id", "name", "is_view_only")
-    import pdb; pdb.set_trace()
     fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
