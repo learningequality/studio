@@ -354,8 +354,10 @@ def _duplicate_node(node, sort_order=1, parent=None, channel_id=None):
         aiobj_copy.contentnode = new_node
         aiobj_copy.save()
 
+    sort_order = 1
     for c in node.children.all():
-        _duplicate_node(c, parent=new_node.id)
+        _duplicate_node(c, sort_order=sort_order, parent=new_node.id)
+        sort_order += 1
 
     return new_node
 
