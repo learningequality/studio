@@ -69,13 +69,20 @@ class FileListSerializer(serializers.ListSerializer):
                     ret.append(File.objects.create(**item))
 
         for file_obj in validated_data:
-            contentnode = file_obj['contentnode']
-            preset = file_obj['preset_id']
-            file_id = file_obj['id']
-            language = file_obj.get('language_id')
-            files_to_delete = File.objects.filter(Q(contentnode=contentnode) & (Q(preset_id=preset) | Q(preset=None)) & (Q(language_id=language)) & ~Q(id=file_id))
-            for to_delete in files_to_delete:
-                to_delete.delete()
+            delete_queryset = File.objects.filter(Q(contentnode=file_obj['contentnode']) & (Q(preset_id=file_obj['preset_id']) | Q(preset=None)) & Q(language_id=file_obj.get('language_id')) & ~Q(id=file_obj['id']))
+            files_to_delete += [f for f in delete_queryset.all()]
+            if file_obj['contentnode'] not in nodes_to_parse:
+                nodes_to_parse.append(file_obj['contentnode'])
+
+        # Delete removed files
+        for node in nodes_to_parse:
+            previous_files = node.files.all()
+            for f in previous_files:
+                if f.id not in current_files:
+                    files_to_delete.append(f)
+
+        for to_delete in files_to_delete:
+            to_delete.delete()
 
         if update_files:
             with transaction.atomic():
