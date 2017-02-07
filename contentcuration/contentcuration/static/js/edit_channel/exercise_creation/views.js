@@ -439,12 +439,13 @@ var EditorView = Backbone.View.extend({
     },
 
     render_content: function() {
-        if(this.model.get('source_url')){
+        if(this.model.get(this.edit_key)){
             this.$el.html(this.view_template({content: parse_content(this.model.get(this.edit_key))}));
         }else{
-            this.$el.html(this.default_template({source_url: this.model.get('source_url')}));
+            this.$el.html(this.default_template({
+                source_url: this.model.get('source_url')
+            }));
         }
-
     },
 
     parse_content:function(content){
@@ -460,7 +461,7 @@ var EditorView = Backbone.View.extend({
     },
 
     activate_editor: function() {
-        this.$el.html(this.edit_template());
+        this.$el.html(this.edit_template({key: this.edit_key}));
         this.editor = new Quill(this.$(".editor")[0], {
             modules: {
                 'toolbar': { container: this.$('.editor-toolbar')[0] }
@@ -469,9 +470,7 @@ var EditorView = Backbone.View.extend({
             styles: {
                 'body': {
                   'background-color': "white",
-                  'border': '1px #66afe9 solid',
-                  'border-radius': "4px",
-                  "box-shadow": "inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6)"
+                  'padding': "10px",
                 }
             }
         });
@@ -560,7 +559,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         this.open = options.open || false;
         this.containing_list_view = options.containing_list_view;
         this.assessment_item = options.assessment_item;
-        this.nodeid=options.nodeid;
+        this.nodeid = options.nodeid;
         this.isdisplay = options.isdisplay;
         this.render();
     },
@@ -697,7 +696,7 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
             isdisplay:this.isdisplay
         });
         this.views.push(view);
-        this.$(".addanswer").before(view.el);
+        this.$(".addanswer_wrapper").after(view.el);
 
     },
     set_focus:function(){
@@ -745,10 +744,16 @@ var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
         }
         this.$(".hints").append(this.hint_editor.el);
         if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: "question", el: this.$(".question"),nodeid:this.nodeid});
+            this.editor_view = new EditorView({
+                model: this.model,
+                edit_key: "question",
+                el: this.$(".question"),
+                nodeid: this.nodeid
+            });
         } else {
             this.$(".question").append(this.editor_view.el);
         }
+        this.$(".question_type_select").val(this.model.get("type"));
     }
 });
 

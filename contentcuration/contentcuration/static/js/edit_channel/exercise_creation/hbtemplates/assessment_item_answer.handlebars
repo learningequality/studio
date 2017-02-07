@@ -1,16 +1,15 @@
-<li class="list-group-item answer_item">
+<li class="answer_item">
 	<div class="row">
-		<div class="col-sm-8">
-		  <div class="answer editable" data-ph="Answer">
-		  </div>
-		 </div>
-		 <div class="col-sm-2 text-center">
+		<div class="col-sm-1 text-center">
 		 	{{#unless input_answer}}
-		 		<input class="correct text-center" type={{#if single_selection}}"radio"{{else}}"checkbox"{{/if}} aria-label="Correct" {{#if answer.correct}}checked{{/if}} name="{{#if isdisplay}}display_{{/if}}answer_{{groupName}}" disabled>
+		 		<input class="correct text-center" type={{#if single_selection}}"radio"{{else}}"checkbox"{{/if}} aria-label="Correct" {{#if answer.correct}}checked{{/if}} name="{{#if isdisplay}}display_{{/if}}answer_{{groupName}}">
 		 	{{/unless}}
-		 </div>
-	 	 <div class="col-sm-2">
-	 	     <div class="show_on_focus answer-toolbar pull-right"></div>
-	 	 </div>
+		</div>
+		<div class="col-sm-10">
+			<div class="answer editable" data-ph="Answer"></div>
+		</div>
+		<div class="col-sm-1">
+			<div class="show_on_focus answer-toolbar pull-right"></div>
+		</div>
     </div>
 </li>
