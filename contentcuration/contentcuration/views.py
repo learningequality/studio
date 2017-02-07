@@ -426,4 +426,3 @@ def publish_channel(request):
             "success": True,
             "channel": channel_id
         }))
-
