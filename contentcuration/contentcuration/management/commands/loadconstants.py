@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages
 from contentcuration import models
 import logging as logmodule
 from django.core.cache import cache
@@ -286,10 +286,11 @@ PRESETS = [
         "pk": "id",
         "fields": {
             "id" : format_presets.VIDEO_HIGH_RES,
-            "readable_name": format_presets.VIDEO_HIGH_RES_READABLE,
+            "readable_name" : format_presets.VIDEO_HIGH_RES_READABLE,
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.VIDEO,
@@ -305,6 +306,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.VIDEO,
@@ -320,10 +322,27 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 3,
             "kind_id" : content_kinds.VIDEO,
             "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+        },
+    },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
+            "id" : format_presets.VIDEO_SUBTITLE,
+            "readable_name": format_presets.VIDEO_SUBTITLE_READABLE,
+            "multi_language" : True,
+            "supplementary" : True,
+            "thumbnail" : False,
+            "subtitle": True,
+            "display": False,
+            "order" : 4,
+            "kind_id" : content_kinds.VIDEO,
+            "allowed_formats" : [file_formats.VTT, file_formats.SRT],
         },
     },
     {
@@ -335,6 +354,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.AUDIO,
@@ -350,6 +370,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.AUDIO,
@@ -365,6 +386,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.DOCUMENT,
@@ -380,6 +402,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.DOCUMENT,
@@ -395,6 +418,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.EXERCISE,
@@ -410,6 +434,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.EXERCISE,
@@ -425,6 +450,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : False,
+            "subtitle": False,
             "display": False,
             "order" : 3,
             "kind_id" : content_kinds.EXERCISE,
@@ -440,6 +466,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : False,
+            "subtitle": False,
             "display": False,
             "order" : 4,
             "kind_id" : content_kinds.EXERCISE,
@@ -455,6 +482,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 0,
             "kind_id" : None,
@@ -470,6 +498,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 0,
             "kind_id" : content_kinds.HTML5,
@@ -485,6 +514,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.HTML5,
@@ -493,8 +523,19 @@ PRESETS = [
     },
 ]
 
+LANGUAGES = [{
+    "model": models.Language,
+    "pk": "id",
+    "fields": {
+            "id": l.code,
+            "lang_code": l.primary_code,
+            "lang_subcode": l.subcode,
+            "readable_name": l.name,
+            "native_name" : l.native_name,
+        },
+} for l in languages.LANGUAGELIST ]
 
-CONSTANTS = [SITES, LICENSES, FILE_FORMATS, KINDS, PRESETS]
+CONSTANTS = [SITES, LICENSES, FILE_FORMATS, KINDS, PRESETS, LANGUAGES]
 
 class EarlyExit(BaseException):
     def __init__(self, message, db_path):
