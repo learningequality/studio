@@ -171,6 +171,12 @@ def create_associated_file_objects(kolibrinode, ccnode):
     for ccfilemodel in ccnode.files.exclude(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
+        if ccfilemodel.language_id:
+            kolibrimodels.Language.objects.get_or_create(
+                id=str(ccfilemodel.language),
+                lang_code=ccfilemodel.language.lang_code,
+                lang_subcode=ccfilemodel.language.lang_subcode
+            )
 
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
@@ -181,7 +187,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
-            lang_id=ccfilemodel.language_id,
+            lang_id=str(ccfilemodel.language),
             thumbnail=preset.thumbnail,
         )
 
@@ -217,9 +223,9 @@ def create_perseus_zip(ccnode, write_to_path):
         })
         if exercise_data['mastery_model'] == exercises.M_OF_N:
             if 'n' not in exercise_data:
-                exercise_data.update({'n':exercise_data.get('m') or max(len(self.questions), 1)})
+                exercise_data.update({'n':exercise_data.get('m') or max(len(assessment_items), 1)})
             if 'm' not in exercise_data:
-                exercise_data.update({'m':exercise_data.get('n') or max(len(self.questions), 1)})
+                exercise_data.update({'m':exercise_data.get('n') or max(len(assessment_items), 1)})
 
         exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
         exercise_context = {

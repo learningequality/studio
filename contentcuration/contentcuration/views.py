@@ -290,19 +290,19 @@ def duplicate_nodes(request):
 
         try:
             nodes = data["nodes"]
-            sort_order = data["sort_order"]
+            sort_order = data.get("sort_order") or 1
             target_parent = data["target_parent"]
             channel_id = data["channel_id"]
+            new_nodes = []
+
+            with transaction.atomic():
+                for node_data in nodes:
+                    new_node = _duplicate_node(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
+                    new_nodes.append(new_node.pk)
+                    sort_order+=1
+
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-        new_nodes = []
-
-        with transaction.atomic():
-            for node_data in nodes:
-                new_node = _duplicate_node(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
-                new_nodes.append(new_node.pk)
-                sort_order+=1
 
         return HttpResponse(json.dumps({
             "success": True,
