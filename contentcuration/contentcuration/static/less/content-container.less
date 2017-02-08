@@ -120,6 +120,48 @@
 	margin:0;
 	margin-bottom:20px;
 	padding: 13px 0 0 30px;
+	.nav-button-container {
+		width: 50px;
+		.inline-block;
+		margin-right: 35px;
+		.nav-button {
+			width: 100%;
+			height: 40px;
+			background: @body-background;
+			border-radius: 2px;
+			cursor: pointer;
+			span {
+				font-size: 23px;
+			    text-align: center;
+			    display: block;
+			    top: 8px;
+			    color: @blue-500;
+			}
+		}
+		a {
+			color: @body-font-color;
+			display: block;
+			text-align: center;
+			&:hover {
+				text-decoration: none;
+			}
+		}
+	}
+	.hide-details-container {
+		position: relative;
+		bottom: 22px;
+		.inline-block;
+		input {
+			width: 20px;
+			height: 20px;
+		}
+		label {
+			font-size: 14px;
+			color: @body-font-color;
+			position: relative;
+			bottom: 4px;
+		}
+	}
 }
 
 #publish-id{
@@ -249,9 +291,17 @@
 				font-size:@item-title-font-size;
 				font-weight:bold;
 			}
+			.current_topic{
+				background-color: @highlighted-file;
+			}
 			li{
-				input[type="radio"]{
-					display:none;
+				input[type=checkbox]{
+					display:inline-block;
+					width:20px;
+					height:20px;
+					vertical-align:middle;
+					margin: 6px 0 0 10px;
+					cursor:pointer;
 				}
 				background-color: @item-color;
 				label{
@@ -273,6 +323,12 @@
 					.item-text-area{
 						display:inline-block;
 						vertical-align: middle;
+					}
+				}
+				.folder, .file{
+					width: @container-width - 55px;
+					h3{
+						width:@container-width - @item-title-font-size - 70px;
 					}
 				}
 				.folder{
@@ -337,9 +393,16 @@
 					}
 				}
 			}
-			.folder{
+			.folder h3{
+				margin-top: 5px;
+			}
+			.folder, .file{
+				width: @container-last-width - 55px;
 				h3{
-					margin-top: 5px;
+					width:@container-last-width  - @item-title-font-size - 100px;
+				}
+				.folder_open_icon{
+					margin-top:5px;
 				}
 			}
 			.unpublished, .invalid{
@@ -382,50 +445,6 @@
 		@edit-new-content-color: #89C0B1;
 		@edit-current-folder-color:#666666;
 
-		#button_bar {
-			.nav-button-container {
-				width: 50px;
-				.inline-block;
-				margin-right: 35px;
-				.nav-button {
-					width: 100%;
-					height: 40px;
-					background: @body-background;
-					border-radius: 2px;
-					cursor: pointer;
-					span {
-						font-size: 23px;
-					    text-align: center;
-					    display: block;
-					    top: 8px;
-					    color: @blue-500;
-					}
-				}
-				a {
-					color: @body-font-color;
-					display: block;
-					text-align: center;
-					&:hover {
-						text-decoration: none;
-					}
-				}
-			}
-			.hide-details-container {
-				position: relative;
-				bottom: 22px;
-				.inline-block;
-				input {
-					width: 20px;
-					height: 20px;
-				}
-				label {
-					font-size: 14px;
-					color: @body-font-color;
-					position: relative;
-					bottom: 4px;
-				}
-			}
-		}
 		.content-container{
 			background-color: @edit-container-color;
 			border: 2px solid @edit-container-color;
@@ -440,13 +459,7 @@
 				li{
 					border-top: 1px solid  @edit-container-color;
 				}
-				input[type=checkbox]{
-					display:inline-block;
-					width:20px;
-					height:20px;
-					vertical-align:middle;
-					margin: 6px 0 0 10px
-				}
+
 				label{
 					.title_wrapper{
 						width:auto;
@@ -488,14 +501,8 @@
 				label:hover .content-options-dropdown, .active-popover{
 					visibility:visible !important;
 				}
-				.folder, .file{
-					width: @container-width - 55px;
-					h3{
-						width:@container-width - @item-title-font-size - 70px;
-					}
-				}
+
 				.current_topic{
-					background-color: @highlighted-file;
 					border-left:4px solid @edit-current-folder-color;
 					label{
 						width: @container-width - 65px;
@@ -575,15 +582,6 @@
 		}
 
 		#container_area .content-container:last-child{
-			.folder, .file{
-				width: @container-last-width - 55px;
-				h3{
-					width:@container-last-width  - @item-title-font-size - 100px;
-				}
-				.folder_open_icon{
-					margin-top:5px;
-				}
-			}
 			.add_content_button{
 				padding:5px 20px;
 				width:150px;
@@ -594,25 +592,12 @@
 				margin-left:@container-last-width * .55 ;
 			}
 		}
-
-		#container_area li:first-child .back_button{
-			display:none;
-		}
-
 	}
 
 	#preview{
 		@preview-container-color:#DEEDE9;
 		@preview-selected-folder:#6B959C;
 
-		h1{
-			font-size:12pt;
-			margin-top: 0;
-
-			input[type="checkbox"] {
-				margin: 4px 0 0 10px;
-			}
-		}
 		.content-container{
 			background-color: @preview-container-color;
 			::-webkit-scrollbar-track {
@@ -621,77 +606,20 @@
 			.content-list{
 				height:@container-height * 0.87;
 				min-height: @container-min-height * 0.87;
-
-				/*.glyphicon{
-					display:none;
-				}*/
 				.edit_folder_button{
 					visibility:hidden;
 				}
 				li{
 					border-top: 1px solid  @preview-container-color;
-					cursor:pointer;
-
-					.folder_open_icon{
-						display:none;
-					}
 				}
 				.current_topic{
-					background-color: @highlighted-file;
 					border-left:4px solid @preview-selected-folder;
 				}
-				label{
-					width: 100%;
-					margin:2px;
-					cursor:pointer;
-					.unpublished{
-						visibility: hidden;
-					}
-				}
-				.folder{
-					h3{
-						width:@container-width - @item-title-font-size - 30px;
-					}
-				}
-				.options, .item_edit_options, .context-menu{
+				.folder_open_icon, .unpublished, .options, .item_edit_options, .context-menu{
 					display:none !important;
 				}
 
 			}
 		}
-
-		#container_area li:last-child{
-			.folder{
-				h3{
-					width:@container-last-width - @item-title-font-size - 30px;
-				}
-			}
-		}
-	}
-
-	.hidden_details{
-		.metadata_to_hide, .description, .filler{
-			display:none !important;
-		}
-	}
-}
-#clipboard{
-	@clipboard-button-color: #915194;
-	@clipboard-background-color: #EDDEED;
-	#channel-edit-content-wrapper{
-		background-color: @clipboard-background-color !important;
-	}
-	#button_bar .nav-button-container .nav-button span{
-		color:@clipboard-button-color !important;
-	}
-	#clipboard_header{
-		margin:0;
-		font-size:18pt;
-		font-style:italic;
-		color:gray;
-		position:fixed;
-	}
-	#container_area{
-		margin-top:40px;
 	}
 }

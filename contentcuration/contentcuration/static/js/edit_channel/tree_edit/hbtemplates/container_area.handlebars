@@ -1,51 +1,33 @@
 <div id={{#if is_clipboard}}"clipboard"{{else}}{{#if edit}}"edit"{{else}}"preview"{{/if}}{{/if}}>
 	<nav id="button_bar">
-	{{#if edit}}
-		{{#if is_clipboard}}
-		<div class="nav-button-container">
-			<a href="edit">
-				<div class="nav-button back_to_edit_button disable-on-edit"><span class="glyphicon glyphicon-arrow-left"></span></div>
-				<a class="nav-label back_to_edit_button disable-on-edit">Back</a>
-			</a>
-		</div>
-		{{/if}}
 		<div id="disable-none-selected-wrapper">
-			<div class="nav-button-container">
-				<div class="nav-button edit_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-pencil"></span></div>
-				<a class="nav-label edit_button disable-on-edit disable-none-selected">Edit</a>
-			</div>
-			{{#unless is_clipboard}}
-			<div class="nav-button-container">
-				<div class="nav-button copy_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-duplicate"></span></div>
-				<a class="nav-label copy_button disable-on-edit disable-none-selected">Copy</a>
-			</div>
-			{{/unless}}
-			<div class="nav-button-container">
-				<div class="nav-button delete_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-remove"></span></div>
-				<a class="nav-label delete_button disable-on-edit disable-none-selected">Delete</a>
-			</div>
+			{{#if edit}}
+				<div class="nav-button-container">
+					<div class="nav-button edit_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-pencil"></span></div>
+					<a class="nav-label edit_button disable-on-edit disable-none-selected">Edit</a>
+				</div>
+			{{/if}}
+				<div class="nav-button-container">
+					<div class="nav-button copy_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-duplicate"></span></div>
+					<a class="nav-label copy_button disable-on-edit disable-none-selected">Copy</a>
+				</div>
+			{{#if edit}}
+				<div class="nav-button-container">
+					<div class="nav-button delete_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-remove"></span></div>
+					<a class="nav-label delete_button disable-on-edit disable-none-selected">Delete</a>
+				</div>
+			{{/if}}
 		</div>
-		<div class="nav-button-container">
-			<div class="nav-button permissions_button disable-on-edit"><span class="glyphicon glyphicon-user"></span></div>
-			<a class="nav-label permissions_button disable-on-edit">Invite</a>
-		</div>
-
-		<!--<a class="btn btn-default undo_button disable-on-edit">Undo</a>
-		<a class="btn btn-default redo_button disable-on-edit">Redo</a>-->
+		{{#if edit}}
+			<div class="nav-button-container">
+				<div class="nav-button permissions_button disable-on-edit"><span class="glyphicon glyphicon-user"></span></div>
+				<a class="nav-label permissions_button disable-on-edit">Invite</a>
+			</div>
+		{{/if}}
 		<div class="hide-details-container">
 			<input type="checkbox" id="hide_details_checkbox"/>
 			<label for="hide_details_checkbox">Hide details</label>
 		</div>
-		{{#if is_clipboard}}
-			<span class="glyphicon glyphicon-remove pull-right back_to_edit_button close_clipboard"></span>
-		{{/if}}
-
-	{{else}}
-		<h1>View-Only
-			<input type="checkbox" id="hide_details_checkbox"/>
-			<label for="hide_details_checkbox">Hide details</label>
-		</h1>
-	{{/if}}
 	</nav>
 
 	<div id="container-wrapper">
