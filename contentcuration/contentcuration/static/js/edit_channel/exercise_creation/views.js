@@ -696,7 +696,7 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
             isdisplay:this.isdisplay
         });
         this.views.push(view);
-        this.$(".addanswer_wrapper").after(view.el);
+        this.$(".addanswer").before(view.el);
 
     },
     set_focus:function(){
@@ -723,7 +723,7 @@ var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
         "click .hint_link": "show_hints"
     },
     render: function() {
-        this.$el.html(this.template({model: this.model.toJSON()}));
+        this.$el.html(this.template({model: this.model.toJSON(), hint_count: this.model.get('hints').length}));
         if (this.model.get("type") !== "free_response") {
             if (!this.answer_editor) {
                 this.answer_editor = new AssessmentItemAnswerListView({
@@ -768,7 +768,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         this.containing_list_view = options.containing_list_view;
         this.undo_manager = new UndoManager({
             track: true,
-            register: [this.model, this.model.get("answers"), this.model.get("hints")]
+            register: [this.model, this.model.get("answers")]
         });
         this.toggle_undo_redo();
         this.render();
@@ -996,7 +996,7 @@ var AssessmentItemHintListView = BaseViews.BaseEditableListView.extend({
             nodeid:this.nodeid
         });
         this.views.push(view);
-        this.$(".addhint_wrapper").after(view.el);
+        this.$(".addhint").before(view.el);
 
     },
     set_focus:function(){
@@ -1005,6 +1005,23 @@ var AssessmentItemHintListView = BaseViews.BaseEditableListView.extend({
         });
     },
 });
+
+var HintQuestionDisplayView = Backbone.View.extend({
+    className:"assessment_li",
+    initialize: function(options) {
+        this.render();
+    },
+    template: require("./hbtemplates/assessment_item_display.handlebars"),
+    render: function() {
+        this.$el.html(this.template({model: this.model.toJSON()}));
+        var editor_view = new EditorView({
+            model: this.model,
+            edit_key: "question",
+            el: this.$(".question")
+        });
+    },
+});
+
 
 var HintModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/assessment_item_hint_modal.handlebars"),
@@ -1021,10 +1038,13 @@ var HintModalView = BaseViews.BaseModalView.extend({
 
     render: function() {
         this.$el.html(this.template());
-        if (!this.hint_editor) {
-            this.hint_editor = new AssessmentItemHintListView(this.data);
-        }
-        this.$(".hints").append(this.hint_editor.el);
+        var question_preview = new HintQuestionDisplayView({
+            model: this.data.assessment_item,
+            el: this.$(".question_preview")
+        });
+
+        var hint_editor = new AssessmentItemHintListView(this.data);
+        this.$(".hints").append(hint_editor.el);
         $("body").append(this.el);
         this.$(".hint_modal").modal({show: true});
         this.$(".hint_modal").on("hide.bs.modal", this.close_hints);

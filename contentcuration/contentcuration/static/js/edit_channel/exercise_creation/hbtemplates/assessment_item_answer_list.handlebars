@@ -1,12 +1,8 @@
-<ul class="list-unstyled">
-<li class="show_on_focus addanswer_wrapper">
-	<div class="row">
-		<div class="col-sm-9">
-			<b>{{#if input_answer}}Accepted Answer(s){{else}}Answers{{/if}}</b>
-		 </div>
-		 <div class="col-sm-3">
-			<a class="action-text btn addanswer show_on_focus" title="Add Answer"><span class="glyphicon glyphicon-plus"></span> ANSWER</a>
-		 </div>
-	</div>
-</li>
+<div class="show_on_focus answer_header">
+	{{#if input_answer}}Accepted Answer(s){{else}}Answers{{/if}}
+</div>
+<ul class="list-unstyled answer_list">
+	<li class="show_on_focus addanswer">
+		<span class="glyphicon glyphicon-plus"></span> ANSWER
+	</li>
 </ul>

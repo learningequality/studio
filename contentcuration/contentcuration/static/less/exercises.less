@@ -84,6 +84,16 @@
 						margin-bottom: -24px;
 					}
 				}
+				.answers{
+					.answer_header, .addanswer{
+						font-size: 12pt;
+						padding:5px 15px;
+						width:100%;
+					}
+					.answer_header{background-color: @blue-700; color:white;}
+					.addanswer{cursor:pointer;}
+					.addanswer:hover{font-weight: bold;}
+				}
 			}
 		}
 		.assessment_item:hover .toolbar{
@@ -187,6 +197,7 @@
 					color: @gray-700;
 					padding: 3px;
 					font-weight:bold;
+					font-size:10pt;
 				}
 				.move_question_handle:hover, .hint_link:hover{
 					color: @blue-500;
@@ -207,20 +218,47 @@
 				height:15px;
 			}
 		}
-		.answer_item:hover{
+		li:hover{
 			background-color: @gray-200;
-		}
-		.hint_item{
-			cursor:pointer;
-			font-style:italic;
-			font-size:10pt;
-			background-color:@hint-color;
 		}
 		.show_on_focus{
 			display:none;
 		}
 		.list-group{
 			margin-bottom:0;
+		}
+	}
+}
+
+.hint_modal{
+	.modal-dialog{
+		width: @uploader-width / 1.5;
+		margin-top: 8%;
+		.modal-body{
+			margin-top:-30px;
+			.question_area{
+				width:100%;
+				cursor:default;
+				background-color:transparent;
+				padding:0;
+				.question{
+					font-size:11pt;
+				}
+			}
+			.hints{
+				min-height: 100px;
+				li{
+					width:100%;
+					cursor:pointer;
+					padding: 5px 20px;
+					margin-bottom: 5px;
+					border: 1px solid @blue-100;
+				}
+				.hint_item{font-size:11pt; min-height:50px;}
+				.hint_item:hover{background-color: @blue-100;}
+				.addhint{font-size:12pt; background-color:@blue-100;}
+				.addhint:hover{font-weight: bold;}
+			}
 		}
 	}
 }
@@ -240,25 +278,6 @@
 	.hints, .answers{
 		margin:7px;
 		background-color: white;
-		.addanswer_wrapper, .addhint_wrapper{
-			background-color: @blue-700;
-			color:white;
-			font-size: 12pt;
-			padding:5px 10px;
-			.addanswer, .addhint{
-				cursor:pointer;
-				background-color: @blue-700;
-				color:white;
-				padding:0px 20px;
-				border:2px solid white;
-			}
-			.addanswer:hover, .addhint:hover{
-				font-weight:bold;
-				background-color: white;
-				color:@blue-700;
-			}
-		}
-
 		li{
 			width:100%;
 			.answer-toolbar, .hint-toolbar{
