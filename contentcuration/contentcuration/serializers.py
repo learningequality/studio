@@ -83,7 +83,8 @@ class FileListSerializer(serializers.ListSerializer):
                     file_obj, is_new = File.objects.get_or_create(pk=file_id)
                     # potential optimization opportunity
                     for attr, value in data.items():
-                        setattr(file_obj, attr, value)
+                        if attr != "preset:
+                            setattr(file_obj, attr, value)
                     file_path = generate_file_on_disk_name(file_obj.checksum, str(file_obj))
                     if os.path.isfile(file_path):
                         file_obj.file_on_disk = DjFile(open(file_path, 'rb'))
