@@ -908,6 +908,7 @@ var AssessmentItemHintView = Backbone.View.extend({
         this.set_editor(true);
     },
     set_open:function(){
+        this.containing_list_view.set_focus();
         this.set_toolbar_open();
         this.editor_view.activate_editor();
     },
