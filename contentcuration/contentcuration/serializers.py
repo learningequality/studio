@@ -83,7 +83,7 @@ class FileListSerializer(serializers.ListSerializer):
                     file_obj, is_new = File.objects.get_or_create(pk=file_id)
                     # potential optimization opportunity
                     for attr, value in data.items():
-                        if attr != "preset:
+                        if attr != "preset" and attr != "language":
                             setattr(file_obj, attr, value)
                     file_path = generate_file_on_disk_name(file_obj.checksum, str(file_obj))
                     if os.path.isfile(file_path):
