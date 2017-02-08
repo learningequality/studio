@@ -5,10 +5,14 @@
 	<label class="list_item_wrapper file" for="item_{{node.id}}" title="{{node.title}}">
 {{/if}}
 		<div class="options pull-right">
-			<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
-				<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
-			</a>
-			{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
+			{{#if edit_mode}}
+				<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
+					<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
+				</a>
+				{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
+			{{else}}
+				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true"></span>
+			{{/if}}
 		</div>
 		<h6 class="content_metadata_summary {{#unless isfolder}}open_file{{/unless}}">
 			<span class="metadata_to_hide">

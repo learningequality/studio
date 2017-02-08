@@ -295,6 +295,7 @@
 				background-color: @highlighted-file;
 			}
 			li{
+				background-color: @item-color;
 				input[type=checkbox]{
 					display:inline-block;
 					width:20px;
@@ -303,7 +304,7 @@
 					margin: 6px 0 0 10px;
 					cursor:pointer;
 				}
-				background-color: @item-color;
+
 				label{
 					padding:5px;
 					vertical-align: middle;
@@ -316,6 +317,15 @@
 					h3{
 						font-size: @item-title-font-size;
 					}
+					.options{
+						width:@item-title-font-size;
+						visibility:hidden;
+						height:100%;
+						.glyphicon{
+							cursor:pointer;
+							font-size: @item-title-font-size;
+						}
+					}
 					.metadata_to_hide, .description, .filler{
 						display:none;
 					}
@@ -325,6 +335,7 @@
 						vertical-align: middle;
 					}
 				}
+
 				.folder, .file{
 					width: @container-width - 55px;
 					h3{
@@ -341,6 +352,9 @@
 			}
 			li:hover{
 				background-color: @highlighted-file;
+				.options{
+					visibility:visible !important;
+				}
 			}
 			.editing{
 				.error_msg{
@@ -458,48 +472,17 @@
 
 				li{
 					border-top: 1px solid  @edit-container-color;
-				}
-
-				label{
-					.title_wrapper{
-						width:auto;
-					}
-					.options{
-						width:@item-title-font-size;
-						height:100%;
-						.glyphicon{
-							cursor:pointer;
-							font-size: @item-title-font-size;
+					label{
+						.title_wrapper{
+							width:auto;
 						}
 						.content-options-dropdown{
-							visibility:hidden;
 							margin:0;
 							padding:0;
 							border:none;
 							background-color:transparent;
 						}
-
-						.disable-on-edit{
-							visibility:hidden;
-						}
 					}
-
-					.node_title_textbox, .topic_textarea{
-						width:100%;
-						resize:none;
-					}
-					.item_edit_options{
-						.glyphicon{
-							font-size: @item-title-font-size;
-							cursor:pointer;
-						}
-						.submit_edit{
-							margin-right:20px;
-						}
-					}
-				}
-				label:hover .content-options-dropdown, .active-popover{
-					visibility:visible !important;
 				}
 
 				.current_topic{
@@ -510,19 +493,6 @@
 							width:80%;
 						}
 					}
-				}
-				.under_topic{
-					.list_item_wrapper{
-						background-color:@blue-100;
-					}
-				}
-				.under_topic_placeholder{
-					display:none;
-					height:@collapsed-height;
-					background-color: @gray-200;
-				}
-				.under_topic_placeholder:hover{
-					background-color:@edit-current-folder-color;
 				}
 			}
 
@@ -606,19 +576,15 @@
 			.content-list{
 				height:@container-height * 0.87;
 				min-height: @container-min-height * 0.87;
-				.edit_folder_button{
-					visibility:hidden;
-				}
 				li{
 					border-top: 1px solid  @preview-container-color;
 				}
 				.current_topic{
 					border-left:4px solid @preview-selected-folder;
 				}
-				.folder_open_icon, .unpublished, .options, .item_edit_options, .context-menu{
+				.folder_open_icon, .unpublished, .context-menu{
 					display:none !important;
 				}
-
 			}
 		}
 	}
