@@ -306,7 +306,7 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
             node: this.model.toJSON(),
             show_metadata: this.parentnode
         }));
-        this.load_content(this.collection, "Select a question type to begin...");
+        this.load_content(this.collection, "Click '+ QUESTION' to begin...");
     },
     create_new_view:function(model){
         var new_exercise_item = new AssessmentItemView({
