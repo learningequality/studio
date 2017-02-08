@@ -205,13 +205,13 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     default_item:"#exercise_list .default-item",
 
     initialize: function(options) {
-        _.bindAll(this, "save", "createexercise", 'toggle_answers','toggle_details');
+        _.bindAll(this, "save", "createexercise", 'toggle_answers','toggle_details', 'add_assessment_item');
         this.bind_edit_functions();
         this.parentnode = options.parentnode;
         this.onclose = options.onclose;
         this.onsave = options.onsave;
-        this.listenTo(this.collection, "remove", this.render);
-        this.listenTo(exerciseSaveDispatcher, "save", this.save);
+        // this.listenTo(this.collection, "remove", this.render);
+        // this.listenTo(exerciseSaveDispatcher, "save", this.save);
         this.collection = new Models.AssessmentItemCollection();
         var self = this;
         this.collection.get_all_fetch(this.model.get("assessment_items")).then(function(fetched){
@@ -221,9 +221,7 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     },
 
     events: {
-        "click .addquestion": "singleselection",
-        "change #exercise_title": "set_title",
-        "change #exercise_description": "set_description",
+        "click .addquestion": "add_assessment_item",
         "click .save": "save",
         "click .download": "download",
         "click #createexercise": "createexercise",
@@ -283,22 +281,12 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
 
             fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".zip");
         }
-
     },
 
     save: function() {
         this.model.save();
         // this.collection.save();
     },
-
-    set_title: function(){
-        this.model.set("title", this.$("#exercise_title").prop("value"));
-    },
-
-    set_description: function(){
-        this.model.set("description", this.$("#exercise_description").prop("value"));
-    },
-
     template: require("./hbtemplates/exercise_edit.handlebars"),
 
     render: function() {
@@ -318,40 +306,16 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
         return new_exercise_item;
     },
 
-    add_assessment_item: function(type, data) {
+    add_assessment_item: function() {
         var model_data = {
-            type: type,
             contentnode: this.model.get("id"),
-            order: this.collection.length + 1,
+            order: this.collection.length + 1
         };
-        if (data) {
-            model_data = _.extend(model_data, data);
-        }
         this.create_new_item(model_data, true, "").then(function(assessment_item){
             assessment_item.toggle_focus();
         });
     },
 
-    multiplechoice: function() {
-        this.add_assessment_item("multiple_selection");
-    },
-
-    truefalse: function() {
-        this.add_assessment_item("multiple_selection", {
-            answers: "[{\"answer\": \"True\", \"correct\": true}, {\"answer\": \"False\", \"correct\": false}]"
-        });
-    },
-    singleselection: function(event) {
-        console.log("CALLED 2", event.target)
-        this.add_assessment_item("single_selection");
-    },
-    inputanswer: function() {
-        this.add_assessment_item("input_question");
-    },
-
-    freeresponse: function() {
-        this.add_assessment_item("free_response");
-    },
     set_focus:function(){
         this.views.forEach(function(view){
             view.remove_focus();

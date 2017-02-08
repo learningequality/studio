@@ -450,6 +450,7 @@ var AssessmentItemModel = BaseModel.extend({
 	root_list:"assessmentitem-list",
 	model_name:"AssessmentItemModel",
 	defaults: {
+		type: "single_selection",
 		question: "",
 		answers: "[]",
 		hints: "[]"

@@ -75,7 +75,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.$el.html(this.template());
     this.load_preview();
     this.load_list();
-    this.load_editor(this.edit_list.selected_items);
+    if(this.collection.length > 1){
+      this.load_editor(this.edit_list.selected_items);
+    }
+
   },
   render_details:function(){
     this.switchPanel("details");
@@ -123,12 +126,15 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   load_questions:function(model){
     var Exercise = require("edit_channel/exercise_creation/views");
-    var exercise_view = new Exercise.ExerciseView({
+    if(!this.exercise_view){
+      this.exercise_view = new Exercise.ExerciseView({
         parent_view: this,
         model:model,
-        onsave:this.reload_ancestors,
-        el:$("#metadata_questions")
+        onsave:this.reload_ancestors
       });
+    }
+    this.$("#metadata_questions").html(this.exercise_view.el);
+
   },
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1 && selected_items[0].model.get("kind") !== "topic";
