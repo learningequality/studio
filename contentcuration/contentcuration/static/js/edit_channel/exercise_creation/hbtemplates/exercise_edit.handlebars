@@ -2,7 +2,7 @@
 	<div class="row">
 		<div class="col-sm-6 show_question_toggle">
 			<input type="checkbox" id="exercise_show_answers"/>
-			<label for="exercise_show_answers">View questions only</label>
+			<label for="exercise_show_answers">&nbsp; View questions only</label>
 		</div>
 		<div class="col-sm-6">
 
@@ -12,18 +12,8 @@
 	<ol class="panel-group" id="exercise_list" role="tablist" aria-multiselectable="true">
 		<div class="default-item">Loading...</div>
 	</ol>
-	<div class="dropup">
-		<button type="button" class="btn btn-default add_question" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Question Types">
-			<span class="glyphicon glyphicon-plus"></span> QUESTION
-			<span class="sr-only">Add Question</span>
-		</button>
-		<ul class="dropdown-menu add_question_dropdown">
-			<li class="multiple_selection"><a >Multiple Selection</a></li>
-			<li class="single_selection"><a >Single Selection</a></li>
-			<li class="true_false"><a >True/False</a></li>
-			<li class="input_answer"><a >Input Answer</a></li>
-			<li class="free_response"><a >Free Response</a></li>
-		</ul>
+	<div class="addquestion single_selection text-center">
+		<span class="glyphicon glyphicon-plus"></span>&nbsp; QUESTION
 	</div>
 
 	{{#if show_metadata}}

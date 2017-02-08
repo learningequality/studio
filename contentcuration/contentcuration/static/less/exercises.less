@@ -111,29 +111,17 @@
 			display:block;
 		}
 	}
-	.dropup{
+	.addquestion{
 		margin-bottom:20px;
-		.add_question{
-			background-color: @blue-700;
-			color:white;
-			margin:5px;
-			margin-left:40px;
-			padding:5px 30px;
-		}
-
-		.add_question:hover{
-			font-weight:bold;
-			background-color: @blue-200;
-			color:black;
-		}
-		.add_question_dropdown{
-			margin-left:35px;
-			padding:0;
-			li a{
-				padding:10px 15px;
-				width:100%;
-			}
-		}
+		background-color: @blue-100;
+		width:100%;
+		padding:5px 30px;
+		font-weight:bold;
+		font-size: 13pt;
+		cursor:pointer;
+	}
+	.addquestion:hover{
+		background-color: @blue-200;
 	}
 	.editable:empty:not(:focus):before{
 	    content:attr(data-ph);

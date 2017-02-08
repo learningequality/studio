@@ -221,11 +221,7 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     },
 
     events: {
-        "click .multiple_selection": "multiplechoice",
-        "click .true_false": "truefalse",
-        "click .free_response": "freeresponse",
-        "click .single_selection": "singleselection",
-        "click .input_answer": "inputanswer",
+        "click .addquestion": "singleselection",
         "change #exercise_title": "set_title",
         "change #exercise_description": "set_description",
         "click .save": "save",
@@ -292,7 +288,7 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
 
     save: function() {
         this.model.save();
-        this.collection.save();
+        // this.collection.save();
     },
 
     set_title: function(){
@@ -345,7 +341,8 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
             answers: "[{\"answer\": \"True\", \"correct\": true}, {\"answer\": \"False\", \"correct\": false}]"
         });
     },
-    singleselection: function() {
+    singleselection: function(event) {
+        console.log("CALLED 2", event.target)
         this.add_assessment_item("single_selection");
     },
     inputanswer: function() {
@@ -911,10 +908,8 @@ var AssessmentItemHintView = Backbone.View.extend({
         this.set_editor(true);
     },
     set_open:function(){
-        this.containing_list_view.set_focus();
         this.set_toolbar_open();
         this.editor_view.activate_editor();
-        this.containing_list_view.container.toggle_focus();
     },
     set_closed:function(){
         this.set_toolbar_closed();
