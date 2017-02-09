@@ -309,9 +309,10 @@ def duplicate_nodes(request):
             "node_ids": " ".join(new_nodes)
         }))
 
-def _duplicate_node(node, sort_order=1, parent=None, channel_id=None):
+def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
+    sort_order = sort_order or node.sort_order
     new_node = ContentNode.objects.create(
         title=node.title,
         description=node.description,
@@ -426,4 +427,3 @@ def publish_channel(request):
             "success": True,
             "channel": channel_id
         }))
-
