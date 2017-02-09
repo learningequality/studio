@@ -41,13 +41,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 
 	edit_page : function(){
 		this.open_channel(true, false, window.current_channel.get_root("main_tree"));
-		var QueueView = require("edit_channel/queue/views");
-		var queue = new QueueView.Queue({
-	 		el: $("#queue-area"),
-	 		collection: this.nodeCollection,
-	 		clipboard_root : window.current_user.get_clipboard(),
-			trash_root : window.current_channel.get_root("trash_tree"),
-	 	});
 	},
 	preview_page : function(){
 		this.open_channel(false, false, window.current_channel.get_root("main_tree"));
@@ -72,6 +65,13 @@ ChannelEditRouter  = Backbone.Router.extend({
 			model : root,
 			is_clipboard : is_clipboard,
 		});
+		var QueueView = require("edit_channel/queue/views");
+		var queue = new QueueView.Queue({
+	 		el: $("#queue-area"),
+	 		collection: this.nodeCollection,
+	 		clipboard_root : window.current_user.get_clipboard(),
+			trash_root : window.current_channel.get_root("trash_tree"),
+	 	});
 	}
 });
 
