@@ -11,25 +11,21 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
   template: require("./hbtemplates/uploader_modal.handlebars"),
   initialize: function(options) {
     _.bindAll(this, "close_uploader");
-    this.onsave = options.onsave;
-    this.onnew = options.onnew;
-    this.collection = options.collection;
-    this.new_content = options.new_content;
-    this.upload_files = options.upload_files;
     this.render(this.close_uploader, {
-      new_content: this.new_content,
+      new_content: options.new_content,
       title: (this.model)? ((this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name")) : null
     });
     this.metadata_view = new EditMetadataView({
       el: this.$(".modal-body"),
-      collection : this.collection,
-      onsave: this.onsave,
-      onnew: this.onnew,
+      collection : options.collection,
+      onsave: options.onsave,
+      onnew: options.onnew,
       onclose: this.close_uploader,
-      new_content: this.new_content,
+      new_exercise: options.new_exercise,
+      new_content: options.new_content,
+      new_topic: options.new_topic,
       container:this,
-      model:this.model,
-      upload_files:this.upload_files
+      model:this.model
     });
   },
   close_uploader:function(event){
@@ -56,9 +52,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.bind_edit_functions();
     this.collection = options.collection;
     this.new_content = options.new_content;
-    this.upload_files = options.upload_files;
+    this.new_exercise = options.new_exercise;
     this.onsave = options.onsave;
     this.onnew = options.onnew;
+    this.new_topic = options.new_topic;
     this.onclose = options.onclose;
     this.render();
     this.render_details();
@@ -110,7 +107,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.edit_list = new EditMetadataList({
       collection:this.collection,
       new_content : this.new_content,
-      upload_files : this.upload_files,
+      new_exercise : this.new_exercise,
+      new_topic: this.new_topic,
       el: this.$("#topic_tree_selector"),
       model: this.model,
       container: this
@@ -130,16 +128,15 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       this.exercise_view = new Exercise.ExerciseView({
         parent_view: this,
         model:model,
-        onsave:this.reload_ancestors
+        onsave:this.reload_ancestors,
+        el: this.$("#metadata_questions")
       });
     }
-    this.$("#metadata_questions").html(this.exercise_view.el);
-
   },
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1 && selected_items[0].model.get("kind") !== "topic";
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
-    var has_files = false;
+    var has_files = selected_items[0].model.get("assessment_items").length > 0;
     if(is_individual){
       selected_items[0].model.get("files").forEach(function(file){
         var preset = (file.preset.id)? file.preset.id:file.preset;
@@ -192,7 +189,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
   },
   save_nodes:function(){
-    var sort_order = (this.model && (this.new_content || this.upload_files)) ? Math.ceil(this.model.get("metadata").max_sort_order) : 0;
+    var sort_order = (this.model && this.new_content) ? Math.ceil(this.model.get("metadata").max_sort_order) : 0;
     var self = this;
     this.edit_list.views.forEach(function(entry){
       var tags = [];
@@ -202,7 +199,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       entry.set({
         tags: tags
       });
-      if(self.new_content || self.upload_files ){
+      if(self.new_content){
         entry.set({
           parent:self.model.id,
           sort_order:++sort_order
@@ -265,19 +262,20 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     this.bind_edit_functions();
     this.collection = options.collection;
     this.new_content = options.new_content;
-    this.upload_files = options.upload_files;
+    this.new_topic = options.new_topic;
+    this.new_exercise = options.new_exercise;
     this.container = options.container;
     this.selected_items = [];
     this.render();
-    if(!this.upload_files && !this.new_content && this.collection.length > 1){
+    if(!this.new_content && this.collection.length > 1){
       this.$("#uploader_select_all_check").attr("checked", true);
       this.check_all_wrapper(null);
     }
   },
   render: function() {
     this.$el.html(this.template({
-      new_content: this.new_content,
-      show_list: this.collection.length > 1 || this.new_content || this.upload_files
+      new_topic: this.new_topic,
+      show_list: this.collection.length > 1 || (this.new_content && !this.new_exercise)
     }));
     this.load_content();
   },
@@ -297,7 +295,6 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       model: model,
       containing_list_view : this,
       new_content: this.new_content,
-      new_file: this.upload_files,
       container: this.container
     });
     this.views.push(uploaded_view);
@@ -306,7 +303,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
   handle_if_individual:function(){
     //Set current node if only one in collection
     if(this.collection.length === 1){
-      if(!this.new_content && !this.uploaded_files){
+      if(!this.new_content){
         this.selected_items.push(this.views[0]);
         this.update_shared_values(true, this.views[0]);
         this.container.load_editor(this.selected_items);
@@ -372,7 +369,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   initialize: function(options) {
     _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'select_tag');
     this.new_content = options.new_content;
-    this.upload_files = options.upload_files;
     this.selected_items = options.selected_items;
     this.shared_data = options.shared_data;
     this.container = options.container;
@@ -521,7 +517,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   set_selected:function(){
     if(this.selected_items.length === 1 && this.$("#input_title").val().trim() == ""){
       this.$("#title_error").css("display", "inline-block");
-      if(this.collection && this.collection.length === 1 && !this.new_content && !this.uploaded_files){
+      if(this.collection && this.collection.length === 1 && !this.new_content){
           this.container.disable_submit();
       }
     }else{
@@ -550,19 +546,19 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.container = options.container;
       this.edited = false;
       this.new_content = options.new_content;
-      this.new_file = options.new_file;
+      this.isNew = this.new_content;
       this.render();
-      this.isNew = this.new_content || this.new_file;
-      this.set_edited(this.isNew);
+      this.set_edited(this.new_content);
       this.load_tags();
       this.uploads_in_progress = 0;
       this.isoriginal = !this.model.get("original_channel") || this.model.get("original_channel").id == window.current_channel.id;
       this.listenTo(this.model, "change:title", this.update_name);
+      this.listenTo(this.model, "change:assessment_items", this.handle_change);
   },
   render: function() {
       this.$el.html(this.template({
           node: this.model.toJSON(),
-          new_content: this.new_content,
+          new_topic: this.new_content && this.model.get("kind") === "topic",
           isfolder: this.model.get("kind") === "topic"
       }));
   },
@@ -592,7 +588,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.check_item();
   },
   set_edited:function(is_edited){
-      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files")
+      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items")
       // Handle unsetting node
       if(!is_edited){
           this.originalData = edited_data;
@@ -642,6 +638,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.listenTo(this.model, "change:files", this.handle_change);
   },
   handle_change:function(){
+    console.log("detected changes");
     this.set_edited(true);
     $("#metadata_preview_btn").css("display", "inline-block");
     this.container.preview_view.load_preview();

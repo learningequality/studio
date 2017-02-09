@@ -80,8 +80,9 @@ var FileUploadView = BaseViews.BaseView.extend({
             onsave: this.onsave,
             onnew: this.onnew,
             onclose:this.close_file_uploader,
-            upload_files: true,
-            new_content: false,
+            new_exercise: false,
+            new_content: true,
+            new_topic: false,
             collection: this.collection
         }
 

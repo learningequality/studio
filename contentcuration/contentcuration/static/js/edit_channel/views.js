@@ -512,6 +512,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		            collection: edit_collection,
 		            model: self.model,
 		            new_content: true,
+		            new_topic: true,
 		            onsave: self.reload_ancestors,
 		            onnew:self.add_nodes
 		        });
@@ -569,7 +570,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		            el : $("#dialog"),
 		            collection: edit_collection,
 		            model: self.model,
-		            new_content: false,
+		            new_content: true,
+		            new_exercise: true,
 		            onsave: self.reload_ancestors,
 		            onnew:self.add_nodes
 		        });
@@ -821,6 +823,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		            collection: edit_collection,
 		            model: self.model,
 		            new_content: true,
+		            new_topic: true,
 		            onsave: self.reload_ancestors,
 		            onnew:self.add_nodes
 		        });

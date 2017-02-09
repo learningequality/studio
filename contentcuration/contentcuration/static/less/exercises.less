@@ -39,11 +39,11 @@
 		display:none;
 	}
 	#exercise_list {
-		min-height: 200px;
+		min-height: 175px;
 		list-style-type: none;
 		.default-item{
 			width:100%;
-			padding-top:10%;
+			padding-top:7%;
 			font-weight: bold;
 			text-align: center;
 			color:@gray-400;
@@ -101,14 +101,11 @@
 		}
 	}
 	#exercise_list.hide_answers{
-		.answers{
-			display:none;
-		}
-		.hints{
-			display:none;
+		.answers, .hint_link{
+			display:none !important;
 		}
 		.assessment_item.active .answers{
-			display:block;
+			display:block !important;
 		}
 	}
 	.addquestion{

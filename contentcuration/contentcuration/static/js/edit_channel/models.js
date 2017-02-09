@@ -16,7 +16,7 @@ var BaseModel = Backbone.Model.extend({
 	},
 	getName:function(){
 		return this.model_name;
-	}
+	},
 });
 
 var BaseCollection = Backbone.Collection.extend({

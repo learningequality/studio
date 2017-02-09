@@ -205,13 +205,13 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     default_item:"#exercise_list .default-item",
 
     initialize: function(options) {
-        _.bindAll(this, "save", "createexercise", 'toggle_answers','toggle_details', 'add_assessment_item');
+        _.bindAll(this, "save", "createexercise", 'toggle_answers','add_assessment_item');
         this.bind_edit_functions();
         this.parentnode = options.parentnode;
         this.onclose = options.onclose;
         this.onsave = options.onsave;
-        // this.listenTo(this.collection, "remove", this.render);
-        // this.listenTo(exerciseSaveDispatcher, "save", this.save);
+        this.listenTo(this.collection, "remove", this.render);
+        this.listenTo(exerciseSaveDispatcher, "save", this.save);
         this.collection = new Models.AssessmentItemCollection();
         var self = this;
         this.collection.get_all_fetch(this.model.get("assessment_items")).then(function(fetched){
@@ -226,21 +226,10 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
         "click .download": "download",
         "click #createexercise": "createexercise",
         "change #exercise_show_answers" : "toggle_answers",
-        "click .metadata_toggle": "toggle_details"
     },
     toggle_answers:function(){
+        console.log("TOGGLING")
         this.$(this.list_selector).toggleClass("hide_answers");
-    },
-    toggle_details:function(){
-        if(this.$(".toggler_icon").hasClass("glyphicon-menu-up")){
-            this.$(".metadata_toggle .text").text("Fewer Details");
-            this.$(".toggler_icon").removeClass("glyphicon-menu-up").addClass("glyphicon-menu-down");
-            this.$("#exercise_extra_metadata").slideDown();
-        }else{
-            this.$(".metadata_toggle .text").text("More Details");
-            this.$(".toggler_icon").removeClass("glyphicon-menu-down").addClass("glyphicon-menu-up");
-            this.$("#exercise_extra_metadata").slideUp();
-        }
     },
     download: function() {
         var self = this;
@@ -284,15 +273,15 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     },
 
     save: function() {
+        console.log("SAVING")
         this.model.save();
-        // this.collection.save();
+        this.collection.save();
     },
     template: require("./hbtemplates/exercise_edit.handlebars"),
 
     render: function() {
         this.$el.html(this.template({
-            node: this.model.toJSON(),
-            show_metadata: this.parentnode
+            node: this.model.toJSON()
         }));
         this.load_content(this.collection, "Click '+ QUESTION' to begin...");
     },
@@ -313,6 +302,7 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
         };
         this.create_new_item(model_data, true, "").then(function(assessment_item){
             assessment_item.toggle_focus();
+
         });
     },
 
@@ -358,7 +348,7 @@ var EditorView = Backbone.View.extend({
         this.editing = false;
         this.render();
         this.listenTo(this.model, "change:" + this.edit_key, this.render);
-        this.nodeid=options.nodeid;
+        this.nodeid = options.nodeid;
     },
 
     events: {
@@ -725,7 +715,8 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     isdisplay: false,
     initialize: function(options) {
         _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus", "toggle_undo_redo", "add_focus", "remove_focus");
-        this.nodeid=options.nodeid;
+        this.originalData = this.model.toJSON();
+        this.nodeid = options.nodeid;
         this.containing_list_view = options.containing_list_view;
         this.undo_manager = new UndoManager({
             track: true,
@@ -832,7 +823,6 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         }
     }
 });
-
 
 var AssessmentItemHintView = Backbone.View.extend({
 
@@ -981,7 +971,6 @@ var HintQuestionDisplayView = Backbone.View.extend({
         });
     },
 });
-
 
 var HintModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/assessment_item_hint_modal.handlebars"),
