@@ -453,7 +453,8 @@ var AssessmentItemModel = BaseModel.extend({
 		type: "single_selection",
 		question: "",
 		answers: "[]",
-		hints: "[]"
+		hints: "[]",
+		files: [],
 	},
 
 	initialize: function () {

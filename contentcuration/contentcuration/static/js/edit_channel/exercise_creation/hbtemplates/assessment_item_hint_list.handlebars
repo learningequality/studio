@@ -1,5 +1,9 @@
 <ul class="list-unstyled">
-	<li class="addhint show_on_focus text-center" title="Add Hint">
-		<span class="glyphicon glyphicon-plus"></span>&nbsp; HINT
+	<li class="addhint_wrapper">
+		{{#unless isdisplay}}
+		<div class="addhint show_on_focus text-center" title="Add Hint">
+			<span class="glyphicon glyphicon-plus"></span>&nbsp; HINT
+		</div>
+		{{/unless}}
 	</li>
 </ul>

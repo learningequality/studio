@@ -12,15 +12,18 @@
 						<option class="free_response" value="free_response">Free Response</option>
 					</select>
 			    </div>
+			    {{#if isdisplay}}<div class="col-sm-1"></div>{{/if}}
 			    <div class="col-sm-3">
 					<div class="open_hints hint_link">
 						HINTS ({{hint_count}})&nbsp;
 						<span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
 					</div>
 			    </div>
+			    {{#unless isdisplay}}
 			    <div class="col-sm-1 move_question_handle">
 			    	<span class="glyphicon glyphicon-resize-vertical" aria-hidden="true"></span>
 			    </div>
+			    {{/unless}}
 			</div>
 			<div class="row">
 				<div class="col-sm-12">

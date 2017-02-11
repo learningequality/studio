@@ -1,10 +1,10 @@
-<li class="hint_item">
+<li class="hint_item {{#if allow_toggle}}hint_toggle{{/if}}">
 	<div class="row">
 		<div class="col-sm-10">
 			<div class="hint editable" data-ph="Hint"></div>
 		</div>
 		<div class="col-sm-2">
-			<div class="hint-toolbar pull-right"></div>
+			{{#if allow_toggle}}<div class="hint-toolbar pull-right"></div>{{/if}}
 		</div>
     </div>
 </li>

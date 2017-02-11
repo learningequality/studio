@@ -17,6 +17,10 @@ require("exercises.less");
 require("dropzone/dist/dropzone.css");
 require("../../../css/katex.min.css");
 
+if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("Safari") > -1){
+    require("mathml.less");
+}
+
 var placeholder_text = "$1\${☣ CONTENTSTORAGE}/$3"
 var regExp = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
 
@@ -522,7 +526,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
     events: {
         "click .delete": "delete",
         "click .correct": "toggle_correct",
-        "click .answer_item": "set_open",
+        "click .toggle_answer": "set_open",
         "click .toggle": "toggle"
     },
 
@@ -532,7 +536,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
             input_answer: this.assessment_item.get("type") === "input_question",
             single_selection: this.assessment_item.get("type") === "single_selection",
             groupName: this.assessment_item.get("id"),
-            isdisplay: this.isdisplay
+            allow_toggle: !this.isdisplay
         }));
         if (!this.editor_view) {
             this.editor_view = new EditorView({model: this.model, edit_key: "answer", el: this.$(".answer"), nodeid:this.nodeid});
@@ -666,7 +670,8 @@ var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
     className:"assessment_li",
     isdisplay: true,
     initialize: function(options) {
-        this.nodeid=options.nodeid;
+        _.bindAll(this, "update_hints");
+        this.nodeid = options.nodeid;
         this.render();
     },
     template: require("./hbtemplates/assessment_item_edit.handlebars"),
@@ -674,7 +679,19 @@ var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
         "click .hint_link": "show_hints"
     },
     render: function() {
-        this.$el.html(this.template({model: this.model.toJSON(), hint_count: this.model.get('hints').length}));
+        this.$el.html(this.template({
+            model: this.model.toJSON(),
+            hint_count: this.model.get('hints').length,
+            isdisplay:this.isdisplay,
+        }));
+        if (!this.editor_view) {
+            this.editor_view = new EditorView({
+                model: this.model,
+                edit_key: "question",
+                nodeid: this.nodeid
+            });
+        }
+        this.$(".question").html(this.editor_view.el);
         if (this.model.get("type") !== "free_response") {
             if (!this.answer_editor) {
                 this.answer_editor = new AssessmentItemAnswerListView({
@@ -685,36 +702,33 @@ var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
                     isdisplay:this.isdisplay,
                 });
             }
-            this.$(".answers").append(this.answer_editor.el);
-        }
-
-        if (!this.editor_view) {
-            this.editor_view = new EditorView({
-                model: this.model,
-                edit_key: "question",
-                el: this.$(".question"),
-                nodeid: this.nodeid
-            });
-        } else {
-            this.$(".question").append(this.editor_view.el);
+            this.$(".answers").html(this.answer_editor.el);
         }
         this.$(".question_type_select").val(this.model.get("type"));
     },
     show_hints:function(event){
         event.stopPropagation();
         this.hint_editor = new HintModalView({
-            collection:this.model.get("hints"),
-            container:this,
+            collection: this.model.get("hints"),
+            container: this,
             assessment_item: this.model,
-            nodeid:this.nodeid
+            model: this.model,
+            nodeid: this.nodeid,
+            onupdate: this.update_hints,
+            isdisplay: this.isdisplay
         });
+    },
+    update_hints:function(){
+        console.log("updating hints", this.model.get("hints"))
     }
 });
 
 var AssessmentItemView = AssessmentItemDisplayView.extend({
     isdisplay: false,
     initialize: function(options) {
-        _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus", "toggle_undo_redo", "add_focus", "remove_focus");
+        _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed", "save",
+                "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus",
+                "toggle_undo_redo", "add_focus", "remove_focus", "update_hints", "set_type");
         this.originalData = this.model.toJSON();
         this.nodeid = options.nodeid;
         this.containing_list_view = options.containing_list_view;
@@ -736,7 +750,19 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         "click .delete": "delete",
         "click .toggle_exercise": "toggle_focus",
         "click .toggle" : "toggle",
-        "click .hint_link": "show_hints"
+        "click .hint_link": "show_hints",
+        "change .question_type_select": "set_type"
+    },
+    set_type:function(event){
+        console.log("Changing:", this.model);
+        this.model.set('type', event.target.value);
+        if(this.answer_editor){
+            this.answer_editor.remove();
+            this.answer_editor = null;
+        }
+        this.render();
+        this.add_focus();
+        // CHECK FOR CORRECT ANSWERS (multiple --> single --> none (free response) --> all (input answer) --> true/false)
     },
     toggle:function(event){
         event.stopPropagation();
@@ -832,6 +858,7 @@ var AssessmentItemHintView = Backbone.View.extend({
         this.containing_list_view = options.containing_list_view;
         this.assessment_item = options.assessment_item;
         this.nodeid = options.nodeid;
+        this.isdisplay = options.isdisplay;
         this.render();
     },
 
@@ -841,13 +868,14 @@ var AssessmentItemHintView = Backbone.View.extend({
 
     events: {
         "click .delete": "delete",
-        "click .hint_item": "set_open",
+        "click .hint_toggle": "set_open",
         "click .toggle": "toggle"
     },
 
     render: function() {
         this.$el.html(this.template({
-            hint: this.model.toJSON()
+            hint: this.model.toJSON(),
+            allow_toggle: !this.isdisplay
         }));
         if (!this.editor_view) {
             this.editor_view = new EditorView({model: this.model, edit_key: "hint", el: this.$(".hint"), nodeid:this.nodeid});
@@ -913,6 +941,7 @@ var AssessmentItemHintListView = BaseViews.BaseEditableListView.extend({
         this.bind_edit_functions();
         this.assessment_item = options.assessment_item;
         this.nodeid = options.nodeid;
+        this.isdisplay = options.isdisplay;
         this.render();
         this.container = options.container;
         this.listenTo(this.collection, "add", this.add_hint_view);
@@ -925,7 +954,7 @@ var AssessmentItemHintListView = BaseViews.BaseEditableListView.extend({
 
     render: function() {
         this.views=[];
-        this.$el.html(this.template());
+        this.$el.html(this.template({isdisplay: this.isdisplay}));
         for (var i = 0; i < this.collection.length; i++) {
             this.add_hint_view(this.collection.at(i));
         }
@@ -943,10 +972,11 @@ var AssessmentItemHintListView = BaseViews.BaseEditableListView.extend({
             open: open,
             containing_list_view:this,
             assessment_item: this.assessment_item,
-            nodeid:this.nodeid
+            nodeid:this.nodeid,
+            isdisplay: this.isdisplay
         });
         this.views.push(view);
-        this.$(".addhint").before(view.el);
+        this.$(".addhint_wrapper").before(view.el);
 
     },
     set_focus:function(){
@@ -974,17 +1004,19 @@ var HintQuestionDisplayView = Backbone.View.extend({
 
 var HintModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/assessment_item_hint_modal.handlebars"),
-
     initialize: function(options) {
         _.bindAll(this, "close_hints");
-        this.modal = true;
         this.data = options;
+        this.onupdate = options.onupdate;
         this.render();
     },
     close_hints:function(){
+        if(!this.data.isdisplay){
+            this.onupdate(this.model);
+        }
+        $('.modal-backdrop').slice(1).remove();
         this.remove();
     },
-
     render: function() {
         this.$el.html(this.template());
         var question_preview = new HintQuestionDisplayView({

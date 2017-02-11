@@ -55,12 +55,15 @@ var PreviewView = BaseViews.BaseView.extend({
             if(this.current_preview.assessment_id){
                 var ExerciseView = require("edit_channel/exercise_creation/views");
                 var assessment_item = new Models.AssessmentItemModel(this.current_preview);
-                var exercise_item = new ExerciseView.AssessmentItemDisplayView({
+                if(this.exercise_item){
+                    this.exercise_item.remove();
+                }
+                this.exercise_item = new ExerciseView.AssessmentItemDisplayView({
                     model: assessment_item,
                     containing_list_view : null,
                     nodeid:(this.model)? this.model.get('id') : null,
-                    el: this.$("#preview_window")
                 });
+                this.$("#preview_window").html(this.exercise_item.el);
             }else{
                 extension = this.current_preview.file_format;
 
