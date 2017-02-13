@@ -354,12 +354,16 @@ def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
         aiobj_copy.id = None
         aiobj_copy.contentnode = new_node
         aiobj_copy.save()
+        # for fobj in aiobj.files.all():
+        #     fobj_copy = copy.copy(fobj)
+        #     fobj_copy.id = None
+        #     fobj_copy.assessment_item = aiobj_copy
+        #     fobj_copy.save()
 
     for c in node.children.all():
         _duplicate_node(c, parent=new_node.id)
 
     return new_node
-
 
 def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
