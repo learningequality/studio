@@ -278,8 +278,8 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
 
     save: function() {
         console.log("SAVING")
-        this.model.save();
-        this.collection.save();
+        // this.model.save();
+        // this.collection.save();
     },
     template: require("./hbtemplates/exercise_edit.handlebars"),
 
@@ -754,15 +754,53 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         "change .question_type_select": "set_type"
     },
     set_type:function(event){
-        console.log("Changing:", this.model);
-        this.model.set('type', event.target.value);
+        var new_type = event.target.value;
+        if(new_type === "true_false" && this.model.get("answers").length > 0){
+            if(confirm("Switching to true or false will remove any current answers. Continue?")){
+                new_type = "single_selection";
+                var trueFalseCollection = new Backbone.Collection();
+                trueFalseCollection.add({answer: "True", correct: true});
+                trueFalseCollection.add({answer: "False", correct: false});
+                this.model.set("answers", trueFalseCollection);
+            }else{
+               new_type = this.model.get('type');
+            }
+        } else if(new_type === "single_selection" && this.model.get("answers").where({'correct': true}).length > 1){
+            if(confirm("Switching to single selection will set only one answer as correct. Continue?")){
+                var correct_answer_set = false;
+                this.model.get('answers').forEach(function(item){
+                    if(correct_answer_set){
+                        item.set('correct', false);
+                    }
+                    correct_answer_set = correct_answer_set || item.get('correct');
+                });
+            }else{
+                new_type = this.model.get('type');
+            }
+        } else if(new_type === "input_question" && this.model.get("answers").where({'correct': false}).length > 0){
+            if(confirm("Switching to input answer will set all answers as correct. Continue?")){
+                this.model.get('answers').forEach(function(item){
+                    item.set('correct', true);
+                });
+                console.log(this.model.get("answers"))
+            }else{
+               new_type = this.model.get('type');
+            }
+        } else if(new_type === "free_response" && this.model.get("answers").length > 0){
+            if(confirm("Switching to free response will remove all answers. Continue?")){
+                this.model.set("answers", new Backbone.Collection());
+            }else{
+                new_type = this.model.get('type');
+            }
+        }
+
+        this.model.set('type', new_type);
         if(this.answer_editor){
             this.answer_editor.remove();
             this.answer_editor = null;
         }
         this.render();
         this.add_focus();
-        // CHECK FOR CORRECT ANSWERS (multiple --> single --> none (free response) --> all (input answer) --> true/false)
     },
     toggle:function(event){
         event.stopPropagation();
