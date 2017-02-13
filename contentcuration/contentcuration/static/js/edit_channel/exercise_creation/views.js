@@ -755,8 +755,8 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     },
     set_type:function(event){
         var new_type = event.target.value;
-        if(new_type === "true_false" && this.model.get("answers").length > 0){
-            if(confirm("Switching to true or false will remove any current answers. Continue?")){
+        if(new_type === "true_false"){
+            if(this.model.get("answers").length === 0 || confirm("Switching to true or false will remove any current answers. Continue?")){
                 new_type = "single_selection";
                 var trueFalseCollection = new Backbone.Collection();
                 trueFalseCollection.add({answer: "True", correct: true});
