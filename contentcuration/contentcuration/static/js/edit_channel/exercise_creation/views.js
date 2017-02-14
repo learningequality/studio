@@ -524,11 +524,19 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
         this.views.forEach(function(view){
             view.set_closed();
         });
+    },
+    validate: function(){
+        var isValid = true;
+        this.views.forEach(function(view){
+            isValid = isValid && view.validate();
+        });
+        return isValid;
     }
 });
 
 var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
     close_editors_on_focus: true,
+    content_field: null,
 
     toggle_editor: function() {
         this.open = !this.open;
@@ -572,11 +580,16 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
         this.model.destroy();
         this.remove();
         console.log("NEED TO BE TEMPORARY UNTIL SAVE!")
+    },
+    validate: function(){
+        console.log(this.model.get(this.content_field))
+        return true;
     }
 });
 
 var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
     toolbar_el : '.answer-toolbar',
+    content_field: 'answer',
     template: require("./hbtemplates/assessment_item_answer.handlebars"),
     closed_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_closed.handlebars"),
     open_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_open.handlebars"),
@@ -670,6 +683,22 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
         this.views.forEach(function(view){
             view.set_correct(is_correct);
         })
+    },
+    validate: function(){
+        var isValid = true;
+        if(this.assessment_item.get("type") === "input_question"){
+            isValid = this.collection.length >= 0;
+        }else if(this.assessment_item.get('type') === 'multiple_selection'){
+            isValid = this.collection.length >= 0;
+            isValid = isValid && this.collection.where({'correct': true}).length > 0;
+        } else if(this.assessment_item.get('type') === 'single_selection'){
+            isValid = this.collection.length >= 0;
+            isValid = isValid && this.collection.where({'correct': true}).length === 1;
+        }
+        this.views.forEach(function(view){
+            isValid = isValid && view.validate();
+        });
+        return isValid;
     }
 });
 
@@ -710,6 +739,7 @@ var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
                 });
             }
             this.$(".answers").html(this.answer_editor.el);
+            this.answer_editor.validate();
         }
         this.$(".question_type_select").val(this.model.get("type"));
     },
@@ -789,7 +819,6 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
                 this.model.get('answers').forEach(function(item){
                     item.set('correct', true);
                 });
-                console.log(this.model.get("answers"))
             }else{
                new_type = this.model.get('type');
             }
@@ -894,6 +923,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
 });
 
 var AssessmentItemHintView = ExerciseEditableItemView.extend({
+    content_field: 'hint',
     toolbar_el : '.hint-toolbar',
     template: require("./hbtemplates/assessment_item_hint.handlebars"),
     closed_toolbar_template: require("./hbtemplates/assessment_item_hint_toolbar_closed.handlebars"),
