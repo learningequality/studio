@@ -231,51 +231,13 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
         "click #createexercise": "createexercise",
         "change #exercise_show_answers" : "toggle_answers",
     },
+    validate:function(){
+
+    },
     toggle_answers:function(){
         console.log("TOGGLING")
         this.$(this.list_selector).toggleClass("hide_answers");
     },
-    download: function() {
-        var self = this;
-        var zip = new JSZip();
-        zip.file("exercise.json", JSON.stringify({
-            title: this.model.get("title"),
-            description: this.model.get("description"),
-            all_assessment_items: this.collection.map(function(model){return model.get("id");})
-        }));
-        zip.file("assessment_items.json", JSON.stringify(this.collection.map(function(model){
-            return convert_assessment_item_to_perseus(model);
-        })));
-        var all_image_urls = this.collection.reduce(function(memo, model){
-            memo = memo.concat(return_all_assessment_item_image_urls(model));
-            return memo;
-        }, []);
-
-        var downloads = 0;
-
-        if (all_image_urls.length > 0) {
-
-            _.each(all_image_urls, function(item) {
-                JSZipUtils.getBinaryContent(item.path, function(err, data) {
-                    if (err) {
-                        throw err
-                    }
-                    zip.file(item.name, data, {binary: true});
-                    downloads += 1;
-                    if (downloads === all_image_urls.length) {
-                        var blob = zip.generate({type:"blob"});
-
-                        fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".zip");
-                    }
-                });
-        });
-        } else {
-            var blob = zip.generate({type:"blob"});
-
-            fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".zip");
-        }
-    },
-
     save: function() {
         console.log("SAVING")
         // this.model.save();
@@ -537,6 +499,8 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
 var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
     close_editors_on_focus: true,
     content_field: null,
+    undo: null,
+    redo: null,
 
     toggle_editor: function() {
         this.open = !this.open;
@@ -568,16 +532,16 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
         }
     },
     set_toolbar_open: function() {
-        this.$(this.toolbar_el).html(this.open_toolbar_template());
+        this.$(this.toolbar_el).html(this.open_toolbar_template({model: this.model.attributes, undo: this.undo, redo: this.redo}));
     },
 
     set_toolbar_closed: function() {
-        this.$(this.toolbar_el).html(this.closed_toolbar_template());
+        this.$(this.toolbar_el).html(this.closed_toolbar_template({model: this.model.attributes}));
     },
 
     delete: function(event) {
         event.stopPropagation();
-        this.model.destroy();
+        // this.model.destroy();
         this.remove();
         console.log("NEED TO BE TEMPORARY UNTIL SAVE!")
     },
@@ -702,8 +666,10 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     }
 });
 
-var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
+var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
     className:"assessment_li",
+    toolbar_el : '.toolbar',
+    content_field: 'question',
     isdisplay: true,
     initialize: function(options) {
         _.bindAll(this, "update_hints");
@@ -728,19 +694,17 @@ var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
             });
         }
         this.$(".question").html(this.editor_view.el);
-        if (this.model.get("type") !== "free_response") {
-            if (!this.answer_editor) {
-                this.answer_editor = new AssessmentItemAnswerListView({
-                    collection: this.model.get("answers"),
-                    container:this,
-                    assessment_item: this.model,
-                    nodeid:this.nodeid,
-                    isdisplay:this.isdisplay,
-                });
-            }
-            this.$(".answers").html(this.answer_editor.el);
-            this.answer_editor.validate();
+        if (!this.answer_editor) {
+            this.answer_editor = new AssessmentItemAnswerListView({
+                collection: this.model.get("answers"),
+                container:this,
+                assessment_item: this.model,
+                nodeid:this.nodeid,
+                isdisplay:this.isdisplay,
+            });
         }
+        this.$(".answers").html(this.answer_editor.el);
+        this.answer_editor.validate();
         this.$(".question_type_select").val(this.model.get("type"));
     },
     show_hints:function(event){
@@ -847,13 +811,6 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
             self.$(".delete").css("display", "block")
         }, 1000);
     },
-    delete: function(event) {
-        event.stopPropagation();
-        this.model.destroy();
-        this.remove();
-        console.log("NEED TO BE TEMPORARY")
-    },
-
     save: function() {
         this.set_toolbar_closed();
     },
@@ -891,13 +848,6 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         this.stopListening(this.undo_manager);
     },
 
-    set_toolbar_open: function() {
-        this.$(".toolbar").html(this.open_toolbar_template({model: this.model.attributes, undo: this.undo, redo: this.redo}));
-    },
-
-    set_toolbar_closed: function() {
-        this.$(".toolbar").html(this.closed_toolbar_template({model: this.model.attributes}));
-    },
     toggle_focus:function(){
         if(!this.$(".assessment_item").hasClass("active")){
            this.containing_list_view.set_focus();
@@ -912,9 +862,8 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     },
     remove_focus:function(){
         this.$(".assessment_item").removeClass("active");
-        this.editor_view.deactivate_editor();
         this.save();
-        this.set_toolbar_closed();
+        this.set_closed();
         this.unset_undo_redo_listener();
         if (this.answer_editor) {
             this.answer_editor.set_focus();
