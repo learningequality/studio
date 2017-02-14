@@ -218,9 +218,9 @@ def create_perseus_zip(ccnode, write_to_path):
         })
         if exercise_data['mastery_model'] == exercises.M_OF_N:
             if 'n' not in exercise_data:
-                exercise_data.update({'n':exercise_data.get('m') or max(min(5, assessment_items.count()), 1)})
+                exercise_data.update({'n':exercise_data.get('m') or max(assessment_items.count(), 1)})
             if 'm' not in exercise_data:
-                exercise_data.update({'m':exercise_data.get('n') or max(min(5, assessment_items.count()), 1)})
+                exercise_data.update({'m':exercise_data.get('n') or max(assessment_items.count(), 1)})
 
         exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
         exercise_context = {
