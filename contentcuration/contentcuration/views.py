@@ -330,7 +330,6 @@ def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
         author=node.author,
         content_id=node.content_id,
         extra_fields=node.extra_fields,
-        published=False,
     )
 
     # add tags now
