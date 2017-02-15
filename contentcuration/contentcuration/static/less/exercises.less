@@ -2,6 +2,7 @@
 @import "modal-styles.less";
 
 @hint-color:#FDFADF;
+@error-bg-color:#F2DEDE;
 
 #exercisecreation{
 	input[type="text"], textarea {
@@ -136,7 +137,6 @@
 	img{
 		max-width: 100% !important;
 	}
-
 	.remove_area{
 		display:inline-block;
 		vertical-align: top;
@@ -232,16 +232,12 @@
 			}
 			.hints{
 				min-height: 100px;
-				li{
+				.hint_item, .addhint{
 					width:100%;
 					cursor:pointer;
 					padding: 5px 20px;
 					margin-bottom: 5px;
 					border: 1px solid @blue-100;
-				}
-				.addhint_wrapper{
-					border:none;
-					padding: 0;
 				}
 				.hint_item{font-size:11pt; min-height:50px;}
 				.hint_item:hover{background-color: @blue-100;}
@@ -283,4 +279,20 @@
 		}
 	}
 
+}
+
+.hint_modal, .assessment_item{
+	.error-list li, .quill-error{
+		color: @red-error-color;
+	    font-weight: bold;
+	    font-size: 10pt;
+	    font-style: italic;
+	    background-color: transparent !important;
+	}
+	.quill-error{
+		display:none;
+	}
+	.invalid{
+		background-color: @error-bg-color;
+	}
 }
