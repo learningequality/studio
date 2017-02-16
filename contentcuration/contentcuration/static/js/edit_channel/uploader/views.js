@@ -612,7 +612,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   className: "uploaded disable_on_error",
   tagName: "li",
   initialize: function(options) {
-      _.bindAll(this, 'remove_topic', 'check_item', 'select_item','update_name', 'set_edited','handle_change');
+      _.bindAll(this, 'remove_topic', 'check_item', 'select_item','update_name', 'set_edited','handle_change', 'handle_assessment_items');
       this.bind_edit_functions();
       this.model.setExtraFields();
       this.containing_list_view = options.containing_list_view;
@@ -660,7 +660,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.check_item();
   },
   set_edited:function(is_edited){
-      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields")
+      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields");
       // Handle unsetting node
       if(!is_edited){
           this.originalData = $.extend(true, {}, edited_data);
@@ -743,13 +743,16 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.exercise_view = new Exercise.ExerciseView({
         parent_view: this,
         model:this.model,
-        onchange: this.handle_change
+        onchange: this.handle_assessment_items
       });
       formats_el.html(this.exercise_view.el);
-      this.listenTo(this.model, "change:assessment_items", this.handle_change);
+      // this.listenTo(this.model, "change:assessment_items", this.handle_assessment_items);
+  },
+  handle_assessment_items:function(data){
+    this.model.set('assessment_items', data);
+    this.handle_change();
   },
   handle_change:function(){
-    console.log("detected changes");
     this.set_edited(true);
     $("#metadata_preview_btn").css("display", "inline-block");
     this.container.preview_view.load_preview();

@@ -315,11 +315,13 @@ var EditorView = Backbone.View.extend({
 
 var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     template: null,
-    default_attributes: {},
+    get_default_attributes: function(){
+        return {};
+    },
 
     add_item: function() {
         this.set_focus();
-        this.collection.add(this.default_attributes);
+        this.collection.add(this.get_default_attributes());
         this.propagate_changes();
     },
     propagate_changes:function(){
@@ -425,9 +427,12 @@ var ExerciseView = ExerciseEditableListView.extend({
     list_selector:"#exercise_list",
     default_item:"#exercise_list .default-item",
     template: require("./hbtemplates/exercise_edit.handlebars"),
+    get_default_attributes: function() {
+        return {contentnode: this.model.get("id"), order: this.collection.length + 1 };
+    },
 
     initialize: function(options) {
-        _.bindAll(this, "save", 'toggle_answers','add_assessment_item');
+        _.bindAll(this, 'toggle_answers','add_item');
         this.bind_edit_functions();
         this.parentnode = options.parentnode;
         this.onchange = options.onchange;
@@ -439,24 +444,17 @@ var ExerciseView = ExerciseEditableListView.extend({
             this.collection = fetched;
             self.render();
         });
+        this.listenTo(this.collection, "add", this.add_item_view);
     },
     events: {
-        "click .addquestion": "add_assessment_item",
-        "click .save": "save",
-        "click .download": "download",
+        "click .addquestion": "add_item",
         "change #exercise_show_answers" : "toggle_answers",
     },
     toggle_answers:function(){
         this.$(this.list_selector).toggleClass("hide_answers");
     },
-    save: function() {
-        console.log("SAVING")
-        // this.model.save();
-        // this.collection.save();
-    },
     propagate_changes:function(){
-        console.log(this.model)
-        this.onchange();
+        this.onchange(this.collection.toJSON());
     },
     render: function() {
         this.$el.html(this.template({
@@ -466,7 +464,6 @@ var ExerciseView = ExerciseEditableListView.extend({
     },
     create_new_view:function(model){
         var new_exercise_item = null;
-        console.log(model.get('type'))
         if(model.get('type') === "perseus_question"){
             new_exercise_item = new AssessmentItemDisplayView({
                 model: model,
@@ -484,18 +481,6 @@ var ExerciseView = ExerciseEditableListView.extend({
         }
         this.views.push(new_exercise_item);
         return new_exercise_item;
-    },
-
-    add_assessment_item: function() {
-        var model_data = {
-            contentnode: this.model.get("id"),
-            order: this.collection.length + 1
-        };
-        var self = this;
-        this.create_new_item(model_data, true, "").then(function(assessment_item){
-            assessment_item.toggle_focus();
-            self.propagate_changes();
-        });
     },
     check_for_changes:function(){
         var is_changed = false;
@@ -737,7 +722,9 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     list_selector:">.answer_list",
     default_item:">.answer_list .default-item",
     template: require("./hbtemplates/assessment_item_answer_list.handlebars"),
-    default_attributes: {answer: "", correct: false},
+    get_default_attributes: function() {
+        return {answer: "", correct: false};
+    },
 
     initialize: function(options) {
         _.bindAll(this, "render", "add_item", "add_item_view");
@@ -880,7 +867,9 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
     list_selector:">.hint_list",
     default_item:">.hint_list .default-item",
     template: require("./hbtemplates/assessment_item_hint_list.handlebars"),
-    default_attributes: {hint: ""},
+    get_default_attributes: function() {
+        return {hint: ""};
+    },
 
     initialize: function(options) {
         _.bindAll(this, "render", "add_item", "add_item_view", "check_valid");
