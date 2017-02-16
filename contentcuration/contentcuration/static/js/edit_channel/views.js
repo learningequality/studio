@@ -486,7 +486,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
   },
 	add_nodes:function(collection){
 		var self = this;
-		collection.sort_by_order();
 		collection.forEach(function(entry){
 			var new_view = self.create_new_view(entry);
 			self.$(self.list_selector).append(new_view.el);

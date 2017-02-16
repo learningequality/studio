@@ -13,20 +13,32 @@
 	{{#if node}}
 		<h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>
 		<input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required/>
-		{{#if exercises}}
-			<div class="row">
-				<div class="col-sm-8">
-					<h4 for="mastery_model_select">Mastery at:</h4>
-					<input type="number" id="m_value" min="1" max="1" value="1"/>
+	{{/if}}
+	{{#if is_exercise}}
+		<div class="row" id="exercise_settings">
+			<div class="col-sm-8">
+				<h4>Mastery Criteria <label class="required">*</label></h4>
+				<select id="mastery_model_select">
+					<option disabled value=0>---</option>
+					<option value="do_all" selected>Do All</option>
+					<option value="num_correct_in_a_row_3">3 in a Row</option>
+					<option value="num_correct_in_a_row_5">5 in a Row</option>
+					<option value="num_correct_in_a_row_10">10 in a Row</option>
+					<option value="skill_check">Skill Check</option>
+					<option value="m_of_n">Custom...</option>
+				</select>
+				<span id="mastery_custom_criterion">
+					<input type="number" id="m_value" min="1" max="20" value="{{m_value}}" maxlength="2" size="2"/>
 					&nbsp;of&nbsp;
-					<input type="number" id="n_value" min="1" max="1" value="1"/>
-				</div>
-				<div class="col-sm-4">
-					<input id="randomize_exercise" type="checkbox" checked>
-					<label for="randomize_exercise">Randomize</label>
-				</div>
+					<input type="number" id="n_value" min="1" max="20" value="{{n_value}}" maxlength="2" size="2"/>
+				</span>
 			</div>
-		{{/if}}
+			<div class="col-sm-4">
+				<input id="randomize_exercise" class="randomize_exercise" type="checkbox">
+				<label for="randomize_exercise" class="randomize_exercise">Randomize</label>
+			</div>
+		</div>
+		<br/>
 	{{/if}}
 	{{#if isoriginal}}
 		<h4>Author</h4>
@@ -34,7 +46,7 @@
 		{{#if is_file}}
 		<div class="row">
 			<div class="content_nodes_only col-sm-5">
-				<h4>License</h4>
+				<h4>License <label class="required">*</label></h4>
 				<select id="license_select">
 		            <option selected disabled value=0>---</option>
 		            {{#each licenses}}

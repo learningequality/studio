@@ -412,11 +412,9 @@ var ExerciseView = ExerciseEditableListView.extend({
     template: require("./hbtemplates/exercise_edit.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, "save", "createexercise", 'toggle_answers','add_assessment_item');
+        _.bindAll(this, "save", 'toggle_answers','add_assessment_item');
         this.bind_edit_functions();
         this.parentnode = options.parentnode;
-        this.onclose = options.onclose;
-        this.onsave = options.onsave;
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(exerciseSaveDispatcher, "save", this.save);
         this.collection = new Models.AssessmentItemCollection();
@@ -430,7 +428,6 @@ var ExerciseView = ExerciseEditableListView.extend({
         "click .addquestion": "add_assessment_item",
         "click .save": "save",
         "click .download": "download",
-        "click #createexercise": "createexercise",
         "change #exercise_show_answers" : "toggle_answers",
     },
     toggle_answers:function(){
@@ -465,23 +462,6 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.create_new_item(model_data, true, "").then(function(assessment_item){
             assessment_item.toggle_focus();
 
-        });
-    },
-    createexercise:function(){
-        var self = this;
-        this.model.set({
-            parent: (this.parentnode)? this.parentnode.get("id") : this.model.get("parent"),
-            extra_fields:JSON.stringify({
-                mastery_model:$("#mastery_model_select").val(),
-                randomize:$("#randomize_exercise").is(":checked")
-            })
-        });
-        this.model.save(this.model.toJSON(), {
-            success:function(new_model){
-                var new_collection = new Models.ContentNodeCollection(self.model);
-                self.onsave(new_collection);
-                self.onclose();
-            }
         });
     },
     check_for_changes:function(){
@@ -845,6 +825,7 @@ var HintModalView = BaseViews.BaseModalView.extend({
         this.render();
     },
     close_hints:function(){
+        this.$(".hint-errors").css('display', 'none');
         if(!this.data.isdisplay){
             this.onupdate(this.model);
         }
@@ -874,7 +855,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
     default_attributes: {hint: ""},
 
     initialize: function(options) {
-        _.bindAll(this, "render", "add_item", "add_item_view");
+        _.bindAll(this, "render", "add_item", "add_item_view", "check_valid");
         this.bind_edit_functions();
         this.assessment_item = options.assessment_item;
         this.nodeid = options.nodeid;
@@ -882,6 +863,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
         this.render();
         this.container = options.container;
         this.listenTo(this.collection, "add", this.add_item_view);
+        this.listenTo(this.collection, "sync", this.check_valid);
         this.listenTo(this.collection, "remove", this.render);
     },
 
@@ -893,6 +875,13 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
         this.$el.html(this.template({isdisplay: this.isdisplay}));
         this.load_content();
         this.validate();
+    },
+    check_valid: function(){
+        if(this.validate()){
+            this.$(".hint-errors").css('display', 'none');
+        }else{
+            this.$(".hint-errors").css('display', 'block');
+        }
     },
     create_new_view: function(model) {
         var view = new AssessmentItemHintView({

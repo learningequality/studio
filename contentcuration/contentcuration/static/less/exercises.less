@@ -56,10 +56,9 @@
 		.assessment_li::before {
 		    content: counter(step-counter);
 		    font-weight: bold;
-			margin-right:5px;
-			width:5%;
 			color:@gray-400;
-			font-size:14pt;
+			margin-right: 15px;
+			font-size:13pt;
 			float:left;
 			text-align: center;
 		}
@@ -140,7 +139,6 @@
 	.remove_area{
 		display:inline-block;
 		vertical-align: top;
-		width:5%;
 		.option{
 			font-size:12pt;
 		}
@@ -158,6 +156,7 @@
 		width:88%;
 		display:inline-block;
 		vertical-align: top;
+		padding:0px;
 		.question_area{
 			padding:7px;
 			cursor:pointer;
@@ -177,6 +176,7 @@
 				.move_question_handle{
 					font-size:17pt;
 					color: @gray-700;
+					padding-left: 0px;
 				}
 				.hint_link{
 					color: @gray-700;
@@ -221,6 +221,9 @@
 		margin-top: 8%;
 		.modal-body{
 			margin-top:-30px;
+			.hint-errors{
+				display:none;
+			}
 			.question_area{
 				width:100%;
 				cursor:default;
@@ -282,7 +285,7 @@
 }
 
 .hint_modal, .assessment_item{
-	.error-list li, .quill-error{
+	.error-list li, .quill-error, .hint-errors{
 		color: @red-error-color;
 	    font-weight: bold;
 	    font-size: 10pt;

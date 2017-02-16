@@ -122,21 +122,13 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       model:null
     });
   },
-  load_questions:function(model){
-    var Exercise = require("edit_channel/exercise_creation/views");
-    if(!this.exercise_view){
-      this.exercise_view = new Exercise.ExerciseView({
-        parent_view: this,
-        model:model,
-        onsave:this.reload_ancestors,
-        el: this.$("#metadata_questions")
-      });
-    }
+  load_questions:function(view){
+    view.load_question_display(this.$("#metadata_questions"));
   },
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1 && selected_items[0].model.get("kind") !== "topic";
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
-    var has_files = selected_items[0].model.get("assessment_items").length > 0;
+    var has_files = is_individual && selected_items[0].model.get("assessment_items").length > 0;
     if(is_individual){
       selected_items[0].model.get("files").forEach(function(file){
         var preset = (file.preset.id)? file.preset.id:file.preset;
@@ -252,13 +244,15 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     shared_copyright_owner:null,
     shared_license:0,
     shared_author:null,
-    all_files:false
+    all_files:false,
+    all_exercises: false,
+    shared_exercise_data:{mastery_model: 0, m: null, n: null, randomize: null}
   },
   list_selector: "#uploaded_list",
   default_item: "#uploaded_list .default-item",
 
   initialize: function(options) {
-    _.bindAll(this, 'add_topic', 'check_all_wrapper');
+    _.bindAll(this, 'add_topic', 'check_all_wrapper', 'selected_individual');
     this.bind_edit_functions();
     this.collection = options.collection;
     this.new_content = options.new_content;
@@ -282,6 +276,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
   events: {
     'click #add_topic_button' : 'add_topic',
     'change #uploader_select_all_check':'check_all_wrapper'
+  },
+  selected_individual:function(){
+    return this.selected_items.length === 1;
   },
   check_all_wrapper :function(event){
     this.check_all(event);
@@ -331,14 +328,14 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     this.views.forEach(function(view){
       if(!_.contains(self.selected_items, view) && view.$(".upload_item_checkbox").is(":checked")){
             self.selected_items.push(view);
-            self.update_shared_values(self.selected_items.length === 1, view);
+            self.update_shared_values(self.selected_individual(), view);
         }
     });
     this.container.load_editor(this.selected_items);
-    if(this.selected_items.length === 1){
+    if(this.selected_individual()){
       this.container.switch_preview(this.selected_items[0].model);
       if(this.selected_items[0].model.get("kind")==="exercise"){
-        this.container.load_questions(this.selected_items[0].model);
+        this.container.load_questions(this.selected_items[0]);
       }
     }
   },
@@ -349,12 +346,31 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.shared_author = view.model.get("author");
       this.shared_data.shared_license = view.model.get("license");
       this.shared_data.all_files = view.model.get("kind") !== "topic";
+      this.shared_data.all_exercises = view.model.get("kind") === "exercise";
+      if(view.model.get("extra_fields")){
+        this.shared_data.shared_exercise_data = view.model.get("extra_fields");
+      }
     }else{
       this.shared_data.shared_tags = _.intersection(this.shared_data.shared_tags, view.tags);
       this.shared_data.shared_copyright_owner = (this.shared_data.shared_copyright_owner === view.model.get("copyright_holder"))? this.shared_data.shared_copyright_owner : null;
       this.shared_data.shared_author = (this.shared_data.shared_author === view.model.get("author"))? this.shared_data.shared_author : null;
       this.shared_data.shared_license = (this.shared_data.shared_license === view.model.get("license"))? this.shared_data.shared_license : 0;
       this.shared_data.all_files = this.shared_data.all_files && view.model.get("kind")  !== "topic";
+      this.shared_data.all_exercises = this.shared_data.all_exercises && view.model.get("kind")  === "exercise";
+
+      if(this.shared_data.all_exercises){
+        if(view.model.get("extra_fields")){
+          var exercise = this.shared_data.shared_exercise_data;
+          this.shared_data.shared_exercise_data = {
+            mastery_model: (exercise.mastery_model === view.model.get("extra_fields").mastery_model)? exercise.mastery_model : 0,
+            m: (exercise.m === view.model.get("extra_fields").m)? exercise.m : null,
+            n: (exercise.n === view.model.get("extra_fields").n)? exercise.n : null,
+            randomize: (exercise.randomize === view.model.get("extra_fields").randomize)? exercise.randomize : null
+          }
+        }else{
+          this.shared_data.shared_exercise_data = {mastery_model: null, m: null, n: null, randomize: null}
+        }
+      }
     }
   }
 });
@@ -363,6 +379,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   template:require("./hbtemplates/edit_metadata_editor.handlebars"),
   tags_template:require("./hbtemplates/edit_metadata_tagarea.handlebars"),
   tag_template:require("./hbtemplates/tag_template.handlebars"),
+  mastery_template:require("./hbtemplates/custom_mastery_template.handlebars"),
   description_limit : 400,
   selected_items: [],
 
@@ -372,11 +389,13 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.selected_items = options.selected_items;
     this.shared_data = options.shared_data;
     this.container = options.container;
+    this.m_value = (this.shared_data && this.shared_data.shared_exercise_data && this.shared_data.shared_exercise_data.m) ? this.shared_data.shared_exercise_data.m : 1;
+    this.n_value = (this.shared_data && this.shared_data.shared_exercise_data && this.shared_data.shared_exercise_data.n) ? this.shared_data.shared_exercise_data.n : 1;
     this.render();
   },
   render: function() {
     var has_files = false;
-    if(this.selected_items.length === 1){
+    if(this.selected_individual()){
       has_files = this.selected_items[0].model.get("kind") !== "topic" && this.selected_items[0].model.get("kind") !== "exercise";
       this.selected_items[0].model.get("files").forEach(function(file){
         var preset = (file.preset.id)? file.preset.id:file.preset;
@@ -398,16 +417,19 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
 
     this.$el.html(this.template({
-      node: (this.selected_items.length === 1)? this.selected_items[0].model.toJSON() : null,
+      node: (this.selected_individual())? this.selected_items[0].model.toJSON() : null,
       isoriginal: alloriginal,
-      is_file: (this.shared_data)? this.shared_data.all_files : false,
+      is_file: this.shared_data && this.shared_data.all_files,
       none_selected: this.selected_items.length === 0,
       licenses: window.licenses.toJSON(),
       copyright_owner: copyright_owner,
       author: author,
       selected_count: this.selected_items.length,
       has_files: has_files,
-      word_limit: this.description_limit
+      word_limit: this.description_limit,
+      is_exercise: this.shared_data && this.shared_data.all_exercises,
+      m_value: this.m_value,
+      n_value: this.n_value,
     }));
     this.update_count();
     this.handle_if_individual();
@@ -415,16 +437,29 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       this.load_tags();
       (!alloriginal)? $("#license_select").text(original_source_license) : $("#license_select").val(this.shared_data.shared_license);
       this.$("#license_about").css("display", (this.shared_data.shared_license > 0)? "inline" : "none");
+
+      // Set exercise fields according to shared exercise data
+      if(this.shared_data.all_exercises){
+        this.$("#mastery_model_select").val(this.shared_data.shared_exercise_data.mastery_model);
+        this.$("#mastery_custom_criterion").css('display', (this.shared_data.shared_exercise_data.mastery_model === "m_of_n") ? 'inline-block' : 'none');
+
+        var randomize = this.shared_data.shared_exercise_data.randomize;
+        this.$("#randomize_exercise").prop("indeterminate", randomize === null || randomize === undefined);
+        this.$("#randomize_exercise").prop("checked", randomize);
+      }
     }
   },
+  selected_individual:function(){
+    return this.selected_items.length === 1;
+  },
   handle_if_individual:function(){
-    if(this.selected_items.length === 1){
+    if(this.selected_individual()){
       var view = this.selected_items[0];
       if(view.model.get("kind") !== "topic"){
         view.load_file_displays(this.$("#editmetadata_format_section"));
       }
       if(view.model.get("kind")==="exercise"){
-        this.container.load_questions(view.model);
+        this.container.load_questions(view);
       }
     }
   },
@@ -439,6 +474,10 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     "change #license_select" : "select_license",
     'keypress #tag_box' : 'add_tag',
     'click .delete_tag':'remove_tag',
+    'change #mastery_model_select': 'change_mastery_model',
+    'change #m_value': 'set_mastery',
+    'change #n_value': 'set_mastery',
+    'change #randomize_exercise': 'set_random'
   },
   load_tags:function(){
     this.$("#tag_area").html(this.tags_template({
@@ -451,13 +490,13 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     autoCompleteHelper.addAutocomplete($( "#tag_box" ), tags, this.select_tag, "#tag_area_wrapper");
   },
   load_license:function(){
-    iscopied = this.selected_items.length === 1 && !this.selected_items[0].isoriginal
+    iscopied = this.selected_individual() && !this.selected_items[0].isoriginal
     var license_modal = new LicenseModalView({
       select_license : window.licenses.get({id: (iscopied)? this.selected_items[0].model.get("license") : $("#license_select").val()})
     })
   },
   update_count:function(){
-    if(this.selected_items.length === 1){
+    if(this.selected_individual()){
       var char_length = this.description_limit - this.$("#input_description").val().length;
       if(this.$("#input_description").val() == ""){
         char_length = this.description_limit;
@@ -515,7 +554,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.set_selected();
   },
   set_selected:function(){
-    if(this.selected_items.length === 1 && this.$("#input_title").val().trim() == ""){
+    if(this.selected_individual() && this.$("#input_title").val().trim() == ""){
       this.$("#title_error").css("display", "inline-block");
       if(this.collection && this.collection.length === 1 && !this.new_content){
           this.container.disable_submit();
@@ -527,6 +566,39 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
           view.set_node();
       })
     }
+  },
+  change_mastery_model:function(event){
+    if(event.target.value === "m_of_n"){
+      this.$("#mastery_custom_criterion").css('display', 'inline-block');
+      this.$("#m_value").val(this.m_value)
+      this.$("#n_value").val(this.n_value)
+    }else{
+      this.$("#mastery_custom_criterion").css('display', 'none');
+    }
+    this.set_mastery();
+  },
+  set_random:function(event){
+    this.set_mastery();
+  },
+  set_mastery:function(){
+    var mastery_model = this.$("#mastery_model_select").val();
+    if(mastery_model === "m_of_n"){
+      this.m_value = Number(this.$("#m_value").val());
+      this.n_value = Number(this.$("#n_value").val());
+
+      if(this.n_value < this.m_value){
+        this.n_value = this.m_value;
+        this.$("#n_value").val(this.n_value);
+      }
+      this.$("#n_value").attr('min', this.m_value);
+    }
+
+    var randomize = this.$("#randomize_exercise").is(":indeterminate") ? null : this.$("#randomize_exercise").is(":checked");
+
+    var self = this;
+    this.selected_items.forEach(function(view){
+        view.set_mastery(mastery_model, self.m_value, self.n_value, randomize);
+    });
   }
 });
 
@@ -542,6 +614,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   initialize: function(options) {
       _.bindAll(this, 'remove_topic', 'check_item', 'select_item','update_name', 'set_edited','handle_change');
       this.bind_edit_functions();
+      this.model.setExtraFields();
       this.containing_list_view = options.containing_list_view;
       this.container = options.container;
       this.edited = false;
@@ -553,7 +626,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.uploads_in_progress = 0;
       this.isoriginal = !this.model.get("original_channel") || this.model.get("original_channel").id == window.current_channel.id;
       this.listenTo(this.model, "change:title", this.update_name);
-      this.listenTo(this.model, "change:assessment_items", this.handle_change);
   },
   render: function() {
       this.$el.html(this.template({
@@ -588,18 +660,19 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.check_item();
   },
   set_edited:function(is_edited){
-      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items")
+      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields")
       // Handle unsetting node
       if(!is_edited){
-          this.originalData = edited_data;
+          this.originalData = $.extend(true, {}, edited_data);
       }
       this.edited = JSON.stringify(this.originalData) != JSON.stringify(edited_data);
+      this.$el.addClass("edited_node")
       this.isNew =  is_edited && this.isNew;
       (this.edited)? this.$el.addClass("edited_node") : this.$el.removeClass("edited_node");
       this.model.set("changed", this.model.get("changed") || this.edited);
   },
   set_node:function(){
-    var individual_selected = this.containing_list_view.selected_items.length === 1;
+    var individual_selected = this.containing_list_view.selected_individual();
     var data = {
           title: (individual_selected)? $("#input_title").val().trim() : this.model.get("title"),
           description: (individual_selected)? $("#input_description").val().trim() : this.model.get("description"),
@@ -609,6 +682,34 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       };
       this.set(data);
       this.set_edited(true);
+  },
+  set_mastery:function(mastery_model, m_value, n_value, randomize){
+    switch(mastery_model){
+      case "skill_check":
+        m_value = n_value = 1;
+        break;
+      case "num_correct_in_a_row_3":
+        m_value = n_value = 3;
+        break;
+      case "num_correct_in_a_row_5":
+        m_value = n_value = 5;
+        break;
+      case "num_correct_in_a_row_10":
+        m_value = n_value = 10;
+        break;
+      case "do_all":
+        m_value = n_value = this.model.get('assessment_items').length;
+        break;
+    }
+    var current_data = this.model.get('extra_fields');
+    current_data['mastery_model'] = mastery_model;
+    current_data['m'] = m_value;
+    current_data['n'] = n_value;
+    if(randomize !== null){
+      current_data['randomize'] = randomize;
+    }
+    this.set({'extra_fields': current_data});
+    this.set_edited(true);
   },
   unset_node:function(){
       this.unset();
@@ -636,6 +737,15 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       });
       formats_el.html(this.format_view.el);
       this.listenTo(this.model, "change:files", this.handle_change);
+  },
+  load_question_display:function(formats_el){
+      var Exercise = require("edit_channel/exercise_creation/views");
+      this.exercise_view = new Exercise.ExerciseView({
+        parent_view: this,
+        model:this.model,
+      });
+      formats_el.html(this.exercise_view.el);
+      this.listenTo(this.model, "change:assessment_items", this.handle_change);
   },
   handle_change:function(){
     console.log("detected changes");
