@@ -312,14 +312,13 @@ def duplicate_nodes(request):
 def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
-    sort_order = sort_order or node.sort_order
     new_node = ContentNode.objects.create(
         title=node.title,
         description=node.description,
         kind=node.kind,
         license=node.license,
         parent=ContentNode.objects.get(pk=parent) if parent else None,
-        sort_order=sort_order,
+        sort_order=sort_order or node.sort_order,
         copyright_holder=node.copyright_holder,
         changed=True,
         original_node=node.original_node or node,
@@ -354,6 +353,11 @@ def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
         aiobj_copy.id = None
         aiobj_copy.contentnode = new_node
         aiobj_copy.save()
+        for fobj in aiobj.files.all():
+            fobj_copy = copy.copy(fobj)
+            fobj_copy.id = None
+            fobj_copy.assessment_item = aiobj_copy
+            fobj_copy.save()
 
     for c in node.children.all():
         _duplicate_node(c, parent=new_node.id)
