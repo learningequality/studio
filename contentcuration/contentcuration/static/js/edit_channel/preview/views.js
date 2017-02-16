@@ -52,7 +52,7 @@ var PreviewView = BaseViews.BaseView.extend({
 
     generate_preview:function(force_load){
         if(this.current_preview){
-            if(this.current_preview.assessment_id){
+            if(this.current_preview.question){
                 var ExerciseView = require("edit_channel/exercise_creation/views");
                 var assessment_item = new Models.AssessmentItemModel(this.current_preview);
                 if(this.exercise_item){
@@ -175,7 +175,9 @@ var PreviewView = BaseViews.BaseView.extend({
                 if(!return_data || current_assessment.get("order") === 1){
                     return_data = item;
                 }
-                self.questions.add(current_assessment);
+                if(!self.questions.findWhere({assessment_id: current_assessment.get('assessment_id')})){
+                    self.questions.add(current_assessment);
+                }
             }
         });
         this.load_preset_dropdown();

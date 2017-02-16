@@ -750,6 +750,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   handle_assessment_items:function(data){
     this.model.set('assessment_items', data);
+    console.log(this.model.get('assessment_items'));
     this.handle_change();
   },
   handle_change:function(){

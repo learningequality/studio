@@ -320,6 +320,7 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     },
 
     add_item: function() {
+        this.$(this.default_item).css('display', 'none');
         this.set_focus();
         this.collection.add(this.get_default_attributes());
         this.propagate_changes();
@@ -723,7 +724,7 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     default_item:">.answer_list .default-item",
     template: require("./hbtemplates/assessment_item_answer_list.handlebars"),
     get_default_attributes: function() {
-        return {answer: "", correct: false};
+        return {answer: "", correct: this.assessment_item.get('type') === "input_question"};
     },
 
     initialize: function(options) {
@@ -747,7 +748,7 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
         this.$el.html(this.template({
             input_answer: this.assessment_item.get("type") === "input_question"
         }));
-        this.load_content();
+        this.load_content(this.collection, "No answers provided.");
         this.validate();
     },
     create_new_view: function(model) {
@@ -890,7 +891,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
     render: function() {
         this.views = [];
         this.$el.html(this.template({isdisplay: this.isdisplay}));
-        this.load_content();
+        this.load_content(this.collection, "No hints provided.");
         this.validate();
     },
     check_valid: function(){
