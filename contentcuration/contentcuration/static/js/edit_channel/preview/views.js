@@ -52,7 +52,7 @@ var PreviewView = BaseViews.BaseView.extend({
 
     generate_preview:function(force_load){
         if(this.current_preview){
-            if(this.current_preview.question){
+            if(this.current_preview.question !== null){
                 var ExerciseView = require("edit_channel/exercise_creation/views");
                 var assessment_item = new Models.AssessmentItemModel(this.current_preview);
                 if(this.exercise_item){

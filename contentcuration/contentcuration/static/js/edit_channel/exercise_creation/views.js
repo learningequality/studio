@@ -325,11 +325,17 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
         this.collection.add(this.get_default_attributes());
         this.propagate_changes();
     },
+    remove_item: function(model){
+        this.collection.remove(model);
+        this.render();
+        this.propagate_changes();
+    },
     propagate_changes:function(){
         this.container.propagate_changes();
     },
     add_item_view: function(model) {
         var view = this.create_new_view(model);
+        console.log(this.$(this.list_selector))
         this.$(this.list_selector).append(view.el);
         view.set_open();
     },
@@ -409,11 +415,8 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
 
     delete: function(event) {
         event.stopPropagation();
-        // this.model.destroy();
-        this.collection.remove(this.model);
-        this.propagate_changes();
+        this.containing_list_view.remove_item(this.model);
         this.remove();
-        console.log("NEED TO BE TEMPORARY UNTIL SAVE!")
     },
     validate:function(){
         var isValid = this.model.get(this.content_field);
@@ -502,7 +505,7 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
     editor_el: ".question",
     isdisplay: true,
     initialize: function(options) {
-        _.bindAll(this, "update_hints");
+        _.bindAll(this, "update_hints", "show_hints");
         this.nodeid = options.nodeid;
         this.render();
     },
@@ -531,18 +534,21 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
     },
     show_hints:function(event){
         event.stopPropagation();
-        this.hint_editor = new HintModalView({
-            collection: this.model.get("hints"),
-            container: this,
-            assessment_item: this.model,
-            model: this.model,
-            nodeid: this.nodeid,
-            onupdate: this.update_hints,
-            isdisplay: this.isdisplay
-        });
+        if(!this.hint_editor){
+            this.hint_editor = new HintModalView({
+                collection: this.model.get("hints"),
+                container: this,
+                assessment_item: this.model,
+                model: this.model,
+                nodeid: this.nodeid,
+                onupdate: this.update_hints,
+                isdisplay: this.isdisplay
+            });
+        }
+        this.hint_editor.show();
     },
     update_hints:function(){
-        console.log("updating hints", this.model.get("hints"))
+        this.$(".hint_count").text(this.model.get("hints").length);
     }
 });
 
@@ -814,6 +820,7 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
     },
     set_correct:function(is_correct){
         this.model.set("correct", is_correct);
+        this.propagate_changes();
     }
 });
 
@@ -837,7 +844,7 @@ var HintModalView = BaseViews.BaseModalView.extend({
     error_template: require("./hbtemplates/assessment_item_errors.handlebars"),
     template: require("./hbtemplates/assessment_item_hint_modal.handlebars"),
     initialize: function(options) {
-        _.bindAll(this, "closing_hints");
+        _.bindAll(this, "closing_hints", "show");
         this.data = options;
         this.onupdate = options.onupdate;
         this.render();
@@ -854,13 +861,13 @@ var HintModalView = BaseViews.BaseModalView.extend({
             model: this.data.assessment_item,
             el: this.$(".question_preview")
         });
-
+        $("body").append(this.el);
         this.hint_editor = new AssessmentItemHintListView(this.data);
         this.$(".hints").append(this.hint_editor.el);
-        $("body").append(this.el);
-        this.$(".hint_modal").modal({show: true});
         this.$(".hint_modal").on("hide.bs.modal", this.closing_hints);
-        this.$(".hint_modal").on("hidden.bs.modal", this.closed_modal);
+    },
+    show: function(){
+        this.$(".hint_modal").modal({show: true});
     }
 });
 
