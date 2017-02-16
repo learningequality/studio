@@ -819,18 +819,16 @@ var HintModalView = BaseViews.BaseModalView.extend({
     error_template: require("./hbtemplates/assessment_item_errors.handlebars"),
     template: require("./hbtemplates/assessment_item_hint_modal.handlebars"),
     initialize: function(options) {
-        _.bindAll(this, "close_hints");
+        _.bindAll(this, "closing_hints");
         this.data = options;
         this.onupdate = options.onupdate;
         this.render();
     },
-    close_hints:function(){
+    closing_hints:function(){
         this.$(".hint-errors").css('display', 'none');
         if(!this.data.isdisplay){
             this.onupdate(this.model);
         }
-        $('.modal-backdrop').slice(1).remove();
-        this.remove();
     },
     render: function() {
         this.$el.html(this.template());
@@ -843,7 +841,8 @@ var HintModalView = BaseViews.BaseModalView.extend({
         this.$(".hints").append(this.hint_editor.el);
         $("body").append(this.el);
         this.$(".hint_modal").modal({show: true});
-        this.$(".hint_modal").on("hide.bs.modal", this.close_hints);
+        this.$(".hint_modal").on("hide.bs.modal", this.closing_hints);
+        this.$(".hint_modal").on("hidden.bs.modal", this.closed_modal);
     }
 });
 

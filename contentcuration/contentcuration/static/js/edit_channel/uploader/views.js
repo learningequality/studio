@@ -784,7 +784,7 @@ var LicenseModalView = BaseViews.BaseModalView.extend({
       }));
       $("body").append(this.el);
       this.$("#license_modal").modal({show: true});
-      this.$("#license_modal").on("hide.bs.modal", this.close);
+      this.$("#license_modal").on("hidden.bs.modal", this.closed_modal);
   }
 });
 

@@ -188,6 +188,11 @@ var BaseModalView = BaseView.extend({
   		this.$(".modal").modal('hide');
   	}
     this.remove();
+  },
+  closed_modal:function(){
+    $("body").addClass('modal-open'); //Make sure modal-open class persists
+    $('.modal-backdrop').slice(1).remove();
+    this.remove();
   }
 });
 
