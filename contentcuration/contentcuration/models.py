@@ -419,6 +419,7 @@ class AssessmentItem(models.Model):
     assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     raw_data = models.TextField(blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
+    randomize = models.BooleanField(default=False)
 
 class File(models.Model):
     """

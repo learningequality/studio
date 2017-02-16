@@ -15,7 +15,7 @@
                         }{% if forloop.last %}{% else %},{% endif %}
                         {% endfor %}
                     ],
-                    "randomize": true,
+                    "randomize": {% if randomize %}true{% else %}false{% endif %},
                     "multipleSelect": {% if multipleSelect %}true{% else %}false{% endif %},
                     "displayCount": null,
                     "hasNoneOfTheAbove": false,
