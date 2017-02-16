@@ -227,7 +227,7 @@ var EditorView = Backbone.View.extend({
             }
         });
         this.render_editor();
-        this.editor.on("text-change", _.debounce(this.save, 500));
+        this.editor.on("text-change", _.debounce(this.save, 300));
         this.editing = true;
         this.editor.focus();
     },
@@ -315,16 +315,19 @@ var EditorView = Backbone.View.extend({
 
 var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     template: null,
-    add_el_wrapper: null,
     default_attributes: {},
 
     add_item: function() {
         this.set_focus();
         this.collection.add(this.default_attributes);
+        this.propagate_changes();
+    },
+    propagate_changes:function(){
+        this.container.propagate_changes();
     },
     add_item_view: function(model) {
         var view = this.create_new_view(model);
-        this.$(this.add_el_wrapper).before(view.el);
+        this.$(this.list_selector).append(view.el);
         view.set_open();
     },
     set_focus:function(){
@@ -344,12 +347,23 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
 
 var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
     close_editors_on_focus: true,
+    editor_el: null,
     content_field: null,
     undo: null,
     redo: null,
     open: false,
     error_template: require("./hbtemplates/assessment_item_errors.handlebars"),
 
+    render_editor: function(){
+        if (!this.editor_view) {
+            this.editor_view = new EditorView({model: this.model, edit_key: this.content_field, nodeid:this.nodeid});
+        }
+        this.$(this.editor_el).html(this.editor_view.el);
+        this.listenTo(this.model, "change:" + this.content_field, this.propagate_changes)
+    },
+    propagate_changes:function(){
+        this.containing_list_view.propagate_changes();
+    },
     toggle_editor: function() {
         this.open = !this.open;
         this.set_editor(true);
@@ -393,6 +407,7 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
     delete: function(event) {
         event.stopPropagation();
         // this.model.destroy();
+        this.propagate_changes();
         this.remove();
         console.log("NEED TO BE TEMPORARY UNTIL SAVE!")
     },
@@ -415,6 +430,7 @@ var ExerciseView = ExerciseEditableListView.extend({
         _.bindAll(this, "save", 'toggle_answers','add_assessment_item');
         this.bind_edit_functions();
         this.parentnode = options.parentnode;
+        this.onchange = options.onchange;
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(exerciseSaveDispatcher, "save", this.save);
         this.collection = new Models.AssessmentItemCollection();
@@ -438,6 +454,10 @@ var ExerciseView = ExerciseEditableListView.extend({
         // this.model.save();
         // this.collection.save();
     },
+    propagate_changes:function(){
+        console.log(this.model)
+        this.onchange();
+    },
     render: function() {
         this.$el.html(this.template({
             node: this.model.toJSON()
@@ -445,11 +465,23 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.load_content(this.collection, "Click '+ QUESTION' to begin...");
     },
     create_new_view:function(model){
-        var new_exercise_item = new AssessmentItemView({
-            model: model,
-            containing_list_view : this,
-            nodeid:this.model.get("id")
-        });
+        var new_exercise_item = null;
+        console.log(model.get('type'))
+        if(model.get('type') === "perseus_question"){
+            new_exercise_item = new AssessmentItemDisplayView({
+                model: model,
+                containing_list_view : this,
+                nodeid:this.model.get("id"),
+                onchange: this.onchange,
+            });
+        }else{
+            new_exercise_item = new AssessmentItemView({
+                model: model,
+                containing_list_view : this,
+                nodeid:this.model.get("id"),
+                onchange: this.onchange,
+            });
+        }
         this.views.push(new_exercise_item);
         return new_exercise_item;
     },
@@ -459,9 +491,10 @@ var ExerciseView = ExerciseEditableListView.extend({
             contentnode: this.model.get("id"),
             order: this.collection.length + 1
         };
+        var self = this;
         this.create_new_item(model_data, true, "").then(function(assessment_item){
             assessment_item.toggle_focus();
-
+            self.propagate_changes();
         });
     },
     check_for_changes:function(){
@@ -480,6 +513,7 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
     className:"assessment_li",
     toolbar_el : '.toolbar',
     content_field: 'question',
+    editor_el: ".question",
     isdisplay: true,
     initialize: function(options) {
         _.bindAll(this, "update_hints");
@@ -496,14 +530,7 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
             hint_count: this.model.get('hints').length,
             isdisplay:this.isdisplay,
         }));
-        if (!this.editor_view) {
-            this.editor_view = new EditorView({
-                model: this.model,
-                edit_key: "question",
-                nodeid: this.nodeid
-            });
-        }
-        this.$(".question").html(this.editor_view.el);
+        this.render_editor();
         if (!this.answer_editor) {
             this.answer_editor = new AssessmentItemAnswerListView({
                 collection: this.model.get("answers"),
@@ -541,6 +568,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
                 "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus",
                 "toggle_undo_redo", "update_hints", "set_type");
         this.originalData = this.model.toJSON();
+        this.onchange = options.onchange;
         this.question = this.model.get('question');
         this.nodeid = options.nodeid;
         this.containing_list_view = options.containing_list_view;
@@ -621,6 +649,12 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     },
     save: function() {
         this.set_toolbar_closed();
+    },
+    propagate_changes:function(data){
+        this.containing_list_view.propagate_changes();
+    },
+    reset: function(){
+        this.undo_manager.undoAll();
     },
     cancel: function(event) {
         this.undo_manager.undoAll();
@@ -703,7 +737,6 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     list_selector:">.answer_list",
     default_item:">.answer_list .default-item",
     template: require("./hbtemplates/assessment_item_answer_list.handlebars"),
-    add_el_wrapper: ".addanswer",
     default_attributes: {answer: "", correct: false},
 
     initialize: function(options) {
@@ -750,6 +783,7 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
 
 var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
     toolbar_el : '.answer-toolbar',
+    editor_el: ".answer",
     content_field: 'answer',
     template: require("./hbtemplates/assessment_item_answer.handlebars"),
     closed_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_closed.handlebars"),
@@ -780,11 +814,7 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
             groupName: this.assessment_item.get("id"),
             allow_toggle: !this.isdisplay
         }));
-        if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: "answer", el: this.$(".answer"), nodeid:this.nodeid});
-        } else {
-            this.$(".answer").append(this.editor_view.el);
-        }
+        this.render_editor();
         _.defer(this.set_editor);
     },
     toggle_correct: function(event) {
@@ -850,7 +880,6 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
     list_selector:">.hint_list",
     default_item:">.hint_list .default-item",
     template: require("./hbtemplates/assessment_item_hint_list.handlebars"),
-    add_el_wrapper: ".addhint_wrapper",
     default_attributes: {hint: ""},
 
     initialize: function(options) {
@@ -897,6 +926,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
 
 var AssessmentItemHintView = ExerciseEditableItemView.extend({
     content_field: 'hint',
+    editor_el: ".hint",
     toolbar_el : '.hint-toolbar',
     template: require("./hbtemplates/assessment_item_hint.handlebars"),
     closed_toolbar_template: require("./hbtemplates/assessment_item_hint_toolbar_closed.handlebars"),
@@ -924,11 +954,7 @@ var AssessmentItemHintView = ExerciseEditableItemView.extend({
             hint: this.model.toJSON(),
             allow_toggle: !this.isdisplay
         }));
-        if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: "hint", el: this.$(".hint"), nodeid:this.nodeid});
-        } else {
-            this.$(".hint").append(this.editor_view.el);
-        }
+        this.render_editor();
     }
 });
 

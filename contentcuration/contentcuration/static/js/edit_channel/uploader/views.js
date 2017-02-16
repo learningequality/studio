@@ -743,6 +743,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.exercise_view = new Exercise.ExerciseView({
         parent_view: this,
         model:this.model,
+        onchange: this.handle_change
       });
       formats_el.html(this.exercise_view.el);
       this.listenTo(this.model, "change:assessment_items", this.handle_change);
