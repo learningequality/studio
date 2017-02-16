@@ -410,6 +410,7 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
     delete: function(event) {
         event.stopPropagation();
         // this.model.destroy();
+        this.collection.remove(this.model);
         this.propagate_changes();
         this.remove();
         console.log("NEED TO BE TEMPORARY UNTIL SAVE!")
@@ -470,7 +471,6 @@ var ExerciseView = ExerciseEditableListView.extend({
                 model: model,
                 containing_list_view : this,
                 nodeid:this.model.get("id"),
-                onchange: this.onchange,
             });
         }else{
             new_exercise_item = new AssessmentItemView({
