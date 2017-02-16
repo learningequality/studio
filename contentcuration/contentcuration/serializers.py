@@ -71,8 +71,15 @@ class FileListSerializer(serializers.ListSerializer):
         files_to_delete = []
         nodes_to_parse = []
         current_files = [f['id'] for f in validated_data]
+
+        # Get files that have the same contentnode, preset, and language as the files that are now attached to this node
         for file_obj in validated_data:
-            delete_queryset = File.objects.filter(Q(contentnode=file_obj['contentnode']) & (Q(preset_id=file_obj['preset_id']) | Q(preset=None)) & Q(language_id=file_obj.get('language_id')) & ~Q(id=file_obj['id']))
+            delete_queryset = File.objects.filter(
+                Q(contentnode=file_obj['contentnode']) & # Get files that are associated with this node
+                (Q(preset_id=file_obj['preset_id']) | Q(preset=None)) & # Look at files that have the same preset as this file
+                Q(language_id=file_obj.get('language_id')) & # Look at files with the same language as this file
+                ~Q(id=file_obj['id']) # Remove the file if it's not this file
+            )
             files_to_delete += [f for f in delete_queryset.all()]
             if file_obj['contentnode'] not in nodes_to_parse:
                 nodes_to_parse.append(file_obj['contentnode'])
