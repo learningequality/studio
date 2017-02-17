@@ -309,6 +309,14 @@ class ContentNode(MPTTModel, models.Model):
 
     objects = TreeManager()
 
+    def get_original_node(self):
+        if self.original_channel_id and self.original_source_node_id:
+            original_channel = Channel.objects.get(pk=self.original_channel_id)
+            return original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first()
+
+        # TEMPORARY: until all nodes have proper sources set (e.g. source_node_id)
+        return self.original_node
+
 
     def get_channel(self):
         root = self.get_root()
@@ -411,6 +419,7 @@ class AssessmentItem(models.Model):
     assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     raw_data = models.TextField(blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
+    randomize = models.BooleanField(default=False)
 
 class File(models.Model):
     """

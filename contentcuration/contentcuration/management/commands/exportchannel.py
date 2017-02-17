@@ -274,6 +274,7 @@ def write_assessment_item(assessment_item, zf):
         'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string),
         'hints': hint_data,
         'freeresponse':assessment_item.type == exercises.FREE_RESPONSE,
+        'randomize': assessment_item.randomize,
     }
 
     if assessment_item.type == exercises.MULTIPLE_SELECTION:
