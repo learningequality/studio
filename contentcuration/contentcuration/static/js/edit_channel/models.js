@@ -191,7 +191,6 @@ var ContentNodeCollection = BaseCollection.extend({
 				fileCollection.add(node.get("files"));
 				assessmentCollection.add(node.get('assessment_items'));
 			});
-			console.log(assessmentCollection)
 			Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function() {
 				Backbone.sync("update", self, {
 		        	url: self.model.prototype.urlRoot(),
