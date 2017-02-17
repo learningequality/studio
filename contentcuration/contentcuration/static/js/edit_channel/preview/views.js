@@ -71,7 +71,7 @@ var PreviewView = BaseViews.BaseView.extend({
         this.presets = new Models.FormatPresetCollection(_.pluck(this.model.get("files"), "preset"));
     },
     load_questions:function(){
-        this.questions = new Models.AssessmentItemCollection(this.model.get("assessment_items"));
+        this.questions = new Models.AssessmentItemCollection(_.where(this.model.get("assessment_items"), {'deleted': false}));
     },
     load_preset_dropdown:function(){
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
