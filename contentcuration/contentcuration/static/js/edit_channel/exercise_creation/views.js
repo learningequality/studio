@@ -946,6 +946,7 @@ var AssessmentItemHintView = ExerciseEditableItemView.extend({
         this.nodeid = options.nodeid;
         this.isdisplay = options.isdisplay;
         this.render();
+        this.set_toolbar_closed();
     },
 
     events: {
