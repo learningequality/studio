@@ -415,11 +415,15 @@ class AssessmentItem(models.Model):
     hints = models.TextField(default="[]")
     answers = models.TextField(default="[]")
     order = models.IntegerField(default=1)
-    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
+    contentnode = models.ForeignKey(ContentNode, related_name="assessment_items", blank=True, null=True)
     assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     raw_data = models.TextField(blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
     randomize = models.BooleanField(default=False)
+    deleted = models.BooleanField(default=False)
+
+    class Admin:
+        pass
 
 class File(models.Model):
     """

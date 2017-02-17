@@ -180,16 +180,19 @@ var ContentNodeCollection = BaseCollection.extend({
 
 	save: function() {
 		var self = this;
-		var promise = new Promise(function(saveResolve, saveReject){
-			var fileCollection = new FileCollection()
+		return new Promise(function(saveResolve, saveReject){
+			var fileCollection = new FileCollection();
+			var assessmentCollection = new AssessmentItemCollection();
 			self.forEach(function(node){
 				node.get("files").forEach(function(file){
 					file.preset.id = file.preset.name ? file.preset.name : file.preset.id;
 				});
 
 				fileCollection.add(node.get("files"));
+				assessmentCollection.add(node.get('assessment_items'));
 			});
-			fileCollection.save().then(function(){
+			console.log(assessmentCollection)
+			Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function() {
 				Backbone.sync("update", self, {
 		        	url: self.model.prototype.urlRoot(),
 		        	success: function(data){
@@ -378,8 +381,7 @@ var FileCollection = BaseCollection.extend({
     				reject(error);
     			}
     		});
-    	})
-
+    	});
 	}
 });
 
@@ -486,7 +488,7 @@ var AssessmentItemModel = BaseModel.extend({
 		question: "",
 		answers: "[]",
 		hints: "[]",
-		files: [],
+		files: []
 	},
 
 	initialize: function () {
@@ -520,7 +522,6 @@ var AssessmentItemModel = BaseModel.extend({
 		}
 	    return attributes;
 	}
-
 });
 
 var AssessmentItemCollection = BaseCollection.extend({
@@ -560,6 +561,20 @@ var AssessmentItemCollection = BaseCollection.extend({
     	});
     	return promise;
     },
+    save:function(){
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+    		Backbone.sync("update", self, {
+    			url: self.model.prototype.urlRoot(),
+    			success:function(data){
+    				resolve(new AssessmentItemCollection(data));
+    			},
+    			error:function(error){
+    				reject(error);
+    			}
+    		});
+    	});
+    }
 });
 
 module.exports = {

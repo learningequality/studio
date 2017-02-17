@@ -237,13 +237,39 @@ class TagSerializer(serializers.ModelSerializer):
     model = ContentTag
     fields = ('tag_name', 'channel', 'id')
 
+
+class AssessmentListSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+        ret = []
+
+        with transaction.atomic():
+            for item in validated_data:
+                files = item.pop('files', []) # TODO: save file objects once images are added
+
+                if 'id' in item:
+                    aitem, is_new = AssessmentItem.objects.get_or_create(pk=item['id'])
+                    if item['deleted']:
+                        aitem.delete()
+                    else:
+                        for attr, value in item.items():
+                            setattr(aitem, attr, value)
+                        aitem.save()
+                        ret.append(aitem)
+                else:
+                    aitem = AssessmentItem.objects.create(**item)
+                    ret.append(aitem)
+        return ret
+
+
 class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     contentnode = serializers.PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
+    id = serializers.IntegerField(required=False)
 
     class Meta:
         model = AssessmentItem
-        fields = ('question', 'files', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hints', 'raw_data', 'order', 'source_url')
-        list_serializer_class = BulkListSerializer
+        fields = ('id', 'question', 'files', 'type', 'answers', 'contentnode', 'assessment_id',
+            'hints', 'raw_data', 'order', 'source_url', 'randomize', 'deleted')
+        list_serializer_class = AssessmentListSerializer
 
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)

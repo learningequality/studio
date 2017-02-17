@@ -746,11 +746,9 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
         onchange: this.handle_assessment_items
       });
       formats_el.html(this.exercise_view.el);
-      // this.listenTo(this.model, "change:assessment_items", this.handle_assessment_items);
   },
   handle_assessment_items:function(data){
     this.model.set('assessment_items', data);
-    console.log(this.model.get('assessment_items'));
     this.handle_change();
   },
   handle_change:function(){

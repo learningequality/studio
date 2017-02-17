@@ -90,7 +90,7 @@
 						padding:5px 15px;
 						width:100%;
 					}
-					.answer_header{background-color: @blue-700; color:white;}
+					.answer_header{background-color: @blue-700; color:white; font-weight: bold;}
 					.addanswer{cursor:pointer;}
 					.addanswer:hover{font-weight: bold;}
 				}
@@ -183,6 +183,24 @@
 					padding: 3px;
 					font-weight:bold;
 					font-size:10pt;
+					float: right;
+				}
+				.random_answers_order{
+					right:0em;
+					.random_answer_section{
+						display: table-cell;
+						cursor: pointer;
+					}
+					input{
+						margin-right: 5px;
+					}
+					label{
+						vertical-align: middle;
+						font-weight:normal;
+						cursor: pointer;
+						font-size: 8pt;
+						line-height: 15px;
+					}
 				}
 				.move_question_handle:hover, .hint_link:hover{
 					color: @blue-500;

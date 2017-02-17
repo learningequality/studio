@@ -335,7 +335,6 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     },
     add_item_view: function(model) {
         var view = this.create_new_view(model);
-        console.log(this.$(this.list_selector))
         this.$(this.list_selector).append(view.el);
         view.set_open();
     },
@@ -433,7 +432,12 @@ var ExerciseView = ExerciseEditableListView.extend({
     default_item:"#exercise_list .default-item",
     template: require("./hbtemplates/exercise_edit.handlebars"),
     get_default_attributes: function() {
-        return {contentnode: this.model.get("id"), order: this.collection.length + 1 };
+        var highest_order_item = this.collection.max(function(i){ return i.get('order');});
+        var max_order = this.collection.length > 0 ? highest_order_item.get('order') + 1 : 1;
+        return {
+            order: max_order,
+            contentnode: this.model.get('id')
+        };
     },
 
     initialize: function(options) {
@@ -443,12 +447,8 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.onchange = options.onchange;
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(exerciseSaveDispatcher, "save", this.save);
-        this.collection = new Models.AssessmentItemCollection();
-        var self = this;
-        this.collection.get_all_fetch(this.model.get("assessment_items")).then(function(fetched){
-            this.collection = fetched;
-            self.render();
-        });
+        this.collection = new Models.AssessmentItemCollection(this.model.get("assessment_items"));
+        this.render();
         this.listenTo(this.collection, "add", this.add_item_view);
     },
     events: {
@@ -465,7 +465,7 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.$el.html(this.template({
             node: this.model.toJSON()
         }));
-        this.load_content(this.collection, "Click '+ QUESTION' to begin...");
+        this.load_content(this.collection.where({'deleted': false}), "Click '+ QUESTION' to begin...");
     },
     create_new_view:function(model){
         var new_exercise_item = null;
@@ -556,7 +556,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     isdisplay: false,
     errors: [],
     initialize: function(options) {
-        _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed", "save",
+        _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed",
                 "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus",
                 "toggle_undo_redo", "update_hints", "set_type");
         this.originalData = this.model.toJSON();
@@ -583,7 +583,18 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         "click .toggle_exercise": "toggle_focus",
         "click .toggle" : "toggle",
         "click .hint_link": "show_hints",
-        "change .question_type_select": "set_type"
+        "change .question_type_select": "set_type",
+        'change #random_answer_order': 'set_random_order',
+        'click .random_answers_order': 'stop_events'
+    },
+    delete: function(event) {
+        event.stopPropagation();
+        this.model.set('deleted', true);
+        this.propagate_changes();
+        this.remove();
+    },
+    stop_events:function(event){
+        event.stopPropagation();
     },
     set_type:function(event){
         var new_type = event.target.value;
@@ -639,12 +650,6 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
             }, 1000);
         }
     },
-    save: function() {
-        this.set_toolbar_closed();
-    },
-    propagate_changes:function(data){
-        this.containing_list_view.propagate_changes();
-    },
     reset: function(){
         this.undo_manager.undoAll();
     },
@@ -691,7 +696,6 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     set_closed:function(){
         this.open = false;
         this.$(".assessment_item").removeClass("active");
-        this.save();
         this.set_toolbar_closed();
         this.editor_view.deactivate_editor();
         this.unset_undo_redo_listener();
@@ -722,7 +726,11 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         }
         this.$(".error-list").html(this.error_template({errors: this.errors}));
         return this.errors.length === 0;
-    }
+    },
+    set_random_order:function(event){
+        this.model.set("randomize", event.target.checked);
+        this.propagate_changes();
+    },
 });
 
 var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
