@@ -107,3 +107,11 @@ Handlebars.registerHelper('format_question_type', function(type){
           return "Unknown Question Type";
   }
 });
+
+Handlebars.registerHelper('substring', function(text, chars){
+  return text.substring(0, chars);
+});
+
+Handlebars.registerHelper('question_default_text', function(type){
+  return type === "perseus_question"? "Perseus Question" : "No text provided";
+});

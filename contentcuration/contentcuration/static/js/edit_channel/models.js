@@ -395,10 +395,10 @@ var FormatPresetCollection = BaseCollection.extend({
 	list_name:"formatpreset-list",
     model_name:"FormatPresetCollection",
 	sort_by_order:function(){
-    	this.comparator = function(preset){
-    		return preset.get("order");
-    	};
     	this.sort();
+    },
+    comparator: function(preset){
+    	return preset.get("order");
     }
 });
 
@@ -526,6 +526,9 @@ var AssessmentItemModel = BaseModel.extend({
 var AssessmentItemCollection = BaseCollection.extend({
 	model: AssessmentItemModel,
 	model_name:"AssessmentItemCollection",
+	comparator : function(assessment_item){
+    	return assessment_item.get("order");
+    },
 	get_all_fetch: function(ids, force_fetch){
 		force_fetch = (force_fetch)? true : false;
     	var self = this;

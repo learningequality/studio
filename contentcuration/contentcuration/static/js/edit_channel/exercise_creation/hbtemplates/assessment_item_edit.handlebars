@@ -19,10 +19,10 @@
 			    </div>
 			    <div class="col-sm-3 random_answers_order">
 			    	<div class="random_answer_section">
-						<input type="checkbox" id="random_answer_order" {{#if model.randomize}}checked{{/if}} {{#if isdisplay}}disabled{{/if}}>
+						<input type="checkbox" id="random_answer_order_{{model.cid}}" {{#if model.randomize}}checked{{/if}} {{#if isdisplay}}disabled{{/if}} class="random_order_check">
 					</div>
 					<div class="random_answer_section">
-						<label for="random_answer_order" {{#if isdisplay}}disabled{{/if}}>Random answer order</label>
+						<label for="random_answer_order_{{model.cid}}" {{#if isdisplay}}disabled{{/if}}>Random answer order</label>
 					</div>
 			    </div>
 			</div>

@@ -3,6 +3,8 @@ var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var Previewer = require("edit_channel/preview/views");
+var FileUploader = require("edit_channel/file_upload/views");
+var Exercise = require("edit_channel/exercise_creation/views");
 var stringHelper = require("edit_channel/utils/string_helper");
 var autoCompleteHelper = require("edit_channel/utils/autocomplete");
 require("uploader.less");
@@ -70,7 +72,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   render: function() {
     this.$el.html(this.template());
-    this.load_preview();
     this.load_list();
     if(this.collection.length > 1){
       this.load_editor(this.edit_list.selected_items);
@@ -115,12 +116,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
     this.edit_list.handle_if_individual();
   },
-  load_preview:function(){
-     this.preview_view = new Previewer.PreviewView({
-      modal:false,
-      el: this.$("#metadata_preview"),
-      model:null
-    });
+  load_preview:function(view){
+     view.load_preview_display(this.$("#metadata_preview"));
   },
   load_questions:function(view){
     view.load_question_display(this.$("#metadata_questions"));
@@ -225,15 +222,11 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       view.unset();
     });
   },
-  switch_preview:function(model){
-    this.preview_view.switch_preview(model);
-  },
   adjust_list_height:function(){
     if(this.edit_list){
       this.edit_list.adjust_list_height();
     }
   },
-
 });
 
 var EditMetadataList = BaseViews.BaseEditableListView.extend({
@@ -304,7 +297,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         this.selected_items.push(this.views[0]);
         this.update_shared_values(true, this.views[0]);
         this.container.load_editor(this.selected_items);
-        this.container.switch_preview(this.selected_items[0].model);
+        this.container.load_preview(this.views[0]);
       }else{
         this.views[0].select_item();
       }
@@ -333,7 +326,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     });
     this.container.load_editor(this.selected_items);
     if(this.selected_individual()){
-      this.container.switch_preview(this.selected_items[0].model);
+      this.container.load_preview(this.views[0]);
       if(this.selected_items[0].model.get("kind")==="exercise"){
         this.container.load_questions(this.selected_items[0]);
       }
@@ -730,7 +723,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       }
   },
   load_file_displays:function(formats_el){
-      var FileUploader = require("edit_channel/file_upload/views");
       this.format_view = new FileUploader.FormatInlineItem({
           model: this.model,
           containing_list_view:this
@@ -739,13 +731,23 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.listenTo(this.model, "change:files", this.handle_change);
   },
   load_question_display:function(formats_el){
-      var Exercise = require("edit_channel/exercise_creation/views");
-      this.exercise_view = new Exercise.ExerciseView({
-        parent_view: this,
-        model:this.model,
-        onchange: this.handle_assessment_items
-      });
+      if(!this.exercise_view){
+        this.exercise_view = new Exercise.ExerciseView({
+          parent_view: this,
+          model:this.model,
+          onchange: this.handle_assessment_items
+        });
+      }
       formats_el.html(this.exercise_view.el);
+  },
+  load_preview_display:function(formats_el){
+    if(!this.preview_view){
+      this.preview_view = new Previewer.PreviewView({
+        modal:false,
+        model: this.model
+      });
+    }
+    formats_el.html(this.preview_view.el);
   },
   handle_assessment_items:function(data){
     this.model.set('assessment_items', data);
@@ -754,7 +756,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   handle_change:function(){
     this.set_edited(true);
     $("#metadata_preview_btn").css("display", "inline-block");
-    this.container.preview_view.load_preview();
+    this.preview_view.switch_preview(this.model);
   },
   add_tag:function(tagname){
       if(this.tags.indexOf(tagname) < 0){

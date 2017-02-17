@@ -227,7 +227,7 @@ var EditorView = Backbone.View.extend({
             }
         });
         this.render_editor();
-        this.editor.on("text-change", _.debounce(this.save, 300));
+        this.editor.on("text-change", _.debounce(this.save, 500));
         this.editing = true;
         this.editor.focus();
     },
@@ -584,7 +584,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         "click .toggle" : "toggle",
         "click .hint_link": "show_hints",
         "change .question_type_select": "set_type",
-        'change #random_answer_order': 'set_random_order',
+        'change .random_order_check': 'set_random_order',
         'click .random_answers_order': 'stop_events'
     },
     delete: function(event) {
@@ -813,7 +813,7 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
             answer: this.model.toJSON(),
             input_answer: this.assessment_item.get("type") === "input_question",
             single_selection: this.assessment_item.get("type") === "single_selection",
-            groupName: this.assessment_item.get("id"),
+            groupName: this.assessment_item.cid,
             allow_toggle: !this.isdisplay
         }));
         this.render_editor();

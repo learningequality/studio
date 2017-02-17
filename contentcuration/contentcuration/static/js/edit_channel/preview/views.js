@@ -24,35 +24,83 @@ var PreviewModalView = BaseViews.BaseModalView.extend({
 var PreviewView = BaseViews.BaseView.extend({
     tabs_template: require("./hbtemplates/preview_templates/tabs.handlebars"),
     template: require("./hbtemplates/preview_dialog.handlebars"),
-    current_preview:null,
     initialize: function(options) {
-        _.bindAll(this, 'set_preview','toggle_fullscreen', 'load_preview', 'exit_fullscreen');
+        _.bindAll(this, 'select_preview','toggle_fullscreen', 'load_preview', 'exit_fullscreen', 'render_preview');
         this.presets = new Models.FormatPresetCollection();
         this.questions = new Models.AssessmentItemCollection();
+        this.current_preview = null;
         this.render();
     },
     events: {
-        'click .preview_btn_tab' : 'set_preview',
+        'click .preview_btn_tab' : 'select_preview',
         'click .view_fullscreen': 'toggle_fullscreen'
     },
     render: function() {
+        this.load_preview();
         this.$el.html(this.template({
-            node: (this.model)? this.model.toJSON() : null,
-            file: this.current_preview,
-            selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset).toJSON() : null,
+            file: this.current_preview
         }));
+        this.load_preset_dropdown();
+        this.render_preview();
+    },
+    render_preview:function(){
+        if(this.current_preview){
+            if (this.current_preview.preset && this.current_preview.preset.readable_name){
+                this.$("#preview_format_switch").text(this.current_preview.preset.readable_name);
+            }else{
+                this.$("#preview_format_switch").text("Q: " + this.current_preview.question);
+            }
+            this.generate_preview(true);
+        }
+    },
+    load_preview:function(){
+        if(this.model){
+            this.load_presets();
+            this.load_questions();
+            this.load_default_value();
+        }
+    },
+    load_default_value:function(){
+        var default_preview = (this.model.get('kind') === 'exercise')?
+            _.min(this.model.get("assessment_items"), function(item){return item.order}) :
+            _.min(this.model.get("files"), function(file){return file.preset.order});
+        this.current_preview = default_preview;
+    },
+    load_presets:function(){
+        var files = this.model.get("files");
+        this.presets = new Models.FormatPresetCollection(_.pluck(this.model.get("files"), "preset"));
+    },
+    load_questions:function(){
+        this.questions = new Models.AssessmentItemCollection(this.model.get("assessment_items"));
     },
     load_preset_dropdown:function(){
-        this.presets.sort_by_order();
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
              presets: this.presets.toJSON(),
              questions: this.questions.toJSON()
         }));
     },
 
+    select_preview:function(event){
+        // called internally
+        var selected_preview = null;
+        if($(event.target).hasClass('preview_file')){
+            var selected_preset = event.target.getAttribute('value');
+            selected_preview = _.find(this.model.get('files'), function(file){ return file.preset.id === selected_preset; });
+        }else{
+            selected_preview = this.questions.at(event.target.value).toJSON();
+        }
+        this.current_preview = selected_preview;
+        this.render_preview();
+    },
+    switch_preview:function(model){
+        // called from outside sources
+        this.model = model;
+        this.render();
+    },
+
     generate_preview:function(force_load){
         if(this.current_preview){
-            if(this.current_preview.question !== null){
+            if(this.current_preview.question !== null && this.current_preview.question !== undefined){
                 var ExerciseView = require("edit_channel/exercise_creation/views");
                 var assessment_item = new Models.AssessmentItemModel(this.current_preview);
                 if(this.exercise_item){
@@ -119,84 +167,6 @@ var PreviewView = BaseViews.BaseView.extend({
             }
         });
         return subtitles;
-    },
-    load_preview:function(){
-        if(this.model){
-            this.switch_preview(this.model);
-        }
-    },
-    set_preview:function(event){
-        // called internally
-        this.load_preview_data(event.target.getAttribute("value"));
-        this.generate_preview(true);
-    },
-    switch_preview:function(model){
-        // called from outside sources
-        this.model = model;
-        if(this.model && this.model.get("kind")!=="topic"){
-            var self = this;
-            this.presets.reset();
-            var default_preview = this.load_preview_data(null);
-            this.set_current_preview(default_preview);
-            this.generate_preview(true);
-        }
-    },
-
-    load_preview_data:function(load_selected_value){
-        var self = this;
-        var return_data = null;
-        this.model.get("files").forEach(function(file){
-            var preset_id = (file.attributes)? file.get("preset") : (file.preset && file.preset.id)? file.preset.id : file.preset;
-            var current_preset = window.formatpresets.get({id:preset_id});
-            if(current_preset && current_preset.get("display")){
-                if (load_selected_value){
-                    var data = (file.attributes)? file.attributes : file;
-                    var preset_check = (data.preset.id)? data.preset.id : data.preset;
-                    if(preset_check === load_selected_value){
-                        self.set_current_preview(data);
-                        return self.current_preview;
-                    }
-                }else{
-                    if(!return_data || current_preset.get("order") < return_data.preset.order){
-                        return_data = file;
-                    }
-                    self.presets.add(current_preset);
-                }
-            }
-        });
-        this.model.get("assessment_items").forEach(function(item){
-            var current_assessment = new Models.AssessmentItemModel(item);
-            if (load_selected_value){
-                if(current_assessment.get('assessment_id') === load_selected_value){
-                    self.set_current_preview(current_assessment);
-                    return self.current_preview;
-                }
-            }else{
-                if(!return_data || current_assessment.get("order") === 1){
-                    return_data = item;
-                }
-                if(!self.questions.findWhere({assessment_id: current_assessment.get('assessment_id')})){
-                    self.questions.add(current_assessment);
-                }
-            }
-        });
-        this.load_preset_dropdown();
-        return return_data;
-    },
-
-    set_current_preview:function(file){
-        if(file){
-            this.current_preview = file;
-            if(this.current_preview.attributes){
-                this.current_preview = this.current_preview.toJSON();
-            }
-            if (this.current_preview.preset){
-                $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
-            }else{
-                $("#preview_format_switch").text("Question " + this.current_preview.order);
-            }
-
-        }
     },
     toggle_fullscreen:function(){
         var elem = document.getElementById("preview_content_main");
