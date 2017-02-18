@@ -272,12 +272,12 @@ def exercise_image_upload(request):
 
     if request.method == 'POST':
         node = ContentNode.objects.get(id=request.META.get('HTTP_NODE'))
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1] # gets file extension without leading period
-        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), contentnode=node)
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:] # gets file extension without leading period
+        file_object = File(preset_id=format_presets.EXERCISE_IMAGE, file_on_disk=request.FILES.values()[0], file_format_id=ext, contentnode=node)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
-            "filename": file_object.file_on_disk.url,
+            "filename": generate_storage_url(str(file_object)),
         }))
 
 def duplicate_nodes(request):

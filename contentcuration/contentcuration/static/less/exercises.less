@@ -278,7 +278,6 @@
 		}
 	}
 	.editor{
-		height:80px;
 		border: 1px solid @gray-300;
 	}
 	.hints, .answers{
@@ -315,5 +314,38 @@
 	}
 	.invalid{
 		background-color: @error-bg-color;
+	}
+}
+
+.exercise_image_modal{
+	.modal-dialog{
+		width: @uploader-width / 1.5;
+		margin-top: 8%;
+		#dropzone{
+			cursor:pointer;
+			#dropzone_placeholder{
+				height:100%;
+				width:100%;
+				padding-top:20%;
+				min-height: 250px;
+				color:@gray-700;
+				font-weight: bold;
+				font-size:12pt;
+				border: 4px solid @blue-500;
+			}
+			.dropzone_item{
+    			img{
+					max-width:100%;
+					margin-bottom: 20px;
+				}
+				.file_upload_progress{
+					height:10px;
+				}
+				.upload_cancel{
+					margin-left: 10px;
+    				color:@blue-200;
+				}
+			}
+		}
 	}
 }

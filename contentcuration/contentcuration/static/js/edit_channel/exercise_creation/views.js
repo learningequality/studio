@@ -54,10 +54,10 @@ var ExerciseModalView = BaseViews.BaseModalView.extend({
     }
 });
 
-var FileUploadView = Backbone.View.extend({
+var FileUploadView = BaseViews.BaseModalView.extend({
 
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded");
+        _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed");
         this.callback = options.callback;
         this.nodeid = options.nodeid;
         this.modal = options.modal;
@@ -65,7 +65,7 @@ var FileUploadView = Backbone.View.extend({
     },
 
     template: require("./hbtemplates/file_upload.handlebars"),
-
+    dropzone_template : require("./hbtemplates/file_upload_dropzone.handlebars"),
     modal_template: require("./hbtemplates/file_upload_modal.handlebars"),
 
     render: function() {
@@ -76,34 +76,47 @@ var FileUploadView = Backbone.View.extend({
             $("body").append(this.el);
             this.$(".modal").modal({show: true});
             this.$(".modal").on("hide.bs.modal", this.close);
+            this.$(".modal").on("hidden.bs.modal", this.closed_modal);
         } else {
             this.$el.html(this.template());
         }
-
         // TODO parameterize to allow different file uploads depending on initialization.
         this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
             maxFiles: 1,
-            clickable: ["#dropzone", ".fileinput-button"],
-            acceptedFiles: "image/*",
+            clickable: ["#dropzone", "#dropzone_placeholder"],
+            acceptedFiles: window.formatpresets.get({id:'exercise_image'}).get('associated_mimetypes').join(','),
             url: window.Urls.exercise_image_upload(),
+            thumbnailWidth:null,
+            thumbnailHeight:null,
+            previewTemplate:this.dropzone_template(),
+            previewsContainer: "#dropzone",
             headers: {"X-CSRFToken": get_cookie("csrftoken"), "Node" : this.nodeid}
         });
         this.dropzone.on("success", this.file_uploaded);
-
+        this.dropzone.on("addedfile", this.file_added);
+        this.dropzone.on("removedfile", this.file_removed);
+        this.dropzone.on("error", this.file_failed);
     },
 
     file_uploaded: function(file) {
-        console.log(JSON.parse(file.xhr.response))
+        this.file = file;
         this.callback(JSON.parse(file.xhr.response).filename);
         this.close();
     },
-
-    close: function() {
-        if (this.modal) {
-            this.$(".modal").modal('hide');
+    file_added:function(file){
+        this.$("#dropzone_placeholder").css("display", "none");
+    },
+    file_removed:function(){
+        this.file = null;
+        this.$("#dropzone_placeholder").css("display", "block");
+    },
+    file_failed:function(data, error){
+        alert(error);
+        $(data.previewTemplate).remove();
+        if(!this.file){
+            this.$("#dropzone_placeholder").css("display", "block");
         }
-        this.remove();
-    }
+    },
 });
 
 var replace_image_paths = function(content){
@@ -161,7 +174,7 @@ var EditorView = Backbone.View.extend({
     },
 
     add_image: function(filename) {
-        this.editor.insertEmbed(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "image", "/" + filename);
+        this.editor.insertEmbed(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "image", filename);
         this.save();
     },
 
@@ -218,17 +231,22 @@ var EditorView = Backbone.View.extend({
             modules: {
                 'toolbar': { container: this.$('.editor-toolbar')[0] }
             },
+            placeholder: 'Enter ' + this.edit_key + "...",
             theme: 'snow',
             styles: {
                 'body': {
                   'background-color': "white",
                   'padding': "10px",
+                  'height': 'auto'
                 }
             }
         });
         this.render_editor();
         this.editor.on("text-change", _.debounce(this.save, 500));
         this.editing = true;
+        console.log(this.editor)
+        console.log($(this.editor.root).outerHeight())
+        // this.$(".editor").height($(this.editor.root).outerHeight())
         this.editor.focus();
     },
 
@@ -318,11 +336,12 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     get_default_attributes: function(){
         return {};
     },
-
     add_item: function() {
+        console.log("CALLED")
         this.$(this.default_item).css('display', 'none');
         this.set_focus();
         this.collection.add(this.get_default_attributes());
+        console.log(this.collection)
         this.propagate_changes();
     },
     remove_item: function(model){
@@ -334,6 +353,7 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
         this.container.propagate_changes();
     },
     add_item_view: function(model) {
+        console.log("CALLED VIEW")
         var view = this.create_new_view(model);
         this.$(this.list_selector).append(view.el);
         view.set_open();
@@ -432,8 +452,10 @@ var ExerciseView = ExerciseEditableListView.extend({
     default_item:"#exercise_list .default-item",
     template: require("./hbtemplates/exercise_edit.handlebars"),
     get_default_attributes: function() {
-        var highest_order_item = this.collection.max(function(i){ return i.get('order');});
-        var max_order = this.collection.length > 0 ? highest_order_item.get('order') + 1 : 1;
+        var max_order = 1;
+        if(this.collection.length > 0){
+            max_order = this.collection.max(function(i){ return i.get('order');}).get('order') + 1
+        }
         return {
             order: max_order,
             contentnode: this.model.get('id')
@@ -441,7 +463,7 @@ var ExerciseView = ExerciseEditableListView.extend({
     },
 
     initialize: function(options) {
-        _.bindAll(this, 'toggle_answers','add_item');
+        _.bindAll(this, 'toggle_answers','add_item', "add_item_view");
         this.bind_edit_functions();
         this.parentnode = options.parentnode;
         this.onchange = options.onchange;
@@ -452,7 +474,7 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.listenTo(this.collection, "add", this.add_item_view);
     },
     events: {
-        "click .addquestion": "add_item",
+        "click #addquestion": "add_item",
         "change #exercise_show_answers" : "toggle_answers",
     },
     toggle_answers:function(){

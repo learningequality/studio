@@ -731,22 +731,24 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.listenTo(this.model, "change:files", this.handle_change);
   },
   load_question_display:function(formats_el){
-      if(!this.exercise_view){
-        this.exercise_view = new Exercise.ExerciseView({
-          parent_view: this,
-          model:this.model,
-          onchange: this.handle_assessment_items
-        });
+      if(this.exercise_view){
+        this.exercise_view.remove();
       }
+      this.exercise_view = new Exercise.ExerciseView({
+        parent_view: this,
+        model:this.model,
+        onchange: this.handle_assessment_items
+      });
       formats_el.html(this.exercise_view.el);
   },
   load_preview_display:function(formats_el){
-    if(!this.preview_view){
-      this.preview_view = new Previewer.PreviewView({
-        modal:false,
-        model: this.model
-      });
+    if(this.preview_view){
+      this.preview_view.remove();
     }
+    this.preview_view = new Previewer.PreviewView({
+      modal:false,
+      model: this.model
+    });
     formats_el.html(this.preview_view.el);
   },
   handle_assessment_items:function(data){
