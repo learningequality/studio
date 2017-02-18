@@ -62,6 +62,7 @@ def sync_node(node, original):
     node.copyright_holder = original.copyright_holder
     node.changed = True
     node.author = original.author
+    node.extra_fields = original.extra_fields
     node.save()
 
 def sync_node_tags(node, original, channel_id):
