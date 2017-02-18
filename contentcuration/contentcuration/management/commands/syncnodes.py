@@ -36,9 +36,10 @@ class Command(BaseCommand):
                         logging.info("----- Syncing: {} from {}".format(node.title.encode('utf-8'), original_node.get_channel().encode('utf-8')))
                         if sync_attributes:
                             sync_node(node, original_node)
-                        if sync_sort_order and node.parent not in parents_to_check:
-                            node.sort_order = original.sort_order if sync_order else node.sort_order
-                            parents_to_check.append(node.parent)
+                        if sync_sort_order:
+                            node.sort_order = original_node.sort_order
+                            if node.parent not in parents_to_check:
+                                parents_to_check.append(node.parent)
                         if sync_tags:
                             sync_node_tags(node, original_node, options['channel_id'])
                         if sync_files:
