@@ -33,7 +33,7 @@ class Command(BaseCommand):
                 for node in channel.main_tree.get_descendants():
                     original_node = node.get_original_node()
                     if original_node.node_id != node.node_id: # Only update if node is not original
-                        logging.info("----- Syncing: {} from {}".format(node.title.encode('utf-8'), original_node.get_channel().encode('utf-8')))
+                        logging.info("----- Syncing: {} from {}".format(node.title.encode('utf-8'), original_node.get_channel().name.encode('utf-8')))
                         if sync_attributes:
                             sync_node(node, original_node)
                         if sync_sort_order:
