@@ -271,13 +271,13 @@ def thumbnail_upload(request):
 def exercise_image_upload(request):
 
     if request.method == 'POST':
-        node = ContentNode.objects.get(id=request.META.get('HTTP_NODE'))
         ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:] # gets file extension without leading period
-        file_object = File(preset_id=format_presets.EXERCISE_IMAGE, file_on_disk=request.FILES.values()[0], file_format_id=ext, contentnode=node)
+        file_object = File(preset_id=format_presets.EXERCISE_IMAGE, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext, assessment_item_id=request.META.get('HTTP_ASSESSMENT_ITEM'))
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
             "filename": generate_storage_url(str(file_object)),
+            "file_id": file_object.pk,
         }))
 
 def duplicate_nodes(request):

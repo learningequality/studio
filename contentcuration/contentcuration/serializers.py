@@ -11,6 +11,7 @@ from rest_framework.fields import set_value, SkipField
 from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.conf import settings
 from django.core.files import File as DjFile
 
@@ -241,23 +242,37 @@ class TagSerializer(serializers.ModelSerializer):
 class AssessmentListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
         ret = []
+        file_mapping = {}
 
         with transaction.atomic():
             for item in validated_data:
-                files = item.pop('files', []) # TODO: save file objects once images are added
+                files =  item.pop('files', []) # Remove here to avoid problems with setting attributes
 
+                # Handle existing items
                 if 'id' in item:
                     aitem, is_new = AssessmentItem.objects.get_or_create(pk=item['id'])
                     if item['deleted']:
                         aitem.delete()
+                        continue
                     else:
+                        # Set attributes for assessment item
                         for attr, value in item.items():
                             setattr(aitem, attr, value)
                         aitem.save()
-                        ret.append(aitem)
                 else:
+                    # Create item
                     aitem = AssessmentItem.objects.create(**item)
-                    ret.append(aitem)
+
+                for f in files:
+                    if f.checksum in str(aitem.__dict__):
+                        if f.assessment_item_id != aitem.pk:
+                            f.assessment_item = aitem
+                            f.save()
+                    else:
+                        f.delete()
+
+                ret.append(aitem)
+
         return ret
 
 
