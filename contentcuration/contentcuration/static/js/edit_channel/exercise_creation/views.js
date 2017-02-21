@@ -57,9 +57,10 @@ var ExerciseModalView = BaseViews.BaseModalView.extend({
 var FileUploadView = BaseViews.BaseModalView.extend({
 
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed");
+        _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed", "submit_file", "file_complete", "set_alt_text");
         this.callback = options.callback;
         this.modal = options.modal;
+        this.file = this.alt_text = null;
         this.render();
     },
 
@@ -67,19 +68,21 @@ var FileUploadView = BaseViews.BaseModalView.extend({
     dropzone_template : require("./hbtemplates/file_upload_dropzone.handlebars"),
     modal_template: require("./hbtemplates/file_upload_modal.handlebars"),
 
-    render: function() {
+    events: {
+        "click #submit_file": "submit_file",
+        "change #alt_text_box": "set_alt_text"
+    },
 
-        if (this.modal) {
-            this.$el.html(this.modal_template());
-            this.$(".modal-body").append(this.template());
-            $("body").append(this.el);
-            this.$(".modal").modal({show: true});
-            this.$(".modal").on("hide.bs.modal", this.close);
-            this.$(".modal").on("hidden.bs.modal", this.closed_modal);
-        } else {
-            this.$el.html(this.template());
-        }
-        // TODO parameterize to allow different file uploads depending on initialization.
+    render: function() {
+        this.$el.html(this.modal_template());
+        $("body").append(this.el);
+        this.$(".modal").modal({show: true});
+        this.$(".modal").on("hide.bs.modal", this.close);
+        this.$(".modal").on("hidden.bs.modal", this.closed_modal);
+        this.render_dropzone();
+    },
+    render_dropzone:function(){
+        this.$(".modal-body").html(this.template({file: this.file, alt_text: this.alt_text}));
         this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
             maxFiles: 1,
             clickable: ["#dropzone", "#dropzone_placeholder"],
@@ -89,33 +92,43 @@ var FileUploadView = BaseViews.BaseModalView.extend({
             thumbnailHeight:null,
             previewTemplate:this.dropzone_template(),
             previewsContainer: "#dropzone",
-            headers: {"X-CSRFToken": get_cookie("csrftoken"), "ASSESSMENT_ITEM" : this.model.get('id')}
+            headers: {"X-CSRFToken": get_cookie("csrftoken")}
         });
         this.dropzone.on("success", this.file_uploaded);
         this.dropzone.on("addedfile", this.file_added);
         this.dropzone.on("removedfile", this.file_removed);
         this.dropzone.on("error", this.file_failed);
+        this.dropzone.on("queuecomplete", this.file_complete);
     },
-
-    file_uploaded: function(file) {
-        this.file = JSON.parse(file.xhr.response);
-        this.callback(this.file.file_id, this.file.filename);
+    set_alt_text: function(event){
+        this.alt_text = event.target.value;
+    },
+    submit_file:function(){
+        this.callback(this.file.file_id, this.file.filename, this.alt_text);
         this.close();
     },
+    file_uploaded: function(file) {
+        this.file_error = null;
+        this.file = JSON.parse(file.xhr.response);
+    },
     file_added:function(file){
+        this.file_error = "Error uploading file: connection interrupted";
         this.$("#dropzone_placeholder").css("display", "none");
     },
     file_removed:function(){
+        this.file_error = null;
         this.file = null;
-        this.$("#dropzone_placeholder").css("display", "block");
+        this.render_dropzone();
     },
     file_failed:function(data, error){
-        alert(error);
-        $(data.previewTemplate).remove();
-        if(!this.file){
-            this.$("#dropzone_placeholder").css("display", "block");
-        }
+        this.file_error = error;
     },
+    file_complete:function(){
+        if(this.file_error){
+            alert(this.file_error);
+        }
+        this.render_dropzone();
+    }
 });
 
 var replace_image_paths = function(content){
@@ -172,13 +185,12 @@ var EditorView = Backbone.View.extend({
         var view = new FileUploadView({callback: this.add_image, modal: true, model: this.model});
     },
 
-    add_image: function(file_id, filename) {
-        var files = this.model.get('files');
-        files.push(file_id);
-        this.model.set('files', files);
-        console.log(file_id, this.model);
-        this.editor.insertEmbed(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "image", filename);
+    add_image: function(file_id, filename, alt_text) {
+        this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
+        // Using insertEmbed will throw an error as the placeholder isn't parsed correctly
+        this.editor.insertText(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "![" + alt_text + "](" + filename + ")");
         this.save();
+        this.render_editor();
     },
 
     edit_template: require("./hbtemplates/editor.handlebars"),
@@ -216,12 +228,6 @@ var EditorView = Backbone.View.extend({
         }
     },
 
-    parse_content:function(content){
-        parsed = replace_image_paths(this.model.get(this.edit_key));
-        parsed = Katex.renderToString(parsed);
-        return parsed;
-    },
-
     render_editor: function() {
         this.editor.setHTML(this.view_template({
             content: parse_content(this.model.get(this.edit_key))
@@ -240,15 +246,15 @@ var EditorView = Backbone.View.extend({
             styles: {
                 'body': {
                   'background-color': "white",
-                  'padding': '0px',
-                  'min-height': "120px",
+                  'padding': '10px',
+                  'min-height': "100px",
+                  "overflow": "hidden"
                 },
                 '.editor-container': {
                     'display': 'block',
                     'clear': 'both',
-                    'min-height': "120px",
-                    "height": "auto",
-                    'margin': '10px'
+                    'min-height': "100px",
+                    "height": "auto"
                 }
             }
         });
@@ -259,13 +265,16 @@ var EditorView = Backbone.View.extend({
 
         var self = this;
         this.$(this.editor.root).ready(function(){
+            self.$('.editor iframe').height(self.editor.root.ownerDocument.body.scrollHeight + 20);
             self.$('.editor').height(self.editor.root.ownerDocument.body.scrollHeight);
             self.editor.focus();
         });
 
     },
     resize_editor_container:function(){
-        this.$('.editor').height(this.$('.editor iframe').contents().find('.editor-container').height())
+        var height = this.$('.editor iframe').contents().find('.editor-container').height();
+        this.$('.editor iframe').height(height + 20);
+        this.$('.editor').height(this.$('.editor iframe').contents().find('.editor-container').height());
     },
 
     deactivate_editor: function() {
