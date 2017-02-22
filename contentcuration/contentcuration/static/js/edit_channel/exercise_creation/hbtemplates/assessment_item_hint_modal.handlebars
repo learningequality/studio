@@ -1,0 +1,23 @@
+<div class="modal fade hint_modal" role="dialog" tabindex="-1">
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4>Hints{{#unless isdisplay}} for Question:{{/unless}}</h4>
+        </div>
+        <div class="modal-body">
+            {{#unless isdisplay}}
+                <div class="question_preview"></div>
+                <hr>
+            {{/unless}}
+            <ul class="error-list list-unstyled text-center"></ul>
+        	<div class="hints"></div>
+            <div class="hint_footer container-fluid">
+    			<a class="action-text pull-right" data-dismiss="modal">
+    	            <span>CLOSE</span>
+    	        </a>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
