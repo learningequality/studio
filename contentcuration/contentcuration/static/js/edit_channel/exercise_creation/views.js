@@ -579,6 +579,7 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
             model: this.model.toJSON(),
             hint_count: this.model.get('hints').length,
             isdisplay:this.isdisplay,
+            cid: this.cid
         }));
         this.render_editor();
         if (!this.answer_editor) {
@@ -919,23 +920,35 @@ var HintModalView = BaseViews.BaseModalView.extend({
     initialize: function(options) {
         _.bindAll(this, "closing_hints", "show");
         this.data = options;
+        this.assessment_item = options.assessment_item;
+        this.isdisplay = options.isdisplay;
         this.onupdate = options.onupdate;
+        this.container = options.container;
         this.render();
     },
     closing_hints:function(){
         this.$(".hint-errors").css('display', 'none');
-        if(!this.data.isdisplay){
+        if(!this.isdisplay){
             this.onupdate(this.model);
         }
     },
     render: function() {
-        this.$el.html(this.template());
-        var question_preview = new HintQuestionDisplayView({
-            model: this.data.assessment_item,
-            el: this.$(".question_preview")
-        });
+        this.$el.html(this.template({isdisplay: this.isdisplay}));
+        if(!this.isdisplay){
+            var question_preview = new HintQuestionDisplayView({
+                model: this.assessment_item,
+                el: this.$(".question_preview")
+            });
+        }
         $("body").append(this.el);
-        this.hint_editor = new AssessmentItemHintListView(this.data);
+        this.hint_editor = new AssessmentItemHintListView({
+            collection: this.model.get("hints"),
+            container: this.container,
+            assessment_item: this.model,
+            model: this.model,
+            onupdate: this.onupdate,
+            isdisplay: this.isdisplay
+        });
         this.$(".hints").append(this.hint_editor.el);
         this.$(".hint_modal").on("hide.bs.modal", this.closing_hints);
     },
@@ -971,7 +984,9 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
         this.views = [];
         this.$el.html(this.template({isdisplay: this.isdisplay}));
         this.load_content(this.collection, "No hints provided.");
-        this.validate();
+        if(!this.isdisplay){
+            this.validate();
+        }
     },
     check_valid: function(){
         if(this.validate()){

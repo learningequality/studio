@@ -67,8 +67,7 @@ var PreviewView = BaseViews.BaseView.extend({
         this.current_preview = default_preview;
     },
     load_presets:function(){
-        var files = this.model.get("files");
-        this.presets = new Models.FormatPresetCollection(_.pluck(this.model.get("files"), "preset"));
+        this.presets = new Models.FormatPresetCollection(_.where(_.pluck(this.model.get("files"), "preset"), {'display': true}));
     },
     load_questions:function(){
         this.questions = new Models.AssessmentItemCollection(_.where(this.model.get("assessment_items"), {'deleted': false}));
