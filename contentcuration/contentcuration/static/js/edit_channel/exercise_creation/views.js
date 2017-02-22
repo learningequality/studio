@@ -541,20 +541,16 @@ var ExerciseView = ExerciseEditableListView.extend({
         return _.filter(this.views, function(view){return !view.validate();}).length === 0;
     },
     switch_view_order:function(view, new_order){
-        if(new_order => 0 && new_order <= this.views.length){
-            var previous_view = _.filter(this.views, function(view){ return view.model.get('order') === new_order; })[0];
-            if(previous_view){
-                previous_view.model.set('order', view.model.get('order'));
-                previous_view.$el.detach();
-                (view.model.get('order') < new_order)? view.$el.before(previous_view.el) : view.$el.after(previous_view.el);
-                if(previous_view.open){
-                    previous_view.set_open();
-                }
-                console.log("Previous", previous_view.model.get('order'))
+        var matches = _.filter(this.views, function(view){ return view.model.get('order') === new_order; });
+        if(matches.length > 0){
+            var previous_view = matches[0];
+            previous_view.model.set('order', view.model.get('order'));
+            previous_view.$el.detach();
+            (view.model.get('order') < new_order)? view.$el.before(previous_view.el) : view.$el.after(previous_view.el);
+            if(previous_view.open){
+                previous_view.set_open();
             }
             view.model.set('order', new_order);
-            console.log("new", view.model.get('order'))
-
             this.propagate_changes();
         }
     }
