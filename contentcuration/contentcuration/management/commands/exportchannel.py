@@ -172,6 +172,12 @@ def create_associated_file_objects(kolibrinode, ccnode):
     for ccfilemodel in ccnode.files.exclude(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
+        if ccfilemodel.language_id:
+            kolibrimodels.Language.objects.get_or_create(
+                id=str(ccfilemodel.language),
+                lang_code=ccfilemodel.language.lang_code,
+                lang_subcode=ccfilemodel.language.lang_subcode
+            )
 
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
@@ -182,7 +188,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
-            lang_id=ccfilemodel.language_id,
+            lang_id=str(ccfilemodel.language),
             thumbnail=preset.thumbnail,
         )
 
