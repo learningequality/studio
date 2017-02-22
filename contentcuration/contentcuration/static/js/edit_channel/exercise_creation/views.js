@@ -542,11 +542,12 @@ var ExerciseView = ExerciseEditableListView.extend({
     },
     switch_view_order:function(view, new_order){
         var matches = _.filter(this.views, function(view){ return view.model.get('order') === new_order; });
+        var old_order = view.model.get('order');
         if(matches.length > 0){
             var previous_view = matches[0];
-            previous_view.model.set('order', view.model.get('order'));
+            previous_view.model.set('order', old_order);
             previous_view.$el.detach();
-            (view.model.get('order') < new_order)? view.$el.before(previous_view.el) : view.$el.after(previous_view.el);
+            (old_order < new_order)? view.$el.before(previous_view.el) : view.$el.after(previous_view.el);
             if(previous_view.open){
                 previous_view.set_open();
             }
