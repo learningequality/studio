@@ -248,13 +248,14 @@ var EditorView = Backbone.View.extend({
                   'background-color': "white",
                   'padding': '10px',
                   'min-height': "100px",
-                  "overflow": "hidden"
+                  "overflow": "hidden",
                 },
                 '.editor-container': {
                     'display': 'block',
                     'clear': 'both',
                     'min-height': "100px",
-                    "height": "auto"
+                    "height": "auto",
+                    "width": "100%"
                 }
             }
         });
@@ -273,8 +274,7 @@ var EditorView = Backbone.View.extend({
     },
     resize_editor_container:function(){
         var height = this.$('.editor iframe').contents().find('.editor-container').height();
-        this.$('.editor iframe').height(height + 20);
-        this.$('.editor').height(this.$('.editor iframe').contents().find('.editor-container').height());
+        this.$('.editor iframe, .editor').height(height);
     },
 
     deactivate_editor: function() {
@@ -539,6 +539,17 @@ var ExerciseView = ExerciseEditableListView.extend({
     },
     validate: function(){
         return _.filter(this.views, function(view){return !view.validate();}).length === 0;
+    },
+    switch_view_order:function(view, new_order){
+        if(new_order => 0 && new_order <= this.views.length){
+            var previous_view = _.filter(this.views, function(view){ return view.model.get('order') === new_order; })[0];
+            if(previous_view){
+                previous_view.model.set('order', view.model.get('order'));
+            }
+            view.model.set('order', new_order);
+
+            this.propagate_changes();
+        }
     }
 });
 
@@ -625,7 +636,17 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         "click .hint_link": "show_hints",
         "change .question_type_select": "set_type",
         'change .random_order_check': 'set_random_order',
-        'click .random_answers_order': 'stop_events'
+        'click .random_answers_order': 'stop_events',
+        'click .move_up': 'move_up',
+        'click .move_down': 'move_down',
+    },
+    move_up:function(event){
+        event.stopPropagation();
+        this.containing_list_view.switch_view_order(this, this.model.get('order') - 1);
+    },
+    move_down:function(event){
+        event.stopPropagation();
+        this.containing_list_view.switch_view_order(this, this.model.get('order') + 1);
     },
     delete: function(event) {
         event.stopPropagation();
@@ -683,10 +704,10 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         event.stopPropagation();
         if(this.validate()){
             this.set_closed()
-            this.$(".delete").css("display", "none");
+            this.$(".closed_toolbar").css("display", "none");
             var self = this;
             setTimeout(function(){
-                self.$(".delete").css("display", "block")
+                self.$(".closed_toolbar").css("display", "block")
             }, 1000);
         }
     },

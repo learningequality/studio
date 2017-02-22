@@ -255,6 +255,7 @@ def create_perseus_zip(ccnode, write_to_path):
         for item in assessment_items:
             write_assessment_item(item, zf)
 
+
 def write_assessment_item(assessment_item, zf):
     template=''
     replacement_string = exercises.IMG_PLACEHOLDER + "/images"

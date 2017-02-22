@@ -62,12 +62,12 @@ class FileListSerializer(serializers.ListSerializer):
                     'preset_id' : item['preset']['id'],
                     'language_id' : item.get('language')['id'] if item.get('language') else None
                 })
-
-                if 'id' in item:
-                    update_files[item['id']] = item
-                else:
-                    # create new nodes
-                    ret.append(File.objects.create(**item))
+                if item['preset']['display']:
+                    if 'id' in item:
+                        update_files[item['id']] = item
+                    else:
+                        # create new nodes
+                        ret.append(File.objects.create(**item))
 
         files_to_delete = []
         nodes_to_parse = []

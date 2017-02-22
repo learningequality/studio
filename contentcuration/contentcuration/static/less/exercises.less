@@ -53,14 +53,19 @@
 		.assessment_li{
 			counter-increment: step-counter;
 		}
-		.assessment_li::before {
+		.assessment_li .order::before{
 		    content: counter(step-counter);
-		    font-weight: bold;
+		}
+		.assessment_order_area{
+			font-weight: bold;
 			color:@gray-400;
 			margin-right: 15px;
 			font-size:13pt;
 			float:left;
 			text-align: center;
+			.move{
+				cursor:pointer;
+			}
 		}
 		.assessment_item.active{
 			.main_edit_area{
@@ -98,10 +103,12 @@
 		}
 	}
 	#exercise_list.hide_answers{
-		.answers, .hint_link{
+		.answers, .hint_link, .random_answer_section{
 			display:none !important;
 		}
-		.assessment_item.active .answers{
+		.assessment_item.active .answers,
+		.assessment_item.active .hint_link,
+		.assessment_item.active .random_answer_section{
 			display:block !important;
 		}
 	}
@@ -126,6 +133,7 @@
 .assessment_item{
 	margin:10px 5px 30px 15px;
 	width:100%;
+	min-height: 100px;
 
 	.toolbar{
 		display:none;
@@ -276,6 +284,9 @@
 	}
 	.editor{
 		border: 1px solid @gray-300;
+	}
+	.question .editor{
+		margin-bottom: -15px;
 	}
 	.hints, .answers{
 		margin:7px;
