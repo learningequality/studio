@@ -545,8 +545,15 @@ var ExerciseView = ExerciseEditableListView.extend({
             var previous_view = _.filter(this.views, function(view){ return view.model.get('order') === new_order; })[0];
             if(previous_view){
                 previous_view.model.set('order', view.model.get('order'));
+                previous_view.$el.detach();
+                (view.model.get('order') < new_order)? view.$el.before(previous_view.el) : view.$el.after(previous_view.el);
+                if(previous_view.open){
+                    previous_view.set_open();
+                }
+                console.log("Previous", previous_view.model.get('order'))
             }
             view.model.set('order', new_order);
+            console.log("new", view.model.get('order'))
 
             this.propagate_changes();
         }
