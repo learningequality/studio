@@ -352,7 +352,7 @@ def create_exercises(node, data):
                 assessment_id = question.get('assessment_id'),
                 raw_data = question.get('raw_data'),
                 source_url=question.get('source_url'),
-                randomize=question.get('randomize'),
+                randomize=question.get('randomize') or False,
             )
             order += 1
             question_obj.save()
