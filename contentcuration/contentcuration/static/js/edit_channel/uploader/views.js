@@ -372,7 +372,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   template:require("./hbtemplates/edit_metadata_editor.handlebars"),
   tags_template:require("./hbtemplates/edit_metadata_tagarea.handlebars"),
   tag_template:require("./hbtemplates/tag_template.handlebars"),
-  mastery_template:require("./hbtemplates/custom_mastery_template.handlebars"),
   description_limit : 400,
   selected_items: [],
 
