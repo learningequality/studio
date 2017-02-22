@@ -16,7 +16,7 @@ django-registration==2.1.2
 django-hashedfilenamestorage==1.0.0
 djangorestframework-bulk==0.2.1
 django-email-extras==0.3.3
-kolibri==0.2.0a2
+kolibri==0.2.0a3
 validators
 le-utils==0.0.9rc18
 gunicorn==19.6.0
