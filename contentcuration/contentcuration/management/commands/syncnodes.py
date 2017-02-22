@@ -12,6 +12,7 @@ logging = logmodule.getLogger(__name__)
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('channel_id', type=str)
+        parser.add_argument('--attributes', action='store_true', dest='attributes', default=False)
         parser.add_argument('--sort', action='store_true', dest='sort', default=False)
         parser.add_argument('--tags', action='store_true', dest='tags', default=False)
         parser.add_argument('--files', action='store_true', dest='files', default=False)
@@ -19,6 +20,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         channel = Channel.objects.get(pk=options['channel_id'])
+        sync_attributes = options['attributes']
         sync_sort_order = options['sort']
         sync_tags = options['tags']
         sync_files = options['files']
@@ -31,9 +33,13 @@ class Command(BaseCommand):
                 for node in channel.main_tree.get_descendants():
                     original_node = node.get_original_node()
                     if original_node.node_id != node.node_id: # Only update if node is not original
-                        sync_node(node, original_node, sync_order=sync_sort_order)
-                        if sync_sort_order and node.parent not in parents_to_check:
-                            parents_to_check.append(node.parent)
+                        logging.info("----- Syncing: {} from {}".format(node.title.encode('utf-8'), original_node.get_channel().name.encode('utf-8')))
+                        if sync_attributes:
+                            sync_node(node, original_node)
+                        if sync_sort_order:
+                            node.sort_order = original_node.sort_order
+                            if node.parent not in parents_to_check:
+                                parents_to_check.append(node.parent)
                         if sync_tags:
                             sync_node_tags(node, original_node, options['channel_id'])
                         if sync_files:
@@ -49,9 +55,7 @@ class Command(BaseCommand):
                         child.save()
                         sort_order += 1
 
-
-def sync_node(node, original, sync_order=False):
-    logging.info("----- Syncing: {} from {}".format(node.title, original.get_channel().name))
+def sync_node(node, original):
     node.title = original.title
     node.description = original.description
     node.license = original.license
@@ -59,7 +63,6 @@ def sync_node(node, original, sync_order=False):
     node.changed = True
     node.author = original.author
     node.extra_fields = original.extra_fields
-    node.sort_order = original.sort_order if sync_order else node.sort_order
     node.save()
 
 def sync_node_tags(node, original, channel_id):
@@ -94,6 +97,9 @@ def sync_node_files(node, original):
         fcopy.save()
 
 def sync_node_assessment_items(node, original):
+    node.extra_fields = original.extra_fields
+    node.save()
+
     # Clear assessment items on node
     node.assessment_items.all().delete()
 
