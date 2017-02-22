@@ -136,8 +136,40 @@ var ContentNodeModel = BaseModel.extend({
 		tags:[],
 		assessment_items:[],
 		metadata: {"resource_size" : 0, "resource_count" : 0},
-		created: new Date()
-    }
+		created: new Date(),
+		extra_fields: {}
+    },
+    initialize: function () {
+		if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
+			this.set("extra_fields", JSON.parse(this.get("extra_fields")))
+		}
+	},
+	parse: function(response) {
+    	if (response !== undefined && response.extra_fields) {
+    		response.extra_fields = JSON.parse(response.extra_fields);
+    	}
+	    return response;
+	},
+	toJSON: function() {
+	    var attributes = _.clone(this.attributes);
+	    if (typeof attributes.extra_fields !== "string") {
+		    attributes.extra_fields = JSON.stringify(attributes.extra_fields);
+		}
+	    return attributes;
+	},
+	setExtraFields:function(){
+		if(typeof this.get('extra_fields') === 'string'){
+			this.set('extra_fields', JSON.parse(this.get('extra_fields')));
+		}
+		if(this.get('kind') === 'exercise'){
+			var data = (this.get('extra_fields'))? this.get('extra_fields') : {};
+			data['mastery_model'] = (data['mastery_model'])? data['mastery_model'] : "do_all";
+		    data['m'] = (data['m'])? data['m'] : 1;
+		    data['n'] = (data['n'])? data['n'] : 1;
+		    data['randomize'] = (data['randomize'] !== undefined)? data['randomize'] : true;
+		    this.set('extra_fields', data);
+		}
+	}
 });
 
 var ContentNodeCollection = BaseCollection.extend({
@@ -362,10 +394,10 @@ var FormatPresetCollection = BaseCollection.extend({
 	list_name:"formatpreset-list",
     model_name:"FormatPresetCollection",
 	sort_by_order:function(){
-    	this.comparator = function(preset){
-    		return preset.get("order");
-    	};
     	this.sort();
+    },
+    comparator: function(preset){
+    	return preset.get("order");
     }
 });
 

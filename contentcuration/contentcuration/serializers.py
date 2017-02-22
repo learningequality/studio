@@ -62,11 +62,13 @@ class FileListSerializer(serializers.ListSerializer):
                     'language_id' : item.get('language')['id'] if item.get('language') else None
                 })
 
-                if 'id' in item:
-                    update_files[item['id']] = item
-                else:
-                    # create new nodes
-                    ret.append(File.objects.create(**item))
+                # User should not be able to change files without a display
+                if item['preset']['display']:
+                    if 'id' in item:
+                        update_files[item['id']] = item
+                    else:
+                        # create new nodes
+                        ret.append(File.objects.create(**item))
 
         files_to_delete = []
         nodes_to_parse = []
@@ -272,19 +274,23 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
             resource_descendants = node.get_descendants().exclude(kind=content_kinds.TOPIC)
+            assessment_size = resource_descendants.filter(kind=content_kinds.EXERCISE).aggregate(resource_size=Sum('assessment_items__files__file_size'))['resource_size'] or 0
+            resource_size = resource_descendants.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
             return {
                 "total_count" : node.get_descendant_count(),
                 "resource_count" : resource_descendants.count(),
                 "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'],
-                "resource_size" : resource_descendants.aggregate(resource_size=Sum('files__file_size'))['resource_size'],
+                "resource_size" : assessment_size + resource_size,
                 "has_changed_descendant" : node.get_descendants(include_self=True).filter(changed=True).exists()
             }
         else:
+            assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+            resource_size = node.files.aggregate(resource_size=Sum('file_size'))['resource_size'] or 0
             return {
                 "total_count" : 1,
                 "resource_count" : 1,
                 "max_sort_order" : node.sort_order,
-                "resource_size" : node.files.aggregate(resource_size=Sum('file_size'))['resource_size'],
+                "resource_size" : assessment_size + resource_size,
                 "has_changed_descendant" : node.changed
             }
 
