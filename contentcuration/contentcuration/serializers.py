@@ -62,6 +62,8 @@ class FileListSerializer(serializers.ListSerializer):
                     'preset_id' : item['preset']['id'],
                     'language_id' : item.get('language')['id'] if item.get('language') else None
                 })
+
+                # User should not be able to change files without a display
                 if item['preset']['display']:
                     if 'id' in item:
                         update_files[item['id']] = item
