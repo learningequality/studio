@@ -180,16 +180,18 @@ var ContentNodeCollection = BaseCollection.extend({
 
 	save: function() {
 		var self = this;
-		var promise = new Promise(function(saveResolve, saveReject){
-			var fileCollection = new FileCollection()
+		return new Promise(function(saveResolve, saveReject){
+			var fileCollection = new FileCollection();
+			var assessmentCollection = new AssessmentItemCollection();
 			self.forEach(function(node){
 				node.get("files").forEach(function(file){
 					file.preset.id = file.preset.name ? file.preset.name : file.preset.id;
 				});
 
 				fileCollection.add(node.get("files"));
+				assessmentCollection.add(node.get('assessment_items'));
 			});
-			fileCollection.save().then(function(){
+			Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function() {
 				Backbone.sync("update", self, {
 		        	url: self.model.prototype.urlRoot(),
 		        	success: function(data){
@@ -524,6 +526,9 @@ var AssessmentItemModel = BaseModel.extend({
 var AssessmentItemCollection = BaseCollection.extend({
 	model: AssessmentItemModel,
 	model_name:"AssessmentItemCollection",
+	comparator : function(assessment_item){
+    	return assessment_item.get("order");
+    },
 	get_all_fetch: function(ids, force_fetch){
 		force_fetch = (force_fetch)? true : false;
     	var self = this;
