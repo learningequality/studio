@@ -4,6 +4,7 @@ import zipfile
 import shutil
 import tempfile
 import json
+import re
 import sys
 import uuid
 import base64
@@ -261,19 +262,18 @@ def write_assessment_item(assessment_item, zf):
 
     answer_data = json.loads(assessment_item.answers)
     for answer in answer_data:
-        answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string)
+        answer['answer'] = re.escape(answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string))
 
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
-        hint['hint'] = hint['hint'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string)
+        hint['hint'] = re.escape(hint['hint'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string))
 
     context = {
-        'question' : assessment_item.question.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string),
+        'question' : re.escape(assessment_item.question.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string)),
         'answers':answer_data,
         'multipleSelect':assessment_item.type == exercises.MULTIPLE_SELECTION,
         'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string),
         'hints': hint_data,
-        'freeresponse':assessment_item.type == exercises.FREE_RESPONSE,
         'randomize': assessment_item.randomize,
     }
 
@@ -281,8 +281,6 @@ def write_assessment_item(assessment_item, zf):
         template = 'perseus/multiple_selection.json'
     elif assessment_item.type == exercises.SINGLE_SELECTION:
         template = 'perseus/multiple_selection.json'
-    elif assessment_item.type == exercises.FREE_RESPONSE:
-        template = 'perseus/input_question.json'
     elif assessment_item.type == exercises.INPUT_QUESTION:
         template = 'perseus/input_question.json'
     elif assessment_item.type == exercises.PERSEUS_QUESTION:
