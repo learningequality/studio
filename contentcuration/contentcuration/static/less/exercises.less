@@ -68,6 +68,9 @@
 			}
 		}
 		.assessment_item.active{
+			.error-list{
+				display:none;
+			}
 			.main_edit_area{
 				background-color: @blue-100;
 				border-left:3px solid @blue-500;
@@ -103,7 +106,7 @@
 		}
 	}
 	#exercise_list.hide_answers{
-		.answers, .hint_link, .random_answer_section{
+		.answers, .hint_link, .random_answer_section, .error-list{
 			display:none !important;
 		}
 		.assessment_item.active .answers,
@@ -131,7 +134,7 @@
 }
 
 .assessment_item{
-	margin:10px 5px 30px 15px;
+	margin:10px 5px 35px 15px;
 	width:100%;
 	min-height: 100px;
 
@@ -238,6 +241,12 @@
 	}
 }
 
+.edit_assessment_item{
+	.assessment_item_error{
+		color:@red-error-color;
+	}
+}
+
 .assessment_li:first-of-type{
 	.move_up{
 		.disabled;
@@ -325,7 +334,7 @@
 		color: @red-error-color;
 	    font-weight: bold;
 	    font-size: 10pt;
-	    font-style: italic;
+	    margin-bottom: 5px;
 	    background-color: transparent !important;
 	}
 	.quill-error{
