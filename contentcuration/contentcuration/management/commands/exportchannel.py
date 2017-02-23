@@ -125,7 +125,7 @@ def map_content_nodes(root_node):
 
                 kolibrinode = create_bare_contentnode(node)
 
-                if node.kind.kind == content_kinds.EXERCISE:
+                if node.kind.kind == content_kinds.EXERCISE and (node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists()):
                     create_perseus_exercise(node)
                 if node.kind.kind != content_kinds.TOPIC:
                     create_associated_file_objects(kolibrinode, node)
@@ -200,7 +200,7 @@ def create_perseus_exercise(ccnode):
         create_perseus_zip(ccnode, tempf)
         tempf.flush()
 
-        ccmodels.File.objects.filter(contentnode=ccnode, preset_id=format_presets.EXERCISE).delete()
+        ccnode.files.filter(preset_id=format_presets.EXERCISE).delete()
 
         assessment_file_obj = ccmodels.File.objects.create(
             file_on_disk=File(open(tempf.name, 'r'), name=filename),
@@ -212,13 +212,11 @@ def create_perseus_exercise(ccnode):
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
 def create_perseus_zip(ccnode, write_to_path):
-    assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode)
+    assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode).order_by('order')
 
     with zipfile.ZipFile(write_to_path, "w") as zf:
-
         # Get mastery model information, set to default if none provided
         exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
-        exercise_data = {} if exercise_data is None else exercise_data
         exercise_data.update({
             'mastery_model': exercise_data.get('mastery_model') or exercises.M_OF_N,
             'randomize': exercise_data.get('randomize') or True,
@@ -231,7 +229,7 @@ def create_perseus_zip(ccnode, write_to_path):
 
         exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
         exercise_context = {
-            'exercise': json.dumps(exercise_data)
+            'exercise': json.dumps(exercise_data, sort_keys=True, indent=4)
         }
         exercise_result = render_to_string('perseus/exercise.json', exercise_context)
         zf.writestr("exercise.json", exercise_result)
@@ -248,7 +246,7 @@ def create_perseus_zip(ccnode, write_to_path):
                 json_name = "images/{0}-data.json".format(image.original_filename)
                 if svg_name not in zf.namelist() or json_name not in zf.namelist():
                     image.file_on_disk.open(mode="rb")
-                    content=image.file_on_disk.read()
+                    content = image.file_on_disk.read()
                     content = content.split(exercises.GRAPHIE_DELIMITER)
                     zf.writestr(svg_name, content[0])
                     zf.writestr(json_name, content[1])
