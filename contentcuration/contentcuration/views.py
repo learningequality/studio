@@ -136,7 +136,7 @@ def channel_view_only(request, channel_id):
 
 def get_or_set_cached_constants(constant, serializer):
     cached_data = cache.get(constant.__name__)
-    if cached_data is not None:
+    if cached_data:
         return cached_data
     constant_objects = constant.objects.all()
     constant_serializer = serializer(constant_objects, many=True)
@@ -312,6 +312,9 @@ def duplicate_nodes(request):
 def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
+
+    original_channel = node.get_original_node().get_channel() if node.get_original_node() else None
+
     new_node = ContentNode.objects.create(
         title=node.title,
         description=node.description,
@@ -323,7 +326,7 @@ def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
         changed=True,
         original_node=node.original_node or node,
         cloned_source=node,
-        original_channel_id = node.original_channel_id or node.original_node.get_channel().id if node.original_node.get_channel() else None,
+        original_channel_id = node.original_channel_id or original_channel.id if original_channel else None,
         source_channel_id = node.get_channel().id if node.get_channel() else None,
         original_source_node_id = node.original_source_node_id or node.node_id,
         source_node_id = node.node_id,

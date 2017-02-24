@@ -226,7 +226,7 @@ class Channel(models.Model):
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     tag_name = models.CharField(max_length=30)
-    channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True)
+    channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True, db_index=True)
 
     def __str__(self):
         return self.tag_name
@@ -415,7 +415,7 @@ class AssessmentItem(models.Model):
     hints = models.TextField(default="[]")
     answers = models.TextField(default="[]")
     order = models.IntegerField(default=1)
-    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True)
+    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True, db_index=True)
     assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     raw_data = models.TextField(blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
@@ -430,10 +430,10 @@ class File(models.Model):
     checksum = models.CharField(max_length=400, blank=True)
     file_size = models.IntegerField(blank=True, null=True)
     file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500, blank=True)
-    contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True)
-    assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True)
+    contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True, db_index=True)
+    assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True, db_index=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
-    preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True)
+    preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True, db_index=True)
     language = models.ForeignKey(Language, related_name='files', blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
@@ -536,11 +536,11 @@ class Exercise(models.Model):
 class Invitation(models.Model):
     """ Invitation to edit channel """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
-    invited = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name='sent_to')
+    invited = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='sent_to')
     share_mode = models.CharField(max_length=50, default='edit')
     email = models.EmailField(max_length=100, null=True)
-    sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_by', null=True)
-    channel = models.ForeignKey('Channel', null=True, related_name='pending_editors')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='sent_by', null=True)
+    channel = models.ForeignKey('Channel', on_delete=models.SET_NULL, null=True, related_name='pending_editors')
     first_name = models.CharField(max_length=100, default='Guest')
     last_name = models.CharField(max_length=100, blank=True, null=True)
 
