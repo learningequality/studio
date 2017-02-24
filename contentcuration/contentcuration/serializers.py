@@ -450,7 +450,6 @@ class ChannelListSerializer(serializers.ModelSerializer):
         return channel.is_view_only == 1
 
     def get_resource_size(self, channel):
-        import pdb; pdb.set_trace()
         return channel.main_tree.get_descendants().aggregate(resource_size=Sum('files__file_size'))['resource_size']
 
     def get_resource_count(self, channel):
