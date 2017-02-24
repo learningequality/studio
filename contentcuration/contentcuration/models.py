@@ -288,7 +288,7 @@ class ContentNode(MPTTModel, models.Model):
 
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    kind = models.ForeignKey('ContentKind', related_name='contentnodes')
+    kind = models.ForeignKey('ContentKind', related_name='contentnodes', db_index=True)
     license = models.ForeignKey('License', null=True, default=settings.DEFAULT_LICENSE)
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
     is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship', symmetrical=False, blank=True)
@@ -303,7 +303,7 @@ class ContentNode(MPTTModel, models.Model):
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
     published = models.BooleanField(default=False)
 
-    changed = models.BooleanField(default=True)
+    changed = models.BooleanField(default=True, db_index=True)
     extra_fields = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"), null=True)
 
