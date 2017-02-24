@@ -29,3 +29,11 @@ class Router(object):
         model_label = model._meta.label
         # logging.debug("Writing {0} into {1}".format(model_label, db))
         return db
+
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
+        if "kolibri" in app_label and db == "default":
+            return False        # don't run on main DB
+        else:
+            return None         # we have no opinion here. Best practice!
+
+

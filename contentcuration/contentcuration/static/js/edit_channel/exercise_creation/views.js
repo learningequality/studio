@@ -16,6 +16,10 @@ require("quill/dist/quill.snow.css");
 require("dropzone/dist/dropzone.css");
 require("../../../css/katex.min.css");
 
+if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("Safari") > -1){
+    require("mathml.less");
+}
+
 var placeholder_text = "$1\${☣ CONTENTSTORAGE}/$3"
 var regExp = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
 

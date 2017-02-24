@@ -27,6 +27,7 @@ from django.db import transaction, connections
 from django.db.utils import ConnectionDoesNotExist
 
 import logging as logmodule
+logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -171,6 +172,12 @@ def create_associated_file_objects(kolibrinode, ccnode):
     for ccfilemodel in ccnode.files.exclude(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
+        if ccfilemodel.language_id:
+            kolibrimodels.Language.objects.get_or_create(
+                id=str(ccfilemodel.language),
+                lang_code=ccfilemodel.language.lang_code,
+                lang_subcode=ccfilemodel.language.lang_subcode
+            )
 
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
@@ -181,7 +188,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
-            lang_id=ccfilemodel.language_id,
+            lang_id=str(ccfilemodel.language),
             thumbnail=preset.thumbnail,
         )
 
@@ -209,7 +216,7 @@ def create_perseus_zip(ccnode, write_to_path):
     with zipfile.ZipFile(write_to_path, "w") as zf:
 
         # Get mastery model information, set to default if none provided
-        exercise_data = json.loads(ccnode.extra_fields)
+        exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
         exercise_data = {} if exercise_data is None else exercise_data
         exercise_data.update({
             'mastery_model': exercise_data.get('mastery_model') or exercises.M_OF_N,
@@ -217,9 +224,9 @@ def create_perseus_zip(ccnode, write_to_path):
         })
         if exercise_data['mastery_model'] == exercises.M_OF_N:
             if 'n' not in exercise_data:
-                exercise_data.update({'n':exercise_data.get('m') or max(len(self.questions), 1)})
+                exercise_data.update({'n':exercise_data.get('m') or max(min(5, assessment_items.count()), 1)})
             if 'm' not in exercise_data:
-                exercise_data.update({'m':exercise_data.get('n') or max(len(self.questions), 1)})
+                exercise_data.update({'m':exercise_data.get('n') or max(min(5, assessment_items.count()), 1)})
 
         exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
         exercise_context = {
@@ -267,6 +274,7 @@ def write_assessment_item(assessment_item, zf):
         'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string),
         'hints': hint_data,
         'freeresponse':assessment_item.type == exercises.FREE_RESPONSE,
+        'randomize': assessment_item.randomize,
     }
 
     if assessment_item.type == exercises.MULTIPLE_SELECTION:

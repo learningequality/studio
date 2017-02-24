@@ -154,7 +154,7 @@ var PreviewView = BaseViews.BaseView.extend({
                         return self.current_preview;
                     }
                 }else{
-                    if(!return_data || current_preset.get("order") === 1){
+                    if(!return_data || current_preset.get("order") < return_data.preset.order){
                         return_data = file;
                     }
                     self.presets.add(current_preset);

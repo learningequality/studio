@@ -138,7 +138,7 @@ def channel_view_only(request, channel_id):
 
 def get_or_set_cached_constants(constant, serializer):
     cached_data = cache.get(constant.__name__)
-    if cached_data is not None:
+    if cached_data:
         return cached_data
     constant_objects = constant.objects.all()
     constant_serializer = serializer(constant_objects, many=True)
@@ -341,40 +341,43 @@ def duplicate_nodes(request):
 
         try:
             nodes = data["nodes"]
-            sort_order = data["sort_order"]
+            sort_order = data.get("sort_order") or 1
             target_parent = data["target_parent"]
             channel_id = data["channel_id"]
+            new_nodes = []
+
+            with transaction.atomic():
+                for node_data in nodes:
+                    new_node = _duplicate_node(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
+                    new_nodes.append(new_node.pk)
+                    sort_order+=1
+
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-        new_nodes = []
-
-        with transaction.atomic():
-            for node_data in nodes:
-                new_node = _duplicate_node(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
-                new_nodes.append(new_node.pk)
-                sort_order+=1
 
         return HttpResponse(json.dumps({
             "success": True,
             "node_ids": " ".join(new_nodes)
         }))
 
-def _duplicate_node(node, sort_order=1, parent=None, channel_id=None):
+def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
+
+    original_channel = node.get_original_node().get_channel() if node.get_original_node() else None
+
     new_node = ContentNode.objects.create(
         title=node.title,
         description=node.description,
         kind=node.kind,
         license=node.license,
         parent=ContentNode.objects.get(pk=parent) if parent else None,
-        sort_order=sort_order,
+        sort_order=sort_order or node.sort_order,
         copyright_holder=node.copyright_holder,
         changed=True,
         original_node=node.original_node or node,
         cloned_source=node,
-        original_channel_id = node.original_channel_id or node.original_node.get_channel().id if node.original_node.get_channel() else None,
+        original_channel_id = node.original_channel_id or original_channel.id if original_channel else None,
         source_channel_id = node.get_channel().id if node.get_channel() else None,
         original_source_node_id = node.original_source_node_id or node.node_id,
         source_node_id = node.node_id,
@@ -404,6 +407,11 @@ def _duplicate_node(node, sort_order=1, parent=None, channel_id=None):
         aiobj_copy.id = None
         aiobj_copy.contentnode = new_node
         aiobj_copy.save()
+        for fobj in aiobj.files.all():
+            fobj_copy = copy.copy(fobj)
+            fobj_copy.id = None
+            fobj_copy.assessment_item = aiobj_copy
+            fobj_copy.save()
 
     for c in node.children.all():
         _duplicate_node(c, parent=new_node.id)
@@ -477,4 +485,3 @@ def publish_channel(request):
             "success": True,
             "channel": channel_id
         }))
-
