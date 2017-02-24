@@ -262,7 +262,8 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return node.kind_id == content_kinds.TOPIC or node.kind_id == content_kinds.EXERCISE or node.files.exists()
 
     def retrieve_original_channel(self, node):
-        channel = node.get_original_node().get_channel() if node.get_original_node() else None
+        original = node.get_original_node()
+        channel = original.get_channel() if original else None
         return {"id": channel.pk, "name": channel.name} if channel else None
 
     def retrieve_metadata(self, node):

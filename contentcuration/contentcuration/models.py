@@ -277,7 +277,7 @@ class ContentNode(MPTTModel, models.Model):
     node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
     # TODO: disallow nulls once existing models have been set
-    original_channel_id = UUIDField(primary_key=False, editable=False, null=True) # Original channel copied from
+    original_channel_id = UUIDField(primary_key=False, editable=False, null=True, db_index=True) # Original channel copied from
     source_channel_id = UUIDField(primary_key=False, editable=False, null=True) # Immediate channel copied from
     original_source_node_id = UUIDField(primary_key=False, editable=False, null=True) # Original node_id of node copied from (TODO: original_node_id clashes with original_node field - temporary)
     source_node_id = UUIDField(primary_key=False, editable=False, null=True) # Immediate node_id of node copied from
@@ -427,12 +427,12 @@ class File(models.Model):
     Things it can represent are, for example, mp4, avi, mov, html, css, jpeg, pdf, mp3...
     """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
-    checksum = models.CharField(max_length=400, blank=True)
+    checksum = models.CharField(max_length=400, blank=True, db_index=True)
     file_size = models.IntegerField(blank=True, null=True)
     file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500, blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True, db_index=True)
     assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True, db_index=True)
-    file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True)
+    file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True, db_index=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True, db_index=True)
     language = models.ForeignKey(Language, related_name='files', blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
