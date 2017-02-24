@@ -234,14 +234,12 @@ var ChannelModel = BaseModel.extend({
 	root_list : "channel-list",
 	defaults: {
 		name: "",
-		editors: [],
-		viewers: [],
-		pending_editors: [],
-		author: "Anonymous",
-		license_owner: "No license found",
 		description:"",
 		thumbnail_url: "/static/img/kolibri_placeholder.png",
-		main_tree: (new ContentNodeModel()).toJSON()
+		count: 0,
+		size: 0,
+		published: false,
+		view_only: false
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
@@ -272,7 +270,7 @@ var ChannelCollection = BaseCollection.extend({
 	list_name:"channel-list",
     model_name:"ChannelCollection",
 	comparator:function(channel){
-		return -new Date(channel.get('main_tree').created);
+		return -new Date(channel.get('created'));
 	}
 });
 

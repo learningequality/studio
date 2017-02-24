@@ -407,6 +407,10 @@ class ChannelSerializer(serializers.ModelSerializer):
     main_tree = ContentNodeSerializer(read_only=True)
     trash_tree = ContentNodeSerializer(read_only=True)
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+    created = serializers.SerializerMethodField('get_date_created')
+
+    def get_date_created(self, channel):
+        return channel.main_tree.created
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
@@ -414,10 +418,7 @@ class ChannelSerializer(serializers.ModelSerializer):
         return '/static/img/kolibri_placeholder.png'
 
     def check_for_changes(self, channel):
-        if channel.main_tree:
-            return channel.main_tree.get_descendants().filter(changed=True).count() > 0
-        else:
-            return False
+        return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).count() > 0
 
     @staticmethod
     def setup_eager_loading(queryset):
@@ -427,8 +428,42 @@ class ChannelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree', 'source_id', 'source_domain',
+        fields = ('id', 'created', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree', 'source_id', 'source_domain',
                 'ricecooker_version', 'thumbnail', 'version', 'deleted', 'public', 'thumbnail_url', 'pending_editors', 'viewers')
+
+
+class ChannelListSerializer(serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+    size = serializers.SerializerMethodField("get_resource_size")
+    count = serializers.SerializerMethodField("get_resource_count")
+    created = serializers.SerializerMethodField('get_date_created')
+    view_only = serializers.SerializerMethodField('check_view_only')
+    published = serializers.SerializerMethodField('check_published')
+
+    def get_date_created(self, channel):
+        return channel.main_tree.created
+
+    def check_published(self, channel):
+        return channel.main_tree.published
+
+    def check_view_only(self, channel):
+        return channel.is_view_only == 1
+
+    def get_resource_size(self, channel):
+        return channel.main_tree.get_descendants().aggregate(resource_size=Sum('files__file_size'))['resource_size']
+
+    def get_resource_count(self, channel):
+        return channel.main_tree.get_descendant_count()
+
+    def generate_thumbnail_url(self, channel):
+        if channel.thumbnail and 'static' not in channel.thumbnail:
+            return generate_storage_url(channel.thumbnail)
+        return '/static/img/kolibri_placeholder.png'
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'created', 'name', 'view_only', 'published', 'editors', 'description', 'size', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'deleted')
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

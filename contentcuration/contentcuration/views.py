@@ -22,7 +22,7 @@ from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
+from contentcuration.serializers import AssessmentItemSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets, content_kinds, file_formats
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -89,12 +89,10 @@ def channel_list(request):
     if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
         return redirect(reverse_lazy('unsupported_browser'))
 
-    channel_list = Channel.objects.filter(deleted=False)\
-                    .filter(Q(editors=request.user) | Q(viewers=request.user))\
+    channel_list = Channel.objects.select_related('main_tree').filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
                     .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
 
-    channel_list = ChannelSerializer.setup_eager_loading(channel_list)
-    channel_serializer = ChannelSerializer(channel_list, many=True)
+    channel_serializer = ChannelListSerializer(channel_list, many=True)
 
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
