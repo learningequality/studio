@@ -617,7 +617,6 @@ var BaseListEditableItemView = BaseListItemView.extend({
 		var promise = new Promise(function(resolve, reject){
 			self.originalData = data;
 			if(self.model.isNew()){
-				console.log("CALLED NEW", data)
 				self.containing_list_view.create_new_item(data).then(function(newView){
 					resolve(newView.model);
 				}).catch(function(error){
@@ -625,7 +624,6 @@ var BaseListEditableItemView = BaseListItemView.extend({
 					reject(error);
 				});
 			}else{
-				console.log("CALLED UPDATE", data)
 				self.display_load(message, function(resolve_load, reject_load){
 					self.model.save(data,{
 						patch:true,
