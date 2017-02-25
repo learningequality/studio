@@ -90,10 +90,8 @@ def channel_list(request):
 
     channel_serializer = ChannelListSerializer(channel_list, many=True)
 
-    licenses = get_or_set_cached_constants(License, LicenseSerializer)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
                                                  "channel_name" : False,
-                                                 "license_list" : licenses,
                                                  "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
 
 @login_required
