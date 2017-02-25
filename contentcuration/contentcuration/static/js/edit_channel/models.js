@@ -136,7 +136,8 @@ var ContentNodeModel = BaseModel.extend({
 		tags:[],
 		assessment_items:[],
 		metadata: {"resource_size" : 0, "resource_count" : 0},
-		created: new Date()
+		created: new Date(),
+		ancestors: []
     }
 });
 
@@ -262,7 +263,24 @@ var ChannelModel = BaseModel.extend({
 	            }
 	        });
     	});
-    }
+    },
+    get_accessible_channel_roots:function(){
+		var self = this;
+    	var promise = new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	        	data: JSON.stringify({'channel_id': self.id}),
+	            url: window.Urls.accessible_channels(),
+	            success: function(data) {
+	            	resolve(new ContentNodeCollection(JSON.parse(data)));
+	            },
+	            error:function(e){
+	            	reject(e);
+	            }
+	        });
+    	});
+    	return promise;
+	}
 });
 
 var ChannelCollection = BaseCollection.extend({
