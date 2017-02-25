@@ -36,36 +36,35 @@ var ImportView = BaseViews.BaseListView.extend({
     initialize: function(options) {
         // _.bindAll(this, 'import_content');
         this.modal = options.modal;
-        this.other_channels = window.access_channels;
-        this.other_channels.remove(window.current_channel);
         this.collection = new Models.ContentNodeCollection();
-        this.lists=[];
         this.onimport = options.onimport;
+        this.lists=[];
         this.render();
     },
     events: {
       "click #import_content_submit" : "import_content"
     },
     render: function() {
-        this.$el.html(this.template({
-            is_empty:this.other_channels.length===0
-        }));
+        this.$el.html(this.template());
         var self = this;
-        this.other_channels.forEach(function(channel){
-            var node = channel.get_root("main_tree");
-            node.set({title:channel.get("name")});
-            self.collection.add(node);
-        });
-        if(this.other_channels.length>0){
-            this.importList = new ImportList({
-                model : null,
-                el:$("#import_from_channel_box"),
-                is_channel: true,
-                collection :  this.collection,
-                parent_node_view:null,
-                container :this
+        window.current_channel.get_accessible_channel_roots().then(function(collection){
+            collection.forEach(function(node){
+                node.set('title', node.get('channel_name'));
             });
-        }
+            self.collection = collection;
+            if(self.collection.length > 0){
+                self.importList = new ImportList({
+                    model: null,
+                    el: self.$("#import_from_channel_box"),
+                    is_channel: true,
+                    collection: self.collection,
+                    parent_node_view: null,
+                    container: self
+                });
+            }else{
+                self.$("#import_empty_text").text("No channels to import from...");
+            }
+        });
     },
 
     update_count:function(){
@@ -215,7 +214,7 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
     render: function() {
         this.$el.html(this.template({
             node:this.model.toJSON(),
-            isfolder: this.model.get("kind") === "topic",
+            isfolder: this.is_channel || this.model.get("kind") === "topic",
             is_channel:this.is_channel
         }));
         this.$el.find(".import_checkbox").prop("checked", this.checked);

@@ -40,6 +40,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 	new_channel: function(){
 		var data = {
 			editors: [window.current_user.id],
+			pending_editors: []
 		};
 		var newView = this.create_new_view(new Models.ChannelModel(data));
 		this.$(this.list_selector).prepend(newView.el);
@@ -221,7 +222,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			name: title,
 			description: description,
 			thumbnail : this.thumbnail,
-			editors: this.model.get('editors')
+			editors: this.model.get('editors'),
+			pending_editors: this.model.get('pending_editors')
 		};
 		this.original_thumbnail = this.thumbnail;
 		this.original_thumbnail_url = this.thumbnail_url;

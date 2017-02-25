@@ -22,7 +22,7 @@ from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import AssessmentItemSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
+from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets, content_kinds, file_formats
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -50,21 +50,18 @@ def unauthorized(request):
 
 def channel_page(request, channel, allow_edit=False):
     channel_serializer =  ChannelSerializer(channel)
-    accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))
-    accessible_channel_list = ChannelSerializer.setup_eager_loading(accessible_channel_list)
-    accessible_channel_list_serializer = ChannelSerializer(accessible_channel_list, many=True)
 
-    channel_list = accessible_channel_list.filter(Q(editors=request.user) | Q(viewers=request.user))\
-                    .distinct()\
-                    .exclude(id=channel.pk)\
-                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
-                    .values("id", "name", "is_view_only")
+    channel_list = Channel.objects.select_related('main_tree').exclude(id=channel.pk)\
+                            .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
+                            .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
+                            .distinct().values("id", "name", "is_view_only")
+
     fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
     contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
 
-    channel_tags = ContentTag.objects.filter(channel = channel)
+    channel_tags = ContentTag.objects.select_related('channel').filter(channel_id=channel.pk)
     channel_tags_serializer = TagSerializer(channel_tags, many=True)
 
     json_renderer = JSONRenderer()
@@ -73,7 +70,6 @@ def channel_page(request, channel, allow_edit=False):
                                                 "channel" : json_renderer.render(channel_serializer.data),
                                                 "channel_id" : channel.pk,
                                                 "channel_name": channel.name,
-                                                "accessible_channels" : json_renderer.render(accessible_channel_list_serializer.data),
                                                 "channel_list" : channel_list,
                                                 "fileformat_list" : fileformats,
                                                  "license_list" : licenses,
@@ -94,10 +90,8 @@ def channel_list(request):
 
     channel_serializer = ChannelListSerializer(channel_list, many=True)
 
-    licenses = get_or_set_cached_constants(License, LicenseSerializer)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
                                                  "channel_name" : False,
-                                                 "license_list" : licenses,
                                                  "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
 
 @login_required
@@ -432,3 +426,11 @@ def publish_channel(request):
             "success": True,
             "channel": channel_id
         }))
+
+def accessible_channels(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        accessible_list = ContentNode.objects.filter(pk__in=Channel.objects.select_related('main_tree')\
+                        .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))\
+                        .exclude(pk=data["channel_id"]).values_list('main_tree_id', flat=True))
+        return HttpResponse(JSONRenderer().render(RootNodeSerializer(accessible_list, many=True).data))
