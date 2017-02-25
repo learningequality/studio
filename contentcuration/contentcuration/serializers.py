@@ -467,7 +467,7 @@ class AccessibleChannelListSerializer(serializers.ModelSerializer):
         return channel.main_tree.created
 
     def get_resource_size(self, channel):
-        return channel.main_tree.get_descendants().aggregate(resource_size=Sum('files__file_size'))['resource_size']
+        return channel.get_resource_size()
 
     def get_resource_count(self, channel):
         return channel.main_tree.get_descendant_count()
@@ -488,7 +488,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
         return channel.main_tree.created
 
     def get_resource_size(self, channel):
-        return channel.main_tree.get_descendants().aggregate(resource_size=Sum('files__file_size'))['resource_size']
+        return channel.get_resource_size()
 
     def get_resource_count(self, channel):
         return channel.main_tree.get_descendant_count()
