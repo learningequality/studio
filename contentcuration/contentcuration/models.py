@@ -150,14 +150,13 @@ class ChannelResourceSize(models.Model):
 
     @classmethod
     def initialize_view(cls):
-        sql = "CREATE MATERIALIZED VIEW {} AS".format(cls.pg_view_name)
-        totalsql = 'SELECT tree_id as id, tree_id, SUM("{file_table}"."file_size") AS '\
-                    '"resource_size" FROM "{node}" LEFT OUTER JOIN "{file_table}" ON '\
-                    '("{node}"."id" = "{file_table}"."contentnode_id") GROUP BY {node}.tree_id'\
-                    ' WITH DATA;'.format(file_table=cls.file_table, node=cls.node_table)
+        sql = 'CREATE MATERIALIZED VIEW {view} AS '\
+                'SELECT tree_id as id, tree_id, SUM("{file_table}"."file_size") AS '\
+                '"resource_size" FROM "{node}" LEFT OUTER JOIN "{file_table}" ON '\
+                '("{node}"."id" = "{file_table}"."contentnode_id") GROUP BY {node}.tree_id'\
+                ' WITH DATA;'.format(view=cls.pg_view_name, file_table=cls.file_table, node=cls.node_table)
         with connection.cursor() as cursor:
             cursor.execute(sql)
-            cursor.execute(totalsql)
 
     @classmethod
     def refresh_view(cls):
