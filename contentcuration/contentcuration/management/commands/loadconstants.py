@@ -493,6 +493,21 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
+            "id" : format_presets.TOPIC_THUMBNAIL,
+            "readable_name": format_presets.TOPIC_THUMBNAIL_READABLE,
+            "multi_language" : False,
+            "supplementary" : True,
+            "thumbnail" : True,
+            "display": True,
+            "order" : 1,
+            "kind_id" : content_kinds.TOPIC,
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+        },
+    },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
             "id" : format_presets.HTML5_ZIP,
             "readable_name": format_presets.HTML5_ZIP_READABLE,
             "multi_language" : False,

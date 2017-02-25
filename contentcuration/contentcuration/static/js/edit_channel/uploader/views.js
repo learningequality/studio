@@ -131,7 +131,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       });
   },
   load_editor:function(selected_items){
-    var is_individual = selected_items.length === 1 && selected_items[0].model.get("kind") !== "topic";
+    var is_individual = selected_items.length === 1;
     var is_exercise = is_individual && selected_items[0].model.get("assessment_items").length > 0;
     var has_files = false;
     if(is_individual){
@@ -375,7 +375,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   render: function() {
     var has_files = false;
     if(this.selected_items.length === 1){
-      has_files = this.selected_items[0].model.get("kind") !== "topic" && this.selected_items[0].model.get("kind") !== "exercise";
+      has_files = this.selected_items[0].model.get("kind") !== "exercise";
       this.selected_items[0].model.get("files").forEach(function(file){
         var preset = (file.preset.id)? file.preset.id:file.preset;
         has_files = has_files || window.formatpresets.get({id:preset}).get("display");
@@ -418,9 +418,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   handle_if_individual:function(){
     if(this.selected_items.length === 1){
       var view = this.selected_items[0];
-      if(view.model.get("kind") !== "topic"){
-        view.load_file_displays(this.$("#editmetadata_format_section"));
-      }
+      view.load_file_displays(this.$("#editmetadata_format_section"));
       if(view.model.get("kind")==="exercise"){
         this.container.load_questions(view.model);
       }

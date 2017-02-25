@@ -444,7 +444,6 @@ var FormatEditorItem = FormatItem.extend({
     update_metadata:function(){
         var all_metadata = this.get_metadata();
         this.$(".format_counter").html(all_metadata.count);
-        this.$el.find(".format_editor_remove").css("display", (all_metadata.count <=1) ? "none" : "inline");
         this.$(".main_file_remove").css("display", (all_metadata.main_file_count <=1) ? "none" : "inline");
         this.$(".format_size_text").html(stringHelper.format_size(all_metadata.size));
     },
@@ -608,7 +607,7 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         });
         var format_slot = new FormatSlot({
             model: model,
-            nodeid : this.model.get("id"),
+            node : this.model,
             file: associated_file,
             containing_list_view: this
         });
@@ -652,26 +651,28 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     className:"row format_editor_item",
     initialize: function(options) {
-        _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed','file_failed', 'create_dropzone');
+        _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed','file_failed', 'create_dropzone', 'set_file');
         this.containing_list_view = options.containing_list_view;
         this.file = options.file;
         this.originalFile = this.file;
-        this.nodeid = options.nodeid;
+        this.node = options.node;
         this.render();
     },
     events: {
-        'click .format_editor_remove ' : 'remove_item'
+        'click .format_editor_remove ' : 'remove_item',
+        'click .open_thumbnail_generator': 'open_thumbnail_generator'
     },
     render: function() {
         this.$el.html(this.template({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
-            nodeid:this.nodeid
+            nodeid:this.node.get('id'),
+            allow_thumbnail_generation: this.model.get("thumbnail") && this.model.get("kind_id") === "topic" // Allow more kinds once supported
         }));
         setTimeout(this.create_dropzone, 100); // Wait for slide down animation to finish
     },
     create_dropzone:function(){
-        var dz_selector="#" + this.model.get("id") + "_"  + this.nodeid + "_dropzone" + ((this.file)? "_swap" : "");
+        var dz_selector="#" + this.model.get("id") + "_"  + this.node.get('id') + "_dropzone" + ((this.file)? "_swap" : "");
         if(this.$(dz_selector).is(":visible")){
             var clickables = [dz_selector + " .dz_click"];
             if(this.file){
@@ -686,7 +687,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                previewsContainer: dz_selector,
                headers: {
                     "X-CSRFToken": get_cookie("csrftoken"),
-                    "Node" : this.nodeid,
+                    "Node" : this.node.get('id'),
                     "Preset": this.model.get("id")
                 }
             });
@@ -706,12 +707,15 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         var new_file = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
         var self = this;
         this.fetch_model(new_file).then(function(fetched){
-            var originalFile = self.file;
-            self.file = fetched;
-            self.render();
-            self.containing_list_view.set_file_format(self.file, self.model, originalFile);
+            self.set_file(fetched);
             self.set_uploading(false);
         });
+    },
+    set_file:function(file){
+        var originalFile = this.file;
+        this.file = file;
+        this.render();
+        this.containing_list_view.set_file_format(this.file, this.model, originalFile);
     },
     file_added: function(file) {
         if(this.file){
@@ -735,8 +739,77 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
+    },
+    open_thumbnail_generator:function(){
+        var thumbnail_modal = new ThumbnailModalView({
+            node: this.node,
+            onuse: this.set_file,
+            model: this.file
+        });
     }
 
+});
+
+var ThumbnailModalView = BaseViews.BaseModalView.extend({
+    template: require("./hbtemplates/thumbnail_generator_modal.handlebars"),
+    img_template: require("./hbtemplates/thumbnail_generator_preview.handlebars"),
+    initialize: function(options) {
+        _.bindAll(this, "generate_thumbnail", 'use_thumbnail', 'render_preview');
+        this.modal = true;
+        this.node = options.node;
+        this.onuse = options.onuse;
+        this.render();
+
+    },
+    events: {
+        'click #generate_thumbnail' : 'generate_thumbnail',
+        'click #use_thumbnail' : 'use_thumbnail'
+    },
+    render: function() {
+        this.$el.html(this.template());
+        $("body").append(this.el);
+        this.$("#thumbnail_modal").modal({show: true});
+        this.$("#thumbnail_modal").on("hide.bs.modal", this.close);
+        this.render_preview()
+    },
+    render_preview:function(){
+        this.$("#thumbnail_preview").html(this.img_template({
+          model: this.model? this.model.toJSON() : null
+        }));
+        this.handle_file();
+    },
+    generate_thumbnail:function(){
+        var self = this;
+        this.$("#generate_thumbnail_text").css("display", "inline-block");
+        this.$("#generate_thumbnail").attr("disabled", "disabled");
+        this.$("#generate_thumbnail").addClass("disabled");
+        this.node.generate_thumbnail().then(function(result){
+            self.model = result;
+            self.render_preview();
+            self.enable_generate();
+        }).catch(function(error){
+            alert(error.responseText);
+            self.enable_generate();
+        });
+    },
+    enable_generate:function(){
+        $("#generate_thumbnail_text").css("display", "none");
+        $("#generate_thumbnail").removeAttr("disabled");
+        $("#generate_thumbnail").removeClass("disabled");
+    },
+    use_thumbnail:function(){
+        this.onuse(this.model);
+        this.close();
+    },
+    handle_file:function(){
+        if(this.model){
+           this.$("#use_thumbnail").removeAttr("disabled");
+           this.$("#use_thumbnail").removeClass("disabled");
+        } else{
+            this.$("#use_thumbnail").attr("disabled", "disabled");
+           this.$("#use_thumbnail").addClass("disabled");
+        }
+    }
 });
 
 module.exports = {

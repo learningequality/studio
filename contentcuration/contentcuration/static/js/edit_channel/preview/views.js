@@ -130,7 +130,7 @@ var PreviewView = BaseViews.BaseView.extend({
     switch_preview:function(model){
         // called from outside sources
         this.model = model;
-        if(this.model && this.model.get("kind")!=="topic"){
+        if(this.model){
             var self = this;
             this.presets.reset();
             var default_preview = this.load_preview_data(null);

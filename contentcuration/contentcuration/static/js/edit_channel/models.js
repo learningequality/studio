@@ -137,6 +137,26 @@ var ContentNodeModel = BaseModel.extend({
 		assessment_items:[],
 		metadata: {"resource_size" : 0, "resource_count" : 0},
 		created: new Date()
+    },
+    generate_thumbnail:function(){
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+	        var data = {"node_id": self.id};
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.generate_thumbnail(),
+	            data:  JSON.stringify(data),
+	            success: function(data) {
+	            	var new_file = new FileModel({id: JSON.parse(data).file_id});
+	            	new_file.fetch().then(function(model){
+	            		resolve(new FileModel(model));
+	            	});
+	            },
+	            error:function(e){
+	            	reject(e);
+	            }
+	        });
+    	});
     }
 });
 
