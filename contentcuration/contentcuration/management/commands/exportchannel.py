@@ -390,4 +390,3 @@ def get_active_content_database():
         }
 
     return alias
-
