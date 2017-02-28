@@ -11,6 +11,7 @@ from rest_framework.fields import set_value, SkipField
 from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.db.models import Q, Case, When, Value, IntegerField, Count
 from django.conf import settings
 from django.core.files import File as DjFile
 
@@ -262,22 +263,20 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         return node.kind_id == content_kinds.TOPIC or node.kind_id == content_kinds.EXERCISE or node.files.exists()
 
     def retrieve_original_channel(self, node):
-        # TODO: update this once existing nodes are handled
-        if node.original_node:
-            root_channel = node.original_node.get_channel()
-            if root_channel:
-                return {"id": root_channel.pk, "name": root_channel.name}
-        return None
+        original = node.get_original_node()
+        channel = original.get_channel() if original else None
+        return {"id": channel.pk, "name": channel.name} if channel else None
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
-            resource_descendants = node.get_descendants().exclude(kind=content_kinds.TOPIC)
+            descendants = node.get_descendants(include_self=True).annotate(change_count=Case(When(changed=True, then=Value(1)),default=Value(0),output_field=IntegerField()))
+            aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), is_changed=Sum('change_count'))
             return {
                 "total_count" : node.get_descendant_count(),
-                "resource_count" : resource_descendants.count(),
+                "resource_count" : descendants.exclude(kind=content_kinds.TOPIC).count(),
                 "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'],
-                "resource_size" : resource_descendants.aggregate(resource_size=Sum('files__file_size'))['resource_size'],
-                "has_changed_descendant" : node.get_descendants(include_self=True).filter(changed=True).exists()
+                "resource_size" : aggregated['resource_size'],
+                "has_changed_descendant" : aggregated['is_changed'] != 0
             }
         else:
             return {
@@ -405,11 +404,39 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
                  'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets', 'valid', 'original_channel_id', 'source_channel_id',
                  'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'source_id', 'source_domain')
 
+class RootNodeSerializer(serializers.ModelSerializer):
+    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    id = serializers.CharField(required=False)
+    metadata = serializers.SerializerMethodField('retrieve_metadata')
+    channel_name = serializers.SerializerMethodField('retrieve_channel_name')
+
+    def retrieve_metadata(self, node):
+        descendants = node.get_descendants(include_self=True).annotate(change_count=Case(When(changed=True, then=Value(1)),default=Value(0),output_field=IntegerField()))
+        aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), is_changed=Sum('change_count'))
+        return {
+            "total_count" : node.get_descendant_count(),
+            "resource_count" : descendants.exclude(kind_id=content_kinds.TOPIC).count(),
+            "resource_size" : aggregated['resource_size'],
+            "has_changed_descendant" : aggregated['is_changed'] != 0
+        }
+
+    def retrieve_channel_name(self, node):
+        return node.get_channel().name if node.get_channel() else None
+
+    class Meta:
+        model = ContentNode
+        fields = ('title', 'id', 'kind', 'children', 'metadata', 'channel_name')
+
+
 class ChannelSerializer(serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')
-    main_tree = ContentNodeSerializer(read_only=True)
-    trash_tree = ContentNodeSerializer(read_only=True)
+    main_tree = RootNodeSerializer(read_only=True)
+    trash_tree = RootNodeSerializer(read_only=True)
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+    created = serializers.SerializerMethodField('get_date_created')
+
+    def get_date_created(self, channel):
+        return channel.main_tree.created
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
@@ -417,10 +444,7 @@ class ChannelSerializer(serializers.ModelSerializer):
         return '/static/img/kolibri_placeholder.png'
 
     def check_for_changes(self, channel):
-        if channel.main_tree:
-            return channel.main_tree.get_descendants().filter(changed=True).count() > 0
-        else:
-            return False
+        return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).count() > 0
 
     @staticmethod
     def setup_eager_loading(queryset):
@@ -430,8 +454,60 @@ class ChannelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree', 'source_id', 'source_domain',
+        fields = ('id', 'created', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree', 'source_id', 'source_domain',
                 'ricecooker_version', 'thumbnail', 'version', 'deleted', 'public', 'thumbnail_url', 'pending_editors', 'viewers')
+
+class AccessibleChannelListSerializer(serializers.ModelSerializer):
+    size = serializers.SerializerMethodField("get_resource_size")
+    count = serializers.SerializerMethodField("get_resource_count")
+    created = serializers.SerializerMethodField('get_date_created')
+    main_tree = RootNodeSerializer(read_only=True)
+
+    def get_date_created(self, channel):
+        return channel.main_tree.created
+
+    def get_resource_size(self, channel):
+        return channel.get_resource_size()
+
+    def get_resource_count(self, channel):
+        return channel.main_tree.get_descendant_count()
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'created', 'name','size', 'count', 'version', 'deleted', 'main_tree')
+
+class ChannelListSerializer(serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+    view_only = serializers.SerializerMethodField('check_view_only')
+    published = serializers.SerializerMethodField('check_published')
+    size = serializers.SerializerMethodField("get_resource_size")
+    count = serializers.SerializerMethodField("get_resource_count")
+    created = serializers.SerializerMethodField('get_date_created')
+
+    def get_date_created(self, channel):
+        return channel.main_tree.created
+
+    def get_resource_size(self, channel):
+        return channel.get_resource_size()
+
+    def get_resource_count(self, channel):
+        return channel.main_tree.get_descendant_count()
+
+    def check_published(self, channel):
+        return channel.main_tree.published
+
+    def check_view_only(self, channel):
+        return channel.is_view_only == 1
+
+    def generate_thumbnail_url(self, channel):
+        if channel.thumbnail and 'static' not in channel.thumbnail:
+            return generate_storage_url(channel.thumbnail)
+        return '/static/img/kolibri_placeholder.png'
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'created', 'name', 'view_only', 'published', 'pending_editors', 'editors', 'description', 'size', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'deleted')
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -439,7 +515,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id')
 
 class CurrentUserSerializer(serializers.ModelSerializer):
-    clipboard_tree = ContentNodeSerializer(read_only=True)
+    clipboard_tree = RootNodeSerializer(read_only=True)
 
     class Meta:
         model = User
