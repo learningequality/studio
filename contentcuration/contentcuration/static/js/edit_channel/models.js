@@ -137,6 +137,7 @@ var ContentNodeModel = BaseModel.extend({
 		assessment_items:[],
 		metadata: {"resource_size" : 0, "resource_count" : 0},
 		created: new Date(),
+		ancestors: [],
 		extra_fields: {}
     },
     initialize: function () {
@@ -268,14 +269,12 @@ var ChannelModel = BaseModel.extend({
 	root_list : "channel-list",
 	defaults: {
 		name: "",
-		editors: [],
-		viewers: [],
-		pending_editors: [],
-		author: "Anonymous",
-		license_owner: "No license found",
 		description:"",
 		thumbnail_url: "/static/img/kolibri_placeholder.png",
-		main_tree: (new ContentNodeModel()).toJSON()
+		count: 0,
+		size: 0,
+		published: false,
+		view_only: false
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
@@ -298,7 +297,24 @@ var ChannelModel = BaseModel.extend({
 	            }
 	        });
     	});
-    }
+    },
+    get_accessible_channel_roots:function(){
+		var self = this;
+    	var promise = new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	        	data: JSON.stringify({'channel_id': self.id}),
+	            url: window.Urls.accessible_channels(),
+	            success: function(data) {
+	            	resolve(new ContentNodeCollection(JSON.parse(data)));
+	            },
+	            error:function(e){
+	            	reject(e);
+	            }
+	        });
+    	});
+    	return promise;
+	}
 });
 
 var ChannelCollection = BaseCollection.extend({
@@ -306,7 +322,7 @@ var ChannelCollection = BaseCollection.extend({
 	list_name:"channel-list",
     model_name:"ChannelCollection",
 	comparator:function(channel){
-		return -new Date(channel.get('main_tree').created);
+		return -new Date(channel.get('created'));
 	}
 });
 
@@ -380,8 +396,7 @@ var FileCollection = BaseCollection.extend({
     				reject(error);
     			}
     		});
-    	})
-
+    	});
 	}
 });
 
@@ -484,9 +499,11 @@ var AssessmentItemModel = BaseModel.extend({
 	root_list:"assessmentitem-list",
 	model_name:"AssessmentItemModel",
 	defaults: {
+		type: "single_selection",
 		question: "",
 		answers: "[]",
-		hints: "[]"
+		hints: "[]",
+		files: []
 	},
 
 	initialize: function () {
@@ -520,7 +537,6 @@ var AssessmentItemModel = BaseModel.extend({
 		}
 	    return attributes;
 	}
-
 });
 
 var AssessmentItemCollection = BaseCollection.extend({
@@ -563,6 +579,20 @@ var AssessmentItemCollection = BaseCollection.extend({
     	});
     	return promise;
     },
+    save:function(){
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+    		Backbone.sync("update", self, {
+    			url: self.model.prototype.urlRoot(),
+    			success:function(data){
+    				resolve(new AssessmentItemCollection(data));
+    			},
+    			error:function(error){
+    				reject(error);
+    			}
+    		});
+    	});
+    }
 });
 
 module.exports = {

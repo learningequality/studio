@@ -637,6 +637,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 			}else{
 				self.display_load(message, function(resolve_load, reject_load){
 					self.model.save(data,{
+						patch:true,
 						success:function(savedModel){
 							resolve(savedModel);
 							resolve_load(true);
