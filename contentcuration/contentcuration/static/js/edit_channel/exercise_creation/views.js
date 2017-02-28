@@ -259,7 +259,7 @@ var EditorView = Backbone.View.extend({
             }
         });
         this.render_editor();
-        this.editor.on("text-change", _.debounce(this.save, 500));
+        this.editor.on("text-change", _.debounce(this.save, 300));
         this.editor.on("text-change", _.debounce(this.resize_editor_container, 100));
         this.editing = true;
 
@@ -567,7 +567,7 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
                 collection: this.model.get("answers"),
                 container:this,
                 assessment_item: this.model,
-                isdisplay:this.isdisplay,
+                isdisplay:this.isdisplay
             });
         }
         this.$(".answers").html(this.answer_editor.el);
@@ -809,6 +809,7 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     initialize: function(options) {
         _.bindAll(this, "render", "add_item", "add_item_view");
         this.bind_edit_functions();
+        console.log(this.collection)
         this.assessment_item = options.assessment_item;
         this.isdisplay = options.isdisplay;
         this.render();
@@ -914,7 +915,7 @@ var HintModalView = BaseViews.BaseModalView.extend({
     error_template: require("./hbtemplates/assessment_item_errors.handlebars"),
     template: require("./hbtemplates/assessment_item_hint_modal.handlebars"),
     initialize: function(options) {
-        _.bindAll(this, "closing_hints", "show", "closed_modal");
+        _.bindAll(this, "closing_hints", "show", "closed_hints");
         this.assessment_item = options.assessment_item;
         this.isdisplay = options.isdisplay;
         this.onupdate = options.onupdate;
@@ -926,6 +927,10 @@ var HintModalView = BaseViews.BaseModalView.extend({
         if(!this.isdisplay){
             this.onupdate(this.model);
         }
+    },
+    closed_hints:function(){
+        $("body").addClass('modal-open'); //Make sure modal-open class persists
+        $('.modal-backdrop').slice(1).remove();
     },
     render: function() {
         this.$el.html(this.template({isdisplay: this.isdisplay}));
@@ -946,7 +951,7 @@ var HintModalView = BaseViews.BaseModalView.extend({
         });
         this.$(".hints").append(this.hint_editor.el);
         this.$(".hint_modal").on("hide.bs.modal", this.closing_hints);
-        this.$(".hint_modal").on("hidden.bs.modal", this.closed_modal);
+        this.$(".hint_modal").on("hidden.bs.modal", this.closed_hints);
     },
     show: function(){
         this.$(".hint_modal").modal({show: true});

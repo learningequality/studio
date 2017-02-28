@@ -302,7 +302,20 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     valid = serializers.SerializerMethodField('check_valid')
 
     def check_valid(self, node):
-        return node.kind_id == content_kinds.TOPIC or node.kind_id == content_kinds.EXERCISE or node.files.exists()
+        if node.kind_id == content_kinds.TOPIC:
+            return True
+        elif node.kind_id == content_kinds.EXERCISE:
+            for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):
+                answers = json.loads(aitem.answers)
+                correct_answers = filter(lambda a: a['correct'], answers)
+                if aitem.question == "" or len(answers) == 0 or len(correct_answers) == 0 or\
+                    any(filter(lambda a: a['answer'] == "", answers)) or\
+                    (aitem.type == exercises.SINGLE_SELECTION and len(correct_answers) > 1) or\
+                    any(filter(lambda h: h['hint'] == "", json.loads(aitem.hints))):
+                    return False
+            return True
+        else:
+            return node.files.filter(preset__supplementary=False).exists()
 
     def retrieve_original_channel(self, node):
         # TODO: update this once existing nodes are handled
