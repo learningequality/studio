@@ -137,7 +137,7 @@ var ContentNodeModel = BaseModel.extend({
 		assessment_items:[],
 		metadata: {"resource_size" : 0, "resource_count" : 0},
 		created: new Date(),
-<<<<<<< HEAD
+		ancestors: [],
 		extra_fields: {}
     },
     initialize: function () {
@@ -171,10 +171,6 @@ var ContentNodeModel = BaseModel.extend({
 		    this.set('extra_fields', data);
 		}
 	}
-=======
-		ancestors: []
-    }
->>>>>>> 2f0660203d44b74610ba2342a31a615680837367
 });
 
 var ContentNodeCollection = BaseCollection.extend({

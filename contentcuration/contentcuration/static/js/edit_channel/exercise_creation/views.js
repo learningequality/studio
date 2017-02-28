@@ -246,13 +246,13 @@ var EditorView = Backbone.View.extend({
                 'body': {
                   'background-color': "white",
                   'padding': '10px',
-                  'min-height': "100px",
-                  "overflow": "hidden",
+                  'min-height': "70px",
+                  "overflow": "hidden"
                 },
                 '.editor-container': {
                     'display': 'block',
                     'clear': 'both',
-                    'min-height': "100px",
+                    'min-height': '150px',
                     "height": "auto",
                     "width": "100%"
                 }
@@ -265,15 +265,13 @@ var EditorView = Backbone.View.extend({
 
         var self = this;
         this.$(this.editor.root).ready(function(){
-            self.$('.editor iframe').height(self.editor.root.ownerDocument.body.scrollHeight + 20);
-            self.$('.editor').height(self.editor.root.ownerDocument.body.scrollHeight);
+            self.$('.editor iframe, .editor').height(self.editor.root.ownerDocument.body.scrollHeight);
             self.editor.focus();
         });
 
     },
     resize_editor_container:function(){
-        var height = this.$('.editor iframe').contents().find('.editor-container').height();
-        this.$('.editor iframe, .editor').height(height);
+        this.$('.editor iframe, .editor').height(this.$('.editor iframe').contents().find('.editor-container').height());
     },
 
     deactivate_editor: function() {
@@ -359,14 +357,17 @@ var EditorView = Backbone.View.extend({
 
 var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     template: null,
+    additem_el: null,
     get_default_attributes: function(){
         return {};
     },
     add_item: function() {
-        this.$(this.default_item).css('display', 'none');
-        this.set_focus();
-        this.collection.add(this.get_default_attributes());
-        this.propagate_changes();
+        if(!this.$(this.additem_el).hasClass('disabled')){
+            this.$(this.default_item).css('display', 'none');
+            this.set_focus();
+            this.collection.add(this.get_default_attributes());
+            this.propagate_changes();
+        }
     },
     remove_item: function(model){
         this.collection.remove(model);
@@ -374,6 +375,7 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
         this.propagate_changes();
     },
     propagate_changes:function(){
+        this.validate();
         this.container.propagate_changes();
     },
     add_item_view: function(model) {
@@ -387,7 +389,13 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
                 view.set_closed();
             }
         });
-    }
+    },
+    set_invalid:function(invalid){
+        this.$(this.additem_el).prop("disabled", invalid);
+        (invalid)? this.$(this.additem_el).addClass("disabled") : this.$(this.additem_el).removeClass("disabled");
+        this.$(this.additem_el).prop('title', (invalid)? 'Blank item detected. Resolve to continue': null);
+    },
+    validate:function(){ return true; }
 });
 
 var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
@@ -455,8 +463,9 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
 });
 
 var ExerciseView = ExerciseEditableListView.extend({
+    additem_el: "#addquestion",
     list_selector:"#exercise_list",
-    default_item:"#exercise_list .default-item",
+    default_item:"#exercise_list >.default-item",
     template: require("./hbtemplates/exercise_edit.handlebars"),
     get_default_attributes: function() {
         var max_order = 1;
@@ -641,6 +650,8 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         event.stopPropagation();
         this.model.set('deleted', true);
         this.propagate_changes();
+        this.containing_list_view.views.splice(this, 1);
+        this.containing_list_view.handle_if_empty();
         this.remove();
     },
     stop_events:function(event){
@@ -744,6 +755,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         this.editor_view.activate_editor();
         this.set_toolbar_open();
         this.set_undo_redo_listener();
+        this.answer_editor.validate();
     },
     set_closed:function(){
         this.open = false;
@@ -799,6 +811,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
 });
 
 var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
+    additem_el: ".addanswer",
     list_selector:">.answer_list",
     default_item:">.answer_list .default-item",
     template: require("./hbtemplates/assessment_item_answer_list.handlebars"),
@@ -809,11 +822,10 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     initialize: function(options) {
         _.bindAll(this, "render", "add_item", "add_item_view");
         this.bind_edit_functions();
-        console.log(this.collection)
         this.assessment_item = options.assessment_item;
         this.isdisplay = options.isdisplay;
-        this.render();
         this.container = options.container;
+        this.render();
         this.listenTo(this.collection, "add", this.add_item_view);
         this.listenTo(this.collection, "remove", this.render);
     },
@@ -844,6 +856,9 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
         this.views.forEach(function(view){
             view.set_correct(is_correct);
         })
+    },
+    validate:function(){
+        this.set_invalid(this.collection.findWhere({answer: ""}));
     }
 });
 
@@ -959,6 +974,7 @@ var HintModalView = BaseViews.BaseModalView.extend({
 });
 
 var AssessmentItemHintListView = ExerciseEditableListView.extend({
+    additem_el: ".addhint",
     list_selector:">.hint_list",
     default_item:">.hint_list .default-item",
     template: require("./hbtemplates/assessment_item_hint_list.handlebars"),
@@ -995,6 +1011,9 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
         });
         this.views.push(view);
         return view;
+    },
+    validate:function(){
+        this.set_invalid(this.collection.findWhere({hint: ""}));
     }
 });
 
