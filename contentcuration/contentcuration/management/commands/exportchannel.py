@@ -232,14 +232,14 @@ def create_perseus_zip(ccnode, write_to_path):
             'exercise': json.dumps(exercise_data, sort_keys=True, indent=4)
         }
         exercise_result = render_to_string('perseus/exercise.json', exercise_context)
-        write_to_zip(zf, "exercise.json", exercise_result, ccnode)
+        zf.writestr("exercise.json", exercise_result)
 
         for question in ccnode.assessment_items.all():
             for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE):
                 image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
                 if image_name not in zf.namelist():
                     image.file_on_disk.open(mode="rb")
-                    write_to_zip(zf, image_name, image.file_on_disk.read(), ccnode)
+                    zf.writestr(image_name, image.file_on_disk.read())
 
             for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE):
                 svg_name = "images/{0}.svg".format(image.original_filename)
@@ -248,28 +248,16 @@ def create_perseus_zip(ccnode, write_to_path):
                     image.file_on_disk.open(mode="rb")
                     content = image.file_on_disk.read()
                     content = content.split(exercises.GRAPHIE_DELIMITER)
-                    write_to_zip(zf, svg_name, content[0], ccnode)
-                    write_to_zip(zf, json_name, content[1], ccnode)
+                    zf.writestr(svg_name, content[0])
+                    zf.writestr(json_name, content[1])
 
         for item in assessment_items:
-            write_assessment_item(ccnode, item, zf)
+            write_assessment_item(item, zf)
 
-def write_assessment_item(ccnode, assessment_item, zf):
-    template = None
-    if assessment_item.type == exercises.MULTIPLE_SELECTION:
-        template = 'perseus/multiple_selection.json'
-    elif assessment_item.type == exercises.SINGLE_SELECTION:
-        template = 'perseus/multiple_selection.json'
-    elif assessment_item.type == exercises.INPUT_QUESTION:
-        template = 'perseus/input_question.json'
-    elif assessment_item.type == exercises.PERSEUS_QUESTION:
-        template = 'perseus/perseus_question.json'
-    else:
-        logging.error("Unrecognized assessment item type: {}".format(assessment_item.type))
-        return
-
-
+def write_assessment_item(assessment_item, zf):
+    template=''
     replacement_string = exercises.IMG_PLACEHOLDER + "/images"
+
     answer_data = json.loads(assessment_item.answers)
     for answer in answer_data:
         answer['answer'] = re.escape(answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string))
@@ -287,16 +275,18 @@ def write_assessment_item(ccnode, assessment_item, zf):
         'randomize': assessment_item.randomize,
     }
 
-    write_to_zip(zf, "{0}.json".format(assessment_item.assessment_id), render_to_string(template, context).encode('utf-8', "ignore"), ccnode)
+    if assessment_item.type == exercises.MULTIPLE_SELECTION:
+        template = 'perseus/multiple_selection.json'
+    elif assessment_item.type == exercises.SINGLE_SELECTION:
+        template = 'perseus/multiple_selection.json'
+    elif assessment_item.type == exercises.INPUT_QUESTION:
+        template = 'perseus/input_question.json'
+    elif assessment_item.type == exercises.PERSEUS_QUESTION:
+        template = 'perseus/perseus_question.json'
 
-
-def write_to_zip(zf, filename, content, ccnode):
-    # Create zip info associated with file and write content
-    info = zipfile.ZipInfo(filename, date_time=ccnode.created.timetuple())
-    info.compress_type = zipfile.ZIP_DEFLATED
-    info.comment = "".encode()
-    info.create_system = 0
-    zf.writestr(info, content)
+    result = render_to_string(template, context).encode('utf-8', "ignore")
+    filename = "{0}.json".format(assessment_item.assessment_id)
+    zf.writestr(filename, result)
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")
@@ -400,4 +390,3 @@ def get_active_content_database():
         }
 
     return alias
-

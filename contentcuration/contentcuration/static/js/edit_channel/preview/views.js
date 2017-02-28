@@ -26,8 +26,6 @@ var PreviewView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/preview_dialog.handlebars"),
     initialize: function(options) {
         _.bindAll(this, 'select_preview','toggle_fullscreen', 'load_preview', 'exit_fullscreen', 'render_preview');
-        this.presets = new Models.FormatPresetCollection();
-        this.questions = new Models.AssessmentItemCollection();
         this.current_preview = null;
         this.render();
     },
@@ -55,9 +53,8 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     load_preview:function(){
         if(this.model){
-            this.load_presets();
-            this.load_questions();
             this.load_default_value();
+            this.load_preset_dropdown();
         }
     },
     load_default_value:function(){
@@ -67,15 +64,15 @@ var PreviewView = BaseViews.BaseView.extend({
         this.current_preview = default_preview;
     },
     load_presets:function(){
-        this.presets = new Models.FormatPresetCollection(_.where(_.pluck(this.model.get("files"), "preset"), {'display': true}));
+        return new Models.FormatPresetCollection(_.where(_.pluck(this.model.get("files"), "preset"), {'display': true}));
     },
     load_questions:function(){
-        this.questions = new Models.AssessmentItemCollection(_.where(this.model.get("assessment_items"), {'deleted': false}));
+        return new Models.AssessmentItemCollection(_.filter(this.model.get("assessment_items"), function(item){return !item['deleted'];}));
     },
     load_preset_dropdown:function(){
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
-             presets: this.presets.toJSON(),
-             questions: this.questions.toJSON()
+             presets: this.load_presets().toJSON(),
+             questions: this.load_questions().toJSON()
         }));
     },
 
@@ -86,7 +83,7 @@ var PreviewView = BaseViews.BaseView.extend({
             var selected_preset = event.target.getAttribute('value');
             selected_preview = _.find(this.model.get('files'), function(file){ return file.preset.id === selected_preset; });
         }else{
-            selected_preview = this.questions.at(event.target.value).toJSON();
+            selected_preview = this.model.get('assessment_items')[event.target.value];
         }
         this.current_preview = selected_preview;
         this.render_preview();
