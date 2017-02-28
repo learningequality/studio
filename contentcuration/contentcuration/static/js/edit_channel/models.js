@@ -137,6 +137,7 @@ var ContentNodeModel = BaseModel.extend({
 		assessment_items:[],
 		metadata: {"resource_size" : 0, "resource_count" : 0},
 		created: new Date(),
+<<<<<<< HEAD
 		extra_fields: {}
     },
     initialize: function () {
@@ -170,6 +171,10 @@ var ContentNodeModel = BaseModel.extend({
 		    this.set('extra_fields', data);
 		}
 	}
+=======
+		ancestors: []
+    }
+>>>>>>> 2f0660203d44b74610ba2342a31a615680837367
 });
 
 var ContentNodeCollection = BaseCollection.extend({
@@ -268,14 +273,12 @@ var ChannelModel = BaseModel.extend({
 	root_list : "channel-list",
 	defaults: {
 		name: "",
-		editors: [],
-		viewers: [],
-		pending_editors: [],
-		author: "Anonymous",
-		license_owner: "No license found",
 		description:"",
 		thumbnail_url: "/static/img/kolibri_placeholder.png",
-		main_tree: (new ContentNodeModel()).toJSON()
+		count: 0,
+		size: 0,
+		published: false,
+		view_only: false
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
@@ -298,7 +301,24 @@ var ChannelModel = BaseModel.extend({
 	            }
 	        });
     	});
-    }
+    },
+    get_accessible_channel_roots:function(){
+		var self = this;
+    	var promise = new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	        	data: JSON.stringify({'channel_id': self.id}),
+	            url: window.Urls.accessible_channels(),
+	            success: function(data) {
+	            	resolve(new ContentNodeCollection(JSON.parse(data)));
+	            },
+	            error:function(e){
+	            	reject(e);
+	            }
+	        });
+    	});
+    	return promise;
+	}
 });
 
 var ChannelCollection = BaseCollection.extend({
@@ -306,7 +326,7 @@ var ChannelCollection = BaseCollection.extend({
 	list_name:"channel-list",
     model_name:"ChannelCollection",
 	comparator:function(channel){
-		return -new Date(channel.get('main_tree').created);
+		return -new Date(channel.get('created'));
 	}
 });
 
