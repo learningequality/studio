@@ -1,57 +1,44 @@
-{% load perseus_tags %}{
+{% load perseus_tags %}{% autoescape off %}{
     "question": {
-        "content": "{{ question | escape_newline }}\n\n[[☃ free-text-input 1]]",
+        "content": "{{ question | escape_newline }}\n\n[[☃ numeric-input 1]]",
         "images": {},
-        "widgets": {
-             "free-text-input 1": {
-                "type": "free-text-input",
-                "alignment": "default",
-                "graded": true,
+        "widgets":  {
+            "numeric-input 1": {
+                "type":"numeric-input",
+                "alignment":"default",
+                "static":false,
+                "graded":true,
                 "options": {
-                    "answers": [
-                        {% if freeresponse %}
-                        {
-                            "value": null,
-                            "status": "ungraded",
-                            "message": "",
-                            "answerForms": [],
-                            "strict": false,
-                            "maxError": null
-                        }
-                        {% else %}
+                    "static":false,
+                    "answers":[
                         {% for answer in answers %}
                         {
-                            "value": "{{ answer.answer | escape_newline }}",
-                            "status": "graded",
+                            "value": {{ answer.answer}},
+                            "status": "correct",
                             "message": "",
-                            "answerForms": [],
                             "strict": false,
-                            "maxError": null
+                            "simplify":true,
+                            "maxError": 0
                         }{% if forloop.last %}{% else %},{% endif %}
                         {% endfor %}
-                        {% endif %}
                     ],
-                    "cols": 50,
-                    "rows": 10,
-                    "coefficient": false,
-                    "labelText": ""
+                    "size":"normal",
+                    "coefficient":false,
+                    "labelText":""
                 },
                 "version": {
-                    "major": 0,
-                    "minor": 0
+                    "major":0,
+                    "minor":0
                 }
             }
         }
     },
-    "answerArea": {
-        "type": "multiple",
-        "options": {
-            "content": "",
-            "images": {},
-            "widgets": {}
-        },
-        "calculator": false,
-        "periodicTable": false
+    "answerArea":{
+        "calculator":false,
+        "chi2Table":false,
+        "periodicTable":false,
+        "tTable":false,
+        "zTable":false
     },
     "itemDataVersion": {
         "major": 0,
@@ -68,3 +55,4 @@
         {% endfor %}
     ]
 }
+{% endautoescape %}

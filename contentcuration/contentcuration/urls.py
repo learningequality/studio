@@ -26,6 +26,7 @@ import contentcuration.views as views
 import contentcuration.view.registration_views as registration_views
 import contentcuration.view.settings_views as settings_views
 import contentcuration.view.internal_views as internal_views
+import contentcuration.view.zip_views as zip_views
 from rest_framework.authtoken import views as auth_view
 from contentcuration import api
 
@@ -109,30 +110,34 @@ urlpatterns = [
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
     url(r'^api/duplicate_nodes/$', views.duplicate_nodes, name='duplicate_nodes'),
+    url(r'^api/move_nodes/$', views.move_nodes, name='move_nodes'),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
+    url(r'^api/generate_thumbnail/$', views.generate_thumbnail, name='generate_thumbnail'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
     url(r'exercises/(?P<exercise_id>\w+)', views.exercise, name='exercise'),
     url(r'^file_upload/', views.file_upload, name="file_upload"),
     url(r'^file_create/', views.file_create, name="file_create"),
     url(r'^channels/$', views.channel_list, name='channels'),
-    url(r'^channels/(?P<channel_id>[^/]+)', views.channel, name='channel'),
+    url(r'^channels/(?P<channel_id>[^/]+)/edit', views.channel, name='channel'),
+    url(r'^channels/(?P<channel_id>[^/]+)/view', views.channel_view_only, name='channel_view_only'),
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^exercise_image_upload/', views.exercise_image_upload, name='exercise_image_upload'),
     url(r'^image_upload/', views.image_upload, name='image_upload'),
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
+    url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
 ]
 
 # Add account/registration endpoints
 urlpatterns += [
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
-    url(r'^accounts/password/reset/$',auth_views.password_reset,{'post_reset_redirect': reverse_lazy('auth_password_reset_done')}, name='auth_password_reset'), # Add 'html_email_template_name': 'registration/password_reset_email.html' to dict for html
+    url(r'^accounts/password/reset/$',auth_views.password_reset,{'post_reset_redirect': reverse_lazy('auth_password_reset_done'),'email_template_name':'registration/password_reset_email.txt'}, name='auth_password_reset'), # Add 'html_email_template_name': 'registration/password_reset_email.html' to dict for html
     url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
-    url(r'^accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)/(?P<channel_id>[^/]+)$', registration_views.InvitationAcceptView.as_view(), name="accept_invitation"),
-    url(r'^new/accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)/(?P<channel_id>[^/]+)$', registration_views.InvitationRegisterView.as_view(), name="accept_invitation_and_registration"),
+    url(r'^accept_invitation/(?P<invitation_link>[^/]+)$', registration_views.InvitationAcceptView.as_view(), name="accept_invitation"),
+    url(r'^new/accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)$', registration_views.InvitationRegisterView.as_view(), name="accept_invitation_and_registration"),
     url(r'^decline_invitation/(?P<invitation_link>[^/]+)$', registration_views.decline_invitation, name="decline_invitation"),
     url(r'^invitation_fail$', registration_views.fail_invitation, name="fail_invitation"),
 ]
@@ -149,6 +154,7 @@ urlpatterns += [
 # Add internal endpoints
 urlpatterns += [
     url(r'^api/internal/authenticate_user_internal$', internal_views.authenticate_user_internal, name="authenticate_user_internal"),
+    url(r'^api/internal/check_version$', internal_views.check_version, name="check_version"),
     url(r'^api/internal/file_diff$', internal_views.file_diff, name="file_diff"),
     url(r'^api/internal/file_upload$', internal_views.api_file_upload, name="api_file_upload"),
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),

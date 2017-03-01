@@ -7,6 +7,7 @@ import re
 import hashlib
 import shutil
 import tempfile
+import subprocess
 from functools import wraps
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
@@ -24,14 +25,13 @@ def check_supported_browsers(user_agent_string):
             return True
     return False
 
-
-def write_file_to_storage(fobj, check_valid = False):
+def write_file_to_storage(fobj, check_valid = False, name=None):
     # Check that hash is valid
     checksum = hashlib.md5()
     for chunk in iter(lambda: fobj.read(4096), b""):
         checksum.update(chunk)
-    name = name if name is not None else fobj._name if fobj._name else ""
-    filename, ext = os.path.splitext(name) if name is not None else ("", "")
+    name = name or fobj._name or ""
+    filename, ext = os.path.splitext(name)
     hashed_filename = checksum.hexdigest()
     full_filename = "{}{}".format(hashed_filename, ext)
     fobj.seek(0)
@@ -46,32 +46,6 @@ def write_file_to_storage(fobj, check_valid = False):
     with open(file_path, 'wb') as destf:
         shutil.copyfileobj(fobj, destf)
     return full_filename
-
-def extract_thumbnail_from_video(fobj):
-    from ffmpy import FFmpeg
-    fh, fd = tempfile.mkstemp(suffix=".{}".format(file_formats.PNG))
-    try:
-        ff = FFmpeg(
-            inputs={str(fobj.file_on_disk): None},
-            outputs={fd: "-vcodec png -ss 10 -vframes 1 -an -f rawvideo -y"}
-        )
-        ff.run()
-        filename = write_file_to_storage(open(fd, 'rb'), name=fd)
-        checksum, ext = os.path.splitext(filename)
-        file_location = models.generate_file_on_disk_name(checksum, filename)
-        thumbnail_object = models.File(
-            file_on_disk=DjFile(open(file_location, 'rb')),
-            file_format_id=file_formats.PNG,
-            original_filename = 'Extracted Thumbnail',
-            contentnode=fobj.contentnode,
-            file_size=os.path.getsize(file_location),
-            preset_id=format_presets.VIDEO_THUMBNAIL,
-        )
-        thumbnail_object.save()
-        return thumbnail_object
-    finally:
-        os.close(fh)
-        os.unlink(fd)
 
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title

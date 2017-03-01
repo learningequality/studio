@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages
 from contentcuration import models
 import logging as logmodule
 from django.core.cache import cache
@@ -189,8 +189,8 @@ FILE_FORMATS = [
         "model": models.FileFormat,
         "pk": "extension",
         "fields": {
-            "extension": file_formats.WAV,
-            "mimetype" : file_formats.WAV_MIMETYPE,
+            "extension": file_formats.GIF,
+            "mimetype" : file_formats.GIF_MIMETYPE,
         },
     },
     {
@@ -286,10 +286,11 @@ PRESETS = [
         "pk": "id",
         "fields": {
             "id" : format_presets.VIDEO_HIGH_RES,
-            "readable_name": format_presets.VIDEO_HIGH_RES_READABLE,
+            "readable_name" : format_presets.VIDEO_HIGH_RES_READABLE,
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.VIDEO,
@@ -305,6 +306,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.VIDEO,
@@ -320,10 +322,27 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 3,
             "kind_id" : content_kinds.VIDEO,
             "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+        },
+    },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
+            "id" : format_presets.VIDEO_SUBTITLE,
+            "readable_name": format_presets.VIDEO_SUBTITLE_READABLE,
+            "multi_language" : True,
+            "supplementary" : True,
+            "thumbnail" : False,
+            "subtitle": True,
+            "display": False,
+            "order" : 4,
+            "kind_id" : content_kinds.VIDEO,
+            "allowed_formats" : [file_formats.VTT, file_formats.SRT],
         },
     },
     {
@@ -335,10 +354,11 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.AUDIO,
-            "allowed_formats" : [file_formats.WAV, file_formats.MP3],
+            "allowed_formats" : [file_formats.MP3],
         },
     },
     {
@@ -350,6 +370,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.AUDIO,
@@ -365,6 +386,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 1,
             "kind_id" : content_kinds.DOCUMENT,
@@ -380,6 +402,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.DOCUMENT,
@@ -395,7 +418,8 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
-            "display": True,
+            "subtitle": False,
+            "display": False,
             "order" : 1,
             "kind_id" : content_kinds.EXERCISE,
             "allowed_formats" : [file_formats.PERSEUS],
@@ -410,6 +434,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 2,
             "kind_id" : content_kinds.EXERCISE,
@@ -425,10 +450,11 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : False,
+            "subtitle": False,
             "display": False,
             "order" : 3,
             "kind_id" : content_kinds.EXERCISE,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG, file_formats.GIF],
         },
     },
     {
@@ -440,6 +466,7 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : False,
+            "subtitle": False,
             "display": False,
             "order" : 4,
             "kind_id" : content_kinds.EXERCISE,
@@ -455,9 +482,25 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : True,
             "thumbnail" : True,
+            "subtitle": False,
             "display": True,
             "order" : 0,
             "kind_id" : None,
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+        },
+    },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
+            "id" : format_presets.TOPIC_THUMBNAIL,
+            "readable_name": format_presets.TOPIC_THUMBNAIL_READABLE,
+            "multi_language" : False,
+            "supplementary" : True,
+            "thumbnail" : True,
+            "display": True,
+            "order" : 1,
+            "kind_id" : content_kinds.TOPIC,
             "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
         },
     },
@@ -470,16 +513,44 @@ PRESETS = [
             "multi_language" : False,
             "supplementary" : False,
             "thumbnail" : False,
+            "subtitle": False,
             "display": True,
             "order" : 0,
             "kind_id" : content_kinds.HTML5,
             "allowed_formats" : [file_formats.HTML5],
         },
     },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
+            "id" : format_presets.HTML5_THUMBNAIL,
+            "readable_name": format_presets.HTML5_THUMBNAIL_READABLE,
+            "multi_language" : False,
+            "supplementary" : True,
+            "thumbnail" : True,
+            "subtitle": False,
+            "display": True,
+            "order" : 1,
+            "kind_id" : content_kinds.HTML5,
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+        },
+    },
 ]
 
+LANGUAGES = [{
+    "model": models.Language,
+    "pk": "id",
+    "fields": {
+            "id": l.code,
+            "lang_code": l.primary_code,
+            "lang_subcode": l.subcode,
+            "readable_name": l.name,
+            "native_name" : l.native_name,
+        },
+} for l in languages.LANGUAGELIST ]
 
-CONSTANTS = [SITES, LICENSES, FILE_FORMATS, KINDS, PRESETS]
+CONSTANTS = [SITES, LICENSES, FILE_FORMATS, KINDS, PRESETS, LANGUAGES]
 
 class EarlyExit(BaseException):
     def __init__(self, message, db_path):

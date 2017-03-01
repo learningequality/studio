@@ -9,48 +9,44 @@
 		{{/if}}
 	</div>
 	{{#if edit}}
-		<div class="new_channel_pic" id="dropzone">
-			<div id="finished_area">
-		        <a id="swap-thumbnail">Change Thumbnail</a>
-		    </div>
-			<img id="dz-placeholder" src="{{picture}}"/>
+		<p id="channel_name_error">Channel must have a name</p>
+		<input type="text" id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}" maxlength="200"></input>
+		<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}"  maxlength="400">{{channel.description}}</textarea>
+		<a class="delete_channel">DELETE CHANNEL</a>
+		<div class="channel_options">
+			<a class="save_channel btn pull-right">SAVE</a>
+			<a class="channel_toggle action-text pull-right">CANCEL</a>
 		</div>
-
 	{{else}}
-		<img class="channel_pic" alt="No picture found." src="{{picture}}"/>
+
+		<span class="channel_metadata">
+			<span class="resource_count">{{resource_count}}</span> Resource(s)
+			<span class="glyphicon glyphicon-file resource-icon" aria-hidden="true"></span>{{#format_file_size total_file_size}}{{/format_file_size}}
+			&nbsp;ID:
+			{{#if channel.main_tree.published}}
+				<input type="text" class="copy-id-text text-center" value="{{channel.id}}" readonly size='30'/>
+				<span class="glyphicon glyphicon-copy copy-id-btn" aria-hidden="true" title="Copy ID to clipboard"></span>
+			{{else}}<em>(Unpublished)</em>
+			{{/if}}
+			{{#if view_only}}
+				<b class="pull-right">&nbsp;View Only</b>
+			{{/if}}
+		</span>
+		<h4>
+			{{#unless view_only}}
+				<span class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right"></span>
+			{{/unless}}
+			<p class="truncate channel_name" title="{{channel.name}}">{{channel.name}}</p>
+		</h4>
+		<div class="description">
+			<p id="channel_description" class="wordwrap" title="{{channel.description}}">{{channel.description}}</p>
+		</div>
+		<div class="tag_area">
+			<ul class="list-unstyle list-inline">
+			{{#each tag_list}}
+				<li>{{name}}</li>
+			{{/each}}
+			</ul>
+		</div>
 	{{/if}}
 </div>
-{{#if edit}}
-	<p id="channel_name_error">Channel must have a name</p>
-	<input type="text" id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}" maxlength="200"></input>
-	<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}"  maxlength="400">{{channel.description}}</textarea>
-	<div class="channel_options">
-		<a class="delete_channel">DELETE CHANNEL</a>
-		<a class="save_channel btn pull-right">SAVE</a>
-		<a class="channel_toggle action-text pull-right">CANCEL</a>
-	</div>
-{{else}}
-
-	<span class="channel_metadata">
-		<span class="resource_count">{{resource_count}}</span> Resource(s)
-		<span class="glyphicon glyphicon-file" aria-hidden="true"></span>{{#format_file_size total_file_size}}{{/format_file_size}}
-		&nbsp;ID: {{#if channel.main_tree.published}}{{channel.id}}{{else}}<em>(Unpublished)</em>{{/if}}
-	</span>
-	<h4>
-		<span class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right"></span>
-		<p class="truncate channel_name" title="{{channel.name}}">{{channel.name}}</p>
-	</h4>
-	<div class="description">
-		<p id="channel_description" class="wordwrap" title="{{channel.description}}">{{channel.description}}</p>
-	</div>
-	<div class="tag_area">
-		<ul class="list-unstyle list-inline">
-		{{#each tag_list}}
-			<li>{{name}}</li>
-		{{/each}}
-		</ul>
-	</div>
-	<div  class="manage_area">
-		<a class="btn open_channel pull-right " href="{{channel_link}}/edit">MANAGE</a>
-	</div>
-{{/if}}
