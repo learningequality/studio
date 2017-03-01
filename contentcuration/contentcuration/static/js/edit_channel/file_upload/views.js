@@ -494,9 +494,6 @@ var FormatInlineItem = FormatEditorItem.extend({
         'click .expand_format_editor' : 'toggle'
     },
     render: function() {
-        // this.files.sort_by_preset(this.presets);
-        this.presets.sort_by_order();
-
         this.$el.html(this.template({
             node: this.model.toJSON()
         }));
@@ -730,8 +727,97 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
 
 });
 
+ImageUploadView = BaseViews.BaseView.extend({
+    template: require("./hbtemplates/image_upload.handlebars"),
+    dropzone_template: require("./hbtemplates/image_upload_preview.handlebars"),
+    initialize: function(options) {
+        _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed');
+        this.image_url = options.image_url;
+        this.onsuccess = options.onsuccess;
+        this.onerror = options.onerror;
+        this.oncancel = options.oncancel;
+        this.onstart = options.onstart;
+        this.preset_id = options.preset_id;
+        this.acceptedFiles = options.acceptedFiles;
+        this.create_file = options.create_file;
+        this.default_url = options.default_url;
+        this.render();
+        this.dropzone = null;
+        this.image_success = true;
+    },
+    events: {
+        'click .remove_image ' : 'remove_image'
+    },
+    render: function() {
+        this.$el.html(this.template({
+            picture : this.image_url || this.default_url,
+            selector: this.get_selector()
+        }));
+        this.create_dropzone();
+    },
+    remove_image: function(){
+        this.image = null;
+        this.image_url = this.default_url;
+        this.image_id = null;
+        this.onsuccess(this.image, this.image_url, this.image_id);
+        this.render();
+    },
+    get_selector: function(){
+        return "dropzone_" + this.cid;
+    },
+    create_dropzone:function(){
+        var selector = "#" + this.get_selector();
+        this.dropzone = new Dropzone(this.$(selector).get(0), {
+            maxFiles: 1,
+            clickable: [selector + "_placeholder", selector + "_swap"],
+            acceptedFiles: this.acceptedFiles,
+            url: (this.create_file)? window.Urls.image_upload() : window.Urls.thumbnail_upload(),
+            previewTemplate:this.dropzone_template(),
+            previewsContainer: selector,
+            headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id}
+        });
+
+        this.dropzone.on("success", this.image_uploaded);
+        this.dropzone.on("addedfile", this.image_added);
+        this.dropzone.on("removedfile", this.image_removed);
+        this.dropzone.on("queuecomplete", this.image_completed);
+        this.dropzone.on("error", this.image_failed);
+    },
+    image_uploaded:function(image){
+        this.image_error = null;
+        result = JSON.parse(image.xhr.response)
+        this.image = new Models.FileModel(result.file);
+        this.image_url = this.image.get('storage_url');
+        this.image_formatted_name = result.file_formatted_name;
+    },
+    image_completed:function(){
+        if(this.image_error){
+            alert(this.image_error);
+            if(this.onerror){ this.onerror(); }
+        }else{
+            if(this.onsuccess){ this.onsuccess(this.image, this.image_url, this.image_id); }
+        }
+        this.render();
+    },
+    image_failed:function(data, error){
+        this.image_error = error;
+    },
+    image_added:function(thumbnail){
+        this.image_error = "Error uploading file: connection interrupted";
+        this.$("#" + this.get_selector() + "_placeholder").css("display", "none");
+        if(this.onstart){ this.onstart(); }
+    },
+    image_removed:function(thumbnail){
+        this.image_error = null;
+        this.$("#" + this.get_selector() + "_placeholder").css("display", "block");
+        if(this.oncancel){ this.oncancel(); }
+
+    }
+});
+
 module.exports = {
     FileUploadView:FileUploadView,
     FileModalView:FileModalView,
-    FormatInlineItem:FormatInlineItem
+    FormatInlineItem:FormatInlineItem,
+    ImageUploadView: ImageUploadView
 }

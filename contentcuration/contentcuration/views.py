@@ -21,7 +21,7 @@ from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, extract_thumbnail_from_video, check_supported_browsers
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, ChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
+from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, FileSerializer
 from django.core.cache import cache
 from le_utils.constants import format_presets, content_kinds
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -184,20 +184,28 @@ def thumbnail_upload(request):
 
         return HttpResponse(json.dumps({
             "success": True,
-            "filename": formatted_filename,
-            "file_url": generate_storage_url(formatted_filename),
+            "formatted_filename": formatted_filename
         }))
 
-def exercise_image_upload(request):
-
+def image_upload(request):
     if request.method == 'POST':
-        node = ContentNode.objects.get(id=request.META.get('HTTP_NODE'))
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1] # gets file extension without leading period
-        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), contentnode=node)
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:] # gets file extension without leading period
+        file_object = File(preset_id=request.META.get('HTTP_PRESET'), file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
-            "filename": file_object.file_on_disk.url,
+            "file": JSONRenderer().render(FileSerializer(file_object).data),
+        }))
+
+def exercise_image_upload(request):
+    if request.method == 'POST':
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1] # gets file extension without leading period
+        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext))
+        file_object.save()
+        return HttpResponse(json.dumps({
+            "success": True,
+            "formatted_filename": exercises.CONTENT_STORAGE_FORMAT.format(str(file_object)),
+            "file": JSONRenderer().render(FileSerializer(file_object).data),
         }))
 
 def duplicate_nodes(request):

@@ -1,4 +1,13 @@
-<div class="profile pull-left text-center">
+<div class="channel-container-wrapper {{#unless edit}}open_channel{{/unless}}">
+	<div class="profile pull-left text-center">
+		{{#if edit}}
+			<div class="new_channel_pic"></div>
+		{{else}}
+			{{#if picture}}
+				<img class="channel_pic" alt="{{channel.name}} logo" src="{{picture}}"/>
+			{{/if}}
+		{{/if}}
+	</div>
 	{{#if edit}}
 		<div class="new_channel_pic" id="dropzone">
 			<div id="finished_area">

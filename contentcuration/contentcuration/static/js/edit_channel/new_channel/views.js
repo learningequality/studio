@@ -5,6 +5,7 @@ var Dropzone = require("dropzone");
 require("dropzone/dist/dropzone.css");
 var Models = require("edit_channel/models");
 var BaseViews = require("edit_channel/views");
+var FileViews = require("edit_channel/file_upload/views");
 var get_cookie = require("utils/get_cookie");
 var stringHelper = require("edit_channel/utils/string_helper")
 
@@ -92,11 +93,10 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	className:"channel_container container",
 	template: require("./hbtemplates/channel_container.handlebars"),
-	dropzone_template: require("./hbtemplates/channel_profile_dropzone.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','thumbnail_uploaded', 'update_title',
-						'thumbnail_added','thumbnail_removed','create_dropzone', 'thumbnail_completed','thumbnail_failed');
+		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','update_title', 'copy_id','open_channel',
+				'set_thumbnail', 'reset_thumbnail','enable_submit', 'disable_submit');
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = false;
 		this.containing_list_view = options.containing_list_view;
@@ -154,7 +154,19 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.containing_list_view.set_editing(true);
 		this.edit = true;
 		this.render();
-		this.create_dropzone();
+		this.image_upload = new FileViews.ImageUploadView({
+			model: this.model,
+			el: this.$(".new_channel_pic"),
+			preset_id: 'channel_thumbnail',
+			upload_url: window.Urls.thumbnail_upload(),
+			acceptedFiles: 'image/jpeg,image/jpeg,image/png',
+			image_url: this.thumbnail_url,
+			default_url: "/static/img/kolibri_placeholder.png",
+			onsuccess: this.set_thumbnail,
+			onerror: this.reset_thumbnail,
+			oncancel:this.enable_submit,
+			onstart: this.disable_submit
+		});
 	},
 	delete_channel: function(event){
 		if(this.isNew){
@@ -216,55 +228,18 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			thumbnail : this.thumbnail
 		});
 	},
-	set_editing: function(edit_mode_on){
-		this.containing_list_view.set_editing(edit_mode_on);
-	},
-
-/* THUMBNAIL FUNCTIONS */
-	create_dropzone:function(){
-		this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
-			maxFiles: 1,
-			clickable: ["#dz-placeholder", "#swap-thumbnail"],
-			acceptedFiles: "image/jpeg,image/png",
-			url: window.Urls.thumbnail_upload(),
-			previewTemplate:this.dropzone_template(),
-			previewsContainer: "#dropzone",
-			headers: {"X-CSRFToken": get_cookie("csrftoken")}
-		});
-
-    	this.dropzone.on("success", this.thumbnail_uploaded);
-    	this.dropzone.on("addedfile", this.thumbnail_added);
-    	this.dropzone.on("removedfile", this.thumbnail_removed);
-    	this.dropzone.on("queuecomplete", this.thumbnail_completed);
-    	this.dropzone.on("error", this.thumbnail_failed);
-	},
-	thumbnail_uploaded:function(thumbnail){
-		this.thumbnail_error = null;
-		result = JSON.parse(thumbnail.xhr.response)
-		this.thumbnail = result.filename;
-		this.thumbnail_url = result.file_url;
-	},
-	thumbnail_completed:function(){
-		if(this.thumbnail_error){
-			alert(this.thumbnail_error);
-		}else{
-			this.set_channel();
-		}
+	reset_thumbnail:function(){
 		this.render();
 		this.enable_submit();
 	},
-	thumbnail_failed:function(data, error){
-		this.thumbnail_error = error;
-	},
-	thumbnail_added:function(thumbnail){
-		this.thumbnail_error = "Error uploading file: connection interrupted";
-		$("#dz-placeholder").css("display", "none");
-		this.disable_submit();
-	},
-	thumbnail_removed:function(thumbnail){
-		this.thumbnail_error = null;
-		$("#dz-placeholder").css("display", "block");
+	set_thumbnail:function(thumbnail, formatted_name){
+		this.thumbnail = formatted_name;
+		this.thumbnail_url = thumbnail_url;
+		this.set_channel();
 		this.enable_submit();
+	},
+	set_editing: function(edit_mode_on){
+		this.containing_list_view.set_editing(edit_mode_on);
 	},
 	enable_submit:function(){
 		this.$(".save_channel").removeAttr("disabled");

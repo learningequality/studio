@@ -185,7 +185,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
   },
   save_nodes:function(){
-    var sort_order = (this.model && (this.new_content || this.upload_files)) ? Math.ceil(this.model.get("metadata").max_sort_order) : 0;
+    var sort_order = (this.model && this.new_content) ? Math.ceil(this.model.get("metadata").max_sort_order) : 0;
+    console.log(sort_order)
     var self = this;
     this.edit_list.views.forEach(function(entry){
       var tags = [];
@@ -373,11 +374,10 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   render: function() {
     var has_files = false;
-    if(this.selected_items.length === 1){
-      has_files = this.selected_items[0].model.get("kind") !== "topic" && this.selected_items[0].model.get("kind") !== "exercise";
+    if(this.selected_individual()){
       this.selected_items[0].model.get("files").forEach(function(file){
         var preset = (file.preset.id)? file.preset.id:file.preset;
-        has_files = has_files || window.formatpresets.get({id:preset}).get("display");
+        has_files = has_files || (window.formatpresets.get({id:preset}).get("display") && !window.formatpresets.get({id:preset}).get("thumbnail"));
       });
     }
 
@@ -417,12 +417,13 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   handle_if_individual:function(){
     if(this.selected_items.length === 1){
       var view = this.selected_items[0];
-      if(view.model.get("kind") !== "topic"){
+      if(view.model.get("kind") !== "topic" && view.model.get("kind") !== "exercise" ){
         view.load_file_displays(this.$("#editmetadata_format_section"));
       }
       if(view.model.get("kind")==="exercise"){
         this.container.load_questions(view.model);
       }
+      view.load_thumbnail_displays(this.$("#node_thumbnail"));
     }
   },
   events: {
@@ -512,10 +513,14 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   className: "uploaded disable_on_error",
   tagName: "li",
   initialize: function(options) {
-      _.bindAll(this, 'remove_topic', 'check_item', 'select_item','update_name', 'set_edited','handle_change');
+      _.bindAll(this, 'remove_topic', 'check_item', 'select_item','update_name', 'set_edited',
+              'handle_change', 'handle_assessment_items', 'set_thumbnail');
       this.bind_edit_functions();
       this.containing_list_view = options.containing_list_view;
       this.container = options.container;
+      this.thumbnail = this.model.get('files').filter(function(f){ return f.preset.thumbnail; });
+      this.thumbnail = (this.thumbnail.length)? this.thumbnail[0] : null;
+      this.thumbnail_preset_id = _.findWhere(this.model.get('associated_presets'), {thumbnail: true}).id;
       this.edited = false;
       this.new_content = options.new_content;
       this.new_file = options.new_file;
@@ -608,6 +613,51 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       });
       formats_el.html(this.format_view.el);
       this.listenTo(this.model, "change:files", this.handle_change);
+  },
+  load_thumbnail_displays:function(formats_el){
+      this.thumbnail_view= new FileUploader.ImageUploadView({
+          model: this.model,
+          el: formats_el,
+          preset_id: this.thumbnail_preset_id,
+          upload_url: window.Urls.image_upload(),
+          acceptedFiles: window.formatpresets.get({id:this.thumbnail_preset_id}).get('associated_mimetypes').join(','),
+          image_url: (this.thumbnail)? this.thumbnail.get('storage_url') : null,
+          default_url: "/static/img/picture_placeholder.png",
+          onsuccess: this.set_thumbnail,
+          onerror: this.container.enable_submit,
+          oncancel:this.container.enable_submit,
+          onstart: this.container.disable_submit
+      });
+  },
+  set_thumbnail:function(thumbnail, formatted_name){
+    this.thumbnail = thumbnail;
+    this.set(data);
+    this.set_edited(true);
+  },
+  load_question_display:function(formats_el){
+      if(this.exercise_view){
+        this.exercise_view.remove();
+      }
+      this.exercise_view = new Exercise.ExerciseView({
+        parent_view: this,
+        model:this.model,
+        onchange: this.handle_assessment_items
+      });
+      formats_el.html(this.exercise_view.el);
+  },
+  load_preview_display:function(formats_el){
+    if(this.preview_view){
+      this.preview_view.remove();
+    }
+    this.preview_view = new Previewer.PreviewView({
+      modal:false,
+      model: this.model
+    });
+    formats_el.html(this.preview_view.el);
+  },
+  handle_assessment_items:function(data){
+    this.model.set('assessment_items', data);
+    this.handle_change();
   },
   handle_change:function(){
     this.set_edited(true);

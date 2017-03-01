@@ -5,12 +5,11 @@
 		<h5 id="uploader-count-message">Editing data for {{selected_count}} items.</h5>
 		{{#unless isoriginal}}<p class="text-center uploader-copied-warning"><i>Detected item(s) imported from another channel - fields disabled accordingly</i></p>{{/unless}}
 	{{/unless}}
-	{{#if is_file}}
-		{{#if has_files}}
-			<ul id="editmetadata_format_section" class="list-unstyled"></ul>
-		{{/if}}
-	{{/if}}
 	{{#if node}}
+		<div class="row">
+			<div class="col-md-4" id="node_thumbnail"></div>
+			<div class="col-md-8">{{#if has_files}}<ul id="editmetadata_format_section" class="list-unstyled"></ul>{{/if}}</div>
+		</div>
 		<h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>
 		<input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required/>
 	{{/if}}

@@ -10,6 +10,8 @@
 @uploader-preview-bg-color: #585858;
 @uploader-grayed-out-color: #BDBDBD;
 
+@default-image-width: 150px;
+
 .modal{
 	padding-top:20px;
 	z-index: 99999;
@@ -191,4 +193,77 @@ video::-webkit-media-controls-fullscreen-button {
 		width:100% !important;
 		max-height:90vh !important;
 	}
+	.html_preview{
+		margin-top:20px !important;
+		width:100% !important;
+		height:100% !important;
+		min-height:90vh !important;
+	}
 }
+
+
+.image_dropzone{
+	width:@default-image-width;
+	height:90%;
+
+	.dz-placeholder{
+		width:@default-image-width;
+		height:@default-image-width;
+		object-fit: cover;
+		cursor:pointer;
+		border:4px dashed @gray-400;
+		font-style:italic;
+		opacity:0.8;
+	}
+
+	.progress_area{
+		margin-top: 10px;
+		width:100%;
+		display:block;
+
+		.file_upload_progress{
+			width:80%;
+			height:10px;
+		}
+
+		.progress-bar-success {
+			background: @blue-200;
+		}
+
+		.upload_option{
+			color: @blue-200;
+		}
+
+		.upload_cancel{
+			cursor:pointer;
+		}
+	}
+
+	.finished_area{
+		position:relative;
+		margin-top:-25px;
+		background-color: rgba(0,0,0,0.7);
+		padding:3px;
+		visibility:hidden;
+
+		.image_option{
+			color:@gray-300;
+			cursor:pointer;
+			font-size:13pt;
+			margin: 0px 7px;
+			padding: 5px;
+		}
+		.image_option:hover{
+			color:white;
+		}
+		.autogenerate{
+			visibility: hidden;
+		}
+	}
+	.dz-overlay{
+		position:absolute;
+		z-index:100;
+		width:@default-image-width;
+	}
+}
+.image_dropzone:hover .finished_area{visibility:visible;}

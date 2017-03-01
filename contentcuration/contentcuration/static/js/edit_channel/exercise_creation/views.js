@@ -76,10 +76,14 @@ var FileUploadView = Backbone.View.extend({
         // TODO parameterize to allow different file uploads depending on initialization.
         this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
             maxFiles: 1,
-            clickable: ["#dropzone", ".fileinput-button"],
-            acceptedFiles: "image/*",
-            url: window.Urls.exercise_image_upload(),
-            headers: {"X-CSRFToken": get_cookie("csrftoken"), "Node" : this.nodeid}
+            clickable: ["#dropzone", "#dropzone_placeholder"],
+            acceptedFiles: window.formatpresets.get({id:'exercise_image'}).get('associated_mimetypes').join(','),
+            url: window.Urls.image_upload(),
+            thumbnailWidth:null,
+            thumbnailHeight:null,
+            previewTemplate:this.dropzone_template(),
+            previewsContainer: "#dropzone",
+            headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": "exercise_image"}
         });
         this.dropzone.on("success", this.file_uploaded);
 
