@@ -127,6 +127,7 @@ urlpatterns = [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
+    url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
 ]
 
 # Add account/registration endpoints

@@ -8,7 +8,7 @@ import json
 from django.conf import settings
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
-from django.db import IntegrityError, connections, models
+from django.db import IntegrityError, connections, models, connection
 from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
 from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager
@@ -139,6 +139,36 @@ class FileOnDiskStorage(FileSystemStorage):
             return name
         return super(FileOnDiskStorage, self)._save(name, content)
 
+
+class ChannelResourceSize(models.Model):
+    tree_id = models.IntegerField()
+    resource_size = models.IntegerField()
+
+    pg_view_name = "contentcuration_channel_resource_sizes"
+    file_table = "contentcuration_file"
+    node_table = "contentcuration_contentnode"
+
+    @classmethod
+    def initialize_view(cls):
+        sql = 'CREATE MATERIALIZED VIEW {view} AS '\
+                'SELECT tree_id as id, tree_id, SUM("{file_table}"."file_size") AS '\
+                '"resource_size" FROM "{node}" LEFT OUTER JOIN "{file_table}" ON '\
+                '("{node}"."id" = "{file_table}"."contentnode_id") GROUP BY {node}.tree_id'\
+                ' WITH DATA;'.format(view=cls.pg_view_name, file_table=cls.file_table, node=cls.node_table)
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+
+    @classmethod
+    def refresh_view(cls):
+        sql = "REFRESH MATERIALIZED VIEW {}".format(cls.pg_view_name)
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+
+
+    class Meta:
+        managed = False
+        db_table = "contentcuration_channel_resource_sizes"
+
 class Channel(models.Model):
     """ Permissions come from association with organizations """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -179,6 +209,13 @@ class Channel(models.Model):
     source_domain = models.CharField(max_length=300, blank=True, null=True)
     ricecooker_version = models.CharField(max_length=100, blank=True, null=True)
 
+
+    def get_resource_size(self):
+        size = ChannelResourceSize.objects.filter(id=self.main_tree.tree_id).first()
+        if size:
+            return size.resource_size
+        return 0
+
     def save(self, *args, **kwargs):
         original_node = None
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
@@ -187,7 +224,7 @@ class Channel(models.Model):
         super(Channel, self).save(*args, **kwargs)
 
         # Check if original thumbnail is no longer referenced
-        if original_node is not None and original_node.thumbnail and 'static' not in original_node.thumbnail:
+        if original_node and original_node.thumbnail and 'static' not in original_node.thumbnail:
             filename, ext = os.path.splitext(original_node.thumbnail)
             delete_empty_file_reference(filename, ext[1:])
 
