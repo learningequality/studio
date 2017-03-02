@@ -82,28 +82,23 @@
 			display:none;
 		}
 		#mastery_custom_criterion{
-			display:none;
 			margin-left:15px;
 			input{
 				padding-left:3px;
 				max-width: 40px;
 			}
 		}
-		.randomize_exercise{
-			cursor:pointer;
-			font-size: 13px;
-		}
 		#license_select{
 			margin-top:5px;
 			padding: 0px 2px;
 		}
-		#license_about{
-			display:none;
+		#license_about, #mastery_about{
 			font-size:14pt;
 			margin-left:5px;
 			cursor:pointer;
 			color: @blue-500;
 		}
+		#license_about{ display:none; }
 		#keywords {
 			margin-bottom: 8px;
 		}
@@ -414,14 +409,14 @@
 	}
 }
 
-#license_modal{
+#license_modal, #mastery_modal{
 	@license-modal-height: 400px;
 	@license-modal-width: 600px;
 	padding:10px 5px;
 	overflow-y:auto;
 	.modal-dialog{
-		width:@license-modal-width * 0.7;
-		height: @license-modal-height;
+		width:@license-modal-width;
+		min-height: @license-modal-height;
 
 	}
 	.modal-content{
@@ -432,9 +427,15 @@
 			font-size:15pt;
 			font-weight:bold;
 		}
+		h3{
+			font-size: 16px;
+    		font-weight: bold;
+    		color: @gray-800;
+    		margin-top: 0px;
+		}
 
-		#license_description_wrapper{
-			height:@license-modal-height * 0.7;
+		.modal-body-content{
+			min-height:@license-modal-height * 0.7;
 			overflow-y:auto;
 			margin-bottom:20px;
 			padding:5px;
@@ -442,8 +443,25 @@
 
 		p{
 			font-size:12pt;
-			font-style:italic;
 			color:gray;
+			text-indent: 20px;
+		}
+
+		.mastery_container{
+			margin-right: 30px;
+			.row{
+				margin-bottom: 15px;
+				.criterion_name{
+					text-align:right;
+					padding:0;
+					color: @blue-700;
+				}
+				.criterion_description{
+					padding-left: 10px;
+					color: @gray-700;
+					.wordwrap;
+				}
+			}
 		}
 	}
 }

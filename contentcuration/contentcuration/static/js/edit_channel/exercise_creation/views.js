@@ -483,6 +483,7 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.bind_edit_functions();
         this.parentnode = options.parentnode;
         this.onchange = options.onchange;
+        this.onrandom = options.onrandom;
         this.listenTo(this.collection, "remove", this.render);
         this.listenTo(exerciseSaveDispatcher, "save", this.save);
         this.collection = new Models.AssessmentItemCollection(this.model.get("assessment_items"));
@@ -492,6 +493,7 @@ var ExerciseView = ExerciseEditableListView.extend({
     events: {
         "click #addquestion": "add_item",
         "change #exercise_show_answers" : "toggle_answers",
+        'change #randomize_question_order': 'set_random',
     },
     toggle_answers:function(){
         this.$(this.list_selector).toggleClass("hide_answers");
@@ -503,10 +505,15 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.onchange(this.collection.toJSON());
     },
     render: function() {
+        console.log(this.model.get('extra_fields').randomize);
         this.$el.html(this.template({
-            node: this.model.toJSON()
+            node: this.model.toJSON(),
+            is_random: this.model.get('extra_fields').randomize
         }));
         this.load_content(this.collection.where({'deleted': false}), "Click '+ QUESTION' to begin...");
+    },
+    set_random:function(event){
+        this.onrandom(event.target.checked)
     },
     create_new_view:function(model){
         var new_exercise_item = null;

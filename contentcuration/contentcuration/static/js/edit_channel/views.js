@@ -564,7 +564,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
             "kind":"exercise",
             "title": "Exercise",
             "sort_order" : this.collection.length,
-            "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+            "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name"),
+            "copyright_holder": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
         }, {
         	success:function(new_node){
 		        var edit_collection = new Models.ContentNodeCollection([new_node]);
