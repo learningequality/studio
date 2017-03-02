@@ -259,9 +259,9 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.render();
 		this.enable_submit();
 	},
-	set_thumbnail:function(thumbnail, formatted_name){
+	set_thumbnail:function(thumbnail, formatted_name, path){
 		this.thumbnail = formatted_name;
-		this.thumbnail_url = thumbnail_url;
+		this.thumbnail_url = path;
 		this.set_channel();
 		this.enable_submit();
 	},

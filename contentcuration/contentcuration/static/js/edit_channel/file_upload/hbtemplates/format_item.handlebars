@@ -3,9 +3,6 @@
 	<div id="{{preset.id}}_{{nodeid}}_dropzone{{#if file}}_swap{{/if}}" class="format_dropzone">
       <div class="format_metadata">
       	<div class="format_editor_options_wrapper pull-right">
-          {{#if allow_thumbnail_generation}}
-            <span id="{{preset.id}}_{{nodeid}}_dropzone" class="open_thumbnail_generator glyphicon glyphicon-new-window" title="Generate Tiled Thumbnail" aria-hidden="true"></span>
-          {{/if}}
           {{#if file}}
 		        <span id="{{preset.id}}_{{nodeid}}_dropzone" class="format_editor_replace glyphicon glyphicon-file dz_click" title="Replace File" aria-hidden="true"></span>
 		        <span class="glyphicon glyphicon-remove format_editor_remove {{#unless preset.supplementary}}main_file_remove{{/unless}}" aria-hidden="true" title="Delete File"></span>

@@ -2,6 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
+var FileUploader = require("edit_channel/file_upload/views");
 var Previewer = require("edit_channel/preview/views");
 var stringHelper = require("edit_channel/utils/string_helper");
 var autoCompleteHelper = require("edit_channel/utils/autocomplete");
@@ -280,6 +281,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     'click #add_topic_button' : 'add_topic',
     'change #uploader_select_all_check':'check_all_wrapper'
   },
+  selected_individual:function(){
+    return this.selected_items.length === 1;
+  },
   check_all_wrapper :function(event){
     this.check_all(event);
     this.update_checked();
@@ -414,6 +418,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       (!alloriginal)? $("#license_select").text(original_source_license) : $("#license_select").val(this.shared_data.shared_license);
       this.$("#license_about").css("display", (this.shared_data.shared_license > 0)? "inline" : "none");
     }
+  },
+  selected_individual:function(){
+    return this.selected_items.length === 1;
   },
   handle_if_individual:function(){
     if(this.selected_items.length === 1){
@@ -630,7 +637,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       }
   },
   load_file_displays:function(formats_el){
-      var FileUploader = require("edit_channel/file_upload/views");
       this.format_view = new FileUploader.FormatInlineItem({
           model: this.model,
           containing_list_view:this
@@ -645,7 +651,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
           preset_id: this.thumbnail_preset_id,
           upload_url: window.Urls.image_upload(),
           acceptedFiles: window.formatpresets.get({id:this.thumbnail_preset_id}).get('associated_mimetypes').join(','),
-          image_url: (this.thumbnail)? this.thumbnail.get('storage_url') : null,
+          image_url: (this.thumbnail)? this.thumbnail.storage_url : null,
           default_url: "/static/img/picture_placeholder.png",
           onsuccess: this.set_thumbnail,
           onerror: this.container.enable_submit,
@@ -654,9 +660,12 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       });
   },
   set_thumbnail:function(thumbnail, formatted_name){
-    this.thumbnail = thumbnail;
-    this.set(data);
+    var files = _.reject(this.model.get('files'), function(f){ return f.preset.thumbnail; });
+    files = (thumbnail)? files.concat(thumbnail.toJSON()) : files
+    this.model.set('files', files);
+    this.thumbnail = (thumbnail)? thumbnail.toJSON() : null;
     this.set_edited(true);
+    this.container.enable_submit();
   },
   load_question_display:function(formats_el){
       if(this.exercise_view){

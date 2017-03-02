@@ -476,11 +476,6 @@ var FormatEditorItem = FormatItem.extend({
 });
 var FormatInlineItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_inline_item.handlebars"),
-    expandedClass: "glyphicon-triangle-bottom",
-    collapsedClass: "glyphicon-triangle-top",
-
-    getToggler: function () { return this.$(".expand_format_editor"); },
-    getSubdirectory: function () {return this.$(".format_editor_list"); },
     'id': function() {
         return this.model.get("id");
     },
@@ -496,16 +491,19 @@ var FormatInlineItem = FormatEditorItem.extend({
         this.listenTo(this.files, "remove", this.sync_file_changes);
         this.listenTo(this.model, "change:files", this.update_metadata);
     },
+    init_collections:function(){
+        this.presets = new Models.FormatPresetCollection(_.reject(this.model.get("associated_presets"),function(p) {return !p.display || p.thumbnail;}));
+        this.files=new Models.FileCollection(this.model.get("files"));
+    },
     events: {
         'change .format_options_dropdown' : 'set_initial_format',
         'click .remove_from_dz ' : 'remove_item',
-        'click .expand_format_editor' : 'toggle'
     },
     render: function() {
         this.$el.html(this.template({
             node: this.model.toJSON()
         }));
-        this.update_metadata();
+        this.load_subfiles();
     },
     unset_model:function(){
 
@@ -656,15 +654,13 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.render();
     },
     events: {
-        'click .format_editor_remove ' : 'remove_item',
-        'click .open_thumbnail_generator': 'open_thumbnail_generator'
+        'click .format_editor_remove ' : 'remove_item'
     },
     render: function() {
         this.$el.html(this.template({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
-            nodeid:this.node.get('id'),
-            allow_thumbnail_generation: this.model.get("thumbnail") && this.model.get("kind_id") === "topic" // Allow more kinds once supported
+            nodeid:this.node.get('id')
         }));
         setTimeout(this.create_dropzone, 100); // Wait for slide down animation to finish
     },
@@ -736,13 +732,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
-    },
-    open_thumbnail_generator:function(){
-        var thumbnail_modal = new ThumbnailModalView({
-            node: this.node,
-            onuse: this.set_file,
-            model: this.file
-        });
     }
 
 });
@@ -751,7 +740,7 @@ ImageUploadView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/image_upload.handlebars"),
     dropzone_template: require("./hbtemplates/image_upload_preview.handlebars"),
     initialize: function(options) {
-        _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed');
+        _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed', 'use_image');
         this.image_url = options.image_url;
         this.onsuccess = options.onsuccess;
         this.onerror = options.onerror;
@@ -759,19 +748,21 @@ ImageUploadView = BaseViews.BaseView.extend({
         this.onstart = options.onstart;
         this.preset_id = options.preset_id;
         this.acceptedFiles = options.acceptedFiles;
-        this.create_file = options.create_file;
+        this.upload_url = options.upload_url;
         this.default_url = options.default_url;
         this.render();
         this.dropzone = null;
         this.image_success = true;
     },
     events: {
-        'click .remove_image ' : 'remove_image'
+        'click .remove_image ' : 'remove_image',
+        'click .open_thumbnail_generator': 'open_thumbnail_generator'
     },
     render: function() {
         this.$el.html(this.template({
             picture : this.image_url || this.default_url,
-            selector: this.get_selector()
+            selector: this.get_selector(),
+            show_generate: this.model.get('kind') === "topic"
         }));
         this.create_dropzone();
     },
@@ -791,10 +782,10 @@ ImageUploadView = BaseViews.BaseView.extend({
             maxFiles: 1,
             clickable: [selector + "_placeholder", selector + "_swap"],
             acceptedFiles: this.acceptedFiles,
-            url: (this.create_file)? window.Urls.image_upload() : window.Urls.thumbnail_upload(),
+            url: this.upload_url,
             previewTemplate:this.dropzone_template(),
             previewsContainer: selector,
-            headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id}
+            headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id, "Node": this.model.id}
         });
 
         this.dropzone.on("success", this.image_uploaded);
@@ -806,16 +797,18 @@ ImageUploadView = BaseViews.BaseView.extend({
     image_uploaded:function(image){
         this.image_error = null;
         result = JSON.parse(image.xhr.response)
-        this.image = new Models.FileModel(result.file);
-        this.image_url = this.image.get('storage_url');
-        this.image_formatted_name = result.file_formatted_name;
+        if(result.file){
+            this.image = new Models.FileModel(JSON.parse(result.file));
+        }
+        this.image_url = result.path;
+        this.image_formatted_name = result.formatted_filename;
     },
     image_completed:function(){
         if(this.image_error){
             alert(this.image_error);
             if(this.onerror){ this.onerror(); }
         }else{
-            if(this.onsuccess){ this.onsuccess(this.image, this.image_url, this.image_id); }
+            if(this.onsuccess){ this.onsuccess(this.image, this.image_formatted_name, this.image_url); }
         }
         this.render();
     },
@@ -831,6 +824,21 @@ ImageUploadView = BaseViews.BaseView.extend({
         this.image_error = null;
         this.$("#" + this.get_selector() + "_placeholder").css("display", "block");
         if(this.oncancel){ this.oncancel(); }
+    },
+    use_image:function(file){
+        this.image = file;
+        this.image_url = file.get('storage_url');
+        this.onsuccess(this.image, this.image_formatted_name, this.image_url);
+        this.render();
+    },
+    open_thumbnail_generator:function(){
+        var thumbnail_modal = new ThumbnailModalView({
+            node: this.model,
+            onuse: this.use_image,
+            model: this.image
+        });
+    }
+});
 
 var ThumbnailModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/thumbnail_generator_modal.handlebars"),

@@ -70,7 +70,17 @@
 		height: 100%;
 		padding: 10px 0;
 		overflow:hidden;
-		/*max-height: @uploader-height * 0.7;*/
+		.file_editor_row{
+			margin:0px;
+			#node_thumbnail{
+				padding:0px;
+				.dz-placeholder{
+					width: 120px;
+					height: 120px;
+				}
+			}
+		}
+
 
 		h4 {
 			font-size: 13px;
@@ -111,84 +121,6 @@
 			color:gray;
 			font-style:italic;
 			font-size:9pt;
-		}
-		.format_editor_header{
-			font-size:10pt;
-			font-weight:bold;
-			.format_counter{
-				background-color:@blue-500;
-			}
-
-			.expand_format_editor{
-				font-size:10pt;
-				color:@blue-500;
-				cursor:pointer;
-			}
-
-			.file_size_metadata{
-				font-size: 10pt;
-				margin-top:5px;
-			}
-		}
-		.format_editor_list{
-			margin-left:25px;
-			margin-bottom:10px;
-			display:none;
-
-			.format_dropzone{
-				width:auto;
-				.file_upload_progress{
-					height:10px;
-					max-width:70%;
-				}
-				.progress-bar-success {
-					background: @blue-200;
-				}
-				.upload_cancel{
-					color: @blue-200;
-					cursor:pointer;
-				}
-			}
-			.add_format_button{
-				margin-left: -15px;
-			}
-
-			.format_editor_file_name_wrapper{
-				display:inline;
-			}
-
-			.format_editor_item{
-				font-size:10pt;
-				margin-bottom:5px;
-				max-width:100%;
-
-				.format_editor_format_name{
-					font-weight:bold;
-					width:(@metadata-width / 2.5) * 0.3;
-					padding:0;
-				}
-
-				.format_editor_file_name{
-					/*max-width:(@metadata-width / 2.6) * 0.6;*/
-					max-width:60%;
-					overflow:hidden;
-					display:inline-block;
-				}
-				.format_editor_options_wrapper{
-					width:auto;
-					.glyphicon{
-						cursor:pointer;
-					}
-				}
-
-				.format_editor_selected_size{
-					color:@gray-400;
-					font-size:10pt;
-					display:inline;
-					position: relative;
-					bottom: 5px;
-				}
-			}
 		}
 	}
 

@@ -48,8 +48,6 @@
 				font-size:12pt;
 			}
 			.file-row{
-				width:100%;
-				padding: 0 25px;
 				.dropzone_remove{
 					display:none;
 					color:@red-error-color;
@@ -152,80 +150,6 @@
 	}
 }
 
-.format_editor_header{
-	font-size:13pt;
-	font-weight:bold;
-	.format_counter{
-		background-color:@blue-500;
-	}
-
-	.expand_format_editor{
-		font-size:10pt;
-		color:@blue-500;
-		cursor:pointer;
-	}
-	.file_size_metadata{
-		font-size:10pt;
-	}
-}
-.format_editor_list{
-	margin-left:30px;
-	.format_dropzone{
-		width:auto;
-		.file_upload_progress{
-			height:10px;
-			width:90%;
-		}
-		.progress-bar-success {
-			background: @blue-200;
-		}
-		.upload_cancel{
-			color: @blue-200;
-			cursor:pointer;
-		}
-	}
-	.format_editor_file_name_wrapper{
-		display:inline;
-	}
-	.add_format_button{
-		margin-left: -15px;
-	}
-	.format_editor_remove{
-		cursor:pointer;
-	}
-	.format_editor_item{
-		font-size:11pt;
-		margin-bottom:5px;
-
-		.format_editor_format_name{
-			font-size: 10pt;
-			font-weight:bold;
-		}
-
-		.format_editor_file_name{
-			overflow:hidden;
-			display:inline-block;
-			width:auto;
-			max-width:60%;
-			cursor:pointer;
-			.format_editor_selected_size{
-				display:inline-block;
-				margin-top:-20px;
-			}
-		}
-		.format_editor_file_name:hover{
-			font-weight:bold;
-		}
-		.format_editor_options_wrapper{
-			width:50px;
-		}
-
-		.format_editor_selected_size{
-			color:@gray-400;
-		}
-	}
-}
-
 .format_item{
 	.thumbnail_img{
 		width:130px;
@@ -275,6 +199,93 @@
 		}
 		#thumbnail_buttons{
 			padding-bottom: 20px;
+		}
+	}
+}
+
+.format_editor_header{
+	font-size:12pt;
+	font-weight:bold;
+	margin:10px;
+	padding-bottom: 10px;
+	border-bottom: 1px dotted @gray-300;
+
+	.format_counter{
+		background-color:@blue-500;
+	}
+	.expand_format_editor{
+		font-size:10pt;
+		color:@blue-500;
+		cursor:pointer;
+	}
+
+	.file_size_metadata{
+		font-size: 10pt;
+	}
+}
+
+.format_editor_list{
+	margin-left:25px;
+	margin-bottom:10px;
+
+	.format_dropzone{
+		width:auto;
+		.file_upload_progress{
+			height:15px;
+			max-width:70%;
+		}
+		div .name {
+			font-weight: bold;
+		}
+		.progress-bar-success {
+			background: @blue-200;
+		}
+		.upload_cancel{
+			color: @blue-200;
+			cursor:pointer;
+		}
+	}
+	.add_format_button{
+		margin-left: -15px;
+	}
+	.format_editor_remove{
+		cursor:pointer;
+	}
+	.format_editor_item{
+		font-size:11pt;
+		margin-bottom:5px;
+		.format_editor_format_name{
+			font-weight:bold;
+			padding:0;
+			font-size: 10pt;
+		}
+		.format_editor_file_name{
+			max-width:60%;
+			overflow:hidden;
+			display:inline-block;
+			width:auto;
+			cursor:pointer;
+		}
+		.format_editor_file_name:hover{
+			font-weight:bold;
+		}
+		.format_editor_selected_size{
+			display:inline-block;
+			margin-top:-20px;
+			color:@gray-400;
+			font-size:10pt;
+			position: relative;
+			bottom: 5px;
+		}
+
+		.format_editor_file_name_wrapper{
+			display:inline;
+		}
+		.format_editor_options_wrapper{
+			width:auto;
+			.glyphicon{
+				cursor:pointer;
+			}
 		}
 	}
 }

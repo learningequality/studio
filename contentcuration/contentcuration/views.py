@@ -201,9 +201,6 @@ def file_create(request):
         file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, contentnode=new_node, file_size=size)
         file_object.save()
         if kind.pk == content_kinds.VIDEO:
-            thumbnail_obj = extract_thumbnail_from_video(file_object)
-
-        if kind.pk == content_kinds.VIDEO:
             extract_thumbnail_wrapper(file_object)
             file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))
         elif presets.filter(supplementary=False).count() == 1:
@@ -252,7 +249,7 @@ def compress_video_wrapper(file_object):
         low_res_object.save()
         return low_res_object
 
-def create_tiled_image_wrapper(files, preset_id):
+def create_tiled_image_wrapper(node, files, preset_id):
     random.shuffle(files)
     if len(files) >= 4:
         files = files[:4]
@@ -271,6 +268,7 @@ def create_tiled_image_wrapper(files, preset_id):
             file_format_id = file_formats.PNG,
             file_size = os.path.getsize(file_location),
             preset_id = preset_id,
+            contentnode_id = node.pk
         )
         thumbnail_object.save()
         return thumbnail_object
@@ -294,7 +292,7 @@ def generate_thumbnail(request):
 
         thumbnail_object = None
         if node.kind.pk == content_kinds.TOPIC:
-            thumbnail_object = create_tiled_image_wrapper(list(set(files)), format_presets.TOPIC_THUMBNAIL)
+            thumbnail_object = create_tiled_image_wrapper(node, list(set(files)), format_presets.TOPIC_THUMBNAIL)
         return HttpResponse(json.dumps({
             "success": True,
             "file_id": thumbnail_object.pk if thumbnail_object else None
@@ -309,17 +307,20 @@ def thumbnail_upload(request):
 
         return HttpResponse(json.dumps({
             "success": True,
-            "formatted_filename": formatted_filename
+            "formatted_filename": formatted_filename,
+            "file":  None,
+            "path": generate_storage_url(formatted_filename),
         }))
 
 def image_upload(request):
     if request.method == 'POST':
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:] # gets file extension without leading period
-        file_object = File(preset_id=request.META.get('HTTP_PRESET'), file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext)
+        name, ext = os.path.splitext(request.FILES.values()[0]._name) # gets file extension without leading period
+        file_object = File(contentnode_id=request.META.get('HTTP_NODE'),original_filename=name, preset_id=request.META.get('HTTP_PRESET'), file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:])
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
             "file": JSONRenderer().render(FileSerializer(file_object).data),
+            "path": generate_storage_url(str(file_object)),
         }))
 
 def exercise_image_upload(request):
@@ -331,6 +332,7 @@ def exercise_image_upload(request):
             "success": True,
             "formatted_filename": exercises.CONTENT_STORAGE_FORMAT.format(str(file_object)),
             "file": JSONRenderer().render(FileSerializer(file_object).data),
+            "path": generate_storage_url(str(file_object)),
         }))
 
 def duplicate_nodes(request):
