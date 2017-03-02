@@ -449,16 +449,24 @@
 
 		.mastery_container{
 			padding:10px;
-			background-color: @gray-200;
 			.row{
-				margin-bottom: 15px;
-				margin-left: 0;
+				margin-bottom: 2px;
+			    margin-left: 0;
+			    border: 1px solid @blue-100;
+			    display: -webkit-box;
+			    display: -webkit-flex;
+			    display: -ms-flexbox;
+			    display: flex;
+			    flex-wrap: wrap;
 				.criterion_name{
-					text-align:right;
-					padding:0;
-					color: @blue-700;
+					text-align: right;
+				    padding: 5px;
+				    background-color: @blue-100;
+				    color: @blue-700;
+				    vertical-align: middle;
 				}
 				.criterion_description{
+					padding: 5px;
 					padding-left: 10px;
 					color: @gray-700;
 					.wordwrap;

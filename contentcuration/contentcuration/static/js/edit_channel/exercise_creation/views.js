@@ -505,7 +505,6 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.onchange(this.collection.toJSON());
     },
     render: function() {
-        console.log(this.model.get('extra_fields').randomize);
         this.$el.html(this.template({
             node: this.model.toJSON(),
             is_random: this.model.get('extra_fields').randomize
