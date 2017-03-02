@@ -767,11 +767,12 @@ ImageUploadView = BaseViews.BaseView.extend({
         this.create_dropzone();
     },
     remove_image: function(){
-        this.image = null;
-        this.image_url = this.default_url;
-        this.image_id = null;
-        this.onsuccess(this.image, this.image_url, this.image_id);
-        this.render();
+        if(confirm("Are you sure you want to remove this image?")){
+            this.image = null;
+            this.image_url = this.default_url;
+            this.onsuccess(this.image, this.image_url, this.default_url);
+            this.render();
+        }
     },
     get_selector: function(){
         return "dropzone_" + this.cid;
