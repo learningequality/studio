@@ -55,11 +55,11 @@ var ExerciseModalView = BaseViews.BaseModalView.extend({
 });
 
 var FileUploadView = BaseViews.BaseModalView.extend({
+    modal: true,
 
     initialize: function(options) {
         _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed", "submit_file", "file_complete", "set_alt_text");
         this.callback = options.callback;
-        this.modal = options.modal;
         this.file = this.alt_text = null;
         this.render();
     },
@@ -195,16 +195,17 @@ var UploadImage = function (context) {
     contents: '<span class="glyphicon glyphicon-picture" aria-hidden="true"></span>',
     tooltip: 'Image',
     click: function () {
-      // invoke insertText method with 'hello' on editor module.
-      context.invoke('editor.insertText', 'hello');
+        console.log(context)
+        var view = new FileUploadView({callback: context.options.callbacks.onImageUpload});
     }
   });
 
   return button.render();   // return button as jquery object
 }
 
-function SummernoteWrapper(element, options) {
+function SummernoteWrapper(element, context, options) {
     this.element = element;
+    this.context = context;
     this.element.summernote(options);
 
     this.insertHTML = function(content){
@@ -235,9 +236,6 @@ var EditorView = Backbone.View.extend({
     },
     stop_events:function(event){
         event.stopPropagation();
-    },
-    add_image_popup: function() {
-        var view = new FileUploadView({callback: this.add_image, modal: true, model: this.model});
     },
 
     add_image: function(file_id, filename, alt_text) {
@@ -288,7 +286,7 @@ var EditorView = Backbone.View.extend({
     activate_editor: function() {
         var selector = this.cid + "_editor";
         this.$el.html(this.edit_template({selector: selector}));
-        this.editor = new SummernoteWrapper(this.$("#" + selector), {
+        this.editor = new SummernoteWrapper(this.$("#" + selector), this, {
             toolbar: [
                 ['style', ['bold', 'italic', 'underline']],
                 ['insert', ['customupload']],
@@ -299,7 +297,7 @@ var EditorView = Backbone.View.extend({
             },
             placeholder: 'Enter ' + this.edit_key + "...",
             disableResizeEditor: true,
-            callbacks: {onChange: _.debounce(this.save, 300)}
+            callbacks: {onChange: _.debounce(this.save, 300), onImageUpload: this.add_image}
         });
         this.editing = true;
         this.render_editor();
