@@ -1,6 +1,17 @@
 @import "global-variables.less";
 @import "modal-styles.less";
 
+@font-face{
+	font-family:"summernote";
+	font-style:normal;
+	font-weight:normal;
+	src:url("@{icon-font-path}summernote.eot");
+	src:url("@{icon-font-path}summernote.eot") format("embedded-opentype"),
+		url("@{icon-font-path}summernote.woff") format("woff"),
+		url("@{icon-font-path}summernote.ttf") format("truetype");
+}
+
+
 @hint-color:#FDFADF;
 @error-bg-color:#F2DEDE;
 
@@ -87,6 +98,9 @@
 				}
 				.question_area{
 					background-color: transparent;
+					.unfocused{
+						background-color: white;
+					}
 					.question_type{
 						display:none;
 					}
@@ -301,19 +315,31 @@
 }
 
 .hint_modal, .assessment_item.active{
-	.editor-toolbar {
-		background-color:@gray-300;
-		padding:4px;
-		.ql-format-button{
-			margin-right:10px;
+	.note-toolbar{
+		background-color: @gray-200;
+		border-radius: 0px;
+		.btn{
+			border: none !important;
+		    border-radius: 0 !important;
+		    box-shadow: none !important;
+		    background: transparent !important;
+		}
+		.btn:hover, .btn.active{
+			color: @blue-500 !important;
 		}
 	}
-	.editor{
-		border: 1px solid @gray-300;
+	.note-editable{
+		cursor: text;
+		min-height: 80px;
 	}
-	.question .editor{
-		margin-bottom: -15px;
+	.note-resizebar{
+		display:none;
 	}
+	.note-editor, .note-editor.note-frame{
+		border:1px solid @gray-300;
+		border-radius:0;
+	}
+
 	.hints, .answers{
 		margin:7px;
 		background-color: white;
@@ -336,14 +362,14 @@
 }
 
 .hint_modal, .assessment_item{
-	.error-list li, .quill-error, .hint-errors{
+	.error-list li, .note-error, .hint-errors{
 		color: @red-error-color;
 	    font-weight: bold;
 	    font-size: 10pt;
 	    margin-bottom: 5px;
 	    background-color: transparent !important;
 	}
-	.quill-error{
+	.note-error{
 		display:none;
 	}
 	.invalid{

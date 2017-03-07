@@ -2,7 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var Quill = require("quilljs");
+require("summernote");
 var Dropzone = require("dropzone");
 var get_cookie = require("utils/get_cookie");
 var UndoManager = require("backbone-undo");
@@ -11,17 +11,18 @@ var fileSaver = require("browser-filesaver");
 var JSZipUtils = require("jszip-utils");
 var Katex = require("katex");
 
-require("quilljs/dist/quill.snow.css");
 require("exercises.less");
-
+require("../../../css/summernote.css");
 require("dropzone/dist/dropzone.css");
 require("../../../css/katex.min.css");
+var toMarkdown = require('to-markdown');
+var htmlparser = require("html-parser");
 
 if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("Safari") > -1){
     require("mathml.less");
 }
 
-var placeholder_text = "$1\${☣ CONTENTSTORAGE}/$3"
+var placeholder_text = "${☣ CONTENTSTORAGE}/"
 var regExp = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
 
 var ExerciseModalView = BaseViews.BaseModalView.extend({
@@ -134,7 +135,7 @@ var replace_image_paths = function(content){
     var matches = content.match(regExp);
     if(matches){
         matches.forEach(function(match){
-            var filename = match.split("/").slice(-1)[0]
+            var filename = match.split("/").slice(-1)[0];
             var replace_str = "/content/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
             content = content.replace(match, replace_str);
         })
@@ -156,19 +157,71 @@ var replace_mathjax = function(content){
 
 var parse_content = function(content){
     parsed = replace_image_paths(content);
-    parsed = replace_mathjax(parsed);
-    return parsed.replace(/\\"/g, '"');
+    return replace_mathjax(parsed);
 };
+
+var convert_html_to_markdown = function(contents) {
+    var updated = toMarkdown(contents,{
+        converters: [
+            {
+                filter: 'img',
+                replacement: function (content, node) {
+                    var alt = node.alt || '';
+                    var src = node.getAttribute('src').split('/').slice(-1)[0] || '';
+                    var title = node.title || '';
+                    var width = node.style.width || node.width || null;
+                    var height = node.style.height || node.height || null;
+                    var size = width ? " =" + width.toString().replace('px', '') + "x" : '';
+                    size += height ? height.toString().replace('px', '') : '';
+                    return src ? '![' + alt + ']' + '(' + placeholder_text + src + size + ')' : ''
+                }
+            },
+            {
+                filter: ['em', 'i'],
+                replacement: function (content) {
+                    return '*' + content + '*'
+                }
+            },
+        ]
+    });
+    return updated
+}
+
+var UploadImage = function (context) {
+  var ui = $.summernote.ui;
+
+  // create button
+  var button = ui.button({
+    contents: '<span class="glyphicon glyphicon-picture" aria-hidden="true"></span>',
+    tooltip: 'Image',
+    click: function () {
+      // invoke insertText method with 'hello' on editor module.
+      context.invoke('editor.insertText', 'hello');
+    }
+  });
+
+  return button.render();   // return button as jquery object
+}
+
+function SummernoteWrapper(element, options) {
+    this.element = element;
+    this.element.summernote(options);
+
+    this.insertHTML = function(content){
+        element.summernote('code', content);
+    };
+    this.focus = function(){
+        element.summernote('focus');
+    };
+}
 
 var exerciseSaveDispatcher = _.clone(Backbone.Events);
 
 var EditorView = Backbone.View.extend({
-
     tagName: "div",
 
     initialize: function(options) {
-        _.bindAll(this, "return_markdown", "resize_editor_container", "add_image", "deactivate_editor",
-            "activate_editor", "save_and_close", "save", "render");
+        _.bindAll(this, "add_image", "deactivate_editor", "activate_editor", "save", "render");
         this.edit_key = options.edit_key;
         this.editing = false;
         this.render();
@@ -177,18 +230,19 @@ var EditorView = Backbone.View.extend({
     },
 
     events: {
-        "click .ql-image": "add_image_popup"
+        "click .ql-image": "add_image_popup",
+        "click .editor-wrapper": "stop_events"
     },
-
+    stop_events:function(event){
+        event.stopPropagation();
+    },
     add_image_popup: function() {
         var view = new FileUploadView({callback: this.add_image, modal: true, model: this.model});
     },
 
     add_image: function(file_id, filename, alt_text) {
         this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
-        // Using insertEmbed will throw an error as the placeholder isn't parsed correctly
-        this.editor.insertText(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "![" + alt_text + "](" + filename + ")");
-        this.save();
+        this.model.set(this.edit_key, this.model.get(this.edit_key) + "![" + alt_text + "](" + filename + ")");
         this.render_editor();
     },
 
@@ -228,52 +282,29 @@ var EditorView = Backbone.View.extend({
     },
 
     render_editor: function() {
-        this.editor.setHTML(this.view_template({
-            content: parse_content(this.model.get(this.edit_key))
-        }));
+        this.editor.insertHTML( this.view_template({content: parse_content(this.model.get(this.edit_key))}));
     },
 
     activate_editor: function() {
-        this.$el.html(this.edit_template({key: this.edit_key}));
-        this.editor = new Quill(this.$(".editor")[0], {
-            modules: {
-                'toolbar': { container: this.$('.editor-toolbar')[0] }
+        var selector = this.cid + "_editor";
+        this.$el.html(this.edit_template({selector: selector}));
+        this.editor = new SummernoteWrapper(this.$("#" + selector), {
+            toolbar: [
+                ['style', ['bold', 'italic', 'underline']],
+                ['insert', ['customupload']],
+                ['controls', ['undo', 'redo']]
+            ],
+            buttons: {
+                customupload: UploadImage
             },
             placeholder: 'Enter ' + this.edit_key + "...",
-            theme: 'snow',
-            scrollingContainer: 'editor-container',
-            styles: {
-                'body': {
-                  'background-color': "white",
-                  'padding': '10px',
-                  'min-height': "70px",
-                  "overflow": "hidden"
-                },
-                '.editor-container': {
-                    'display': 'block',
-                    'clear': 'both',
-                    'min-height': '150px',
-                    "height": "auto",
-                    "width": "100%"
-                }
-            }
+            disableResizeEditor: true,
+            callbacks: {onChange: _.debounce(this.save, 300)}
         });
-        this.render_editor();
-        this.editor.on("text-change", _.debounce(this.save, 300));
-        this.editor.on("text-change", _.debounce(this.resize_editor_container, 100));
         this.editing = true;
-
-        var self = this;
-        this.$(this.editor.root).ready(function(){
-            self.$('.editor iframe, .editor').height(self.editor.root.ownerDocument.body.scrollHeight);
-            self.editor.focus();
-        });
-
+        this.render_editor();
+        this.editor.focus();
     },
-    resize_editor_container:function(){
-        this.$('.editor iframe, .editor').height(this.$('.editor iframe').contents().find('.editor-container').height());
-    },
-
     deactivate_editor: function() {
         delete this.editor;
         this.editing = false;
@@ -288,7 +319,7 @@ var EditorView = Backbone.View.extend({
         }
     },
 
-    save: function(delta, source) {
+    save: function(contents, $editable) {
         /*
         * This method can be triggered by a change event firing on the QuillJS
         * instance that we are using. As such, it supplies arguments delta and source.
@@ -297,61 +328,14 @@ var EditorView = Backbone.View.extend({
         * Doing this check prevents us from continually rerendering when a non-user source
         * modifies the contents of the editor (i.e. our own code).
         */
-        if (typeof source !== "undefined" && source !== "user") {
-            return;
-        }
         this.setting_model = true;
-        this.markdown = this.return_markdown().trim();
-        if(this.validate()){
-            this.model.set(this.edit_key, this.markdown);
-        }else{
-            this.markdown = this.model.get(this.edit_key);
-        }
+        this.markdown = convert_html_to_markdown(contents).trim();
+
+        this.model.set(this.edit_key, this.markdown);
     },
     validate: function(){
-        this.$(".quill-error").css("display", (this.markdown)? "none" : "inline-block");
+        this.$(".note-error").css("display", (this.markdown)? "none" : "inline-block");
         return this.markdown;
-    },
-
-    save_and_close: function() {
-        this.save();
-        this.deactivate_editor();
-    },
-
-    return_html: function() {
-        return this.editor.getHTML();
-    },
-
-    return_markdown: function() {
-        var contents = this.editor.getContents();
-        var outputs = [];
-        for (var i = 0; i < contents.ops.length; i++) {
-            var insert = contents.ops[i].insert;
-            var attributes = contents.ops[i].attributes;
-            if (typeof attributes !== "undefined") {
-                _.each(attributes, function(value, key) {
-                    switch (key) {
-                        case "bold":
-                            if (value) {
-                                insert = "**" + insert + "**";
-                            }
-                            break;
-                        case "italic":
-                            if (value) {
-                                insert = "*" + insert + "*";
-                            }
-                            break;
-                        case "image":
-                            if (value && insert === 1) {
-                                insert = "![](" + value + ")";
-                            }
-                            break;
-                    }
-                })
-            }
-            outputs.push(insert);
-        }
-        return outputs.join("");
     }
 });
 
@@ -384,10 +368,8 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
         view.set_open();
     },
     set_focus:function(){
-        this.views.forEach(function(view){
-            if(view.open){
-                view.set_closed();
-            }
+        _.where(this.views, {open: true}).forEach(function(view){
+            view.set_closed();
         });
     },
     set_invalid:function(invalid){
@@ -424,8 +406,8 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
     set_open:function(){
         if(this.close_editors_on_focus){
             this.containing_list_view.container.toggle_focus();
+            this.containing_list_view.container.remove_focus();
         }
-        this.containing_list_view.set_focus();
         this.set_toolbar_open();
         this.editor_view.activate_editor();
         this.open = true;
@@ -577,15 +559,17 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
             cid: this.cid
         }));
         this.render_editor();
-        if (!this.answer_editor) {
-            this.answer_editor = new AssessmentItemAnswerListView({
-                collection: this.model.get("answers"),
-                container:this,
-                assessment_item: this.model,
-                isdisplay:this.isdisplay
-            });
+        if(this.model.get('type') !== "perseus_question"){
+            if (!this.answer_editor) {
+                this.answer_editor = new AssessmentItemAnswerListView({
+                    collection: this.model.get("answers"),
+                    container:this,
+                    assessment_item: this.model,
+                    isdisplay:this.isdisplay
+                });
+            }
+            this.$(".answers").html(this.answer_editor.el);
         }
-        this.$(".answers").html(this.answer_editor.el);
         this.$(".question_type_select").val(this.model.get("type"));
     },
     show_hints:function(event){
@@ -613,16 +597,12 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     initialize: function(options) {
         _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed",
                 "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus",
-                "toggle_undo_redo", "update_hints", "set_type");
+                "toggle_undo_redo", "update_hints", "set_type", "set_open");
         this.originalData = this.model.toJSON();
         this.onchange = options.onchange;
         this.question = this.model.get('question');
         this.containing_list_view = options.containing_list_view;
-        this.undo_manager = new UndoManager({
-            track: true,
-            register: [this.model, this.model.get("answers")]
-        });
-        this.toggle_undo_redo();
+        this.init_undo_redo();
         this.render();
         this.set_toolbar_closed();
         this.validate();
@@ -654,11 +634,13 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     },
     delete: function(event) {
         event.stopPropagation();
-        this.model.set('deleted', true);
-        this.propagate_changes();
-        this.containing_list_view.views.splice(this, 1);
-        this.containing_list_view.handle_if_empty();
-        this.remove();
+        if(confirm("Are you sure you want to delete this question?")){
+            this.model.set('deleted', true);
+            this.propagate_changes();
+            this.containing_list_view.views.splice(this, 1);
+            this.containing_list_view.handle_if_empty();
+            this.remove();
+        }
     },
     stop_events:function(event){
         event.stopPropagation();
@@ -712,12 +694,11 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     },
     toggle:function(event){
         event.stopPropagation();
+        this.init_undo_redo();
         this.set_closed()
         this.$(".closed_toolbar").css("display", "none");
         var self = this;
-        setTimeout(function(){
-            self.$(".closed_toolbar").css("display", "block")
-        }, 1000);
+        setTimeout(function(){ self.$(".closed_toolbar").css("display", "block"); }, 1000);
     },
     reset: function(){
         this.undo_manager.undoAll();
@@ -731,6 +712,13 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     },
     redo: function() {
         this.undo_manager.redo();
+    },
+    init_undo_redo:function(){
+        this.undo_manager = new UndoManager({
+            track: true,
+            register: [this.model, this.model.get("answers")]
+        });
+        this.toggle_undo_redo();
     },
     toggle_undo_redo: function() {
         var undo = this.undo;
@@ -759,15 +747,20 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         this.open = true;
         this.$(".assessment_item").addClass("active");
         this.editor_view.activate_editor();
+        this.$(".question").removeClass("unfocused");
         this.set_toolbar_open();
         this.set_undo_redo_listener();
         this.answer_editor.validate();
+        if (this.answer_editor) {
+            this.answer_editor.set_focus();
+        }
     },
     set_closed:function(){
-        this.open = false;
         this.$(".assessment_item").removeClass("active");
         this.set_toolbar_closed();
+        this.$(".question").removeClass("unfocused");
         this.editor_view.deactivate_editor();
+        this.open = false;
         this.unset_undo_redo_listener();
         if (this.answer_editor) {
             this.answer_editor.set_focus();
@@ -814,6 +807,11 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         this.model.set("randomize", event.target.checked);
         this.propagate_changes();
     },
+    remove_focus:function(){
+        this.editor_view.deactivate_editor();
+        this.$(".question").addClass("unfocused");
+        this.$(".question").on('click', this.set_open);
+    }
 });
 
 var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
