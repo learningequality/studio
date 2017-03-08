@@ -126,7 +126,6 @@ def map_content_nodes(root_node):
 
                 if node.kind.kind == content_kinds.EXERCISE:
                     create_perseus_exercise(node, kolibrinode)
-
                 if node.kind.kind != content_kinds.TOPIC:
                     create_associated_file_objects(kolibrinode, node)
                 map_tags_to_node(kolibrinode, node)
@@ -275,7 +274,6 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
 
         for item in ccnode.assessment_items.all():
             write_assessment_item(item, zf)
-
 
 def write_assessment_item(assessment_item, zf):
     template=''
