@@ -125,8 +125,7 @@ def map_content_nodes(root_node):
                 kolibrinode = create_bare_contentnode(node)
 
                 if node.kind.kind == content_kinds.EXERCISE:
-                    data = process_assessment_metadata(node, kolibrinode)
-                    create_perseus_exercise(node, data)
+                    create_perseus_exercise(node, kolibrinode)
 
                 if node.kind.kind != content_kinds.TOPIC:
                     create_associated_file_objects(kolibrinode, node)
@@ -194,6 +193,26 @@ def create_associated_file_objects(kolibrinode, ccnode):
             thumbnail=preset.thumbnail,
         )
 
+def create_perseus_exercise(ccnode, kolibrinode):
+    logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
+    filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
+    with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
+        data = process_assessment_metadata(node, kolibrinode)
+        create_perseus_zip(ccnode, data, tempf)
+        tempf.flush()
+
+        ccmodels.File.objects.filter(contentnode=ccnode, preset_id=format_presets.EXERCISE).delete()
+
+        assessment_file_obj = ccmodels.File.objects.create(
+            file_on_disk=File(open(tempf.name, 'r'), name=filename),
+            contentnode=ccnode,
+            file_format_id=file_formats.PERSEUS,
+            preset_id=format_presets.EXERCISE,
+            original_filename=filename,
+        )
+        logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
+
+
 def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
     assessment_items = ccnode.assessment_items.all()
@@ -227,25 +246,6 @@ def process_assessment_metadata(ccnode, kolibrinode):
     )
 
     return exercise_data
-
-
-def create_perseus_exercise(ccnode, exercise_data):
-    logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
-    filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
-    with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
-        create_perseus_zip(ccnode, exercise_data, tempf)
-        tempf.flush()
-
-        ccmodels.File.objects.filter(contentnode=ccnode, preset_id=format_presets.EXERCISE).delete()
-
-        assessment_file_obj = ccmodels.File.objects.create(
-            file_on_disk=File(open(tempf.name, 'r'), name=filename),
-            contentnode=ccnode,
-            file_format_id=file_formats.PERSEUS,
-            preset_id=format_presets.EXERCISE,
-            original_filename=filename,
-        )
-        logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
 
 def create_perseus_zip(ccnode, exercise_data, write_to_path):
