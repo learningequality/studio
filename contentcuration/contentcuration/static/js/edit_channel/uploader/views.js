@@ -15,6 +15,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     _.bindAll(this, "close_uploader");
     this.render(this.close_uploader, {
       new_content: options.new_content,
+      new_topic: options.new_topic,
       title: (this.model)? ((this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name")) : null
     });
     this.metadata_view = new EditMetadataView({

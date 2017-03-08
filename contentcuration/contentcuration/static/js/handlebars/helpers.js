@@ -47,7 +47,6 @@ Handlebars.registerHelper('markdown', function(markdown) {
               if(groups[3]) {img.height = groups[3];}
             }
         });
-
         return el.innerHTML;
     } else {
         return "";

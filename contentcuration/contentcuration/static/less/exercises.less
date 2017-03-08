@@ -11,6 +11,17 @@
 		url("@{icon-font-path}summernote.ttf") format("truetype");
 }
 
+@font-face {
+  font-family: Symbola;
+  src: url("@{icon-font-path}Symbola.eot");
+  src: local("Symbola Regular"), local("Symbola"),
+  		url("@{icon-font-path}Symbola.woff2") format("woff2"),
+  		url("@{icon-font-path}Symbola.woff") format("woff"),
+  		url("@{icon-font-path}Symbola.ttf") format("truetype"),
+  		url("@{icon-font-path}Symbola.otf") format("opentype"),
+  		url("@{icon-font-path}Symbola.svg#Symbola") format("svg");
+}
+
 
 @hint-color:#FDFADF;
 @error-bg-color:#F2DEDE;
@@ -318,14 +329,49 @@
 		background-color: @gray-200;
 		border-radius: 0px;
 		.btn{
-			border: none !important;
-		    border-radius: 0 !important;
-		    box-shadow: none !important;
-		    background: transparent !important;
+			border: none;
+		    border-radius: 0;
+		    box-shadow: none;
+		    background: transparent;
 		}
 		.btn:hover, .btn.active{
 			color: @blue-500 !important;
 		}
+	}
+	.mq-overlay{
+		display:none;
+		width:100%;
+		height:100%;
+		background-color: black;
+		position: absolute;
+    	top: 0em;
+    	background:rgba(0,0,0,0.6);
+    	color:white;
+    	font-weight:bold;
+    	padding-top: 18%;
+    	z-index: 9999;
+	}
+	.mq-wrapper{
+		font-size: 18pt;
+		padding: 5px;
+		display: -webkit-flex;
+        -webkit-flex-flow: row;
+        * {
+		    outline: none;
+		    -webkit-box-shadow: none;
+		    -moz-box-shadow: none;
+		    box-shadow: none;
+		}
+        .mq-editable-field{.input-form; border-width:2px;}
+        .mq-focused{border-color: @blue-500;}
+        .btn{color:@gray-700; font-size: 13pt;}
+		.mq-root-block{
+			min-width:60px;
+			padding: 5px;
+			color: black;
+    		background-color: white;
+		}
+
 	}
 	.note-editable{
 		cursor: text;

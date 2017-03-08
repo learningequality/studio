@@ -10,18 +10,21 @@ var JSZip = require("jszip");
 var fileSaver = require("browser-filesaver");
 var JSZipUtils = require("jszip-utils");
 var Katex = require("katex");
+var domtoimage = require('dom-to-image');
 
 require("exercises.less");
 require("../../../css/summernote.css");
 require("dropzone/dist/dropzone.css");
 require("../../../css/katex.min.css");
+require("../../../css/mathquill.css");
 var toMarkdown = require('to-markdown');
 var htmlparser = require("html-parser");
+require("../../utils/mathquill.min.js");
+
 
 if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("Safari") > -1){
     require("mathml.less");
 }
-
 var placeholder_text = "${☣ CONTENTSTORAGE}/"
 var regExp = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
 
@@ -131,6 +134,70 @@ var FileUploadView = BaseViews.BaseModalView.extend({
     }
 });
 
+var AddFormulaView = BaseViews.BaseModalView.extend({
+    modal: true,
+    template: require("./hbtemplates/add_formula.handlebars"),
+
+    initialize: function(options) {
+        _.bindAll(this, 'add_formula');
+        this.callback = options.callback;
+        this.selector = "mathquill_" + this.cid;
+        this.render();
+    },
+    events: {
+        "click #add_formula": "add_formula"
+    },
+    render: function() {
+        this.$el.html(this.template({selector: this.selector}));
+    },
+    activate_mq: function(){
+        var mathFieldSpan = document.getElementById(this.selector);
+
+        var MQ = MathQuill.getInterface(2); // for backcompat
+        var self = this;
+        this.mathField = MQ.MathField(mathFieldSpan, {
+          spaceBehavesLikeTab: true, // configurable
+          handlers: {
+            enter:function(){
+                self.add_formula();
+            }
+          }
+        });
+    },
+    add_formula:function(){
+        if(this.mathField.latex().trim()){
+
+            /* IMPLEMENTATION FOR ADDING FORMULA AS IMAGE */
+            // var self = this;
+            // this.$(".mq-overlay").css("display", "block");
+            // domtoimage.toPng(this.$(".mq-root-block")[0]).then(function(dataUrl){
+            //     $.ajax({
+            //         method:"POST",
+            //         url: window.Urls.exercise_formula_upload(),
+            //         data:  JSON.stringify({"formula": dataUrl}),
+            //         success: function(data) {
+            //             var formula = JSON.parse(data);
+            //             self.callback(formula.file_id, formula.filename, self.mathField.latex());
+            //             self.$(".mq-overlay").css("display", "none");
+            //             self.mathField.latex("");
+            //             $(".dropdown").dropdown('toggle');
+            //         },
+            //         error:function(e){
+            //             reject(e);
+            //         }
+            //     });
+            // })
+
+            /* IMPLEMENTATION FOR INJECTING MATHJAX */
+            this.callback("$$" + this.mathField.latex() + "$$ "); //extra space allows for easier cursor navigation
+            this.mathField.latex("");
+            $(".dropdown").dropdown('toggle');
+        }
+
+    }
+});
+
+
 var replace_image_paths = function(content){
     var matches = content.match(regExp);
     if(matches){
@@ -192,16 +259,42 @@ var UploadImage = function (context) {
 
   // create button
   var button = ui.button({
-    contents: '<span class="glyphicon glyphicon-picture" aria-hidden="true"></span>',
+    contents: '<i class="note-icon-picture"/>',
     tooltip: 'Image',
     click: function () {
-        console.log(context)
         var view = new FileUploadView({callback: context.options.callbacks.onImageUpload});
     }
   });
 
   return button.render();   // return button as jquery object
 }
+
+var AddFormula = function (context) {
+    var ui = $.summernote.ui;
+    var view = new AddFormulaView({callback: context.options.callbacks.onAddFormula});
+
+    // create button
+    var button = ui.buttonGroup([
+        ui.button({
+          className: 'dropdown-toggle',
+          contents: '<span class="glyphicon glyphicon-plus-sign"></span> <span class="caret"></span>',
+          tooltip: 'Formula',
+          data: {
+            toggle: 'dropdown'
+          },
+          click: function(){
+              view.activate_mq();
+          }
+        }),
+        ui.dropdown({
+            className: 'drop-default add_formula_dropdown',
+            contents: view.el
+        })
+      ]);
+
+    return button.render();
+}
+
 
 function SummernoteWrapper(element, context, options) {
     this.element = element;
@@ -222,7 +315,7 @@ var EditorView = Backbone.View.extend({
     tagName: "div",
 
     initialize: function(options) {
-        _.bindAll(this, "add_image", "deactivate_editor", "activate_editor", "save", "render");
+        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "render");
         this.edit_key = options.edit_key;
         this.editing = false;
         this.render();
@@ -241,6 +334,10 @@ var EditorView = Backbone.View.extend({
     add_image: function(file_id, filename, alt_text) {
         this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
         this.model.set(this.edit_key, this.model.get(this.edit_key) + "![" + alt_text + "](" + filename + ")");
+        this.render_editor();
+    },
+    add_formula:function(formula){
+        this.model.set(this.edit_key, this.model.get(this.edit_key) + formula);
         this.render_editor();
     },
 
@@ -281,6 +378,7 @@ var EditorView = Backbone.View.extend({
 
     render_editor: function() {
         this.editor.insertHTML( this.view_template({content: parse_content(this.model.get(this.edit_key))}));
+        this.$(".katex").prop('readonly', true);
     },
 
     activate_editor: function() {
@@ -289,16 +387,23 @@ var EditorView = Backbone.View.extend({
         this.editor = new SummernoteWrapper(this.$("#" + selector), this, {
             toolbar: [
                 ['style', ['bold', 'italic', 'underline']],
-                ['insert', ['customupload']],
+                ['insert', ['customupload', 'customformula']],
                 ['controls', ['undo', 'redo']]
             ],
             buttons: {
-                customupload: UploadImage
+                customupload: UploadImage,
+                customformula: AddFormula
             },
             placeholder: 'Enter ' + this.edit_key + "...",
             disableResizeEditor: true,
-            callbacks: {onChange: _.debounce(this.save, 300), onImageUpload: this.add_image}
+            selector: this.cid,
+            callbacks: {
+                onChange: _.debounce(this.save, 300),
+                onImageUpload: this.add_image,
+                onAddFormula: this.add_formula
+            }
         });
+        $('.dropdown-toggle').dropdown()
         this.editing = true;
         this.render_editor();
         this.editor.focus();

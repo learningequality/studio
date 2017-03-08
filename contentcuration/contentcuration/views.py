@@ -29,6 +29,7 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from pressurecooker.videos import guess_video_preset_by_resolution, extract_thumbnail_from_video, compress_video
+from pressurecooker.encodings import write_base64_to_file
 from django.core.cache import cache
 
 def base(request):
@@ -272,6 +273,24 @@ def exercise_image_upload(request):
             "file_id": file_object.pk,
             "filepath": generate_storage_url(str(file_object)),
         }))
+
+def exercise_formula_upload(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        with tempfile.TemporaryFile(suffix=".{}".format(file_formats.PNG)) as tempf:
+            tempf.close()
+            write_base64_to_file(data["formula"], tempf.name)
+            filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
+            checksum, ext = os.path.splitext(filename)
+            file_location = generate_file_on_disk_name(checksum, filename)
+            file_object = File(preset_id=format_presets.EXERCISE_IMAGE, file_on_disk=DjFile(open(file_location, 'rb')), file_format_id=file_formats.PNG)
+            file_object.save()
+            return HttpResponse(json.dumps({
+                "success": True,
+                "filename": exercises.CONTENT_STORAGE_FORMAT.format(str(file_object)),
+                "file_id": file_object.pk,
+                "filepath": generate_storage_url(str(file_object)),
+            }))
 
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
