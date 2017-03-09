@@ -469,6 +469,12 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     get_default_attributes: function(){
         return {};
     },
+    get_next_order: function(){
+        if(this.collection.length > 0){
+            return this.collection.max(function(i){ return i.get('order');}).get('order') + 1
+        }
+        return 1;
+    },
     add_item: function() {
         if(!this.$(this.additem_el).hasClass('disabled')){
             this.$(this.default_item).css('display', 'none');
@@ -574,12 +580,8 @@ var ExerciseView = ExerciseEditableListView.extend({
     default_item:"#exercise_list >.default-item",
     template: require("./hbtemplates/exercise_edit.handlebars"),
     get_default_attributes: function() {
-        var max_order = 1;
-        if(this.collection.length > 0){
-            max_order = this.collection.max(function(i){ return i.get('order');}).get('order') + 1
-        }
         return {
-            order: max_order,
+            order: this.get_next_order(),
             contentnode: this.model.get('id')
         };
     },
@@ -944,7 +946,7 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     default_item:">.answer_list .default-item",
     template: require("./hbtemplates/assessment_item_answer_list.handlebars"),
     get_default_attributes: function() {
-        return {answer: "", correct: this.assessment_item.get('type') === "input_question"};
+        return {order: this.get_next_order(), answer: "", correct: this.assessment_item.get('type') === "input_question"};
     },
 
     initialize: function(options) {
@@ -1107,9 +1109,8 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
     default_item:">.hint_list .default-item",
     template: require("./hbtemplates/assessment_item_hint_list.handlebars"),
     get_default_attributes: function() {
-        return {hint: ""};
+        return {order: this.get_next_order(), hint: ""};
     },
-
     initialize: function(options) {
         _.bindAll(this, "render", "add_item", "add_item_view");
         this.bind_edit_functions();

@@ -5,10 +5,10 @@
 		 		<input class="correct" type="{{#if single_selection}}radio{{else}}checkbox{{/if}}" aria-label="Correct" name="{{#if isdisplay}}display_{{/if}}answer_{{groupName}}" {{#unless allow_toggle}}disabled{{/unless}} {{#if answer.correct}}checked{{/if}}>
 		</div>
 		{{/unless}}
-		<div class="col-sm-{{#if input_answer}}11{{else}}10{{/if}}">
+		<div class="col-sm-{{#if input_answer}}10{{else}}9{{/if}}">
 			<div class="answer editable" data-ph="Answer"></div>
 		</div>
-		<div class="col-sm-1">
+		<div class="col-sm-2">
 			<div class="show_on_focus answer-toolbar pull-right"></div>
 		</div>
     </div>
