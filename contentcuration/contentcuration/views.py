@@ -40,8 +40,8 @@ def base(request):
     else:
         return redirect('accounts/login')
 
-def testpage(request):
-    return render(request, 'test.html')
+def health(request):
+    return HttpResponse("500")
 
 def unsupported_browser(request):
     return render(request, 'unsupported_browser.html')

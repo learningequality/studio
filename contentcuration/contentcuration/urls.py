@@ -105,7 +105,6 @@ bulkrouter.register(r'file', FileViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
-    url(r'^test/', views.testpage, name='test'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
@@ -127,6 +126,7 @@ urlpatterns = [
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
     url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
+    url(r'^healthz$', views.health, name='health'),
 ]
 
 # Add account/registration endpoints
