@@ -12,6 +12,7 @@ var JSZipUtils = require("jszip-utils");
 var Katex = require("katex");
 var domtoimage = require('dom-to-image');
 
+var CHARACTERS = require("./symbols.json");
 require("exercises.less");
 require("../../../css/summernote.css");
 require("dropzone/dist/dropzone.css");
@@ -139,21 +140,41 @@ var AddFormulaView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/add_formula.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, 'add_formula');
+        _.bindAll(this, 'add_formula', 'add_character', 'add_format');
         this.callback = options.callback;
         this.selector = "mathquill_" + this.cid;
         this.render();
     },
     events: {
-        "click #add_formula": "add_formula"
+        "click #add_formula": "add_formula",
+        "click .character_symbol": "add_character",
+        "click .char_cmd": "add_format"
     },
     render: function() {
-        this.$el.html(this.template({selector: this.selector}));
+        this.$el.html(this.template({selector: this.selector, characters: CHARACTERS}));
+        this.$('[data-toggle="popover"]').popover({html: true, content: this.$("#characters_" + this.selector)});
+    },
+    add_character:function(event){
+        event.stopPropagation();
+        this.mathField.write(event.currentTarget.dataset.key);
+        this.$('[data-toggle="popover"]').popover("hide");
+        this.mathField.focus();
+    },
+    add_format:function(event){
+        event.stopPropagation();
+        this.mathField.cmd(event.currentTarget.dataset.key);
+        this.$('[data-toggle="popover"]').popover("hide");
+        this.mathField.focus();
     },
     activate_mq: function(){
         var mathFieldSpan = document.getElementById(this.selector);
-
         var MQ = MathQuill.getInterface(2); // for backcompat
+        _.each(this.$(".character_format"), function(item, index){
+            MQ.StaticMath(this.$("#character_format_" + index)[0]);
+        });
+        _.each(this.$(".character_eqn"), function(item, index){
+            MQ.StaticMath(this.$("#character_eqn_" + index)[0]);
+        });
         var self = this;
         this.mathField = MQ.MathField(mathFieldSpan, {
           spaceBehavesLikeTab: true, // configurable
@@ -163,6 +184,7 @@ var AddFormulaView = BaseViews.BaseModalView.extend({
             }
           }
         });
+
     },
     add_formula:function(){
         if(this.mathField.latex().trim()){
@@ -170,26 +192,26 @@ var AddFormulaView = BaseViews.BaseModalView.extend({
             /* IMPLEMENTATION FOR ADDING FORMULA AS IMAGE */
             // var self = this;
             // this.$(".mq-overlay").css("display", "block");
-            // domtoimage.toPng(this.$(".mq-root-block")[0]).then(function(dataUrl){
-            //     $.ajax({
-            //         method:"POST",
-            //         url: window.Urls.exercise_formula_upload(),
-            //         data:  JSON.stringify({"formula": dataUrl}),
-            //         success: function(data) {
-            //             var formula = JSON.parse(data);
-            //             self.callback(formula.file_id, formula.filename, self.mathField.latex());
-            //             self.$(".mq-overlay").css("display", "none");
-            //             self.mathField.latex("");
-            //             $(".dropdown").dropdown('toggle');
-            //         },
-            //         error:function(e){
-            //             reject(e);
-            //         }
-            //     });
-            // })
+            // domtoimage.toSvg(this.$(".mq-root-block")[0]).then(function(dataUrl){
+                // $.ajax({
+                //     method:"POST",
+                //     url: window.Urls.exercise_formula_upload(),
+                //     data:  JSON.stringify({"formula": dataUrl}),
+                //     success: function(data) {
+                //         var formula = JSON.parse(data);
+                //         self.callback(formula.file_id, formula.filename, self.mathField.latex());
+                //         self.$(".mq-overlay").css("display", "none");
+                //         self.mathField.latex("");
+                //         $(".dropdown").dropdown('toggle');
+                //     },
+                //     error:function(e){
+                //         reject(e);
+                //     }
+                // });
+            // }).catch(function(err){console.log(err)})
 
             /* IMPLEMENTATION FOR INJECTING MATHJAX */
-            this.callback("$$" + this.mathField.latex() + "$$ "); //extra space allows for easier cursor navigation
+            this.callback("\t$$" + this.mathField.latex() + "$$\t"); //extra tabs allow for easier cursor navigation
             this.mathField.latex("");
             $(".dropdown").dropdown('toggle');
         }
@@ -212,11 +234,11 @@ var replace_image_paths = function(content){
 
 var replace_mathjax = function(content){
     var mathJaxRegex = /\$\$(.+)\$\$/g;
+    var MQ = MathQuill.getInterface(2); // for backcompat
     var matches = content.match(mathJaxRegex);
     if(matches){
         matches.forEach(function(match){
-            var replace_str = Katex.renderToString(match.match(/\$\$(.+)\$\$/)[1]);
-            content = content.replace(match, replace_str);
+            content = content.replace(match, Katex.renderToString(match.match(/\$\$(.+)\$\$/)[1]));
         });
     }
     return content;
@@ -324,7 +346,6 @@ var EditorView = Backbone.View.extend({
     },
 
     events: {
-        "click .ql-image": "add_image_popup",
         "click .editor-wrapper": "stop_events"
     },
     stop_events:function(event){
@@ -339,6 +360,7 @@ var EditorView = Backbone.View.extend({
     add_formula:function(formula){
         this.model.set(this.edit_key, this.model.get(this.edit_key) + formula);
         this.render_editor();
+        this.editor.focus();
     },
 
     edit_template: require("./hbtemplates/editor.handlebars"),
@@ -378,7 +400,6 @@ var EditorView = Backbone.View.extend({
 
     render_editor: function() {
         this.editor.insertHTML( this.view_template({content: parse_content(this.model.get(this.edit_key))}));
-        this.$(".katex").prop('readonly', true);
     },
 
     activate_editor: function() {
@@ -432,12 +453,12 @@ var EditorView = Backbone.View.extend({
         * modifies the contents of the editor (i.e. our own code).
         */
         this.setting_model = true;
-        this.markdown = convert_html_to_markdown(contents).trim();
+        this.markdown = convert_html_to_markdown(contents);
 
         this.model.set(this.edit_key, this.markdown);
     },
     validate: function(){
-        this.$(".note-error").css("display", (this.markdown)? "none" : "inline-block");
+        this.$(".note-error").css("display", (this.markdown.trim())? "none" : "inline-block");
         return this.markdown;
     }
 });

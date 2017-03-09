@@ -325,6 +325,7 @@
 }
 
 .hint_modal, .assessment_item.active{
+	.character_wrapper{display:none;}
 	.note-toolbar{
 		background-color: @gray-200;
 		border-radius: 0px;
@@ -366,12 +367,38 @@
         .mq-focused{border-color: @blue-500;}
         .btn{color:@gray-700; font-size: 13pt;}
 		.mq-root-block{
-			min-width:60px;
+			min-width:150px;
 			padding: 5px;
 			color: black;
-    		background-color: white;
 		}
+		.popover {
+			min-width: 300px;
+			.popover-content{ padding:0; }
+		}
+		.exercise_characters{
+			padding:5px;
+			max-height: 450px;
+			overflow-y: auto;
 
+			.row{margin:0px}
+			.character_section_header{
+				font-weight:bold;
+				background-color: @blue-200;
+				padding:5px;
+				margin-top: 10px;
+			}
+			.character_symbol, .character_format, .character_eqn{
+				font-family: Symbola;
+				font-size: 16pt;
+				cursor: pointer;
+				padding:5px 0;
+				&:hover{
+					background-color: @gray-200;
+				}
+				.mq-root-block{min-width: 0;}
+			}
+			.character_eqn{font-size: 12pt;}
+		}
 	}
 	.note-editable{
 		cursor: text;
