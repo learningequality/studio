@@ -706,16 +706,6 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
             this.$(".answers").html(this.answer_editor.el);
         }
         this.$(".question_type_select").val(this.model.get("type"));
-        var self = this;
-        this.$(".toolbar").affix({
-            // target: self.$(".assessment_item"),
-            offset: {
-                top: self.$('.toolbar').offset().top,
-                bottom: function () {
-                    return (this.bottom = self.$(".assessment_item").outerHeight(true))
-                }
-            }
-        });
     },
     show_hints:function(event){
         if(!this.hint_editor){
