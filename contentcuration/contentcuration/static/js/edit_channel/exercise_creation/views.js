@@ -505,9 +505,24 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     set_invalid:function(invalid){
         this.$(this.additem_el).prop("disabled", invalid);
         (invalid)? this.$(this.additem_el).addClass("disabled") : this.$(this.additem_el).removeClass("disabled");
-        this.$(this.additem_el).prop('title', (invalid)? 'Blank item detected. Resolve to continue': null);
+        this.$(this.additem_el).prop('title', (invalid)? 'Blank item detected. Resolve to continue': "Add");
     },
-    validate:function(){ return true; }
+    validate:function(){ return true; },
+    switch_view_order:function(view, new_order){
+        var matches = _.filter(this.views, function(view){ return view.model.get('order') === new_order; });
+        var old_order = view.model.get('order');
+        if(matches.length > 0){
+            var previous_view = matches[0];
+            previous_view.model.set('order', old_order);
+            previous_view.$el.detach();
+            (old_order < new_order)? view.$el.before(previous_view.el) : view.$el.after(previous_view.el);
+            if(previous_view.open){
+                previous_view.set_open();
+            }
+            view.model.set('order', new_order);
+            this.propagate_changes();
+        }
+    }
 });
 
 var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
@@ -534,6 +549,7 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
         this.set_editor(true);
     },
     set_open:function(){
+        this.containing_list_view.set_focus();
         if(this.close_editors_on_focus){
             this.containing_list_view.container.toggle_focus();
             this.containing_list_view.container.remove_focus();
@@ -571,7 +587,15 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
         event.stopPropagation();
         this.containing_list_view.remove_item(this.model);
         this.remove();
-    }
+    },
+    move_up:function(event){
+        event.stopPropagation();
+        this.containing_list_view.switch_view_order(this, this.model.get('order') - 1);
+    },
+    move_down:function(event){
+        event.stopPropagation();
+        this.containing_list_view.switch_view_order(this, this.model.get('order') + 1);
+    },
 });
 
 var ExerciseView = ExerciseEditableListView.extend({
@@ -645,21 +669,6 @@ var ExerciseView = ExerciseEditableListView.extend({
             is_changed = is_changed || view.undo;
         });
         return is_changed;
-    },
-    switch_view_order:function(view, new_order){
-        var matches = _.filter(this.views, function(view){ return view.model.get('order') === new_order; });
-        var old_order = view.model.get('order');
-        if(matches.length > 0){
-            var previous_view = matches[0];
-            previous_view.model.set('order', old_order);
-            previous_view.$el.detach();
-            (old_order < new_order)? view.$el.before(previous_view.el) : view.$el.after(previous_view.el);
-            if(previous_view.open){
-                previous_view.set_open();
-            }
-            view.model.set('order', new_order);
-            this.propagate_changes();
-        }
     }
 });
 
@@ -699,7 +708,6 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
         this.$(".question_type_select").val(this.model.get("type"));
     },
     show_hints:function(event){
-        event.stopPropagation();
         if(!this.hint_editor){
             this.hint_editor = new HintModalView({
                 collection: this.model.get("hints"),
@@ -738,8 +746,6 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
 
     events: {
         "click .cancel": "cancel",
-        "click .undo": "undo",
-        "click .redo": "redo",
         "click .delete": "delete",
         "click .toggle_exercise": "toggle_focus",
         "click .toggle" : "toggle",
@@ -749,14 +755,6 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         'click .random_answers_order': 'stop_events',
         'click .move_up': 'move_up',
         'click .move_down': 'move_down',
-    },
-    move_up:function(event){
-        event.stopPropagation();
-        this.containing_list_view.switch_view_order(this, this.model.get('order') - 1);
-    },
-    move_down:function(event){
-        event.stopPropagation();
-        this.containing_list_view.switch_view_order(this, this.model.get('order') + 1);
     },
     delete: function(event) {
         event.stopPropagation();
@@ -826,32 +824,28 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         var self = this;
         setTimeout(function(){ self.$(".closed_toolbar").css("display", "block"); }, 1000);
     },
-    reset: function(){
-        this.undo_manager.undoAll();
-    },
     cancel: function(event) {
         this.undo_manager.undoAll();
-        this.toggle(event)
-    },
-    undo: function() {
-        this.undo_manager.undo();
-    },
-    redo: function() {
-        this.undo_manager.redo();
+        this.render();
+        this.toggle(event);
+        if(this.answer_editor){
+            this.answer_editor.render();
+        }
+        if(this.hint_editor){
+            this.hint_editor.render();
+        }
     },
     init_undo_redo:function(){
         this.undo_manager = new UndoManager({
             track: true,
-            register: [this.model, this.model.get("answers")]
+            register: [this.model, this.model.get("answers"), this.model.get("hints")]
         });
         this.toggle_undo_redo();
     },
     toggle_undo_redo: function() {
         var undo = this.undo;
-        var redo = this.redo;
         this.undo = this.undo_manager.isAvailable("undo");
-        this.redo = this.undo_manager.isAvailable("redo");
-        if (undo !== this.undo || redo !== this.redo) {
+        if (undo !== this.undo) {
             this.set_toolbar_open();
         }
     },
@@ -952,6 +946,7 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     initialize: function(options) {
         _.bindAll(this, "render", "add_item", "add_item_view");
         this.bind_edit_functions();
+        this.views = [];
         this.assessment_item = options.assessment_item;
         this.isdisplay = options.isdisplay;
         this.container = options.container;
@@ -959,18 +954,13 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
         this.listenTo(this.collection, "add", this.add_item_view);
         this.listenTo(this.collection, "remove", this.render);
     },
-
-    events: {
-        "click .addanswer": "add_item"
-    },
-
     render: function() {
-        this.views = [];
         this.$el.html(this.template({
             input_answer: this.assessment_item.get("type") === "input_question",
             isdisplay: this.isdisplay
         }));
         this.load_content(this.collection, "No answers provided.");
+        this.$(".addanswer").on('click', this.add_item);
     },
     create_new_view: function(model) {
         var view = new AssessmentItemAnswerView({
@@ -993,6 +983,7 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
 });
 
 var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
+    className:"answer_li",
     toolbar_el : '.answer-toolbar',
     editor_el: ".answer",
     content_field: 'answer',
@@ -1013,7 +1004,8 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
         "click .delete": "delete",
         "click .correct": "toggle_correct",
         "click .toggle_answer": "set_open",
-        "click .toggle": "toggle"
+        'click .item_move_up': 'move_up',
+        'click .item_move_down': 'move_down'
     },
 
     render: function() {
@@ -1069,6 +1061,7 @@ var HintModalView = BaseViews.BaseModalView.extend({
     },
     closing_hints:function(){
         this.$(".hint-errors").css('display', 'none');
+        this.hint_editor.set_focus();
         if(!this.isdisplay){
             this.onupdate(this.model);
         }
@@ -1147,6 +1140,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
 });
 
 var AssessmentItemHintView = ExerciseEditableItemView.extend({
+    className:"hint_li",
     content_field: 'hint',
     editor_el: ".hint",
     toolbar_el : '.hint-toolbar',
@@ -1168,7 +1162,8 @@ var AssessmentItemHintView = ExerciseEditableItemView.extend({
     events: {
         "click .delete": "delete",
         "click .hint_toggle": "set_open",
-        "click .toggle": "toggle"
+        'click .item_move_up': 'move_up',
+        'click .item_move_down': 'move_down'
     },
 
     render: function() {

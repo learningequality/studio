@@ -3,7 +3,7 @@
 </div>
 <div class="assessment_item container-fluid {{#unless isdisplay}}edit_assessment_item{{/unless}}">
 	<div class="main_edit_area container">
-		<div class="question_area">
+		<div class="question_area toggle_exercise">
 			<div class="row question_controls">
 				<div class="col-sm-5">
 					<div class="question_type">{{#format_question_type model.type}}{{/format_question_type}}</div>
@@ -34,7 +34,7 @@
 			</div>
 			<div class="row">
 				<div class="col-sm-12">
-				  	<div class="question toggle_exercise editable" data-ph="Question"></div>
+				  	<div class="question editable" data-ph="Question"></div>
 			    </div>
 			</div>
 		</div>

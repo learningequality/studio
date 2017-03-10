@@ -49,14 +49,18 @@
         .assessment_li{
             counter-increment: step-counter;
             .order::before{ content: counter(step-counter); }
-            &:first-of-type .move_up, &:last-child .move_down{ .disabled; }
             .assessment_order_area{
                 font-weight: bold;
                 color:@gray-400;
                 margin-right: 15px;
                 font-size:13pt;
             }
+            .assessment_item.active .main_edit_area{
+                background-color: @blue-100;
+                border-left:3px solid @blue-500;
+            }
         }
+        .assessment_li{ &:first-of-type .move_up, &:last-of-type .move_down { .disabled; }}
         &.hide_answers{
             .answers, .hint_link, .random_answer_section, .error-list{ display:none !important; }
             .assessment_item.active{
@@ -91,20 +95,7 @@
         vertical-align: top;
         padding:0px;
     }
-    .remove_area{
-        .option{
-            font-size:12pt;
-        }
-        .undo {
-            .option{
-              -moz-transform: scaleX(-1);    /* Gecko */
-              -o-transform: scaleX(-1);      /* Opera */
-              -webkit-transform: scaleX(-1); /* Webkit */
-              transform: scaleX(-1);         /* Standard */
-              filter: FlipH;                 /* IE 6/7/8 */
-            }
-        }
-    }
+    .remove_area .option{ font-size:12pt; }
     .main_edit_area{
         width:88%;
         .question_area{
@@ -160,16 +151,20 @@
 }
 
 .hint_modal .modal-dialog{
-    width: @uploader-width / 1.5;
+    width: @uploader-width / 1.2;
     margin-top: 8%;
     .modal-body{
-        margin-top:-30px;
-        .question_area{
-            cursor:default;
-            background-color:transparent;
-            padding:0;
-            .question{ font-size:11pt; }
+        .assessment_item{
+            min-height: 0px;
+            margin:0;
+            .question_area{
+                cursor:default;
+                background-color:transparent;
+                padding:0;
+                .question{ font-size:11pt; }
+            }
         }
+        .hint_li{margin-bottom:10px;}
     }
 }
 
@@ -184,13 +179,12 @@
     }
     .note-error{ display:none; }
     .invalid{ background-color: @error-bg-color; }
+    .editor-col{padding-right:0;}
 }
 
 .hint_modal, .assessment_item.active{
     .error-list, .hint-errors, .character_wrapper{display:none;}
     .main_edit_area{
-        background-color: @blue-100;
-        border-left:3px solid @blue-500;
         .show_on_focus{ display:inline-block; }
         .question_area{
             background-color: transparent;
@@ -218,7 +212,7 @@
             cursor: text;
             min-height: 80px;
         }
-        .note-resizebar{ display:none; }
+        .note-statusbar{ display:none; }
         .note-editor, .note-editor.note-frame{
             border:1px solid @gray-300;
             border-radius:0;
@@ -284,6 +278,62 @@
                 padding: 5px;
                 color: black;
             }
+        }
+    }
+    .hints, .answers{
+        margin:7px;
+        background-color: white;
+        li{
+            .row{margin:0;}
+            width:100%;
+            .hint_options, .answer_options{padding:0;}
+            .answer-toolbar, .hint-toolbar{
+                text-align:right;
+                font-size: 12pt;
+                margin-right:10px;
+                .option:hover{color: @blue-500;}
+            }
+            .closed_toolbar{
+                .option{margin-left:5px;}
+                .delete{margin-left: 10px;}
+            }
+            .open_toolbar{
+                .option{margin-bottom:10px;}
+                .delete{margin-bottom: 20px;}
+            }
+            .move_option{ display:none; }
+            &:hover{.move_option{display:inline-block;}}
+        }
+        .answer_li, .hint_li{ &:first-of-type .item_move_up, &:last-of-type .item_move_down { .disabled; }}
+        .addanswer, .addhint{
+            cursor: pointer;
+            font-size:12pt;
+            width: 100%;
+            padding:5px 15px;
+            &:hover{font-weight: bold;}
+        }
+    }
+    .answers .answer_header{
+        width: 100%;
+        font-size: 12pt;
+        padding:5px 15px;
+        background-color: @blue-700;
+        color:white;
+        font-weight: bold;
+    }
+    .hints{
+        min-height: 100px;
+        .addhint{ background-color:@blue-100; }
+        .hint_item, .addhint{
+            border: 1px solid @blue-100;
+            margin-bottom: 5px;
+            cursor:pointer;
+        }
+        .hint_item{
+            padding: 5px;
+            font-size:11pt;
+            min-height:50px;
+            &:hover{background-color: @blue-100;}
         }
     }
 }

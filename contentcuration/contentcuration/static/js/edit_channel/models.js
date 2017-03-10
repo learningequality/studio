@@ -495,6 +495,12 @@ var ExerciseCollection = BaseCollection.extend({
 	model_name:"ExerciseCollection"
 });
 
+var ExerciseItemCollection = Backbone.Collection.extend({
+	comparator: function(item){
+		return item.get('order');
+	}
+});
+
 var AssessmentItemModel = BaseModel.extend({
 	root_list:"assessmentitem-list",
 	model_name:"AssessmentItemModel",
@@ -508,20 +514,20 @@ var AssessmentItemModel = BaseModel.extend({
 
 	initialize: function () {
 		if (typeof this.get("answers") !== "object") {
-			this.set("answers", new Backbone.Collection(JSON.parse(this.get("answers"))), {silent: true});
+			this.set("answers", new ExerciseItemCollection(JSON.parse(this.get("answers"))), {silent: true});
 		}
 		if (typeof this.get("hints") !== "object"){
-			this.set("hints", new Backbone.Collection(JSON.parse(this.get("hints"))), {silent:true});
+			this.set("hints", new ExerciseItemCollection(JSON.parse(this.get("hints"))), {silent:true});
 		}
 	},
 
 	parse: function(response) {
 	    if (response !== undefined) {
 	    	if (response.answers) {
-	    		response.answers = new Backbone.Collection(JSON.parse(response.answers));
+	    		response.answers = new ExerciseItemCollection(JSON.parse(response.answers));
 	    	}
 	    	if(response.hints){
-	    		response.hints = new Backbone.Collection(JSON.parse(response.hints));
+	    		response.hints = new ExerciseItemCollection(JSON.parse(response.hints));
 	    	}
 	    }
 	    return response;
