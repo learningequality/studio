@@ -106,7 +106,7 @@ var UserModel = BaseModel.extend({
 var UserCollection = BaseCollection.extend({
 	model: UserModel,
 	list_name:"user-list",
-	model_name:"UserCollection"
+    model_name:"UserCollection"
 });
 
 var InvitationModel = BaseModel.extend({
@@ -123,7 +123,7 @@ var InvitationModel = BaseModel.extend({
 var InvitationCollection = BaseCollection.extend({
 	model: InvitationModel,
 	list_name:"invitation-list",
-	model_name:"InvitationCollection"
+    model_name:"InvitationCollection"
 });
 
 /**** CHANNEL AND CONTENT MODELS ****/
@@ -136,7 +136,8 @@ var ContentNodeModel = BaseModel.extend({
 		tags:[],
 		assessment_items:[],
 		metadata: {"resource_size" : 0, "resource_count" : 0},
-		created: new Date()
+		created: new Date(),
+		ancestors: []
     }
 });
 
@@ -144,7 +145,7 @@ var ContentNodeCollection = BaseCollection.extend({
 	model: ContentNodeModel,
 	list_name:"contentnode-list",
 	highest_sort_order: 1,
-	model_name:"ContentNodeCollection",
+    model_name:"ContentNodeCollection",
 
 	save: function() {
 		var self = this;
@@ -237,14 +238,12 @@ var ChannelModel = BaseModel.extend({
 	root_list : "channel-list",
 	defaults: {
 		name: "",
-		editors: [],
-		viewers: [],
-		pending_editors: [],
-		author: "Anonymous",
-		license_owner: "No license found",
 		description:"",
 		thumbnail_url: "/static/img/kolibri_placeholder.png",
-		main_tree: (new ContentNodeModel()).toJSON()
+		count: 0,
+		size: 0,
+		published: false,
+		view_only: false
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
@@ -267,15 +266,32 @@ var ChannelModel = BaseModel.extend({
 	            }
 	        });
     	});
-    }
+    },
+    get_accessible_channel_roots:function(){
+		var self = this;
+    	var promise = new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	        	data: JSON.stringify({'channel_id': self.id}),
+	            url: window.Urls.accessible_channels(),
+	            success: function(data) {
+	            	resolve(new ContentNodeCollection(JSON.parse(data)));
+	            },
+	            error:function(e){
+	            	reject(e);
+	            }
+	        });
+    	});
+    	return promise;
+	}
 });
 
 var ChannelCollection = BaseCollection.extend({
 	model: ChannelModel,
 	list_name:"channel-list",
-	model_name:"ChannelCollection",
+    model_name:"ChannelCollection",
 	comparator:function(channel){
-		return -new Date(channel.get('main_tree').created);
+		return -new Date(channel.get('created'));
 	}
 });
 
@@ -290,7 +306,7 @@ var TagModel = BaseModel.extend({
 var TagCollection = BaseCollection.extend({
 	model: TagModel,
 	list_name:"contenttag-list",
-	model_name:"TagCollection",
+    model_name:"TagCollection",
 	get_all_fetch:function(ids){
 		var self = this;
 		var fetched_collection = new TagCollection();
@@ -330,7 +346,7 @@ var FileModel = BaseModel.extend({
 var FileCollection = BaseCollection.extend({
 	model: FileModel,
 	list_name:"file-list",
-	model_name:"FileCollection",
+    model_name:"FileCollection",
 	get_or_fetch: function(data){
 		var newCollection = new FileCollection();
 		newCollection.fetch({
@@ -366,7 +382,7 @@ var FileCollection = BaseCollection.extend({
 var FormatPresetModel = BaseModel.extend({
 	root_list:"formatpreset-list",
 	attached_format: null,
-	model_name:"FormatPresetModel"
+    model_name:"FormatPresetModel"
 });
 
 var FormatPresetCollection = BaseCollection.extend({
@@ -426,7 +442,6 @@ var LanguageCollection = BaseCollection.extend({
     	return language.get("readable_name");
     }
 });
-
 
 var ContentKindModel = BaseModel.extend({
 	root_list:"contentkind-list",
@@ -554,8 +569,6 @@ module.exports = {
 	FileModel: FileModel,
 	FormatPresetModel: FormatPresetModel,
 	FormatPresetCollection: FormatPresetCollection,
-	LanguageModel : LanguageModel,
-	LanguageCollection : LanguageCollection,
 	ContentKindModel: ContentKindModel,
 	ContentKindCollection : ContentKindCollection,
 	UserModel:UserModel,

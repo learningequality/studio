@@ -6,14 +6,17 @@ import os
 import re
 import hashlib
 import shutil
+import tempfile
+import subprocess
 from functools import wraps
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
+from django.core.files import File as DjFile
 from django.http import HttpResponse
 from kolibri.content import models as KolibriContent
-from le_utils.constants import content_kinds
+from le_utils.constants import format_presets, content_kinds, file_formats
 import contentcuration.models as models
 
 def check_supported_browsers(user_agent_string):
@@ -22,19 +25,19 @@ def check_supported_browsers(user_agent_string):
             return True
     return False
 
-
-def write_file_to_storage(fobj, check_valid = False):
+def write_file_to_storage(fobj, check_valid = False, name=None):
     # Check that hash is valid
     checksum = hashlib.md5()
     for chunk in iter(lambda: fobj.read(4096), b""):
         checksum.update(chunk)
-    filename, ext = os.path.splitext(fobj._name) if fobj._name is not None else ("", "")
+    name = name or fobj._name or ""
+    filename, ext = os.path.splitext(name)
     hashed_filename = checksum.hexdigest()
     full_filename = "{}{}".format(hashed_filename, ext)
     fobj.seek(0)
 
     if check_valid and hashed_filename != filename:
-        raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(fobj._name))
+        raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(name))
 
     # Get location of file
     file_path = models.generate_file_on_disk_name(hashed_filename, full_filename)
@@ -43,7 +46,6 @@ def write_file_to_storage(fobj, check_valid = False):
     with open(file_path, 'wb') as destf:
         shutil.copyfileobj(fobj, destf)
     return full_filename
-
 
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
