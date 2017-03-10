@@ -196,7 +196,7 @@ def create_perseus_exercise(ccnode, kolibrinode):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
-        data = process_assessment_metadata(node, kolibrinode)
+        data = process_assessment_metadata(ccnode, kolibrinode)
         create_perseus_zip(ccnode, data, tempf)
         tempf.flush()
 
