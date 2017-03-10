@@ -1,0 +1,34 @@
+<div class="inline col-xs-3 preview_section text-center">
+    <div class="preview_thumbnail"></div>
+    {{#if initial}}
+    <div class="progress_file_area">
+        <span class="glyphicon glyphicon-ok upload_successful pull-right upload_option" aria-hidden="true"></span>
+        <div class="progress file_upload_progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="progress-bar progress-bar-success" style="width:100%;"></div>
+        </div>
+    </div>
+    {{/if}}
+</div>
+
+<div class="inline col-xs-8 format_section">
+    <p class="name truncate" title="{{node.title}}">
+    {{#if initial}}
+        {{node.title}}
+    {{else}}
+        <strong>{{node.title}}</strong>
+    {{/if}}
+    </p>
+    {{#if initial}}
+        <p class="size">{{#format_file_size total_file_size}}{{/format_file_size}}</p>
+    {{else}}
+        {{#each files}}
+            <p class="size">
+                {{preset.readable_name}}
+                ({{#format_file_size file_size}}{{/format_file_size}})
+            </p>
+        {{/each}}
+    {{/if}}
+</div>
+<div class="inline col-xs-1">
+    <span class="glyphicon glyphicon-remove remove_from_dz pull-right" aria-hidden="true"></span>
+</div>
