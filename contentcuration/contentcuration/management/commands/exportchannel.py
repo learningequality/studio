@@ -235,7 +235,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
         'assessment_mapping': {a.assessment_id : a.type for a in assessment_items},
     })
 
-    kolibrifilemodel = kolibrimodels.File.objects.create(
+    kolibrifilemodel = kolibrimodels.AssessmentMetaData.objects.create(
         contentnode=kolibrinode,
         assessment_item_ids=json.dumps(assessment_item_ids),
         number_of_assessments=assessment_items.count(),
