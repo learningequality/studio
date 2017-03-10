@@ -15,6 +15,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     _.bindAll(this, "close_uploader");
     this.render(this.close_uploader, {
       new_content: options.new_content,
+      new_topic: options.new_topic,
       title: (this.model)? ((this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name")) : null
     });
     this.metadata_view = new EditMetadataView({
@@ -469,7 +470,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     'change #mastery_model_select': 'change_mastery_model',
     'change #m_value': 'set_mastery',
     'change #n_value': 'set_mastery',
-    'change #randomize_exercise': 'set_random'
+    "click #mastery_about": "load_mastery",
   },
   load_tags:function(){
     this.$("#tag_area").html(this.tags_template({
@@ -482,10 +483,13 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     autoCompleteHelper.addAutocomplete($( "#tag_box" ), tags, this.select_tag, "#tag_area_wrapper");
   },
   load_license:function(){
-    iscopied = this.selected_individual() && !this.selected_items[0].isoriginal
+    var iscopied = this.selected_individual() && !this.selected_items[0].isoriginal
     var license_modal = new LicenseModalView({
       select_license : window.licenses.get({id: (iscopied)? this.selected_items[0].model.get("license") : $("#license_select").val()})
     })
+  },
+  load_mastery:function(){
+    new MasteryModalView();
   },
   update_count:function(){
     if(this.selected_individual()){
@@ -569,9 +573,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
     this.set_mastery();
   },
-  set_random:function(event){
-    this.set_mastery();
-  },
   set_mastery:function(){
     var mastery_model = this.$("#mastery_model_select").val();
     if(mastery_model === "m_of_n"){
@@ -584,12 +585,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       }
       this.$("#n_value").attr('min', this.m_value);
     }
-
-    var randomize = this.$("#randomize_exercise").is(":indeterminate") ? null : this.$("#randomize_exercise").is(":checked");
-
     var self = this;
     this.selected_items.forEach(function(view){
-        view.set_mastery(mastery_model, self.m_value, self.n_value, randomize);
+        view.set_mastery(mastery_model, self.m_value, self.n_value);
     });
   }
 });
@@ -604,7 +602,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   className: "uploaded disable_on_error",
   tagName: "li",
   initialize: function(options) {
-      _.bindAll(this, 'remove_topic', 'check_item', 'select_item','update_name', 'set_edited','handle_change', 'handle_assessment_items');
+      _.bindAll(this, 'remove_topic', 'check_item', 'select_item','update_name', 'set_edited','handle_change', 'handle_assessment_items', 'set_random');
       this.bind_edit_functions();
       this.model.setExtraFields();
       this.containing_list_view = options.containing_list_view;
@@ -675,7 +673,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.set(data);
       this.set_edited(true);
   },
-  set_mastery:function(mastery_model, m_value, n_value, randomize){
+  set_mastery:function(mastery_model, m_value, n_value){
     switch(mastery_model){
       case "skill_check":
         m_value = n_value = 1;
@@ -697,9 +695,12 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     current_data['mastery_model'] = mastery_model;
     current_data['m'] = m_value;
     current_data['n'] = n_value;
-    if(randomize !== null){
-      current_data['randomize'] = randomize;
-    }
+    this.set({'extra_fields': current_data});
+    this.set_edited(true);
+  },
+  set_random:function(randomize){
+    var current_data = this.model.get('extra_fields');
+    current_data['randomize'] = randomize;
     this.set({'extra_fields': current_data});
     this.set_edited(true);
   },
@@ -736,7 +737,8 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.exercise_view = new Exercise.ExerciseView({
         parent_view: this,
         model:this.model,
-        onchange: this.handle_assessment_items
+        onchange: this.handle_assessment_items,
+        onrandom: this.set_random
       });
       formats_el.html(this.exercise_view.el);
   },
@@ -791,6 +793,22 @@ var LicenseModalView = BaseViews.BaseModalView.extend({
       $("body").append(this.el);
       this.$("#license_modal").modal({show: true});
       this.$("#license_modal").on("hidden.bs.modal", this.closed_modal);
+  }
+});
+
+var MasteryModalView = BaseViews.BaseModalView.extend({
+  template: require("./hbtemplates/mastery_modal.handlebars"),
+
+  initialize: function(options) {
+      this.modal = true;
+      this.render();
+  },
+
+  render: function() {
+      this.$el.html(this.template());
+      $("body").append(this.el);
+      this.$("#mastery_modal").modal({show: true});
+      this.$("#mastery_modal").on("hidden.bs.modal", this.closed_modal);
   }
 });
 
