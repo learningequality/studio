@@ -569,6 +569,8 @@ module.exports = {
 	FileModel: FileModel,
 	FormatPresetModel: FormatPresetModel,
 	FormatPresetCollection: FormatPresetCollection,
+	LanguageModel : LanguageModel,
+	LanguageCollection : LanguageCollection,
 	ContentKindModel: ContentKindModel,
 	ContentKindCollection : ContentKindCollection,
 	UserModel:UserModel,

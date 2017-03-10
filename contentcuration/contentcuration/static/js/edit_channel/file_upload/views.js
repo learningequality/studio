@@ -736,6 +736,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
 
     create_dropzone:function(){
+        console.log(this.get_accepted_files())
         var dz_selector="#" + this.id() + "_dropzone" + ((this.file)? "_swap" : "");
         if(this.$(dz_selector).is(":visible")){
             var clickables = [dz_selector + " .dz_click"];

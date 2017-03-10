@@ -342,7 +342,7 @@ PRESETS = [
             "display": True,
             "order" : 4,
             "kind_id" : content_kinds.VIDEO,
-            "allowed_formats" : [file_formats.VTT, file_formats.SRT],
+            "allowed_formats" : [file_formats.VTT],
         },
     },
     {
