@@ -86,8 +86,10 @@
 .assessment_item{
     margin:10px 5px 35px 15px;
     min-height: 100px;
+    display: -webkit-flex;
+    -webkit-flex-flow: row;
     .assessment_item_error{ color:@gray-400; }
-    .toolbar{ display:none; }
+    // .toolbar{ display:none; }
     &:hover .toolbar{ display:block; }
     img{ max-width: 100% !important; }
     .remove_area, .main_edit_area {
@@ -98,6 +100,7 @@
     .remove_area .option{ font-size:12pt; }
     .main_edit_area{
         width:88%;
+        margin-right: 5px;
         .question_area{
             padding:7px;
             cursor:pointer;
@@ -141,8 +144,8 @@
             padding:3px 10px;
             .correct{
                 cursor:pointer;
-                width:15px;
-                height:15px;
+                width:17px;
+                height:17px;
             }
             &:hover{ background-color: @gray-200; }
         }
@@ -320,6 +323,10 @@
         background-color: @blue-700;
         color:white;
         font-weight: bold;
+        .correct_header{
+            font-size: 13pt;
+            padding-left: 10px;
+        }
     }
     .hints{
         min-height: 100px;
@@ -378,3 +385,19 @@
         }
     }
 }
+
+
+.affix {
+  top: 0;
+  width: 100%;
+}
+
+.affix-top {
+  width: 100%;
+}
+
+.affix-bottom {
+  position: absolute;
+  width: 100%;
+}
+

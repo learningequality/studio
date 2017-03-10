@@ -706,6 +706,16 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
             this.$(".answers").html(this.answer_editor.el);
         }
         this.$(".question_type_select").val(this.model.get("type"));
+        var self = this;
+        this.$(".toolbar").affix({
+            // target: self.$(".assessment_item"),
+            offset: {
+                top: self.$('.toolbar').offset().top,
+                bottom: function () {
+                    return (this.bottom = self.$(".assessment_item").outerHeight(true))
+                }
+            }
+        });
     },
     show_hints:function(event){
         if(!this.hint_editor){
@@ -1020,6 +1030,7 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
         _.defer(this.set_editor);
     },
     toggle_correct: function(event) {
+        this.set_open();
         event.stopPropagation();
         if(this.assessment_item.get("type") === "single_selection"){
             this.containing_list_view.set_all_correct(false);
@@ -1028,6 +1039,7 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
     },
     set_correct:function(is_correct){
         this.model.set("correct", is_correct);
+        this.$(".correct").attr('title', (is_correct)? "Correct" : "Incorrect");
         this.propagate_changes();
     }
 });
