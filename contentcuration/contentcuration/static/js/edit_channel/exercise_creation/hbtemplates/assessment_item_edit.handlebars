@@ -1,13 +1,13 @@
-<div class="assessment_order_area">
+<div class="assessment_order_area text-center pull-left">
 	<div class="order"></div>
 </div>
-<div class="assessment_item toggle_exercise {{#unless isdisplay}}edit_assessment_item{{/unless}}">
-	<div class="main_edit_area container">
-		<div class="question_area">
+<div class="assessment_item container-fluid {{#unless isdisplay}}edit_assessment_item{{/unless}}">
+	<div class="main_edit_area">
+		<div class="question_area toggle_exercise">
 			<div class="row question_controls">
 				<div class="col-sm-5">
 					<div class="question_type">{{#format_question_type model.type}}{{/format_question_type}}</div>
-					<select class="question_type_select" value="{{model.type}}">
+					<select class="question_type_select show_on_focus" value="{{model.type}}">
 						<option class="single_selection" value="single_selection">Single Selection</option>
 						<option class="multiple_selection" value="multiple_selection">Multiple Selection</option>
 						<option class="true_false" value="true_false">True/False</option>
@@ -15,7 +15,7 @@
 					</select>
 			    </div>
 			    <div class="col-sm-4">
-					<div class="open_hints hint_link">
+					<div class="open_hints hint_link pull-right">
 						HINTS (<span class="hint_count">{{hint_count}}</span>)&nbsp;
 						<span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
 					</div>
@@ -34,7 +34,7 @@
 			</div>
 			<div class="row">
 				<div class="col-sm-12">
-				  	<div class="question editable wordwrap" data-ph="Question"></div>
+				  	<div class="question editable" data-ph="Question"></div>
 			    </div>
 			</div>
 		</div>
@@ -43,6 +43,6 @@
 		</div>
 	</div>
 	<div class="remove_area">
-		<div class="toolbar pull-right"></div>
+		<div class="toolbar"></div>
 	</div>
 </div>

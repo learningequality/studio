@@ -1,9 +1,15 @@
 <div class="show_on_focus answer_header">
-	{{#if input_answer}}ACCEPTED ANSWER(S){{else}}ANSWERS{{/if}}
+	{{#if input_answer}}ACCEPTED ANSWER(S)
+	{{else}}
+	    <div class="col-sm-1 correct_header">
+			<span class="glyphicon glyphicon-check" aria-hidden="true" title="Correct?"></span>
+		</div>
+		<div class="col-sm-11">ANSWERS</div>
+	{{/if}}
 </div>
 <ul class="list-unstyled answer_list">
 	<div class="default-item">Loading...</div>
 </ul>
-<div class="show_on_focus addanswer">
+<div class="show_on_focus addanswer" title="Add">
 	<span class="glyphicon glyphicon-plus"></span>&nbsp; <span class="addanswertext">ANSWER</span>
 </div>
