@@ -457,6 +457,7 @@ class AssessmentItem(models.Model):
     raw_data = models.TextField(blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
     randomize = models.BooleanField(default=False)
+    deleted = models.BooleanField(default=False)
 
 class File(models.Model):
     """

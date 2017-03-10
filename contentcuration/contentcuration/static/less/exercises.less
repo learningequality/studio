@@ -2,6 +2,7 @@
 @import "modal-styles.less";
 
 @hint-color:#FDFADF;
+@error-bg-color:#F2DEDE;
 
 #exercisecreation{
 	input[type="text"], textarea {
@@ -22,10 +23,18 @@
 	div#dropzone{
 		min-height: 150px;
 	}
-	.show_question_toggle{
+	.show_question_toggle, .toggle_question_order{
 		font-size:11pt;
 		*{
 			cursor:pointer;
+		}
+		input[type='checkbox']{
+			width:18px;
+			height:18px;
+		}
+		label{
+			vertical-align: middle;
+			margin-top: -5px;
 		}
 	}
 	.metadata_toggle{
@@ -38,24 +47,38 @@
 	#exercise_extra_metadata{
 		display:none;
 	}
-
 	#exercise_list {
-		min-height: 50px;
+		min-height: 175px;
 		list-style-type: none;
+		> .default-item{
+			width:100%;
+			padding-top:7%;
+			font-weight: bold;
+			text-align: center;
+			color:@gray-400;
+			font-size: 14pt;
+		}
 		.assessment_li{
 			counter-increment: step-counter;
 		}
-		.assessment_li::before {
+		.assessment_li .order::before{
 		    content: counter(step-counter);
-		    font-weight: bold;
-			margin-right:5px;
-			width:5%;
+		}
+		.assessment_order_area{
+			font-weight: bold;
 			color:@gray-400;
-			font-size:14pt;
+			margin-right: 15px;
+			font-size:13pt;
 			float:left;
 			text-align: center;
+			.move{
+				cursor:pointer;
+			}
 		}
 		.assessment_item.active{
+			.error-list{
+				display:none;
+			}
 			.main_edit_area{
 				background-color: @blue-100;
 				border-left:3px solid @blue-500;
@@ -64,30 +87,25 @@
 				}
 				.question_area{
 					background-color: transparent;
+					.question_type{
+						display:none;
+					}
+					.question_type_select{
+						display:block;
+					}
+					.editor-toolbar {
+						margin-bottom: -24px;
+					}
 				}
 				.answers{
-					margin-bottom:5px;
-					.addanswer{
-						cursor:pointer;
-					}
-					.addanswer:hover, .addhint:hover{
-						font-weight:bold;
-					}
-					li{
+					.answer_header, .addanswer{
+						font-size: 12pt;
+						padding:5px 15px;
 						width:100%;
-						.answer-toolbar, .hint-toolbar{
-							text-align:right;
-							.toggle{
-								a{
-									padding:0;
-									text-decoration: none;
-								}
-								margin-top:135px;
-								font-size:13pt;
-							}
-						}
-
 					}
+					.answer_header{background-color: @blue-700; color:white; font-weight: bold;}
+					.addanswer{cursor:pointer;}
+					.addanswer:hover{font-weight: bold;}
 				}
 			}
 		}
@@ -96,39 +114,26 @@
 		}
 	}
 	#exercise_list.hide_answers{
-		.answers{
-			display:none;
+		.answers, .hint_link, .random_answer_section, .error-list{
+			display:none !important;
 		}
-		.hints{
-			display:none;
-		}
-		.assessment_item.active .answers{
-			display:block;
+		.assessment_item.active .answers,
+		.assessment_item.active .hint_link,
+		.assessment_item.active .random_answer_section{
+			display:block !important;
 		}
 	}
-	.dropup{
+	.addquestion{
 		margin-bottom:20px;
-		.add_question{
-			background-color: @blue-700;
-			color:white;
-			margin:5px;
-			margin-left:10px;
-			padding:5px 30px;
-		}
-
-		.add_question:hover{
-			font-weight:bold;
-			background-color: @blue-200;
-			color:black;
-		}
-		.add_question_dropdown{
-			margin-left:35px;
-			padding:0;
-			li a{
-				padding:10px 15px;
-				width:100%;
-			}
-		}
+		background-color: @blue-100;
+		width:100%;
+		padding:5px 30px;
+		font-weight:bold;
+		font-size: 13pt;
+		cursor:pointer;
+	}
+	.addquestion:hover{
+		background-color: @blue-200;
 	}
 	.editable:empty:not(:focus):before{
 	    content:attr(data-ph);
@@ -137,8 +142,13 @@
 }
 
 .assessment_item{
-	margin:10px 5px 30px 15px;
+	margin:10px 5px 35px 15px;
 	width:100%;
+	min-height: 100px;
+
+	.assessment_item_error{
+		color:@gray-400;
+	}
 
 	.toolbar{
 		display:none;
@@ -146,11 +156,9 @@
 	img{
 		max-width: 100% !important;
 	}
-
 	.remove_area{
 		display:inline-block;
 		vertical-align: top;
-		width:5%;
 		.option{
 			font-size:12pt;
 		}
@@ -168,41 +176,218 @@
 		width:88%;
 		display:inline-block;
 		vertical-align: top;
+		padding:0px;
 		.question_area{
 			padding:7px;
 			cursor:pointer;
 			background-color:@gray-200;
-			.question_type{
-				color:@gray-700;
-				font-size:9pt;
-				margin-bottom:2px;
+			.question_controls{
+				.question_type{
+					color:@gray-700;
+					font-size:9pt;
+					margin-bottom:2px;
+				}
+				.question_type_select{
+					display:none;
+					font-size:11pt;
+					font-weight: normal;
+					margin-bottom:10px;
+				}
+				.move_question_handle{
+					font-size:17pt;
+					color: @gray-700;
+					padding-left: 0px;
+				}
+				.hint_link{
+					color: @gray-700;
+					padding: 3px;
+					font-weight:bold;
+					font-size:10pt;
+					float: right;
+				}
+				.random_answers_order{
+					right:0em;
+					.random_answer_section{
+						display: table-cell;
+						cursor: pointer;
+					}
+					input{
+						margin-right: 5px;
+					}
+					label{
+						vertical-align: middle;
+						font-weight:normal;
+						cursor: pointer;
+						font-size: 8pt;
+						line-height: 15px;
+					}
+				}
+				.move_question_handle:hover, .hint_link:hover{
+					color: @blue-500;
+				}
 			}
 			.question{
 				font-size:13pt;
+				padding:5px;
 			}
-			.move{
-				font-size:12pt;
-			}
+
 		}
 		.answer_item{
 			cursor:pointer;
+			padding:3px 10px;
 			.correct{
 				cursor:pointer;
 				width:15px;
 				height:15px;
 			}
 		}
-		.hint_item{
-			cursor:pointer;
-			font-style:italic;
-			font-size:10pt;
-			background-color:@hint-color;
+		li:hover{
+			background-color: @gray-200;
 		}
 		.show_on_focus{
 			display:none;
 		}
 		.list-group{
 			margin-bottom:0;
+		}
+	}
+}
+
+.assessment_li:first-of-type{
+	.move_up{
+		.disabled;
+	}
+}
+.assessment_li:last-child{
+	.move_down{
+		.disabled;
+	}
+}
+
+.hint_modal{
+	.modal-dialog{
+		width: @uploader-width / 1.5;
+		margin-top: 8%;
+		.modal-body{
+			margin-top:-30px;
+			.hint-errors{
+				display:none;
+			}
+			.question_area{
+				width:100%;
+				cursor:default;
+				background-color:transparent;
+				padding:0;
+				.question{
+					font-size:11pt;
+				}
+			}
+			.hints{
+				min-height: 100px;
+				.hint_item, .addhint{
+					width:100%;
+					cursor:pointer;
+					padding: 5px 20px;
+					margin-bottom: 5px;
+					border: 1px solid @blue-100;
+				}
+				.hint_item{font-size:11pt; min-height:50px;}
+				.hint_item:hover{background-color: @blue-100;}
+				.addhint{font-size:12pt; background-color:@blue-100; padding:10px;}
+				.addhint:hover{font-weight: bold;}
+			}
+		}
+	}
+}
+
+.hint_modal, .assessment_item.active{
+	.editor-toolbar {
+		background-color:@gray-300;
+		padding:4px;
+		.ql-format-button{
+			margin-right:10px;
+		}
+	}
+	.editor{
+		border: 1px solid @gray-300;
+	}
+	.question .editor{
+		margin-bottom: -15px;
+	}
+	.hints, .answers{
+		margin:7px;
+		background-color: white;
+		li{
+			width:100%;
+			.answer-toolbar, .hint-toolbar{
+				text-align:right;
+				.toggle{
+					a{
+						padding:0;
+						text-decoration: none;
+					}
+					margin-top:50px;
+					font-size:13pt;
+				}
+			}
+		}
+	}
+
+}
+
+.hint_modal, .assessment_item{
+	.error-list li, .quill-error, .hint-errors{
+		color: @red-error-color;
+	    font-weight: bold;
+	    font-size: 10pt;
+	    margin-bottom: 5px;
+	    background-color: transparent !important;
+	}
+	.quill-error{
+		display:none;
+	}
+	.invalid{
+		background-color: @error-bg-color;
+	}
+}
+
+.exercise_image_modal{
+	.modal-dialog{
+		width: @uploader-width / 1.5;
+		margin-top: 8%;
+		#alt_text_box{
+			margin-bottom: 10px;
+			width: 100%;
+			.input-form;
+		}
+		#dropzone{
+			cursor:pointer;
+			#dropzone_placeholder{
+				height:100%;
+				width:100%;
+				min-height: 250px;
+				color:@gray-700;
+				font-weight: bold;
+				font-size:12pt;
+				border: 4px solid @blue-500;
+
+				#placeholder_text{
+					margin-top:20%;
+				}
+			}
+			.dropzone_item{
+    			img{
+					max-width:100%;
+					margin-bottom: 20px;
+				}
+				.file_upload_progress{
+					height:10px;
+				}
+				.upload_cancel{
+					margin-left: 10px;
+    				color:@blue-200;
+				}
+			}
 		}
 	}
 }

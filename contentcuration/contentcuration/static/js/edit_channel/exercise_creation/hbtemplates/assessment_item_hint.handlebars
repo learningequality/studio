@@ -1,12 +1,10 @@
-<li class="list-group-item hint_item">
+<li class="hint_item {{#if allow_toggle}}hint_toggle{{/if}}">
 	<div class="row">
 		<div class="col-sm-10">
-			<label>Hint</label>
-		  <div class="hint editable" data-ph="Hint">
-		  </div>
-		 </div>
-	 	 <div class="col-sm-2">
-	 	     <div class="show_on_focus hint-toolbar pull-right"></div>
-	 	 </div>
+			<div class="hint editable" data-ph="Hint"></div>
+		</div>
+		<div class="col-sm-2">
+			{{#if allow_toggle}}<div class="hint-toolbar pull-right"></div>{{/if}}
+		</div>
     </div>
 </li>

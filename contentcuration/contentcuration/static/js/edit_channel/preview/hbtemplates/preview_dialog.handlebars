@@ -1,11 +1,8 @@
 <div id="preview_content_main" allowfullscreen>
 <div class="row">
     <div class="btn-group col-sm-6">
-      <button class="btn btn-default btn-sm dropdown-toggle" id="preview_format_switch" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-      	{{#if selected_preset}}
-      		{{selected_preset.readable_name}} <span class="caret"></span>
-      	{{else}}No files found.
-      	{{/if}}
+      <button class="btn btn-default btn-sm dropdown-toggle truncate" id="preview_format_switch" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        No preview available
       </button>
       <ul class="dropdown-menu" id="preview_tabs_dropdown"></ul>
     </div>
@@ -14,11 +11,11 @@
     </div>
 </div>
 
-<div id="preview_window">
-	{{#unless file}}
-	<div class="container-fluid">
-		<h5 class="default_preview_text text-center"><em>Select a format to preview.</em></h5>
-	</div>
-	{{/unless}}
+<div id="preview_window" class="list-unstyled">
+    {{#unless file}}
+    <div class="container-fluid">
+        <h5 class="default_preview_text text-center"><em>Select a format to preview.</em></h5>
+    </div>
+    {{/unless}}
 </div>
 </div>
