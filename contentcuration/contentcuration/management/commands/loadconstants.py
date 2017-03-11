@@ -134,7 +134,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.VTT,
-            "mimetype" : file_formats.VTT_MIMETYPE,
+            "mimetype" : ".vtt",
         },
     },
     {
