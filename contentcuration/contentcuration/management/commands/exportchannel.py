@@ -236,12 +236,13 @@ def process_assessment_metadata(ccnode, kolibrinode):
     })
 
     kolibriassessmentmetadatamodel = kolibrimodels.AssessmentMetaData.objects.create(
+        id=uuid.uuid4(),
         contentnode=kolibrinode,
         assessment_item_ids=json.dumps(assessment_item_ids),
         number_of_assessments=assessment_items.count(),
         mastery_model=json.dumps(mastery_model),
         randomize=randomize,
-        is_manipulable=node.kind==content_kinds.EXERCISE,
+        is_manipulable=ccnode.kind==content_kinds.EXERCISE,
     )
 
     return exercise_data
