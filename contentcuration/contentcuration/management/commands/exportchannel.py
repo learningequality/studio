@@ -212,29 +212,9 @@ def create_perseus_exercise(ccnode, kolibrinode):
         )
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
-<<<<<<< HEAD
-def create_perseus_zip(ccnode, write_to_path):
-    assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode).order_by('order')
-
-    with zipfile.ZipFile(write_to_path, "w") as zf:
-        # Get mastery model information, set to default if none provided
-        exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
-        exercise_data.update({
-            'mastery_model': exercise_data.get('mastery_model') or exercises.M_OF_N,
-            'randomize': exercise_data.get('randomize') or True,
-        })
-        if exercise_data['mastery_model'] == exercises.M_OF_N:
-            if 'n' not in exercise_data:
-                exercise_data.update({'n':exercise_data.get('m') or max(min(5, assessment_items.count()), 1)})
-            if 'm' not in exercise_data:
-                exercise_data.update({'m':exercise_data.get('n') or max(min(5, assessment_items.count()), 1)})
-
-        exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
-=======
-
 def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
-    assessment_items = ccnode.assessment_items.all()
+    assessment_items = ccnode.assessment_items.all().order_by('order')
     exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
     exercise_data = {} if exercise_data is None else exercise_data
 
@@ -270,7 +250,6 @@ def process_assessment_metadata(ccnode, kolibrinode):
 
 def create_perseus_zip(ccnode, exercise_data, write_to_path):
     with zipfile.ZipFile(write_to_path, "w") as zf:
->>>>>>> f28d186799d92ef6fa06de7852a2525d61d97eeb
         exercise_context = {
             'exercise': json.dumps(exercise_data, sort_keys=True, indent=4)
         }
