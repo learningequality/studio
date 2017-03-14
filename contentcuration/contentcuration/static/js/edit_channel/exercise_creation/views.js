@@ -992,7 +992,7 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_open.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, "render", "set_editor", "set_open", "toggle");
+        _.bindAll(this, "render", "set_editor", "set_open", "toggle", "toggle_correct");
         this.open = options.open || false;
         this.containing_list_view = options.containing_list_view;
         this.assessment_item = options.assessment_item;
@@ -1020,17 +1020,20 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
         _.defer(this.set_editor);
     },
     toggle_correct: function(event) {
-        this.set_open();
         event.stopPropagation();
         if(this.assessment_item.get("type") === "single_selection"){
             this.containing_list_view.set_all_correct(false);
         }
         this.set_correct(this.$(".correct").prop("checked"));
+        if(!this.containing_list_view.container.open){
+            this.containing_list_view.container.init_undo_redo()
+        }
     },
     set_correct:function(is_correct){
         this.model.set("correct", is_correct);
         this.$(".correct").attr('title', (is_correct)? "Correct" : "Incorrect");
         this.propagate_changes();
+        (is_correct)? this.$(".answer_item").addClass('is_correct') : this.$(".answer_item").removeClass('is_correct');
     }
 });
 
