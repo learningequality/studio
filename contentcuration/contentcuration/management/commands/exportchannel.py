@@ -63,7 +63,7 @@ class Command(BaseCommand):
                 map_content_nodes(channel.main_tree,)
                 save_export_database(channel_id)
                 increment_channel_version(channel)
-                mark_all_nodes_as_changed(channel)
+                # mark_all_nodes_as_changed(channel)
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -256,27 +256,34 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
             'exercise': json.dumps(exercise_data, sort_keys=True, indent=4)
         }
         exercise_result = render_to_string('perseus/exercise.json', exercise_context)
-        zf.writestr("exercise.json", exercise_result)
+        write_to_zipfile("exercise.json", exercise_result, zf)
 
-        for question in ccnode.assessment_items.all():
-            for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE):
+        for question in ccnode.assessment_items.all().order_by('order'):
+            for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE).order_by('checksum'):
                 image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
                 if image_name not in zf.namelist():
                     image.file_on_disk.open(mode="rb")
-                    zf.writestr(image_name, image.file_on_disk.read())
+                    write_to_zipfile(image_name, image.file_on_disk.read(), zf)
 
-            for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE):
+            for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE).order_by('checksum'):
                 svg_name = "images/{0}.svg".format(image.original_filename)
                 json_name = "images/{0}-data.json".format(image.original_filename)
                 if svg_name not in zf.namelist() or json_name not in zf.namelist():
                     image.file_on_disk.open(mode="rb")
                     content = image.file_on_disk.read()
                     content = content.split(exercises.GRAPHIE_DELIMITER)
-                    zf.writestr(svg_name, content[0])
-                    zf.writestr(json_name, content[1])
+                    write_to_zipfile(svg_name, content[0], zf)
+                    write_to_zipfile(json_name, content[1], zf)
 
         for item in ccnode.assessment_items.all().order_by('order'):
             write_assessment_item(item, zf)
+
+def write_to_zipfile(filename, content, zf):
+    info = zipfile.ZipInfo(filename, date_time=(2015, 10, 21, 7, 28, 0))
+    info.compress_type = zipfile.ZIP_DEFLATED
+    info.comment = "".encode()
+    info.create_system = 0
+    zf.writestr(info, content)
 
 def write_assessment_item(assessment_item, zf):
     template=''
@@ -288,7 +295,6 @@ def write_assessment_item(assessment_item, zf):
         template = 'perseus/input_question.json'
     elif assessment_item.type == exercises.PERSEUS_QUESTION:
         template = 'perseus/perseus_question.json'
-
 
     question, question_images = process_image_strings(assessment_item.question)
 
@@ -315,8 +321,7 @@ def write_assessment_item(assessment_item, zf):
     }
 
     result = render_to_string(template, context).encode('utf-8', "ignore")
-    filename = "{0}.json".format(assessment_item.assessment_id)
-    zf.writestr(filename, result)
+    write_to_zipfile("{0}.json".format(assessment_item.assessment_id), result, zf)
 
 def process_image_strings(content):
     image_list = []
@@ -331,7 +336,6 @@ def process_image_strings(content):
             })
             content = content.replace(match.group(1), img_match.group(1))
     return content, image_list
-
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")
