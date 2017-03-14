@@ -1,6 +1,6 @@
 {% load perseus_tags %}{% autoescape off %}{
     "question": {
-        "content": "{{ question | escape_newline }}\n\n[[☃ radio 1]]",
+        "content": "{{ question | escape_chars }}\n\n[[☃ radio 1]]",
         "images": {},
         "widgets": {
             "radio 1": {
@@ -11,7 +11,7 @@
                         {% for answer in answers %}
                         {
                             "correct": {% if answer.correct %}true{% else %}false{% endif %},
-                            "content": "{{ answer.answer | escape_newline }}"
+                            "content": "{{ answer.answer | escape_chars }}"
                         }{% if forloop.last %}{% else %},{% endif %}
                         {% endfor %}
                     ],
@@ -48,7 +48,7 @@
         {
             "widgets":{},
             "images":{},
-            "content":"{{hint.hint | escape_newline}}",
+            "content":"{{hint.hint | escape_chars}}",
             "replace":false
         }{% if forloop.last %}{% else %},{% endif %}
         {% endfor %}
