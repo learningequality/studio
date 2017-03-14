@@ -259,13 +259,13 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
         write_to_zipfile("exercise.json", exercise_result, zf)
 
         for question in ccnode.assessment_items.all().order_by('order'):
-            for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE).order_by('checksum'):
+            for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE):
                 image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
                 if image_name not in zf.namelist():
                     image.file_on_disk.open(mode="rb")
                     write_to_zipfile(image_name, image.file_on_disk.read(), zf)
 
-            for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE).order_by('checksum'):
+            for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE):
                 svg_name = "images/{0}.svg".format(image.original_filename)
                 json_name = "images/{0}-data.json".format(image.original_filename)
                 if svg_name not in zf.namelist() or json_name not in zf.namelist():
@@ -275,12 +275,12 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                     write_to_zipfile(svg_name, content[0], zf)
                     write_to_zipfile(json_name, content[1], zf)
 
-        for item in ccnode.assessment_items.all().order_by('order'):
+        for item in ccnode.assessment_items.all():
             write_assessment_item(item, zf)
 
 def write_to_zipfile(filename, content, zf):
     info = zipfile.ZipInfo(filename, date_time=(2015, 10, 21, 7, 28, 0))
-    info.compress_type = zipfile.ZIP_DEFLATED
+    info.compress_type = zipfile.ZIP_STORED
     info.comment = "".encode()
     info.create_system = 0
     zf.writestr(info, content)
