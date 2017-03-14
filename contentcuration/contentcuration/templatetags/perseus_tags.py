@@ -7,7 +7,7 @@ register = template.Library()
 
 @register.filter(is_safe=True)
 @stringfilter
-def escape_chars(value):
+def jsonify(value):
     """
     Add slashes before quotes. Useful for escaping strings in CSV, for
     example. Less useful for escaping JavaScript; use the ``escapejs``

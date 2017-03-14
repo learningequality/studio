@@ -1,6 +1,6 @@
 {% load perseus_tags %}{% autoescape off %}{
     "question": {
-        "content": "{{ question | escape_chars  }} [[☃ radio 1]]",
+        "content": "{{ question | jsonify   }} [[☃ radio 1]]",
         "images": {{% for image in question_images %}
             "{{ image.name }}": {
                 "width": {{ image.width }},
@@ -15,7 +15,7 @@
                     "choices": [{% for answer in answers %}
                         {
                             "correct": {% if answer.correct %}true{% else %}false{% endif %},
-                            "content": "{{ answer.answer | escape_chars  }}"
+                            "content": "{{ answer.answer | jsonify   }}"
                         }{% if forloop.last %}{% else %},{% endif %}
                     {% endfor %}],
                     "randomize": {% if randomize %}true{% else %}false{% endif %},
@@ -55,7 +55,7 @@
                     "height": {{ image.height }}
                 }{% if forloop.last %}{% else %},{% endif %}
             {% endfor %}},
-            "content":"{{hint.hint | escape_chars }}",
+            "content":"{{hint.hint | jsonify  }}",
             "replace":false
         }{% if forloop.last %}{% else %},{% endif %}
     {% endfor %}]

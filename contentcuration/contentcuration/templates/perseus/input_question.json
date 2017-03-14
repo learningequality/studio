@@ -1,6 +1,6 @@
 {% load perseus_tags %}{% autoescape off %}{
     "question": {
-        "content": "{{ question | escape_chars  }} [[☃ numeric-input 1]]",
+        "content": "{{ question | jsonify  }} [[☃ numeric-input 1]]",
         "images": {{% for image in question_images %}
             "{{ image.name }}": {
                 "width": {{ image.width }},
@@ -56,7 +56,7 @@
                     "height": {{ image.height }}
                 }{% if forloop.last %}{% else %},{% endif %}
             {% endfor %}},
-            "content":"{{hint.hint | escape_chars  }}",
+            "content":"{{hint.hint | jsonify  }}",
             "replace":false
         }{% if forloop.last %}{% else %},{% endif %}
     {% endfor %}]
