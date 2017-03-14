@@ -1,4 +1,5 @@
 import re
+import json
 from django import template
 from django.template.defaultfilters import stringfilter
 
@@ -12,4 +13,4 @@ def escape_chars(value):
     example. Less useful for escaping JavaScript; use the ``escapejs``
     filter instead.
     """
-    return value.replace('"', '\\"').replace('\n', '\\n')
+    return json.dumps(value)[1:-1]
