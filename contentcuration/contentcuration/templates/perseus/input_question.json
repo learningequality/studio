@@ -1,7 +1,12 @@
 {% load perseus_tags %}{% autoescape off %}{
     "question": {
-        "content": "{{ question | escape_newline }}\n\n[[☃ numeric-input 1]]",
-        "images": {},
+        "content": "{{ question | escape_chars  }} [[☃ numeric-input 1]]",
+        "images": {{% for image in question_images %}
+            "{{ image.name }}": {
+                "width": {{ image.width }},
+                "height": {{ image.height }}
+            }{% if forloop.last %}{% else %},{% endif %}
+        {% endfor %}},
         "widgets":  {
             "numeric-input 1": {
                 "type":"numeric-input",
@@ -10,8 +15,7 @@
                 "graded":true,
                 "options": {
                     "static":false,
-                    "answers":[
-                        {% for answer in answers %}
+                    "answers":[{% for answer in answers %}
                         {
                             "value": {{ answer.answer}},
                             "status": "correct",
@@ -20,8 +24,7 @@
                             "simplify":true,
                             "maxError": 0
                         }{% if forloop.last %}{% else %},{% endif %}
-                        {% endfor %}
-                    ],
+                    {% endfor %}],
                     "size":"normal",
                     "coefficient":false,
                     "labelText":""
@@ -44,15 +47,18 @@
         "major": 0,
         "minor": 1
     },
-    "hints": [
-        {% for hint in hints %}
+    "hints": [{% for hint in hints %}
         {
             "widgets":{},
-            "images":{},
-            "content":"{{hint.hint | escape_newline}}",
+            "images":{{% for image in hint.images %}
+                "{{ image.name }}": {
+                    "width": {{ image.width }},
+                    "height": {{ image.height }}
+                }{% if forloop.last %}{% else %},{% endif %}
+            {% endfor %}},
+            "content":"{{hint.hint | escape_chars  }}",
             "replace":false
         }{% if forloop.last %}{% else %},{% endif %}
-        {% endfor %}
-    ]
+    {% endfor %}]
 }
 {% endautoescape %}

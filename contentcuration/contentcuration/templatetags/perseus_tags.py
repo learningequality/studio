@@ -4,12 +4,12 @@ from django.template.defaultfilters import stringfilter
 
 register = template.Library()
 
-@register.filter
-@stringfilter
-def escape_newline(value):
-	return value.replace('\n', '\\n')
-
-@register.filter
+@register.filter(is_safe=True)
 @stringfilter
 def escape_chars(value):
-	return value.replace('\n', '\\n').replace('\\"', '"')
+    """
+    Add slashes before quotes. Useful for escaping strings in CSV, for
+    example. Less useful for escaping JavaScript; use the ``escapejs``
+    filter instead.
+    """
+    return value.replace('"', '\\"').replace('\n', '\\n')

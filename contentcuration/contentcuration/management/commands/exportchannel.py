@@ -33,6 +33,8 @@ logging = logmodule.getLogger(__name__)
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
+
 class EarlyExit(BaseException):
     def __init__(self, message, db_path):
         self.message = message
@@ -273,30 +275,11 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                     zf.writestr(svg_name, content[0])
                     zf.writestr(json_name, content[1])
 
-        for item in ccnode.assessment_items.all():
+        for item in ccnode.assessment_items.all().order_by('order'):
             write_assessment_item(item, zf)
 
 def write_assessment_item(assessment_item, zf):
     template=''
-    replacement_string = exercises.IMG_PLACEHOLDER + "/images"
-
-    answer_data = json.loads(assessment_item.answers)
-    for answer in answer_data:
-        answer['answer'] = re.escape(answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string))
-
-    hint_data = json.loads(assessment_item.hints)
-    for hint in hint_data:
-        hint['hint'] = re.escape(hint['hint'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string))
-
-    context = {
-        'question' : re.escape(assessment_item.question.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string)),
-        'answers':answer_data,
-        'multipleSelect':assessment_item.type == exercises.MULTIPLE_SELECTION,
-        'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string),
-        'hints': hint_data,
-        'randomize': assessment_item.randomize,
-    }
-
     if assessment_item.type == exercises.MULTIPLE_SELECTION:
         template = 'perseus/multiple_selection.json'
     elif assessment_item.type == exercises.SINGLE_SELECTION:
@@ -306,9 +289,49 @@ def write_assessment_item(assessment_item, zf):
     elif assessment_item.type == exercises.PERSEUS_QUESTION:
         template = 'perseus/perseus_question.json'
 
+
+    question, question_images = process_image_strings(assessment_item.question)
+
+    answer_data = json.loads(assessment_item.answers)
+    for answer in answer_data:
+        answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
+        # In case perseus doesn't support =wxh syntax, use below code
+        # answer['answer'], answer_images = process_image_strings(answer['answer'])
+        # answer.update({'images': answer_images})
+
+    hint_data = json.loads(assessment_item.hints)
+    for hint in hint_data:
+        hint['hint'], hint_images = process_image_strings(hint['hint'])
+        hint.update({'images': hint_images})
+
+    context = {
+        'question': question,
+        'answers': sorted(answer_data, lambda x,y: cmp(x.get('order'), y.get('order'))),
+        'multipleSelect': assessment_item.type == exercises.MULTIPLE_SELECTION,
+        'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR),
+        'hints': sorted(hint_data, lambda x,y: cmp(x.get('order'), y.get('order'))),
+        'randomize': assessment_item.randomize,
+        'question_images': question_images,
+    }
+
     result = render_to_string(template, context).encode('utf-8', "ignore")
     filename = "{0}.json".format(assessment_item.assessment_id)
     zf.writestr(filename, result)
+
+def process_image_strings(content):
+    image_list = []
+    content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
+    for match in re.finditer(ur'!\[(?:.*)]\((.+)\)', content):
+        img_match = re.search(ur'(.+/images/.+)\s=([0-9\.]+)x([0-9\.]+)*', match.group(1))
+        if img_match:
+            image_list.append({
+                'name': img_match.group(1),
+                'width': float(img_match.group(2)),
+                'height': float(img_match.group(3)) if img_match.group(3) else None
+            })
+            content = content.replace(match.group(1), img_match.group(1))
+    return content, image_list
+
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")
