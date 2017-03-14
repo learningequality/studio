@@ -6,5 +6,5 @@ register = template.Library()
 
 @register.filter
 @stringfilter
-def escape_chars(value):
+def jsonify(value):
     return json.dumps(value)[1:-1]
