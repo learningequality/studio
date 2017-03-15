@@ -7,4 +7,4 @@ register = template.Library()
 @register.filter
 @stringfilter
 def jsonify(value):
-    return json.dumps(value)[1:-1]
+    return json.dumps(value, ensure_ascii=False)[1:-1]
