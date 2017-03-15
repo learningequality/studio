@@ -125,7 +125,7 @@ def map_content_nodes(root_node):
                 kolibrinode = create_bare_contentnode(node)
 
                 if node.kind.kind == content_kinds.EXERCISE:
-                    create_perseus_exercise(node)
+                    create_perseus_exercise(node, kolibrinode)
                 if node.kind.kind != content_kinds.TOPIC:
                     create_associated_file_objects(kolibrinode, node)
                 map_tags_to_node(kolibrinode, node)
@@ -192,11 +192,12 @@ def create_associated_file_objects(kolibrinode, ccnode):
             thumbnail=preset.thumbnail,
         )
 
-def create_perseus_exercise(ccnode):
+def create_perseus_exercise(ccnode, kolibrinode):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
-        create_perseus_zip(ccnode, tempf)
+        data = process_assessment_metadata(ccnode, kolibrinode)
+        create_perseus_zip(ccnode, data, tempf)
         tempf.flush()
 
         ccmodels.File.objects.filter(contentnode=ccnode, preset_id=format_presets.EXERCISE).delete()
@@ -210,25 +211,45 @@ def create_perseus_exercise(ccnode):
         )
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
-def create_perseus_zip(ccnode, write_to_path):
-    assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode)
 
+def process_assessment_metadata(ccnode, kolibrinode):
+    # Get mastery model information, set to default if none provided
+    assessment_items = ccnode.assessment_items.all()
+    exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
+    exercise_data = {} if exercise_data is None else exercise_data
+
+    mastery_model = {'type' : exercise_data.get('mastery_model') or exercises.M_OF_N}
+    randomize = exercise_data.get('randomize') or True
+    assessment_item_ids = [a.assessment_id for a in assessment_items]
+
+    if mastery_model['type'] == exercises.M_OF_N:
+        mastery_model.update({'n':exercise_data.get('m') or min(5, assessment_items.count()) or 1})
+        mastery_model.update({'m':exercise_data.get('n') or min(5, assessment_items.count()) or 1})
+
+    exercise_data.update({
+        'mastery_model': mastery_model['type'],
+        'randomize': randomize,
+        'n': mastery_model.get('n'),
+        'm': mastery_model.get('m'),
+        'all_assessment_items': assessment_item_ids,
+        'assessment_mapping': {a.assessment_id : a.type for a in assessment_items},
+    })
+
+    kolibriassessmentmetadatamodel = kolibrimodels.AssessmentMetaData.objects.create(
+        id=uuid.uuid4(),
+        contentnode=kolibrinode,
+        assessment_item_ids=json.dumps(assessment_item_ids),
+        number_of_assessments=assessment_items.count(),
+        mastery_model=json.dumps(mastery_model),
+        randomize=randomize,
+        is_manipulable=ccnode.kind==content_kinds.EXERCISE,
+    )
+
+    return exercise_data
+
+
+def create_perseus_zip(ccnode, exercise_data, write_to_path):
     with zipfile.ZipFile(write_to_path, "w") as zf:
-
-        # Get mastery model information, set to default if none provided
-        exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
-        exercise_data = {} if exercise_data is None else exercise_data
-        exercise_data.update({
-            'mastery_model': exercise_data.get('mastery_model') or exercises.M_OF_N,
-            'randomize': exercise_data.get('randomize') or True,
-        })
-        if exercise_data['mastery_model'] == exercises.M_OF_N:
-            if 'n' not in exercise_data:
-                exercise_data.update({'n':exercise_data.get('m') or max(min(5, assessment_items.count()), 1)})
-            if 'm' not in exercise_data:
-                exercise_data.update({'m':exercise_data.get('n') or max(min(5, assessment_items.count()), 1)})
-
-        exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
         exercise_context = {
             'exercise': json.dumps(exercise_data)
         }
@@ -252,7 +273,7 @@ def create_perseus_zip(ccnode, write_to_path):
                     zf.writestr(svg_name, content[0])
                     zf.writestr(json_name, content[1])
 
-        for item in assessment_items:
+        for item in ccnode.assessment_items.all():
             write_assessment_item(item, zf)
 
 def write_assessment_item(assessment_item, zf):
