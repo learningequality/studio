@@ -1,6 +1,6 @@
 {% load perseus_tags %}{% autoescape off %}{
     "question": {
-        "content": "{{ question | escape_newline }}\n\n[[☃ numeric-input 1]]",
+        "content": "{{ question | jsonify }}\n\n[[☃ numeric-input 1]]",
         "images": {},
         "widgets":  {
             "numeric-input 1": {
@@ -49,7 +49,7 @@
         {
             "widgets":{},
             "images":{},
-            "content":"{{hint.hint | escape_newline}}",
+            "content":"{{hint.hint | jsonify}}",
             "replace":false
         }{% if forloop.last %}{% else %},{% endif %}
         {% endfor %}
