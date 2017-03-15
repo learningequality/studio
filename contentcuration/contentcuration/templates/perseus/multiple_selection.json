@@ -1,6 +1,6 @@
 {% load perseus_tags %}{% autoescape off %}{
     "question": {
-        "content": "{{ question | jsonify   }} [[☃ radio 1]]",
+        "content": "{{ question | jsonify   }}\n\n[[☃ radio 1]]",
         "images": {{% for image in question_images %}
             "{{ image.name }}": {
                 "width": {{ image.width }},
@@ -16,6 +16,7 @@
                         {
                             "correct": {% if answer.correct %}true{% else %}false{% endif %},
                             "content": "{{ answer.answer | jsonify   }}"
+
                         }{% if forloop.last %}{% else %},{% endif %}
                     {% endfor %}],
                     "randomize": {% if randomize %}true{% else %}false{% endif %},
