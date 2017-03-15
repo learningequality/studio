@@ -246,7 +246,8 @@ var replace_mathjax = function(content){
 
 var parse_content = function(content){
     parsed = replace_image_paths(content);
-    return replace_mathjax(parsed);
+    parsed = replace_mathjax(parsed);
+    return parsed.replace(/\\/g, '\\\\') // Escape backslashes
 };
 
 var convert_html_to_markdown = function(contents) {
@@ -354,6 +355,7 @@ var EditorView = Backbone.View.extend({
 
     add_image: function(file_id, filename, alt_text) {
         this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
+        alt_text = alt_text || "";
         this.model.set(this.edit_key, this.model.get(this.edit_key) + "![" + alt_text + "](" + filename + ")");
         this.render_editor();
     },

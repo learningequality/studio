@@ -8,9 +8,4 @@ register = template.Library()
 @register.filter(is_safe=True)
 @stringfilter
 def jsonify(value):
-    """
-    Add slashes before quotes. Useful for escaping strings in CSV, for
-    example. Less useful for escaping JavaScript; use the ``escapejs``
-    filter instead.
-    """
-    return json.dumps(value)[1:-1]
+    return json.dumps(value, ensure_ascii=False)[1:-1]

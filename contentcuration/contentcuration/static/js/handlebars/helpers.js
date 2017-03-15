@@ -36,7 +36,6 @@ Handlebars.registerHelper('url', function(url_name) {
 Handlebars.registerHelper('markdown', function(markdown) {
     if (markdown) {
         markdown = markdown.toString().replace(/\n(\n)/g, "$1<br />");
-        markdown = markdown.toString().replace(/\\"(\\")/g, '"');
         var el = document.createElement( 'body' );
         el.innerHTML = marked(markdown);
         _.each(el.getElementsByTagName( 'img' ), function(img){
