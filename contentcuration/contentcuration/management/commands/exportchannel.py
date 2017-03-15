@@ -33,6 +33,8 @@ logging = logmodule.getLogger(__name__)
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
+
 class EarlyExit(BaseException):
     def __init__(self, message, db_path):
         self.message = message
@@ -66,10 +68,8 @@ class Command(BaseCommand):
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
         except EarlyExit as e:
-            logging.warning("Exited early due to {message}.".format(
-                message=e.message))
-            self.stdout.write("You can find your database in {path}".format(
-                path=e.db_path))
+            logging.warning("Exited early due to {message}.".format(message=e.message))
+            self.stdout.write("You can find your database in {path}".format(path=e.db_path))
 
 def create_kolibri_license_object(license):
     return kolibrimodels.License.objects.get_or_create(
@@ -199,6 +199,7 @@ def create_perseus_exercise(ccnode, kolibrinode):
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
         data = process_assessment_metadata(ccnode, kolibrinode)
         create_perseus_zip(ccnode, data, tempf)
+        file_size = tempf.tell()
         tempf.flush()
 
         ccnode.files.filter(preset_id=format_presets.EXERCISE).delete()
@@ -209,32 +210,13 @@ def create_perseus_exercise(ccnode, kolibrinode):
             file_format_id=file_formats.PERSEUS,
             preset_id=format_presets.EXERCISE,
             original_filename=filename,
+            file_size=file_size,
         )
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
-<<<<<<< HEAD
-def create_perseus_zip(ccnode, write_to_path):
-    assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode).order_by('order')
-
-    with zipfile.ZipFile(write_to_path, "w") as zf:
-        # Get mastery model information, set to default if none provided
-        exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
-        exercise_data.update({
-            'mastery_model': exercise_data.get('mastery_model') or exercises.M_OF_N,
-            'randomize': exercise_data.get('randomize') or True,
-        })
-        if exercise_data['mastery_model'] == exercises.M_OF_N:
-            if 'n' not in exercise_data:
-                exercise_data.update({'n':exercise_data.get('m') or max(min(5, assessment_items.count()), 1)})
-            if 'm' not in exercise_data:
-                exercise_data.update({'m':exercise_data.get('n') or max(min(5, assessment_items.count()), 1)})
-
-        exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
-=======
-
 def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
-    assessment_items = ccnode.assessment_items.all()
+    assessment_items = ccnode.assessment_items.all().order_by('order')
     exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
     exercise_data = {} if exercise_data is None else exercise_data
 
@@ -262,7 +244,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
         number_of_assessments=assessment_items.count(),
         mastery_model=json.dumps(mastery_model),
         randomize=randomize,
-        is_manipulable=ccnode.kind==content_kinds.EXERCISE,
+        is_manipulable=ccnode.kind_id==content_kinds.EXERCISE,
     )
 
     return exercise_data
@@ -270,66 +252,97 @@ def process_assessment_metadata(ccnode, kolibrinode):
 
 def create_perseus_zip(ccnode, exercise_data, write_to_path):
     with zipfile.ZipFile(write_to_path, "w") as zf:
->>>>>>> f28d186799d92ef6fa06de7852a2525d61d97eeb
-        exercise_context = {
-            'exercise': json.dumps(exercise_data, sort_keys=True, indent=4)
-        }
-        exercise_result = render_to_string('perseus/exercise.json', exercise_context)
-        zf.writestr("exercise.json", exercise_result)
+        try:
+            exercise_context = {
+                'exercise': json.dumps(exercise_data, sort_keys=True, indent=4)
+            }
+            exercise_result = render_to_string('perseus/exercise.json', exercise_context)
+            write_to_zipfile("exercise.json", exercise_result, zf)
 
-        for question in ccnode.assessment_items.all():
-            for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE):
-                image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
-                if image_name not in zf.namelist():
-                    image.file_on_disk.open(mode="rb")
-                    zf.writestr(image_name, image.file_on_disk.read())
+            for question in ccnode.assessment_items.all().order_by('order'):
+                for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE).order_by('checksum'):
+                    image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
+                    if image_name not in zf.namelist():
+                        image.file_on_disk.open(mode="rb")
+                        write_to_zipfile(image_name, image.file_on_disk.read(), zf)
 
-            for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE):
-                svg_name = "images/{0}.svg".format(image.original_filename)
-                json_name = "images/{0}-data.json".format(image.original_filename)
-                if svg_name not in zf.namelist() or json_name not in zf.namelist():
-                    image.file_on_disk.open(mode="rb")
-                    content = image.file_on_disk.read()
-                    content = content.split(exercises.GRAPHIE_DELIMITER)
-                    zf.writestr(svg_name, content[0])
-                    zf.writestr(json_name, content[1])
+                for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE).order_by('checksum'):
+                    svg_name = "images/{0}.svg".format(image.original_filename)
+                    json_name = "images/{0}-data.json".format(image.original_filename)
+                    if svg_name not in zf.namelist() or json_name not in zf.namelist():
+                        image.file_on_disk.open(mode="rb")
+                        content = image.file_on_disk.read()
+                        content = content.split(exercises.GRAPHIE_DELIMITER)
+                        write_to_zipfile(svg_name, content[0], zf)
+                        write_to_zipfile(json_name, content[1], zf)
 
-        for item in ccnode.assessment_items.all():
-            write_assessment_item(item, zf)
+            for item in ccnode.assessment_items.all().order_by('order'):
+                write_assessment_item(item, zf)
+
+        finally:
+            zf.close()
+
+def write_to_zipfile(filename, content, zf):
+    info = zipfile.ZipInfo(filename, date_time=(2013, 3, 14, 1, 59, 26))
+    info.comment = "Perseus file generated during export process".encode()
+    info.compress_type = zipfile.ZIP_STORED
+    info.create_system = 0
+    zf.writestr(info, content)
 
 def write_assessment_item(assessment_item, zf):
-    template=''
-    replacement_string = exercises.IMG_PLACEHOLDER + "/images"
+    if assessment_item.type != exercises.PERSEUS_QUESTION:
+        template=''
+        if assessment_item.type == exercises.MULTIPLE_SELECTION:
+            template = 'perseus/multiple_selection.json'
+        elif assessment_item.type == exercises.SINGLE_SELECTION:
+            template = 'perseus/multiple_selection.json'
+        elif assessment_item.type == exercises.INPUT_QUESTION:
+            template = 'perseus/input_question.json'
+        elif assessment_item.type == exercises.PERSEUS_QUESTION:
+            template = 'perseus/perseus_question.json'
+        else:
+            raise TypeError("Unrecognized question type on item {}".format(assessment_item.assessment_id))
 
-    answer_data = json.loads(assessment_item.answers)
-    for answer in answer_data:
-        answer['answer'] = re.escape(answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string))
+        question, question_images = process_image_strings(assessment_item.question)
 
-    hint_data = json.loads(assessment_item.hints)
-    for hint in hint_data:
-        hint['hint'] = re.escape(hint['hint'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string))
+        answer_data = json.loads(assessment_item.answers)
+        for answer in answer_data:
+            answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
+            # In case perseus doesn't support =wxh syntax, use below code
+            # answer['answer'], answer_images = process_image_strings(answer['answer'])
+            # answer.update({'images': answer_images})
 
-    context = {
-        'question' : re.escape(assessment_item.question.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string)),
-        'answers':answer_data,
-        'multipleSelect':assessment_item.type == exercises.MULTIPLE_SELECTION,
-        'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string),
-        'hints': hint_data,
-        'randomize': assessment_item.randomize,
-    }
+        hint_data = json.loads(assessment_item.hints)
+        for hint in hint_data:
+            hint['hint'], hint_images = process_image_strings(hint['hint'])
+            hint.update({'images': hint_images})
 
-    if assessment_item.type == exercises.MULTIPLE_SELECTION:
-        template = 'perseus/multiple_selection.json'
-    elif assessment_item.type == exercises.SINGLE_SELECTION:
-        template = 'perseus/multiple_selection.json'
-    elif assessment_item.type == exercises.INPUT_QUESTION:
-        template = 'perseus/input_question.json'
-    elif assessment_item.type == exercises.PERSEUS_QUESTION:
-        template = 'perseus/perseus_question.json'
+        context = {
+            'question': question,
+            'question_images': question_images,
+            'answers': sorted(answer_data, lambda x,y: cmp(x.get('order'), y.get('order'))),
+            'multiple_select': assessment_item.type == exercises.MULTIPLE_SELECTION,
+            'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR),
+            'hints': sorted(hint_data, lambda x,y: cmp(x.get('order'), y.get('order'))),
+            'randomize': assessment_item.randomize,
+        }
 
-    result = render_to_string(template, context).encode('utf-8', "ignore")
-    filename = "{0}.json".format(assessment_item.assessment_id)
-    zf.writestr(filename, result)
+        result = render_to_string(template, context).encode('utf-8', "ignore")
+        write_to_zipfile("{0}.json".format(assessment_item.assessment_id), result, zf)
+
+def process_image_strings(content):
+    image_list = []
+    content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
+    for match in re.finditer(ur'!\[(?:.*)]\((.+)\)', content):
+        img_match = re.search(ur'(.+/images/.+)\s=([0-9\.]+)x([0-9\.]+)*', match.group(1))
+        if img_match:
+            image_list.append({
+                'name': img_match.group(1),
+                'width': float(img_match.group(2)),
+                'height': float(img_match.group(3)) if img_match.group(3) else None
+            })
+            content = content.replace(match.group(1), img_match.group(1))
+    return content, image_list
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")
