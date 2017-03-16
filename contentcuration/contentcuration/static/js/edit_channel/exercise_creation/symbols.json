@@ -6,10 +6,12 @@
 		{"key": "\\overleftarrow", "preview": "\\overleftarrow{abc}", "title": "Left arrow"},
 		{"key": "\\overrightarrow", "preview": "\\overrightarrow{abc}", "title": "Right arrow"},
 		{"key": "\\vec", "preview": "\\vec{v}", "title": "Vector"},
-
 	],
 	"equations":[
-		{"key": "\\binom", "preview": "\\binom_b^a", "title": "Binomial coefficient"},
+		{"key": "^", "preview": "{a}^{b}", "title": "Superscript"},
+		{"key": "_", "preview": "{a}_{b}", "title": "Subscript"},
+		{"key": "\\frac", "preview": "\\frac{a}{b}", "title": "Fraction"},
+		{"key": "\\binom", "preview": "(\\binom_b^a)", "title": "Binomial coefficient"},
 		{"key": "\\sum", "preview": "\\sum_b^a", "title": "Sum"},
 		{"key": "\\prod", "preview": "\\prod_b^a", "title": "Product"},
 		{"key": "\\coprod", "preview": "\\coprod_b^a", "title": "Coproduct"},
@@ -19,8 +21,11 @@
 		{
 			"title": "BASIC",
 			"symbols": [
-				{"key": "\\times","symbol": "×","title": "Times"},
+				{"key": "+","symbol": "+","title": "Addition"},
+				{"key": "-","symbol": "-","title": "Subtraction"},
+				{"key": "\\times","symbol": "×","title": "Multiplication"},
 				{"key": "\\div","symbol": "÷","title": "Division"},
+				{"key": "\\cdot","symbol": "·","title": "Dot"},
 				{"key": "\\neg","symbol": "¬","title": "Negation"},
 				{"key": "\\pm","symbol": "±","title": "Plus-minus"},
 				{"key": "\\mp","symbol": "∓","title": "Minus-plus"},

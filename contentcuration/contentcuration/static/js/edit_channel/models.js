@@ -164,7 +164,7 @@ var ContentNodeModel = BaseModel.extend({
 		}
 		if(this.get('kind') === 'exercise'){
 			var data = (this.get('extra_fields'))? this.get('extra_fields') : {};
-			data['mastery_model'] = (data['mastery_model'])? data['mastery_model'] : "do_all";
+			data['mastery_model'] = (data['mastery_model'])? data['mastery_model'] : "num_correct_in_a_row_5";
 		    data['m'] = (data['m'])? data['m'] : 1;
 		    data['n'] = (data['n'])? data['n'] : 1;
 		    data['randomize'] = (data['randomize'] !== undefined)? data['randomize'] : true;

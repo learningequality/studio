@@ -3,6 +3,7 @@ var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("summernote");
+var mathjax = require("MathJax");
 var Dropzone = require("dropzone");
 var get_cookie = require("utils/get_cookie");
 var UndoManager = require("backbone-undo");
@@ -10,7 +11,7 @@ var JSZip = require("jszip");
 var fileSaver = require("browser-filesaver");
 var JSZipUtils = require("jszip-utils");
 var Katex = require("katex");
-var domtoimage = require('dom-to-image');
+var mathjax = require("utils/mathjax");
 
 var CHARACTERS = require("./symbols.json");
 require("exercises.less");
@@ -21,7 +22,6 @@ require("../../../css/mathquill.css");
 var toMarkdown = require('to-markdown');
 var htmlparser = require("html-parser");
 require("../../utils/mathquill.min.js");
-
 
 if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("Safari") > -1){
     require("mathml.less");
@@ -188,29 +188,6 @@ var AddFormulaView = BaseViews.BaseModalView.extend({
     },
     add_formula:function(){
         if(this.mathField.latex().trim()){
-
-            /* IMPLEMENTATION FOR ADDING FORMULA AS IMAGE */
-            // var self = this;
-            // this.$(".mq-overlay").css("display", "block");
-            // domtoimage.toSvg(this.$(".mq-root-block")[0]).then(function(dataUrl){
-                // $.ajax({
-                //     method:"POST",
-                //     url: window.Urls.exercise_formula_upload(),
-                //     data:  JSON.stringify({"formula": dataUrl}),
-                //     success: function(data) {
-                //         var formula = JSON.parse(data);
-                //         self.callback(formula.file_id, formula.filename, self.mathField.latex());
-                //         self.$(".mq-overlay").css("display", "none");
-                //         self.mathField.latex("");
-                //         $(".dropdown").dropdown('toggle');
-                //     },
-                //     error:function(e){
-                //         reject(e);
-                //     }
-                // });
-            // }).catch(function(err){console.log(err)})
-
-            /* IMPLEMENTATION FOR INJECTING MATHJAX */
             this.callback("\t$$" + this.mathField.latex() + "$$\t"); //extra tabs allow for easier cursor navigation
             this.mathField.latex("");
             $(".dropdown").dropdown('toggle');
@@ -419,6 +396,7 @@ var EditorView = Backbone.View.extend({
             },
             placeholder: 'Enter ' + this.edit_key + "...",
             disableResizeEditor: true,
+            disableDragAndDrop: true,
             selector: this.cid,
             callbacks: {
                 onChange: _.debounce(this.save, 300),
@@ -643,6 +621,7 @@ var ExerciseView = ExerciseEditableListView.extend({
             node: this.model.toJSON(),
             is_random: this.model.get('extra_fields').randomize
         }));
+        _.defer(mathjax.initMathJax, 100);
         this.load_content(this.collection.where({'deleted': false}), "Click '+ QUESTION' to begin...");
     },
     set_random:function(event){
