@@ -1,44 +1,17 @@
-/*********************************************************************
- *
- *  main.js
- *
- *  Implements an API to MathJax in Node.js so that MathJax can be
- *  used server-side to generate HTML+CSS, SVG, or MathML.
- *
- *  This API converts single math expressions while giving control
- *  over the input format, the SVG font caching, and a number of other
- *  features.
- *
- * ----------------------------------------------------------------------
- *
- *  Copyright (c) 2014--2016 The MathJax Consortium
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 var http = require('http');
 var fs = require('fs');
 var path = require('path');
 var url = require('url');
 var jsdom = require('jsdom').jsdom;
+var mathjax = require('./mathjax');
 
-require('./patch/jsdom.js').patch(jsdom);  //  Fix some bugs in jsdom
+require('./jsdom.js').patch(jsdom);  //  Fix some bugs in jsdom
 
 var displayMessages = false;      // don't log Message.Set() calls
 var displayErrors = true;         // show error messages on the console
 var undefinedChar = false;        // unknown characters are not saved in the error array
 var extensions = '';              // no additional extensions used
-var fontURL = 'https://cdn.mathjax.org/mathjax/latest/fonts/HTML-CSS';  // location of web fonts for CHTML
+var fontURL = null; //'https://cdn.mathjax.org/mathjax/latest/fonts/HTML-CSS';  // location of web fonts for CHTML
 
 var defaults = {
   ex: 6,                          // ex-size in pixels
@@ -63,9 +36,7 @@ var defaults = {
   timeout: 10 * 1000,             // 10 second timeout before restarting MathJax
 };
 
-//
 //  The MathJax server states
-//
 var STATE = {
   STOPPED: 1,          // no DOM or MathJax available
   STARTED: 2,          // DOM loaded, MathJax starting up
@@ -73,10 +44,7 @@ var STATE = {
   BUSY:    4           // MathJax currently processing math
 };
 
-//
-// The MathJaxPath is normaized against file:/// so that Windows paths are correct
-//
-var MathJaxPath = url.resolve("file:///","file:"+require.resolve('mathjax'));
+var MathJaxPath = './mathjax.js';
 var MathJaxConfig;                   // configuration for when starting MathJax
 var MathJax;                         // filled in once MathJax is loaded
 var serverState = STATE.STOPPED;     // nothing loaded yet
@@ -89,9 +57,7 @@ var data, callback;   // the current queue item
 var errors = [];      // errors collected durring the typesetting
 var ID = 0;           // id for this SVG element
 
-//
 //  The delimiters used for each of the input formats
-//
 var TYPES = {
   TeX: "tex; mode=display",
   "inline-TeX": "tex",
@@ -101,47 +67,29 @@ var TYPES = {
 
 var CHTMLSTYLES;         // filled in when CommonHTML is loaded
 
-/********************************************************************/
-
-//
 //  Create the DOM window and set up the console wtihin it
-//  Add an error handler to trap unexpected errors (requires
-//    modifying jsdom)
+//  Add an error handler to trap unexpected errors (requires modifying jsdom)
 //  Add a <div> where we can put the math to be typeset
-//    and typeset math in the three formats we use (to force
-//    the jax to be loaded completely)
-//
+//    and typeset math in the three formats we use (to force the jax to be loaded completely)
 function GetWindow() {
   document = jsdom('',{userAgent: "Node.js"});
   html = document.firstChild;
   window = document.defaultView;
   window.console = console;
-  window.addEventListener("error",function (event) {AddError("Error: "+event.error.stack)});
   content = document.body.appendChild(document.createElement("div"));
   content.id = "MathJax_Content";
   content.innerHTML = '<script type="math/tex">x</script>' +
                       '<script type="math/asciimath">x</script>' +
                       '<script type="math/mml"><math><mi>x</mi></math></script>';
-  //
-  //  Node's url.resolve() has a problem with resolving a file:// URL when
-  //  the base URL is "about:blank", so force it to be something else (HACK)
-  //  since jsdom 3.x sets the base to "about:blank".
-  //
-  if (document._URL === "about:blank") document._URL = "file:///blank.html";
 }
 
-//
 //  Set up a Mathjax configuration within the window
-//
 function ConfigureMathJax() {
   window.MathJax = {
-    //
     //  Load all input jax and preprocessors
     //  Load AMS extensions and the autoload extension for TeX
     //  Allow $...$ delimiters and don't create previews for any preprocessor,
     //  Create stand-alone SVG elements with font caches by default
-    //    (users can override that)
-    //
     jax: ["input/TeX", "input/MathML", "input/AsciiMath", "output/SVG", "output/CommonHTML"],
     extensions: ["toMathML.js"],
     TeX: {extensions: window.Array("AMSmath.js","AMSsymbols.js","autoload-all.js")},
@@ -151,9 +99,7 @@ function ConfigureMathJax() {
     SVG: {useFontCache: true, useGlobalCache: false, EqnChunk: 1000000, EqnDelay: 0},
     CommonHTML: {EqnChunk: 1000000, EqnDelay: 0, undefinedFamily:"monospace"},
 
-    //
     //  This gets run before MathJax queues any actions
-    //
     AuthorInit: function () {
       MathJax = window.MathJax;
 
@@ -164,19 +110,15 @@ function ConfigureMathJax() {
       };
       MathJax.Ajax.loaded[MathJax.Ajax.fileURL("[MathJax]/extensions/MathEvents.js")] = true;
 
-      //
       //  When creating stylesheets, no need to wait for them
       //  to become active, so just do the callback
-      //
       MathJax.Ajax.timer.create = function (callback,node) {
         callback = MathJax.Callback(callback);
         callback(this.STATUS.OK);
         return callback;
       };
 
-      //
       //  Use the console for messages, if we are requesting them
-      //
       MathJax.Message.Set = function (text,n,delay) {
         if (displayMessages && n !== 0) {
           if (text instanceof window.Array)
@@ -188,9 +130,7 @@ function ConfigureMathJax() {
       MathJax.Message.Remove = function () {};
       MathJax.Message.Init = function () {};
 
-      //
       //  Trap Math Processing Errors
-      //
       MathJax.Hub.Register.MessageHook("Math Processing Error",function (message) {
         AddError("Math Processing Error: "+message[2].message);
       });
@@ -214,58 +154,39 @@ function ConfigureMathJax() {
         AddError("File load error: "+message[1]);
       });
 
-      //
       //  Set the delays to 0 (we don't need to update the screen)
-      //
       MathJax.Hub.processSectionDelay = 0;
       MathJax.Hub.processUpdateTime = 10000000;  // don't interrupt processing of output
       MathJax.Hub.processUpdateDelay = 0;
 
-      //
       //  Adjust the SVG output jax
-      //
       MathJax.Hub.Register.StartupHook("SVG Jax Config",function () {
         var SVG = MathJax.OutputJax.SVG, HTML = MathJax.HTML;
 
-        //
-        //  Don't need the styles
-        //
-        delete SVG.config.styles
+        delete SVG.config.styles //  Don't need the styles
 
         SVG.Augment({
-          //
           //  Set up the default ex-size and width
-          //
           InitializeSVG: function () {
             this.pxPerInch    = 96;
             this.defaultEx    = 6;
             this.defaultWidth = 100;
           },
-          //
-          //  Adjust preTranslate() to not try to find the ex-size or
-          //  the container widths.
-          //
+          //  Adjust preTranslate() to not try to find the ex-size or the container widths.
           preTranslate: function (state) {
             var scripts = state.jax[this.id], i, m = scripts.length,
                 script, prev, span, div, jax, ex, em,
                 maxwidth = 100000, relwidth = false, cwidth,
                 linebreak = this.config.linebreaks.automatic,
                 width = this.config.linebreaks.width;
-            //
             //  Loop through the scripts
-            //
             for (i = 0; i < m; i++) {
               script = scripts[i]; if (!script.parentNode) continue;
-              //
               //  Remove any existing output
-              //
               prev = script.previousSibling;
               if (prev && String(prev.className).match(/^MathJax(_SVG)?(_Display)?( MathJax(_SVG)?_Processing)?$/))
                 {prev.parentNode.removeChild(prev)}
-              //
-              //  Add the span, and a div if in display mode,
-              //  then mark it as being processed
-              //
+              //  Add the span, and a div if in display mode, then mark it as being processed
               jax = script.MathJax.elementJax; if (!jax) continue;
               jax.SVG = {display: (jax.root.Get("display") === "block")}
               span = div = HTML.Element("span",{
@@ -278,29 +199,23 @@ function ConfigureMathJax() {
               }
               div.className += " MathJax_SVG_Processing";
               script.parentNode.insertBefore(div,script);
-              //
               //  Set SVG data for jax
-              //
               jax.SVG.ex = ex = (data||defaults).ex;
               jax.SVG.em = em = ex / SVG.TeX.x_height * 1000; // scale ex to x_height
               jax.SVG.cwidth = width / em * 1000;
               jax.SVG.lineWidth = (linebreak ? width / em * 1000 : SVG.BIGDIMEN);
             }
-            //
             //  Set state variables used for displaying equations in chunks
-            //
             state.SVGeqn = state.SVGlast = 0; state.SVGi = -1;
             state.SVGchunk = this.config.EqnChunk;
             state.SVGdelay = false;
           }
         });
 
-        //
         //  TEXT boxes use getBBox, which isn't implemented, so
         //  use a monspace font and fake the size.  Since these
         //  are used only for error messages and undefined characters,
         //  this should be good enough for now.
-        //
         SVG.BBOX.TEXT.Augment({
           Init: function (scale,text,def) {
             if (!def) {def = {}}; def.stroke = "none";
@@ -320,15 +235,11 @@ function ConfigureMathJax() {
 
       });
 
-      //
       //  Adjust the CommonHTML output jax
-      //
       MathJax.Hub.Register.StartupHook("CommonHTML Jax Config",function () {
         var CHTML = MathJax.OutputJax.CommonHTML, HTML = MathJax.HTML;
 
-        //
         //  Don't need these styles
-        //
         var STYLES = CHTML.config.styles;
         delete STYLES["#MathJax_CHTML_Tooltip"];
         delete STYLES[".MJXc-processing"];
@@ -341,9 +252,7 @@ function ConfigureMathJax() {
 
         CHTML.Augment({
           webfontDir: fontURL,
-          //
           //  Set up the default ex-size and width
-          //
           getDefaultExEm: function () {
             var styles = document.head.getElementsByTagName("style");
             CHTMLSTYLES = styles[styles.length-1].innerHTML;
@@ -352,65 +261,48 @@ function ConfigureMathJax() {
             this.defaultEm    = 6 / CHTML.TEX.x_height * 1000;
             this.defaultWidth = 100;
           },
-          //
-          //  Adjust preTranslate() to not try to find the ex-size or
-          //  the container widths.
-          //
+          //  Adjust preTranslate() to not try to find the ex-size or the container widths.
           preTranslate: function (state) {
             var scripts = state.jax[this.id], i, m = scripts.length,
                 script, prev, node, jax, ex, em,
                 maxwidth = 100000, relwidth = false, cwidth = 0,
                 linebreak = this.config.linebreaks.automatic,
                 width = this.config.linebreaks.width;
-            //
             //  Loop through the scripts
-            //
             for (i = 0; i < m; i++) {
               script = scripts[i]; if (!script.parentNode) continue;
-              //
               //  Remove any existing output
-              //
               prev = script.previousSibling;
               if (prev && prev.className && String(prev.className).substr(0,9) === "mjx-chtml")
                 prev.parentNode.removeChild(prev);
-              //
               //  Add the node for the math and mark it as being processed
-              //
               jax = script.MathJax.elementJax; if (!jax) continue;
               jax.CHTML = {display: (jax.root.Get("display") === "block")}
               node = CHTML.Element("mjx-chtml",{
                 id:jax.inputID+"-Frame", isMathJax:true, jaxID:this.id
               });
               if (jax.CHTML.display) {
-                //
                 // Zoom box requires an outer container to get the positioning right.
-                //
                 var NODE = CHTML.Element("mjx-chtml",{className:"MJXc-display",isMathJax:false});
                 NODE.appendChild(node); node = NODE;
               }
 
               node.className += " MJXc-processing";
               script.parentNode.insertBefore(node,script);
-              //
               //  Set CHTML data for jax
-              //
               jax.CHTML.ex = ex = (data||defaults).ex;
               jax.CHTML.em = jax.CHTML.outerEm = em = ex / CHTML.TEX.x_height; // scale ex to x_height
               jax.CHTML.cwidth = width / em;
               jax.CHTML.lineWidth = (linebreak ? width / em : CHTML.BIGDIMEN);
               jax.CHTML.scale = 1; jax.CHTML.fontsize = "100%";
             }
-            //
             //  Set state variables used for displaying equations in chunks
-            //
             state.CHTMLeqn = state.CHTMLlast = 0; state.CHTMLi = -1;
             state.CHTMLchunk = this.config.EqnChunk;
             state.CHTMLdelay = false;
           },
 
-          //
           //  We are using a monospaced font, so fake the size
-          //
           getHDW: function (c,name,styles) {
             return {h:.8, d:.2, w:c.length*.5};
           }
@@ -419,9 +311,7 @@ function ConfigureMathJax() {
 
       });
 
-      //
       //  Reset the color extension after `autoload-all`
-      //
       if (MathJax.AuthorConfig.extensions.indexOf("TeX/color.js") == -1) {
               MathJax.Hub.Register.StartupHook("TeX autoload-all Ready",function () {
                 var macros = MathJax.InputJax.TeX.Definitions.macros;
@@ -433,10 +323,7 @@ function ConfigureMathJax() {
               });
             }
 
-      //
       //  Start the typesetting queue when MathJax is ready
-      //    (reseting the counters so that the initial math doesn't affect them)
-      //
       MathJax.Hub.Register.StartupHook("End",function () {
         MathJax.OutputJax.SVG.resetGlyphs(true);
         MathJax.ElementJax.mml.ID = 0;
@@ -447,9 +334,7 @@ function ConfigureMathJax() {
   };
 
   if (extensions) {
-    //
     // Parse added extensions list and add to standard ones
-    //
     var extensionList = extensions.split(/s*,\s*/);
     for (var i = 0; i < extensionList.length; i++) {
       var matches = extensionList[i].match(/^(.*?)(\.js)?$/);
@@ -457,10 +342,7 @@ function ConfigureMathJax() {
     }
   }
 
-  //
-  //  Turn arrays into jsdom window arrays
-  //  (so "instanceof Array" will identify them properly)
-  //
+  //  Turn arrays into jsdom window arrays (so "instanceof Array" will identify them properly)
   var adjustArrays = function (obj) {
     for (var id in obj) {if (obj.hasOwnProperty(id)) {
       if (obj[id] instanceof Array) {
@@ -477,9 +359,7 @@ function ConfigureMathJax() {
   }
 }
 
-//
 //  Insert one objects into another
-//
 function Insert(dst,src) {
   for (var id in src) {if (src.hasOwnProperty(id)) {
     // allow for concatenation of arrays?
@@ -490,42 +370,34 @@ function Insert(dst,src) {
   return dst;
 }
 
-//
 //  Load MathJax into the DOM
-//
 function StartMathJax() {
   serverState = STATE.STARTED;
   var script = document.createElement("script");
   script.src = MathJaxPath;
+  // script.async = true;
+  script.type = 'text/javascript';
   script.onerror = function () {AddError("Can't load MathJax.js from "+MathJaxPath)}
-  document.head.appendChild(script);
+  document.getElementsByTagName('head')[0].appendChild(script);
 }
 
 /********************************************************************/
 
-//
 //  Return an error value (and report it to console)
-//
 function ReportError(message,currentCallback) {
   AddError(message);
   (currentCallback||callback)({errors: errors});
 }
 
-//
 //  Add an error to the error list and display it on the console
-//
 function AddError(message,nopush) {
   if (displayErrors) console.error(message);
   if (!nopush) errors.push(message);
 }
 
-
 /********************************************************************/
 
-//
-//  Creates the MathML output (taking MathJax resets
-//  into account)
-//
+//  Creates the MathML output (taking MathJax resets into account)
 function GetMML(result) {
   if (!data.mml && !data.mmlNode) return;
   var jax = MathJax.Hub.getAllJax()[0];
@@ -546,9 +418,7 @@ function GetMML(result) {
   if (data.mmlNode) result.mmlNode = jsdom(mml).body.firstChild;
 }
 
-//
 //  Creates speech string and updates the MathML to include it, if needed
-//
 function GetSpeech(result) {
   if (!data.speakText) return;
   result.speakText = "Equation";
@@ -559,9 +429,7 @@ function GetSpeech(result) {
   }
 }
 
-//
 //  Create HTML and CSS output, if requested
-//
 function GetHTML(result) {
   if (data.css) result.css = CHTMLSTYLES;
   if (!data.html && !data.htmlNode) return;
@@ -573,7 +441,7 @@ function GetHTML(result) {
     var labelTarget = html.querySelector('.mjx-math');
     for (child of labelTarget.childNodes) child.setAttribute("aria-hidden",true);
     if (!labelTarget.getAttribute("aria-label")){
-    labelTarget.setAttribute("aria-label",result.speakText);
+        labelTarget.setAttribute("aria-label",result.speakText);
     }
   }
   // remove automatically generated IDs
@@ -584,21 +452,17 @@ function GetHTML(result) {
   // remove extreneous frame element
   var frame = html.querySelector('[id^="MathJax-Element-"]');
   if (frame){
-    // in display-mode, the frame is inside the display-style wrapper
-    html.insertBefore(frame.firstChild, frame);
+    html.insertBefore(frame.firstChild, frame); // in display-mode, the frame is inside the display-style wrapper
     html.removeChild(frame);
   }
   else{
-    // otherwise (inline-mode) the frame is the root element
-    html.removeAttribute("id");
+    html.removeAttribute("id"); // otherwise (inline-mode) the frame is the root element
   }
   if (data.html) result.html = html.outerHTML;
   if (data.htmlNode) result.htmlNode = html;
 }
 
-//
 //  Create SVG output, if requested
-//
 function GetSVG(result) {
   if (!data.svg && !data.svgNode) return;
   var jax = MathJax.Hub.getAllJax()[0]; if (!jax) return;
@@ -606,14 +470,10 @@ function GetSVG(result) {
       svg = script.previousSibling.getElementsByTagName("svg")[0];
   svg.setAttribute("xmlns","http://www.w3.org/2000/svg");
 
-  //
   //  Add the speech text and mark the SVG appropriately
-  //
   if (data.speakText){
     for (var i=0, m=svg.childNodes.length; i < m; i++)
       svg.childNodes[i].setAttribute("aria-hidden",true);
-    // Note: if aria-label exists, getSpeech preserved it in speakText
-    // remove aria-label since labelled-by title is preferred
     svg.removeAttribute("aria-label");
     ID++; var id = "MathJax-SVG-"+ID+"-Title";
     svg.setAttribute("aria-labelledby",id);
@@ -622,18 +482,12 @@ function GetSVG(result) {
   }
 
   if (data.svg){
-    //
     //  SVG data is modified to add linebreaks for readability,
     //  and to put back the xlink namespace that is removed in HTML5
-    //
     var svgdata = svg.outerHTML.replace(/><([^/])/g,">\n<$1")
                                .replace(/(<\/[a-z]*>)(?=<\/)/g,"$1\n")
                                .replace(/(<(?:use|image) [^>]*)(href=)/g,' $1xlink:$2');
-
-    //
-    //  Add the requested data to the results
-    //
-    result.svg = svgdata;
+    result.svg = svgdata; //  Add the requested data to the results
   }
   if (data.svgNode) result.svgNode = svg;
   result.width = svg.getAttribute("width");
@@ -643,9 +497,7 @@ function GetSVG(result) {
 
 /********************************************************************/
 
-//
 //  Start typesetting the queued expressions
-//
 function StartQueue() {
   data = callback = null;       //  clear existing equation, if any
   errors = [];                  //  clear any errors
@@ -654,20 +506,14 @@ function StartQueue() {
   serverState = STATE.BUSY;
   var result = {}, $$ = window.Array;
 
-  //
-  //  Get the math data and callback
-  //  and set the content with the proper delimiters
-  //
+  //  Get the math data and callback and set the content with the proper delimiters
   var item = queue.shift();
   data = item[0]; callback = item[1];
   content.innerHTML = "";
   MathJax.HTML.addElement(content,"script",{type: "math/"+TYPES[data.format]},[data.math]);
   html.setAttribute("xmlns:"+data.xmlns,"http://www.w3.org/1998/Math/MathML");
 
-  //
-  //  Set the SVG and TeX parameters
-  //  according to the requested data
-  //
+  //  Set the SVG and TeX parameters according to the requested data
   var CHTML = MathJax.OutputJax.CommonHTML,
       SVG = MathJax.OutputJax.SVG,
       TEX = MathJax.InputJax.TeX,
@@ -681,18 +527,13 @@ function StartQueue() {
   SVG.config.useGlobalCache = data.useGlobalCache;
   TEX.config.equationNumbers.autoNumber = data.equationNumbers;
 
-  //
-  // Set the state from data.state or clear it
-  //
-  GetState(data.state);
+  GetState(data.state); // Set the state from data.state or clear it
 
   var renderer = ( (data.html || data.htmlNode || data.css) ? "CommonHTML" : "SVG");
 
-  //
   //  Set up a timeout timer to restart MathJax if it runs too long,
   //  Then push the Typeset call, the MathML, speech, and SVG calls,
   //  and our TypesetDone routine
-  //
   timer = setTimeout(RestartMathJax,data.timeout);
   HUB.Queue(
     $$(SetRenderer,renderer),
@@ -707,10 +548,7 @@ function StartQueue() {
   );
 }
 
-//
-//  Update the MathJax values from the state,
-//  or clear them if there is no state.
-//
+//  Update the MathJax values from the state, or clear them if there is no state.
 function GetState(state) {
   var SVG = MathJax.OutputJax.SVG,
       TEX = MathJax.InputJax.TeX,
@@ -742,20 +580,13 @@ function GetState(state) {
   }
 }
 
-//
-//  When the expression is typeset,
-//    clear the timeout timer, if any,
-//    and update the MathJax state,
-//
+//  When the expression is typeset, clear the timeout timer, if any, and update the MathJax state,
 function TypesetDone(result) {
   if (timer) {clearTimeout(timer); timer = null}
   html.removeAttribute("xmlns:"+data.xmlns);
 }
 
-//
-//  Return the result object, and
-//  do the next queued expression
-//
+//  Return the result object, and do the next queued expression
 function ReturnResult(result) {
   if (errors.length) {
     result.errors = errors;
@@ -778,9 +609,7 @@ function ReturnResult(result) {
   StartQueue();
 }
 
-//
 //  Set the MathJax renderer
-//
 function SetRenderer(renderer) {
   return MathJax.Hub.setRenderer(renderer);
 }
@@ -800,10 +629,7 @@ function RerenderSVG(result) {
 
 /********************************************************************/
 
-//
-//  If MathJax times out, discard the DOM
-//  and load a new one (get a fresh MathJax)
-//
+//  If MathJax times out, discard the DOM and load a new one (get a fresh MathJax)
 function RestartMathJax() {
   if (timer) {
     MathJax.Hub.queue.queue = [];  // clear MathJax queue, so pending operations won't fire
@@ -818,13 +644,9 @@ function RestartMathJax() {
 
 /********************************************************************/
 
-//
 //  The API call to typeset an equation
-//
-//     %%% cache results?
-//     %%% check types and values of parameters
-//
 exports.typeset = function (data,callback) {
+    console.log(data)
   if (!callback || typeof(callback) !== "function") {
     if (displayErrors) console.error("Missing callback");
     return;
@@ -840,26 +662,10 @@ exports.typeset = function (data,callback) {
   if (serverState == STATE.READY) StartQueue();
 }
 
-//
-//  Manually start MathJax (this is done automatically
-//  when the first typeset() call is made)
-//
+//  Manually start MathJax (this is done automatically when the first typeset() call is made)
 exports.start = function () {RestartMathJax()}
 
-//
 //  Configure MathJax and the API
-//  You can pass additional configuration options to MathJax using the
-//    MathJax property, and can set displayErrors and displayMessages
-//    that control the display of error messages, and extensions to add
-//    additional MathJax extensions to the base or to sub-categories.
-//
-//  E.g.
-//     mjAPI.config({
-//       MathJax: {SVG: {font: "STIX-Web"}},
-//       displayErrors: false,
-//       extensions: 'Safe,TeX/noUndefined'
-//     });
-//
 exports.config = function (config) {
   if (config.displayMessages != null)    {displayMessages = config.displayMessages}
   if (config.displayErrors != null)      {displayErrors   = config.displayErrors}
@@ -868,3 +674,50 @@ exports.config = function (config) {
   if (config.fontURL != null)            {fontURL         = config.fontURL}
   if (config.MathJax) {MathJaxConfig = config.MathJax}
 }
+
+// initMathJax = function(){
+    // mathjax = {
+    //     jax: ["input/TeX", "output/SVG"],
+    //     extensions: ["tex2jax.js", "MathMenu.js", "MathZoom.js"],
+    //     showMathMenu: false,
+    //     showProcessingMessages: false,
+    //     messageStyle: "none",
+    //     inlineMath: [['$','$'], ['\\(','\\)']],
+    //     SVG: {useGlobalCache: false},
+    //     TeX: {extensions: ["AMSmath.js", "AMSsymbols.js", "autoload-all.js"]},
+    //     AuthorInit: function() {
+    //         MathJax.Hub.Register.StartupHook("End", function() {
+    //             var wrapper = document.createElement("div");
+    //             wrapper.innerHTML = texstring;
+    //             MathJax.Hub.Queue(["Typeset", MathJax.Hub, wrapper]);
+    //             MathJax.Hub.Queue(function() {
+    //                 var mjOut = wrapper.getElementsByTagName("svg")[0];
+    //                 if(mjOut){
+    //                     mjOut.classList.add("mathjax-svg");
+    //                     mjOut.setAttribute("data-texstring", texstring);
+    //                     console.log(mjOut.outerHTML)
+    //                 }
+    //             });
+    //         });
+    //     }
+    // };
+
+    // (function(d, script) {
+    //     script = d.createElement('script');
+    //     script.type = 'text/javascript';
+    //     script.async = true;
+    //     script.src = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js';
+    //     d.getElementsByTagName('head')[0].appendChild(script);
+    // }(document));
+// }
+
+// toSvg = function(texstring, callback){
+//     // var svg_el = $("svg[data-texstring='" + texstring + "']");
+//     // console.log(svg_el)
+//     // callback(svg_el[0])
+// }
+
+// module.exports = {
+//   initMathJax : initMathJax,
+//   toSvg : toSvg
+// }

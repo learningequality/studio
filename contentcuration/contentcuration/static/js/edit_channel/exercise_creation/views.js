@@ -3,7 +3,6 @@ var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("summernote");
-var mathjax = require("MathJax");
 var Dropzone = require("dropzone");
 var get_cookie = require("utils/get_cookie");
 var UndoManager = require("backbone-undo");
@@ -11,7 +10,25 @@ var JSZip = require("jszip");
 var fileSaver = require("browser-filesaver");
 var JSZipUtils = require("jszip-utils");
 var Katex = require("katex");
-var mathjax = require("utils/mathjax");
+var mjAPI = require("utils/mathjax-parser");
+
+// a simple TeX-input example
+
+mjAPI.config({
+  MathJax: {
+    // traditional MathJax configuration
+  }
+});
+mjAPI.start();
+
+mjAPI.typeset({
+  math: 'E = mc^2',
+  format: "TeX", // "inline-TeX", "MathML"
+  svg:true,
+}, function (data) {
+    console.log(data)
+});
+
 
 var CHARACTERS = require("./symbols.json");
 require("exercises.less");
@@ -28,6 +45,7 @@ if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("S
 }
 var placeholder_text = "${☣ CONTENTSTORAGE}/"
 var regExp = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
+
 
 var ExerciseModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/exercise_modal.handlebars"),
@@ -215,7 +233,10 @@ var replace_mathjax = function(content){
     var matches = content.match(mathJaxRegex);
     if(matches){
         matches.forEach(function(match){
-            content = content.replace(match, Katex.renderToString(match.match(/\$\$(.+)\$\$/)[1]));
+            // MathJax.toSvg(match, function(svg){
+            //     console.log(svg)
+            //     // content = content.replace(match, svg);
+            // });
         });
     }
     return content;
@@ -621,7 +642,7 @@ var ExerciseView = ExerciseEditableListView.extend({
             node: this.model.toJSON(),
             is_random: this.model.get('extra_fields').randomize
         }));
-        _.defer(mathjax.initMathJax, 100);
+        // _.defer(MathJax.initMathJax, 100);
         this.load_content(this.collection.where({'deleted': false}), "Click '+ QUESTION' to begin...");
     },
     set_random:function(event){

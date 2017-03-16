@@ -47,6 +47,7 @@
     "minifyify": "^7.0.3",
     "node-lessify": "0.0.10",
     "summernote": "^0.8.2",
+    "tex-equation-to-svg": "^1.0.1",
     "to-markdown": "^3.0.3",
     "underscore": "^1.8.3",
     "watchify": "^3.2.3"
