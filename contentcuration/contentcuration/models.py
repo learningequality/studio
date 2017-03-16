@@ -352,7 +352,7 @@ class ContentNode(MPTTModel, models.Model):
             return original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first()
 
         # TEMPORARY: until all nodes have proper sources set (e.g. source_node_id)
-        return self.original_node
+        return self.original_node or self
 
 
     def get_channel(self):
