@@ -41,16 +41,19 @@ class EarlyExit(BaseException):
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('channel_id', type=str)
+        parser.add_argument('--force', action='store_true', dest='force', default=False)
 
     def handle(self, *args, **options):
         # license_id = options['license_id']
         channel_id = options['channel_id']
+        force = options['force']
 
         # license = ccmodels.License.objects.get(pk=license_id)
         try:
             channel = ccmodels.Channel.objects.get(pk=channel_id)
             # increment the channel version
-            raise_if_nodes_are_all_unchanged(channel)
+            if not force:
+                raise_if_nodes_are_all_unchanged(channel)
             fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
             with using_content_database(tempdb):

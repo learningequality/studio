@@ -13,4 +13,4 @@ class Command(BaseCommand):
         with transaction.atomic():
             for channel in Channel.objects.filter(main_tree__published=True):
                 logging.debug("Republishing channel {} ({})".format(channel.pk, channel.name))
-                call_command("exportchannel", channel.pk)
+                call_command("exportchannel", channel.pk, force=True)
