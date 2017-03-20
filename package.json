@@ -28,6 +28,7 @@
     "bootstrap": "^3.3.5",
     "browser-filesaver": "^1.1.0",
     "browserify": "^13.0.1",
+    "dom-to-image": "^2.5.2",
     "dropzone": "^4.0.1",
     "factor-bundle": "^2.4.1",
     "fastclick": "^1.0.6",

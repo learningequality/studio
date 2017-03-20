@@ -5,7 +5,18 @@
 
 {% block content %}
 	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
-
+	<div id="mathjax_container"></div>
+	<script type="text/x-mathjax-config">
+	  MathJax.Hub.Config({
+	    showProcessingMessages: false,
+	    jax: ["input/TeX","input/MathML","output/SVG"],
+  		extensions: ["tex2jax.js","mml2jax.js","MathMenu.js","MathZoom.js", "fast-preview.js", "AssistiveMML.js", "[Contrib]/a11y/accessibility-menu.js"],
+	  	TeX: {
+		    extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"]
+		  }
+	  });
+	</script>
+	<script type="text/javascript" src='https://cdn.mathjax.org/mathjax/latest/MathJax.js'></script>
 	<script>
 		var channel = JSON.parse("{{ channel|escapejs}}");
 		var license_list = JSON.parse("{{ license_list|escapejs}}");

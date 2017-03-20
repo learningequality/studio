@@ -10,25 +10,6 @@ var JSZip = require("jszip");
 var fileSaver = require("browser-filesaver");
 var JSZipUtils = require("jszip-utils");
 var Katex = require("katex");
-var mjAPI = require("utils/mathjax-parser");
-
-// a simple TeX-input example
-
-mjAPI.config({
-  MathJax: {
-    // traditional MathJax configuration
-  }
-});
-mjAPI.start();
-
-mjAPI.typeset({
-  math: 'E = mc^2',
-  format: "TeX", // "inline-TeX", "MathML"
-  svg:true,
-}, function (data) {
-    console.log(data)
-});
-
 
 var CHARACTERS = require("./symbols.json");
 require("exercises.less");
@@ -40,9 +21,15 @@ var toMarkdown = require('to-markdown');
 var htmlparser = require("html-parser");
 require("../../utils/mathquill.min.js");
 
+
 if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("Safari") > -1){
     require("mathml.less");
 }
+
+var domtoimage = require('dom-to-image');
+var jax2svg = require('edit_channel/utils/mathjaxtosvg')
+jax2svg.initMathJax();
+
 var placeholder_text = "${☣ CONTENTSTORAGE}/"
 var regExp = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
 
@@ -166,7 +153,11 @@ var AddFormulaView = BaseViews.BaseModalView.extend({
     events: {
         "click #add_formula": "add_formula",
         "click .character_symbol": "add_character",
-        "click .char_cmd": "add_format"
+        "click .char_cmd": "add_format",
+        "click .mq-wrapper": "keep_open"
+    },
+    keep_open:function(event){
+        event.stopPropagation();
     },
     render: function() {
         this.$el.html(this.template({selector: this.selector, characters: CHARACTERS}));
@@ -206,7 +197,7 @@ var AddFormulaView = BaseViews.BaseModalView.extend({
     },
     add_formula:function(){
         if(this.mathField.latex().trim()){
-            this.callback("\t$$" + this.mathField.latex() + "$$\t"); //extra tabs allow for easier cursor navigation
+            this.callback("&nbsp;\$\$" + this.mathField.latex() + "\$\$&nbsp;"); //extra tabs allow for easier cursor navigation
             this.mathField.latex("");
             $(".dropdown").dropdown('toggle');
         }
@@ -227,29 +218,38 @@ var replace_image_paths = function(content){
     return content;
 };
 
-var replace_mathjax = function(content){
-    var mathJaxRegex = /\$\$(.+)\$\$/g;
-    var MQ = MathQuill.getInterface(2); // for backcompat
-    var matches = content.match(mathJaxRegex);
+var replace_mathjax = function(content, callback){
+    var matches = content.match(/\$\$(.+)\$\$/g);
+    var promises = [];
     if(matches){
         matches.forEach(function(match){
-            // MathJax.toSvg(match, function(svg){
-            //     console.log(svg)
-            //     // content = content.replace(match, svg);
-            // });
+            promises.push(jax2svg.toSVG(match));
         });
     }
-    return content;
+    return Promise.all(promises).then(function(results){
+        results.forEach(function(result){
+            content = content.replace(result.getAttribute('data-texstring'), '&nbsp;' + result.outerHTML + '&nbsp;');
+        });
+        callback(content);
+    });
 };
 
 var parse_content = function(content){
-    parsed = replace_image_paths(content);
-    parsed = replace_mathjax(parsed);
-    return parsed.replace(/\\/g, '\\\\') // Escape backslashes
+    return new Promise(function(resolve, reject){
+        content = replace_image_paths(content);
+        replace_mathjax(content, function(result){
+            resolve(result.replace(/\\/g, '\\\\')); // Escape backslashes
+        });
+    });
 };
 
 var convert_html_to_markdown = function(contents) {
-    var updated = toMarkdown(contents,{
+    var el = document.createElement( 'div' );
+    el.innerHTML = contents;
+    _.each(el.getElementsByTagName( 'svg' ), function(svg){
+        contents = contents.replace(svg.outerHTML, '\$\$' + svg.getAttribute('data-texstring') + '\$\$')
+    });
+    contents = toMarkdown(contents,{
         converters: [
             {
                 filter: 'img',
@@ -269,10 +269,11 @@ var convert_html_to_markdown = function(contents) {
                 replacement: function (content) {
                     return '*' + content + '*'
                 }
-            },
+            }
         ]
     });
-    return updated
+    console.log(contents)
+    return contents
 }
 
 var UploadImage = function (context) {
@@ -334,9 +335,10 @@ var exerciseSaveDispatcher = _.clone(Backbone.Events);
 
 var EditorView = Backbone.View.extend({
     tagName: "div",
+    id: function() { return "editor_view_" + this.cid; },
 
     initialize: function(options) {
-        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "render");
+        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "render", "render_content");
         this.edit_key = options.edit_key;
         this.editing = false;
         this.render();
@@ -390,7 +392,10 @@ var EditorView = Backbone.View.extend({
 
     render_content: function() {
         if(this.model.get(this.edit_key)){
-            this.$el.html(this.view_template({content: parse_content(this.model.get(this.edit_key))}));
+            var self = this;
+            parse_content(this.model.get(this.edit_key)).then(function(result){
+                self.$el.html(self.view_template({content: result}));
+            });
         }else{
             this.$el.html(this.default_template({
                 source_url: this.model.get('source_url')
@@ -399,7 +404,10 @@ var EditorView = Backbone.View.extend({
     },
 
     render_editor: function() {
-        this.editor.insertHTML( this.view_template({content: parse_content(this.model.get(this.edit_key))}));
+        var self = this;
+        parse_content(this.model.get(this.edit_key)).then(function(result){
+            self.editor.insertHTML( self.view_template({content: result}));
+        });
     },
 
     activate_editor: function() {
@@ -418,6 +426,7 @@ var EditorView = Backbone.View.extend({
             placeholder: 'Enter ' + this.edit_key + "...",
             disableResizeEditor: true,
             disableDragAndDrop: true,
+            shortcuts: false,
             selector: this.cid,
             callbacks: {
                 onChange: _.debounce(this.save, 300),
@@ -642,7 +651,6 @@ var ExerciseView = ExerciseEditableListView.extend({
             node: this.model.toJSON(),
             is_random: this.model.get('extra_fields').randomize
         }));
-        // _.defer(MathJax.initMathJax, 100);
         this.load_content(this.collection.where({'deleted': false}), "Click '+ QUESTION' to begin...");
     },
     set_random:function(event){
@@ -878,10 +886,10 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         }
     },
     set_closed:function(){
-        this.$(".assessment_item").removeClass("active");
         this.set_toolbar_closed();
-        this.$(".question").removeClass("unfocused");
         this.editor_view.deactivate_editor();
+        this.$(".assessment_item").removeClass("active");
+        this.$(".question").removeClass("unfocused");
         this.open = false;
         this.unset_undo_redo_listener();
         if (this.answer_editor) {

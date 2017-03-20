@@ -58,21 +58,19 @@ var PreviewView = BaseViews.BaseView.extend({
         }
     },
     load_default_value:function(){
-        var default_preview = (this.model.get('kind') === 'exercise')?
-            _.min(this.model.get("assessment_items"), function(item){return item.order}) :
-            _.min(this.model.get("files"), function(file){return file.preset.order});
+        var default_preview = _.min(this.model.get("files"), function(file){return file.preset.order});
         this.current_preview = default_preview;
     },
     load_presets:function(){
         return new Models.FormatPresetCollection(_.where(_.pluck(this.model.get("files"), "preset"), {'display': true}));
     },
     load_questions:function(){
-        return new Models.AssessmentItemCollection(_.filter(this.model.get("assessment_items"), function(item){return !item['deleted'];}));
+        // return new Models.AssessmentItemCollection(_.filter(this.model.get("assessment_items"), function(item){return !item['deleted'];}));
     },
     load_preset_dropdown:function(){
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
              presets: this.load_presets().toJSON(),
-             questions: this.load_questions().toJSON()
+             // questions: this.load_questions().toJSON()
         }));
     },
 

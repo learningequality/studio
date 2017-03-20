@@ -126,7 +126,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1 && selected_items[0].model.get("kind") !== "topic";
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
-    var has_files = is_individual && selected_items[0].model.get("assessment_items").length > 0;
+    var has_files = is_individual;
     if(is_individual){
       selected_items[0].model.get("files").forEach(function(file){
         var preset = (file.preset.id)? file.preset.id:file.preset;
