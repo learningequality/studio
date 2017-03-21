@@ -740,8 +740,88 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
 
 });
 
+
+var ImageUploadView = BaseViews.BaseModalView.extend({
+    modal: true,
+
+    initialize: function(options) {
+        _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed", "submit_file", "file_complete", "set_alt_text");
+        this.callback = options.callback;
+        this.file = this.alt_text = null;
+        this.preset_id = options.preset_id;
+        this.render();
+    },
+
+    template: require("./hbtemplates/image_upload.handlebars"),
+    dropzone_template : require("./hbtemplates/image_upload_dropzone.handlebars"),
+    modal_template: require("./hbtemplates/image_upload_modal.handlebars"),
+
+    events: {
+        "click #submit_file": "submit_file",
+        "change #alt_text_box": "set_alt_text"
+    },
+
+    render: function() {
+        this.$el.html(this.modal_template());
+        $("body").append(this.el);
+        this.$(".modal").modal({show: true});
+        this.$(".modal").on("hide.bs.modal", this.close);
+        this.$(".modal").on("hidden.bs.modal", this.closed_modal);
+        this.render_dropzone();
+    },
+    render_dropzone:function(){
+        this.$(".modal-body").html(this.template({file: this.file, alt_text: this.alt_text}));
+        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
+            maxFiles: 1,
+            clickable: ["#dropzone", "#dropzone_placeholder"],
+            acceptedFiles: window.formatpresets.get({id:this.preset_id}).get('associated_mimetypes').join(','),
+            url: window.Urls.exercise_image_upload(),
+            thumbnailWidth:null,
+            thumbnailHeight:null,
+            previewTemplate:this.dropzone_template(),
+            previewsContainer: "#dropzone",
+            headers: {"X-CSRFToken": get_cookie("csrftoken")}
+        });
+        this.dropzone.on("success", this.file_uploaded);
+        this.dropzone.on("addedfile", this.file_added);
+        this.dropzone.on("removedfile", this.file_removed);
+        this.dropzone.on("error", this.file_failed);
+        this.dropzone.on("queuecomplete", this.file_complete);
+    },
+    set_alt_text: function(event){
+        this.alt_text = event.target.value;
+    },
+    submit_file:function(){
+        this.callback(this.file.file_id, this.file.filename, this.alt_text);
+        this.close();
+    },
+    file_uploaded: function(file) {
+        this.file_error = null;
+        this.file = JSON.parse(file.xhr.response);
+    },
+    file_added:function(file){
+        this.file_error = "Error uploading file: connection interrupted";
+        this.$("#dropzone_placeholder").css("display", "none");
+    },
+    file_removed:function(){
+        this.file_error = null;
+        this.file = null;
+        this.render_dropzone();
+    },
+    file_failed:function(data, error){
+        this.file_error = error;
+    },
+    file_complete:function(){
+        if(this.file_error){
+            alert(this.file_error);
+        }
+        this.render_dropzone();
+    }
+});
+
 module.exports = {
     FileUploadView:FileUploadView,
     FileModalView:FileModalView,
-    FormatInlineItem:FormatInlineItem
+    FormatInlineItem:FormatInlineItem,
+    ImageUploadView:ImageUploadView
 }

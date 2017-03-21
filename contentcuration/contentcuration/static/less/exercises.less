@@ -22,6 +22,18 @@
         url("@{icon-font-path}Symbola.svg#Symbola") format("svg");
 }
 
+@font-face {
+  font-family: KaTeX_Main;
+  src: url("@{icon-font-path}Symbola.eot");
+  src: local("Symbola Regular"), local("Symbola"),
+        url("@{icon-font-path}Symbola.woff2") format("woff2"),
+        url("@{icon-font-path}Symbola.woff") format("woff"),
+        url("@{icon-font-path}Symbola.ttf") format("truetype"),
+        url("@{icon-font-path}Symbola.otf") format("opentype"),
+        url("@{icon-font-path}Symbola.svg#Symbola") format("svg");
+}
+
+
 
 @hint-color:#FDFADF;
 @incorrect-bg-color:#F7DCDC;
@@ -208,6 +220,15 @@
         }
     }
     .editor-wrapper{
+        .loading-overlay{
+            position: absolute;
+            z-index: 99;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10%;
+            margin-left: 40%;
+        }
+
         /* SummerNote Styling */
         .note-toolbar{
             background-color: @gray-200;
@@ -228,6 +249,9 @@
         .note-editor, .note-editor.note-frame{
             border:1px solid @gray-300;
             border-radius:0;
+            .note-placeholder{
+                cursor:text;
+            }
         }
 
         /* MathQuill Styling */

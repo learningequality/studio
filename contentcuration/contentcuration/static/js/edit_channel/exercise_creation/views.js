@@ -1,144 +1,32 @@
+// Modules
 var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-require("summernote");
-var Dropzone = require("dropzone");
+var FileUploader = require('edit_channel/file_upload/views');
 var get_cookie = require("utils/get_cookie");
 var UndoManager = require("backbone-undo");
-var JSZip = require("jszip");
-var fileSaver = require("browser-filesaver");
-var JSZipUtils = require("jszip-utils");
+require("summernote");
+
+// Parsers
 var Katex = require("katex");
-
-var CHARACTERS = require("./symbols.json");
-require("exercises.less");
-require("../../../css/summernote.css");
-require("dropzone/dist/dropzone.css");
-require("../../../css/katex.min.css");
-require("../../../css/mathquill.css");
 var toMarkdown = require('to-markdown');
-var htmlparser = require("html-parser");
-require("../../utils/mathquill.min.js");
-
-
-if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("Safari") > -1){
-    require("mathml.less");
-}
-
-var domtoimage = require('dom-to-image');
 var jax2svg = require('edit_channel/utils/mathjaxtosvg')
 jax2svg.initMathJax();
 
-var placeholder_text = "${☣ CONTENTSTORAGE}/"
-var regExp = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
+// Stylesheets
+require("exercises.less");
+require("../../../css/summernote.css");
+require("../../../css/katex.min.css");
+if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("Safari") > -1){
+    require("mathml.less"); // Windows and Safari don't support mathml natively, so add styling accordingly
+}
 
+const CHARACTERS = require("./symbols.json");
+const MATHJAX_REGEX = /\$\$([^\$]+)\$\$/g;
+const IMG_PLACEHOLDER = "${☣ CONTENTSTORAGE}/"
+const IMG_REGEX = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
 
-var ExerciseModalView = BaseViews.BaseModalView.extend({
-    template: require("./hbtemplates/exercise_modal.handlebars"),
-    initialize: function(options) {
-        _.bindAll(this, "close_exercise_uploader", "close");
-        this.render(this.close_exercise_uploader, {});
-         this.exercise_view = new ExerciseView({
-            el: this.$(".modal-body"),
-            container: this,
-            model:this.model,
-            parentnode:options.parentnode,
-            onclose: this.close_exercise_uploader,
-            onsave: options.onsave,
-        });
-    },
-    close_exercise_uploader:function(event){
-        if(!event || !this.exercise_view.check_for_changes()){
-            this.close();
-            $('body').removeClass('modal-open');
-            $('.modal-backdrop').remove();
-        }else if(confirm("Unsaved Metadata Detected! Exiting now will"
-            + " undo any new changes. \n\nAre you sure you want to exit?")){
-            this.close();
-        }else{
-            event.stopPropagation();
-            event.preventDefault();
-        }
-    }
-});
-
-var FileUploadView = BaseViews.BaseModalView.extend({
-    modal: true,
-
-    initialize: function(options) {
-        _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed", "submit_file", "file_complete", "set_alt_text");
-        this.callback = options.callback;
-        this.file = this.alt_text = null;
-        this.render();
-    },
-
-    template: require("./hbtemplates/file_upload.handlebars"),
-    dropzone_template : require("./hbtemplates/file_upload_dropzone.handlebars"),
-    modal_template: require("./hbtemplates/file_upload_modal.handlebars"),
-
-    events: {
-        "click #submit_file": "submit_file",
-        "change #alt_text_box": "set_alt_text"
-    },
-
-    render: function() {
-        this.$el.html(this.modal_template());
-        $("body").append(this.el);
-        this.$(".modal").modal({show: true});
-        this.$(".modal").on("hide.bs.modal", this.close);
-        this.$(".modal").on("hidden.bs.modal", this.closed_modal);
-        this.render_dropzone();
-    },
-    render_dropzone:function(){
-        this.$(".modal-body").html(this.template({file: this.file, alt_text: this.alt_text}));
-        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
-            maxFiles: 1,
-            clickable: ["#dropzone", "#dropzone_placeholder"],
-            acceptedFiles: window.formatpresets.get({id:'exercise_image'}).get('associated_mimetypes').join(','),
-            url: window.Urls.exercise_image_upload(),
-            thumbnailWidth:null,
-            thumbnailHeight:null,
-            previewTemplate:this.dropzone_template(),
-            previewsContainer: "#dropzone",
-            headers: {"X-CSRFToken": get_cookie("csrftoken")}
-        });
-        this.dropzone.on("success", this.file_uploaded);
-        this.dropzone.on("addedfile", this.file_added);
-        this.dropzone.on("removedfile", this.file_removed);
-        this.dropzone.on("error", this.file_failed);
-        this.dropzone.on("queuecomplete", this.file_complete);
-    },
-    set_alt_text: function(event){
-        this.alt_text = event.target.value;
-    },
-    submit_file:function(){
-        this.callback(this.file.file_id, this.file.filename, this.alt_text);
-        this.close();
-    },
-    file_uploaded: function(file) {
-        this.file_error = null;
-        this.file = JSON.parse(file.xhr.response);
-    },
-    file_added:function(file){
-        this.file_error = "Error uploading file: connection interrupted";
-        this.$("#dropzone_placeholder").css("display", "none");
-    },
-    file_removed:function(){
-        this.file_error = null;
-        this.file = null;
-        this.render_dropzone();
-    },
-    file_failed:function(data, error){
-        this.file_error = error;
-    },
-    file_complete:function(){
-        if(this.file_error){
-            alert(this.file_error);
-        }
-        this.render_dropzone();
-    }
-});
 
 var AddFormulaView = BaseViews.BaseModalView.extend({
     modal: true,
@@ -205,77 +93,6 @@ var AddFormulaView = BaseViews.BaseModalView.extend({
     }
 });
 
-
-var replace_image_paths = function(content){
-    var matches = content.match(regExp);
-    if(matches){
-        matches.forEach(function(match){
-            var filename = match.split("/").slice(-1)[0];
-            var replace_str = "/content/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
-            content = content.replace(match, replace_str);
-        })
-    }
-    return content;
-};
-
-var replace_mathjax = function(content, callback){
-    var matches = content.match(/\$\$(.+)\$\$/g);
-    var promises = [];
-    if(matches){
-        matches.forEach(function(match){
-            promises.push(jax2svg.toSVG(match));
-        });
-    }
-    return Promise.all(promises).then(function(results){
-        results.forEach(function(result){
-            content = content.replace(result.getAttribute('data-texstring'), '&nbsp;' + result.outerHTML + '&nbsp;');
-        });
-        callback(content);
-    });
-};
-
-var parse_content = function(content){
-    return new Promise(function(resolve, reject){
-        content = replace_image_paths(content);
-        replace_mathjax(content, function(result){
-            resolve(result.replace(/\\/g, '\\\\')); // Escape backslashes
-        });
-    });
-};
-
-var convert_html_to_markdown = function(contents) {
-    var el = document.createElement( 'div' );
-    el.innerHTML = contents;
-    _.each(el.getElementsByTagName( 'svg' ), function(svg){
-        contents = contents.replace(svg.outerHTML, '\$\$' + svg.getAttribute('data-texstring') + '\$\$')
-    });
-    contents = toMarkdown(contents,{
-        converters: [
-            {
-                filter: 'img',
-                replacement: function (content, node) {
-                    var alt = node.alt || '';
-                    var src = node.getAttribute('src').split('/').slice(-1)[0] || '';
-                    var title = node.title || '';
-                    var width = node.style.width || node.width || null;
-                    var height = node.style.height || node.height || null;
-                    var size = width ? " =" + width.toString().replace('px', '') + "x" : '';
-                    size += height ? height.toString().replace('px', '') : '';
-                    return src ? '![' + alt + ']' + '(' + placeholder_text + src + size + ')' : ''
-                }
-            },
-            {
-                filter: ['em', 'i'],
-                replacement: function (content) {
-                    return '*' + content + '*'
-                }
-            }
-        ]
-    });
-    console.log(contents)
-    return contents
-}
-
 var UploadImage = function (context) {
   var ui = $.summernote.ui;
 
@@ -284,10 +101,12 @@ var UploadImage = function (context) {
     contents: '<i class="note-icon-picture"/>',
     tooltip: 'Image',
     click: function () {
-        var view = new FileUploadView({callback: context.options.callbacks.onImageUpload});
+        var view = new FileUploader.ImageUploadView({
+            callback: context.options.callbacks.onImageUpload,
+            preset_id: 'exercise_image'
+        });
     }
   });
-
   return button.render();   // return button as jquery object
 }
 
@@ -323,11 +142,23 @@ function SummernoteWrapper(element, context, options) {
     this.context = context;
     this.element.summernote(options);
 
-    this.insertHTML = function(content){
+    this.setHTML = function(content){
         element.summernote('code', content);
+    };
+    this.insertHTML = function(content){
+        element.summernote('insertNode', content);
     };
     this.focus = function(){
         element.summernote('focus');
+    };
+    this.getContents = function(){
+        return element.summernote('code');
+    };
+    this.enable = function(){
+        element.summernote('enable');
+    };
+    this.disable = function(){
+        element.summernote('disable');
     };
 }
 
@@ -338,7 +169,8 @@ var EditorView = Backbone.View.extend({
     id: function() { return "editor_view_" + this.cid; },
 
     initialize: function(options) {
-        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "render", "render_content");
+        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save",
+                "render", "render_content", "parse_content", "replace_mathjax_with_svgs");
         this.edit_key = options.edit_key;
         this.editing = false;
         this.render();
@@ -360,13 +192,25 @@ var EditorView = Backbone.View.extend({
         this.render_editor();
     },
     add_formula:function(formula){
-        this.model.set(this.edit_key, this.model.get(this.edit_key) + formula);
-        this.render_editor();
-        this.editor.focus();
+        var self = this;
+        jax2svg.toSVG(formula).then(function(svg){
+            var updatedHtml = svg.outerHTML;
+
+            // Check if there is any content. If there is, append to the end of the last line
+            var div = document.createElement('div');
+            div.innerHTML = self.editor.getContents();
+            var paragraphs = div.getElementsByTagName('p');
+            if(paragraphs.length){
+                paragraphs[paragraphs.length - 1].appendChild(svg);
+                updatedHtml = div.innerHTML;
+            }
+            self.editor.setHTML(updatedHtml)
+            self.model.set(self.edit_key, self.model.get(self.edit_key) + formula);
+            self.editor.focus();
+        });
     },
 
     edit_template: require("./hbtemplates/editor.handlebars"),
-
     view_template: require("./hbtemplates/editor_view.handlebars"),
     default_template: require("./hbtemplates/editor_view_default.handlebars"),
 
@@ -393,8 +237,10 @@ var EditorView = Backbone.View.extend({
     render_content: function() {
         if(this.model.get(this.edit_key)){
             var self = this;
-            parse_content(this.model.get(this.edit_key)).then(function(result){
+            this.toggle_loading(true);
+            this.parse_content(this.model.get(this.edit_key)).then(function(result){
                 self.$el.html(self.view_template({content: result}));
+                self.toggle_loading(false);
             });
         }else{
             this.$el.html(this.default_template({
@@ -405,11 +251,23 @@ var EditorView = Backbone.View.extend({
 
     render_editor: function() {
         var self = this;
-        parse_content(this.model.get(this.edit_key)).then(function(result){
-            self.editor.insertHTML( self.view_template({content: result}));
+        this.toggle_loading(true);
+        this.parse_content(this.model.get(this.edit_key)).then(function(result){
+            self.editor.setHTML( self.view_template({content: result}));
+            self.toggle_loading(false);
         });
     },
-
+    toggle_loading:function(isLoading){
+        if(this.editor && this.editing){
+            if(isLoading){
+                this.editor.disable();
+                this.$('.loading-overlay').css('display', 'block');
+            }else{
+                this.editor.enable();
+                this.$('.loading-overlay').css('display', 'none');
+            }
+        }
+    },
     activate_editor: function() {
         var selector = this.cid + "_editor";
         this.$el.html(this.edit_template({selector: selector}));
@@ -463,13 +321,89 @@ var EditorView = Backbone.View.extend({
         * modifies the contents of the editor (i.e. our own code).
         */
         this.setting_model = true;
-        this.markdown = convert_html_to_markdown(contents);
-
+        this.markdown = this.convert_html_to_markdown(contents);
         this.model.set(this.edit_key, this.markdown);
     },
     validate: function(){
         this.$(".note-error").css("display", (this.markdown.trim())? "none" : "inline-block");
         return this.markdown;
+    },
+    replace_image_paths: function(content){
+        var matches = content.match(IMG_REGEX);
+        if(matches){
+            matches.forEach(function(match){
+                var filename = match.split("/").slice(-1)[0];
+                var replace_str = "/content/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
+                content = content.replace(match, replace_str);
+            })
+        }
+        return content;
+    },
+    replace_mathjax_with_svgs: function(content, callback){
+        var matches = content.match(MATHJAX_REGEX) || [];
+        var promises = [];
+        matches.forEach(function(match){
+            promises.push(jax2svg.toSVG(match));
+        });
+        Promise.all(promises).then(function(results){
+            results.forEach(function(result){
+                content = content.replace(result.getAttribute('data-texstring'), '&nbsp;' + result.outerHTML + '&nbsp;');
+            });
+            callback(content);
+        });
+    },
+    replace_mathjax_with_katex: function(content, callback){
+        var matches = content.match(MATHJAX_REGEX) || [];
+        matches.forEach(function(match){
+            var replace_str = Katex.renderToString(match.match(/\$\$(.+)\$\$/)[1]);
+            content = content.replace(match, replace_str);
+        });
+        callback(content);
+    },
+    parse_content: function(content){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            content = self.replace_image_paths(content);
+            content = content.replace(/\\/g, '\\\\') // Escape backslashes
+            if(!MATHJAX_REGEX.test(content)){
+                resolve(content);
+                return;
+            }
+
+            // If the editor is open, convert to svgs. Otherwise use katex to make loading faster
+            (self.editing)? self.replace_mathjax_with_svgs(content, resolve) : self.replace_mathjax_with_katex(content, resolve);
+        });
+    },
+    convert_html_to_markdown: function(contents) {
+        var el = document.createElement( 'div' );
+        el.innerHTML = contents;
+        _.each(el.getElementsByTagName( 'svg' ), function(svg){
+            contents = contents.replace(svg.outerHTML, '\$\$' + svg.getAttribute('data-texstring') + '\$\$')
+        });
+        contents = toMarkdown(contents,{
+            converters: [
+                {
+                    filter: 'img',
+                    replacement: function (content, node) {
+                        var alt = node.alt || '';
+                        var src = node.getAttribute('src').split('/').slice(-1)[0] || '';
+                        var title = node.title || '';
+                        var width = node.style.width || node.width || null;
+                        var height = node.style.height || node.height || null;
+                        var size = width ? " =" + width.toString().replace('px', '') + "x" : '';
+                        size += height ? height.toString().replace('px', '') : '';
+                        return src ? '![' + alt + ']' + '(' + IMG_PLACEHOLDER + src + size + ')' : ''
+                    }
+                },
+                {
+                    filter: ['em', 'i'],
+                    replacement: function (content) {
+                        return '*' + content + '*'
+                    }
+                }
+            ]
+        });
+        return contents
     }
 });
 
@@ -1193,6 +1127,5 @@ var AssessmentItemHintView = ExerciseEditableItemView.extend({
 
 module.exports = {
     ExerciseView:ExerciseView,
-    ExerciseModalView:ExerciseModalView,
     AssessmentItemDisplayView:AssessmentItemDisplayView
 }

@@ -1,51 +1,45 @@
-// var domtoimage = require('dom-to-image');
-// require("./mathjax/MathJax");
-// MathJax.Hub.Config({
-//     showProcessingMessages: false,
-//     jax: ["input/TeX","input/MathML","output/SVG", "output/PreviewHTML"],
-//       extensions: ["tex2jax.js","mml2jax.js","MathMenu.js","MathZoom.js", "fast-preview.js", "AssistiveMML.js", "[Contrib]/a11y/accessibility-menu.js"],
-//       TeX: {
-//         extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"]
-//       }
-// });
+_ = require('underscore');
 
-// var config = {
-//     showProcessingMessages: false,
-//     jax: ["input/TeX","input/MathML","output/SVG"],
-//     extensions: ["tex2jax.js","mml2jax.js","MathMenu.js","MathZoom.js", "fast-preview.js", "AssistiveMML.js", "[Contrib]/a11y/accessibility-menu.js"],
-//     TeX: {extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"]}
-// }
+var config = {
+    showProcessingMessages: false,
+    jax: ["input/TeX","input/MathML","output/SVG"],
+    extensions: ["tex2jax.js","mml2jax.js","MathMenu.js","MathZoom.js", "fast-preview.js", "AssistiveMML.js", "[Contrib]/a11y/accessibility-menu.js"],
+    TeX: {extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"]}
+}
 
+function initMathJax(){
+    // (function () {
+    //   var head = document.getElementsByTagName("head")[0], script;
+    //   script = document.createElement("script");
+    //   script.type = "text/x-mathjax-config";
+    //   script[(window.opera ? "innerHTML" : "text")] = "MathJax.Hub.Config(" + config +");";
+    //   head.appendChild(script);
+    //   script = document.createElement("script");
+    //   script.type = "text/javascript";
+    //   script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js";
+    //   head.appendChild(script);
+    // })();
+}
 var SvgGenerator = {
   svg_container: null,     // filled in by Init below
   timeout: null,     // store setTimout id
   mjRunning: false,  // true when MathJax is processing
-  mjPending: false,  // true when a typeset has been queued
+  index: 0,
 
   //  Get the preview and buffer DIV's
   Init: function () {
-    this.svg_container = document.createElement("canvas");
+    this.svg_container = document.createElement("div");
     this.svg_container.id = "mathjax_container";
   },
 
-  // Generate mathjax based on input
-  Update: function (text, callback) {
-    if (this.timeout) {clearTimeout(this.timeout)}
-    this.timeout = setTimeout(this.callback, this.delay, text, callback);
-  },
-
-  //  Creates the preview and runs MathJax on it.
-  //  Indicate that MathJax is running, and start the
-  //    typesetting.  After it is done, call PreviewDone.
+  //  Creates the SVG container and runs MathJax on it.
   GenerateSVG: function (text, callback) {
-    SvgGenerator.timeout = null;
-    if (this.mjPending) return;
     if (this.mjRunning) {
-      this.mjPending = true;
-      MathJax.Hub.Queue(["GenerateSVG",this]);
+      MathJax.Hub.Queue(["GenerateSVG",this, text, callback]);
     } else {
-      this.svg_container.innerHTML = text;
       this.mjRunning = true;
+      this.svg_container = document.createElement("div");
+      this.svg_container.innerHTML = text;
       MathJax.Hub.Queue(
         ["Typeset",MathJax.Hub,this.svg_container],
         ["SVGDone",this, text, callback]
@@ -55,71 +49,27 @@ var SvgGenerator = {
 
   //  Indicate that MathJax is no longer running and return the result
   SVGDone: function (text, callback) {
-    this.mjRunning = this.mjPending = false;
     var result = $(this.svg_container).find('svg')[0];
     if (result){
       result.setAttribute("data-texstring", text);
-      callback(result);
-      MathJax.Hub.Queue(["Typeset", MathJax.Hub, this.svg_container]);
     }
-  },
-
-  ApplyTypeset: function(element){
-    MathJax.Hub.Queue(["Typeset",MathJax.Hub,element] );
+    callback(result);
+    this.mjRunning = false;
   }
 };
 
 //  Cache a callback to the GenerateSVG action
-SvgGenerator.callback = MathJax.Callback(["GenerateSVG",SvgGenerator]);
-SvgGenerator.callback.autoReset = true;  // make sure it can run more than once
+SvgGenerator.generate = MathJax.Callback(["GenerateSVG",SvgGenerator]);
+SvgGenerator.generate.autoReset = true;  // make sure it can run more than once
 SvgGenerator.Init();
 
-function initMathJax(){
-    // loadModule().then(function(){
-    //     console.log("loaded module")
-    //     loadConfig().then(function(){
-    //         console.log("GOT ALL")
-    //     });
-    // });
-}
-
-function loadModule(){
-    return new Promise(function(resolve, reject){
-        var loadscript = document.createElement('script');
-        loadscript.type = 'text/javascript';
-        loadscript.src = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js';
-        loadscript.onload = function(){
-            resolve(true);
-        }
-    });
-}
-
-function loadConfig(){
-    return new Promise(function(resolve, reject){
-        var configscript = document.createElement('script');
-        configscript.type = 'text/x-mathjax-config';
-        configscript.text = 'MathJax.Hub.Config(' + JSON.stringify(config) + ');';
-        configscript.onload = function(){
-            resolve(true);
-        }
-    });
-}
-
-
 function toSVG(text){
-    return new Promise(function(resolve, reject){
-        SvgGenerator.Update(text, function(result){
-          resolve(result)
-        });
-    });
-}
-
-function typeset(element){
-    SvgGenerator.ApplyTypeset(element);
+  return new Promise(function(resolve, reject){
+    SvgGenerator.generate(text, resolve);
+  });
 }
 
 module.exports = {
 	initMathJax : initMathJax,
-    toSVG :toSVG,
-    typeset:typeset
+  toSVG:toSVG
 }
