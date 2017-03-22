@@ -7,17 +7,19 @@ var FileUploader = require('edit_channel/file_upload/views');
 var get_cookie = require("utils/get_cookie");
 var UndoManager = require("backbone-undo");
 require("summernote");
+require("../../utils/mathquill.min.js");
 
 // Parsers
 var Katex = require("katex");
 var toMarkdown = require('to-markdown');
 var jax2svg = require('edit_channel/utils/mathjaxtosvg')
-jax2svg.initMathJax();
+jax2svg.init();
 
 // Stylesheets
 require("exercises.less");
 require("../../../css/summernote.css");
 require("../../../css/katex.min.css");
+require("../../../css/mathquill.css");
 if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("Safari") > -1){
     require("mathml.less"); // Windows and Safari don't support mathml natively, so add styling accordingly
 }
@@ -85,7 +87,7 @@ var AddFormulaView = BaseViews.BaseModalView.extend({
     },
     add_formula:function(){
         if(this.mathField.latex().trim()){
-            this.callback("&nbsp;\$\$" + this.mathField.latex() + "\$\$&nbsp;"); //extra tabs allow for easier cursor navigation
+            this.callback("\$\$" + this.mathField.latex().trim() + "\$\$");
             this.mathField.latex("");
             $(".dropdown").dropdown('toggle');
         }
@@ -140,6 +142,9 @@ var AddFormula = function (context) {
 function SummernoteWrapper(element, context, options) {
     this.element = element;
     this.context = context;
+    if(!!document.createRange) {
+        document.getSelection().removeAllRanges();
+    }
     this.element.summernote(options);
 
     this.setHTML = function(content){
@@ -253,8 +258,10 @@ var EditorView = Backbone.View.extend({
         var self = this;
         this.toggle_loading(true);
         this.parse_content(this.model.get(this.edit_key)).then(function(result){
-            self.editor.setHTML( self.view_template({content: result}));
+            var html = self.view_template({content: result});
+            self.editor ? self.editor.setHTML(html) : self.$el.html(html);
             self.toggle_loading(false);
+            if(self.editor) self.editor.focus();
         });
     },
     toggle_loading:function(isLoading){
@@ -295,7 +302,6 @@ var EditorView = Backbone.View.extend({
         $('.dropdown-toggle').dropdown()
         this.editing = true;
         this.render_editor();
-        this.editor.focus();
     },
     deactivate_editor: function() {
         delete this.editor;
@@ -339,8 +345,23 @@ var EditorView = Backbone.View.extend({
         }
         return content;
     },
+    get_mathjax_strings:function(content){
+        var mathjax_list = [];
+        var collectString = false;
+        var parsedString = content;
+        while(parsedString.length){
+            var index = parsedString.indexOf("$$");
+            if(index < 0) break;
+            if(collectString){
+                mathjax_list.push("$$" + parsedString.substring(0, index) + "$$");
+            }
+            parsedString = parsedString.substring(index + 2, parsedString.length);
+            collectString = !collectString;
+        }
+        return mathjax_list;
+    },
     replace_mathjax_with_svgs: function(content, callback){
-        var matches = content.match(MATHJAX_REGEX) || [];
+        var matches = this.get_mathjax_strings(content);
         var promises = [];
         matches.forEach(function(match){
             promises.push(jax2svg.toSVG(match));
@@ -353,8 +374,9 @@ var EditorView = Backbone.View.extend({
         });
     },
     replace_mathjax_with_katex: function(content, callback){
-        var matches = content.match(MATHJAX_REGEX) || [];
+        var matches = this.get_mathjax_strings(content);
         matches.forEach(function(match){
+            console.log(match)
             var replace_str = Katex.renderToString(match.match(/\$\$(.+)\$\$/)[1]);
             content = content.replace(match, replace_str);
         });
@@ -364,14 +386,13 @@ var EditorView = Backbone.View.extend({
         var self = this;
         return new Promise(function(resolve, reject){
             content = self.replace_image_paths(content);
-            content = content.replace(/\\/g, '\\\\') // Escape backslashes
-            if(!MATHJAX_REGEX.test(content)){
-                resolve(content);
-                return;
-            }
-
+            content = content.replace(/\\(?!\$)/g, '\\\\') // Escape backslashes, skipping $ to keep mathjax delimiters
             // If the editor is open, convert to svgs. Otherwise use katex to make loading faster
-            (self.editing)? self.replace_mathjax_with_svgs(content, resolve) : self.replace_mathjax_with_katex(content, resolve);
+            if(self.editing){
+                self.replace_mathjax_with_svgs(content, resolve);
+            }else{
+                self.replace_mathjax_with_katex(content, resolve);
+            }
         });
     },
     convert_html_to_markdown: function(contents) {
