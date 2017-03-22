@@ -12,27 +12,9 @@
 }
 
 @font-face {
-  font-family: Symbola;
-  src: url("@{icon-font-path}Symbola.eot");
-  src: local("Symbola Regular"), local("Symbola"),
-        url("@{icon-font-path}Symbola.woff2") format("woff2"),
-        url("@{icon-font-path}Symbola.woff") format("woff"),
-        url("@{icon-font-path}Symbola.ttf") format("truetype"),
-        url("@{icon-font-path}Symbola.otf") format("opentype"),
-        url("@{icon-font-path}Symbola.svg#Symbola") format("svg");
+  font-family: MathJax;
+  src: url("@{icon-font-path}MathJax_Math-Italic.otf") format("opentype"),
 }
-
-@font-face {
-  font-family: KaTeX_Main;
-  src: url("@{icon-font-path}Symbola.eot");
-  src: local("Symbola Regular"), local("Symbola"),
-        url("@{icon-font-path}Symbola.woff2") format("woff2"),
-        url("@{icon-font-path}Symbola.woff") format("woff"),
-        url("@{icon-font-path}Symbola.ttf") format("truetype"),
-        url("@{icon-font-path}Symbola.otf") format("opentype"),
-        url("@{icon-font-path}Symbola.svg#Symbola") format("svg");
-}
-
 
 
 @hint-color:#FDFADF;
@@ -42,6 +24,7 @@
 @correct-highlight-color: #8FE48F;
 
 .note-image-popover{ display: none !important; }
+.tooltip { z-index: 99999999999999; }
 
 #exercisecreation{
     .show_question_toggle, .toggle_question_order{
@@ -204,6 +187,7 @@
     }
     .note-error{ display:none; }
     .editor-col{padding-right:0;}
+    .katex *{ font-family: MathJax !important; }
 }
 
 .hint_modal, .assessment_item.active{
@@ -238,6 +222,11 @@
                 border-radius: 0;
                 box-shadow: none;
                 background: transparent;
+            }
+            .formula_icon{
+                font-family: FANTASY;
+                font-size: 10pt;
+                font-weight: bolder;
             }
             .btn:hover, .btn.active{ color: @blue-500 !important; }
         }
