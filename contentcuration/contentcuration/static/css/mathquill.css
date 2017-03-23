@@ -100,7 +100,7 @@
 .mq-math-mode var,
 .mq-math-mode .mq-text-mode,
 .mq-math-mode .mq-nonSymbola {
-  font-family: "Times New Roman", Symbola, serif;
+  font-family: MathJax, serif;
   line-height: .9;
 }
 .mq-math-mode * {
@@ -133,7 +133,7 @@
   min-width: 1ex;
 }
 .mq-math-mode .mq-font {
-  font: 1em "Times New Roman", Symbola, serif;
+  font: 1em MathJax, serif;
 }
 .mq-math-mode .mq-font * {
   font-family: inherit;
@@ -182,10 +182,10 @@
   font-style: normal;
 }
 .mq-math-mode .mq-sans-serif {
-  font-family: sans-serif, Symbola, serif;
+  font-family: sans-serif, MathJax, serif;
 }
 .mq-math-mode .mq-monospace {
-  font-family: monospace, Symbola, serif;
+  font-family: monospace, MathJax, serif;
 }
 .mq-math-mode .mq-overline {
   border-top: 1px solid black;
@@ -256,7 +256,7 @@
   display: block;
 }
 .mq-math-mode .mq-operator-name {
-  font-family: Symbola, "Times New Roman", serif;
+  font-family: MathJax, "Times New Roman", serif;
   line-height: .9;
   font-style: normal;
 }
@@ -348,7 +348,7 @@
 .mq-math-mode,
 .mq-math-mode .mq-editable-field {
   cursor: text;
-  font-family: Symbola, "Times New Roman", serif;
+  font-family: MathJax, "Times New Roman", serif;
 }
 .mq-math-mode .mq-overarrow {
   border-top: 1px solid black;

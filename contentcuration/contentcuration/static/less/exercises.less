@@ -12,14 +12,8 @@
 }
 
 @font-face {
-  font-family: Symbola;
-  src: url("@{icon-font-path}Symbola.eot");
-  src: local("Symbola Regular"), local("Symbola"),
-        url("@{icon-font-path}Symbola.woff2") format("woff2"),
-        url("@{icon-font-path}Symbola.woff") format("woff"),
-        url("@{icon-font-path}Symbola.ttf") format("truetype"),
-        url("@{icon-font-path}Symbola.otf") format("opentype"),
-        url("@{icon-font-path}Symbola.svg#Symbola") format("svg");
+  font-family: MathJax;
+  src: url("@{icon-font-path}MathJax_Math-Italic.otf") format("opentype"),
 }
 
 
@@ -28,6 +22,9 @@
 @incorrect-highlight-color: #FFA9A9;
 @correct-bg-color: #CEEFCE;
 @correct-highlight-color: #8FE48F;
+
+.note-image-popover{ display: none !important; }
+.tooltip { z-index: 99999999999999; }
 
 #exercisecreation{
     .show_question_toggle, .toggle_question_order{
@@ -190,6 +187,7 @@
     }
     .note-error{ display:none; }
     .editor-col{padding-right:0;}
+    .katex *{ font-family: MathJax !important; }
 }
 
 .hint_modal, .assessment_item.active{
@@ -206,6 +204,15 @@
         }
     }
     .editor-wrapper{
+        .loading-overlay{
+            position: absolute;
+            z-index: 99;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10%;
+            margin-left: 40%;
+        }
+
         /* SummerNote Styling */
         .note-toolbar{
             background-color: @gray-200;
@@ -215,6 +222,11 @@
                 border-radius: 0;
                 box-shadow: none;
                 background: transparent;
+            }
+            .formula_icon{
+                font-family: FANTASY;
+                font-size: 10pt;
+                font-weight: bolder;
             }
             .btn:hover, .btn.active{ color: @blue-500 !important; }
         }
@@ -226,6 +238,9 @@
         .note-editor, .note-editor.note-frame{
             border:1px solid @gray-300;
             border-radius:0;
+            .note-placeholder{
+                cursor:text;
+            }
         }
 
         /* MathQuill Styling */

@@ -11,7 +11,7 @@
 						<option class="single_selection" value="single_selection">Single Selection</option>
 						<option class="multiple_selection" value="multiple_selection">Multiple Selection</option>
 						<option class="true_false" value="true_false">True/False</option>
-						<option class="input_question" value="input_question">Input Answer</option>
+						<option class="input_question" value="input_question">Numeric Input</option>
 					</select>
 			    </div>
 			    <div class="col-sm-4">
@@ -25,7 +25,7 @@
 						<input type="checkbox" id="random_answer_order_{{cid}}" {{#if model.randomize}}checked{{/if}} {{#if isdisplay}}disabled{{/if}} class="random_order_check">
 					</div>
 					<div class="random_answer_section">
-						<label for="random_answer_order_{{cid}}" {{#if isdisplay}}disabled{{/if}}>Random answer order</label>
+						<label for="random_answer_order_{{cid}}" {{#if isdisplay}}disabled{{/if}}>Randomize answer order for learners</label>
 					</div>
 			    </div>
 			</div>

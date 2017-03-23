@@ -9,20 +9,20 @@
 		<div class="row">
 			<div class="col-xs-12 text-center character_section_header">FORMULAS</div>
 			{{#each characters.equations}}
-				<div id="character_eqn_{{@index}}" class="col-xs-4 text-center char_cmd character_eqn" title="{{title}}" data-key="{{key}}">{{preview}}</div>
+				<div id="character_eqn_{{@index}}" class="col-xs-4 text-center char_cmd character_eqn" title="{{title}}  ({{key}})" data-key="{{key}}">{{preview}}</div>
 			{{/each}}
 		</div>
 		<div class="row">
 			<div class="col-xs-12 text-center character_section_header">LINES</div>
 			{{#each characters.formats}}
-				<div id="character_format_{{@index}}" class="col-xs-4 text-center char_cmd character_format" title="{{title}}" data-key="{{key}}">{{preview}}</div>
+				<div id="character_format_{{@index}}" class="col-xs-4 text-center char_cmd character_format" title="{{title}} ({{key}})" data-key="{{key}}">{{preview}}</div>
 			{{/each}}
 		</div>
 		{{#each characters.symbols}}
 			<div class="row">
 				<div class="col-xs-12 text-center character_section_header">{{title}}</div>
 				{{#each symbols}}
-					<div class="col-xs-2 text-center character_symbol" title="{{title}}" data-key="{{key}}">{{symbol}}</div>
+					<div class="col-xs-2 text-center character_symbol" title="{{title}} ({{key}})" data-key="{{key}}">{{symbol}}</div>
 				{{/each}}
 			</div>
 		{{/each}}
