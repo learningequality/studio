@@ -204,7 +204,7 @@ var EditorView = Backbone.View.extend({
         this.$el.html(this.edit_template({selector: selector}));
         this.editor = new Summernote(this.$("#" + selector), this, {
             toolbar: [
-                ['style', ['bold', 'italic', 'underline']],
+                ['style', ['bold', 'italic']],
                 ['insert', ['customupload', 'customformula']],
                 ['controls', ['undo', 'redo']]
             ],
@@ -218,7 +218,7 @@ var EditorView = Backbone.View.extend({
             shortcuts: false,
             selector: this.cid,
             callbacks: {
-                onChange: _.debounce(this.save, 200),
+                onChange: _.debounce(this.save, 100),
                 onImageUpload: this.add_image,
                 onAddFormula: this.add_formula
             }
@@ -1097,7 +1097,6 @@ var AssessmentItemHintView = ExerciseEditableItemView.extend({
         this.render_editor();
     }
 });
-
 
 module.exports = {
     ExerciseView:ExerciseView,
