@@ -740,7 +740,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
 
 });
 
-
 var ImageUploadView = BaseViews.BaseModalView.extend({
     modal: true,
 
