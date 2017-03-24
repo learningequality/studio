@@ -1,8 +1,10 @@
+import json
 from contentcuration.models import User
 from django import forms
 from django.utils.translation import ugettext as _
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm
+from le_utils.constants import exercises, licenses
 
 class RegistrationForm(UserCreationForm):
     password1 = forms.CharField(widget=forms.PasswordInput, label='Password', required=True)
@@ -140,8 +142,35 @@ class ProfileSettingsForm(UserChangeForm):
         user.save()
         return user
 
-    def __init__(self, *args, **kwargs):
-        super(ProfileSettingsForm, self).__init__(*args, **kwargs)
+class PreferencesSettingsForm(forms.Form):
+    # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
+    author = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    copyright_holder = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    license = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=licenses.choices)
+    mastery_model = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=exercises.MASTERY_MODELS, label="Mastery at")
+    m_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label="M")
+    n_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label="N")
+    auto_derive_video_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Videos")
+    auto_randomize_questions = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Automatically randomize question order")
+
+    class Meta:
+        model = User
+        fields = ('author', 'copyright_holder', 'license', 'mastery_model', 'm_value', 'n_value', 'auto_derive_video_thumbnail', 'auto_randomize_questions')
+
+    def save(self, user):
+        user.preferences = json.dumps({
+            'author': self.cleaned_data["author"] or "",
+            'copyright_holder': self.cleaned_data["copyright_holder"],
+            'license': self.cleaned_data["license"],
+            'mastery_model': self.cleaned_data["mastery_model"],
+            'auto_randomize_questions': self.cleaned_data["auto_randomize_questions"],
+            'auto_derive_video_thumbnail': self.cleaned_data["auto_derive_video_thumbnail"],
+            'm_value': self.cleaned_data["m_value"],
+            'n_value': self.cleaned_data["n_value"],
+        })
+        print user.preferences
+        user.save()
+        return user
 
 
 class AccountSettingsForm(PasswordChangeForm):

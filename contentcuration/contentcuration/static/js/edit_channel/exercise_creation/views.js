@@ -2,7 +2,6 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var Quill = require("quill");
 var Dropzone = require("dropzone");
 var get_cookie = require("utils/get_cookie");
 var UndoManager = require("backbone-undo");
@@ -12,7 +11,6 @@ var JSZipUtils = require("jszip-utils");
 var Katex = require("katex");
 
 require("exercises.less");
-require("quill/dist/quill.snow.css");
 require("dropzone/dist/dropzone.css");
 require("../../../css/katex.min.css");
 

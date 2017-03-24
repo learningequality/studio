@@ -16,7 +16,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from contentcuration.models import User, Channel
-from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm
+from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, PreferencesSettingsForm
 from rest_framework.authtoken.models import Token
 from django.core.urlresolvers import reverse_lazy
 import contentcuration.urls
@@ -39,8 +39,7 @@ class ProfileView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super(ProfileView, self).get_context_data(**kwargs)
-        channel_list = Channel.objects.filter( Q(deleted=False, editors= self.request.user)).values("id", "name")
-        context.update({'channel_list': channel_list, "page": "profile", 'channel_name': False, "success":False})
+        context.update({"page": "profile", 'channel_name': False, "success":False})
         return context
 
     def get_initial(self):
@@ -61,32 +60,63 @@ class ProfileView(FormView):
         return self.request.user
 
 
+class PreferencesView(FormView):
+    """
+    Base class for user settings views.
+    """
+    success_url = reverse_lazy('preferences_settings')
+    form_class = PreferencesSettingsForm
+    template_name = 'settings/preferences.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(PreferencesView, self).get_context_data(**kwargs)
+        context.update({"page": "preferences", "success":False})
+        return context
+
+    def get_initial(self):
+        initial = self.initial.copy()
+        initial.update(json.loads(self.request.user.preferences))
+        initial.update({
+            'author': initial.get('author') or self.request.user.get_full_name(),
+            'm_value': initial.get('m_value') or 1,
+            'n_value': initial.get('n_value') or 1,
+        })
+        return initial
+
+    def form_valid(self, form):
+        user = form.save(self.user())
+        context = self.get_context_data(form=form)
+        context.update({'success': True})
+        return self.render_to_response(context)
+
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def user(self):
+        return self.request.user
+
+
 @login_required
 def account_settings(request):
-    channel_list = Channel.objects.filter( Q(deleted=False, editors= request.user)).values("id", "name")
     return views.password_change(request,
         template_name='settings/account.html',
         post_change_redirect=reverse_lazy('account_settings_success'),
         password_change_form=AccountSettingsForm,
-        extra_context={"channel_list" : channel_list,"current_user" : request.user, "page": "account", 'channel_name': False}
+        extra_context={"current_user" : request.user, "page": "account"}
     )
 
 @login_required
 def account_settings_success(request):
-    channel_list = Channel.objects.filter( Q(deleted=False, editors= request.user)).values("id", "name")
     return views.password_change(request,
         template_name='settings/account_success.html',
         post_change_redirect=reverse_lazy('account_settings_success'),
         password_change_form=AccountSettingsForm,
-        extra_context={"channel_list" : channel_list,"current_user" : request.user, "page": "account", 'channel_name': False}
+        extra_context={"current_user" : request.user, "page": "account"}
     )
 
 @login_required
 def tokens_settings(request):
-    channel_list = Channel.objects.filter( Q(deleted=False, editors= request.user)).values("id", "name")
     user_token, isNew = Token.objects.get_or_create(user=request.user)
-    return render(request, 'settings/tokens.html', {"channel_list" : channel_list,
-                                                    'channel_name': False,
-                                                    "current_user" : request.user,
+    return render(request, 'settings/tokens.html', {"current_user" : request.user,
                                                     "page": "tokens",
                                                     "tokens":[str(user_token)]})
