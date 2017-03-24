@@ -100,6 +100,9 @@ var UserModel = BaseModel.extend({
     },
     get_clipboard:function(){
     	return  new ContentNodeModel(this.get("clipboard_tree"));
+    },
+    get_full_name: function(){
+    	return this.get('first_name') + " " + this.get('last_name');
     }
 });
 

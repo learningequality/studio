@@ -2,6 +2,9 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var Models = require("./models");
 //var UndoManager = require("backbone-undo");
+function get_author(){
+	return (window.preferences.author === null)? window.current_user.get_full_name() : window.preferences.author;
+}
 
 var BaseView = Backbone.View.extend({
 	display_load:function(message, callback){
@@ -501,7 +504,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
             "kind":"topic",
             "title": "Topic",
             "sort_order" : this.collection.length,
-            "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+            "author": get_author(),
         }, {
         	success:function(new_topic){
 		        var edit_collection = new Models.ContentNodeCollection([new_topic]);
@@ -559,7 +562,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
             "kind":"exercise",
             "title": "New Exercise",
             "sort_order" : this.collection.length,
-            "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+            "author": get_author(),
+            "copyright_holder": window.preferences.copyright_holder
         }, {
         	success:function(new_node){
 		        var exercise_view = new Exercise.ExerciseModalView({
@@ -806,7 +810,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
             "kind":"topic",
             "title": "Topic",
             "sort_order" : this.model.get("metadata").max_sort_order,
-            "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+            "author": get_author(),
         },{
         	success:function(new_topic){
 		        var edit_collection = new Models.ContentNodeCollection([new_topic]);

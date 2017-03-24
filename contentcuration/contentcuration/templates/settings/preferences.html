@@ -81,7 +81,6 @@
 </div>
 <script>
 	function registerChange(){
-		console.log("GOT CHANGE")
 		$(".mastery_criteria").css('display', ($("#id_mastery_model").val()==="m_of_n")? "inline-table" : "none");
 		if(Number($("#id_m_value").val()) > Number($("#id_n_value").val())) $("#id_n_value").val($("#id_m_value").val());
 		$("#save").attr("disabled", false);
