@@ -454,7 +454,7 @@ PRESETS = [
             "display": False,
             "order" : 3,
             "kind_id" : content_kinds.EXERCISE,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG, file_formats.GIF],
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG, file_formats.GIF, file_formats.SVG],
         },
     },
     {

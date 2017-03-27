@@ -20,10 +20,10 @@
 		height:100%;
 	}
 	.edit_details_section{
-		width:@metadata-width * 0.6;
+		width:95%;
 	}
 	.tree_section{
-		width: @metadata-width * 0.3;
+		width: @metadata-width * 0.28;
 		margin-right:10px;
 	}
 	#uploader_select_all{
@@ -91,17 +91,24 @@
 		#title_error{
 			display:none;
 		}
+		#mastery_custom_criterion{
+			margin-left:15px;
+			input{
+				padding-left:3px;
+				max-width: 40px;
+			}
+		}
 		#license_select{
 			margin-top:5px;
 			padding: 0px 2px;
 		}
-		#license_about{
-			display:none;
+		#license_about, #mastery_about{
 			font-size:14pt;
 			margin-left:5px;
 			cursor:pointer;
 			color: @blue-500;
 		}
+		#license_about{ display:none; }
 		#keywords {
 			margin-bottom: 8px;
 		}
@@ -334,14 +341,14 @@
 	}
 }
 
-#license_modal{
+#license_modal, #mastery_modal{
 	@license-modal-height: 400px;
 	@license-modal-width: 600px;
 	padding:10px 5px;
 	overflow-y:auto;
 	.modal-dialog{
-		width:@license-modal-width * 0.7;
-		height: @license-modal-height;
+		width:@license-modal-width;
+		min-height: @license-modal-height;
 
 	}
 	.modal-content{
@@ -352,9 +359,15 @@
 			font-size:15pt;
 			font-weight:bold;
 		}
+		h3{
+			font-size: 16px;
+    		font-weight: bold;
+    		color: @gray-800;
+    		margin-top: 0px;
+		}
 
-		#license_description_wrapper{
-			height:@license-modal-height * 0.7;
+		.modal-body-content{
+			min-height:@license-modal-height * 0.7;
 			overflow-y:auto;
 			margin-bottom:20px;
 			padding:5px;
@@ -362,8 +375,34 @@
 
 		p{
 			font-size:12pt;
-			font-style:italic;
 			color:gray;
+			text-indent: 20px;
+		}
+
+		.mastery_container{
+			padding:10px;
+			.row{
+				margin-bottom: 2px;
+			    border: 1px solid @blue-100;
+			    display: -webkit-box;
+			    display: -webkit-flex;
+			    display: -ms-flexbox;
+			    display: flex;
+			    flex-wrap: wrap;
+				.criterion_name{
+					text-align: right;
+				    padding: 5px;
+				    background-color: @blue-100;
+				    color: @blue-700;
+				    vertical-align: middle;
+				}
+				.criterion_description{
+					padding: 5px;
+					padding-left: 10px;
+					color: @gray-700;
+					.wordwrap;
+				}
+			}
 		}
 	}
 }

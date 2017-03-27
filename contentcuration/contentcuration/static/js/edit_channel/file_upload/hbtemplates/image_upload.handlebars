@@ -1,10 +1,16 @@
-<div class="image_dropzone" id="{{selector}}">
-	<img class="dz-placeholder" id="{{selector}}_placeholder" src="{{picture}}"/>
-	<div class="finished_area">
-        <div class="image_options">
-        	<span id="{{selector}}_swap" class="image_option glyphicon glyphicon-picture" aria-hidden="true"></span>
-        	<span class="image_option glyphicon glyphicon-random open_thumbnail_generator" {{#unless show_generate}}style="visibility:hidden;"{{/unless}} aria-hidden="true"></span>
-        	<span class="image_option glyphicon glyphicon-remove remove_image" aria-hidden="true"></span>
-        </div>
-    </div>
+<input type="text" id="alt_text_box" placeholder="Enter text to display if image fails to load" value="{{alt_text}}"/>
+<div id="dropzone" class="text-center">
+	{{#if file}}
+		<img id="dropzone_placeholder" alt="Error loading image" src="{{file.filepath}}"/>
+	{{else}}
+		<div id="dropzone_placeholder"><div id="placeholder_text">Click or drop file here...</div></div>
+	{{/if}}
+</div>
+<div class="modal-buttons">
+    <button class="action-button pull-right {{#unless file}}disabled{{/unless}}" id="submit_file" {{#unless file}}disabled{{/unless}}>
+        <span>USE</span>
+    </button>
+    <a class="action-text" data-dismiss="modal">
+        <span>CANCEL</span>
+    </a>
 </div>

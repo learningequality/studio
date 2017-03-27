@@ -179,7 +179,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.containing_list_view.set_editing(true);
 		this.edit = true;
 		this.render();
-		this.image_upload = new FileViews.ImageUploadView({
+		this.image_upload = new FileViews.ThumbnailUploadView({
 			model: this.model,
 			el: this.$(".new_channel_pic"),
 			preset_id: 'channel_thumbnail',
