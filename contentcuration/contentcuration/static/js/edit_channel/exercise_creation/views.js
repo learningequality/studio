@@ -566,7 +566,7 @@ var ExerciseView = ExerciseEditableListView.extend({
 
     /*********** CONTENT PROCESSING METHODS ***********/
     validate: function(){
-        return _.filter(this.views, function(view){return !view.validate();}).length === 0;
+        return !_.find(this.views, function(view){return !view.validate();});
     },
     propagate_changes:function(){
         this.onchange(this.collection.toJSON());
@@ -758,7 +758,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         // Make sure different question types have valid answers
         if(this.model.get("type") === "input_question"){
             // Answers must be numeric for input questions
-            if(this.model.get('answers').filter(function(a){ return isNaN(a.get('answer'));}).length > 0)
+            if(this.model.get('answers').find(function(a){ return isNaN(a.get('answer'));}))
                 this.errors.push({error: "Answers must be numeric"});
 
             // Input answers must have at least one answer
