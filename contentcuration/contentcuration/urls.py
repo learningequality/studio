@@ -121,7 +121,6 @@ urlpatterns = [
     url(r'^channels/(?P<channel_id>[^/]+)/view', views.channel_view_only, name='channel_view_only'),
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^exercise_image_upload/', views.exercise_image_upload, name='exercise_image_upload'),
-    url(r'^exercise_formula_upload/', views.exercise_formula_upload, name='exercise_formula_upload'),
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
