@@ -381,7 +381,7 @@ class ContentNode(MPTTModel, models.Model):
         # Detect if node has been moved to another tree
         if self.pk is not None and ContentNode.objects.filter(pk=self.pk).exists():
             original = ContentNode.objects.get(pk=self.pk)
-            if original.parent and original.parent_id != self.parent_id:
+            if original.parent and original.parent_id != self.parent_id and not original.parent.changed:
                 original.parent.changed = True
                 original.parent.save()
 
@@ -472,6 +472,7 @@ class AssessmentItem(models.Model):
     raw_data = models.TextField(blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
     randomize = models.BooleanField(default=False)
+    deleted = models.BooleanField(default=False)
 
 class File(models.Model):
     """

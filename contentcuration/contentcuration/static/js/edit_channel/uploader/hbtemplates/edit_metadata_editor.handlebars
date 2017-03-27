@@ -14,13 +14,32 @@
 		<h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>
 		<input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required/>
 	{{/if}}
+	{{#if is_exercise}}
+		<h4>Mastery Criteria <label class="required">*</label></h4>
+		<select id="mastery_model_select">
+			<option disabled value=0>---</option>
+			<option value="num_correct_in_a_row_3" selected>3 in a Row</option>
+			<option value="num_correct_in_a_row_5">5 in a Row</option>
+			<option value="num_correct_in_a_row_10">10 in a Row</option>
+			<option value="do_all">100% Correct</option>
+			<option value="m_of_n">M out of N...</option>
+		</select>
+		<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="mastery_about" ></span>
+		<span id="mastery_custom_criterion">
+			<input type="number" id="m_value" min="1" max="20" value="{{m_value}}" maxlength="2" size="2"/>
+			&nbsp;of&nbsp;
+			<input type="number" id="n_value" min="1" max="20" value="{{n_value}}" maxlength="2" size="2"/>
+		</span>
+		<br/>
+		<br/>
+	{{/if}}
 	{{#if isoriginal}}
 		<h4>Author</h4>
 		<input type="text" id="author_field" class="upload_input input_listener" value="{{author}}" placeholder="Enter author name"/>
 		{{#if is_file}}
 		<div class="row">
 			<div class="content_nodes_only col-sm-5">
-				<h4>License</h4>
+				<h4>License <label class="required">*</label></h4>
 				<select id="license_select">
 		            <option selected disabled value=0>---</option>
 		            {{#each licenses}}

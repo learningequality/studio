@@ -191,6 +191,11 @@ var BaseModalView = BaseView.extend({
   		this.$(".modal").modal('hide');
   	}
     this.remove();
+  },
+  closed_modal:function(){
+    $("body").addClass('modal-open'); //Make sure modal-open class persists
+    $('.modal-backdrop').slice(1).remove();
+    this.remove();
   }
 });
 
@@ -489,7 +494,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
   },
 	add_nodes:function(collection){
 		var self = this;
-		collection.sort_by_order();
 		collection.forEach(function(entry){
 			var new_view = self.create_new_view(entry);
 			self.$(self.list_selector).append(new_view.el);
@@ -515,6 +519,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		            collection: edit_collection,
 		            model: self.model,
 		            new_content: true,
+		            new_topic: true,
 		            onsave: self.reload_ancestors,
 		            onnew:self.add_nodes
 		        });
@@ -556,22 +561,28 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		});
 	},
 	add_exercise:function(){
-		var Exercise = require("edit_channel/exercise_creation/views");
+		var UploaderViews = require("edit_channel/uploader/views");
 		var self = this;
 		var new_exercise = this.collection.create({
             "kind":"exercise",
-            "title": "New Exercise",
+            "title": (this.model.get('parent'))? this.model.get('title') + " Exercise" : "Exercise", // Avoid having exercises prefilled with 'email clipboard'
             "sort_order" : this.collection.length,
             "author": get_author(),
-            "copyright_holder": window.preferences.copyright_holder
+            "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder
         }, {
         	success:function(new_node){
-		        var exercise_view = new Exercise.ExerciseModalView({
-			      parent_view: self,
-			      model:new_node,
-			      onsave: self.add_nodes,
-				  parentnode: self.model
-			  	});
+		        var edit_collection = new Models.ContentNodeCollection([new_node]);
+		        $("#main-content-area").append("<div id='dialog'></div>");
+
+		        var metadata_view = new UploaderViews.MetadataModalView({
+		            el : $("#dialog"),
+		            collection: edit_collection,
+		            model: self.model,
+		            new_content: true,
+		            new_exercise: true,
+		            onsave: self.reload_ancestors,
+		            onnew:self.add_nodes
+		        });
         	},
         	error:function(obj, error){
             	console.log("Error message:", error);
@@ -821,6 +832,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		            collection: edit_collection,
 		            model: self.model,
 		            new_content: true,
+		            new_topic: true,
 		            onsave: self.reload_ancestors,
 		            onnew:self.add_nodes
 		        });

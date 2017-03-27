@@ -1,435 +1,575 @@
+/* CONSTANTS */
+const CHARACTERS = require("./symbols.json");
+const MATHJAX_REGEX = /\$\$([^\$]+)\$\$/g;
+const IMG_PLACEHOLDER = "${☣ CONTENTSTORAGE}/"
+const IMG_REGEX = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
+
+/* MODULES */
 var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var Dropzone = require("dropzone");
-var get_cookie = require("utils/get_cookie");
+var FileUploader = require('edit_channel/file_upload/views');
 var UndoManager = require("backbone-undo");
-var JSZip = require("jszip");
-var fileSaver = require("browser-filesaver");
-var JSZipUtils = require("jszip-utils");
+require("summernote");
+require("../../utils/mathquill.min.js");
+
+/* PARSERS */
 var Katex = require("katex");
+var toMarkdown = require('to-markdown');
+var stringHelper = require("edit_channel/utils/string_helper");
+var jax2svg = require('edit_channel/utils/mathjaxtosvg')
+jax2svg.init();
 
+/* STYLESHEETS */
 require("exercises.less");
-require("dropzone/dist/dropzone.css");
+require("../../../css/summernote.css");
 require("../../../css/katex.min.css");
-
+require("../../../css/mathquill.css");
 if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("Safari") > -1){
-    require("mathml.less");
+    require("mathml.less"); // Windows and Safari don't support mathml natively, so add it accordingly
 }
 
-var placeholder_text = "$1\${☣ CONTENTSTORAGE}/$3"
-var regExp = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
-
-var ExerciseModalView = BaseViews.BaseModalView.extend({
-    template: require("./hbtemplates/exercise_modal.handlebars"),
-    initialize: function(options) {
-        _.bindAll(this, "close_exercise_uploader", "close");
-        this.render(this.close_exercise_uploader, {});
-         this.exercise_view = new ExerciseView({
-            el: this.$(".modal-body"),
-            container: this,
-            model:this.model,
-            parentnode:options.parentnode,
-            onclose: this.close_exercise_uploader,
-            onsave: options.onsave,
-        });
-    },
-    close_exercise_uploader:function(event){
-        if(!event || !this.exercise_view.check_for_changes()){
-            this.close();
-            $('body').removeClass('modal-open');
-            $('.modal-backdrop').remove();
-        }else if(confirm("Unsaved Metadata Detected! Exiting now will"
-            + " undo any new changes. \n\nAre you sure you want to exit?")){
-            // this.exercise_view.reset();
-            this.close();
-        }else{
-            event.stopPropagation();
-            event.preventDefault();
-        }
-    }
-});
-
-var FileUploadView = Backbone.View.extend({
+/*********** FORMULA ADD-IN FOR EXERCISE EDITOR ***********/
+var AddFormulaView = Backbone.View.extend({
+    template: require("./hbtemplates/add_formula.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded");
+        _.bindAll(this, 'add_formula', 'add_character', 'add_format', 'activate_mq');
         this.callback = options.callback;
-        this.nodeid = options.nodeid;
-        this.modal = options.modal;
+        this.selector = "mathquill_" + this.cid;
         this.render();
     },
-
-    template: require("./hbtemplates/file_upload.handlebars"),
-
-    modal_template: require("./hbtemplates/file_upload_modal.handlebars"),
-
+    events: {
+        "click #add_formula": "add_formula",
+        "click .character_symbol": "add_character",
+        "click .char_cmd": "add_format",
+        "click .mq-wrapper": "keep_open"
+    },
+    keep_open:function(event){ event.stopPropagation(); },
     render: function() {
+        this.$el.html(this.template({selector: this.selector, characters: CHARACTERS}));
+        this.$('[data-toggle="popover"]').popover({html: true, content: this.$("#characters_" + this.selector)});
+    },
+    add_character:function(event){
+        this.mathField.write(event.currentTarget.dataset.key);
+        this.close_dropdown();
+    },
+    add_format:function(event){
+        this.mathField.cmd(event.currentTarget.dataset.key);
+        this.close_dropdown();
+    },
+    close_dropdown:function(){
+        this.$('[data-toggle="popover"]').popover("hide");
+        this.mathField.focus();
+    },
+    activate_mq: function(){
+        // Load mathjax symbols and formats
+        var MQ = MathQuill.getInterface(2);
+        this.parse_mathjax_characters(this.$(".character_format"), "#character_format_", MQ);
+        this.parse_mathjax_characters(this.$(".character_eqn"), "#character_eqn_", MQ);
 
-        if (this.modal) {
-            this.$el.html(this.modal_template());
-            this.$(".modal-body").append(this.template());
-            $("body").append(this.el);
-            this.$(".modal").modal({show: true});
-            this.$(".modal").on("hide.bs.modal", this.close);
-        } else {
-            this.$el.html(this.template());
-        }
-
-        // TODO parameterize to allow different file uploads depending on initialization.
-        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
-            maxFiles: 1,
-            clickable: ["#dropzone", ".fileinput-button"],
-            acceptedFiles: "image/*",
-            url: window.Urls.exercise_image_upload(),
-            headers: {"X-CSRFToken": get_cookie("csrftoken"), "Node" : this.nodeid}
+        // Configure mathquill input field
+        var self = this;
+        this.mathField = MQ.MathField(document.getElementById(this.selector), {
+          spaceBehavesLikeTab: true,
+          handlers: {enter: self.add_formula}
         });
-        this.dropzone.on("success", this.file_uploaded);
-
     },
-
-    file_uploaded: function(file) {
-        console.log(JSON.parse(file.xhr.response))
-        this.callback(JSON.parse(file.xhr.response).filename);
-        this.close();
+    parse_mathjax_characters:function(wrapper_el, id_prefix, MQ){
+        _.each(wrapper_el, function(item, index){
+            MQ.StaticMath(this.$(id_prefix + index)[0]);
+        });
     },
-
-    close: function() {
-        if (this.modal) {
-            this.$(".modal").modal('hide');
+    add_formula:function(){
+        if(this.mathField.latex().trim()){
+            this.callback("\$\$" + this.mathField.latex().trim() + "\$\$");
+            this.mathField.latex("");
+            $(".dropdown").dropdown('toggle');
         }
-        this.remove();
     }
 });
 
-/**
- * Replace local 'media' urls with 'web+local://'.
- * @param {string} Markdown containing image URLs.
- * Should take a string of markdown like:
- * "something![foo](/media/bar/baz)otherthings"
- * and turn it into:
- * "something![foo](web+local://bar/baz)otherthings"
- */
-var set_image_urls_for_export = function(text) {
-    return text.replace(/(\!\[[^\]]*\]\()(\/storage\/)([^\)]*\))/g, placeholder_text);
-};
+/*********** CUSTOM BUTTON FOR UPLOADING IMAGES ***********/
+var UploadImage = function (context) {
+    return $.summernote.ui.button({
+        contents: '<i class="note-icon-picture"/>',
+        tooltip: 'Image',
+        click: function () {
+            var view = new FileUploader.ImageUploadView({
+                callback: context.options.callbacks.onImageUpload,
+                preset_id: 'exercise_image'
+            });
+        }
+    }).render();
+}
 
+/*********** CUSTOM BUTTON FOR ADDING FORMULAS ***********/
+var AddFormula = function (context) {
+    var ui = $.summernote.ui;
+    var view = new AddFormulaView({callback: context.options.callbacks.onAddFormula});
+    return ui.buttonGroup([
+        ui.button({
+            className: 'dropdown-toggle',
+            contents: '<b class="formula_icon">∑</b> <span class="caret"></span>',
+            tooltip: 'Formula',
+            data: { toggle: 'dropdown' },
+            click: view.activate_mq
+        }),
+        ui.dropdown({ className: 'drop-default add_formula_dropdown', contents: view.el })
+    ]).render();
+}
 
-/**
- * Return all image URLs from Markdown.
- * @param {string} Markdown containing image URLs.
- * Should take a string of markdown like:
- * "something![foo](/media/bar/baz.png)otherthings something![foo](/media/bar/foo.jpg)otherthings"
- * and return:
- * ["/media/bar/baz.png", "/media/bar/foo.jpg"]
- */
-var return_image_urls_for_export = function(text) {
-    var match, output = [];
-    var Re = /\!\[[^\]]*\]\((\/storage\/[^\)]*)\)/g;
-    while (match = Re.exec(text)) {
-        output.push(match[1]);
+/*********** WRAPPER FOR SUMMERNOTE FOR OBECT-ORIENTED APPROACH ***********/
+function Summernote(element, context, options) {
+    // Clear all ranges to get undo/redo to work on summernote
+    if(!!document.createRange) {
+        document.getSelection().removeAllRanges();
     }
-    return output;
-};
 
-var replace_image_paths = function(content){
-    var matches = content.match(regExp);
-    if(matches){
+    // Configure editor
+    this.element = element;             // Element to which summernote should be attached
+    this.context = context;             // View in which summernote is nested
+    this.element.summernote(options);   // Initialize summernote with configuration options
+
+    this.setHTML = function(content){ element.summernote('code', content); };
+    this.insertHTML = function(content){ element.summernote('insertNode', content); };
+    this.focus = function(){ element.summernote('focus'); };
+    this.getContents = function(){ return element.summernote('code'); };
+    this.enable = function(){ element.summernote('enable'); };
+    this.disable = function(){ element.summernote('disable'); };
+}
+
+/*********** TEXT EDITOR FOR QUESTIONS, ANSWERS, AND HINTS ***********/
+var EditorView = Backbone.View.extend({
+    tagName: "div",
+    edit_template: require("./hbtemplates/editor.handlebars"),
+    view_template: require("./hbtemplates/editor_view.handlebars"),
+    default_template: require("./hbtemplates/editor_view_default.handlebars"),
+
+    id: function() { return "editor_view_" + this.cid; },
+    initialize: function(options) {
+        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save",
+                "render", "render_content", "parse_content", "replace_mathjax_with_svgs");
+        this.edit_key = options.edit_key;
+        this.editing = false;
+        this.render();
+        this.markdown = this.model.get(this.edit_key);
+        this.listenTo(this.model, "change:" + this.edit_key, this.render);
+    },
+    events: {
+        "click .editor-wrapper": "stop_events"
+    },
+    stop_events:function(event){ event.stopPropagation(); },
+
+    /*********** LOADING METHODS ***********/
+    render: function() {
+        if (this.editing) {
+            if (!this.setting_model) this.render_editor();
+        } else { this.render_content(); }
+        this.setting_model = false;
+    },
+    render_content: function() {
+        if(this.model.get(this.edit_key)){
+            var self = this;
+            this.toggle_loading(true);
+            this.parse_content(this.model.get(this.edit_key)).then(function(result){
+                self.$el.html(self.view_template({content: result}));
+                self.toggle_loading(false);
+            });
+        }else{
+            this.$el.html(this.default_template({ source_url: this.model.get('source_url') }));
+        }
+    },
+    render_editor: function() {
+        var self = this;
+        this.toggle_loading(true);
+        this.parse_content(this.model.get(this.edit_key)).then(function(result){
+            var html = self.view_template({content: result});
+            self.editor ? self.editor.setHTML(html) : self.$el.html(html);
+            self.toggle_loading(false);
+            if(self.editor) self.editor.focus();
+        });
+    },
+    toggle_loading:function(isLoading){
+        if(this.editor && this.editing){
+            (isLoading) ? this.editor.disable() : this.editor.enable();
+            this.$('.loading-overlay').css('display', (isLoading) ? 'block' : 'none');
+        }
+    },
+
+    /*********** EDITOR METHODS ***********/
+    activate_editor: function() {
+        var selector = this.cid + "_editor";
+        this.$el.html(this.edit_template({selector: selector}));
+        this.editor = new Summernote(this.$("#" + selector), this, {
+            toolbar: [
+                ['style', ['bold', 'italic']],
+                ['insert', ['customupload', 'customformula']],
+                ['controls', ['undo', 'redo']]
+            ],
+            buttons: {
+                customupload: UploadImage,
+                customformula: AddFormula
+            },
+            placeholder: 'Enter ' + this.edit_key + "...",
+            disableResizeEditor: true,
+            disableDragAndDrop: true,
+            shortcuts: false,
+            selector: this.cid,
+            callbacks: {
+                onChange: _.debounce(this.save, 100),
+                onImageUpload: this.add_image,
+                onAddFormula: this.add_formula
+            }
+        });
+        $('.dropdown-toggle').dropdown()
+        this.editing = true;
+        this.render_editor();
+    },
+    deactivate_editor: function() {
+        delete this.editor;
+        this.editing = false;
+        this.render();
+    },
+    toggle_editor: function() {
+        if (this.editor) {
+            this.deactivate_editor();
+        } else {
+            this.activate_editor();
+        }
+    },
+
+    /*********** EDITOR CONTENT METHODS ***********/
+    save: function(contents, $editable) {
+        this.setting_model = true;
+        this.markdown = this.convert_html_to_markdown(contents);
+        this.model.set(this.edit_key, this.markdown);
+    },
+    validate: function(){
+        this.$(".note-error").css("display", (this.markdown.trim())? "none" : "inline-block");
+        return this.markdown;
+    },
+    add_image: function(file_id, filename, alt_text) {
+        this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
+        alt_text = alt_text || "";
+        this.model.set(this.edit_key, this.model.get(this.edit_key) + "![" + alt_text + "](" + filename + ")");
+        this.render_editor();
+    },
+    add_formula:function(formula){
+        var self = this;
+        jax2svg.toSVG(formula).then(function(svg){
+            var updatedHtml = svg.outerHTML;
+
+            // Check if there is any content. If there is, append to the end of the last line
+            var div = document.createElement('div');
+            div.innerHTML = self.editor.getContents();
+            var paragraphs = div.getElementsByTagName('p');
+            if(paragraphs.length){
+                paragraphs[paragraphs.length - 1].appendChild(svg);
+                updatedHtml = div.innerHTML;
+            }
+            self.editor.setHTML(updatedHtml)
+            self.model.set(self.edit_key, self.model.get(self.edit_key) + formula);
+            self.editor.focus();
+        });
+    },
+
+    /*********** PARSING METHODS ***********/
+    parse_content: function(content){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            content = self.replace_image_paths(content);
+            content = stringHelper.escape_str(content.replace(/\\(?![^\\\s])/g, '\\\\'));
+            // If the editor is open, convert to svgs. Otherwise use katex to make loading faster
+            (self.editing)? self.replace_mathjax_with_svgs(content, resolve) : self.replace_mathjax_with_katex(content, resolve);
+        });
+    },
+    replace_image_paths: function(content){
+        var matches = content.match(IMG_REGEX);
+        if(matches){
+            matches.forEach(function(match){
+                var filename = match.split("/").slice(-1)[0];
+                var replace_str = "/content/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
+                content = content.replace(match, replace_str);
+            })
+        }
+        return content;
+    },
+    get_mathjax_strings:function(content){
+        var mathjax_list = [];
+        var collectString = false;
+        var parsedString = content;
+        while(parsedString.length){
+            var index = parsedString.indexOf("$$");
+            if(index < 0) break;
+            if(collectString) mathjax_list.push("$$" + parsedString.substring(0, index) + "$$");
+            parsedString = parsedString.substring(index + 2, parsedString.length);
+            collectString = !collectString;
+        }
+        return mathjax_list;
+    },
+    replace_mathjax_with_svgs: function(content, callback){
+        var matches = this.get_mathjax_strings(content);
+        var promises = [];
         matches.forEach(function(match){
-            var filename = match.split("/").slice(-1)[0]
-            var replace_str = "/content/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
-            content = content.replace(match, replace_str);
-        })
-    }
-    return content;
-};
-
-var replace_mathjax = function(content){
-    var mathJaxRegex = /\$\$(.+)\$\$/g;
-    var matches = content.match(mathJaxRegex);
-    if(matches){
+            promises.push(jax2svg.toSVG(match));
+        });
+        Promise.all(promises).then(function(svgs){
+            svgs.forEach(function(svg){
+                content = content.replace(svg.getAttribute('data-texstring'), '&nbsp;' + svg.outerHTML + '&nbsp;');
+            });
+            callback(content);
+        });
+    },
+    replace_mathjax_with_katex: function(content, callback){
+        var matches = this.get_mathjax_strings(content);
         matches.forEach(function(match){
             var replace_str = Katex.renderToString(match.match(/\$\$(.+)\$\$/)[1]);
             content = content.replace(match, replace_str);
         });
-    }
-    return content;
-};
-
-var parse_content = function(content){
-    parsed = replace_image_paths(content);
-    parsed = replace_mathjax(parsed);
-    return parsed;
-};
-
-
-/**
- * Return all image URLs from an assessment item.
- * @param {object} Backbone Model.
- * Should take a model with a "question" attribute that is a string of Markdown,
- * and an "answers" attribute that is a Backbone Collection, with each
- * model having an "answer" attribute that is also a string of markdown
- * and return all the image URLs embedded inside all the Markdown texts.
- */
-var return_all_assessment_item_image_urls = function(model) {
-    var output = return_image_urls_for_export(model.get("question"));
-    var output = model.get("answers").reduce(function(memo, model) {
-        memo = memo.concat(return_image_urls_for_export(model.get("answer")));
-        return memo;
-    }, output);
-
-    output = _.map(output, function(item) {
-        return {
-            name: item.replace(/\/storage\//g, ""),
-            path: item
-        }
-    });
-    return output;
-}
-
-/**
- * Return JSON object in Perseus format.
- * @param {object} Backbone Model - AssessmentItem.
- */
-var convert_assessment_item_to_perseus = function(model) {
-    var multiplechoice_template = require("./hbtemplates/assessment_item_multiple.handlebars");
-    var freeresponse_template = require("./hbtemplates/assessment_item_free.handlebars");
-    var output = "";
-    var answers = model.get("answers").toJSON();
-    answers.forEach(function(answer){
-        answer.answer = set_image_urls_for_export(answer.answer);
-    });
-    switch (model.get("type")) {
-        case "free_response":
-            output = freeresponse_template(model.attributes);
-            break;
-        case "multiple_selection":
-            output = multiplechoice_template({
-                question: set_image_urls_for_export(model.get("question")),
-                randomize: true,
-                // multipleSelect: (model.get("answers").reduce(function(memo, model) {
-                //     if (model.get("correct")) {
-                //         memo += 1;
-                //     }
-                //     return memo;
-                //     }, 0) || 0) > 1,
-                answer: answers
-            });
-            break;
-        case "single_selection":
-            output = multiplechoice_template({
-                question: set_image_urls_for_export(model.get("question")),
-                randomize: true,
-                answer: answers
-            });
-            break;
-        case "input_question":
-            output = multiplechoice_template({
-                question: set_image_urls_for_export(model.get("question")),
-                randomize: true,
-                answer: answers
-            });
-            break;
-    }
-    console.log("EXERCISE", output);
-    return $.parseJSON(output);
-};
-
-
-var slugify = function(text) {
-    // https://gist.github.com/mathewbyrne/1280286
-    return text.toString().toLowerCase()
-        .replace(/\s+/g, '-')           // Replace spaces with -
-        .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-        .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-        .replace(/^-+/, '')             // Trim - from start of text
-        .replace(/-+$/, '');            // Trim - from end of text
-    }
-
-
-var exerciseSaveDispatcher = _.clone(Backbone.Events);
-
-var ExerciseView = BaseViews.BaseEditableListView.extend({
-    list_selector:"#exercise_list",
-    default_item:"#exercise_list .default-item",
-
-    initialize: function(options) {
-        _.bindAll(this, "save", "createexercise", 'toggle_answers','toggle_details');
-        this.bind_edit_functions();
-        this.parentnode = options.parentnode;
-        this.onclose = options.onclose;
-        this.onsave = options.onsave;
-        this.listenTo(this.collection, "remove", this.render);
-        this.listenTo(exerciseSaveDispatcher, "save", this.save);
-        this.collection = new Models.AssessmentItemCollection();
-        var self = this;
-        this.collection.get_all_fetch(this.model.get("assessment_items")).then(function(fetched){
-            this.collection = fetched;
-            self.render();
+        callback(content);
+    },
+    convert_html_to_markdown: function(contents) {
+        // Replace svgs with latex strings
+        var el = document.createElement( 'div' );
+        el.innerHTML = contents;
+        _.each(el.getElementsByTagName( 'svg' ), function(svg){
+            contents = contents.replace(svg.outerHTML, '\$\$' + svg.getAttribute('data-texstring') + '\$\$')
         });
+
+        // Render content to markdown (use custom fiters for images and italics)
+        contents = toMarkdown(contents,{
+            converters: [
+                {
+                    filter: 'img',
+                    replacement: function (content, node) {
+                        var alt = node.alt || '';
+                        var src = node.getAttribute('src').split('/').slice(-1)[0] || '';
+                        var title = node.title || '';
+                        var width = node.style.width || node.width || null;
+                        var height = node.style.height || node.height || null;
+                        var size = width ? " =" + width.toString().replace('px', '') + "x" : '';
+                        size += height ? height.toString().replace('px', '') : '';
+                        return src ? '![' + alt + ']' + '(' + IMG_PLACEHOLDER + src + size + ')' : ''
+                    }
+                },
+                {
+                    filter: ['em', 'i'],
+                    replacement: function (content) { return '*' + content + '*'; }
+                }
+            ]
+        });
+        return contents
+    }
+});
+
+/*********** BASE EXERCISE LIST VIEW ***********/
+var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
+    template: null,
+    additem_el: null,
+    get_default_attributes: function(){ return {}; }, // Default attributes to use when adding to list
+    get_next_order: function(){
+        if(this.collection.length > 0){
+            return this.collection.max(function(i){ return i.get('order');}).get('order') + 1
+        }
+        return 1;
     },
 
-    events: {
-        "click .multiple_selection": "multiplechoice",
-        "click .true_false": "truefalse",
-        "click .free_response": "freeresponse",
-        "click .single_selection": "singleselection",
-        "click .input_answer": "inputanswer",
-        "change #exercise_title": "set_title",
-        "change #exercise_description": "set_description",
-        "click .save": "save",
-        "click .download": "download",
-        "click #createexercise": "createexercise",
-        "change #exercise_show_answers" : "toggle_answers",
-        "click .metadata_toggle": "toggle_details"
-    },
-    toggle_answers:function(){
-        this.$(this.list_selector).toggleClass("hide_answers");
-    },
-    toggle_details:function(){
-        if(this.$(".toggler_icon").hasClass("glyphicon-menu-up")){
-            this.$(".metadata_toggle .text").text("Fewer Details");
-            this.$(".toggler_icon").removeClass("glyphicon-menu-up").addClass("glyphicon-menu-down");
-            this.$("#exercise_extra_metadata").slideDown();
-        }else{
-            this.$(".metadata_toggle .text").text("More Details");
-            this.$(".toggler_icon").removeClass("glyphicon-menu-down").addClass("glyphicon-menu-up");
-            this.$("#exercise_extra_metadata").slideUp();
+    /*********** EDITING METHODS ***********/
+    add_item: function() {
+        if(!this.$(this.additem_el).hasClass('disabled')){
+            this.$(this.default_item).css('display', 'none');
+            this.close_all_editors();
+            this.collection.add(this.get_default_attributes());
+            this.propagate_changes();
         }
     },
-    download: function() {
-        var self = this;
-        var zip = new JSZip();
-        zip.file("exercise.json", JSON.stringify({
-            title: this.model.get("title"),
-            description: this.model.get("description"),
-            all_assessment_items: this.collection.map(function(model){return model.get("id");})
-        }));
-        zip.file("assessment_items.json", JSON.stringify(this.collection.map(function(model){
-            return convert_assessment_item_to_perseus(model);
-        })));
-        var all_image_urls = this.collection.reduce(function(memo, model){
-            memo = memo.concat(return_all_assessment_item_image_urls(model));
-            return memo;
-        }, []);
+    remove_item: function(model){
+        this.collection.remove(model);
+        this.render();
+        this.propagate_changes();
+    },
+    switch_view_order:function(view, new_order){
+        var matches = _.filter(this.views, function(view){ return view.model.get('order') === new_order; });
+        var old_order = view.model.get('order');
+        if(matches.length > 0){
+            var previous_view = matches[0];
+            previous_view.model.set('order', old_order);
+            previous_view.$el.detach();
+            (old_order < new_order)? view.$el.before(previous_view.el) : view.$el.after(previous_view.el);
+            if(previous_view.open) previous_view.set_open();
+            view.model.set('order', new_order);
+            this.propagate_changes();
+        }
+    },
+    propagate_changes:function(){
+        this.validate();
+        this.container.propagate_changes();
+    },
 
-        var downloads = 0;
+    /*********** VALIDATION METHODS ***********/
+    validate:function(){ return true; },
+    set_invalid:function(invalid){
+        this.$(this.additem_el).prop("disabled", invalid);
+        (invalid)? this.$(this.additem_el).addClass("disabled") : this.$(this.additem_el).removeClass("disabled");
+        this.$(this.additem_el).prop('title', (invalid)? 'Blank item detected. Resolve to continue': "Add");
+    },
 
-        if (all_image_urls.length > 0) {
-
-            _.each(all_image_urls, function(item) {
-                JSZipUtils.getBinaryContent(item.path, function(err, data) {
-                    if (err) {
-                        throw err
-                    }
-                    zip.file(item.name, data, {binary: true});
-                    downloads += 1;
-                    if (downloads === all_image_urls.length) {
-                        var blob = zip.generate({type:"blob"});
-
-                        fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".zip");
-                    }
-                });
+    /*********** RENDERING METHODS ***********/
+    add_item_view: function(model) {
+        var view = this.create_new_view(model);
+        this.$(this.list_selector).append(view.el);
+        view.set_open();
+    },
+    close_all_editors:function(){
+        _.where(this.views, {open: true}).forEach(function(view){
+            view.set_closed();
         });
+    }
+});
+
+/*********** BASE EXERCISE ITEM VIEW ***********/
+var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
+    close_editors_on_focus: true,   // Determines if all other open editors should be closed
+    editor_el: null,                // HTML container for editor
+    content_field: null,            // Field that will be changed based on editor
+    undo: null,                     // Keep track of changes so user can cancel all changes
+    open: false,                    // Determines if editor is open
+    error_template: require("./hbtemplates/assessment_item_errors.handlebars"),
+
+    /*********** EDITOR METHODS ***********/
+    render_editor: function(){
+        if (!this.editor_view) {
+            this.editor_view = new EditorView({model: this.model, edit_key: this.content_field});
+        }
+        this.$(this.editor_el).html(this.editor_view.el);
+        this.listenTo(this.model, "change:" + this.content_field, this.propagate_changes)
+    },
+    toggle_editor: function() {
+        this.open = !this.open;
+        this.set_editor(true);
+    },
+    set_open:function(){
+        this.containing_list_view.close_all_editors();
+        if(this.close_editors_on_focus){
+            this.containing_list_view.container.toggle_focus();
+            this.containing_list_view.container.remove_focus();
+        }
+        this.set_toolbar_open();
+        this.editor_view.activate_editor();
+        this.open = true;
+    },
+    set_closed:function(){
+        this.set_toolbar_closed();
+        this.editor_view.deactivate_editor();
+        this.open = false;
+    },
+    toggle:function(event){
+        event.stopPropagation();
+        this.set_closed();
+    },
+    set_editor: function(save) {
+        if (this.open) {
+            this.set_toolbar_open();
+            this.editor_view.activate_editor();
         } else {
-            var blob = zip.generate({type:"blob"});
-
-            fileSaver.saveAs(blob, slugify(self.model.get("title")) + ".zip");
+            this.set_closed();
         }
-
+    },
+    set_toolbar_open: function() {
+        this.$(this.toolbar_el).html(this.open_toolbar_template({model: this.model.attributes, undo: this.undo}));
+    },
+    set_toolbar_closed: function() {
+        this.$(this.toolbar_el).html(this.closed_toolbar_template({model: this.model.attributes}));
     },
 
-    save: function() {
-        this.model.save();
-        this.collection.save();
+    /*********** CONTENT PROCESSING METHODS ***********/
+    propagate_changes:function(){
+        this.containing_list_view.propagate_changes();
     },
-
-    set_title: function(){
-        this.model.set("title", this.$("#exercise_title").prop("value"));
+    delete: function(event) {
+        event.stopPropagation();
+        this.containing_list_view.remove_item(this.model);
+        this.remove();
     },
-
-    set_description: function(){
-        this.model.set("description", this.$("#exercise_description").prop("value"));
+    move_up:function(event){
+        event.stopPropagation();
+        this.containing_list_view.switch_view_order(this, this.model.get('order') - 1);
     },
+    move_down:function(event){
+        event.stopPropagation();
+        this.containing_list_view.switch_view_order(this, this.model.get('order') + 1);
+    },
+});
 
+/*********** MAIN EXERCISE VIEW ***********/
+var ExerciseView = ExerciseEditableListView.extend({
+    additem_el: "#addquestion",
+    list_selector:"#exercise_list",
+    default_item:"#exercise_list >.default-item",
     template: require("./hbtemplates/exercise_edit.handlebars"),
 
+    get_default_attributes: function() {
+        return {order: this.get_next_order(), contentnode: this.model.get('id')};
+    },
+    initialize: function(options) {
+        _.bindAll(this, 'toggle_answers','add_item', "add_item_view");
+        this.bind_edit_functions();
+        this.parentnode = options.parentnode;
+        this.onchange = options.onchange;
+        this.onrandom = options.onrandom;
+        this.listenTo(this.collection, "remove", this.render);
+        this.collection = new Models.AssessmentItemCollection(this.model.get("assessment_items"));
+        this.render();
+        this.listenTo(this.collection, "add", this.add_item_view);
+    },
+    events: {
+        "click #addquestion": "add_item",
+        "change #exercise_show_answers" : "toggle_answers",
+        'change #randomize_question_order': 'set_random',
+    },
+
+    /*********** LOADING METHODS ***********/
     render: function() {
         this.$el.html(this.template({
             node: this.model.toJSON(),
-            show_metadata: this.parentnode
+            is_random: this.model.get('extra_fields').randomize
         }));
-        this.load_content(this.collection, "Select a question type below");
-        if(this.model.get("extra_fields")){
-            this.$("#mastery_model_select").val(JSON.parse(this.model.get("extra_fields")).mastery_model)
-        }
+        this.load_content(this.collection.where({'deleted': false}), "Click '+ QUESTION' to begin...");
     },
     create_new_view:function(model){
-        var new_exercise_item = new AssessmentItemView({
-            model: model,
-            containing_list_view : this,
-            nodeid:this.model.get("id")
-        });
+        var new_exercise_item = null;
+        if(model.get('type') === "perseus_question"){
+            new_exercise_item = new AssessmentItemDisplayView({
+                model: model,
+                containing_list_view : this
+            });
+        }else{
+            new_exercise_item = new AssessmentItemView({
+                model: model,
+                containing_list_view : this,
+                onchange: this.onchange,
+            });
+        }
         this.views.push(new_exercise_item);
         return new_exercise_item;
     },
 
-    add_assessment_item: function(type, data) {
-        var model_data = {
-            type: type,
-            contentnode: this.model.get("id"),
-            order: this.collection.length + 1,
-        };
-        if (data) {
-            model_data = _.extend(model_data, data);
-        }
-        this.create_new_item(model_data, true, "").then(function(assessment_item){
-            assessment_item.toggle_focus();
-        });
+    /*********** CHECKBOX METHODS ***********/
+    toggle_answers:function(){
+        this.$(this.list_selector).toggleClass("hide_answers");
+    },
+    set_random:function(event){
+        this.onrandom(event.target.checked)
     },
 
-    multiplechoice: function() {
-        this.add_assessment_item("multiple_selection");
+    /*********** CONTENT PROCESSING METHODS ***********/
+    validate: function(){
+        return _.filter(this.views, function(view){return !view.validate();}).length === 0;
     },
-
-    truefalse: function() {
-        this.add_assessment_item("multiple_selection", {
-            answers: "[{\"answer\": \"True\", \"correct\": true}, {\"answer\": \"False\", \"correct\": false}]"
-        });
-    },
-    singleselection: function() {
-        this.add_assessment_item("single_selection");
-    },
-    inputanswer: function() {
-        this.add_assessment_item("input_question");
-    },
-
-    freeresponse: function() {
-        this.add_assessment_item("free_response");
-    },
-    set_focus:function(){
-        this.views.forEach(function(view){
-            view.remove_focus();
-        })
-    },
-    createexercise:function(){
-        var self = this;
-        this.model.set({
-            parent: (this.parentnode)? this.parentnode.get("id") : this.model.get("parent"),
-            extra_fields:JSON.stringify({
-                mastery_model:$("#mastery_model_select").val(),
-                randomize:$("#randomize_exercise").is(":checked")
-            })
-        });
-        this.model.save(this.model.toJSON(), {
-            success:function(new_model){
-                exerciseSaveDispatcher.trigger("save");
-                var new_collection = new Models.ContentNodeCollection(self.model);
-                self.onsave(new_collection);
-                self.onclose();
-            }
-        });
+    propagate_changes:function(){
+        this.onchange(this.collection.toJSON());
     },
     check_for_changes:function(){
         var is_changed = false;
@@ -440,616 +580,525 @@ var ExerciseView = BaseViews.BaseEditableListView.extend({
     }
 });
 
-var EditorView = Backbone.View.extend({
-
-    tagName: "div",
-
-    initialize: function(options) {
-        _.bindAll(this, "return_markdown", "add_image", "deactivate_editor", "activate_editor", "save_and_close", "save", "render");
-        this.edit_key = options.edit_key;
-        this.editing = false;
-        this.render();
-        this.listenTo(this.model, "change:" + this.edit_key, this.render);
-        this.nodeid=options.nodeid;
-    },
-
-    events: {
-        "click .ql-image": "add_image_popup"
-    },
-
-    add_image_popup: function() {
-        var view = new FileUploadView({callback: this.add_image, modal: true, nodeid: this.nodeid});
-    },
-
-    add_image: function(filename) {
-        this.editor.insertEmbed(this.editor.getSelection() !== null ? this.editor.getSelection().start : this.editor.getLength(), "image", "/" + filename);
-        this.save();
-    },
-
-    edit_template: require("./hbtemplates/editor.handlebars"),
-
-    view_template: require("./hbtemplates/editor_view.handlebars"),
-
-    render: function() {
-        if (this.editing) {
-            if (!this.setting_model) {
-                /*
-                * (rtibbles)
-                * The view rerenders on model change. But, the save method below modifies the exact attribute that it is listening to.
-                * If we don't stop the rerender, we needlessly reparse the markdown to HTML into the editor.
-                * This led to some weird behaviour (due to race conditions) during manual testing, so I stopped it.
-                *
-                * The only other alternative would be to do the set in the save method with {silent: true} as an option,
-                * but other behaviour relies on listening to the model's change events.
-                */
-                this.render_editor();
-            }
-        } else {
-            this.render_content();
-        }
-        this.setting_model = false;
-    },
-
-    render_content: function() {
-        this.$el.html(this.view_template({
-            content: parse_content(this.model.get(this.edit_key)),
-            source_url:this.model.get('source_url')
-        }));
-    },
-
-    parse_content:function(content){
-        parsed = replace_image_paths(this.model.get(this.edit_key));
-        parsed = Katex.renderToString(parsed);
-        return parsed;
-    },
-
-    render_editor: function() {
-        this.editor.setHTML(this.view_template({
-            content: parse_content(this.model.get(this.edit_key)),
-            source_url:this.model.get('source_url')
-        }));
-    },
-
-    activate_editor: function() {
-        this.$el.html(this.edit_template());
-        this.editor = new Quill(this.$(".editor")[0], {
-            modules: {
-                'toolbar': { container: this.$('#toolbar')[0] }
-            },
-            theme: 'snow',
-            styles: {
-                'body': {
-                  'background-color': "white",
-                  'border': '1px #66afe9 solid',
-                  'border-radius': "4px",
-                  "box-shadow": "inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6)"
-                }
-            }
-        });
-        this.render_editor();
-        this.editor.on("text-change", _.debounce(this.save, 500));
-        this.editing = true;
-        this.editor.focus();
-    },
-
-    deactivate_editor: function() {
-        delete this.editor;
-        this.editing = false;
-        this.render();
-    },
-
-    toggle_editor: function() {
-        if (this.editor) {
-            this.deactivate_editor();
-        } else {
-            this.activate_editor();
-        }
-    },
-
-    save: function(delta, source) {
-        /*
-        * This method can be triggered by a change event firing on the QuillJS
-        * instance that we are using. As such, it supplies arguments delta and source.
-        * Delta describes the change in the Editor instance, while source defines whether
-        * those changes were user initiated or made via the API.
-        * Doing this check prevents us from continually rerendering when a non-user source
-        * modifies the contents of the editor (i.e. our own code).
-        */
-        if (typeof source !== "undefined" && source !== "user") {
-            return;
-        }
-        this.setting_model = true;
-        this.model.set(this.edit_key, this.return_markdown());
-    },
-
-    save_and_close: function() {
-        this.save();
-        this.deactivate_editor();
-    },
-
-    return_html: function() {
-        return this.editor.getHTML();
-    },
-
-    return_markdown: function() {
-        var contents = this.editor.getContents();
-        var outputs = [];
-        for (var i = 0; i < contents.ops.length; i++) {
-            var insert = contents.ops[i].insert;
-            var attributes = contents.ops[i].attributes;
-            if (typeof attributes !== "undefined") {
-                _.each(attributes, function(value, key) {
-                    switch (key) {
-                        case "bold":
-                            if (value) {
-                                insert = "**" + insert + "**";
-                            }
-                            break;
-                        case "italic":
-                            if (value) {
-                                insert = "*" + insert + "*";
-                            }
-                            break;
-                        case "image":
-                            if (value && insert === 1) {
-                                insert = "![](" + value + ")";
-                            }
-                            break;
-                    }
-                })
-            }
-            outputs.push(insert);
-        }
-        return outputs.join("");
-    }
-});
-
-var AssessmentItemAnswerView = Backbone.View.extend({
-
-    initialize: function(options) {
-        _.bindAll(this, "render", "set_editor", "set_open", "toggle");
-        this.open = options.open || false;
-        this.containing_list_view = options.containing_list_view;
-        this.assessment_item = options.assessment_item;
-        this.nodeid=options.nodeid;
-        this.isdisplay = options.isdisplay;
-        this.render();
-    },
-
-    template: require("./hbtemplates/assessment_item_answer.handlebars"),
-    closed_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_closed.handlebars"),
-    open_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_open.handlebars"),
-
-    events: {
-        // "click .delete": "delete",
-        // "change .correct": "toggle_correct",
-        // "click .answer_item": "set_open",
-        // "click .toggle": "toggle"
-    },
-
-    render: function() {
-        this.$el.html(this.template({
-            answer: this.model.toJSON(),
-            input_answer: this.assessment_item.get("type") === "input_question",
-            single_selection: this.assessment_item.get("type") === "single_selection",
-            groupName: this.assessment_item.get("id"),
-            isdisplay: this.isdisplay
-        }));
-        if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: "answer", el: this.$(".answer"), nodeid:this.nodeid});
-        } else {
-            this.$(".answer").append(this.editor_view.el);
-        }
-        _.defer(this.set_editor);
-    },
-
-    toggle_editor: function() {
-        this.open = !this.open;
-        this.set_editor(true);
-    },
-    set_open:function(){
-        this.containing_list_view.set_focus();
-        this.set_toolbar_open();
-        this.editor_view.activate_editor();
-        this.containing_list_view.container.toggle_focus();
-    },
-    set_closed:function(){
-        this.set_toolbar_closed();
-        this.editor_view.deactivate_editor();
-        exerciseSaveDispatcher.trigger("save");
-    },
-    toggle:function(event){
-        event.stopPropagation();
-        this.set_closed();
-    },
-
-    set_editor: function(save) {
-        if (this.open) {
-            this.set_toolbar_open();
-            this.editor_view.activate_editor();
-        } else {
-            this.set_toolbar_closed();
-            this.editor_view.deactivate_editor();
-            if (save) {
-                // exerciseSaveDispatcher.trigger("save");
-            }
-        }
-    },
-
-    toggle_correct: function() {
-        if(this.assessment_item.get("type") === "single_selection"){
-            this.containing_list_view.set_all_correct(false);
-        }
-        this.set_correct(this.$(".correct").prop("checked"));
-    },
-    set_correct:function(is_correct){
-        this.model.set("correct", is_correct);
-    },
-
-    set_toolbar_open: function() {
-        this.$(".answer-toolbar").html(this.open_toolbar_template());
-    },
-
-    set_toolbar_closed: function() {
-        this.$(".answer-toolbar").html(this.closed_toolbar_template());
-    },
-
-    delete: function(event) {
-        event.stopPropagation();
-        this.model.destroy();
-        // exerciseSaveDispatcher.trigger("save");
-        this.remove();
-    }
-});
-
-var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
-
-    template: require("./hbtemplates/assessment_item_answer_list.handlebars"),
-
-    initialize: function(options) {
-        _.bindAll(this, "render", "add_answer_view");
-        this.bind_edit_functions();
-        this.assessment_item = options.assessment_item;
-        this.nodeid = options.nodeid;
-        this.isdisplay = options.isdisplay;
-        this.render();
-        this.container = options.container;
-        this.listenTo(this.collection, "add", this.add_answer_view);
-        this.listenTo(this.collection, "remove", this.render);
-    },
-
-    events: {
-        "click .addanswer": "add_answer"
-    },
-
-    render: function() {
-        this.views=[];
-        this.$el.html(this.template({
-            input_answer: this.assessment_item.get("type") === "input_question"
-        }));
-        for (var i = 0; i < this.collection.length; i++) {
-            this.add_answer_view(this.collection.at(i));
-        }
-    },
-
-    add_answer: function() {
-        this.set_focus();
-        this.collection.add({answer: "", correct: false});
-    },
-
-    add_answer_view: function(model, open) {
-        open = open ? true : false;
-        var view = new AssessmentItemAnswerView({
-            model: model,
-            open: open,
-            containing_list_view:this,
-            assessment_item: this.assessment_item,
-            nodeid:this.nodeid,
-            isdisplay:this.isdisplay
-        });
-        this.views.push(view);
-        this.$(".addanswer").before(view.el);
-
-    },
-    set_focus:function(){
-        this.views.forEach(function(view){
-            view.set_closed();
-        });
-    },
-    set_all_correct:function(is_correct){
-        this.views.forEach(function(view){
-            view.set_correct(is_correct);
-        })
-    }
-});
-
-var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
+/*********** ASSESSMENT ITEM VIEW (STATIC) ***********/
+var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
     className:"assessment_li",
+    toolbar_el : '.toolbar',
+    content_field: 'question',
+    editor_el: ".question",
     isdisplay: true,
-    initialize: function(options) {
-        this.nodeid=options.nodeid;
-        this.render();
-    },
     template: require("./hbtemplates/assessment_item_edit.handlebars"),
 
+    initialize: function(options) {
+        _.bindAll(this, "update_hints", "show_hints");
+        this.render();
+    },
+    events: {
+        "click .hint_link": "show_hints"
+    },
     render: function() {
-        this.$el.html(this.template({model: this.model.toJSON()}));
-        if (this.model.get("type") !== "free_response") {
+        this.$el.html(this.template({
+            model: this.model.toJSON(),
+            hint_count: this.model.get('hints').length,
+            isdisplay:this.isdisplay,
+            cid: this.cid
+        }));
+        this.render_editor();
+        this.$(".question_type_select").val(this.model.get("type")); // Set dropdown to current type
+
+        // Add answer list for non-perseus questions
+        if(this.model.get('type') !== "perseus_question"){
             if (!this.answer_editor) {
                 this.answer_editor = new AssessmentItemAnswerListView({
                     collection: this.model.get("answers"),
                     container:this,
                     assessment_item: this.model,
-                    nodeid:this.nodeid,
                     isdisplay:this.isdisplay
                 });
             }
-            this.$(".answers").append(this.answer_editor.el);
+            this.$(".answers").html(this.answer_editor.el);
         }
-        if (!this.hint_editor) {
-            this.hint_editor = new AssessmentItemHintListView({
-                collection:this.model.get("hints"),
-                container:this,
+    },
+    show_hints:function(event){
+        if(!this.hint_editor){
+            this.hint_editor = new HintModalView({
+                collection: this.model.get("hints"),
+                container: this,
                 assessment_item: this.model,
-                nodeid:this.nodeid
+                model: this.model,
+                onupdate: this.update_hints,
+                isdisplay: this.isdisplay
             });
         }
-        this.$(".hints").append(this.hint_editor.el);
-        if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: "question", el: this.$(".question"),nodeid:this.nodeid});
-        } else {
-            this.$(".question").append(this.editor_view.el);
-        }
+        this.hint_editor.show();
+    },
+    update_hints:function(){
+        this.$(".hint_count").text(this.model.get("hints").length); // Update how many hints are on assessment item
     }
 });
 
+/*********** ASSESSMENT ITEM VIEW (DYNAMIC) ***********/
 var AssessmentItemView = AssessmentItemDisplayView.extend({
     isdisplay: false,
+    errors: [],
+    closed_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_closed.handlebars"),
+    open_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_open.handlebars"),
+
     initialize: function(options) {
-        _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus", "toggle_undo_redo", "add_focus", "remove_focus");
-        this.nodeid=options.nodeid;
+        _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed",
+                "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus",
+                "toggle_undo_redo", "update_hints", "set_type", "set_open");
+        this.originalData = this.model.toJSON();
+        this.onchange = options.onchange;
+        this.question = this.model.get('question');
         this.containing_list_view = options.containing_list_view;
+        this.init_undo_redo();
+        this.render();
+        this.set_toolbar_closed();
+        this.validate();
+    },
+    events: {
+        "click .cancel": "cancel",
+        "click .delete": "delete",
+        "click .toggle_exercise": "toggle_focus",
+        "click .toggle" : "toggle",
+        "click .hint_link": "show_hints",
+        "change .question_type_select": "set_type",
+        'change .random_order_check': 'set_random_order',
+        'click .random_answers_order': 'stop_events',
+        'click .move_up': 'move_up',
+        'click .move_down': 'move_down',
+    },
+    stop_events:function(event){ event.stopPropagation(); },
+
+    /*********** EDITING METHODS ***********/
+    delete: function(event) {
+        this.stop_events(event); // Don't activate editor on deleting question
+        if(confirm("Are you sure you want to delete this question?")){
+            this.model.set('deleted', true);
+            this.propagate_changes();
+            this.containing_list_view.views.splice(this, 1);
+            this.containing_list_view.handle_if_empty();
+            this.remove();
+        }
+    },
+    set_type:function(event){
+        var new_type = event.target.value;
+
+        // True/false questions will overwrite all answers
+        if(new_type === "true_false"){
+            if(this.model.get("answers").length === 0 || confirm("Switching to true or false will remove any current answers. Continue?")){
+                new_type = "single_selection";
+                var trueFalseCollection = new Backbone.Collection();
+                trueFalseCollection.add([{answer: "True", correct: true, order: 1}, {answer: "False", correct: false, order: 2}]);
+                this.model.set("answers", trueFalseCollection);
+            }else{ new_type = this.model.get('type'); } // Keep current type
+        }
+
+        // Single selection questions will set only one answer as being correct
+        else if(new_type === "single_selection" && this.model.get("answers").where({'correct': true}).length > 1){
+            if(confirm("Switching to single selection will set only one answer as correct. Continue?")){
+                var correct_answer_set = false;
+                this.model.get('answers').forEach(function(item){
+                    if(correct_answer_set) item.set('correct', false);
+                    correct_answer_set = correct_answer_set || item.get('correct');
+                });
+            }else{ new_type = this.model.get('type'); } // Keep current type
+        }
+
+        // Input questions will set all answers as being correct
+        else if(new_type === "input_question" && this.model.get("answers").where({'correct': false}).length > 0){
+            if(confirm("Switching to input answer will set all answers as correct. Continue?")){
+                this.model.get('answers').forEach(function(item){
+                    item.set('correct', true);
+                });
+            }else{ new_type = this.model.get('type'); }  // Keep current type
+        }
+
+        // Set type and re-render answers accordingly
+        this.model.set('type', new_type);
+        if(this.answer_editor){
+            this.answer_editor.remove();
+            this.answer_editor = null;
+        }
+        this.render();
+        this.set_open();
+        this.propagate_changes();
+    },
+    propagate_changes:function(){
+        this.containing_list_view.propagate_changes();
+        this.validate();
+    },
+    cancel: function(event) {
+        this.undo_manager.undoAll();
+        this.render();
+        this.toggle(event);
+        if(this.answer_editor){
+            this.answer_editor.render();
+        }
+        if(this.hint_editor){
+            this.hint_editor.render();
+        }
+    },
+    validate:function(){
+        this.errors = [];
+
+        // Validation rules don't apply to perseus questions
+        if(this.model.get("type") === 'perseus_question') return true;
+
+        // Make sure questions aren't blank
+        if(!this.model.get(this.content_field)) this.errors.push({error: "Question cannot be blank"});
+
+        // Make sure answers aren't blank
+        if(this.model.get('answers').findWhere({'answer': ""})) this.errors.push({error: "Answers cannot be blank"});
+
+        // Make sure hints aren't blank
+        if(this.model.get('hints').findWhere({'hint': ""})) this.errors.push({error: "Hints cannot be blank"});
+
+        // Make sure different question types have valid answers
+        if(this.model.get("type") === "input_question"){
+            // Answers must be numeric for input questions
+            if(this.model.get('answers').filter(function(a){ return isNaN(a.get('answer'));}).length > 0)
+                this.errors.push({error: "Answers must be numeric"});
+
+            // Input answers must have at least one answer
+            else if(this.model.get('answers').length === 0)
+                this.errors.push({error: "Question must have one or more answers"});
+        }
+
+        // Multiple selection questions must have at least one correct answer
+        else if(this.model.get('type') === 'multiple_selection'){
+            if(this.model.get('answers').where({'correct': true}).length === 0)
+                this.errors.push({error: "Question must have at least one correct answer"});
+        }
+
+        // Single selection questions must have one correct answer
+        else if(this.model.get('type') === 'single_selection'){
+            if(this.model.get('answers').where({'correct': true}).length !== 1)
+                this.errors.push({error: "Question must have one correct answer"});
+        }
+        this.$(".error-list").html(this.error_template({errors: this.errors}));
+        return this.errors.length === 0;
+    },
+    set_random_order:function(event){
+        this.model.set("randomize", event.target.checked);
+        this.propagate_changes();
+    },
+
+    /*********** UNDO/REDO METHODS ***********/
+    init_undo_redo:function(){
         this.undo_manager = new UndoManager({
             track: true,
             register: [this.model, this.model.get("answers"), this.model.get("hints")]
         });
         this.toggle_undo_redo();
-        this.render();
-        this.set_toolbar_closed();
     },
-    closed_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_closed.handlebars"),
-    open_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_open.handlebars"),
-
-    events: {
-        // "click .cancel": "cancel",
-        // "click .undo": "undo",
-        // "click .redo": "redo",
-        // "click .delete": "delete",
-        // "click .toggle_exercise": "toggle_focus",
-        // "click .toggle" : "toggle"
-    },
-    toggle:function(event){
-        event.stopPropagation();
-        this.remove_focus();
-        this.$(".delete").css("display", "none");
-        var self = this;
-        setTimeout(function(){
-            self.$(".delete").css("display", "block")
-        }, 1000);
-    },
-    delete: function(event) {
-        event.stopPropagation();
-        this.model.destroy();
-        exerciseSaveDispatcher.trigger("save");
-        this.remove();
-    },
-
-    save: function() {
-        exerciseSaveDispatcher.trigger("save");
-        this.set_toolbar_closed();
-    },
-
-    cancel: function(event) {
-        this.undo_manager.undoAll();
-        this.toggle(event)
-    },
-
-    undo: function() {
-        this.undo_manager.undo();
-    },
-
-    redo: function() {
-        this.undo_manager.redo();
-    },
-
     toggle_undo_redo: function() {
         var undo = this.undo;
-        var redo = this.redo;
         this.undo = this.undo_manager.isAvailable("undo");
-        this.redo = this.undo_manager.isAvailable("redo");
-        if (undo !== this.undo || redo !== this.redo) {
+        if (undo !== this.undo) {
             this.set_toolbar_open();
         }
     },
-
     set_undo_redo_listener: function() {
         this.listenTo(this.undo_manager.stack, "add", this.toggle_undo_redo);
         this.listenTo(this.undo_manager, "all", this.toggle_undo_redo);
     },
-
     unset_undo_redo_listener: function() {
         this.stopListening(this.undo_manager.stack);
         this.stopListening(this.undo_manager);
     },
 
-    set_toolbar_open: function() {
-        this.$(".toolbar").html(this.open_toolbar_template({model: this.model.attributes, undo: this.undo, redo: this.redo}));
-    },
-
-    set_toolbar_closed: function() {
-        this.$(".toolbar").html(this.closed_toolbar_template({model: this.model.attributes}));
+    /*********** EDITOR METHODS ***********/
+    toggle:function(event){
+        event.stopPropagation();
+        this.init_undo_redo();
+        this.set_closed()
+        this.$(".closed_toolbar").css("display", "none");
+        var self = this;
+        setTimeout(function(){ self.$(".closed_toolbar").css("display", "block"); }, 1000);
     },
     toggle_focus:function(){
         if(!this.$(".assessment_item").hasClass("active")){
-           this.containing_list_view.set_focus();
-           this.add_focus();
+           this.containing_list_view.close_all_editors();
+           this.set_open();
         }
     },
-    add_focus:function(){
+    set_open:function(){
+        this.open = true;
         this.$(".assessment_item").addClass("active");
         this.editor_view.activate_editor();
+        this.$(".question").removeClass("unfocused");
         this.set_toolbar_open();
         this.set_undo_redo_listener();
+        this.answer_editor.validate();
+        if (this.answer_editor) {
+            this.answer_editor.close_all_editors();
+        }
     },
-    remove_focus:function(){
-        this.$(".assessment_item").removeClass("active");
-        // this.editor_view.save_and_close();
-        this.editor_view.deactivate_editor();
-        this.save();
+    set_closed:function(){
         this.set_toolbar_closed();
+        this.editor_view.deactivate_editor();
+        this.$(".assessment_item").removeClass("active");
+        this.$(".question").removeClass("unfocused");
+        this.open = false;
         this.unset_undo_redo_listener();
         if (this.answer_editor) {
-            this.answer_editor.set_focus();
+            this.answer_editor.close_all_editors();
         }
+    },
+    remove_focus:function(){
+        this.editor_view.deactivate_editor();
+        this.$(".question").addClass("unfocused");
+        this.$(".question").on('click', this.set_open);
     }
 });
 
+/*********** ANSWER LIST VIEW ***********/
+var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
+    additem_el: ".addanswer",
+    list_selector:">.answer_list",
+    default_item:">.answer_list .default-item",
+    template: require("./hbtemplates/assessment_item_answer_list.handlebars"),
 
-var AssessmentItemHintView = Backbone.View.extend({
+    get_default_attributes: function() {
+        return {order: this.get_next_order(), answer: "", correct: this.assessment_item.get('type') === "input_question"};
+    },
+    initialize: function(options) {
+        _.bindAll(this, "render", "add_item", "add_item_view");
+        this.bind_edit_functions();
+        this.views = [];
+        this.assessment_item = options.assessment_item;
+        this.isdisplay = options.isdisplay;
+        this.container = options.container;
+        this.render();
+        this.listenTo(this.collection, "add", this.add_item_view);
+        this.listenTo(this.collection, "remove", this.render);
+    },
+    render: function() {
+        this.$el.html(this.template({
+            input_answer: this.assessment_item.get("type") === "input_question",
+            isdisplay: this.isdisplay
+        }));
+        this.load_content(this.collection, "No answers provided.");
+        this.$(".addanswer").on('click', this.add_item);
+    },
+    create_new_view: function(model) {
+        var view = new AssessmentItemAnswerView({
+            model: model,
+            containing_list_view:this,
+            assessment_item: this.assessment_item,
+            isdisplay:this.isdisplay
+        });
+        this.views.push(view);
+        return view;
+    },
+    set_all_correct:function(is_correct){
+        this.views.forEach(function(view){
+            view.set_correct(is_correct);
+        });
+    },
+    validate:function(){
+        this.set_invalid(this.collection.findWhere({answer: ""}));
+    }
+});
+
+/*********** ANSWER ITEM VIEW ***********/
+var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
+    className:"answer_li",
+    toolbar_el : '.answer-toolbar',
+    editor_el: ".answer",
+    content_field: 'answer',
+    template: require("./hbtemplates/assessment_item_answer.handlebars"),
+    closed_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_closed.handlebars"),
+    open_toolbar_template: require("./hbtemplates/assessment_item_answer_toolbar_open.handlebars"),
+
+    initialize: function(options) {
+        _.bindAll(this, "render", "set_editor", "set_open", "toggle", "toggle_correct");
+        this.open = options.open || false;
+        this.containing_list_view = options.containing_list_view;
+        this.assessment_item = options.assessment_item;
+        this.isdisplay = options.isdisplay;
+        this.render();
+    },
+    events: {
+        "click .delete": "delete",
+        "click .correct": "toggle_correct",
+        "click .toggle_answer": "set_open",
+        'click .item_move_up': 'move_up',
+        'click .item_move_down': 'move_down'
+    },
+    render: function() {
+        this.$el.html(this.template({
+            answer: this.model.toJSON(),
+            input_answer: this.assessment_item.get("type") === "input_question",
+            single_selection: this.assessment_item.get("type") === "single_selection",
+            groupName: this.assessment_item.cid,
+            allow_toggle: !this.isdisplay
+        }));
+        this.render_editor();
+        _.defer(this.set_editor);
+    },
+    toggle_correct: function(event) {
+        event.stopPropagation();
+        if(this.assessment_item.get("type") === "single_selection"){
+            this.containing_list_view.set_all_correct(false);
+        }
+        this.set_correct(this.$(".correct").prop("checked"));
+        if(!this.containing_list_view.container.open){
+            this.containing_list_view.container.init_undo_redo()
+        }
+    },
+    set_correct:function(is_correct){
+        this.model.set("correct", is_correct);
+        this.$(".correct").attr('title', (is_correct)? "Correct" : "Incorrect");
+        this.propagate_changes();
+        (is_correct)? this.$(".answer_item").addClass('is_correct') : this.$(".answer_item").removeClass('is_correct');
+    }
+});
+
+/*********** QUESTION DISPLAY FOR HINT MODAL ***********/
+var HintQuestionDisplayView = Backbone.View.extend({
+    className:"assessment_li",
+    template: require("./hbtemplates/assessment_item_display.handlebars"),
+
+    initialize: function(options) {
+        this.render();
+    },
+    render: function() {
+        this.$el.html(this.template({model: this.model.toJSON()}));
+        var editor_view = new EditorView({
+            model: this.model,
+            edit_key: "question",
+            el: this.$(".question")
+        });
+    }
+});
+
+/*********** HINT MODAL VIEW ***********/
+var HintModalView = BaseViews.BaseModalView.extend({
+    error_template: require("./hbtemplates/assessment_item_errors.handlebars"),
+    template: require("./hbtemplates/assessment_item_hint_modal.handlebars"),
+
+    initialize: function(options) {
+        _.bindAll(this, "closing_hints", "show", "closed_hints");
+        this.assessment_item = options.assessment_item;
+        this.isdisplay = options.isdisplay;
+        this.onupdate = options.onupdate;
+        this.container = options.container;
+        this.render();
+    },
+    render: function() {
+        this.$el.html(this.template({isdisplay: this.isdisplay}));
+        if(!this.isdisplay){
+            var question_preview = new HintQuestionDisplayView({
+                model: this.assessment_item,
+                el: this.$(".question_preview")
+            });
+        }
+        $("body").append(this.el);
+        this.hint_editor = new AssessmentItemHintListView({
+            collection: this.model.get("hints"),
+            container: this.container,
+            assessment_item: this.model,
+            model: this.model,
+            onupdate: this.onupdate,
+            isdisplay: this.isdisplay
+        });
+        this.$(".hints").append(this.hint_editor.el);
+        this.$(".hint_modal").on("hide.bs.modal", this.closing_hints);
+        this.$(".hint_modal").on("hidden.bs.modal", this.closed_hints);
+    },
+    show: function(){
+        this.$(".hint_modal").modal({show: true});
+    },
+    closing_hints:function(){
+        this.$(".hint-errors").css('display', 'none');
+        this.hint_editor.close_all_editors();
+        if(!this.isdisplay) this.onupdate(this.model);
+    },
+    closed_hints:function(){
+        $("body").addClass('modal-open'); // Make sure modal-open class persists
+        $('.modal-backdrop').slice(1).remove();
+    }
+});
+
+/*********** HINT LIST VIEW ***********/
+var AssessmentItemHintListView = ExerciseEditableListView.extend({
+    additem_el: ".addhint",
+    list_selector:">.hint_list",
+    default_item:">.hint_list .default-item",
+    template: require("./hbtemplates/assessment_item_hint_list.handlebars"),
+    get_default_attributes: function() {
+        return {order: this.get_next_order(), hint: ""};
+    },
+    initialize: function(options) {
+        _.bindAll(this, "render", "add_item", "add_item_view");
+        this.bind_edit_functions();
+        this.assessment_item = options.assessment_item;
+        this.isdisplay = options.isdisplay;
+        this.render();
+        this.container = options.container;
+        this.listenTo(this.collection, "add", this.add_item_view);
+        this.listenTo(this.collection, "sync", this.check_valid);
+        this.listenTo(this.collection, "remove", this.render);
+    },
+    events: {
+        "click .addhint": "add_item"
+    },
+    render: function() {
+        this.views = [];
+        this.$el.html(this.template({isdisplay: this.isdisplay}));
+        this.load_content(this.collection, "No hints provided.");
+    },
+    create_new_view: function(model) {
+        var view = new AssessmentItemHintView({
+            model: model,
+            containing_list_view:this,
+            assessment_item: this.assessment_item,
+            isdisplay: this.isdisplay
+        });
+        this.views.push(view);
+        return view;
+    },
+    validate:function(){
+        this.set_invalid(this.collection.findWhere({hint: ""}));
+    }
+});
+
+/*********** HINT ITEM VIEW ***********/
+var AssessmentItemHintView = ExerciseEditableItemView.extend({
+    className:"hint_li",
+    content_field: 'hint',
+    editor_el: ".hint",
+    toolbar_el : '.hint-toolbar',
+    template: require("./hbtemplates/assessment_item_hint.handlebars"),
+    closed_toolbar_template: require("./hbtemplates/assessment_item_hint_toolbar_closed.handlebars"),
+    open_toolbar_template: require("./hbtemplates/assessment_item_hint_toolbar_open.handlebars"),
+    close_editors_on_focus: false,
 
     initialize: function(options) {
         _.bindAll(this, "render", "set_editor", "set_open", "toggle");
         this.open = options.open || false;
         this.containing_list_view = options.containing_list_view;
         this.assessment_item = options.assessment_item;
-        this.nodeid=options.nodeid;
+        this.isdisplay = options.isdisplay;
         this.render();
-    },
-
-    template: require("./hbtemplates/assessment_item_hint.handlebars"),
-    closed_toolbar_template: require("./hbtemplates/assessment_item_hint_toolbar_closed.handlebars"),
-    open_toolbar_template: require("./hbtemplates/assessment_item_hint_toolbar_open.handlebars"),
-
-    events: {
-        // "click .delete": "delete",
-        // "click .hint_item": "set_open",
-        // "click .toggle": "toggle"
-    },
-
-    render: function() {
-        this.$el.html(this.template({
-            hint: this.model.toJSON()
-        }));
-        if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: "hint", el: this.$(".hint"), nodeid:this.nodeid});
-        } else {
-            this.$(".hint").append(this.editor_view.el);
-        }
-        _.defer(this.set_editor);
-    },
-
-    toggle_editor: function() {
-        this.open = !this.open;
-        this.set_editor(true);
-    },
-    set_open:function(){
-        this.containing_list_view.set_focus();
-        this.set_toolbar_open();
-        this.editor_view.activate_editor();
-        this.containing_list_view.container.toggle_focus();
-    },
-    set_closed:function(){
         this.set_toolbar_closed();
-        this.editor_view.deactivate_editor();
-        exerciseSaveDispatcher.trigger("save");
     },
-    toggle:function(event){
-        event.stopPropagation();
-        this.set_closed();
-    },
-
-    set_editor: function(save) {
-        if (this.open) {
-            this.set_toolbar_open();
-            this.editor_view.activate_editor();
-        } else {
-            this.set_toolbar_closed();
-            this.editor_view.deactivate_editor();
-            if (save) {
-                // exerciseSaveDispatcher.trigger("save");
-            }
-        }
-    },
-    set_toolbar_open: function() {
-        this.$(".hint-toolbar").html(this.open_toolbar_template());
-    },
-
-    set_toolbar_closed: function() {
-        this.$(".hint-toolbar").html(this.closed_toolbar_template());
-    },
-
-    delete: function(event) {
-        event.stopPropagation();
-        this.model.destroy();
-        // exerciseSaveDispatcher.trigger("save");
-        this.remove();
-    }
-});
-
-var AssessmentItemHintListView = BaseViews.BaseEditableListView.extend({
-
-    template: require("./hbtemplates/assessment_item_hint_list.handlebars"),
-
-    initialize: function(options) {
-        _.bindAll(this, "render", "add_hint_view");
-        this.bind_edit_functions();
-        this.assessment_item = options.assessment_item;
-        this.nodeid = options.nodeid;
-        this.render();
-        this.container = options.container;
-        this.listenTo(this.collection, "add", this.add_hint_view);
-        this.listenTo(this.collection, "remove", this.render);
-    },
-
     events: {
-        "click .addhint": "add_hint"
+        "click .delete": "delete",
+        "click .hint_toggle": "set_open",
+        'click .item_move_up': 'move_up',
+        'click .item_move_down': 'move_down'
     },
-
     render: function() {
-        this.views=[];
-        this.$el.html(this.template());
-        for (var i = 0; i < this.collection.length; i++) {
-            this.add_hint_view(this.collection.at(i));
-        }
-    },
-
-    add_hint: function() {
-        this.set_focus();
-        this.collection.add({hint: ""});
-    },
-
-    add_hint_view: function(model, open) {
-        open = open ? true : false;
-        var view = new AssessmentItemHintView({
-            model: model,
-            open: open,
-            containing_list_view:this,
-            assessment_item: this.assessment_item,
-            nodeid:this.nodeid
-        });
-        this.views.push(view);
-        this.$(".addhint").before(view.el);
-
-    },
-    set_focus:function(){
-        this.views.forEach(function(view){
-            view.set_closed();
-        });
-    },
+        this.$el.html(this.template({hint: this.model.toJSON(), allow_toggle: !this.isdisplay}));
+        this.render_editor();
+    }
 });
 
 module.exports = {
     ExerciseView:ExerciseView,
-    ExerciseModalView:ExerciseModalView,
     AssessmentItemDisplayView:AssessmentItemDisplayView
 }
