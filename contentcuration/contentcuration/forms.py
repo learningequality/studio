@@ -168,7 +168,6 @@ class PreferencesSettingsForm(forms.Form):
             'm_value': self.cleaned_data["m_value"],
             'n_value': self.cleaned_data["n_value"],
         })
-        print user.preferences
         user.save()
         return user
 

@@ -26,6 +26,8 @@ DEFAULT_USER_PREFERENCES = json.dumps({
     'author': None,
     'copyright_holder': None,
     'mastery_model': exercises.NUM_CORRECT_IN_A_ROW_5,
+    'm_value': 5,
+    'n_value': 5,
     'auto_derive_video_thumbnail': True,
     'auto_derive_audio_thumbnail': True,
     'auto_derive_document_thumbnail': True,
