@@ -332,7 +332,7 @@ def exercise_image_upload(request):
         return HttpResponse(json.dumps({
             "success": True,
             "formatted_filename": exercises.CONTENT_STORAGE_FORMAT.format(str(file_object)),
-            "file": JSONRenderer().render(FileSerializer(file_object).data),
+            "file_id": file_object.pk,
             "path": generate_storage_url(str(file_object)),
         }))
 

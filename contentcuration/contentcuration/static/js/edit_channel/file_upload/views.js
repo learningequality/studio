@@ -738,7 +738,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
 });
 
 var ThumbnailUploadView = BaseViews.BaseView.extend({
-    template: require("./hbtemplates/image_upload.handlebars"),
+    template: require("./hbtemplates/thumbnail_upload.handlebars"),
     dropzone_template: require("./hbtemplates/image_upload_preview.handlebars"),
     initialize: function(options) {
         _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed', 'use_image');
@@ -955,7 +955,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
         this.alt_text = event.target.value;
     },
     submit_file:function(){
-        this.callback(this.file.file_id, this.file.filename, this.alt_text);
+        this.callback(this.file.file_id, this.file.formatted_filename, this.alt_text);
         this.close();
     },
     file_uploaded: function(file) {
