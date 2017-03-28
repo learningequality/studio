@@ -27,6 +27,7 @@ from django.db import transaction, connections
 from django.db.utils import ConnectionDoesNotExist
 
 import logging as logmodule
+logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -40,16 +41,19 @@ class EarlyExit(BaseException):
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('channel_id', type=str)
+        parser.add_argument('--force', action='store_true', dest='force', default=False)
 
     def handle(self, *args, **options):
         # license_id = options['license_id']
         channel_id = options['channel_id']
+        force = options['force']
 
         # license = ccmodels.License.objects.get(pk=license_id)
         try:
             channel = ccmodels.Channel.objects.get(pk=channel_id)
             # increment the channel version
-            raise_if_nodes_are_all_unchanged(channel)
+            if not force:
+                raise_if_nodes_are_all_unchanged(channel)
             fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
             with using_content_database(tempdb):
@@ -124,7 +128,7 @@ def map_content_nodes(root_node):
                 kolibrinode = create_bare_contentnode(node)
 
                 if node.kind.kind == content_kinds.EXERCISE:
-                    create_perseus_exercise(node)
+                    create_perseus_exercise(node, kolibrinode)
                 if node.kind.kind != content_kinds.TOPIC:
                     create_associated_file_objects(kolibrinode, node)
                 map_tags_to_node(kolibrinode, node)
@@ -142,9 +146,10 @@ def create_bare_contentnode(ccnode):
         defaults={'kind': ccnode.kind.kind,
             'title': ccnode.title,
             'content_id': ccnode.content_id,
+            'author' : ccnode.author or "",
             'description': ccnode.description,
             'sort_order': ccnode.sort_order,
-            'license_owner': ccnode.copyright_holder,
+            'license_owner': ccnode.copyright_holder or "",
             'license': kolibri_license,
             'available': True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
             'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
@@ -170,6 +175,12 @@ def create_associated_file_objects(kolibrinode, ccnode):
     for ccfilemodel in ccnode.files.exclude(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
+        if ccfilemodel.language_id:
+            kolibrimodels.Language.objects.get_or_create(
+                id=str(ccfilemodel.language),
+                lang_code=ccfilemodel.language.lang_code,
+                lang_subcode=ccfilemodel.language.lang_subcode
+            )
 
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
@@ -180,15 +191,16 @@ def create_associated_file_objects(kolibrinode, ccnode):
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
-            lang=None,          # TODO: fix this once we've implemented lang importing.
+            lang_id=str(ccfilemodel.language),
             thumbnail=preset.thumbnail,
         )
 
-def create_perseus_exercise(ccnode):
+def create_perseus_exercise(ccnode, kolibrinode):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
-        create_perseus_zip(ccnode, tempf)
+        data = process_assessment_metadata(ccnode, kolibrinode)
+        create_perseus_zip(ccnode, data, tempf)
         tempf.flush()
 
         ccmodels.File.objects.filter(contentnode=ccnode, preset_id=format_presets.EXERCISE).delete()
@@ -202,25 +214,45 @@ def create_perseus_exercise(ccnode):
         )
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
-def create_perseus_zip(ccnode, write_to_path):
-    assessment_items = ccmodels.AssessmentItem.objects.filter(contentnode = ccnode)
 
+def process_assessment_metadata(ccnode, kolibrinode):
+    # Get mastery model information, set to default if none provided
+    assessment_items = ccnode.assessment_items.all()
+    exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
+    exercise_data = {} if exercise_data is None else exercise_data
+
+    mastery_model = {'type' : exercise_data.get('mastery_model') or exercises.M_OF_N}
+    randomize = exercise_data.get('randomize') or True
+    assessment_item_ids = [a.assessment_id for a in assessment_items]
+
+    if mastery_model['type'] == exercises.M_OF_N:
+        mastery_model.update({'n':exercise_data.get('m') or min(5, assessment_items.count()) or 1})
+        mastery_model.update({'m':exercise_data.get('n') or min(5, assessment_items.count()) or 1})
+
+    exercise_data.update({
+        'mastery_model': mastery_model['type'],
+        'randomize': randomize,
+        'n': mastery_model.get('n'),
+        'm': mastery_model.get('m'),
+        'all_assessment_items': assessment_item_ids,
+        'assessment_mapping': {a.assessment_id : a.type for a in assessment_items},
+    })
+
+    kolibriassessmentmetadatamodel = kolibrimodels.AssessmentMetaData.objects.create(
+        id=uuid.uuid4(),
+        contentnode=kolibrinode,
+        assessment_item_ids=json.dumps(assessment_item_ids),
+        number_of_assessments=assessment_items.count(),
+        mastery_model=json.dumps(mastery_model),
+        randomize=randomize,
+        is_manipulable=ccnode.kind==content_kinds.EXERCISE,
+    )
+
+    return exercise_data
+
+
+def create_perseus_zip(ccnode, exercise_data, write_to_path):
     with zipfile.ZipFile(write_to_path, "w") as zf:
-
-        # Get mastery model information, set to default if none provided
-        exercise_data = json.loads(ccnode.extra_fields)
-        exercise_data = {} if exercise_data is None else exercise_data
-        exercise_data.update({
-            'mastery_model': exercise_data.get('mastery_model') or exercises.M_OF_N,
-            'randomize': exercise_data.get('randomize') or True,
-        })
-        if exercise_data['mastery_model'] == exercises.M_OF_N:
-            if 'n' not in exercise_data:
-                exercise_data.update({'n':exercise_data.get('m') or max(len(self.questions), 1)})
-            if 'm' not in exercise_data:
-                exercise_data.update({'m':exercise_data.get('n') or max(len(self.questions), 1)})
-
-        exercise_data.update({'all_assessment_items': [a.assessment_id for a in assessment_items], 'assessment_mapping':{a.assessment_id : a.type for a in assessment_items}})
         exercise_context = {
             'exercise': json.dumps(exercise_data)
         }
@@ -244,7 +276,7 @@ def create_perseus_zip(ccnode, write_to_path):
                     zf.writestr(svg_name, content[0])
                     zf.writestr(json_name, content[1])
 
-        for item in assessment_items:
+        for item in ccnode.assessment_items.all():
             write_assessment_item(item, zf)
 
 def write_assessment_item(assessment_item, zf):
@@ -266,6 +298,7 @@ def write_assessment_item(assessment_item, zf):
         'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, replacement_string),
         'hints': hint_data,
         'freeresponse':assessment_item.type == exercises.FREE_RESPONSE,
+        'randomize': assessment_item.randomize,
     }
 
     if assessment_item.type == exercises.MULTIPLE_SELECTION:

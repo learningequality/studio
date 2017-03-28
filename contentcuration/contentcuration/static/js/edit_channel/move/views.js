@@ -76,11 +76,11 @@ var MoveView = BaseViews.BaseListView.extend({
 
         // Render list
         this.targetList = new MoveList({
-            model : null,
-            el:$("#target_list_area"),
+            model: null,
+            el: $("#target_list_area"),
             is_target: true,
-            collection :  fetched,
-            container :this
+            collection:  fetched,
+            container: this
         });
     },
     move_content:function(){
@@ -90,8 +90,7 @@ var MoveView = BaseViews.BaseListView.extend({
             var original_parents = self.collection.pluck('parent');
             // Get original parents
             self.collection.move(self.target_node, sort_order).then(function(moved){
-                var original_collection = new Models.ContentNodeCollection();
-                original_collection.get_all_fetch(original_parents).then(function(fetched){
+                self.collection.get_all_fetch(original_parents).then(function(fetched){
                     fetched.add(self.target_node);
                     self.onmove(self.target_node, moved, fetched);
                     self.close_move();
@@ -100,9 +99,6 @@ var MoveView = BaseViews.BaseListView.extend({
             }).catch(function(exception){
                 reject(exception);
             });
-
-
-
         });
     },
     close_move:function(){
@@ -211,12 +207,15 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
         }
     },
     load_subfiles:function(){
-        this.subcontent_view = new MoveList({
-            model : this.model,
-            el: $(this.getSubdirectory()),
-            is_target: this.is_target,
-            collection: this.collection,
-            container: this.container
+        var self = this;
+        this.collection.get_all_fetch(this.model.get("children")).then(function(fetched){
+            self.subcontent_view = new MoveList({
+                model: self.model,
+                el: $(self.getSubdirectory()),
+                is_target: self.is_target,
+                collection: fetched.filter({kind: 'topic'}),
+                container: self.container
+            });
         });
     },
     handle_checked:function(event){

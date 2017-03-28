@@ -14,10 +14,9 @@ class RegistrationForm(UserCreationForm):
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
-        try:
-            User.objects.get(email__iexact=email)
+        if User.objects.filter(email__iexact=email, is_active=True).exists():
             self.add_error('email', 'Email already exists.')
-        except User.DoesNotExist:
+        else:
             return email
 
     def clean(self):

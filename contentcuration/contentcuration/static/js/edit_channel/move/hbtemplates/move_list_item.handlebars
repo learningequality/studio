@@ -5,7 +5,6 @@
 	{{/if}}
 	{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
 	<div class="move_item_title truncate">{{node.title}}</div>
-	{{#if isfolder}}{{#unless has_descendants}}<em class="move_empty">(empty)</em>{{/unless}}{{/if}}
 </label>
 
 {{#if node.children}}

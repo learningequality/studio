@@ -1,6 +1,6 @@
-{% load perseus_tags %}{
+{% load perseus_tags %}{% autoescape off %}{
     "question": {
-        "content": "{{ question | escape_newline }}\n\n[[☃ radio 1]]",
+        "content": "{{ question | jsonify }}\n\n[[☃ radio 1]]",
         "images": {},
         "widgets": {
             "radio 1": {
@@ -11,11 +11,11 @@
                         {% for answer in answers %}
                         {
                             "correct": {% if answer.correct %}true{% else %}false{% endif %},
-                            "content": "{{ answer.answer | escape_newline }}"
+                            "content": "{{ answer.answer | jsonify }}"
                         }{% if forloop.last %}{% else %},{% endif %}
                         {% endfor %}
                     ],
-                    "randomize": true,
+                    "randomize": {% if randomize %}true{% else %}false{% endif %},
                     "multipleSelect": {% if multipleSelect %}true{% else %}false{% endif %},
                     "displayCount": null,
                     "hasNoneOfTheAbove": false,
@@ -48,9 +48,10 @@
         {
             "widgets":{},
             "images":{},
-            "content":"{{hint.hint | escape_newline}}",
+            "content":"{{hint.hint | jsonify}}",
             "replace":false
         }{% if forloop.last %}{% else %},{% endif %}
         {% endfor %}
     ]
 }
+{% endautoescape %}

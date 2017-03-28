@@ -2,17 +2,23 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var Quill = require("quilljs");
+var Quill = require("quill");
 var Dropzone = require("dropzone");
 var get_cookie = require("utils/get_cookie");
 var UndoManager = require("backbone-undo");
 var JSZip = require("jszip");
 var fileSaver = require("browser-filesaver");
 var JSZipUtils = require("jszip-utils");
+var Katex = require("katex");
 
 require("exercises.less");
-require("quilljs/dist/quill.snow.css");
+require("quill/dist/quill.snow.css");
 require("dropzone/dist/dropzone.css");
+require("../../../css/katex.min.css");
+
+if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("Safari") > -1){
+    require("mathml.less");
+}
 
 var placeholder_text = "$1\${☣ CONTENTSTORAGE}/$3"
 var regExp = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
@@ -134,11 +140,29 @@ var replace_image_paths = function(content){
     if(matches){
         matches.forEach(function(match){
             var filename = match.split("/").slice(-1)[0]
-            var replace_str = "/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
+            var replace_str = "/content/storage/" + filename.charAt(0) + "/" + filename.charAt(1) + "/" + filename;
             content = content.replace(match, replace_str);
         })
     }
     return content;
+};
+
+var replace_mathjax = function(content){
+    var mathJaxRegex = /\$\$(.+)\$\$/g;
+    var matches = content.match(mathJaxRegex);
+    if(matches){
+        matches.forEach(function(match){
+            var replace_str = Katex.renderToString(match.match(/\$\$(.+)\$\$/)[1]);
+            content = content.replace(match, replace_str);
+        });
+    }
+    return content;
+};
+
+var parse_content = function(content){
+    parsed = replace_image_paths(content);
+    parsed = replace_mathjax(parsed);
+    return parsed;
 };
 
 
@@ -469,11 +493,23 @@ var EditorView = Backbone.View.extend({
     },
 
     render_content: function() {
-        this.$el.html(this.view_template({content: replace_image_paths(this.model.get(this.edit_key))}));
+        this.$el.html(this.view_template({
+            content: parse_content(this.model.get(this.edit_key)),
+            source_url:this.model.get('source_url')
+        }));
+    },
+
+    parse_content:function(content){
+        parsed = replace_image_paths(this.model.get(this.edit_key));
+        parsed = Katex.renderToString(parsed);
+        return parsed;
     },
 
     render_editor: function() {
-        this.editor.setHTML(this.view_template({content: replace_image_paths(this.model.get(this.edit_key))}));
+        this.editor.setHTML(this.view_template({
+            content: parse_content(this.model.get(this.edit_key)),
+            source_url:this.model.get('source_url')
+        }));
     },
 
     activate_editor: function() {
@@ -578,6 +614,7 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         this.containing_list_view = options.containing_list_view;
         this.assessment_item = options.assessment_item;
         this.nodeid=options.nodeid;
+        this.isdisplay = options.isdisplay;
         this.render();
     },
 
@@ -596,7 +633,9 @@ var AssessmentItemAnswerView = Backbone.View.extend({
         this.$el.html(this.template({
             answer: this.model.toJSON(),
             input_answer: this.assessment_item.get("type") === "input_question",
-            single_selection: this.assessment_item.get("type") === "single_selection"
+            single_selection: this.assessment_item.get("type") === "single_selection",
+            groupName: this.assessment_item.get("id"),
+            isdisplay: this.isdisplay
         }));
         if (!this.editor_view) {
             this.editor_view = new EditorView({model: this.model, edit_key: "answer", el: this.$(".answer"), nodeid:this.nodeid});
@@ -674,6 +713,7 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
         this.bind_edit_functions();
         this.assessment_item = options.assessment_item;
         this.nodeid = options.nodeid;
+        this.isdisplay = options.isdisplay;
         this.render();
         this.container = options.container;
         this.listenTo(this.collection, "add", this.add_answer_view);
@@ -706,7 +746,8 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
             open: open,
             containing_list_view:this,
             assessment_item: this.assessment_item,
-            nodeid:this.nodeid
+            nodeid:this.nodeid,
+            isdisplay:this.isdisplay
         });
         this.views.push(view);
         this.$(".addanswer").before(view.el);
@@ -726,6 +767,7 @@ var AssessmentItemAnswerListView = BaseViews.BaseEditableListView.extend({
 
 var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
     className:"assessment_li",
+    isdisplay: true,
     initialize: function(options) {
         this.nodeid=options.nodeid;
         this.render();
@@ -740,7 +782,8 @@ var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
                     collection: this.model.get("answers"),
                     container:this,
                     assessment_item: this.model,
-                    nodeid:this.nodeid
+                    nodeid:this.nodeid,
+                    isdisplay:this.isdisplay
                 });
             }
             this.$(".answers").append(this.answer_editor.el);
@@ -763,6 +806,7 @@ var AssessmentItemDisplayView = BaseViews.BaseListEditableItemView.extend({
 });
 
 var AssessmentItemView = AssessmentItemDisplayView.extend({
+    isdisplay: false,
     initialize: function(options) {
         _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed", "save", "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus", "toggle_undo_redo", "add_focus", "remove_focus");
         this.nodeid=options.nodeid;
