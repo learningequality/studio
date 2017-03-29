@@ -462,42 +462,21 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	},
 	drop_in_container:function(moved_item, selected_items, orders){
 		var self = this;
-		var promise = new Promise(function(resolve, reject){
-	    /* Step 1: Get sort orders updated */
-			var index = orders.indexOf(moved_item);
-			var moved_index = selected_items.indexOf(moved_item);
-			if(index >= 0){
+		return new Promise(function(resolve, reject){
+			if(_.contains(orders, moved_item)){
 				self.handle_drop(selected_items).then(function(collection){
-					var moved_ids = collection.pluck('id');
-					var filtered = _.reject(orders, function(item){ return _.contains(moved_ids, item.id); });
-					var start = index - moved_index - 1;
-					var min = (start < 0)? 0 : filtered[start].get('sort_order');
-					var max = (start + 1 >= filtered.length)? min + selected_items.length + 1 : filtered[start + 1].get('sort_order');
-
-
-
-
-
-					console.log("MIN", start, min)
-					console.log("MAX", end, max)
-
-
-
-
-
-					// var end = start + selected_items.length + 1;
-					// var min = (start < 0)? 0 : orders[start].get("sort_order");
-					// var max = (end >= orders.length)? min + 2 : orders[end].get("sort_order");
-
-
-
-
-					// var start = index - moved_index - 1;
-					// var end = start + selected_items.length + 1;
-					// var min = (start < 0)? 0 : orders[start].get("sort_order");
-					// var max = (end >= orders.length)? min + 2 : orders[end].get("sort_order");
-					// console.log("MIN", index, moved_index, start)
-					// console.log("MAX", start, collection.length, end)
+					var ids = collection.pluck('id');
+					var pivot = orders.indexOf(moved_item);
+					var min = _.chain(orders.slice(0, pivot))
+								.reject(function(item) { return _.contains(ids, item.id); })
+								.map(function(item) { return item.get('sort_order'); })
+								.max().value();
+					var max = _.chain(orders.slice(pivot, orders.length))
+								.reject(function(item) { return _.contains(ids, item.id); })
+								.map(function(item) { return item.get('sort_order'); })
+								.min().value();
+					min = _.isFinite(min)? min : 0;
+					max = _.isFinite(max)? max : min + (selected_items.length * 2);
 
 					var reload_list = [];
 					var last_elem = $("#" + moved_item.id);
@@ -533,7 +512,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				});
 			}
 		});
-		return promise;
 	},
 	handle_drop:function(collection){
 		this.$(this.default_item).css("display", "none");

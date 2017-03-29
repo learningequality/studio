@@ -232,8 +232,7 @@ var ContentNodeCollection = BaseCollection.extend({
     },
     move:function(target_parent, max_order, min_order){
     	var self = this;
-    	console.log("MAX:", max_order, "MIN:", min_order)
-    	var promise = new Promise(function(resolve, reject){
+    	return new Promise(function(resolve, reject){
 	        var data = {
 	        	"nodes" : self.toJSON(),
                 "target_parent" : target_parent.get("id"),
@@ -251,7 +250,6 @@ var ContentNodeCollection = BaseCollection.extend({
 	            }
 	        });
     	});
-    	return promise;
 	}
 });
 
