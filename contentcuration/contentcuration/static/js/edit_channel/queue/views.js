@@ -163,7 +163,8 @@ var ClipboardList = QueueList.extend({
 		'click .edit_items' : 'edit_items',
 		'click .create_new_content' : 'add_topic',
 		'click .upload_files_button': 'add_files',
-		'click .import_content' : 'import_content'
+		'click .import_content' : 'import_content',
+		'click .create_exercise_button' : 'add_exercise'
 	},
 	delete_items:function(){
 		if(confirm("Are you sure you want to delete these selected items?")){

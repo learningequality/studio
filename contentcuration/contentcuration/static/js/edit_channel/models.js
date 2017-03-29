@@ -137,8 +137,40 @@ var ContentNodeModel = BaseModel.extend({
 		assessment_items:[],
 		metadata: {"resource_size" : 0, "resource_count" : 0},
 		created: new Date(),
-		ancestors: []
-    }
+		ancestors: [],
+		extra_fields: {}
+    },
+    initialize: function () {
+		if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
+			this.set("extra_fields", JSON.parse(this.get("extra_fields")))
+		}
+	},
+	parse: function(response) {
+    	if (response !== undefined && response.extra_fields) {
+    		response.extra_fields = JSON.parse(response.extra_fields);
+    	}
+	    return response;
+	},
+	toJSON: function() {
+	    var attributes = _.clone(this.attributes);
+	    if (typeof attributes.extra_fields !== "string") {
+		    attributes.extra_fields = JSON.stringify(attributes.extra_fields);
+		}
+	    return attributes;
+	},
+	setExtraFields:function(){
+		if(typeof this.get('extra_fields') === 'string'){
+			this.set('extra_fields', JSON.parse(this.get('extra_fields')));
+		}
+		if(this.get('kind') === 'exercise'){
+			var data = (this.get('extra_fields'))? this.get('extra_fields') : {};
+			data['mastery_model'] = (data['mastery_model'])? data['mastery_model'] : "do_all";
+		    data['m'] = (data['m'])? data['m'] : 1;
+		    data['n'] = (data['n'])? data['n'] : 1;
+		    data['randomize'] = (data['randomize'] !== undefined)? data['randomize'] : true;
+		    this.set('extra_fields', data);
+		}
+	}
 });
 
 var ContentNodeCollection = BaseCollection.extend({
@@ -149,16 +181,18 @@ var ContentNodeCollection = BaseCollection.extend({
 
 	save: function() {
 		var self = this;
-		var promise = new Promise(function(saveResolve, saveReject){
-			var fileCollection = new FileCollection()
+		return new Promise(function(saveResolve, saveReject){
+			var fileCollection = new FileCollection();
+			var assessmentCollection = new AssessmentItemCollection();
 			self.forEach(function(node){
 				node.get("files").forEach(function(file){
 					file.preset.id = file.preset.name ? file.preset.name : file.preset.id;
 				});
 
 				fileCollection.add(node.get("files"));
+				assessmentCollection.add(node.get('assessment_items'));
 			});
-			fileCollection.save().then(function(){
+			Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function() {
 				Backbone.sync("update", self, {
 		        	url: self.model.prototype.urlRoot(),
 		        	success: function(data){
@@ -362,8 +396,7 @@ var FileCollection = BaseCollection.extend({
     				reject(error);
     			}
     		});
-    	})
-
+    	});
 	}
 });
 
@@ -378,10 +411,10 @@ var FormatPresetCollection = BaseCollection.extend({
 	list_name:"formatpreset-list",
     model_name:"FormatPresetCollection",
 	sort_by_order:function(){
-    	this.comparator = function(preset){
-    		return preset.get("order");
-    	};
     	this.sort();
+    },
+    comparator: function(preset){
+    	return preset.get("order");
     }
 });
 
@@ -466,9 +499,11 @@ var AssessmentItemModel = BaseModel.extend({
 	root_list:"assessmentitem-list",
 	model_name:"AssessmentItemModel",
 	defaults: {
+		type: "single_selection",
 		question: "",
 		answers: "[]",
-		hints: "[]"
+		hints: "[]",
+		files: []
 	},
 
 	initialize: function () {
@@ -502,12 +537,14 @@ var AssessmentItemModel = BaseModel.extend({
 		}
 	    return attributes;
 	}
-
 });
 
 var AssessmentItemCollection = BaseCollection.extend({
 	model: AssessmentItemModel,
 	model_name:"AssessmentItemCollection",
+	comparator : function(assessment_item){
+    	return assessment_item.get("order");
+    },
 	get_all_fetch: function(ids, force_fetch){
 		force_fetch = (force_fetch)? true : false;
     	var self = this;
@@ -542,6 +579,20 @@ var AssessmentItemCollection = BaseCollection.extend({
     	});
     	return promise;
     },
+    save:function(){
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+    		Backbone.sync("update", self, {
+    			url: self.model.prototype.urlRoot(),
+    			success:function(data){
+    				resolve(new AssessmentItemCollection(data));
+    			},
+    			error:function(error){
+    				reject(error);
+    			}
+    		});
+    	});
+    }
 });
 
 module.exports = {
