@@ -468,6 +468,12 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			var moved_index = selected_items.indexOf(moved_item);
 			if(index >= 0){
 				self.handle_drop(selected_items).then(function(collection){
+					var moved_ids = collection.pluck('id');
+					var filtered = _.reject(orders, function(item){ return _.contains(moved_ids, item.id); });
+					console.log(moved_ids, orders, filtered)
+
+
+
 					var start = index - moved_index - 1;
 					var end = start + selected_items.length + 1;
 					var min = (start < 0)? 0 : orders[start].get("sort_order");
