@@ -52,6 +52,7 @@ var PreviewView = BaseViews.BaseView.extend({
         }
     },
     parse_question:function(question){
+        question = question || "";
         return question.replace(/\$\$([^\$]+)\$\$/g, '[Formula]').replace(/!\[([^\]]*)\]\(([^\)]+)\)/g, '[Image]');
     },
     load_preview:function(){
