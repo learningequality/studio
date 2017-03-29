@@ -11,7 +11,7 @@ from rest_framework.fields import set_value, SkipField
 from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField, Count
+from django.db.models import Q, Case, When, Value, IntegerField, Count, Max
 from django.conf import settings
 from django.core.files import File as DjFile
 
