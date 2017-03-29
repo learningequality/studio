@@ -470,16 +470,34 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				self.handle_drop(selected_items).then(function(collection){
 					var moved_ids = collection.pluck('id');
 					var filtered = _.reject(orders, function(item){ return _.contains(moved_ids, item.id); });
-					console.log(moved_ids, orders, filtered)
-
-
-
 					var start = index - moved_index - 1;
-					var end = start + selected_items.length + 1;
-					var min = (start < 0)? 0 : orders[start].get("sort_order");
-					var max = (end >= orders.length)? min + 2 : orders[end].get("sort_order");
-					console.log("MIN", index, moved_index, start)
-					console.log("MAX", start, collection.length, end)
+					var min = (start < 0)? 0 : filtered[start].get('sort_order');
+					var max = (start + 1 >= filtered.length)? min + selected_items.length + 1 : filtered[start + 1].get('sort_order');
+
+
+
+
+
+					console.log("MIN", start, min)
+					console.log("MAX", end, max)
+
+
+
+
+
+					// var end = start + selected_items.length + 1;
+					// var min = (start < 0)? 0 : orders[start].get("sort_order");
+					// var max = (end >= orders.length)? min + 2 : orders[end].get("sort_order");
+
+
+
+
+					// var start = index - moved_index - 1;
+					// var end = start + selected_items.length + 1;
+					// var min = (start < 0)? 0 : orders[start].get("sort_order");
+					// var max = (end >= orders.length)? min + 2 : orders[end].get("sort_order");
+					// console.log("MIN", index, moved_index, start)
+					// console.log("MAX", start, collection.length, end)
 
 					var reload_list = [];
 					var last_elem = $("#" + moved_item.id);
