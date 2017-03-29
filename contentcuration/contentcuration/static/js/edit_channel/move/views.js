@@ -4,12 +4,12 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("move.less");
 
+/*********** MODAL CONTAINER FOR MOVE OPERATION ***********/
 var MoveModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/move_modal.handlebars"),
+    modal: true,
 
     initialize: function(options) {
-        _.bindAll(this, "close_move");
-        this.modal = true;
         this.render(this.close, {});
         this.move_view = new MoveView({
             el: this.$(".modal-body"),
@@ -18,13 +18,10 @@ var MoveModalView = BaseViews.BaseModalView.extend({
             modal : this,
             model:this.model
         });
-    },
-    close_move:function(){
-      this.close();
     }
 });
 
-
+/*********** VIEW FOR MOVE OPERATION ***********/
 var MoveView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/move_dialog.handlebars"),
     onmove:null,
@@ -37,19 +34,17 @@ var MoveView = BaseViews.BaseListView.extend({
         this.onmove = options.onmove;
         this.collection = options.collection;
 
-        // Get ids of all descendants to help calculate valid moves
-        // and calculate how many nodes are being moved
-        this.to_move_ids = [];
-        var self = this;
-        this.collection.forEach(function(node){
-            self.to_move_ids.push(node.id);
-            self.to_move_ids = $.merge(self.to_move_ids, node.get("descendants"));
-        });
-
+        // Calculate valid moves using node descendants
+        this.to_move_ids = _.uniq(this.collection.reduce(
+            function(l,n){ return l.concat(n.get('descendants')).concat(n.id);}, []
+        ));
         this.render();
     },
     events: {
       "click #move_content_button" : "move_content"
+    },
+    close_move:function(){
+        (this.modal)? this.modal.close() : this.remove();
     },
     render: function() {
         this.$el.html(this.template());
@@ -89,24 +84,15 @@ var MoveView = BaseViews.BaseListView.extend({
             var sort_order = self.target_node.get('metadata').max_sort_order;
             var original_parents = self.collection.pluck('parent');
             // Get original parents
-            self.collection.move(self.target_node, sort_order).then(function(moved){
+            self.collection.move(self.target_node, null, sort_order).then(function(moved){
                 self.collection.get_all_fetch(original_parents).then(function(fetched){
                     fetched.add(self.target_node);
                     self.onmove(self.target_node, moved, fetched);
                     self.close_move();
                     resolve(true);
                 });
-            }).catch(function(exception){
-                reject(exception);
-            });
+            }).catch(reject);
         });
-    },
-    close_move:function(){
-        if(this.modal){
-            this.modal.close();
-        }else{
-            this.remove();
-        }
     },
     handle_target_selection:function(node){
         this.target_node = node;
@@ -114,7 +100,10 @@ var MoveView = BaseViews.BaseListView.extend({
         this.$("#move_content_button").removeClass("disabled");
 
         // Calculate number of items
-        this.$("#move_status").text("Moving " + this.to_move_ids.length + ((this.to_move_ids.length === 1)? " item to " : " items to ") + this.target_node.get("title"));
+        this.$("#move_status").text("Moving " + this.to_move_ids.length +
+            ((this.to_move_ids.length === 1)? " item to " : " items to ") +
+            this.target_node.get("title")
+        );
     }
 });
 
@@ -168,6 +157,7 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
         this.containing_list_view = options.containing_list_view;
         this.is_target = options.is_target;
         this.container = options.container;
+        this.collection = new Models.ContentNodeCollection();
         this.fetch_collection(this.render);
     },
     events: {
@@ -176,44 +166,37 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
         'change >.move_checkbox' : 'handle_checked'
     },
     render: function() {
+        var has_descendants = this.model.get('metadata').resource_count < this.model.get('metadata').total_count;
         this.$el.html(this.template({
             node:this.model.toJSON(),
             isfolder: this.model.get("kind") === "topic",
             is_target:this.is_target,
-            has_descendants: (this.is_target)? this.collection.length > 0 : this.model.get("children").length > 0
+            has_descendants: (this.is_target)? has_descendants : this.model.get("children").length
         }));
     },
     fetch_collection:function(callback){
         var self = this;
-        this.collection = new Models.ContentNodeCollection()
-        this.collection.get_all_fetch(this.model.get("children")).then(function(fetched){
-            self.collection = self.filter_collection(fetched);
+        Models.fetch_nodes_by_ids(this.model.get('children')).then(function(fetched){
+            if(self.is_target){
+                var filter_ids = self.container.to_move_ids;
+                fetched = fetched.filter(function(n) { return !_.contains(filter_ids, n.id); });
+            }
+            self.collection.add(_.pluck(fetched, 'attributes'));
             callback();
         });
     },
-    filter_collection:function(collection){
-        if(this.is_target){
-            var to_return = new Models.ContentNodeCollection();
-            var self = this;
-            collection.forEach(function(node){
-                // Filter out descendants and non-topics
-                if(node.get("kind") == "topic" && self.container.to_move_ids.indexOf(node.id) < 0){
-                    to_return.add(node);
-                }
-            });
-            return to_return;
-        } else {
-            return collection;
-        }
-    },
     load_subfiles:function(){
         var self = this;
-        this.collection.get_all_fetch(this.model.get("children")).then(function(fetched){
+        var filter_ids = this.container.to_move_ids
+        this.collection.get_all_fetch(this.model.get('children')).then(function(fetched){
+            var nodes = fetched.filter(function(n) {
+                return !self.is_target || (n.get('kind') === 'topic' && !_.contains(filter_ids, n.id));
+            });
             self.subcontent_view = new MoveList({
                 model: self.model,
                 el: $(self.getSubdirectory()),
                 is_target: self.is_target,
-                collection: fetched.filter({kind: 'topic'}),
+                collection: new Models.ContentNodeCollection(_.pluck(nodes, 'attributes')),
                 container: self.container
             });
         });

@@ -64,12 +64,8 @@ var BaseView = Backbone.View.extend({
 	fetch_model:function(model){
 		return new Promise(function(resolve, reject){
             model.fetch({
-                success:function(data){
-                    resolve(data)
-                },
-                error:function(error){
-                    reject(error);
-                }
+                success: resolve,
+                error: reject
             });
         });
 	},
@@ -189,13 +185,7 @@ var BaseWorkspaceView = BaseView.extend({
 	move_content:function(){
 		var MoveView = require("edit_channel/move/views");
 		var list = this.get_selected(true);
-		var move_collection = new Models.ContentNodeCollection();
-		/* Create list of nodes to move */
-		for(var i = 0; i < list.length; i++){
-			var model = list[i].model;
-			model.view = list[i];
-			move_collection.add(model);
-		}
+		var move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
 		$("#main-content-area").append("<div id='dialog'></div>");
 
 		var move = new MoveView.MoveModalView({
@@ -474,16 +464,17 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 	    /* Step 1: Get sort orders updated */
-			var max = 1;
-			var min = 1;
 			var index = orders.indexOf(moved_item);
 			var moved_index = selected_items.indexOf(moved_item);
 			if(index >= 0){
 				self.handle_drop(selected_items).then(function(collection){
-					var starting_index = index - moved_index - 1;
-					var ending_index= starting_index + collection.length + 1;
-					min = (starting_index < 0)? 0 : orders[starting_index].get("sort_order");
-					max = (ending_index >= orders.length)? min + 2 : orders[ending_index].get("sort_order");
+					var start = index - moved_index - 1;
+					var end = start + selected_items.length + 1;
+					var min = (start < 0)? 0 : orders[start].get("sort_order");
+					var max = (end >= orders.length)? min + 2 : orders[end].get("sort_order");
+					console.log("MIN", index, moved_index, start)
+					console.log("MAX", start, collection.length, end)
+
 					var reload_list = [];
 					var last_elem = $("#" + moved_item.id);
 					collection.forEach(function(node){
@@ -491,17 +482,13 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						if(node.get("parent") !== self.model.get("id")){
 							reload_list.push(node.get("parent"));
 						}
-						min += (max - min) / 2;
-						node.set({
-							"sort_order": min
-						});
 						var to_delete = $("#" + node.id);
 						var item_view = self.create_new_view(node);
 						last_elem.after(item_view.el);
 						last_elem = item_view.$el;
 						to_delete.remove();
 					});
-					collection.move(self.model).then(function(savedCollection){
+					collection.move(self.model, max, min).then(function(savedCollection){
 						self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
 							self.reload_ancestors(fetched);
 							resolve(true);
@@ -808,7 +795,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 
 		// Add nodes to correct place
 		var content = window.workspace_manager.get(target.id);
-		if(content.list){
+		if(content && content.list){
 			content.list.add_nodes(moved);
 		}
 	},
