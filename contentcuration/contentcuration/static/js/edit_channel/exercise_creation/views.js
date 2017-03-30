@@ -44,24 +44,14 @@ var AddFormulaView = Backbone.View.extend({
         "click #add_formula": "add_formula",
         "click .character_symbol": "add_character",
         "click .char_cmd": "add_format",
-        "click .mq-wrapper": "keep_open"
+        "click .mq-wrapper": "keep_open",
+        'keydown' : 'handle_escape'
     },
-    keep_open:function(event){ event.stopPropagation(); },
+
+    /*********** LOAD METHODS ***********/
     render: function() {
         this.$el.html(this.template({selector: this.selector, characters: CHARACTERS}));
         this.$('[data-toggle="popover"]').popover({html: true, content: this.$("#characters_" + this.selector)});
-    },
-    add_character:function(event){
-        this.mathField.write(event.currentTarget.dataset.key);
-        this.close_dropdown();
-    },
-    add_format:function(event){
-        this.mathField.cmd(event.currentTarget.dataset.key);
-        this.close_dropdown();
-    },
-    close_dropdown:function(){
-        this.$('[data-toggle="popover"]').popover("hide");
-        this.mathField.focus();
     },
     activate_mq: function(){
         // Load mathjax symbols and formats
@@ -81,6 +71,29 @@ var AddFormulaView = Backbone.View.extend({
         _.each(wrapper_el, function(item, index){
             MQ.StaticMath(self.$(id_prefix + index)[0]);
         });
+    },
+
+    /*********** TOGGLE METHODS ***********/
+    keep_open:function(event){ event.stopPropagation(); },
+    handle_escape: function(event){
+        if (event.keyCode === 27 || event.which === 27){
+            event.stopPropagation();
+            $('.dropdown-toggle').dropdown("toggle");
+        }
+    },
+    close_dropdown:function(){
+        this.$('[data-toggle="popover"]').popover("hide");
+        this.mathField.focus();
+    },
+
+    /*********** FORMATTING METHODS ***********/
+    add_character:function(event){
+        this.mathField.write(event.currentTarget.dataset.key);
+        this.close_dropdown();
+    },
+    add_format:function(event){
+        this.mathField.cmd(event.currentTarget.dataset.key);
+        this.close_dropdown();
     },
     add_formula:function(){
         if(this.mathField.latex().trim()){
