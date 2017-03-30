@@ -66,8 +66,8 @@ var AddFormulaView = Backbone.View.extend({
     activate_mq: function(){
         // Load mathjax symbols and formats
         var MQ = MathQuill.getInterface(2);
-        this.parse_mathjax_characters(this.$(".character_format"), "#character_format_", MQ);
-        this.parse_mathjax_characters(this.$(".character_eqn"), "#character_eqn_", MQ);
+        this.parse_mathjax_characters(this.$("#characters_" + this.selector + " .character_format"), "#character_format_", MQ);
+        this.parse_mathjax_characters(this.$("#characters_" + this.selector + " .character_eqn"), "#character_eqn_", MQ);
 
         // Configure mathquill input field
         var self = this;
@@ -77,8 +77,9 @@ var AddFormulaView = Backbone.View.extend({
         });
     },
     parse_mathjax_characters:function(wrapper_el, id_prefix, MQ){
+        var self = this;
         _.each(wrapper_el, function(item, index){
-            MQ.StaticMath(this.$(id_prefix + index)[0]);
+            MQ.StaticMath(self.$(id_prefix + index)[0]);
         });
     },
     add_formula:function(){
@@ -218,7 +219,7 @@ var EditorView = Backbone.View.extend({
             shortcuts: false,
             selector: this.cid,
             callbacks: {
-                onChange: _.debounce(this.save, 100),
+                onChange: _.debounce(this.save, 10),
                 onImageUpload: this.add_image,
                 onAddFormula: this.add_formula
             }

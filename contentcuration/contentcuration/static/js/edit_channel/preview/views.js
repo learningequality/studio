@@ -73,9 +73,9 @@ var PreviewView = BaseViews.BaseView.extend({
     load_questions:function(){
         var self = this;
         return new Models.AssessmentItemCollection(
-            _.chain(this.model.get("assessment_items"))
+            _.chain(this.model.get("assessment_items")).clone()
                 .filter(function(item){return !item['deleted'];})
-                .each(function(item){ item.question = self.parse_question(item.question); }).value()
+                .map(function(item){ return {type: item.type, question: self.parse_question(item.question)}; }).value()
         );
     },
     load_preset_dropdown:function(){
