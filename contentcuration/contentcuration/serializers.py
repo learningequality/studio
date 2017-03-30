@@ -483,7 +483,7 @@ class RootNodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'kind', 'children', 'metadata', 'channel_name')
+        fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'channel_name')
 
 
 class ChannelSerializer(serializers.ModelSerializer):

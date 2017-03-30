@@ -54,9 +54,14 @@ If not, use these commands:
 	`python manage.py makemigrations`
 
 	`python manage.py migrate`
+	
+	`python manage.py loadconstants`
+	
+	`python manage.py calculateresources --init`
+	
 
 * Run your server and start developing! Make sure you're in your virtual environment each time before you run the server.
-
+	
 	`python manage.py runserver`
 
 	Visit the localhost link that is presented on your console.

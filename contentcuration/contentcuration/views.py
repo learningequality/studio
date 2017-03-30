@@ -190,14 +190,13 @@ def file_upload(request):
 
 def file_create(request):
     if request.method == 'POST':
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
+        original_filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
-        presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext)
+        presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:])
         kind = presets.first().kind
-        original_filename = request.FILES.values()[0]._name
         new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=settings.DEFAULT_LICENSE, author=request.user.get_full_name())
         new_node.save()
-        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, contentnode=new_node, file_size=size)
+        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename = original_filename, contentnode=new_node, file_size=size)
         file_object.save()
 
         if kind.pk == content_kinds.VIDEO:
