@@ -219,7 +219,7 @@ var EditorView = Backbone.View.extend({
             shortcuts: false,
             selector: this.cid,
             callbacks: {
-                onChange: _.debounce(this.save, 10),
+                onChange: _.debounce(this.save, 1),
                 onImageUpload: this.add_image,
                 onAddFormula: this.add_formula
             }
@@ -268,6 +268,7 @@ var EditorView = Backbone.View.extend({
             var paragraphs = div.getElementsByTagName('p');
             if(paragraphs.length){
                 paragraphs[paragraphs.length - 1].appendChild(svg);
+                paragraphs[paragraphs.length - 1].innerHTML += '&nbsp;';
                 updatedHtml = div.innerHTML;
             }
             self.editor.setHTML(updatedHtml)
