@@ -298,7 +298,7 @@ def write_assessment_item(assessment_item, zf):
         template=''
         if assessment_item.type == exercises.MULTIPLE_SELECTION:
             template = 'perseus/multiple_selection.json'
-        elif assessment_item.type == exercises.SINGLE_SELECTION:
+        elif assessment_item.type == exercises.SINGLE_SELECTION or assessment_item.type == 'true_false':
             template = 'perseus/multiple_selection.json'
         elif assessment_item.type == exercises.INPUT_QUESTION:
             template = 'perseus/input_question.json'

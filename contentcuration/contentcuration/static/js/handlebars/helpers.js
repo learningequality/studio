@@ -107,6 +107,8 @@ Handlebars.registerHelper('format_question_type', function(type){
           return "Multiple Selection";
       case "single_selection":
           return "Single Selection";
+        case "true_false":
+          return "True/False";
       case "input_question":
           return "Input Answer";
       case "perseus_question":

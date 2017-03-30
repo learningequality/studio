@@ -87,13 +87,9 @@ var PreviewView = BaseViews.BaseView.extend({
 
     select_preview:function(event){
         // called internally
-        var selected_preview = null;
-        if($(event.target).hasClass('preview_file')){
-            var selected_preset = event.target.getAttribute('value');
-            selected_preview = _.find(this.model.get('files'), function(file){ return file.preset.id === selected_preset; });
-        }else{
-            selected_preview = this.model.get('assessment_items')[event.target.value];
-        }
+        var selected_preview = ($(event.target).hasClass('preview_file'))?
+            _.find(this.model.get('files'), function(file){ return file.preset.id === event.target.getAttribute('value'); }) :
+            this.model.get('assessment_items')[event.target.value];
         this.current_preview = selected_preview;
         this.render_preview();
     },

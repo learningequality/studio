@@ -689,7 +689,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         // True/false questions will overwrite all answers
         if(new_type === "true_false"){
             if(this.model.get("answers").length === 0 || confirm("Switching to true or false will remove any current answers. Continue?")){
-                new_type = "single_selection";
+                // new_type = "single_selection";
                 var trueFalseCollection = new Backbone.Collection();
                 trueFalseCollection.add([{answer: "True", correct: true, order: 1}, {answer: "False", correct: false, order: 2}]);
                 this.model.set("answers", trueFalseCollection);
@@ -879,7 +879,8 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     render: function() {
         this.$el.html(this.template({
             input_answer: this.assessment_item.get("type") === "input_question",
-            isdisplay: this.isdisplay
+            isdisplay: this.isdisplay,
+            true_false: this.assessment_item.get("type") === "true_false"
         }));
         this.load_content(this.collection, "No answers provided.");
         this.$(".addanswer").on('click', this.add_item);
@@ -933,16 +934,20 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
         this.$el.html(this.template({
             answer: this.model.toJSON(),
             input_answer: this.assessment_item.get("type") === "input_question",
-            single_selection: this.assessment_item.get("type") === "single_selection",
+            single_selection: this.is_single_correct(),
             groupName: this.assessment_item.cid,
+            allow_edit: !this.isdisplay && this.assessment_item.get("type") !== "true_false",
             allow_toggle: !this.isdisplay
         }));
         this.render_editor();
         _.defer(this.set_editor);
     },
+    is_single_correct: function(){
+        return this.assessment_item.get("type") === "single_selection" || this.assessment_item.get("type") === "true_false";
+    },
     toggle_correct: function(event) {
         event.stopPropagation();
-        if(this.assessment_item.get("type") === "single_selection"){
+        if(this.is_single_correct()){
             this.containing_list_view.set_all_correct(false);
         }
         this.set_correct(this.$(".correct").prop("checked"));
