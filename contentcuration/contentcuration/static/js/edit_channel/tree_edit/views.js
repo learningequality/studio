@@ -237,6 +237,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	close: function(){
 		this.close_container();
+		this.remove()
 	},
   /* Resets folders to initial state */
 	close_folders:function(){

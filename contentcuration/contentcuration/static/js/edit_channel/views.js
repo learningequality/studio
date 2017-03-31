@@ -231,7 +231,6 @@ var BaseWorkspaceView = BaseView.extend({
 		var content = window.workspace_manager.get(target.id);
 		if(content && content.list)
 			content.list.add_nodes(moved);
-		}
 	},
 	delete_items_permanently:function(message, list, callback){
 		message = (message!=null)? message: "Deleting...";
