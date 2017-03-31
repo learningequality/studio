@@ -56,7 +56,7 @@ function WorkspaceManager(){
 		var n = this.get(key);
 		if(n){
 			if(n.node){n.node.remove();}
-			if(n.list){n.list.remove();}
+			if(n.list){n.list.close();}
 			this.put(key, null, null);
 		}
 	}

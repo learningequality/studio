@@ -200,15 +200,12 @@ var BaseWorkspaceView = BaseView.extend({
 		this.reload_ancestors(original_parents, true);
 
 		// Remove where nodes originally were
-		moved.forEach(function(node){
-			window.workspace_manager.remove(node.id)
-		});
+		moved.forEach(function(node){ window.workspace_manager.remove(node.id)});
 
 		// Add nodes to correct place
 		var content = window.workspace_manager.get(target.id);
-		if(content && content.list){
+		if(content && content.list)
 			content.list.add_nodes(moved);
-		}
 	}
 });
 
@@ -243,7 +240,8 @@ var BaseListView = BaseView.extend({
 	views: [],			//List of item views to help with garbage collection
 
 	bind_list_functions:function(){
-		_.bindAll(this, 'load_content', 'handle_if_empty', 'check_all', 'get_selected', 'set_root_model', 'update_views', 'cancel_actions');
+		_.bindAll(this, 'load_content', 'close', 'handle_if_empty', 'check_all', 'get_selected',
+			'set_root_model', 'update_views', 'cancel_actions');
 	},
 	set_root_model:function(model){
 		this.model.set(model.toJSON());
@@ -295,6 +293,9 @@ var BaseListView = BaseView.extend({
 			}
 		})
 		return selected_views;
+	},
+	close: function(){
+		this.remove();
 	}
 });
 

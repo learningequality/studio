@@ -35,9 +35,7 @@ var MoveView = BaseViews.BaseListView.extend({
         this.collection = options.collection;
 
         // Calculate valid moves using node descendants
-        this.to_move_ids = _.uniq(this.collection.reduce(
-            function(l,n){ return l.concat(n.get('descendants')).concat(n.id);}, []
-        ));
+        this.to_move_ids = _.uniq(this.collection.reduce(function(l,n){ return l.concat(n.get('descendants')).concat(n.id);}, []));
         this.render();
     },
     events: {
@@ -158,7 +156,7 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
         this.is_target = options.is_target;
         this.container = options.container;
         this.collection = new Models.ContentNodeCollection();
-        this.fetch_collection(this.render);
+        this.render();
     },
     events: {
         'dblclick .dblclick_toggle' : 'toggle',
@@ -173,17 +171,6 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
             is_target:this.is_target,
             has_descendants: (this.is_target)? has_descendants : this.model.get("children").length
         }));
-    },
-    fetch_collection:function(callback){
-        var self = this;
-        Models.fetch_nodes_by_ids(this.model.get('children')).then(function(fetched){
-            if(self.is_target){
-                var filter_ids = self.container.to_move_ids;
-                fetched = fetched.filter(function(n) { return !_.contains(filter_ids, n.id); });
-            }
-            self.collection.add(_.pluck(fetched, 'attributes'));
-            callback();
-        });
     },
     load_subfiles:function(){
         var self = this;

@@ -227,6 +227,9 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		this.current_node = view.model.id;
 		return this.container.add_container(this.index, view.model, view);
 	},
+	close: function(){
+		this.close_container();
+	},
   /* Resets folders to initial state */
 	close_folders:function(){
 		this.$el.find("." + this.openedFolderClass).removeClass(this.openedFolderClass);
@@ -280,7 +283,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
-		this.expanded=false;
+		this.expanded = false;
 		this.render();
 		this.isSelected = false;
 		this.listenTo(this.model, 'change:metadata', this.render);
