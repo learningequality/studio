@@ -16,14 +16,12 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 	initialize: function(options) {
 		_.bindAll(this, 'new_channel');
 		this.bind_edit_functions();
-		this.collection = options.channels;
 		this.render();
 		this.user = options.user;
 	},
 	render: function() {
 		this.set_editing(false);
 		this.$el.html(this.template({
-			channel_list: this.collection.toJSON(),
 			user: window.current_user
 		}));
 		this.load_content(this.collection.where({deleted:false}));
@@ -40,18 +38,14 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
   		return newView;
 	},
 	new_channel: function(){
-		var self = this;
 		var data = {
-			name: "",
-			description: "",
 			editors: [window.current_user.id],
-			thumbnail:"/static/img/kolibri_placeholder.png"
+			pending_editors: []
 		};
-		this.create_new_item(data, false, "").then(function(newView){
-			self.$(self.list_selector).prepend(newView.el);
-			newView.edit_channel();
-			newView.set_is_new(true);
-		});
+		var newView = this.create_new_view(new Models.ChannelModel(data));
+		this.$(this.list_selector).prepend(newView.el);
+		newView.edit_channel();
+		newView.set_is_new(true);
 	},
 	set_editing: function(edit_mode_on){
 		$(".disable-on-edit").prop("disabled", edit_mode_on);
@@ -62,26 +56,6 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 	},
 	handle_channel_change:function(channel, deleted){
 		this.update_channel_collection(channel, deleted);
-		this.update_dropdown(channel, deleted);
-	},
-	update_dropdown:function(channel, deleted){
-		if(deleted){
-			$("#channel_dd_" + channel.id).remove();
-		}else{
-			if($("#channel_dd_" + channel.id).length > 0){
-				$("#channel_dd_" + channel.id + " a").text(channel.get("name"));
-			}else{
-				var new_channel = document.createElement('li');
-				new_channel.id = "channel_dd_" + channel.id;
-				var new_channel_link = document.createElement("a");
-				new_channel_link.class = "truncate";
-				new_channel_link.text = channel.get("name");
-				new_channel_link.href = "/channels/" + channel.get("id") + "/edit";
-				new_channel.appendChild(new_channel_link);
-				$("#channel_selection_dropdown_list").append(new_channel)
-			}
-
-		}
 	},
 	update_channel_collection:function(channel, deleted){
 		if(deleted){
@@ -140,14 +114,16 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			view_only: this.isViewOnly,
 			edit: this.edit,
 			channel: this.model.toJSON(),
-			total_file_size: this.model.get("main_tree").metadata.resource_size,
-			resource_count: this.model.get("main_tree").metadata.resource_count,
+			total_file_size: this.model.get("size"),
+			resource_count: this.model.get("count"),
 			channel_link : this.model.get("id"),
 			picture : this.thumbnail_url
 		}));
 	},
 	events: {
 		'click .edit_channel':'edit_channel',
+		'mouseover .edit_channel':'remove_highlight',
+		'mouseover .copy-id-btn':'remove_highlight',
 		'click .delete_channel' : 'delete_channel',
 		'click .channel_toggle': 'toggle_channel',
 		'click .save_channel': 'save_channel',
@@ -155,11 +131,21 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		'keyup #new_channel_name': 'update_title',
 		'paste #new_channel_name': 'update_title',
 		'click .copy-id-btn' : 'copy_id',
-		'click .open_channel': 'open_channel'
+		'click .open_channel': 'open_channel',
+		'mouseover .open_channel': 'add_highlight',
+		'mouseleave .open_channel': 'remove_highlight',
+	},
+	remove_highlight:function(event){
+		event.stopPropagation();
+		event.preventDefault();
+		this.$('.channel-container-wrapper').removeClass('highlight');
+	},
+	add_highlight:function(event){
+		this.$('.channel-container-wrapper').addClass('highlight');
 	},
 	open_channel:function(event){
 		if(!this.edit){
-			window.location.href = '/channels/' + this.model.get("id") + ((this.isViewOnly)? '/view' : '/edit');
+			window.location.href = '/channels/' + this.model.get("id") + ((this.model.get('view_only'))? '/view' : '/edit');
 		}
 	},
 	copy_id:function(event){
@@ -237,9 +223,10 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		var data = {
 			name: title,
 			description: description,
-			thumbnail : this.thumbnail
+			thumbnail : this.thumbnail,
+			editors: this.model.get('editors'),
+			pending_editors: this.model.get('pending_editors')
 		};
-		this.originalData = data;
 		this.original_thumbnail = this.thumbnail;
 		this.original_thumbnail_url = this.thumbnail_url;
 		this.edit = false;

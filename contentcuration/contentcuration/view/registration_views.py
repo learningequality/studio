@@ -15,6 +15,7 @@ from django.core.context_processors import csrf
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse_lazy
+from django.utils.translation import ugettext as _
 from contentcuration.models import Channel, User, Invitation
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
 from registration.backends.hmac.views import RegistrationView
@@ -45,7 +46,7 @@ def send_invitation_email(request):
             ctx_dict = {    'sender' : request.user,
                             'site' : get_current_site(request),
                             'user' : recipient,
-                            'share_mode' : share_mode,
+                            'share_mode' : _(share_mode),
                             'channel_id' : channel_id,
                             'invitation_key': invitation.id,
                             'is_new': recipient.is_active is False,
@@ -211,8 +212,12 @@ class UserRegistrationView(RegistrationView):
 
 def add_editor_to_channel(invitation):
     if invitation.share_mode == "view":
+        if invitation.invited in invitation.channel.editors.all():
+            invitation.channel.editors.remove(invitation.invited)
         invitation.channel.viewers.add(invitation.invited)
     else:
+        if invitation.invited in invitation.channel.viewers.all():
+            invitation.channel.viewers.remove(invitation.invited)
         invitation.channel.editors.add(invitation.invited)
     invitation.channel.save()
     invitation.delete()

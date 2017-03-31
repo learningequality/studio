@@ -515,7 +515,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   set_selected:function(){
     if(this.selected_items.length === 1 && this.$("#input_title").val().trim() == ""){
       this.$("#title_error").css("display", "inline-block");
-      if(this.collection.length === 1 && !this.new_content && !this.uploaded_files){
+      if(this.collection && this.collection.length === 1 && !this.new_content && !this.uploaded_files){
           this.container.disable_submit();
       }
     }else{
@@ -601,9 +601,9 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     var data = {
           title: (individual_selected)? $("#input_title").val().trim() : this.model.get("title"),
           description: (individual_selected)? $("#input_description").val().trim() : this.model.get("description"),
-          license: (this.model.get("kind") != "topic" && $("#license_select").val()!=0)? $("#license_select").val() : this.model.get("license"),
-          copyright_holder: (this.model.get("kind") != "topic" && (individual_selected || $("#input_license_owner").val() !== ""))? $("#input_license_owner").val().trim() : this.model.get("copyright_holder"),
-          author: (individual_selected || $("#author_field").val() !== "")? $("#author_field").val().trim() : this.model.get("author"),
+          license: ($("#license_select").is(":visible") && $("#license_select").val()!=0)? $("#license_select").val() : this.model.get("license"),
+          copyright_holder: ($("#input_license_owner").is(":visible") && (individual_selected || $("#input_license_owner").val() !== ""))? $("#input_license_owner").val().trim() : this.model.get("copyright_holder"),
+          author: ($("#author_field").is(":visible") && (individual_selected || $("#author_field").val() !== ""))? $("#author_field").val().trim() : this.model.get("author"),
       };
       this.set(data);
       this.set_edited(true);

@@ -31,7 +31,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		'change input[type=checkbox]' : 'handle_checked',
 		'click .permissions_button' : 'edit_permissions',
 		'click .archive_button' : 'open_archive',
-		'click .move_button' : 'move_items',
+		'click .move_button' : 'move_items'
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -206,13 +206,20 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 			index: this.index,
 		}));
 		window.workspace_manager.put_list(this.model.get("id"), this);
+
+		if(this.edit_mode){
+			this.make_droppable();
+		}
+
 		var self = this;
-		self.make_droppable();
 		this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
 			self.$el.find(this.default_item).text("No items found.");
 			fetchedCollection.sort_by_order();
 			self.load_content(fetchedCollection);
-			self.refresh_droppable();
+			if(self.edit_mode){
+				self.refresh_droppable();
+			}
+
 		});
 		setTimeout(function(){
 			self.$el.removeClass("pre_animation").addClass("post_animation");
@@ -302,7 +309,6 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			this.$el.addClass(this.openedFolderClass);
 		}
 		window.workspace_manager.put_node(this.model.get("id"), this);
-		this.make_droppable();
 		this.$el.removeClass(this.selectedClass);
 		this.create_popover();
 	},

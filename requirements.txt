@@ -16,8 +16,9 @@ django-registration==2.1.2
 django-hashedfilenamestorage==1.0.0
 djangorestframework-bulk==0.2.1
 django-email-extras==0.3.3
-https://github.com/learningequality/kolibri/tarball/master#egg=kolibri
+https://storage.googleapis.com/le-downloads/kolibri/kolibri-0.2.0b1.dev218-py2.py3-none-any.whl
 validators
-django-mailgun==0.9.1
-le-utils==0.0.9rc13
+le-utils==0.0.9rc18
 gunicorn==19.6.0
+django-mailgun==0.9.1
+pressurecooker==0.0.10

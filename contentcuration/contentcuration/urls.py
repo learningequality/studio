@@ -26,6 +26,7 @@ import contentcuration.views as views
 import contentcuration.view.registration_views as registration_views
 import contentcuration.view.settings_views as settings_views
 import contentcuration.view.internal_views as internal_views
+import contentcuration.view.zip_views as zip_views
 from rest_framework.authtoken import views as auth_view
 from contentcuration import api
 
@@ -104,11 +105,11 @@ bulkrouter.register(r'file', FileViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
-    url(r'^test/', views.testpage, name='test'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
     url(r'^api/duplicate_nodes/$', views.duplicate_nodes, name='duplicate_nodes'),
+    url(r'^api/move_nodes/$', views.move_nodes, name='move_nodes'),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'exercises/$', views.exercise_list, name='exercise_list'),
@@ -120,8 +121,11 @@ urlpatterns = [
     url(r'^channels/(?P<channel_id>[^/]+)/view', views.channel_view_only, name='channel_view_only'),
     url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^exercise_image_upload/', views.exercise_image_upload, name='exercise_image_upload'),
+    url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
+    url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
+    url(r'^healthz$', views.health, name='health'),
 ]
 
 # Add account/registration endpoints
@@ -149,6 +153,7 @@ urlpatterns += [
 # Add internal endpoints
 urlpatterns += [
     url(r'^api/internal/authenticate_user_internal$', internal_views.authenticate_user_internal, name="authenticate_user_internal"),
+    url(r'^api/internal/check_version$', internal_views.check_version, name="check_version"),
     url(r'^api/internal/file_diff$', internal_views.file_diff, name="file_diff"),
     url(r'^api/internal/file_upload$', internal_views.api_file_upload, name="api_file_upload"),
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),
