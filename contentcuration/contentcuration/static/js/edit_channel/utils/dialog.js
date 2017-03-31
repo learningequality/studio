@@ -23,25 +23,34 @@ function dialog(title, submessage, actions, onclose){
         onclose();
       }
       $('.ui-widget-overlay').fadeOut(100);
+    },
+    open: function(){
+      _.defer(function () {
+       $('.ui-dialog').find('button').last().focus();
+      });
     }
   });
 
   $("#dialog-box").dialog('open');
   $('.ui-widget-overlay').on('click', function() { $('#dialog-box').dialog( "close" ); });
   $('.ui-dialog').find("button").on('click', function() { $('#dialog-box').dialog( "close" ); });
+
   $(document).on('keydown', function(event) {
-    if ((event.keyCode ? event.keyCode : event.which) == 27) {
-      event.stopImmediatePropagation();
-      event.preventDefault();
-      $(document).off("keydown");
-      $('#dialog-box').dialog( "close" );
-      return false;
+    switch(event.keyCode || event.which){
+      case 27: // escape key
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        $(document).off("keydown");
+        $('#dialog-box').dialog( "close" );
+        return false;
+      case 37: // left key
+        $('.ui-dialog').find("button:focus").prev().focus();
+        break;
+      case 39: // right key
+        $('.ui-dialog').find("button:focus").next().focus();
+        break;
     }
   });
-  $('.ui-dialog').ready(function(){
-    console.log("READY")
-    $('.ui-dialog').find('button').last().focus();
-  })
 }
 
 module.exports = {
