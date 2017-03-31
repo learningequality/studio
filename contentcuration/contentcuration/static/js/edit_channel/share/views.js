@@ -4,6 +4,7 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("share.less");
 var stringHelper = require("edit_channel/utils/string_helper");
+var dialog = require("edit_channel/utils/dialog");
 
 var ShareModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/share_modal.handlebars"),
@@ -78,15 +79,13 @@ var ShareView = BaseViews.BaseView.extend({
             this.$(".share_list_item").removeClass("error_share_list_item");
             this.$("#share_error").text("");
 
-            if(this.validate(email, share_mode)){
-                this.send_mail(email, share_mode);
+            var self = this;
+            if(this.check_email(email) && this.check_current_user(email) && this.check_pending_editors(email, share_mode)){
+                this.check_current_editors(email, share_mode, function(){
+                    self.send_mail(email, share_mode);
+                });
             }
         }
-    },
-    validate:function(email, share_mode){
-        return this.check_email(email) && this.check_current_user(email)
-            && this.check_current_editors(email, share_mode)
-            && this.check_pending_editors(email, share_mode);
     },
     check_email:function(email){
         var emailtest = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -104,13 +103,16 @@ var ShareView = BaseViews.BaseView.extend({
         }
         return true;
     },
-    check_current_editors:function(email, share_mode){
+    check_current_editors:function(email, share_mode, callback){
         var result = this.collection.findWhere({"email": email});
         if(result){
-            if (share_mode === "edit" &&
-                window.current_channel.get("viewers").indexOf(result.id) >= 0
-                && confirm("This person already has viewing access. Would you like to grant editing permissions?")){
-                return true;
+            if (share_mode === "edit" && window.current_channel.get("viewers").indexOf(result.id) >= 0){
+                dialog.dialog("Grant permissions", "This person already has viewing access. Would you like to grant editing permissions?",{
+                    "No":function(){},
+                    "Yes": function(){
+                        callback();
+                    }
+                }, function(){});
             }else{
                 this.$("#share_error").text("This person already has access to this channel.");
                 this.$("#share_item_" + result.get("id")).addClass("error_share_list_item");
@@ -119,8 +121,9 @@ var ShareView = BaseViews.BaseView.extend({
                 }, 100);
             }
             return false;
+        }else{
+            callback();
         }
-        return true;
     },
     check_pending_editors:function(email, share_mode){
         var result = this.pending_collection.findWhere({"email": email, "share_mode" : share_mode});
@@ -133,6 +136,13 @@ var ShareView = BaseViews.BaseView.extend({
            return false;
         }
         return true;
+    },
+    display_invalid_invitation:function(message, user){
+        this.$("#share_error").text(message);
+        this.$("#share_item_" + user.get("id")).addClass("error_share_list_item");
+        $('#editor_list_wrapper').animate({
+            scrollTop : this.$("#share_item_" + user.get("id")).position().top,
+        }, 100);
     },
     send_mail:function(email, share_mode){
         this.$("#share_email_address").val("");
@@ -294,7 +304,6 @@ var ShareCurrentItem = ShareItem.extend({
     },
     remove_editor:function(){
         var self = this;
-        var dialog = require("edit_channel/utils/dialog");
         dialog.dialog("Remove editor", "Are you sure you want to remove " + this.model.get("first_name")
             + " " + this.model.get("last_name") + " from the list?", {
             "Cancel":function(){},
