@@ -16,14 +16,12 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 	initialize: function(options) {
 		_.bindAll(this, 'new_channel');
 		this.bind_edit_functions();
-		this.collection = options.channels;
 		this.render();
 		this.user = options.user;
 	},
 	render: function() {
 		this.set_editing(false);
 		this.$el.html(this.template({
-			channel_list: this.collection.toJSON(),
 			user: window.current_user
 		}));
 		this.load_content(this.collection.where({deleted:false}));
@@ -42,6 +40,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 	new_channel: function(){
 		var data = {
 			editors: [window.current_user.id],
+			pending_editors: []
 		};
 		var newView = this.create_new_view(new Models.ChannelModel(data));
 		this.$(this.list_selector).prepend(newView.el);
@@ -96,7 +95,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.thumbnail_url = this.original_thumbnail_url;
 		this.thumbnail = this.original_thumbnail;
 		this.originalData = (this.model)? this.model.toJSON() : null;
-		this.isViewOnly = this.model.get("viewers").indexOf(window.current_user.get("id")) >= 0;
 		this.render();
 		this.dropzone = null;
 		this.isNew = false;
@@ -112,11 +110,10 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	render: function() {
 		this.$el.html(this.template({
-			view_only: this.isViewOnly,
 			edit: this.edit,
 			channel: this.model.toJSON(),
-			total_file_size: this.model.get("main_tree").metadata.resource_size,
-			resource_count: this.model.get("main_tree").metadata.resource_count,
+			total_file_size: this.model.get("size"),
+			resource_count: this.model.get("count"),
 			channel_link : this.model.get("id"),
 			picture : this.thumbnail_url
 		}));
@@ -146,7 +143,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	open_channel:function(event){
 		if(!this.edit){
-			window.location.href = '/channels/' + this.model.get("id") + ((this.isViewOnly)? '/view' : '/edit');
+			window.location.href = '/channels/' + this.model.get("id") + ((this.model.get('view_only'))? '/view' : '/edit');
 		}
 	},
 	copy_id:function(event){
@@ -229,7 +226,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			name: title,
 			description: description,
 			thumbnail : this.thumbnail,
-			editors: this.model.get('editors')
+			editors: this.model.get('editors'),
+			pending_editors: this.model.get('pending_editors')
 		};
 		this.original_thumbnail = this.thumbnail;
 		this.original_thumbnail_url = this.thumbnail_url;

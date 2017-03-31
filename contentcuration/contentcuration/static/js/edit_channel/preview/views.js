@@ -51,9 +51,6 @@ var PreviewView = BaseViews.BaseView.extend({
     },
 
     generate_preview:function(force_load){
-        var location ="";
-        var extension = "";
-        var checksum = "";
         if(this.current_preview){
             if(this.current_preview.assessment_id){
                 var ExerciseView = require("edit_channel/exercise_creation/views");
@@ -65,10 +62,7 @@ var PreviewView = BaseViews.BaseView.extend({
                     el: this.$("#preview_window")
                 });
             }else{
-                location = this.current_preview.storage_url;
                 extension = this.current_preview.file_format;
-                mimetype = this.current_preview.mimetype;
-                checksum = this.current_preview.checksum;
 
                 var preview_template;
                 switch (extension){
@@ -100,9 +94,10 @@ var PreviewView = BaseViews.BaseView.extend({
                         preview_template = require("./hbtemplates/preview_templates/default.handlebars");
                 }
                 this.$("#preview_window").html(preview_template({
-                    source: location,
-                    extension:mimetype,
-                    checksum:checksum
+                    source: this.current_preview.storage_url,
+                    extension:this.current_preview.mimetype,
+                    checksum:this.current_preview.checksum,
+                    subtitles : this.get_subtitles()
                 }));
                 if(force_load && this.current_preview.recommended_kind === "video"){
                     $("#preview_window video").load();
@@ -110,7 +105,18 @@ var PreviewView = BaseViews.BaseView.extend({
             }
         }
     },
-
+    get_subtitles:function(){
+        var subtitles = [];
+        this.model.get("files").forEach(function(file){
+            var file_json = (file.attributes)? file.attributes : file;
+            var preset_id = (file_json.preset && file_json.preset.id)? file_json.preset.id : file_json.preset;
+            var current_preset = window.formatpresets.get({id:preset_id});
+            if(current_preset && current_preset.get("subtitle")){
+                subtitles.push(file_json);
+            }
+        });
+        return subtitles;
+    },
     load_preview:function(){
         if(this.model){
             this.switch_preview(this.model);
@@ -148,7 +154,7 @@ var PreviewView = BaseViews.BaseView.extend({
                         return self.current_preview;
                     }
                 }else{
-                    if(!return_data || current_preset.get("order") === 1){
+                    if(!return_data || current_preset.get("order") < return_data.preset.order){
                         return_data = file;
                     }
                     self.presets.add(current_preset);

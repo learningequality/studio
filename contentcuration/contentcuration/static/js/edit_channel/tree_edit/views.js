@@ -201,13 +201,20 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 			index: this.index,
 		}));
 		window.workspace_manager.put_list(this.model.get("id"), this);
+
+		if(this.edit_mode){
+			this.make_droppable();
+		}
+
 		var self = this;
-		self.make_droppable();
 		this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
 			self.$el.find(this.default_item).text("No items found.");
 			fetchedCollection.sort_by_order();
 			self.load_content(fetchedCollection);
-			self.refresh_droppable();
+			if(self.edit_mode){
+				self.refresh_droppable();
+			}
+
 		});
 		setTimeout(function(){
 			self.$el.removeClass("pre_animation").addClass("post_animation");

@@ -5,6 +5,7 @@ import os
 import re
 import hashlib
 import shutil
+import tempfile
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
@@ -21,12 +22,13 @@ from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import AssessmentItemSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
+from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
-from le_utils.constants import format_presets
+from le_utils.constants import format_presets, content_kinds, file_formats
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from pressurecooker.videos import guess_video_preset_by_resolution, extract_thumbnail_from_video, compress_video
 from django.core.cache import cache
 
 def base(request):
@@ -37,8 +39,8 @@ def base(request):
     else:
         return redirect('accounts/login')
 
-def testpage(request):
-    return render(request, 'test.html')
+def health(request):
+    return HttpResponse("500")
 
 def unsupported_browser(request):
     return render(request, 'unsupported_browser.html')
@@ -48,20 +50,18 @@ def unauthorized(request):
 
 def channel_page(request, channel, allow_edit=False):
     channel_serializer =  ChannelSerializer(channel)
-    accessible_channel_list = Channel.objects.filter(deleted=False).filter( Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))
-    accessible_channel_list = ChannelSerializer.setup_eager_loading(accessible_channel_list)
-    accessible_channel_list_serializer = ChannelSerializer(accessible_channel_list, many=True)
 
-    channel_list = accessible_channel_list.filter(Q(editors=request.user) | Q(viewers=request.user))\
-                    .exclude(id=channel.pk)\
-                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
-                    .values("id", "name", "is_view_only")
+    channel_list = Channel.objects.select_related('main_tree').exclude(id=channel.pk)\
+                            .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
+                            .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
+                            .distinct().values("id", "name", "is_view_only")
+
     fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
     contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
 
-    channel_tags = ContentTag.objects.filter(channel = channel)
+    channel_tags = ContentTag.objects.select_related('channel').filter(channel_id=channel.pk)
     channel_tags_serializer = TagSerializer(channel_tags, many=True)
 
     json_renderer = JSONRenderer()
@@ -70,7 +70,6 @@ def channel_page(request, channel, allow_edit=False):
                                                 "channel" : json_renderer.render(channel_serializer.data),
                                                 "channel_id" : channel.pk,
                                                 "channel_name": channel.name,
-                                                "accessible_channels" : json_renderer.render(accessible_channel_list_serializer.data),
                                                 "channel_list" : channel_list,
                                                 "fileformat_list" : fileformats,
                                                  "license_list" : licenses,
@@ -86,17 +85,13 @@ def channel_list(request):
     if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
         return redirect(reverse_lazy('unsupported_browser'))
 
-    channel_list = Channel.objects.filter(deleted=False)\
-                    .filter(Q(editors=request.user) | Q(viewers=request.user))\
+    channel_list = Channel.objects.select_related('main_tree').filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
                     .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
 
-    channel_list = ChannelSerializer.setup_eager_loading(channel_list)
-    channel_serializer = ChannelSerializer(channel_list, many=True)
+    channel_serializer = ChannelListSerializer(channel_list, many=True)
 
-    licenses = get_or_set_cached_constants(License, LicenseSerializer)
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
                                                  "channel_name" : False,
-                                                 "license_list" : licenses,
                                                  "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
 
 @login_required
@@ -133,7 +128,7 @@ def channel_view_only(request, channel_id):
 
 def get_or_set_cached_constants(constant, serializer):
     cached_data = cache.get(constant.__name__)
-    if cached_data is not None:
+    if cached_data:
         return cached_data
     constant_objects = constant.objects.all()
     constant_serializer = serializer(constant_objects, many=True)
@@ -194,19 +189,63 @@ def file_upload(request):
 
 def file_create(request):
     if request.method == 'POST':
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
+        original_filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
-        kind = FormatPreset.objects.filter(allowed_formats__extension__contains=ext).first().kind
-        original_filename = request.FILES.values()[0]._name
+        presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:])
+        kind = presets.first().kind
         new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=settings.DEFAULT_LICENSE, author=request.user.get_full_name())
         new_node.save()
-        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, contentnode=new_node, file_size=size)
+        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename = original_filename, contentnode=new_node, file_size=size)
+        file_object.save()
+
+        if kind.pk == content_kinds.VIDEO:
+            extract_thumbnail_wrapper(file_object)
+            file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))
+        elif presets.filter(supplementary=False).count() == 1:
+            file_object.preset = presets.filter(supplementary=False).first()
+
         file_object.save()
 
         return HttpResponse(json.dumps({
             "success": True,
             "object_id": new_node.pk
         }))
+
+def extract_thumbnail_wrapper(file_object):
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(file_formats.PNG)) as tempf:
+        tempf.close()
+        extract_thumbnail_from_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
+        filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
+        checksum, ext = os.path.splitext(filename)
+        file_location = generate_file_on_disk_name(checksum, filename)
+        thumbnail_object = File(
+            file_on_disk=DjFile(open(file_location, 'rb')),
+            file_format_id=file_formats.PNG,
+            original_filename = 'Extracted Thumbnail',
+            contentnode=file_object.contentnode,
+            file_size=os.path.getsize(file_location),
+            preset_id=format_presets.VIDEO_THUMBNAIL,
+        )
+        thumbnail_object.save()
+        return thumbnail_object
+
+def compress_video_wrapper(file_object):
+    with tempfile.TemporaryFile(suffix=".{}".format(file_formats.MP4)) as tempf:
+        tempf.close()
+        compress_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
+        filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
+        checksum, ext = os.path.splitext(filename)
+        file_location = generate_file_on_disk_name(checksum, filename)
+        low_res_object = File(
+            file_on_disk=DjFile(open(file_location, 'rb')),
+            file_format_id=file_formats.MP4,
+            original_filename = file_object.original_filename,
+            contentnode=file_object.contentnode,
+            file_size=os.path.getsize(file_location),
+            preset_id=format_presets.VIDEO_LOW_RES,
+        )
+        low_res_object.save()
+        return low_res_object
 
 @csrf_exempt
 def thumbnail_upload(request):
@@ -242,41 +281,46 @@ def duplicate_nodes(request):
 
         try:
             nodes = data["nodes"]
-            sort_order = data["sort_order"]
+            sort_order = data.get("sort_order") or 1
             target_parent = data["target_parent"]
             channel_id = data["channel_id"]
+            new_nodes = []
+
+            with transaction.atomic():
+                for node_data in nodes:
+                    new_node = _duplicate_node(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
+                    new_nodes.append(new_node.pk)
+                    sort_order+=1
+
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-        new_nodes = []
-
-        with transaction.atomic():
-            for node_data in nodes:
-                new_node = _duplicate_node(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
-                new_nodes.append(new_node.pk)
-                sort_order+=1
 
         return HttpResponse(json.dumps({
             "success": True,
             "node_ids": " ".join(new_nodes)
         }))
 
-def _duplicate_node(node, sort_order=1, parent=None, channel_id=None):
+def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
+
+    original_channel = node.get_original_node().get_channel() if node.get_original_node() else None
+
     new_node = ContentNode.objects.create(
         title=node.title,
         description=node.description,
         kind=node.kind,
         license=node.license,
         parent=ContentNode.objects.get(pk=parent) if parent else None,
-        sort_order=sort_order,
+        sort_order=sort_order or node.sort_order,
         copyright_holder=node.copyright_holder,
         changed=True,
         original_node=node.original_node or node,
         cloned_source=node,
-        original_channel_id = node.original_channel_id or node.original_node.get_channel().id if node.original_node.get_channel() else None,
+        original_channel_id = node.original_channel_id or original_channel.id if original_channel else None,
         source_channel_id = node.get_channel().id if node.get_channel() else None,
+        original_source_node_id = node.original_source_node_id or node.node_id,
+        source_node_id = node.node_id,
         author=node.author,
         content_id=node.content_id,
         extra_fields=node.extra_fields,
@@ -303,6 +347,11 @@ def _duplicate_node(node, sort_order=1, parent=None, channel_id=None):
         aiobj_copy.id = None
         aiobj_copy.contentnode = new_node
         aiobj_copy.save()
+        for fobj in aiobj.files.all():
+            fobj_copy = copy.copy(fobj)
+            fobj_copy.id = None
+            fobj_copy.assessment_item = aiobj_copy
+            fobj_copy.save()
 
     for c in node.children.all():
         _duplicate_node(c, parent=new_node.id)
@@ -377,3 +426,10 @@ def publish_channel(request):
             "channel": channel_id
         }))
 
+def accessible_channels(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        accessible_list = ContentNode.objects.filter(pk__in=Channel.objects.select_related('main_tree')\
+                        .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))\
+                        .exclude(pk=data["channel_id"]).values_list('main_tree_id', flat=True))
+        return HttpResponse(JSONRenderer().render(RootNodeSerializer(accessible_list, many=True).data))

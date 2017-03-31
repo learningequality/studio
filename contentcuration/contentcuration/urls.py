@@ -105,7 +105,6 @@ bulkrouter.register(r'file', FileViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
-    url(r'^test/', views.testpage, name='test'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
@@ -125,6 +124,8 @@ urlpatterns = [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
+    url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
+    url(r'^healthz$', views.health, name='health'),
 ]
 
 # Add account/registration endpoints
@@ -152,6 +153,7 @@ urlpatterns += [
 # Add internal endpoints
 urlpatterns += [
     url(r'^api/internal/authenticate_user_internal$', internal_views.authenticate_user_internal, name="authenticate_user_internal"),
+    url(r'^api/internal/check_version$', internal_views.check_version, name="check_version"),
     url(r'^api/internal/file_diff$', internal_views.file_diff, name="file_diff"),
     url(r'^api/internal/file_upload$', internal_views.api_file_upload, name="api_file_upload"),
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),

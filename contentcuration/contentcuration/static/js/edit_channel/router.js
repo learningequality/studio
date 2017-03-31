@@ -11,7 +11,6 @@ ChannelEditRouter  = Backbone.Router.extend({
   initialize: function(options) {
     _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page");
 		this.nodeCollection = new Models.ContentNodeCollection();
-		window.licenses = new Models.LicenseCollection(window.license_list);
 		window.current_channel = new Models.ChannelModel(window.channel);
 		window.current_user = new Models.UserModel(window.user);
 		window.workspace_manager = new WorkspaceManager();
@@ -34,20 +33,12 @@ ChannelEditRouter  = Backbone.Router.extend({
 		var ChannelManageView = require("edit_channel/new_channel/views");
 		var channel_manager_view = new ChannelManageView.ChannelList ({
 			el: $("#channel-container"),
-			channels: this.channelCollection,
-			licenses:window.licenses
+			collection: this.channelCollection
 		});
   },
 
 	edit_page : function(){
 		this.open_channel(true, false, window.current_channel.get_root("main_tree"));
-		var QueueView = require("edit_channel/queue/views");
-		var queue = new QueueView.Queue({
-	 		el: $("#queue-area"),
-	 		collection: this.nodeCollection,
-	 		clipboard_root : window.current_user.get_clipboard(),
-			trash_root : window.current_channel.get_root("trash_tree"),
-	 	});
 	},
 	preview_page : function(){
 		this.open_channel(false, false, window.current_channel.get_root("main_tree"));
@@ -62,7 +53,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.formatpresets = this.formatpresets;
 		window.contentkinds = this.contentkinds;
 		window.contenttags = new Models.TagCollection(window.channel_tags);
-		window.access_channels = new Models.ChannelCollection(window.accessible_channels);
+		window.licenses = new Models.LicenseCollection(window.license_list);
 
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
@@ -72,6 +63,13 @@ ChannelEditRouter  = Backbone.Router.extend({
 			model : root,
 			is_clipboard : is_clipboard,
 		});
+		var QueueView = require("edit_channel/queue/views");
+		var queue = new QueueView.Queue({
+	 		el: $("#queue-area"),
+	 		collection: this.nodeCollection,
+	 		clipboard_root : window.current_user.get_clipboard(),
+			trash_root : window.current_channel.get_root("trash_tree"),
+	 	});
 	}
 });
 

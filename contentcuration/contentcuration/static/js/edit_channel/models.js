@@ -136,7 +136,8 @@ var ContentNodeModel = BaseModel.extend({
 		tags:[],
 		assessment_items:[],
 		metadata: {"resource_size" : 0, "resource_count" : 0},
-		created: new Date()
+		created: new Date(),
+		ancestors: []
     }
 });
 
@@ -152,8 +153,9 @@ var ContentNodeCollection = BaseCollection.extend({
 			var fileCollection = new FileCollection()
 			self.forEach(function(node){
 				node.get("files").forEach(function(file){
-					file.preset = file.preset.id ? file.preset.id : file.preset
+					file.preset.id = file.preset.name ? file.preset.name : file.preset.id;
 				});
+
 				fileCollection.add(node.get("files"));
 			});
 			fileCollection.save().then(function(){
@@ -233,14 +235,12 @@ var ChannelModel = BaseModel.extend({
 	root_list : "channel-list",
 	defaults: {
 		name: "",
-		editors: [],
-		viewers: [],
-		pending_editors: [],
-		author: "Anonymous",
-		license_owner: "No license found",
 		description:"",
 		thumbnail_url: "/static/img/kolibri_placeholder.png",
-		main_tree: (new ContentNodeModel()).toJSON()
+		count: 0,
+		size: 0,
+		published: false,
+		view_only: false
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
@@ -263,7 +263,24 @@ var ChannelModel = BaseModel.extend({
 	            }
 	        });
     	});
-    }
+    },
+    get_accessible_channel_roots:function(){
+		var self = this;
+    	var promise = new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	        	data: JSON.stringify({'channel_id': self.id}),
+	            url: window.Urls.accessible_channels(),
+	            success: function(data) {
+	            	resolve(new ContentNodeCollection(JSON.parse(data)));
+	            },
+	            error:function(e){
+	            	reject(e);
+	            }
+	        });
+    	});
+    	return promise;
+	}
 });
 
 var ChannelCollection = BaseCollection.extend({
@@ -271,7 +288,7 @@ var ChannelCollection = BaseCollection.extend({
 	list_name:"channel-list",
     model_name:"ChannelCollection",
 	comparator:function(channel){
-		return -new Date(channel.get('main_tree').created);
+		return -new Date(channel.get('created'));
 	}
 });
 
@@ -308,7 +325,10 @@ var TagCollection = BaseCollection.extend({
 /**** MODELS SPECIFIC TO FILE NODES ****/
 var FileModel = BaseModel.extend({
 	root_list:"file-list",
-    model_name:"FileModel"
+	model_name:"FileModel",
+	get_preset:function(){
+		return window.formatpresets.get({'id':this.get("id")});
+	}
 });
 
 var FileCollection = BaseCollection.extend({
@@ -398,6 +418,17 @@ var LicenseCollection = BaseCollection.extend({
     get_default:function(){
     	return this.findWhere({license_name:"CC-BY"});
     }
+});
+
+var LanguageModel = BaseModel.extend({
+	root_list:"language-list",
+	model_name:"LanguageModel"
+});
+
+var LanguageCollection = BaseCollection.extend({
+	model: LanguageModel,
+	list_name:"language-list",
+	model_name:"LanguageCollection"
 });
 
 var ContentKindModel = BaseModel.extend({
