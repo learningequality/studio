@@ -44,6 +44,8 @@ var MoveView = BaseViews.BaseListView.extend({
     close_move:function(){
         (this.modal)? this.modal.close() : this.remove();
     },
+
+    /*********** LOADING METHODS ***********/
     render: function() {
         this.$el.html(this.template());
         this.moveList = new MoveList({
@@ -76,6 +78,8 @@ var MoveView = BaseViews.BaseListView.extend({
             container: this
         });
     },
+
+    /*********** MOVING METHODS ***********/
     move_content:function(){
         var self = this;
         this.display_load("Moving Content...", function(resolve, reject){
@@ -93,6 +97,7 @@ var MoveView = BaseViews.BaseListView.extend({
         });
     },
     handle_target_selection:function(node){
+        // Set node to move items to
         this.target_node = node;
         this.$("#move_content_button").prop("disabled", false);
         this.$("#move_content_button").removeClass("disabled");
@@ -105,6 +110,7 @@ var MoveView = BaseViews.BaseListView.extend({
     }
 });
 
+/*********** VIEW FOR MOVE LISTS (SOURCE AND DESTINATION) ***********/
 var MoveList = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/move_list.handlebars"),
     default_item:">.default-item",
@@ -134,6 +140,7 @@ var MoveList = BaseViews.BaseListView.extend({
     }
 });
 
+/*********** ITEM TO MOVE OR DESTINATION ITEM ***********/
 var MoveItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/move_list_item.handlebars"),
     tagName: "li",
