@@ -163,10 +163,11 @@ var EditorView = Backbone.View.extend({
 
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
-        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save",
-                "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content");
+        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key",
+               "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content");
         this.edit_key = options.edit_key;
         this.editing = false;
+        this.numbersOnly = options.numbersOnly || false;
         this.render();
         this.markdown = this.model.get(this.edit_key);
         this.listenTo(this.model, "change:" + this.edit_key, this.render);
@@ -202,8 +203,14 @@ var EditorView = Backbone.View.extend({
             var html = self.view_template({content: result});
             self.editor ? self.editor.setHTML(html) : self.$el.html(html);
             self.toggle_loading(false);
+            self.render_toolbar();
             if(self.editor) self.editor.focus();
         });
+    },
+    render_toolbar:function(){
+        if(this.numbersOnly){
+            this.$(".note-style, .note-insert").css('display', 'none');
+        }
     },
     toggle_loading:function(isLoading){
         if(this.editor && this.editing){
@@ -235,7 +242,8 @@ var EditorView = Backbone.View.extend({
                 onChange: _.debounce(this.save, 1),
                 onPaste: this.paste_content,
                 onImageUpload: this.add_image,
-                onAddFormula: this.add_formula
+                onAddFormula: this.add_formula,
+                onKeydown: this.process_key
             }
         });
         $('.dropdown-toggle').dropdown();
@@ -265,20 +273,36 @@ var EditorView = Backbone.View.extend({
         this.$(".note-error").css("display", (this.markdown.trim())? "none" : "inline-block");
         return this.markdown;
     },
+    process_key: function(event){
+        if(this.numbersOnly){
+            var key = event.keyCode || event.which;
+            var allowedKeys = [46, 8, 9, 27, 32, 110, 37, 38, 39, 40, 109];
+            if(!this.check_key(String.fromCharCode(key), key) && !_.contains(allowedKeys, key) && !(event.ctrlKey || event.metaKey)){
+                event.preventDefault();
+            }
+        }
+    },
+    check_key: function(content, key){
+        var specialCharacterKeys = [188, 189, 190];
+        return !this.numbersOnly || /[0-9\,\.\-]+/g.test(content) || _.contains(specialCharacterKeys, key);
+    },
     paste_content: function(event){
         var clipboard = (event.originalEvent || event).clipboardData || window.clipboardData;
+        event.preventDefault();
         var bufferText = clipboard.getData("Text");
         var clipboardHtml = clipboard.getData('text/html');
         if(clipboardHtml)
             bufferText = this.convert_html_to_markdown(clipboardHtml);
-        event.preventDefault();
         var self = this;
         setTimeout(function () { // Firefox fix
-            document.execCommand('insertText', false, bufferText);
-            if(clipboardHtml){
-                self.save(self.editor.getContents());
-                self.editor.setHTML("");
-                self.render_editor();
+            console.log(!self.numbersOnly || !isNaN(bufferText), bufferText)
+            if(!self.numbersOnly || self.check_key(bufferText)){
+                document.execCommand('insertText', false, bufferText);
+                if(clipboardHtml){
+                    self.save(self.editor.getContents());
+                    self.editor.setHTML("");
+                    self.render_editor();
+                }
             }
         }, 10);
     },
@@ -477,11 +501,12 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
     undo: null,                     // Keep track of changes so user can cancel all changes
     open: false,                    // Determines if editor is open
     error_template: require("./hbtemplates/assessment_item_errors.handlebars"),
+    numbers_only: function() {return false;},
 
     /*********** EDITOR METHODS ***********/
     render_editor: function(){
         if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: this.content_field});
+            this.editor_view = new EditorView({model: this.model, edit_key: this.content_field, numbersOnly:this.numbers_only()});
         }
         this.$(this.editor_el).html(this.editor_view.el);
         this.listenTo(this.model, "change:" + this.content_field, this.propagate_changes)
@@ -904,7 +929,11 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     template: require("./hbtemplates/assessment_item_answer_list.handlebars"),
 
     get_default_attributes: function() {
-        return {order: this.get_next_order(), answer: "", correct: this.assessment_item.get('type') === "input_question"};
+        return {
+            order: this.get_next_order(),
+            answer: this.assessment_item.get('type') === "input_question"? "0" : "",
+            correct: this.assessment_item.get('type') === "input_question"
+        };
     },
     initialize: function(options) {
         _.bindAll(this, "render", "add_item", "add_item_view");
@@ -974,7 +1003,7 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
     render: function() {
         this.$el.html(this.template({
             answer: this.model.toJSON(),
-            input_answer: this.assessment_item.get("type") === "input_question",
+            input_answer: this.numbers_only(),
             single_selection: this.is_single_correct(),
             groupName: this.assessment_item.cid,
             allow_edit: !this.isdisplay && this.assessment_item.get("type") !== "true_false",
@@ -983,6 +1012,7 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
         this.render_editor();
         _.defer(this.set_editor);
     },
+    numbers_only: function() {return this.assessment_item.get('type') === 'input_question';},
     is_single_correct: function(){
         return this.assessment_item.get("type") === "single_selection" || this.assessment_item.get("type") === "true_false";
     },
