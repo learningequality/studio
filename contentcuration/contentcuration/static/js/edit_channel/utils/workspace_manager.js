@@ -55,13 +55,8 @@ function WorkspaceManager(){
 	this.remove = function(key){
 		var n = this.get(key);
 		if(n){
-			if(n.node){
-				if(n.node.containing_list_view){
-					n.node.containing_list_view.views = _.reject(n.node.containing_list_view.views, function(el) { return el.model.id === key; });
-				}
-				n.node.remove();
-			}
-			if(n.list){n.list.remove();}
+			if(n.node){n.node.remove();}
+			if(n.list){n.list.close();}
 			this.put(key, null, null);
 		}
 	}

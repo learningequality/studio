@@ -4,12 +4,12 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("move.less");
 
+/*********** MODAL CONTAINER FOR MOVE OPERATION ***********/
 var MoveModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/move_modal.handlebars"),
+    modal: true,
 
     initialize: function(options) {
-        _.bindAll(this, "close_move");
-        this.modal = true;
         this.render(this.close, {});
         this.move_view = new MoveView({
             el: this.$(".modal-body"),
@@ -18,13 +18,10 @@ var MoveModalView = BaseViews.BaseModalView.extend({
             modal : this,
             model:this.model
         });
-    },
-    close_move:function(){
-      this.close();
     }
 });
 
-
+/*********** VIEW FOR MOVE OPERATION ***********/
 var MoveView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/move_dialog.handlebars"),
     onmove:null,
@@ -37,20 +34,18 @@ var MoveView = BaseViews.BaseListView.extend({
         this.onmove = options.onmove;
         this.collection = options.collection;
 
-        // Get ids of all descendants to help calculate valid moves
-        // and calculate how many nodes are being moved
-        this.to_move_ids = [];
-        var self = this;
-        this.collection.forEach(function(node){
-            self.to_move_ids.push(node.id);
-            self.to_move_ids = $.merge(self.to_move_ids, node.get("descendants"));
-        });
-
+        // Calculate valid moves using node descendants
+        this.to_move_ids = _.uniq(this.collection.reduce(function(l,n){ return l.concat(n.get('descendants')).concat(n.id);}, []));
         this.render();
     },
     events: {
       "click #move_content_button" : "move_content"
     },
+    close_move:function(){
+        (this.modal)? this.modal.close() : this.remove();
+    },
+
+    /*********** LOADING METHODS ***********/
     render: function() {
         this.$el.html(this.template());
         this.moveList = new MoveList({
@@ -76,52 +71,46 @@ var MoveView = BaseViews.BaseListView.extend({
 
         // Render list
         this.targetList = new MoveList({
-            model : null,
-            el:$("#target_list_area"),
+            model: null,
+            el: $("#target_list_area"),
             is_target: true,
-            collection :  fetched,
-            container :this
+            collection:  fetched,
+            container: this
         });
     },
+
+    /*********** MOVING METHODS ***********/
     move_content:function(){
         var self = this;
         this.display_load("Moving Content...", function(resolve, reject){
             var sort_order = self.target_node.get('metadata').max_sort_order;
             var original_parents = self.collection.pluck('parent');
             // Get original parents
-            self.collection.move(self.target_node, sort_order).then(function(moved){
-                var original_collection = new Models.ContentNodeCollection();
-                original_collection.get_all_fetch(original_parents).then(function(fetched){
+            self.collection.move(self.target_node, null, sort_order).then(function(moved){
+                self.collection.get_all_fetch(original_parents).then(function(fetched){
                     fetched.add(self.target_node);
                     self.onmove(self.target_node, moved, fetched);
                     self.close_move();
                     resolve(true);
                 });
-            }).catch(function(exception){
-                reject(exception);
-            });
-
-
-
+            }).catch(reject);
         });
     },
-    close_move:function(){
-        if(this.modal){
-            this.modal.close();
-        }else{
-            this.remove();
-        }
-    },
     handle_target_selection:function(node){
+        // Set node to move items to
         this.target_node = node;
         this.$("#move_content_button").prop("disabled", false);
         this.$("#move_content_button").removeClass("disabled");
 
         // Calculate number of items
-        this.$("#move_status").text("Moving " + this.to_move_ids.length + ((this.to_move_ids.length === 1)? " item to " : " items to ") + this.target_node.get("title"));
+        this.$("#move_status").text("Moving " + this.to_move_ids.length +
+            ((this.to_move_ids.length === 1)? " item to " : " items to ") +
+            this.target_node.get("title")
+        );
     }
 });
 
+/*********** VIEW FOR MOVE LISTS (SOURCE AND DESTINATION) ***********/
 var MoveList = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/move_list.handlebars"),
     default_item:">.default-item",
@@ -151,6 +140,7 @@ var MoveList = BaseViews.BaseListView.extend({
     }
 });
 
+/*********** ITEM TO MOVE OR DESTINATION ITEM ***********/
 var MoveItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/move_list_item.handlebars"),
     tagName: "li",
@@ -172,7 +162,8 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
         this.containing_list_view = options.containing_list_view;
         this.is_target = options.is_target;
         this.container = options.container;
-        this.fetch_collection(this.render);
+        this.collection = new Models.ContentNodeCollection();
+        this.render();
     },
     events: {
         'dblclick .dblclick_toggle' : 'toggle',
@@ -180,43 +171,28 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
         'change >.move_checkbox' : 'handle_checked'
     },
     render: function() {
+        var has_descendants = this.model.get('metadata').resource_count < this.model.get('metadata').total_count;
         this.$el.html(this.template({
             node:this.model.toJSON(),
             isfolder: this.model.get("kind") === "topic",
             is_target:this.is_target,
-            has_descendants: (this.is_target)? this.collection.length > 0 : this.model.get("children").length > 0
+            has_descendants: (this.is_target)? has_descendants : this.model.get("children").length
         }));
     },
-    fetch_collection:function(callback){
-        var self = this;
-        this.collection = new Models.ContentNodeCollection()
-        this.collection.get_all_fetch(this.model.get("children")).then(function(fetched){
-            self.collection = self.filter_collection(fetched);
-            callback();
-        });
-    },
-    filter_collection:function(collection){
-        if(this.is_target){
-            var to_return = new Models.ContentNodeCollection();
-            var self = this;
-            collection.forEach(function(node){
-                // Filter out descendants and non-topics
-                if(node.get("kind") == "topic" && self.container.to_move_ids.indexOf(node.id) < 0){
-                    to_return.add(node);
-                }
-            });
-            return to_return;
-        } else {
-            return collection;
-        }
-    },
     load_subfiles:function(){
-        this.subcontent_view = new MoveList({
-            model : this.model,
-            el: $(this.getSubdirectory()),
-            is_target: this.is_target,
-            collection: this.collection,
-            container: this.container
+        var self = this;
+        var filter_ids = this.container.to_move_ids
+        this.collection.get_all_fetch(this.model.get('children')).then(function(fetched){
+            var nodes = fetched.filter(function(n) {
+                return !self.is_target || (n.get('kind') === 'topic' && !_.contains(filter_ids, n.id));
+            });
+            self.subcontent_view = new MoveList({
+                model: self.model,
+                el: $(self.getSubdirectory()),
+                is_target: self.is_target,
+                collection: new Models.ContentNodeCollection(_.pluck(nodes, 'attributes')),
+                container: self.container
+            });
         });
     },
     handle_checked:function(event){

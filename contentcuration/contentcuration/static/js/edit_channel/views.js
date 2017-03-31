@@ -41,15 +41,18 @@ var BaseView = Backbone.View.extend({
 		this.retrieve_nodes($.unique(list_to_reload), true).then(function(fetched){
 			fetched.forEach(function(model){
 				var object = window.workspace_manager.get(model.get("id"));
-				if(object.node){
-					object.node.reload(model);
+				if(object){
+					if(object.node) object.node.reload(model);
+					if(object.list) object.list.set_root_model(model);
 				}
-				if(object.list){
-					object.list.set_root_model(model);
-				}
+
 				if(model.id === window.current_channel.get("main_tree").id){
+					window.current_channel.set('main_tree', model.toJSON());
 					self.check_if_published(model);
 					window.workspace_manager.get_main_view().handle_checked();
+				}
+				if(model.id === window.current_user.get('clipboard_tree').id){
+					window.current_user.set('clipboard_tree', model.toJSON());
 				}
 			});
 		});
@@ -61,12 +64,8 @@ var BaseView = Backbone.View.extend({
 	fetch_model:function(model){
 		return new Promise(function(resolve, reject){
             model.fetch({
-                success:function(data){
-                    resolve(data)
-                },
-                error:function(error){
-                    reject(error);
-                }
+                success: resolve,
+                error: reject
             });
         });
 	},
@@ -207,6 +206,8 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	move_content:function(move_collection){
 		var MoveView = require("edit_channel/move/views");
+		var list = this.get_selected(true);
+		var move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
 		$("#main-content-area").append("<div id='dialog'></div>");
 
 		var move = new MoveView.MoveModalView({
@@ -224,13 +225,11 @@ var BaseWorkspaceView = BaseView.extend({
 		this.reload_ancestors(reloadCollection, true);
 
 		// Remove where nodes originally were
-		moved.forEach(function(node){
-			window.workspace_manager.remove(node.id)
-		});
+		moved.forEach(function(node){ window.workspace_manager.remove(node.id)});
 
 		// Add nodes to correct place
 		var content = window.workspace_manager.get(target.id);
-		if(content.list){
+		if(content && content.list)
 			content.list.add_nodes(moved);
 		}
 	},
@@ -307,7 +306,8 @@ var BaseListView = BaseView.extend({
 	views: [],			//List of item views to help with garbage collection
 
 	bind_list_functions:function(){
-		_.bindAll(this, 'load_content', 'handle_if_empty', 'check_all', 'get_selected', 'set_root_model', 'update_views', 'cancel_actions');
+		_.bindAll(this, 'load_content', 'close', 'handle_if_empty', 'check_all', 'get_selected',
+			'set_root_model', 'update_views', 'cancel_actions');
 	},
 	set_root_model:function(model){
 		this.model.set(model.toJSON());
@@ -359,6 +359,9 @@ var BaseListView = BaseView.extend({
 			}
 		})
 		return selected_views;
+	},
+	close: function(){
+		this.remove();
 	}
 });
 
@@ -494,18 +497,22 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	},
 	drop_in_container:function(moved_item, selected_items, orders){
 		var self = this;
-		var promise = new Promise(function(resolve, reject){
-	    /* Step 1: Get sort orders updated */
-			var max = 1;
-			var min = 1;
-			var index = orders.indexOf(moved_item);
-			var moved_index = selected_items.indexOf(moved_item);
-			if(index >= 0){
+		return new Promise(function(resolve, reject){
+			if(_.contains(orders, moved_item)){
 				self.handle_drop(selected_items).then(function(collection){
-					var starting_index = index - moved_index - 1;
-					var ending_index= starting_index + collection.length + 1;
-					min = (starting_index < 0)? 0 : orders[starting_index].get("sort_order");
-					max = (ending_index >= orders.length)? min + 2 : orders[ending_index].get("sort_order");
+					var ids = collection.pluck('id');
+					var pivot = orders.indexOf(moved_item);
+					var min = _.chain(orders.slice(0, pivot))
+								.reject(function(item) { return _.contains(ids, item.id); })
+								.map(function(item) { return item.get('sort_order'); })
+								.max().value();
+					var max = _.chain(orders.slice(pivot, orders.length))
+								.reject(function(item) { return _.contains(ids, item.id); })
+								.map(function(item) { return item.get('sort_order'); })
+								.min().value();
+					min = _.isFinite(min)? min : 0;
+					max = _.isFinite(max)? max : min + (selected_items.length * 2);
+
 					var reload_list = [];
 					var last_elem = $("#" + moved_item.id);
 					collection.forEach(function(node){
@@ -513,17 +520,13 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						if(node.get("parent") !== self.model.get("id")){
 							reload_list.push(node.get("parent"));
 						}
-						min += (max - min) / 2;
-						node.set({
-							"sort_order": min
-						});
 						var to_delete = $("#" + node.id);
 						var item_view = self.create_new_view(node);
 						last_elem.after(item_view.el);
 						last_elem = item_view.$el;
 						to_delete.remove();
 					});
-					collection.move(self.model).then(function(savedCollection){
+					collection.move(self.model, max, min).then(function(savedCollection){
 						self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
 							self.reload_ancestors(fetched);
 							resolve(true);
@@ -544,7 +547,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				});
 			}
 		});
-		return promise;
 	},
 	handle_drop:function(collection){
 		this.$(this.default_item).css("display", "none");
@@ -555,7 +557,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
   },
 	add_nodes:function(collection){
 		var self = this;
-		collection.sort_by_order();
 		collection.forEach(function(entry){
 			var new_view = self.create_new_view(entry);
 			self.$(self.list_selector).append(new_view.el);
@@ -840,7 +841,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 
 		// Add nodes to correct place
 		var content = window.workspace_manager.get(target.id);
-		if(content.list){
+		if(content && content.list){
 			content.list.add_nodes(moved);
 		}
 	},
