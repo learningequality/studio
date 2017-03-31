@@ -222,16 +222,19 @@ body {
 			border:0;
 			background:none;
 			outline:none;
-			text-decoration: underline;
 			.action-text;
 			margin:5px;
-		}
-		button:hover{
-			font-weight:bold;
-		}
-		button:last-child{
-			.action-button;
-			text-decoration: none;
+			&:hover, &:focus{text-decoration: underline;}
+			&:last-child{
+				.action-button;
+				text-decoration: none;
+				&:hover, &:focus{
+					background: white;
+					color: @blue-500;
+					font-weight:bold;
+					text-decoration: none;
+				}
+			}
 		}
 	}
 }

@@ -1,16 +1,15 @@
 var Models = require("edit_channel/models");
+var template = require("edit_channel/utils/hbtemplates/dialog.handlebars");
+var _ = require('underscore')
 
 function dialog(title, submessage, actions, onclose){
-  var overlay = document.createElement('div');
-  overlay.setAttribute('class', "ui-widget-overlay");
-  var dialog = document.createElement("div");
-  dialog.setAttribute('id',"dialog-box");
-  dialog.setAttribute('title',title);
-  var paragraph = document.createElement("p");
-  paragraph.innerHTML=submessage;
-  dialog.appendChild(paragraph);
-  overlay.appendChild(dialog);
-  document.body.appendChild(overlay);
+  if(!$("#dialog-box").length){
+    $('body').append(template({title: title}));
+  }
+
+  $(".ui-dialog-title").text(title);
+  $("#dialog-box p").text(submessage);
+  $('.ui-widget-overlay').fadeIn(10);
 
   $("#dialog-box").dialog({
     autoOpen: false,
@@ -23,30 +22,26 @@ function dialog(title, submessage, actions, onclose){
       if(onclose){
         onclose();
       }
-
-      $('.ui-widget-overlay').fadeOut();
-      $('#dialog-box').remove();
+      $('.ui-widget-overlay').fadeOut(100);
     }
   });
 
   $("#dialog-box").dialog('open');
-  $('.ui-widget-overlay').on('click', function() {
-       $('#dialog-box').dialog( "close" );
-  });
-  $('.ui-dialog').find("button").on('click', function() {
-       $('#dialog-box').dialog( "close" );
-  });
+  $('.ui-widget-overlay').on('click', function() { $('#dialog-box').dialog( "close" ); });
+  $('.ui-dialog').find("button").on('click', function() { $('#dialog-box').dialog( "close" ); });
   $(document).on('keydown', function(event) {
-    var code = event.keyCode ? event.keyCode : event.which;
-      if (code == 27) {
-        event.stopImmediatePropagation();
-        event.preventDefault();
-        $(document).off("keydown");
-        $('#dialog-box').dialog( "close" );
-        return false;
-      }
+    if ((event.keyCode ? event.keyCode : event.which) == 27) {
+      event.stopImmediatePropagation();
+      event.preventDefault();
+      $(document).off("keydown");
+      $('#dialog-box').dialog( "close" );
+      return false;
+    }
   });
-
+  $('.ui-dialog').ready(function(){
+    console.log("READY")
+    $('.ui-dialog').find('button').last().focus();
+  })
 }
 
 module.exports = {
