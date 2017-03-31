@@ -11,7 +11,7 @@ from rest_framework.fields import set_value, SkipField
 from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField, Count
+from django.db.models import Q, Case, When, Value, IntegerField, Count, Max
 from django.conf import settings
 from django.core.files import File as DjFile
 
@@ -63,11 +63,13 @@ class FileListSerializer(serializers.ListSerializer):
                     'language_id' : item.get('language')['id'] if item.get('language') else None
                 })
 
-                if 'id' in item:
-                    update_files[item['id']] = item
-                else:
-                    # create new nodes
-                    ret.append(File.objects.create(**item))
+                # User should not be able to change files without a display
+                if item['preset']['display']:
+                    if 'id' in item:
+                        update_files[item['id']] = item
+                    else:
+                        # create new nodes
+                        ret.append(File.objects.create(**item))
 
         files_to_delete = []
         nodes_to_parse = []
@@ -238,13 +240,53 @@ class TagSerializer(serializers.ModelSerializer):
     model = ContentTag
     fields = ('tag_name', 'channel', 'id')
 
+
+class AssessmentListSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+        ret = []
+        file_mapping = {}
+
+        with transaction.atomic():
+            for item in validated_data:
+                files =  item.pop('files', []) # Remove here to avoid problems with setting attributes
+
+                # Handle existing items
+                if 'id' in item:
+                    aitem, is_new = AssessmentItem.objects.get_or_create(pk=item['id'])
+                    if item['deleted']:
+                        aitem.delete()
+                        continue
+                    else:
+                        # Set attributes for assessment item
+                        for attr, value in item.items():
+                            setattr(aitem, attr, value)
+                        aitem.save()
+                else:
+                    # Create item
+                    aitem = AssessmentItem.objects.create(**item)
+
+                for f in files:
+                    if f.checksum in str(aitem.__dict__):
+                        if f.assessment_item_id != aitem.pk:
+                            f.assessment_item = aitem
+                            f.save()
+                    else:
+                        f.delete()
+
+                ret.append(aitem)
+
+        return ret
+
+
 class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     contentnode = serializers.PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
+    id = serializers.IntegerField(required=False)
 
     class Meta:
         model = AssessmentItem
-        fields = ('question', 'type', 'answers', 'id', 'contentnode', 'assessment_id', 'hints', 'raw_data', 'order', 'source_url')
-        list_serializer_class = BulkListSerializer
+        fields = ('id', 'question', 'files', 'type', 'answers', 'contentnode', 'assessment_id',
+            'hints', 'raw_data', 'order', 'source_url', 'randomize', 'deleted')
+        list_serializer_class = AssessmentListSerializer
 
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -261,7 +303,20 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     valid = serializers.SerializerMethodField('check_valid')
 
     def check_valid(self, node):
-        return node.kind_id == content_kinds.TOPIC or node.kind_id == content_kinds.EXERCISE or node.files.exists()
+        if node.kind_id == content_kinds.TOPIC:
+            return True
+        elif node.kind_id == content_kinds.EXERCISE:
+            for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):
+                answers = json.loads(aitem.answers)
+                correct_answers = filter(lambda a: a['correct'], answers)
+                if aitem.question == "" or len(answers) == 0 or len(correct_answers) == 0 or\
+                    any(filter(lambda a: a['answer'] == "", answers)) or\
+                    (aitem.type == exercises.SINGLE_SELECTION and len(correct_answers) > 1) or\
+                    any(filter(lambda h: h['hint'] == "", json.loads(aitem.hints))):
+                    return False
+            return True
+        else:
+            return node.files.filter(preset__supplementary=False).exists()
 
     def retrieve_original_channel(self, node):
         original = node.get_original_node()
@@ -271,20 +326,22 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
             descendants = node.get_descendants(include_self=True).annotate(change_count=Case(When(changed=True, then=Value(1)),default=Value(0),output_field=IntegerField()))
-            aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), is_changed=Sum('change_count'))
+            aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), is_changed=Sum('change_count'), assessment_size=Sum('assessment_items__files__file_size'))
             return {
                 "total_count" : node.get_descendant_count(),
                 "resource_count" : descendants.exclude(kind=content_kinds.TOPIC).count(),
                 "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
-                "resource_size" : aggregated['resource_size'] or 0,
+                "resource_size" : (aggregated['resource_size'] or 0) + (aggregated['assessment_size'] or 0),
                 "has_changed_descendant" : aggregated['is_changed'] != 0
             }
         else:
+            assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+            resource_size = node.files.aggregate(resource_size=Sum('file_size'))['resource_size'] or 0
             return {
                 "total_count" : 1,
                 "resource_count" : 1,
                 "max_sort_order" : node.sort_order,
-                "resource_size" : node.files.aggregate(resource_size=Sum('file_size'))['resource_size'] or 0,
+                "resource_size" : assessment_size + resource_size,
                 "has_changed_descendant" : node.changed
             }
 
