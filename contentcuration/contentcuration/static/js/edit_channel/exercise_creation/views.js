@@ -164,7 +164,7 @@ var EditorView = Backbone.View.extend({
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
         _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save",
-                "render", "render_content", "parse_content", "replace_mathjax_with_svgs");
+                "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content");
         this.edit_key = options.edit_key;
         this.editing = false;
         this.render();
@@ -233,11 +233,12 @@ var EditorView = Backbone.View.extend({
             selector: this.cid,
             callbacks: {
                 onChange: _.debounce(this.save, 1),
+                onPaste: this.paste_content,
                 onImageUpload: this.add_image,
                 onAddFormula: this.add_formula
             }
         });
-        $('.dropdown-toggle').dropdown()
+        $('.dropdown-toggle').dropdown();
         this.editing = true;
         this.render_editor();
     },
@@ -263,6 +264,23 @@ var EditorView = Backbone.View.extend({
     validate: function(){
         this.$(".note-error").css("display", (this.markdown.trim())? "none" : "inline-block");
         return this.markdown;
+    },
+    paste_content: function(event){
+        var clipboard = (event.originalEvent || event).clipboardData || window.clipboardData;
+        var bufferText = clipboard.getData("Text");
+        var clipboardHtml = clipboard.getData('text/html');
+        if(clipboardHtml)
+            bufferText = this.convert_html_to_markdown(clipboardHtml);
+        event.preventDefault();
+        var self = this;
+        setTimeout(function () { // Firefox fix
+            document.execCommand('insertText', false, bufferText);
+            if(clipboardHtml){
+                self.save(self.editor.getContents());
+                self.editor.setHTML("");
+                self.render_editor();
+            }
+        }, 10);
     },
     add_image: function(file_id, filename, alt_text) {
         this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
@@ -350,11 +368,11 @@ var EditorView = Backbone.View.extend({
         var el = document.createElement( 'div' );
         el.innerHTML = contents;
         _.each(el.getElementsByTagName( 'svg' ), function(svg){
-            contents = contents.replace(svg.outerHTML, '\$\$' + svg.getAttribute('data-texstring') + '\$\$')
+            contents = contents.replace(svg.outerHTML, '\$\$' + svg.getAttribute('data-texstring') + '\$\$');
         });
 
         // Render content to markdown (use custom fiters for images and italics)
-        contents = toMarkdown(contents,{
+        return toMarkdown(contents,{
             converters: [
                 {
                     filter: 'img',
@@ -372,10 +390,17 @@ var EditorView = Backbone.View.extend({
                 {
                     filter: ['em', 'i'],
                     replacement: function (content) { return '*' + content + '*'; }
+                },
+                {
+                    filter: ['span'],
+                    replacement: function (content) {
+                        var div = document.createElement('div');
+                        div.innerHTML = content;
+                        return div.textContent;
+                    }
                 }
             ]
         });
-        return contents
     }
 });
 
@@ -702,7 +727,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
 
         // True/false questions will overwrite all answers
         if(new_type === "true_false"){
-            if(this.model.get("answers").length === 0 || confirm("Switching to true or false will remove any current answers. Continue?")){
+            if(this.model.get("answers").length || confirm("Switching to true or false will remove any current answers. Continue?")){
                 // new_type = "single_selection";
                 var trueFalseCollection = new Backbone.Collection();
                 trueFalseCollection.add([{answer: "True", correct: true, order: 1}, {answer: "False", correct: false, order: 2}]);
@@ -721,12 +746,14 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
             }else{ new_type = this.model.get('type'); } // Keep current type
         }
 
-        // Input questions will set all answers as being correct
-        else if(new_type === "input_question" && this.model.get("answers").where({'correct': false}).length > 0){
-            if(confirm("Switching to input answer will set all answers as correct. Continue?")){
-                this.model.get('answers').forEach(function(item){
-                    item.set('correct', true);
-                });
+        // Input questions will set all answers as being correct and remove non-numeric answers
+        else if(new_type === "input_question" && this.model.get("answers").some(function(a){ return a.get('correct') || isNaN(a.get('answer')); })){
+            if(confirm("Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?")){
+                this.model.set('answers', new Models.ContentNodeCollection(
+                    this.model.get('answers').chain()
+                        .reject( function(a){return isNaN(a.get('answer'));} )
+                        .each( function(a){ a.set('correct', true);} ).value()
+                ));
             }else{ new_type = this.model.get('type'); }  // Keep current type
         }
 

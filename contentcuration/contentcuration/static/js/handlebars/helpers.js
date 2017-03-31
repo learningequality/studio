@@ -110,7 +110,7 @@ Handlebars.registerHelper('format_question_type', function(type){
         case "true_false":
           return "True/False";
       case "input_question":
-          return "Input Answer";
+          return "Numeric Input";
       case "perseus_question":
           return "Perseus Question";
       default:
