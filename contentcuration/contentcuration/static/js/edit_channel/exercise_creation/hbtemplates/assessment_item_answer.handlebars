@@ -1,16 +1,15 @@
-<li class="list-group-item answer_item">
+<div class="answer_item {{#if allow_toggle}}toggle_answer{{/if}} {{#if answer.correct}}is_correct{{/if}}">
 	<div class="row">
-		<div class="col-sm-8">
-		  <div class="answer editable" data-ph="Answer">
-		  </div>
-		 </div>
-		 <div class="col-sm-2 text-center">
-		 	{{#unless input_answer}}
-		 		<input class="correct text-center" type={{#if single_selection}}"radio"{{else}}"checkbox"{{/if}} aria-label="Correct" {{#if answer.correct}}checked{{/if}} name="{{#if isdisplay}}display_{{/if}}answer_{{groupName}}" disabled>
-		 	{{/unless}}
-		 </div>
-	 	 <div class="col-sm-2">
-	 	     <div class="show_on_focus answer-toolbar pull-right"></div>
-	 	 </div>
-    </div>
-</li>
+		{{#unless input_answer}}
+		<div class="col-sm-1 text-center">
+		 		<input class="correct" type="{{#if single_selection}}radio{{else}}checkbox{{/if}}" aria-label="Correct" name="{{#if isdisplay}}display_{{/if}}answer_{{groupName}}" {{#unless allow_toggle}}disabled{{/unless}} {{#if answer.correct}}checked{{/if}} title="{{#if answer.correct}}Correct{{else}}Incorrect{{/if}}">
+		</div>
+		{{/unless}}
+		<div class="col-sm-{{#if input_answer}}10{{else}}9{{/if}} editor-col">
+			<div class="answer editable" data-ph="Answer"></div>
+		</div>
+		<div class="col-sm-2 answer_options">
+			<div class="show_on_focus answer-toolbar pull-right"></div>
+		</div>
+	</div>
+</div>

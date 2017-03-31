@@ -21,7 +21,7 @@
 				&nbsp;
 				{{#if isexercise}}
 					<span class="glyphicon glyphicon-check" aria-hidden="true"></span>
-					{{#format_count "Question" node.assessment_items.length}}{{/format_count}}
+					{{#format_count "Question" num_questions}}{{/format_count}}
 				{{else}}
 					<span class="glyphicon glyphicon-file" aria-hidden="true"></span>
 					{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}
@@ -31,7 +31,7 @@
 					<em class="unpublished">{{#if node.published}}Updated{{else}}New{{/if}}</em>
 				{{/if}}
 				{{#unless node.valid}}
-					<em class="invalid">No files attached</em>
+					<em class="invalid">Incomplete</em>
 				{{/unless}}
 			</span>
 		</h6>
