@@ -567,7 +567,8 @@ class ChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'view_only', 'published', 'pending_editors', 'editors', 'description', 'size', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'deleted')
+        fields = ('id', 'created', 'name', 'view_only', 'published', 'pending_editors', 'editors', 'viewers', 
+                'description', 'size', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'deleted')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

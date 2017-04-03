@@ -16,8 +16,8 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 	initialize: function(options) {
 		_.bindAll(this, 'new_channel');
 		this.bind_edit_functions();
-		this.render();
 		this.user = options.user;
+		this.render();
 	},
 	render: function() {
 		this.set_editing(false);
@@ -95,7 +95,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.thumbnail_url = this.original_thumbnail_url;
 		this.thumbnail = this.original_thumbnail;
 		this.originalData = (this.model)? this.model.toJSON() : null;
-		this.isViewOnly = this.model.get("viewers").indexOf(window.current_user.get("id")) >= 0;
+		this.isViewOnly = this.model.get("viewers").indexOf(window.current_user.id) >= 0;
 		this.render();
 		this.dropzone = null;
 		this.isNew = false;
