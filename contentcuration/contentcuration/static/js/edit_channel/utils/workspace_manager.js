@@ -52,6 +52,15 @@ function WorkspaceManager(){
 		return this.table[key].list;
 	};
 
+	this.remove = function(key){
+		var n = this.get(key);
+		if(n){
+			if(n.node){n.node.remove();}
+			if(n.list){n.list.close();}
+			this.put(key, null, null);
+		}
+	}
+
 	this.print_values = function(){
 		console.log(this.table);
 	};

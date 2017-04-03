@@ -21,7 +21,7 @@
 				&nbsp;
 				{{#if isexercise}}
 					<span class="glyphicon glyphicon-check" aria-hidden="true"></span>
-					{{#format_count "Question" node.assessment_items.length}}{{/format_count}}
+					{{#format_count "Question" num_questions}}{{/format_count}}
 				{{else}}
 					<span class="glyphicon glyphicon-file" aria-hidden="true"></span>
 					{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}
@@ -61,6 +61,7 @@
 		{{#if isfolder}}<div class="add_subtopic_item_button option">Add Subtopic</div>{{/if}}
 		<div class="edit_item_button option">Edit</div>
 		<div class="copy_item_button option">Copy</div>
+		<div class="move_item_button option">Move</div>
 		<div class="delete_item_button option">Delete</div>
 	</div>
 </div>
@@ -69,6 +70,7 @@
   	{{#if isfolder}}<div class="add_subtopic_item_button context-option">Add Subtopic</div>{{/if}}
 	<div class="edit_item_button context-option">Edit</div>
 	<div class="copy_item_button context-option">Copy</div>
+	<div class="move_item_button context-option">Move</div>
 	<div class="delete_item_button context-option">Delete</div>
 </nav>
 </div>

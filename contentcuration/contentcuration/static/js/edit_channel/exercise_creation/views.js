@@ -44,30 +44,20 @@ var AddFormulaView = Backbone.View.extend({
         "click #add_formula": "add_formula",
         "click .character_symbol": "add_character",
         "click .char_cmd": "add_format",
-        "click .mq-wrapper": "keep_open"
+        "click .mq-wrapper": "keep_open",
+        'keydown' : 'handle_escape'
     },
-    keep_open:function(event){ event.stopPropagation(); },
+
+    /*********** LOAD METHODS ***********/
     render: function() {
         this.$el.html(this.template({selector: this.selector, characters: CHARACTERS}));
         this.$('[data-toggle="popover"]').popover({html: true, content: this.$("#characters_" + this.selector)});
     },
-    add_character:function(event){
-        this.mathField.write(event.currentTarget.dataset.key);
-        this.close_dropdown();
-    },
-    add_format:function(event){
-        this.mathField.cmd(event.currentTarget.dataset.key);
-        this.close_dropdown();
-    },
-    close_dropdown:function(){
-        this.$('[data-toggle="popover"]').popover("hide");
-        this.mathField.focus();
-    },
     activate_mq: function(){
         // Load mathjax symbols and formats
         var MQ = MathQuill.getInterface(2);
-        this.parse_mathjax_characters(this.$(".character_format"), "#character_format_", MQ);
-        this.parse_mathjax_characters(this.$(".character_eqn"), "#character_eqn_", MQ);
+        this.parse_mathjax_characters(this.$("#characters_" + this.selector + " .character_format"), "#character_format_", MQ);
+        this.parse_mathjax_characters(this.$("#characters_" + this.selector + " .character_eqn"), "#character_eqn_", MQ);
 
         // Configure mathquill input field
         var self = this;
@@ -77,9 +67,33 @@ var AddFormulaView = Backbone.View.extend({
         });
     },
     parse_mathjax_characters:function(wrapper_el, id_prefix, MQ){
+        var self = this;
         _.each(wrapper_el, function(item, index){
-            MQ.StaticMath(this.$(id_prefix + index)[0]);
+            MQ.StaticMath(self.$(id_prefix + index)[0]);
         });
+    },
+
+    /*********** TOGGLE METHODS ***********/
+    keep_open:function(event){ event.stopPropagation(); },
+    handle_escape: function(event){
+        if (event.keyCode === 27 || event.which === 27){
+            event.stopPropagation();
+            $('.dropdown-toggle').dropdown("toggle");
+        }
+    },
+    close_dropdown:function(){
+        this.$('[data-toggle="popover"]').popover("hide");
+        this.mathField.focus();
+    },
+
+    /*********** FORMATTING METHODS ***********/
+    add_character:function(event){
+        this.mathField.write(event.currentTarget.dataset.key);
+        this.close_dropdown();
+    },
+    add_format:function(event){
+        this.mathField.cmd(event.currentTarget.dataset.key);
+        this.close_dropdown();
     },
     add_formula:function(){
         if(this.mathField.latex().trim()){
@@ -149,10 +163,11 @@ var EditorView = Backbone.View.extend({
 
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
-        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save",
-                "render", "render_content", "parse_content", "replace_mathjax_with_svgs");
+        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key",
+               "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content");
         this.edit_key = options.edit_key;
         this.editing = false;
+        this.numbersOnly = options.numbersOnly || false;
         this.render();
         this.markdown = this.model.get(this.edit_key);
         this.listenTo(this.model, "change:" + this.edit_key, this.render);
@@ -188,8 +203,14 @@ var EditorView = Backbone.View.extend({
             var html = self.view_template({content: result});
             self.editor ? self.editor.setHTML(html) : self.$el.html(html);
             self.toggle_loading(false);
+            self.render_toolbar();
             if(self.editor) self.editor.focus();
         });
+    },
+    render_toolbar:function(){
+        if(this.numbersOnly){
+            this.$(".note-style, .note-insert").css('display', 'none');
+        }
     },
     toggle_loading:function(isLoading){
         if(this.editor && this.editing){
@@ -218,12 +239,14 @@ var EditorView = Backbone.View.extend({
             shortcuts: false,
             selector: this.cid,
             callbacks: {
-                onChange: _.debounce(this.save, 100),
+                onChange: _.debounce(this.save, 1),
+                onPaste: this.paste_content,
                 onImageUpload: this.add_image,
-                onAddFormula: this.add_formula
+                onAddFormula: this.add_formula,
+                onKeydown: this.process_key
             }
         });
-        $('.dropdown-toggle').dropdown()
+        $('.dropdown-toggle').dropdown();
         this.editing = true;
         this.render_editor();
     },
@@ -250,6 +273,39 @@ var EditorView = Backbone.View.extend({
         this.$(".note-error").css("display", (this.markdown.trim())? "none" : "inline-block");
         return this.markdown;
     },
+    process_key: function(event){
+        if(this.numbersOnly){
+            var key = event.keyCode || event.which;
+            var allowedKeys = [46, 8, 9, 27, 32, 110, 37, 38, 39, 40, 109];
+            if(!this.check_key(String.fromCharCode(key), key) && !_.contains(allowedKeys, key) && !(event.ctrlKey || event.metaKey)){
+                event.preventDefault();
+            }
+        }
+    },
+    check_key: function(content, key){
+        var specialCharacterKeys = [188, 189, 190];
+        return !this.numbersOnly || /[0-9\,\.\-]+/g.test(content) || _.contains(specialCharacterKeys, key);
+    },
+    paste_content: function(event){
+        var clipboard = (event.originalEvent || event).clipboardData || window.clipboardData;
+        event.preventDefault();
+        var bufferText = clipboard.getData("Text");
+        var clipboardHtml = clipboard.getData('text/html');
+        if(clipboardHtml)
+            bufferText = this.convert_html_to_markdown(clipboardHtml);
+        var self = this;
+        setTimeout(function () { // Firefox fix
+            console.log(!self.numbersOnly || !isNaN(bufferText), bufferText)
+            if(!self.numbersOnly || self.check_key(bufferText)){
+                document.execCommand('insertText', false, bufferText);
+                if(clipboardHtml){
+                    self.save(self.editor.getContents());
+                    self.editor.setHTML("");
+                    self.render_editor();
+                }
+            }
+        }, 10);
+    },
     add_image: function(file_id, filename, alt_text) {
         this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
         alt_text = alt_text || "";
@@ -267,6 +323,7 @@ var EditorView = Backbone.View.extend({
             var paragraphs = div.getElementsByTagName('p');
             if(paragraphs.length){
                 paragraphs[paragraphs.length - 1].appendChild(svg);
+                paragraphs[paragraphs.length - 1].innerHTML += '&nbsp;';
                 updatedHtml = div.innerHTML;
             }
             self.editor.setHTML(updatedHtml)
@@ -335,11 +392,11 @@ var EditorView = Backbone.View.extend({
         var el = document.createElement( 'div' );
         el.innerHTML = contents;
         _.each(el.getElementsByTagName( 'svg' ), function(svg){
-            contents = contents.replace(svg.outerHTML, '\$\$' + svg.getAttribute('data-texstring') + '\$\$')
+            contents = contents.replace(svg.outerHTML, '\$\$' + svg.getAttribute('data-texstring') + '\$\$');
         });
 
         // Render content to markdown (use custom fiters for images and italics)
-        contents = toMarkdown(contents,{
+        return toMarkdown(contents,{
             converters: [
                 {
                     filter: 'img',
@@ -357,10 +414,17 @@ var EditorView = Backbone.View.extend({
                 {
                     filter: ['em', 'i'],
                     replacement: function (content) { return '*' + content + '*'; }
+                },
+                {
+                    filter: ['span'],
+                    replacement: function (content) {
+                        var div = document.createElement('div');
+                        div.innerHTML = content;
+                        return div.textContent;
+                    }
                 }
             ]
         });
-        return contents
     }
 });
 
@@ -437,11 +501,12 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
     undo: null,                     // Keep track of changes so user can cancel all changes
     open: false,                    // Determines if editor is open
     error_template: require("./hbtemplates/assessment_item_errors.handlebars"),
+    numbers_only: function() {return false;},
 
     /*********** EDITOR METHODS ***********/
     render_editor: function(){
         if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: this.content_field});
+            this.editor_view = new EditorView({model: this.model, edit_key: this.content_field, numbersOnly:this.numbers_only()});
         }
         this.$(this.editor_el).html(this.editor_view.el);
         this.listenTo(this.model, "change:" + this.content_field, this.propagate_changes)
@@ -566,7 +631,7 @@ var ExerciseView = ExerciseEditableListView.extend({
 
     /*********** CONTENT PROCESSING METHODS ***********/
     validate: function(){
-        return _.filter(this.views, function(view){return !view.validate();}).length === 0;
+        return _.every(this.views, function(view){return view.validate();});
     },
     propagate_changes:function(){
         this.onchange(this.collection.toJSON());
@@ -687,8 +752,8 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
 
         // True/false questions will overwrite all answers
         if(new_type === "true_false"){
-            if(this.model.get("answers").length === 0 || confirm("Switching to true or false will remove any current answers. Continue?")){
-                new_type = "single_selection";
+            if(this.model.get("answers").length || confirm("Switching to true or false will remove any current answers. Continue?")){
+                // new_type = "single_selection";
                 var trueFalseCollection = new Backbone.Collection();
                 trueFalseCollection.add([{answer: "True", correct: true, order: 1}, {answer: "False", correct: false, order: 2}]);
                 this.model.set("answers", trueFalseCollection);
@@ -706,12 +771,14 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
             }else{ new_type = this.model.get('type'); } // Keep current type
         }
 
-        // Input questions will set all answers as being correct
-        else if(new_type === "input_question" && this.model.get("answers").where({'correct': false}).length > 0){
-            if(confirm("Switching to input answer will set all answers as correct. Continue?")){
-                this.model.get('answers').forEach(function(item){
-                    item.set('correct', true);
-                });
+        // Input questions will set all answers as being correct and remove non-numeric answers
+        else if(new_type === "input_question" && this.model.get("answers").some(function(a){ return a.get('correct') || isNaN(a.get('answer')); })){
+            if(confirm("Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?")){
+                this.model.set('answers', new Models.ContentNodeCollection(
+                    this.model.get('answers').chain()
+                        .reject( function(a){return isNaN(a.get('answer'));} )
+                        .each( function(a){ a.set('correct', true);} ).value()
+                ));
             }else{ new_type = this.model.get('type'); }  // Keep current type
         }
 
@@ -758,7 +825,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         // Make sure different question types have valid answers
         if(this.model.get("type") === "input_question"){
             // Answers must be numeric for input questions
-            if(this.model.get('answers').filter(function(a){ return isNaN(a.get('answer'));}).length > 0)
+            if(this.model.get('answers').some(function(a){ return isNaN(a.get('answer'));}))
                 this.errors.push({error: "Answers must be numeric"});
 
             // Input answers must have at least one answer
@@ -862,7 +929,11 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     template: require("./hbtemplates/assessment_item_answer_list.handlebars"),
 
     get_default_attributes: function() {
-        return {order: this.get_next_order(), answer: "", correct: this.assessment_item.get('type') === "input_question"};
+        return {
+            order: this.get_next_order(),
+            answer: this.assessment_item.get('type') === "input_question"? "0" : "",
+            correct: this.assessment_item.get('type') === "input_question"
+        };
     },
     initialize: function(options) {
         _.bindAll(this, "render", "add_item", "add_item_view");
@@ -878,7 +949,8 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     render: function() {
         this.$el.html(this.template({
             input_answer: this.assessment_item.get("type") === "input_question",
-            isdisplay: this.isdisplay
+            isdisplay: this.isdisplay,
+            true_false: this.assessment_item.get("type") === "true_false"
         }));
         this.load_content(this.collection, "No answers provided.");
         this.$(".addanswer").on('click', this.add_item);
@@ -931,17 +1003,22 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
     render: function() {
         this.$el.html(this.template({
             answer: this.model.toJSON(),
-            input_answer: this.assessment_item.get("type") === "input_question",
-            single_selection: this.assessment_item.get("type") === "single_selection",
+            input_answer: this.numbers_only(),
+            single_selection: this.is_single_correct(),
             groupName: this.assessment_item.cid,
+            allow_edit: !this.isdisplay && this.assessment_item.get("type") !== "true_false",
             allow_toggle: !this.isdisplay
         }));
         this.render_editor();
         _.defer(this.set_editor);
     },
+    numbers_only: function() {return this.assessment_item.get('type') === 'input_question';},
+    is_single_correct: function(){
+        return this.assessment_item.get("type") === "single_selection" || this.assessment_item.get("type") === "true_false";
+    },
     toggle_correct: function(event) {
         event.stopPropagation();
-        if(this.assessment_item.get("type") === "single_selection"){
+        if(this.is_single_correct()){
             this.containing_list_view.set_all_correct(false);
         }
         this.set_correct(this.$(".correct").prop("checked"));
