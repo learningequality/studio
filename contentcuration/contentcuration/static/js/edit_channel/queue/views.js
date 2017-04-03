@@ -122,7 +122,7 @@ var ClipboardList = QueueList.extend({
 	list_wrapper_selector: "#clipboard-queue",
 
 	initialize: function(options) {
-		_.bindAll(this, 'delete_items', 'create_new_view', 'edit_items', 'handle_drop');
+		_.bindAll(this, 'delete_items', 'create_new_view', 'edit_items', 'handle_drop', 'move_items');
 		this.bind_queue_list_functions();
 		this.collection = options.collection;
 		this.container = options.container;
@@ -161,9 +161,11 @@ var ClipboardList = QueueList.extend({
 		'change .select_all' : 'check_all',
 		'click .delete_items' : 'delete_items',
 		'click .edit_items' : 'edit_items',
+		'click .move_items' : 'move_items',
 		'click .create_new_content' : 'add_topic',
 		'click .upload_files_button': 'add_files',
-		'click .import_content' : 'import_content'
+		'click .import_content' : 'import_content',
+		'click .create_exercise_button' : 'add_exercise'
 	},
 	delete_items:function(){
 		var self = this;
@@ -179,6 +181,9 @@ var ClipboardList = QueueList.extend({
 	edit_items:function(){
 		this.container.edit_selected();
 	},
+	move_items:function(){
+		this.container.move_content();
+	}
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
 	// handle_drop:function(collection){
 	// 	this.$(this.default_item).css("display", "none");

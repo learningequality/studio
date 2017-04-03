@@ -16,7 +16,7 @@ from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField
+from django.db.models import Q, Case, When, Value, IntegerField, Max
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
@@ -24,11 +24,12 @@ from contentcuration.api import write_file_to_storage, check_supported_browsers
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
 from django.core.cache import cache
-from le_utils.constants import format_presets, content_kinds, file_formats
+from le_utils.constants import format_presets, content_kinds, file_formats, exercises
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from pressurecooker.videos import guess_video_preset_by_resolution, extract_thumbnail_from_video, compress_video
+from pressurecooker.encodings import write_base64_to_file
 from django.core.cache import cache
 
 def base(request):
@@ -262,13 +263,14 @@ def thumbnail_upload(request):
 def exercise_image_upload(request):
 
     if request.method == 'POST':
-        node = ContentNode.objects.get(id=request.META.get('HTTP_NODE'))
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1] # gets file extension without leading period
-        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), contentnode=node)
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:] # gets file extension without leading period
+        file_object = File(preset_id=format_presets.EXERCISE_IMAGE, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
-            "filename": file_object.file_on_disk.url,
+            "filename": exercises.CONTENT_STORAGE_FORMAT.format(str(file_object)),
+            "file_id": file_object.pk,
+            "filepath": generate_storage_url(str(file_object)),
         }))
 
 def duplicate_nodes(request):
@@ -371,20 +373,24 @@ def move_nodes(request):
             nodes = data["nodes"]
             target_parent = ContentNode.objects.get(pk=data["target_parent"])
             channel_id = data["channel_id"]
+            min_order = data.get("min_order") or 0
+            max_order = data.get("max_order") or min_order + len(nodes)
+
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
+        all_ids = []
         with transaction.atomic():
             for n in nodes:
+                min_order = min_order + float(max_order - min_order) / 2
                 node = ContentNode.objects.get(pk=n['id'])
-                _move_node(node, parent=target_parent, sort_order=n['sort_order'], channel_id=channel_id)
+                _move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
+                all_ids.append(n['id'])
 
-        return HttpResponse(json.dumps({
-            "success": True,
-            "nodes": [n['id'] for n in nodes]
-        }))
+        serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=all_ids), many=True).data
+        return HttpResponse(JSONRenderer().render(serialized))
 
-def _move_node(node, parent=None, sort_order=1, channel_id=None):
+def _move_node(node, parent=None, sort_order=None, channel_id=None):
     node.parent = parent
     node.sort_order = sort_order
     node.changed = True
@@ -394,10 +400,7 @@ def _move_node(node, parent=None, sort_order=1, channel_id=None):
     for tag in ContentTag.objects.filter(tagged_content__in=descendants).distinct():
         # If moving from another channel
         if tag.channel_id != channel_id:
-            t, is_new = ContentTag.objects.get_or_create(
-                tag_name=tag.tag_name,
-                channel_id=channel_id,
-            )
+            t, is_new = ContentTag.objects.get_or_create(tag_name=tag.tag_name, channel_id=channel_id)
 
             # Set descendants with this tag to correct tag
             for n in descendants.filter(tags=tag):
@@ -433,3 +436,8 @@ def accessible_channels(request):
                         .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))\
                         .exclude(pk=data["channel_id"]).values_list('main_tree_id', flat=True))
         return HttpResponse(JSONRenderer().render(RootNodeSerializer(accessible_list, many=True).data))
+
+def get_nodes_by_ids(request):
+    if request.method == 'POST':
+        nodes = ContentNode.objects.filter(pk__in=json.loads(request.body))
+        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))

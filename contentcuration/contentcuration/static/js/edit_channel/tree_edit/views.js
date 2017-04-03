@@ -16,7 +16,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	lists: [],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container','toggle_details', 'handle_checked');
+		_.bindAll(this, 'copy_content','delete_content' , 'add_container','toggle_details', 'handle_checked', 'open_archive', 'move_content');
 		this.bind_workspace_functions();
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
@@ -29,7 +29,9 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		'click .edit_button' : 'edit_selected',
 		'click #hide_details_checkbox' :'toggle_details',
 		'change input[type=checkbox]' : 'handle_checked',
-		'click .permissions_button' : 'edit_permissions'
+		'click .permissions_button' : 'edit_permissions',
+		'click .archive_button' : 'open_archive',
+		'click .move_button' : 'move_content'
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -230,6 +232,9 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		this.current_node = view.model.id;
 		return this.container.add_container(this.index, view.model, view);
 	},
+	close: function(){
+		this.close_container();
+	},
   /* Resets folders to initial state */
 	close_folders:function(){
 		this.$el.find("." + this.openedFolderClass).removeClass(this.openedFolderClass);
@@ -271,7 +276,6 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 // reject (function): function to call if failed to render
 var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	template: require("./hbtemplates/content_list_item.handlebars"),
-	options_template:require("./hbtemplates/content_list_item_options.handlebars"),
 	selectedClass: "content-selected",
 	openedFolderClass: "current_topic",
 	'id': function() {
@@ -279,11 +283,12 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'add_new_subtopic', 'open_context_menu', 'toggle_description');
+		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'move_node',
+				'add_new_subtopic', 'open_context_menu', 'toggle_description');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
-		this.expanded=false;
+		this.expanded = false;
 		this.render();
 		this.isSelected = false;
 		this.listenTo(this.model, 'change:metadata', this.render);
@@ -297,7 +302,8 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			checked: this.checked,
 			isexercise: this.model.get("kind") === "exercise",
 			description_first: description[0],
-			description_overflow: description[1]
+			description_overflow: description[1],
+			num_questions: _.where(this.model.get('assessment_items'), {'deleted': false}).length
 		}));
 		this.handle_checked();
 		if(this.isSelected){
@@ -348,6 +354,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'change input[type=checkbox]': 'handle_checked',
 		'click .delete_item_button' : 'delete_node',
 		'click .copy_item_button': 'copy_node',
+		'click .move_item_button': 'move_node',
 		'click .add_subtopic_item_button': 'add_new_subtopic',
 		'contextmenu .list_item_wrapper' : 'open_context_menu',
 		'click .toggle_description' : 'toggle_description'
@@ -391,6 +398,10 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	copy_node:function(event){
 		this.cancel_actions(event);
 		this.copy_item();
+	},
+	move_node:function(event){
+		this.cancel_actions(event);
+		this.open_move();
 	},
 	delete_node:function(event){
 		this.cancel_actions(event);

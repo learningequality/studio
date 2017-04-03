@@ -24,43 +24,95 @@ var PreviewModalView = BaseViews.BaseModalView.extend({
 var PreviewView = BaseViews.BaseView.extend({
     tabs_template: require("./hbtemplates/preview_templates/tabs.handlebars"),
     template: require("./hbtemplates/preview_dialog.handlebars"),
-    current_preview:null,
     initialize: function(options) {
-        _.bindAll(this, 'set_preview','toggle_fullscreen', 'load_preview', 'exit_fullscreen');
-        this.presets = new Models.FormatPresetCollection();
-        this.questions = new Models.AssessmentItemCollection();
+        _.bindAll(this, 'select_preview','toggle_fullscreen', 'load_preview', 'exit_fullscreen', 'render_preview');
+        this.current_preview = null;
         this.render();
     },
     events: {
-        'click .preview_btn_tab' : 'set_preview',
+        'click .preview_btn_tab' : 'select_preview',
         'click .view_fullscreen': 'toggle_fullscreen'
     },
     render: function() {
+        this.load_preview();
         this.$el.html(this.template({
-            node: (this.model)? this.model.toJSON() : null,
-            file: this.current_preview,
-            selected_preset: (this.current_preview) ?  window.formatpresets.get(this.current_preview.preset).toJSON() : null,
+            file: this.current_preview
         }));
+        this.load_preset_dropdown();
+        this.render_preview();
+    },
+    render_preview:function(){
+        if(this.current_preview){
+            if (this.current_preview.preset && this.current_preview.preset.readable_name){
+                this.$(".preview_format_switch").text(this.current_preview.preset.readable_name);
+            }else{
+                this.$(".preview_format_switch").text("Q: " + this.parse_question(this.current_preview.question));
+            }
+            this.generate_preview(true);
+        }
+    },
+    parse_question:function(question){
+        question = question || "";
+        return question.replace(/\$\$([^\$]+)\$\$/g, '[Formula]').replace(/!\[([^\]]*)\]\(([^\)]+)\)/g, '[Image]');
+    },
+    load_preview:function(){
+        if(this.model){
+            this.load_default_value();
+            this.load_preset_dropdown();
+        }
+    },
+    load_default_value:function(){
+        var default_preview = (this.model.get('kind')==="exercise") ?
+            _.min(this.model.get("assessment_items"), function(item){return item.order;}) :
+            _.min(this.model.get("files"), function(file){return file.preset.order});
+        this.current_preview = default_preview;
+    },
+    load_presets:function(){
+        return new Models.FormatPresetCollection(_.where(_.pluck(this.model.get("files"), "preset"), {'display': true}));
+    },
+    load_questions:function(){
+        var self = this;
+        return new Models.AssessmentItemCollection(
+            _.chain(this.model.get("assessment_items")).clone()
+                .filter(function(item){return !item['deleted'];})
+                .map(function(item){ return {type: item.type, question: self.parse_question(item.question)}; }).value()
+        );
     },
     load_preset_dropdown:function(){
-        this.presets.sort_by_order();
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
-             presets: this.presets.toJSON(),
-             questions: this.questions.toJSON()
+             presets: this.load_presets().toJSON(),
+             questions: this.load_questions().toJSON()
         }));
+    },
+
+    select_preview:function(event){
+        // called internally
+        var selected_preview = ($(event.target).hasClass('preview_file'))?
+            _.find(this.model.get('files'), function(file){ return file.preset.id === event.target.getAttribute('value'); }) :
+            this.model.get('assessment_items')[event.target.value];
+        this.current_preview = selected_preview;
+        this.render_preview();
+    },
+    switch_preview:function(model){
+        // called from outside sources
+        this.model = model;
+        this.render();
     },
 
     generate_preview:function(force_load){
         if(this.current_preview){
-            if(this.current_preview.assessment_id){
+            if(this.current_preview.question !== null && this.current_preview.question !== undefined){
                 var ExerciseView = require("edit_channel/exercise_creation/views");
                 var assessment_item = new Models.AssessmentItemModel(this.current_preview);
-                var exercise_item = new ExerciseView.AssessmentItemDisplayView({
+                if(this.exercise_item){
+                    this.exercise_item.remove();
+                }
+                this.exercise_item = new ExerciseView.AssessmentItemDisplayView({
                     model: assessment_item,
                     containing_list_view : null,
                     nodeid:(this.model)? this.model.get('id') : null,
-                    el: this.$("#preview_window")
                 });
+                this.$("#preview_window").html(this.exercise_item.el);
             }else{
                 extension = this.current_preview.file_format;
 
@@ -116,82 +168,6 @@ var PreviewView = BaseViews.BaseView.extend({
             }
         });
         return subtitles;
-    },
-    load_preview:function(){
-        if(this.model){
-            this.switch_preview(this.model);
-        }
-    },
-    set_preview:function(event){
-        // called internally
-        this.load_preview_data(event.target.getAttribute("value"));
-        this.generate_preview(true);
-    },
-    switch_preview:function(model){
-        // called from outside sources
-        this.model = model;
-        if(this.model && this.model.get("kind")!=="topic"){
-            var self = this;
-            this.presets.reset();
-            var default_preview = this.load_preview_data(null);
-            this.set_current_preview(default_preview);
-            this.generate_preview(true);
-        }
-    },
-
-    load_preview_data:function(load_selected_value){
-        var self = this;
-        var return_data = null;
-        this.model.get("files").forEach(function(file){
-            var preset_id = (file.attributes)? file.get("preset") : (file.preset && file.preset.id)? file.preset.id : file.preset;
-            var current_preset = window.formatpresets.get({id:preset_id});
-            if(current_preset && current_preset.get("display")){
-                if (load_selected_value){
-                    var data = (file.attributes)? file.attributes : file;
-                    var preset_check = (data.preset.id)? data.preset.id : data.preset;
-                    if(preset_check === load_selected_value){
-                        self.set_current_preview(data);
-                        return self.current_preview;
-                    }
-                }else{
-                    if(!return_data || current_preset.get("order") < return_data.preset.order){
-                        return_data = file;
-                    }
-                    self.presets.add(current_preset);
-                }
-            }
-        });
-        this.model.get("assessment_items").forEach(function(item){
-            var current_assessment = new Models.AssessmentItemModel(item);
-            if (load_selected_value){
-                if(current_assessment.get('assessment_id') === load_selected_value){
-                    self.set_current_preview(current_assessment);
-                    return self.current_preview;
-                }
-            }else{
-                if(!return_data || current_assessment.get("order") === 1){
-                    return_data = item;
-                }
-                self.questions.add(current_assessment);
-            }
-        });
-        this.load_preset_dropdown();
-        return return_data;
-    },
-
-    set_current_preview:function(file){
-        if(file){
-            this.current_preview = file;
-            if(this.current_preview.attributes){
-                this.current_preview = this.current_preview.toJSON();
-            }
-            if (this.current_preview.preset){
-                $("#preview_format_switch").text(this.presets.get(this.current_preview.preset).get("readable_name"));
-            }else{
-                $("#preview_format_switch").text("Question " + this.current_preview.order);
-            }
-
-        }
     },
     toggle_fullscreen:function(){
         var elem = document.getElementById("preview_content_main");

@@ -6,7 +6,7 @@
         <h4 class="modal-title truncate">
           {{#if new_content}}
             <span class="glyphicon glyphicon-plus pull-left" aria-hidden="true"></span>
-            Adding Topics to {{title}}
+            Adding {{#if new_topic}}Topics{{else}}Exercise{{/if}} to {{title}}
           {{else}}
             <span class="glyphicon glyphicon-pencil pull-left" aria-hidden="true"></span>
             Editing Content Details
