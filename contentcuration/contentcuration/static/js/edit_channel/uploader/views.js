@@ -127,9 +127,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1;
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
-    var has_files = is_individual && selected_items[0].model.get("files").find(function(f){
-      return window.formatpresets.get({id:(f.preset.id)? f.preset.id:f.preset}).get("display");
-    });
+    var has_files = is_individual && (selected_items[0].model.get("assessment_items").length ||
+                    selected_items[0].model.get("files").find(function(f){
+                      return window.formatpresets.get({id:(f.preset.id)? f.preset.id:f.preset}).get("display");
+                    }));
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
     if(!is_individual){
@@ -776,7 +777,8 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   handle_assessment_items:function(data){
     this.model.set('assessment_items', data);
-    this.set_edited(true);
+    // this.set_edited(true);
+    this.handle_change(false);
   },
   handle_change:function(is_file){
     this.set_edited(true);

@@ -1,4 +1,4 @@
-<div class="answer_item {{#if allow_toggle}}toggle_answer{{/if}} {{#if answer.correct}}is_correct{{/if}}">
+<div class="answer_item {{#if allow_edit}}toggle_answer{{/if}} {{#if answer.correct}}is_correct{{/if}}">
 	<div class="row">
 		{{#unless input_answer}}
 		<div class="col-sm-1 text-center">
@@ -9,7 +9,7 @@
 			<div class="answer editable" data-ph="Answer"></div>
 		</div>
 		<div class="col-sm-2 answer_options">
-			<div class="show_on_focus answer-toolbar pull-right"></div>
+			{{#if allow_edit}}<div class="show_on_focus answer-toolbar pull-right"></div>{{/if}}
 		</div>
 	</div>
 </div>

@@ -74,6 +74,15 @@
 .modal-dialog{
 	width: @uploader-width;
 	margin-top:5%;
+
+	.empty_default{
+		margin-top:20%;
+		text-align: center;
+		color:@gray-400;
+		font-size:14pt;
+		font-weight:bold;
+		font-style:italic;
+	}
 }
 
 
@@ -156,9 +165,10 @@ video::-webkit-media-controls-fullscreen-button {
 	width:100%;
 }
 
-#preview_format_switch{
+.preview_format_switch{
 	font-size:11pt;
 	width:100%;
+	max-height:35px;
 }
 #preview_window{
 	min-height: 300px;

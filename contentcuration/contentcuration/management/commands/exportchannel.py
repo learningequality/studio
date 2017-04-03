@@ -128,8 +128,9 @@ def map_content_nodes(root_node):
 
                 kolibrinode = create_bare_contentnode(node)
 
-                if node.kind.kind == content_kinds.EXERCISE and (node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists()):
-                    create_perseus_exercise(node, kolibrinode)
+                if node.kind.kind == content_kinds.EXERCISE:
+                    if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
+                        create_perseus_exercise(node, kolibrinode)
                 if node.kind.kind != content_kinds.TOPIC:
                     create_associated_file_objects(kolibrinode, node)
                 map_tags_to_node(kolibrinode, node)
@@ -264,7 +265,7 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
 
             for question in ccnode.assessment_items.all().order_by('order'):
                 for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE).order_by('checksum'):
-                    image_name = "images/{0}.{ext}".format(image.checksum, ext=image.file_format_id)
+                    image_name = "images/{}.{}".format(image.checksum, image.file_format_id)
                     if image_name not in zf.namelist():
                         image.file_on_disk.open(mode="rb")
                         write_to_zipfile(image_name, image.file_on_disk.read(), zf)
@@ -297,7 +298,7 @@ def write_assessment_item(assessment_item, zf):
         template=''
         if assessment_item.type == exercises.MULTIPLE_SELECTION:
             template = 'perseus/multiple_selection.json'
-        elif assessment_item.type == exercises.SINGLE_SELECTION:
+        elif assessment_item.type == exercises.SINGLE_SELECTION or assessment_item.type == 'true_false':
             template = 'perseus/multiple_selection.json'
         elif assessment_item.type == exercises.INPUT_QUESTION:
             template = 'perseus/input_question.json'
