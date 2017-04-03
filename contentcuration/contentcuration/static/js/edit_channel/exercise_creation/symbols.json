@@ -5,7 +5,7 @@
 		{"key": "\\underline", "preview": "\\underline{abc}", "title": "Underline"},
 		{"key": "\\overleftarrow", "preview": "\\overleftarrow{abc}", "title": "Left arrow"},
 		{"key": "\\overrightarrow", "preview": "\\overrightarrow{abc}", "title": "Right arrow"},
-		{"key": "\\vec", "preview": "\\vec{v}", "title": "Vector"},
+		{"key": "\\vec", "preview": "\\vec{v}", "title": "Vector"}
 	],
 	"equations":[
 		{"key": "^", "preview": "{a}^{b}", "title": "Superscript"},
@@ -61,7 +61,7 @@
 				{"key": "\\infty","symbol": "∞","title": "Infinity"},
 				{"key": "\\top","symbol": "⊤","title": "Top element"},
 				{"key": "\\prec","symbol": "≺","title": "Reducible to"},
-				{"key": "\\succ","symbol": "≻","title": "Nondominated by"},
+				{"key": "\\succ","symbol": "≻","title": "Nondominated by"}
 			]
 		},
 		{

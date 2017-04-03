@@ -16,7 +16,6 @@
                         {
                             "correct": {% if answer.correct %}true{% else %}false{% endif %},
                             "content": "{{ answer.answer | jsonify   }}"
-
                         }{% if forloop.last %}{% else %},{% endif %}
                     {% endfor %}],
                     "randomize": {% if randomize %}true{% else %}false{% endif %},
