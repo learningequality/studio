@@ -1,22 +1,25 @@
 {% load perseus_tags %}{% autoescape off %}{
     "question": {
-        "content": "{{ question | jsonify }}\n\n[[☃ radio 1]]",
-        "images": {},
+        "content": "{{ question | jsonify   }}\n\n[[☃ radio 1]]",
+        "images": {{% for image in question_images %}
+            "{{ image.name }}": {
+                "width": {{ image.width }},
+                "height": {{ image.height }}
+            }{% if forloop.last %}{% else %},{% endif %}
+        {% endfor %}},
         "widgets": {
             "radio 1": {
                 "type": "radio",
                 "graded": true,
                 "options": {
-                    "choices": [
-                        {% for answer in answers %}
+                    "choices": [{% for answer in answers %}
                         {
                             "correct": {% if answer.correct %}true{% else %}false{% endif %},
-                            "content": "{{ answer.answer | jsonify }}"
+                            "content": "{{ answer.answer | jsonify   }}"
                         }{% if forloop.last %}{% else %},{% endif %}
-                        {% endfor %}
-                    ],
+                    {% endfor %}],
                     "randomize": {% if randomize %}true{% else %}false{% endif %},
-                    "multipleSelect": {% if multipleSelect %}true{% else %}false{% endif %},
+                    "multipleSelect": {% if multiple_select %}true{% else %}false{% endif %},
                     "displayCount": null,
                     "hasNoneOfTheAbove": false,
                     "onePerLine": true,
@@ -43,15 +46,18 @@
         "major": 0,
         "minor": 1
     },
-    "hints": [
-        {% for hint in hints %}
+    "hints": [{% for hint in hints %}
         {
             "widgets":{},
-            "images":{},
-            "content":"{{hint.hint | jsonify}}",
+            "images":{{% for image in hint.images %}
+                "{{ image.name }}": {
+                    "width": {{ image.width }},
+                    "height": {{ image.height }}
+                }{% if forloop.last %}{% else %},{% endif %}
+            {% endfor %}},
+            "content":"{{hint.hint | jsonify  }}",
             "replace":false
         }{% if forloop.last %}{% else %},{% endif %}
-        {% endfor %}
-    ]
+    {% endfor %}]
 }
 {% endautoescape %}
