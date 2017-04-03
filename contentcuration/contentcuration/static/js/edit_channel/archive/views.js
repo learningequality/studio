@@ -232,6 +232,7 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         this.model.set(model.attributes);
         this.load_folder_toggle();
         this.update_count();
+        this.check_item(false);
     },
     load_folder_toggle:function(){
         if(this.model.get("kind")==="topic"){

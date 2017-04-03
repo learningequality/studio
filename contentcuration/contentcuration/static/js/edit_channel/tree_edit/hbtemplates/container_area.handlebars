@@ -25,7 +25,7 @@
 		{{#if edit}}
 		<div class="nav-button-container">
 				<div class="nav-button archive_button disable-on-edit"><span class="glyphicon glyphicon-trash"></span></div>
-				<a class="nav-label permissions_button disable-on-edit">Archive</a>
+				<a class="nav-label permissions_button disable-on-edit">Archives</a>
 			</div>
 			<div class="nav-button-container">
 				<div class="nav-button permissions_button disable-on-edit"><span class="glyphicon glyphicon-user"></span></div>
@@ -37,11 +37,7 @@
 			<label for="hide_details_checkbox">Hide details</label>
 		</div>
 	</nav>
-
 	<div id="container-wrapper">
-		{{#if is_clipboard}}
-			<h1 id="clipboard_header">{{channel.name}} Clipboard</h1>
-		{{/if}}
 		<ul id="container_area" class="list-unstyled">
 		</ul>
 	</div>
