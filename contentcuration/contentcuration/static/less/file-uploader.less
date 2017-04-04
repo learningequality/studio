@@ -4,12 +4,10 @@
 #file_upload_modal{
     padding:20px;
     min-height: @uploader-height;
-    #file_upload_buttons{
-        margin-bottom:15px;
-    }
+    #file_upload_buttons{ margin-bottom:15px; }
     #file_upload_list_wrapper{
         #dropzone {
-            margin-top:20px;
+            margin-top:25px;
             min-height: 400px;
             width:100%;
             margin-bottom:20px;
@@ -18,17 +16,15 @@
                 height:400px;
                 border:5px solid @blue-500;
                 color:@blue-500;
-                text-align: center;
                 padding-top:20%;
                 padding-bottom:20%;
                 font-size:12pt;
-            }
-            .default-item:hover{
-                background:rgba(187,222,251,0.4);
+                &:hover{ background:rgba(187,222,251,0.4); }
             }
         }
         #show_uploading_wrapper{
             margin:0px 10px 30px 20px;
+            cursor: pointer;
             #show_uploading{ width:20px; height:20px; }
             label{ font-size:12pt; padding-left:5px; }
         }
@@ -51,69 +47,26 @@
                 padding-bottom:20%;
                 font-size:12pt;
             }
-            .format_item_wrapper{
-                margin: 0px 30px 35px 30px;
-                padding: 10px;
-                border: 1px solid @gray-300;
-            }
-            .format_item{
+            .file_dropzone_contents, .format_item{ margin: 0px 30px 35px 30px; }
+            .file_dropzone_contents{
+                .name{ font-size:14pt; }
+                .name, .error{ overflow:hidden; width:100%; }
+                .error{ color:@red-error-color; }
+                .size{
+                    font-size:12pt;
+                    color:gray;
+                    font-weight:normal;
+                    font-style:italic;
+                }
                 .dropzone_remove{
                     display:none;
                     color:@red-error-color;
                     cursor:pointer;
                 }
-                .preview_section{
-                    .data-dz-thumbnail{
-                        width:auto;
-                        min-height:70px;
-                        display:block;
-                    }
-                    .progress_file_area{
-                        margin-top: 10px;
-                        width:100%;
-                        display:block;
-
-                        .file_upload_progress{
-                            width:90%;
-                            height:10px;
-                        }
-
-                        .progress-bar-success {
-                            background: @blue-200;
-                        }
-
-                        .upload_option{
-                            color: @blue-200;
-                        }
-
-                        .upload_cancel{
-                            cursor:pointer;
-                        }
-                    }
-                }
-                .format_section{
-                    &.format_metadata_section{ padding-left: 30px; }
-                    .name, .error{ overflow:hidden; width:100%; }
-                    .error{ color:@red-error-color; }
-                    .name{ font-size:14pt; }
-                    .size{
-                        font-size:12pt;
-                        color:gray;
-                        font-weight:normal;
-                        font-style:italic;
-                    }
-                    .name_content_input{ 
-                        padding:2px 5px;
-                        border:1px solid @gray-400;
-                        width:100%;
-                        margin-bottom: 10px;
-                        font-size:14pt;
-                    }
-                }
-
-                .remove_from_dz{
-                    cursor:pointer;
-                    font-size:14pt;
+                .preview_section .data-dz-thumbnail{
+                    width:auto;
+                    min-height:70px;
+                    display:block;
                 }
             }
         }
@@ -121,13 +74,28 @@
 }
 
 .format_item{
+    padding: 10px;
+    border: 1px solid @gray-300;
     .thumbnail_img{
         width:130px;
         height:130px;
         object-fit: cover;
     }
+    .format_section{
+        &.format_metadata_section{ padding-left: 30px; }
+        .name_content_input{ 
+            padding:2px 5px;
+            border:1px solid @gray-400;
+            width:100%;
+            margin-bottom: 10px;
+            font-size:14pt;
+        }
+    }
+    .remove_from_dz{
+        cursor:pointer;
+        font-size:14pt;
+    }
 }
-
 
 #thumbnail_modal{
     @thumbnail-modal-height: 400px;
@@ -137,23 +105,15 @@
     .modal-dialog{
         width:@thumbnail-modal-width * 0.7;
         height: @thumbnail-modal-height;
-
     }
     .modal-content{
-        .modal-header{
-            background-color:@gray-200;
-        }
-
-        #generate_thumbnail_text{
-            display:none;
-        }
-
+        .modal-header{ background-color:@gray-200; }
+        #generate_thumbnail_text{ display:none; }
         #thumbnail_preview{
             height:@thumbnail-modal-height * 0.7;
             overflow-y:auto;
             margin-bottom:10px;
             padding:5px;
-
             #thumbnail_placeholder{
                 width:100%;
                 height:100%;
@@ -161,15 +121,12 @@
                 color:@gray-400;
                 font-weight:bold;
             }
-
             #thumbnail_preview_img{
                 max-width:100%;
                 max-height:100%;
             }
         }
-        #thumbnail_buttons{
-            padding-bottom: 20px;
-        }
+        #thumbnail_buttons{ padding-bottom: 20px; }
     }
 }
 
@@ -179,39 +136,23 @@
     margin:10px;
     padding-bottom: 10px;
     border-bottom: 1px dotted @gray-300;
-    .file_size_metadata{
-        font-size: 10pt;
-    }
+    .file_size_metadata{ font-size: 10pt; }
 }
 
 .format_editor_list{
     margin-left:25px;
     margin-bottom:10px;
-
     .format_dropzone{
         width:auto;
         .file_upload_progress{
             height:15px;
             max-width:70%;
         }
-        div .name {
-            font-weight: bold;
-        }
-        .progress-bar-success {
-            background: @blue-200;
-        }
-        .upload_cancel{
-            color: @blue-200;
-            cursor:pointer;
-        }
+        div .name { font-weight: bold; }
     }
-    .add_format_button{
-        margin-left: -15px;
-    }
+    .add_format_button{ margin-left: -15px; }
     .format_metadata{ padding: 0px 15px; }
-    .format_editor_remove{
-        cursor:pointer;
-    }
+    .format_editor_remove{ cursor:pointer; }
     .format_editor_item{
         font-size:11pt;
         margin-bottom:5px;
@@ -227,9 +168,7 @@
             width:auto;
             cursor:pointer;
         }
-        .format_editor_file_name:hover{
-            font-weight:bold;
-        }
+        .format_editor_file_name:hover{ font-weight:bold; }
         .format_editor_selected_size{
             display:inline-block;
             margin-top:-20px;
@@ -238,15 +177,10 @@
             position: relative;
             bottom: 5px;
         }
-
-        .format_editor_file_name_wrapper{
-            display:inline;
-        }
+        .format_editor_file_name_wrapper{ display:inline; }
         .format_editor_options_wrapper{
             width:auto;
-            .glyphicon{
-                cursor:pointer;
-            }
+            .glyphicon{ cursor:pointer; }
         }
     }
 }

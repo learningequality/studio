@@ -4,23 +4,22 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <div id="upload_steps" class="row steps_row">
-                    <div class="col-xs-2">&nbsp;</div>
-                    <div class="col-xs-2 text-center">
-                        <span class="step_number active_number" id="upload_step_number">1</span>
+                    <div class="col-xs-1">&nbsp;</div>
+                    <div class="col-xs-2 text-center step_wrapper enabled_step go_to_upload">
+                        <span class="step_number active_number" id="upload_step_number"><span class="glyphicon glyphicon-upload" aria-hidden="true"></span></span>
                         <p>Upload Files</p>
                     </div>
-                    <div class="col-xs-4">
+                    <div class="col-xs-6">
                       <hr class="steps_divider"/>
                     </div>
-                    <div class="col-xs-2 text-center">
-                      <span class="step_number" id="metadata_step_number">2</span>
+                    <div class="col-xs-2 text-center step_wrapper disabled_step go_to_metadata">
+                      <span class="step_number" id="metadata_step_number"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span></span>
                       <p>Edit Metadata</p>
                     </div>
-                    <div class="col-xs-2">&nbsp;</div>
+                    <div class="col-xs-1">&nbsp;</div>
                 </div>
             </div>
-            <div class="modal-body">
-            </div>
+            <div class="modal-body"></div>
         </div>
     </div>
 </div>

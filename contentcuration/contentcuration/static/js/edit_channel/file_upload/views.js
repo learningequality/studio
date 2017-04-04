@@ -15,12 +15,24 @@ var FileModalView = BaseViews.BaseModalView.extend({
         _.bindAll(this, "close_file_uploader");
         this.render(this.close_file_uploader, {});
         this.file_upload_view = new FileUploadView({
-            el: this.$(".modal-body"),
             container: this,
             model:this.model,
             onsave: options.onsave,
             onnew: options.onnew
         });
+        this.$(".modal-body").append(this.file_upload_view.el)
+    },
+    events:{
+      "click .go_to_upload" : "go_to_upload",
+      "click .go_to_metadata": "go_to_metadata"
+    },
+    go_to_upload:function(){
+        this.file_upload_view.go_to_upload();
+    },
+    go_to_metadata:function(){
+        if(!this.$(".go_to_metadata").hasClass('disabled')){
+            this.file_upload_view.go_to_metadata();
+        }
     },
     close_file_uploader:function(event){
         if(this.file_upload_view.collection.length === 0){
@@ -39,30 +51,21 @@ var FileUploadView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/file_upload.handlebars"),
     navigation_template: require("./hbtemplates/file_upload_buttons.handlebars"),
     initialize: function(options) {
-        _.bindAll(this,"go_to_formats", "go_to_upload", "go_to_metadata", "close_file_uploader");
+        _.bindAll(this,"go_to_upload", "go_to_metadata", "close_file_uploader");
         this.container = options.container;
         this.collection = new Models.ContentNodeCollection();
         this.onsave = options.onsave;
         this.onnew = options.onnew;
-        this.render();
-    },
-    events:{
-      "click .go_to_formats" : "go_to_formats",
-      "click .go_to_upload" : "go_to_upload",
-      "click .go_to_metadata": "go_to_metadata",
-      "click .go_to_upload_from_metadata":"go_to_upload"
-    },
-    render: function() {
         this.switch_view(1);
     },
-    go_to_formats:function(){
-        this.switch_view(2);
+    events:{
+      "click .go_to_metadata": "go_to_metadata"
     },
     go_to_upload:function(){
         this.switch_view(1);
     },
     go_to_metadata:function(){
-        this.switch_view(3);
+        this.switch_view(2);
     },
     switch_view:function(stepNumber){
         if(this.current_view){
@@ -84,7 +87,6 @@ var FileUploadView = BaseViews.BaseView.extend({
             new_topic: false,
             collection: this.collection
         }
-
         switch(stepNumber){
             case 1:
                 $("#metadata_step_number").removeClass("active_number");
@@ -103,73 +105,28 @@ var FileUploadView = BaseViews.BaseView.extend({
         $(".modal-backdrop").remove();
     },
     disable_next:function(upload_in_progress){
-        this.$(".go_to_formats").attr("disabled", "disabled");
-        this.$(".go_to_formats").addClass("disabled");
-        this.$(".go_to_formats").text((upload_in_progress)? "Upload in progress..." : "Add files to continue");
+        $(".go_to_metadata").attr("disabled", "disabled");
+        $(".go_to_metadata").addClass("disabled");
+        this.$(".go_to_metadata").text((upload_in_progress)? "Upload in progress..." : "Add files to continue");
     },
     enable_next:function(){
-        this.$(".go_to_formats").removeAttr("disabled");
-        this.$(".go_to_formats").removeClass("disabled");
-        this.$(".go_to_formats").text("NEXT");
-    },
-    disable_submit: function() {
-        this.$(".go_to_metadata").attr("disabled", "disabled");
-        this.$(".go_to_metadata").addClass("disabled");
-        this.$(".go_to_metadata").text((this.current_view.check_completed()) ? "Upload in progress..." : "Assign formats to continue");
-    },
-    enable_submit: function() {
-        this.$(".go_to_metadata").removeAttr("disabled");
-        this.$(".go_to_metadata").removeClass("disabled");
+        $(".go_to_metadata").removeAttr("disabled");
+        $(".go_to_metadata").removeClass("disabled");
         this.$(".go_to_metadata").text("EDIT METADATA");
     },
     reset:function(){
-        if(this.current_view){
-            this.current_view.reset();
-        }
+        if(this.current_view){ this.current_view.reset(); }
     }
 });
 
-var FileBaseList = BaseViews.BaseEditableListView.extend({
+var FileUploadList = BaseViews.BaseEditableListView.extend({
     list_selector:"#file_upload_list",
     default_item:"#file_upload_list >.default-item",
-    disable_next:function(upload_in_progress){
-        this.container.disable_next(upload_in_progress);
-    },
-    enable_next:function(){
-        this.container.enable_next();
-    },
-    disable_submit: function() {
-        this.container.disable_submit();
-    },
-    enable_submit: function() {
-        this.container.enable_submit();
-    },
-    remove_view: function(view){
-        this.views.splice(this.views.indexOf(this), 1);
-        this.collection.remove(view.model);
-        view.remove();
-        this.handle_if_empty();
-        if(this.views.length ===0){
-            this.container.switch_view(1);
-        }else{
-            this.handle_completed();
-        }
-    },
-    check_completed:function(){
-        var is_completed = this.views.length > 0;
-        this.views.forEach(function(view){
-            is_completed = is_completed && view.check_for_completion();
-        });
-        return is_completed;
-    }
-});
-
-var FileUploadList = FileBaseList.extend({
     template: require("./hbtemplates/file_upload_upload_list.handlebars"),
     file_upload_template: require("./hbtemplates/file_upload_dropzone_item.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded",  "all_files_uploaded", "file_added", "file_removed","file_failed");
+        _.bindAll(this, "file_uploaded",  "all_files_uploaded", "file_added", "file_removed","file_failed", "create_dropzone");
         this.container = options.container;
         this.collection = options.collection;
         this.acceptedFiles = this.get_accepted_files();
@@ -181,10 +138,26 @@ var FileUploadList = FileBaseList.extend({
     events:{
       "click #show_uploading" : "show_uploading"
     },
+    disable_next:function(upload_in_progress){
+        this.container.disable_next(upload_in_progress);
+    },
+    enable_next:function(){
+        this.container.enable_next();
+    },
+    remove_view: function(view){
+        this.views.splice(this.views.indexOf(this), 1);
+        this.collection.remove(view.model);
+        view.remove();
+        this.handle_if_empty();
+        (this.views.length === 0)? this.container.switch_view(1) : this.handle_completed();
+    },
+    check_completed:function(){
+        return _.some(this.views, function(view){ return view.check_for_completion(); });
+    },
     show_uploading:function(event){
         var is_checked = this.$("#show_uploading").is(":checked");
         (is_checked)? this.$el.addClass('hide_uploaded') : this.$el.removeClass('hide_uploaded');
-        this.$(this.default_item).css("display", (this.views.length || is_checked) ? "none" : "block");
+        this.$(this.default_item).css("display", (this.$(".format_item").length || is_checked) ? "none" : "block");
         this.$("#file_upload_count").css("display", (is_checked) ? "flex" : "none");
     },
     handle_if_empty:function(){
@@ -202,6 +175,9 @@ var FileUploadList = FileBaseList.extend({
     },
     render: function() {
         this.$el.html(this.template());
+        _.defer(this.create_dropzone, 1);
+    },
+    create_dropzone: function(){
         this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
             clickable: ["#dropzone", ".fileinput-button"],
             acceptedFiles: this.acceptedFiles,
@@ -241,6 +217,7 @@ var FileUploadList = FileBaseList.extend({
             }
             $(request.previewTemplate).html(new_view.el);
             self.update_count();
+            (self.views.length && self.uploads_in_progress <= 0)? self.enable_next() : self.disable_next(self.uploads_in_progress > 0);
         });
     },
     file_failed:function(file, error){
@@ -249,7 +226,6 @@ var FileUploadList = FileBaseList.extend({
     },
     all_files_uploaded: function() {
         this.uploads_in_progress = 0;
-        this.enable_next();
     },
     file_added: function(file) {
         this.uploads_in_progress ++;
@@ -258,7 +234,6 @@ var FileUploadList = FileBaseList.extend({
     },
     file_removed: function(file) {
         if (this.views.length === 0) {
-            this.disable_next(this.uploads_in_progress > 0);
             this.load_content(this.collection, "Drop files here to add them to your channel");
         }
     },
@@ -272,55 +247,13 @@ var FileUploadList = FileBaseList.extend({
     }
 });
 
-var FormatItem = BaseViews.BaseListNodeItemView.extend({
-    thumbnail_template: require("./hbtemplates/file_upload_thumbnail.handlebars"),
+var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     className: "format_item_wrapper files",
     files: null,
     presets:null,
-
-    'id': function() {
-        return "format_item_" + this.model.filename;
-    },
-    init_collections:function(){
-        this.presets = new Models.FormatPresetCollection(_.reject(this.model.get("associated_presets"),{display:false}));
-        this.files=new Models.FileCollection(this.model.get("files"));
-    },
-    remove_item:function(){
-        this.files.forEach(function(file){ if(file) file.destroy(); });
-        this.containing_list_view.remove_view(this);
-        this.containing_list_view.update_count();
-        this.model.destroy();
-    },
-    set_file_format:function(file, preset){
-        file.set({preset: preset.toJSON()});
-        this.model.set("files", this.files.toJSON());
-        this.containing_list_view.handle_completed();
-    },
-    get_thumbnail:function(){
-        var self = this;
-        var to_return = null;
-        // this.files.forEach(function(file){
-        //     if (file.get("preset")){
-        //         var preset_id = (file.get("preset").id) ? file.get("preset").id : file.get("preset");
-        //         if(self.presets.get(preset_id).get("thumbnail")){
-        //             to_return = file;
-        //             return;
-        //         }
-        //     }
-        // });
-        return to_return;
-    },
-    set_thumbnail:function(file){
-        var placeholder = "/static/img/" + this.model.get("kind") + "_placeholder.png";
-        this.$el.find(".preview_thumbnail").html(this.thumbnail_template({
-            thumbnail:(file && file.attributes)? file.get('storage_url') : placeholder
-        }));
-    },
-});
-
-var FormatEditorItem = FormatItem.extend({
     expandedClass: "glyphicon-triangle-bottom",
     collapsedClass: "glyphicon-triangle-top",
+    thumbnail_template: require("./hbtemplates/file_upload_thumbnail.handlebars"),
 
     getToggler: function () { return this.$(".expand_format_editor"); },
     getSubdirectory: function () {return this.$(".format_editor_list"); },
@@ -365,11 +298,42 @@ var FormatEditorItem = FormatItem.extend({
                 };
         }, {'count': 0, 'size': 0, 'main_file_count': 0});
     },
-    save_files:function(){},
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
-    }
+    },
+    remove_item:function(){
+        this.files.forEach(function(file){ if(file) file.destroy(); });
+        this.containing_list_view.remove_view(this);
+        this.containing_list_view.update_count();
+        this.model.destroy();
+    },
+    set_file_format:function(file, preset){
+        file.set({preset: preset.toJSON()});
+        this.model.set("files", this.files.toJSON());
+        this.containing_list_view.handle_completed();
+    },
+    get_thumbnail:function(){
+        var self = this;
+        var to_return = null;
+        // this.files.forEach(function(file){
+        //     if (file.get("preset")){
+        //         var preset_id = (file.get("preset").id) ? file.get("preset").id : file.get("preset");
+        //         if(self.presets.get(preset_id).get("thumbnail")){
+        //             to_return = file;
+        //             return;
+        //         }
+        //     }
+        // });
+        return to_return;
+    },
+    set_thumbnail:function(file){
+        var placeholder = "/static/img/" + this.model.get("kind") + "_placeholder.png";
+        this.$el.find(".preview_thumbnail").html(this.thumbnail_template({
+            thumbnail:(file && file.attributes)? file.get('storage_url') : placeholder
+        }));
+    },
 });
+
 var FormatInlineItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_inline_item.handlebars"),
     'id': function() { return this.model.get("id"); },
