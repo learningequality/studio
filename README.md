@@ -28,7 +28,11 @@ If not, use these commands:
 
 * [Install pip](https://pypi.python.org/pypi/pip) if you don't have it already.
 
-* [Install postgres](https://www.postgresql.org/download/) if you don't have it already.
+* [Install postgres](https://www.postgresql.org/download/) if you don't have it already. If you're using a package manager, this includes:
+	* postgresql
+	* postgresql-contrib
+	* postgresql-server-dev-all   # to build psycopg2
+
 
 * [Install ffmpeg](https://ffmpeg.org/) if you don't have it already.
 
@@ -54,14 +58,14 @@ If not, use these commands:
 	`python manage.py makemigrations`
 
 	`python manage.py migrate`
-	
+
 	`python manage.py loadconstants`
-	
+
 	`python manage.py calculateresources --init`
-	
+
 
 * Run your server and start developing! Make sure you're in your virtual environment each time before you run the server.
-	
+
 	`python manage.py runserver`
 
 	Visit the localhost link that is presented on your console.
