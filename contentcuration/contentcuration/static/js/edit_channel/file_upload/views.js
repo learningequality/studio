@@ -70,8 +70,7 @@ var FileUploadView = BaseViews.BaseView.extend({
         }
         this.$el.html(this.template());
         this.$("#file_upload_buttons").html(this.navigation_template({
-            uploading: stepNumber === 1,
-            formatting: stepNumber === 2
+            uploading: stepNumber === 1
         }));
         var data = {
             el: this.$("#file_upload_list_wrapper"),
@@ -88,17 +87,11 @@ var FileUploadView = BaseViews.BaseView.extend({
 
         switch(stepNumber){
             case 1:
-                $("#formats_step_number").removeClass("active_number");
                 $("#metadata_step_number").removeClass("active_number");
                 this.current_view = new FileUploadList(data);
                 this.current_view.check_completed() ? this.enable_next() : this.disable_next();
                 break;
             case 2:
-                $("#formats_step_number").addClass("active_number");
-                this.current_view = new FileFormatList(data);
-                this.current_view.check_completed() ? this.enable_submit() : this.disable_submit();
-                break;
-            case 3:
                 var UploaderViews = require("edit_channel/uploader/views");
                 $("#metadata_step_number").addClass("active_number");
                 this.current_view = new UploaderViews.EditMetadataView(data);
@@ -185,6 +178,15 @@ var FileUploadList = FileBaseList.extend({
         this.uploads_in_progress = 0;
         this.render();
     },
+    events:{
+      "click #show_uploading" : "show_uploading"
+    },
+    show_uploading:function(event){
+        var is_checked = this.$("#show_uploading").is(":checked");
+        (is_checked)? this.$el.addClass('hide_uploaded') : this.$el.removeClass('hide_uploaded');
+        this.$(this.default_item).css("display", (this.views.length || is_checked) ? "none" : "block");
+        this.$("#file_upload_count").css("display", (is_checked) ? "flex" : "none");
+    },
     handle_if_empty:function(){
         this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
         this.disable_next(this.uploads_in_progress > 0);
@@ -200,14 +202,12 @@ var FileUploadList = FileBaseList.extend({
     },
     render: function() {
         this.$el.html(this.template());
-        // TODO parameterize to allow different file uploads depending on initialization.
         this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
             clickable: ["#dropzone", ".fileinput-button"],
             acceptedFiles: this.acceptedFiles,
             url: window.Urls.file_create(),
             previewTemplate:this.file_upload_template(),
             parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads()),
-            //autoQueue: false, // Make sure the files aren't queued until manually added
             previewsContainer: this.list_selector, // Define the container to display the previews
             headers: {"X-CSRFToken": get_cookie("csrftoken")},
             dictInvalidFileType: "This file type is not supported.",
@@ -215,20 +215,14 @@ var FileUploadList = FileBaseList.extend({
             dictResponseError: "Error processing request."
         });
         this.load_content(this.collection, "Drop files here to add them to your channel");
-
         this.dropzone.on("success", this.file_uploaded);
-
-        // Only enable the submit upload files button once all files have finished uploading.
         this.dropzone.on("queuecomplete", this.all_files_uploaded);
-
-        // Disable the submit upload files button if a new file is added to the queue.
         this.dropzone.on("addedfile", this.file_added);
-
         this.dropzone.on("removedfile", this.file_removed);
         this.dropzone.on("error", this.file_failed);
     },
     create_new_view:function(model){
-        var new_format_item = new FormatUploadItem({
+        var new_format_item = new FormatFormatItem({
             model: model,
             containing_list_view : this
         });
@@ -246,9 +240,7 @@ var FileUploadList = FileBaseList.extend({
                 new_view.set_preset(data.preset);
             }
             $(request.previewTemplate).html(new_view.el);
-            if(self.uploads_in_progress<=0){
-                self.enable_next();
-            }
+            self.update_count();
         });
     },
     file_failed:function(file, error){
@@ -257,6 +249,7 @@ var FileUploadList = FileBaseList.extend({
     },
     all_files_uploaded: function() {
         this.uploads_in_progress = 0;
+        this.enable_next();
     },
     file_added: function(file) {
         this.uploads_in_progress ++;
@@ -273,58 +266,15 @@ var FileUploadList = FileBaseList.extend({
         if(this.check_completed() && this.uploads_in_progress === 0){
             this.enable_next();
         }
-    }
-});
-
-var FileFormatList  = FileBaseList.extend({
-    template: require("./hbtemplates/file_upload_format_list.handlebars"),
-    selectedClass: "file-selected",
-
-    initialize: function(options) {
-        _.bindAll(this, "hide_assigned");
-        this.container = options.container;
-        this.collection = options.collection;
-        this.uploads_in_progress = 0;
-        this.render();
     },
-    events:{
-      "click #show_unassigned" : "hide_assigned"
-    },
-    render: function() {
-        this.$el.html(this.template());
-        this.load_content();
-    },
-    hide_assigned:function(){
-        var to_hide = this.$el.find(".hide_assigned").parent("li");
-        var is_checked = this.$("#show_unassigned").is(":checked");
-        to_hide.css("display", (is_checked) ? "none" : "block");
-        if(to_hide.length === this.views.length){
-            this.$(this.default_item).text("All files have been assigned a format.");
-            this.$(this.default_item).css("display", (is_checked) ? "block" : "none");
-        }
-    },
-    create_new_view:function(model){
-        var new_format_item = new FormatFormatItem({
-            model: model,
-            containing_list_view : this,
-        });
-        this.views.push(new_format_item);
-        return new_format_item;
-    },
-    handle_completed:function(){
-        if(this.check_completed()){
-            this.enable_submit();
-        }
-    },
-    set_uploading:function(uploading){
-        (uploading)? this.uploads_in_progress++ : this.uploads_in_progress--;
-        (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
+    update_count:function(){
+        $("#file_upload_count").text(this.views.length + (this.views.length===1? " file" : " files") + " uploaded");
     }
 });
 
 var FormatItem = BaseViews.BaseListNodeItemView.extend({
     thumbnail_template: require("./hbtemplates/file_upload_thumbnail.handlebars"),
-    className: "format_item row table table-striped files file-row",
+    className: "format_item_wrapper files",
     files: null,
     presets:null,
 
@@ -336,10 +286,9 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         this.files=new Models.FileCollection(this.model.get("files"));
     },
     remove_item:function(){
-        this.files.forEach(function(file){
-            file.destroy();
-        });
+        this.files.forEach(function(file){ if(file) file.destroy(); });
         this.containing_list_view.remove_view(this);
+        this.containing_list_view.update_count();
         this.model.destroy();
     },
     set_file_format:function(file, preset){
@@ -350,15 +299,15 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     get_thumbnail:function(){
         var self = this;
         var to_return = null;
-        this.files.forEach(function(file){
-            if (file.get("preset")){
-                var preset_id = (file.get("preset").id) ? file.get("preset").id : file.get("preset");
-                if(self.presets.get(preset_id).get("thumbnail")){
-                    to_return = file;
-                    return;
-                }
-            }
-        });
+        // this.files.forEach(function(file){
+        //     if (file.get("preset")){
+        //         var preset_id = (file.get("preset").id) ? file.get("preset").id : file.get("preset");
+        //         if(self.presets.get(preset_id).get("thumbnail")){
+        //             to_return = file;
+        //             return;
+        //         }
+        //     }
+        // });
         return to_return;
     },
     set_thumbnail:function(file){
@@ -369,52 +318,6 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     },
 });
 
-var FormatUploadItem = FormatItem.extend({
-    template: require("./hbtemplates/file_upload_upload_item.handlebars"),
-    inline_template: require("./hbtemplates/file_upload_inline_item.handlebars"),
-
-    initialize: function(options) {
-        _.bindAll(this, 'remove_item', 'set_thumbnail', 'get_thumbnail');
-        this.containing_list_view = options.containing_list_view;
-        this.originalData = this.model.toJSON();
-        this.init_collections();
-        this.set_presets();
-        this.render();
-    },
-    events: {
-        'click .remove_from_dz ' : 'remove_item',
-    },
-    render: function() {
-        var total_file_size = 0;
-        this.initial = this.files.findWhere({preset:null});
-        this.files.forEach(function(file){
-            total_file_size += file.get("file_size");
-        })
-        this.$el.html(this.template({
-            initial: this.initial,
-            node: this.model.toJSON(),
-            files: this.files.toJSON(),
-            total_file_size: total_file_size
-        }));
-        this.set_thumbnail(this.get_thumbnail());
-    },
-    auto_assign_preset:function(){
-        var nonsupplementarypresets = this.presets.where({supplementary:false});
-        var to_assign = this.files.findWhere({preset:null});
-        if(nonsupplementarypresets.length === 1 && to_assign){
-            this.set_file_format(to_assign, nonsupplementarypresets[0]);
-        }
-    },
-    check_for_completion:function(){
-       return true;
-    },
-    set_presets:function(){
-        var self = this;
-        this.files.forEach(function(file){
-            self.set_file_format(file, self.presets.get(file.get("preset")));
-        });
-    }
-});
 var FormatEditorItem = FormatItem.extend({
     expandedClass: "glyphicon-triangle-bottom",
     collapsedClass: "glyphicon-triangle-top",
@@ -423,6 +326,10 @@ var FormatEditorItem = FormatItem.extend({
     getSubdirectory: function () {return this.$(".format_editor_list"); },
     'id': function() {
         return this.model.get("id");
+    },
+    init_collections:function(){
+        this.presets = new Models.FormatPresetCollection(_.reject(this.model.get("associated_presets"),function(p) {return !p.display || p.thumbnail;}));
+        this.files = new Models.FileCollection(this.model.get("files"));
     },
     check_for_completion:function(){
        return !this.files.findWhere({preset:null});
@@ -449,37 +356,23 @@ var FormatEditorItem = FormatItem.extend({
         this.$(".format_size_text").html(stringHelper.format_size(all_metadata.size));
     },
     get_metadata:function(){
-        var self = this;
-        var count = 0;
-        var main_count = 0;
-        var size = 0;
-        this.model.get("files").forEach(function(file){
-            var preset = (file.preset && file.preset.id)? file.preset.id: file.preset;
-            if(preset && window.formatpresets.get({id:preset}).get("display")){
-                if(!file.preset.id){
-                    file.preset = window.formatpresets.get({id:preset}).toJSON();
-                }
-                count ++;
-                if(!file.preset.supplementary){
-                    main_count++;
-                }
-                size += file.file_size;
-            }
-        });
-        return {"count": count, "size": size, "main_file_count" : main_count};
+        return _.reduce(this.model.get("files"), function(dict, file){
+            return !file.preset.display ? dict :
+                {
+                    'count': dict.count + 1,
+                    'size': dict.size + file.file_size,
+                    'main_file_count': dict.main_file_count + !file.preset.supplementary
+                };
+        }, {'count': 0, 'size': 0, 'main_file_count': 0});
     },
-    save_files:function(){
-
-    },
+    save_files:function(){},
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
     }
 });
 var FormatInlineItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_inline_item.handlebars"),
-    'id': function() {
-        return this.model.get("id");
-    },
+    'id': function() { return this.model.get("id"); },
     initialize: function(options) {
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
@@ -492,12 +385,7 @@ var FormatInlineItem = FormatEditorItem.extend({
         this.listenTo(this.files, "remove", this.sync_file_changes);
         this.listenTo(this.model, "change:files", this.update_metadata);
     },
-    init_collections:function(){
-        this.presets = new Models.FormatPresetCollection(_.reject(this.model.get("associated_presets"),function(p) {return !p.display || p.thumbnail;}));
-        this.files=new Models.FileCollection(this.model.get("files"));
-    },
     events: {
-        'change .format_options_dropdown' : 'set_initial_format',
         'click .remove_from_dz ' : 'remove_item',
     },
     render: function() {
@@ -506,21 +394,18 @@ var FormatInlineItem = FormatEditorItem.extend({
         }));
         this.load_subfiles();
     },
-    unset_model:function(){
-
-    }
+    unset_model:function(){}
 });
 
 var FormatFormatItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_format_item.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, 'update_name', 'set_initial_format', 'remove_item', 'set_thumbnail', 'get_thumbnail');
+        _.bindAll(this, 'update_name', 'remove_item', 'set_thumbnail', 'get_thumbnail');
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
         this.containing_list_view = options.containing_list_view;
         this.init_collections();
-        this.initial_file = null;
         this.render();
         this.listenTo(this.files, "add", this.sync_file_changes);
         this.listenTo(this.files, "change", this.sync_file_changes);
@@ -528,47 +413,20 @@ var FormatFormatItem = FormatEditorItem.extend({
         this.listenTo(this.model, "change:files", this.update_metadata);
     },
     events: {
-        'change .format_options_dropdown' : 'set_initial_format',
         'click .remove_from_dz ' : 'remove_item',
         'keyup .name_content_input': 'update_name',
         'paste .name_content_input': 'update_name',
         'click .expand_format_editor' : 'toggle'
     },
-    set_initial_file: function(){
-        this.initial = !this.check_for_completion();
-        if(this.initial){
-            var self = this;
-            this.files.forEach(function(file){
-                if(!file.get('preset')){
-                    self.initial_file = file;
-                }
-            })
-        }
-    },
     render: function() {
-        // this.files.sort_by_preset(this.presets);
-        this.presets.sort_by_order();
-        this.set_initial_file();
-
         this.$el.html(this.template({
             presets:this.presets.toJSON(),
             files: this.files.toJSON(),
-            node: this.model.toJSON(),
-            initial: this.initial,
-            initial_file:(this.initial_file)? this.initial_file.toJSON() : null
+            node: this.model.toJSON()
         }));
         this.update_metadata();
-        if(!this.initial){
-            this.load_subfiles();
-        }
+        this.load_subfiles();
         this.set_thumbnail(this.get_thumbnail());
-    },
-
-    set_initial_format:function(event){
-        this.set_file_format(this.initial_file, window.formatpresets.findWhere({id: event.target.value}));
-        this.render();
-        this.containing_list_view.handle_completed();
-        this.containing_list_view.hide_assigned();
     },
     update_name:function(event){
         this.model.set("title", event.target.value);

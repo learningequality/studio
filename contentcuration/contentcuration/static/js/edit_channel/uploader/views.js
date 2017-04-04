@@ -325,7 +325,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     });
     this.container.load_editor(this.selected_items);
     if(this.selected_individual()){
-      this.container.load_preview(this.views[0]);
+      this.container.load_preview(this.selected_items[0]);
       if(this.selected_items[0].model.get("kind")==="exercise"){
         this.container.load_questions(this.selected_items[0]);
       }
