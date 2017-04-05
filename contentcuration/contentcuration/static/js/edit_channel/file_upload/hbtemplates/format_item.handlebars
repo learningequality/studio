@@ -10,7 +10,7 @@
 	    </div>
       <div class="format_editor_file_name_wrapper">
         {{#if file}}
-          <div class="format_editor_file_name truncate dz-clickable" title="{{file.original_filename}}">{{#if file.original_filename}}{{file.original_filename}}{{else}}File{{/if}}</div>
+          <div class="format_editor_file_name truncate" title="{{file.original_filename}}">{{#if file.original_filename}}{{file.original_filename}}{{else}}File{{/if}}</div>
           <i class="format_editor_selected_size">({{#format_file_size file.file_size}}{{/format_file_size}})</i>
         {{else}}
             <a class="action-text add_format_button dz-clickable">+ ADD</a>

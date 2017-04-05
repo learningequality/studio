@@ -196,8 +196,8 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         this.collection.add(new_node);
         var new_view = this.create_new_view(new_node);
         $(request.previewTemplate).html(new_view.el);
+        this.uploads_in_progress --;
         this.update_count();
-        (this.views.length && this.uploads_in_progress <= 0)? this.enable_next() : this.disable_next(this.uploads_in_progress > 0);
     },
     file_failed:function(file, error){
         this.uploads_in_progress --;
@@ -205,6 +205,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     },
     all_files_uploaded: function() {
         this.uploads_in_progress = 0;
+        this.enable_next();
     },
     file_added: function(file) {
         this.uploads_in_progress ++;
@@ -578,7 +579,8 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         //TODO: add other types as autogeneration is supported
         var show_generate = this.model.get('kind') === "topic" || 
             this.model.get('kind') === "video" ||
-            this.model.get('kind') === "exercise"
+            this.model.get('kind') === "exercise"||
+            this.model.get('kind') === "html5";
 
         this.$el.html(this.template({
             picture : this.image_url || this.default_url,

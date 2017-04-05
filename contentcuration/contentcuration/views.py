@@ -13,6 +13,7 @@ from django.shortcuts import render, get_object_or_404, redirect, render_to_resp
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core import paginator, serializers
+from django.core.cache import cache
 from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
@@ -22,9 +23,9 @@ from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers
+from contentcuration.utils.files import extract_thumbnail_wrapper, compress_video_wrapper,  generate_thumbnail_from_node, duplicate_file
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, FileSerializer
-from django.core.cache import cache
 from le_utils.constants import format_presets, content_kinds, file_formats, exercises
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -32,7 +33,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from pressurecooker.videos import guess_video_preset_by_resolution, extract_thumbnail_from_video, compress_video
 from pressurecooker.images import create_tiled_image
 from pressurecooker.encodings import write_base64_to_file
-from django.core.cache import cache
+
 
 def base(request):
     if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
@@ -139,41 +140,6 @@ def get_or_set_cached_constants(constant, serializer):
     cache.set(constant.__name__, constant_data, None)
     return constant_data
 
-def exercise_list(request):
-
-    exercise_list = Exercise.objects.all().order_by('title')
-
-    paged_list = paginator.Paginator(exercise_list, 25)  # Show 25 exercises per page
-
-    page = request.GET.get('page')
-
-    try:
-        exercises = paged_list.page(page)
-    except paginator.PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        exercises = paged_list.page(1)
-    except paginator.EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        exercises = paged_list.page(paginator.num_pages)
-
-    # serializer = ExerciseSerializer(exercises.object_list, many=True)
-
-    return render(request, 'exercise_list.html', {"exercises": exercises, "blob": JSONRenderer().render(serializer.data)})
-
-
-def exercise(request, exercise_id):
-
-    exercise = get_object_or_404(ContentNode, id=exercise_id)
-
-    serializer = ContentNodeSerializer(exercise)
-
-    assessment_items = AssessmentItem.objects.filter(exercise=exercise)
-
-    assessment_serialize = AssessmentItemSerializer(assessment_items, many=True)
-
-    return render(request, 'exercise_edit.html', {"exercise": JSONRenderer().render(serializer.data), "assessment_items": JSONRenderer().render(assessment_serialize.data)})
-
-
 def file_upload(request):
     if request.method == 'POST':
         preset = FormatPreset.objects.get(id=request.META.get('HTTP_PRESET'))
@@ -212,77 +178,6 @@ def file_create(request):
             "node": JSONRenderer().render(ContentNodeSerializer(new_node).data)
         }))
 
-def extract_thumbnail_wrapper(file_object, node=None):
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(file_formats.PNG)) as tempf:
-        tempf.close()
-        extract_thumbnail_from_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
-        filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
-        checksum, ext = os.path.splitext(filename)
-        file_location = generate_file_on_disk_name(checksum, filename)
-        thumbnail_object = File(
-            file_on_disk=DjFile(open(file_location, 'rb')),
-            file_format_id=file_formats.PNG,
-            original_filename = 'Extracted Thumbnail',
-            contentnode=node,
-            file_size=os.path.getsize(file_location),
-            preset_id=format_presets.VIDEO_THUMBNAIL,
-        )
-        thumbnail_object.save()
-        return thumbnail_object
-
-def compress_video_wrapper(file_object):
-    with tempfile.TemporaryFile(suffix=".{}".format(file_formats.MP4)) as tempf:
-        tempf.close()
-        compress_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
-        filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
-        checksum, ext = os.path.splitext(filename)
-        file_location = generate_file_on_disk_name(checksum, filename)
-        low_res_object = File(
-            file_on_disk=DjFile(open(file_location, 'rb')),
-            file_format_id=file_formats.MP4,
-            original_filename = file_object.original_filename,
-            contentnode=file_object.contentnode,
-            file_size=os.path.getsize(file_location),
-            preset_id=format_presets.VIDEO_LOW_RES,
-        )
-        low_res_object.save()
-        return low_res_object
-
-def create_tiled_image_wrapper(files, preset_id, node=None):
-    random.shuffle(files)
-    if len(files) >= 4:
-        files = files[:4]
-    elif len(files) >= 1:
-        files = files[:1]
-
-    with tempfile.TemporaryFile(suffix=".{}".format(file_formats.PNG)) as tempf:
-        tempf.close()
-        create_tiled_image(files, tempf.name)
-
-        filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
-        checksum, ext = os.path.splitext(filename)
-        file_location = generate_file_on_disk_name(checksum, filename)
-        thumbnail_object = File(
-            file_on_disk = DjFile(open(file_location, 'rb')),
-            file_format_id = file_formats.PNG,
-            file_size = os.path.getsize(file_location),
-            preset_id = preset_id,
-            contentnode = node
-        )
-        thumbnail_object.save()
-        return thumbnail_object
-
-def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None):
-    if not file_object:
-        return None
-    file_copy = copy.copy(file_object)
-    file_copy.id = None
-    file_copy.contentnode = node
-    file_copy.assessment_item = assessment_item
-    file_copy.preset_id = preset_id or file_object.preset_id
-    file_copy.save()
-    return file_copy
-
 def generate_thumbnail(request):
     logging.debug("Entering the generate_thumbnail endpoint")
 
@@ -292,26 +187,8 @@ def generate_thumbnail(request):
         data = json.loads(request.body)
         node = ContentNode.objects.get(pk=data["node_id"])
 
-        thumbnail_object = None
-        if node.kind_id == content_kinds.TOPIC:
-            files = []
-            for n in node.get_descendants().all():
-                file_locations = n.files.filter(file_format_id__in=[file_formats.PNG, file_formats.JPG, file_formats.JPEG]).values_list('file_on_disk', flat=True)
-                files += [str(f) for f in file_locations]
-            assert any(files), "No images available to generate thumbnail"
-            thumbnail_object = create_tiled_image_wrapper(node, list(set(files)), format_presets.TOPIC_THUMBNAIL, set_node=False)
-        elif node.kind_id == content_kinds.VIDEO:
-            file_object = node.files.filter(file_format_id=file_formats.MP4).first()
-            thumbnail_object = extract_thumbnail_wrapper(file_object)
-        elif node.kind_id == content_kinds.EXERCISE:
-            file_ids = node.assessment_items.values_list('files__id', flat=True)
-            image = File.objects.filter(id__in=file_ids, preset_id=format_presets.EXERCISE_IMAGE).first()
-            thumbnail_object = duplicate_file(image, preset_id=format_presets.EXERCISE_THUMBNAIL)
-        else:
-            raise NotImplementedError("Thumbnail generation for this kind is not supported")
-
-        assert thumbnail_object, "Cannot generate thumbnail for this content"
-
+        thumbnail_object = generate_thumbnail_from_node(node)
+        
         return HttpResponse(json.dumps({
             "success": True,
             "file": JSONRenderer().render(FileSerializer(thumbnail_object).data),
