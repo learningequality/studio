@@ -743,12 +743,20 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
           onsuccess: this.set_thumbnail,
           onerror: this.container.enable_submit,
           oncancel:this.container.enable_submit,
-          onstart: this.container.disable_submit
+          onstart: this.container.disable_submit,
+          onremove: this.remove_thumbnail
       });
+  },
+  remove_thumbnail:function(){
+    var files = _.reject(this.model.get('files'), function(f){ return f.preset.thumbnail; });
+    this.model.set('files', files);
   },
   set_thumbnail:function(thumbnail, formatted_name){
     var files = _.reject(this.model.get('files'), function(f){ return f.preset.thumbnail; });
-    files = (thumbnail)? files.concat(thumbnail.toJSON()) : files
+    if(thumbnail){
+      thumbnail.set('contentnode', this.model.id);
+      files = files.concat(thumbnail.toJSON());
+    }
     this.model.set('files', files);
     this.thumbnail = (thumbnail)? thumbnail.toJSON() : null;
     this.set_edited(true);

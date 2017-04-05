@@ -154,20 +154,15 @@ var ContentNodeModel = BaseModel.extend({
     generate_thumbnail:function(){
     	var self = this;
     	return new Promise(function(resolve, reject){
-	        var data = {"node_id": self.id};
 	        $.ajax({
 	        	method:"POST",
 	            url: window.Urls.generate_thumbnail(),
-	            data:  JSON.stringify(data),
-	            success: function(data) {
-	            	var new_file = new FileModel({id: JSON.parse(data).file_id});
-	            	new_file.fetch().then(function(model){
-	            		resolve(new FileModel(model));
-	            	});
+	            data:  JSON.stringify({"node_id": self.id}),
+	            success: function(result) {
+	            	file = JSON.parse(result).file
+	            	resolve(new FileModel(JSON.parse(file)));
 	            },
-	            error:function(e){
-	            	reject(e);
-	            }
+	            error:reject
 	        });
     	});
     },

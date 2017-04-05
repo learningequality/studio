@@ -134,31 +134,21 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         this.onnew = options.onnew;
         this.uploads_in_progress = 0;
         this.render();
+        (this.views.length)? this.enable_next() : this.disable_next(this.uploads_in_progress);
     },
     events:{
       "click #show_uploading" : "show_uploading"
+    },
+    render: function() {
+        this.$el.html(this.template());
+        this.load_content(this.collection, "Drop files here to add them to your channel");
+        _.defer(this.create_dropzone, 1);
     },
     disable_next:function(upload_in_progress){
         this.container.disable_next(upload_in_progress);
     },
     enable_next:function(){
         this.container.enable_next();
-    },
-    remove_view: function(view){
-        this.views.splice(this.views.indexOf(this), 1);
-        this.collection.remove(view.model);
-        view.remove();
-        this.handle_if_empty();
-        (this.views.length === 0)? this.container.switch_view(1) : this.handle_completed();
-    },
-    check_completed:function(){
-        return _.some(this.views, function(view){ return view.check_for_completion(); });
-    },
-    show_uploading:function(event){
-        var is_checked = this.$("#show_uploading").is(":checked");
-        (is_checked)? this.$el.addClass('hide_uploaded') : this.$el.removeClass('hide_uploaded');
-        this.$(this.default_item).css("display", (this.$(".format_item").length || is_checked) ? "none" : "block");
-        this.$("#file_upload_count").css("display", (is_checked) ? "flex" : "none");
     },
     handle_if_empty:function(){
         this.$(this.default_item).css("display", (this.views.length > 0) ? "none" : "block");
@@ -173,10 +163,6 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         });
         return list.join(",");
     },
-    render: function() {
-        this.$el.html(this.template());
-        _.defer(this.create_dropzone, 1);
-    },
     create_dropzone: function(){
         this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
             clickable: ["#dropzone", ".fileinput-button"],
@@ -190,7 +176,6 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
             dictFileTooBig: "Max file size exceeded.",
             dictResponseError: "Error processing request."
         });
-        this.load_content(this.collection, "Drop files here to add them to your channel");
         this.dropzone.on("success", this.file_uploaded);
         this.dropzone.on("queuecomplete", this.all_files_uploaded);
         this.dropzone.on("addedfile", this.file_added);
@@ -237,6 +222,22 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
             this.load_content(this.collection, "Drop files here to add them to your channel");
         }
     },
+    remove_view: function(view){
+        this.views.splice(this.views.indexOf(this), 1);
+        this.collection.remove(view.model);
+        view.remove();
+        this.handle_if_empty();
+        (this.views.length === 0)? this.container.switch_view(1) : this.handle_completed();
+    },
+    check_completed:function(){
+        return _.some(this.views, function(view){ return view.check_for_completion(); });
+    },
+    show_uploading:function(event){
+        var is_checked = this.$("#show_uploading").is(":checked");
+        (is_checked)? this.$el.addClass('hide_uploaded') : this.$el.removeClass('hide_uploaded');
+        this.$(this.default_item).css("display", (this.$(".format_item").length || is_checked) ? "none" : "block");
+        this.$("#file_upload_count").css("display", (is_checked) ? "flex" : "none");
+    },
     handle_completed:function(){
         if(this.check_completed() && this.uploads_in_progress === 0){
             this.enable_next();
@@ -244,6 +245,9 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     },
     update_count:function(){
         $("#file_upload_count").text(this.views.length + (this.views.length===1? " file" : " files") + " uploaded");
+    },
+    set_uploading:function(is_uploading){
+        is_uploading? this.disable_next(true) : this.enable_next();
     }
 });
 
@@ -485,7 +489,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             preset: this.model.toJSON(),
             nodeid:this.node.get('id')
         }));
-        setTimeout(this.create_dropzone, 100); // Wait for slide down animation to finish
+        _.defer(this.create_dropzone, 1)
     },
     create_dropzone:function(){
         var dz_selector="#" + this.model.get("id") + "_"  + this.node.get('id') + "_dropzone" + ((this.file)? "_swap" : "");
@@ -556,7 +560,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
     }
-
 });
 
 var ThumbnailUploadView = BaseViews.BaseView.extend({
@@ -566,6 +569,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed', 'use_image');
         this.image_url = options.image_url;
         this.onsuccess = options.onsuccess;
+        this.onremove = options.onremove;
         this.onerror = options.onerror;
         this.oncancel = options.oncancel;
         this.onstart = options.onstart;
@@ -582,19 +586,24 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         'click .open_thumbnail_generator': 'open_thumbnail_generator'
     },
     render: function() {
+        //TODO: add other types as autogeneration is supported
+        var show_generate = this.model.get('kind') === "topic" || 
+            this.model.get('kind') === "video" ||
+            this.model.get('kind') === "exercise"
+
         this.$el.html(this.template({
             picture : this.image_url || this.default_url,
             selector: this.get_selector(),
-            show_generate: this.model.get('kind') === "topic"
+            show_generate: show_generate 
         }));
-        this.create_dropzone();
+        _.defer(this.create_dropzone, 1);
     },
     remove_image: function(){
         if(confirm("Are you sure you want to remove this image?")){
             this.image = null;
             this.image_url = this.default_url;
-            this.onsuccess(this.image, this.image_url, this.default_url);
             this.render();
+            this.onremove();
         }
     },
     get_selector: function(){
@@ -611,7 +620,6 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             previewsContainer: selector,
             headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id, "Node": this.model.id}
         });
-
         this.dropzone.on("success", this.image_uploaded);
         this.dropzone.on("addedfile", this.image_added);
         this.dropzone.on("removedfile", this.image_removed);
@@ -694,20 +702,20 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
     },
     generate_thumbnail:function(){
         var self = this;
-        this.$("#generate_thumbnail_text").css("display", "inline-block");
+        this.$("#thumbnail_area").removeClass('error').addClass('loading');
         this.$("#generate_thumbnail").attr("disabled", "disabled");
-        this.$("#generate_thumbnail").addClass("disabled");
         this.node.generate_thumbnail().then(function(result){
+            self.$("#thumbnail_area").removeClass('loading');
             self.model = result;
             self.render_preview();
             self.enable_generate();
         }).catch(function(error){
-            alert(error.responseText);
+            self.$("#thumbnail_area").removeClass('loading').addClass('error');
+            self.$("#generate_thumbnail_error").text(error.responseText);
             self.enable_generate();
         });
     },
     enable_generate:function(){
-        $("#generate_thumbnail_text").css("display", "none");
         $("#generate_thumbnail").removeAttr("disabled");
         $("#generate_thumbnail").removeClass("disabled");
     },
