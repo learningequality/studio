@@ -201,7 +201,7 @@ def file_create(request):
         file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename = original_filename, contentnode=new_node, file_size=size)
         file_object.save()
         if kind.pk == content_kinds.VIDEO:
-            extract_thumbnail_wrapper(file_object)
+            extract_thumbnail_wrapper(file_object, node=new_node)
             file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))
         elif presets.filter(supplementary=False).count() == 1:
             file_object.preset = presets.filter(supplementary=False).first()
@@ -213,7 +213,7 @@ def file_create(request):
             "object_id": new_node.pk
         }))
 
-def extract_thumbnail_wrapper(file_object):
+def extract_thumbnail_wrapper(file_object, node=None):
     with tempfile.NamedTemporaryFile(suffix=".{}".format(file_formats.PNG)) as tempf:
         tempf.close()
         extract_thumbnail_from_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
@@ -224,7 +224,7 @@ def extract_thumbnail_wrapper(file_object):
             file_on_disk=DjFile(open(file_location, 'rb')),
             file_format_id=file_formats.PNG,
             original_filename = 'Extracted Thumbnail',
-            contentnode=file_object.contentnode,
+            contentnode=node,
             file_size=os.path.getsize(file_location),
             preset_id=format_presets.VIDEO_THUMBNAIL,
         )
@@ -249,7 +249,7 @@ def compress_video_wrapper(file_object):
         low_res_object.save()
         return low_res_object
 
-def create_tiled_image_wrapper(node, files, preset_id):
+def create_tiled_image_wrapper(files, preset_id, node=None):
     random.shuffle(files)
     if len(files) >= 4:
         files = files[:4]
@@ -268,10 +268,21 @@ def create_tiled_image_wrapper(node, files, preset_id):
             file_format_id = file_formats.PNG,
             file_size = os.path.getsize(file_location),
             preset_id = preset_id,
-            contentnode_id = node.pk
+            contentnode = node
         )
         thumbnail_object.save()
         return thumbnail_object
+
+def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None):
+    if not file_object:
+        return None
+    file_copy = copy.copy(file_object)
+    file_copy.id = None
+    file_copy.contentnode = node
+    file_copy.assessment_item = assessment_item
+    file_copy.preset_id = preset_id or file_object.preset_id
+    file_copy.save()
+    return file_copy
 
 def generate_thumbnail(request):
     logging.debug("Entering the generate_thumbnail endpoint")
@@ -282,22 +293,31 @@ def generate_thumbnail(request):
         data = json.loads(request.body)
         node = ContentNode.objects.get(pk=data["node_id"])
 
-        files = []
-        for n in node.get_descendants().all():
-            file_locations = n.files.filter(file_format_id__in=[file_formats.PNG, file_formats.JPG, file_formats.JPEG]).values_list('file_on_disk', flat=True)
-            files += [str(f) for f in file_locations]
-
-        assert node.kind.pk == content_kinds.TOPIC, "Thumbnail generation for this kind is not supported."
-        assert any(files), "No images available to generate thumbnail."
-
         thumbnail_object = None
-        if node.kind.pk == content_kinds.TOPIC:
-            thumbnail_object = create_tiled_image_wrapper(node, list(set(files)), format_presets.TOPIC_THUMBNAIL)
+        if node.kind_id == content_kinds.TOPIC:
+            files = []
+            for n in node.get_descendants().all():
+                file_locations = n.files.filter(file_format_id__in=[file_formats.PNG, file_formats.JPG, file_formats.JPEG]).values_list('file_on_disk', flat=True)
+                files += [str(f) for f in file_locations]
+            assert any(files), "No images available to generate thumbnail"
+            thumbnail_object = create_tiled_image_wrapper(node, list(set(files)), format_presets.TOPIC_THUMBNAIL, set_node=False)
+        elif node.kind_id == content_kinds.VIDEO:
+            file_object = node.files.filter(file_format_id=file_formats.MP4).first()
+            thumbnail_object = extract_thumbnail_wrapper(file_object)
+        elif node.kind_id == content_kinds.EXERCISE:
+            file_ids = node.assessment_items.values_list('files__id', flat=True)
+            image = File.objects.filter(id__in=file_ids, preset_id=format_presets.EXERCISE_IMAGE).first()
+            thumbnail_object = duplicate_file(image, preset_id=format_presets.EXERCISE_THUMBNAIL)
+        else:
+            raise NotImplementedError("Thumbnail generation for this kind is not supported")
+
+        assert thumbnail_object, "Cannot generate thumbnail for this content"
+
         return HttpResponse(json.dumps({
             "success": True,
-            "file_id": thumbnail_object.pk if thumbnail_object else None
+            "file": JSONRenderer().render(FileSerializer(thumbnail_object).data),
+            "path": generate_storage_url(str(thumbnail_object)),
         }))
-
 
 @csrf_exempt
 def thumbnail_upload(request):
@@ -400,10 +420,7 @@ def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
 
     # copy file object too
     for fobj in node.files.all():
-        fobj_copy = copy.copy(fobj)
-        fobj_copy.id = None
-        fobj_copy.contentnode = new_node
-        fobj_copy.save()
+        duplicate_file(fobj, node=new_node)
 
     # copy assessment item object too
     for aiobj in node.assessment_items.all():
@@ -412,10 +429,7 @@ def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
         aiobj_copy.contentnode = new_node
         aiobj_copy.save()
         for fobj in aiobj.files.all():
-            fobj_copy = copy.copy(fobj)
-            fobj_copy.id = None
-            fobj_copy.assessment_item = aiobj_copy
-            fobj_copy.save()
+            duplicate_file(fobj, assessment_item=aiobj_copy)
 
     for c in node.children.all():
         _duplicate_node(c, parent=new_node.id)
