@@ -173,8 +173,7 @@ def exercise(request, exercise_id):
 
     return render(request, 'exercise_edit.html', {"exercise": JSONRenderer().render(serializer.data), "assessment_items": JSONRenderer().render(assessment_serialize.data)})
 
-# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
-@csrf_exempt
+
 def file_upload(request):
     if request.method == 'POST':
         preset = FormatPreset.objects.get(id=request.META.get('HTTP_PRESET'))
@@ -187,7 +186,7 @@ def file_upload(request):
         return HttpResponse(json.dumps({
             "success": True,
             "filename": str(file_object),
-            "object_id": file_object.pk
+            "file": JSONRenderer().render(FileSerializer(file_object).data)
         }))
 
 def file_create(request):
@@ -210,7 +209,7 @@ def file_create(request):
 
         return HttpResponse(json.dumps({
             "success": True,
-            "object_id": new_node.pk
+            "node": JSONRenderer().render(ContentNodeSerializer(new_node).data)
         }))
 
 def extract_thumbnail_wrapper(file_object, node=None):

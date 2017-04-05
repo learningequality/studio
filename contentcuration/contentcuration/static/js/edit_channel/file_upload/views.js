@@ -191,19 +191,13 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         return new_format_item;
     },
     file_uploaded: function(request) {
-        var data = JSON.parse(request.xhr.response)
-        var new_node = new Models.ContentNodeModel({id: data.object_id});
-        var self = this;
-        this.fetch_model(new_node).then(function(fetched){
-            self.collection.add(fetched);
-            var new_view = self.create_new_view(fetched);
-            if(data.preset){
-                new_view.set_preset(data.preset);
-            }
-            $(request.previewTemplate).html(new_view.el);
-            self.update_count();
-            (self.views.length && self.uploads_in_progress <= 0)? self.enable_next() : self.disable_next(self.uploads_in_progress > 0);
-        });
+        var data = JSON.parse(request.xhr.response).node
+        var new_node = new Models.ContentNodeModel(JSON.parse(data));
+        this.collection.add(new_node);
+        var new_view = this.create_new_view(new_node);
+        $(request.previewTemplate).html(new_view.el);
+        this.update_count();
+        (this.views.length && this.uploads_in_progress <= 0)? this.enable_next() : this.disable_next(this.uploads_in_progress > 0);
     },
     file_failed:function(file, error){
         this.uploads_in_progress --;
@@ -468,9 +462,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     dropzone_template : require("./hbtemplates/format_dropzone_item.handlebars"),
     upload_in_progress:false,
 
-    'id': function() {
-        return "format_slot_item_" + this.model.get("id");
-    },
+    'id': function() { return "format_slot_item_" + this.model.get("id"); },
+    selector: function() { return this.model.get("id") + "_"  + this.node.get('id') + "_dropzone" + ((this.file)? "_swap" : "") },
     className:"row format_editor_item",
     initialize: function(options) {
         _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed','file_failed', 'create_dropzone', 'set_file');
@@ -487,49 +480,45 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
-            nodeid:this.node.get('id')
+            selector: this.selector()
         }));
-        _.defer(this.create_dropzone, 1)
+        _.defer(this.create_dropzone);
     },
     create_dropzone:function(){
-        var dz_selector="#" + this.model.get("id") + "_"  + this.node.get('id') + "_dropzone" + ((this.file)? "_swap" : "");
-        if(this.$(dz_selector).is(":visible")){
-            var clickables = [dz_selector + " .dz_click"];
-            if(this.file){
-                clickables.push(dz_selector + " .format_editor_file_name");
-            }
-            var dropzone = new Dropzone(this.$(dz_selector).get(0), {
-               clickable: clickables,
-               acceptedFiles: this.get_accepted_files(),
-               url: window.Urls.file_upload(),
-               previewTemplate:this.dropzone_template(),
-               maxFiles: 1,
-               previewsContainer: dz_selector,
-               headers: {
-                    "X-CSRFToken": get_cookie("csrftoken"),
-                    "Node" : this.node.get('id'),
-                    "Preset": this.model.get("id")
-                }
-            });
-            dropzone.on("success", this.file_uploaded);
-
-            // Only enable the submit upload files button once all files have finished uploading.
-            dropzone.on("addedfile", this.file_added);
-            dropzone.on("removedfile", this.file_removed);
-            dropzone.on("error", this.file_failed);
+        var dz_selector="#" + this.selector();
+        var clickables = [dz_selector + " .dz-clickable"];
+        if(this.file){
+            clickables.push(dz_selector + " .format_editor_file_name");
         }
+        var dropzone = new Dropzone(this.$(dz_selector).get(0), {
+           clickable: clickables,
+           acceptedFiles: this.get_accepted_files(),
+           url: window.Urls.file_upload(),
+           previewTemplate:this.dropzone_template(),
+           maxFiles: 1,
+           previewsContainer: dz_selector,
+           headers: {
+                "X-CSRFToken": get_cookie("csrftoken"),
+                "Node" : this.node.get('id'),
+                "Preset": this.model.get("id")
+            }
+        });
+        dropzone.on("success", this.file_uploaded);
+
+        // Only enable the submit upload files button once all files have finished uploading.
+        dropzone.on("addedfile", this.file_added);
+        dropzone.on("removedfile", this.file_removed);
+        dropzone.on("error", this.file_failed);
     },
     get_accepted_files:function(){
         var preset = window.formatpresets.findWhere({id: this.model.id});
         return preset.get("associated_mimetypes").join(",");
     },
     file_uploaded:function(file){
-        var new_file = new Models.FileModel({id: JSON.parse(file.xhr.response).object_id});
-        var self = this;
-        this.fetch_model(new_file).then(function(fetched){
-            self.set_file(fetched);
-            self.set_uploading(false);
-        });
+        var data = JSON.parse(file.xhr.response).file
+        var new_file = new Models.FileModel(JSON.parse(data));
+        this.set_file(new_file);
+        this.set_uploading(false);
     },
     set_file:function(file){
         var originalFile = this.file;
