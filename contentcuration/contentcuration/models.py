@@ -4,7 +4,6 @@ import uuid
 import hashlib
 import functools
 import json
-
 from django.conf import settings
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
@@ -19,6 +18,22 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from rest_framework.authtoken.models import Token
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+
+DEFAULT_USER_PREFERENCES = json.dumps({
+    'license': licenses.CC_BY,
+    'language': None,
+    'author': None,
+    'copyright_holder': None,
+    'mastery_model': exercises.NUM_CORRECT_IN_A_ROW_5,
+    'm_value': 5,
+    'n_value': 5,
+    'auto_derive_video_thumbnail': True,
+    'auto_derive_audio_thumbnail': True,
+    'auto_derive_document_thumbnail': True,
+    'auto_derive_html5_thumbnail': True,
+    'auto_derive_exercise_thumbnail': True,
+    'auto_randomize_questions': True,
+})
 
 class UserManager(BaseUserManager):
     def create_user(self, email, first_name, last_name, password=None):
@@ -48,6 +63,7 @@ class User(AbstractBaseUser):
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
+    preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
