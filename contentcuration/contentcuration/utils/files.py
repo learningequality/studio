@@ -1,5 +1,4 @@
 import copy
-from io import BytesIO
 import json
 import logging
 import os
@@ -16,8 +15,41 @@ from contentcuration.api import write_file_to_storage, write_raw_content_to_stor
 from contentcuration.models import File, ContentNode, generate_file_on_disk_name, generate_storage_url
 from le_utils.constants import format_presets, content_kinds, file_formats, exercises
 from pressurecooker.videos import extract_thumbnail_from_video, compress_video
-from pressurecooker.images import create_tiled_image
+from pressurecooker.images import create_tiled_image, create_image_from_pdf_page, create_waveform_image
 from pressurecooker.encodings import write_base64_to_file
+
+def get_image_from_audio(audio, node=None, preset_id=None, max_num_of_points=None, colormap_options=None):
+    ext = file_formats.PNG
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
+        tempf.close()
+        create_waveform_image(str(audio.file_on_disk), tempf.name, max_num_of_points=max_num_of_points, colormap_options=colormap_options)
+        with open(tempf.name, 'rb') as tf:
+            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
+
+
+def create_file_from_contents(contents, ext=None, node=None, preset_id=None):
+    file_object = None
+    checksum, filename, path = write_raw_content_to_storage(contents, ext=ext)
+    with open(path, 'rb') as new_file:
+        return File.objects.create(
+            file_on_disk = DjFile(new_file),
+            file_format_id = ext,
+            file_size = os.path.getsize(path),
+            checksum = checksum,
+            preset_id = preset_id,
+            contentnode = node
+        )
+
+def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None):
+    if not file_object:
+        return None
+    file_copy = copy.copy(file_object)
+    file_copy.id = None
+    file_copy.contentnode = node
+    file_copy.assessment_item = assessment_item
+    file_copy.preset_id = preset_id or file_object.preset_id
+    file_copy.save()
+    return file_copy
 
 def extract_thumbnail_wrapper(file_object, node=None, preset_id=None):
     ext = file_formats.PNG
@@ -59,21 +91,9 @@ def create_tiled_image_wrapper(files, preset_id, node=None):
         with open(tempf.name, 'rb') as tf:
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
 
-def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None):
-    if not file_object:
-        return None
-    file_copy = copy.copy(file_object)
-    file_copy.id = None
-    file_copy.contentnode = node
-    file_copy.assessment_item = assessment_item
-    file_copy.preset_id = preset_id or file_object.preset_id
-    file_copy.save()
-    return file_copy
-
-def get_image_from_exercise(node):
-    file_ids = node.assessment_items.values_list('files__id', flat=True)
+def get_image_from_exercise(file_ids, node=None, preset_id=None):
     image = File.objects.filter(id__in=file_ids, preset_id=format_presets.EXERCISE_IMAGE).first()
-    return duplicate_file(image, preset_id=format_presets.EXERCISE_THUMBNAIL)
+    return duplicate_file(image, node=node, preset_id=preset_id)
 
 def get_image_from_htmlnode(htmlfile, node=None, preset_id=None):
     with zipfile.ZipFile(htmlfile.file_on_disk, 'r') as zf:
@@ -85,18 +105,16 @@ def get_image_from_htmlnode(htmlfile, node=None, preset_id=None):
             with zf.open(image_name) as image:
                 return create_file_from_contents(image.read(), ext=ext[1:], node=node, preset_id=preset_id)
 
-def create_file_from_contents(contents, ext=None, node=None, preset_id=None):
-    file_object = None
-    checksum, filename, path = write_raw_content_to_storage(contents, ext=ext)
-    with open(path, 'rb') as new_file:
-        return File.objects.create(
-            file_on_disk = DjFile(new_file),
-            file_format_id = ext,
-            file_size = os.path.getsize(path),
-            checksum = checksum,
-            preset_id = preset_id,
-            contentnode = node
-        )
+def get_image_from_pdf(document, node=None, preset_id=None):
+    ext = file_formats.PNG
+
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
+        tempf.close()
+        create_image_from_pdf_page(document.file_on_disk.name, tempf.name)
+
+        with open(tempf.name, 'rb') as tf:
+            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
+
 
 def generate_thumbnail_from_node(node):
     thumbnail_object = None
@@ -111,10 +129,19 @@ def generate_thumbnail_from_node(node):
         file_object = node.files.filter(file_format_id=file_formats.MP4).first()
         thumbnail_object = extract_thumbnail_wrapper(file_object, preset_id=format_presets.VIDEO_THUMBNAIL)
     elif node.kind_id == content_kinds.EXERCISE:
-        thumbnail_object = get_image_from_exercise(node)
+        file_ids = node.assessment_items.values_list('files__id', flat=True)
+        thumbnail_object = get_image_from_exercise(file_ids, preset_id=format_presets.EXERCISE_THUMBNAIL)
     elif node.kind_id == content_kinds.HTML5:
         htmlfile = node.files.filter(preset_id=format_presets.HTML5_ZIP).first()
         thumbnail_object = get_image_from_htmlnode(htmlfile, preset_id=format_presets.HTML5_THUMBNAIL) if htmlfile else thumbnail_object
+    elif node.kind_id == content_kinds.DOCUMENT:
+        document = node.files.filter(preset_id=format_presets.DOCUMENT).first()
+        thumbnail_object = get_image_from_pdf(document, preset_id=format_presets.DOCUMENT_THUMBNAIL) if document else thumbnail_object
+    elif node.kind_id == content_kinds.AUDIO:
+        audio = node.files.filter(preset_id=format_presets.AUDIO).first()
+        cmap_options={'name': 'cool', 'vmin': 0.2, 'vmax': 0.7}
+        if audio:
+            thumbnail_object = get_image_from_audio(audio, preset_id=format_presets.AUDIO_THUMBNAIL, max_num_of_points=1000000, colormap_options=cmap_options)
     else:
         raise NotImplementedError("Thumbnail generation for this kind is not supported")
 

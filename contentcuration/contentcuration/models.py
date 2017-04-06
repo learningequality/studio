@@ -4,7 +4,6 @@ import uuid
 import hashlib
 import functools
 import json
-
 from django.conf import settings
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
