@@ -662,12 +662,14 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     image_added:function(thumbnail){
         this.image_error = "Error uploading file: connection interrupted";
+        this.$(".finished_area").css('display', 'none');
         this.$("#" + this.get_selector() + "_placeholder").css("display", "none");
         if(this.onstart){ this.onstart(); }
     },
     image_removed:function(thumbnail){
         this.image_error = null;
         this.$("#" + this.get_selector() + "_placeholder").css("display", "block");
+        this.$(".finished_area").css('display', 'block');
         if(this.onfinish){ this.onfinish(); }
     },
     use_image:function(file){
