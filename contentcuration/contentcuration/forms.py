@@ -151,6 +151,9 @@ class PreferencesSettingsForm(forms.Form):
     m_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label="M")
     n_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label="N")
     auto_derive_video_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Videos")
+    auto_derive_audio_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Audio")
+    auto_derive_document_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Documents")
+    auto_derive_html5_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="HTML Apps")
     auto_randomize_questions = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Automatically randomize question order")
 
     class Meta:
@@ -165,6 +168,9 @@ class PreferencesSettingsForm(forms.Form):
             'mastery_model': self.cleaned_data["mastery_model"],
             'auto_randomize_questions': self.cleaned_data["auto_randomize_questions"],
             'auto_derive_video_thumbnail': self.cleaned_data["auto_derive_video_thumbnail"],
+            'auto_derive_audio_thumbnail': self.cleaned_data["auto_derive_audio_thumbnail"],
+            'auto_derive_document_thumbnail': self.cleaned_data["auto_derive_document_thumbnail"],
+            'auto_derive_html5_thumbnail': self.cleaned_data["auto_derive_html5_thumbnail"],
             'm_value': self.cleaned_data["m_value"],
             'n_value': self.cleaned_data["n_value"],
         })
