@@ -358,6 +358,7 @@ var FormatInlineItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_inline_item.handlebars"),
     'id': function() { return this.model.get("id"); },
     initialize: function(options) {
+        _.bindAll(this, 'set_thumbnail', 'remove_thumbnail');
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
         this.containing_list_view = options.containing_list_view;
@@ -386,7 +387,7 @@ var FormatFormatItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_format_item.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, 'update_name', 'remove_item', 'set_thumbnail', 'disable_next', 'enable_next');
+        _.bindAll(this, 'update_name', 'remove_item', 'set_thumbnail', 'disable_next', 'enable_next', 'remove_thumbnail');
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
         this.containing_list_view = options.containing_list_view;
