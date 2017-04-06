@@ -55,6 +55,9 @@ INSTALLED_APPS = (
     'rest_framework.authtoken',
 )
 
+SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
+
+
 MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
