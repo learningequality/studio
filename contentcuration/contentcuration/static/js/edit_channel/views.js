@@ -815,8 +815,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			content.list.add_nodes(moved);
 		}
 	},
-	open_edit:function(event){
-		this.cancel_actions(event);
+	open_edit:function(allow_edit){
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var editCollection =  new Models.ContentNodeCollection([this.model]);
@@ -825,7 +824,8 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			el: $("#dialog"),
 			new_content: false,
 			model: this.containing_list_view.model,
-		  	onsave: this.reload_ancestors
+		  	onsave: this.reload_ancestors,
+		  	allow_edit: allow_edit
 		});
 	},
 	handle_drop:function(models){
