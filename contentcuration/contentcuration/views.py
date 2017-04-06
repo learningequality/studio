@@ -84,7 +84,9 @@ def channel_page(request, channel, allow_edit=False):
                                                  "fpreset_list" : formatpresets,
                                                  "ckinds_list" : contentkinds,
                                                  "ctags": json_renderer.render(channel_tags_serializer.data),
-                                                 "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data)})
+                                                 "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data),
+                                                 "preferences" : request.user.preferences,
+                                                })
 
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -164,7 +166,12 @@ def file_create(request):
         size = request.FILES.values()[0]._size
         presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:])
         kind = presets.first().kind
-        new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=settings.DEFAULT_LICENSE, author=request.user.get_full_name())
+        original_filename = request.FILES.values()[0]._name
+        preferences = json.loads(request.user.preferences)
+        author = preferences.get('author') if isinstance(preferences.get('author'), basestring) else request.user.get_full_name()
+        license = License.objects.filter(license_name=preferences.get('license')).first() # Use filter/first in case preference hasn't been set
+        license_id = license.pk if license else settings.DEFAULT_LICENSE
+        new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=license_id, author=author, copyright_holder=preferences.get('copyright_holder') )
         new_node.save()
         file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename = original_filename, contentnode=new_node, file_size=size)
         file_object.save()
@@ -175,7 +182,11 @@ def file_create(request):
 
         file_object.save()
 
-        generate_thumbnail_from_node(new_node, set_node=True)
+        if preferences.get('auto_derive_video_thumbnail') and new_node.kind_id == content_kinds.VIDEO \
+            or preferences.get('auto_derive_audio_thumbnail') and new_node.kind_id == content_kinds.AUDIO \
+            or preferences.get('auto_derive_html5_thumbnail') and new_node.kind_id == content_kinds.HTML5 \
+            or preferences.get('auto_derive_document_thumbnail') and new_node.kind_id == content_kinds.DOCUMENT:
+            generate_thumbnail_from_node(new_node, set_node=True)
 
         return HttpResponse(json.dumps({
             "success": True,

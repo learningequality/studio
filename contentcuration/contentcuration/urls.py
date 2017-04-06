@@ -146,6 +146,7 @@ urlpatterns += [
 urlpatterns += [
     url(r'^settings/$', settings_views.settings, name='settings'),
     url(r'^settings/profile', settings_views.ProfileView.as_view(), name='profile_settings'),
+    url(r'^settings/preferences', settings_views.PreferencesView.as_view(), name='preferences_settings'),
     url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
     url(r'^settings/account/success', settings_views.account_settings_success, name='account_settings_success'),
     url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),

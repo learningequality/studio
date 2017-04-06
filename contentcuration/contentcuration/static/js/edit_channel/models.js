@@ -96,6 +96,9 @@ var UserModel = BaseModel.extend({
     },
     get_clipboard:function(){
     	return  new ContentNodeModel(this.get("clipboard_tree"));
+    },
+    get_full_name: function(){
+    	return this.get('first_name') + " " + this.get('last_name');
     }
 });
 
@@ -190,10 +193,10 @@ var ContentNodeModel = BaseModel.extend({
 		}
 		if(this.get('kind') === 'exercise'){
 			var data = (this.get('extra_fields'))? this.get('extra_fields') : {};
-			data['mastery_model'] = (data['mastery_model'])? data['mastery_model'] : "num_correct_in_a_row_5";
-		    data['m'] = (data['m'])? data['m'] : 1;
-		    data['n'] = (data['n'])? data['n'] : 1;
-		    data['randomize'] = (data['randomize'] !== undefined)? data['randomize'] : true;
+			data['mastery_model'] = (data['mastery_model'])? data['mastery_model'] : window.preferences.mastery_model;
+		    data['m'] = (data['m'])? data['m'] : window.preferences.m_value;
+		    data['n'] = (data['n'])? data['n'] : window.preferences.n_value;
+		    data['randomize'] = (data['randomize'] !== undefined)? data['randomize'] : window.preferences.auto_randomize_questions;
 		    this.set('extra_fields', data);
 		}
 	}
