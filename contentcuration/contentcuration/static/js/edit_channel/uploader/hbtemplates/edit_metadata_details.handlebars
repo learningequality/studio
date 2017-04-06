@@ -1,0 +1,50 @@
+{{#if none_selected}}
+	<div id="uploader-default-prompt" class="text-center container-fluid">Please select an item to view.</div>
+{{else}}
+	{{#unless node}}
+		<h5 id="uploader-count-message">Viewing data for {{selected_count}} items.</h5>
+		{{#unless isoriginal}}<p class="text-center uploader-copied-warning"><i>Detected item(s) imported from another channel</i></p>{{/unless}}
+	{{/unless}}
+	{{#if node}}
+		<div id="editmetadata_format_section"></div>
+		<hr/>
+		<br/>
+		<h4>Title</h4>
+		<p class="detail_field">{{#if node.title}}{{node.title}}{{else}}<span class="default_detail_field">No title</span>{{/if}}</p>
+	{{/if}}
+	{{#if is_exercise}}
+		<h4>Mastery Criteria <span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="mastery_about"></span></h4>
+		<p class="detail_field">{{#if mastery}}{{mastery}}{{else}}<span class="default_detail_field">None</span>{{/if}}</p>
+	{{/if}}
+	{{#if is_file}}
+		{{#unless isoriginal}}<p class="uploader-copied-warning">Imported from <b>{{node.original_channel.name}}</b></p>{{/unless}}
+		<div class="row">
+			<div class="col-xs-4">
+				<h4>Author</h4>
+				<p class="detail_field">{{#if author}}{{author}}{{else}}<span class="default_detail_field">Anonymous</span>{{/if}}</p>
+			</div>
+			<div class="col-xs-4">
+				<h4>License</h4>
+				<p class="detail_field">
+					<span>{{#if license}}{{license}}{{else}}<span class="default_detail_field">None</span>{{/if}}</span>
+					<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" ></span>
+				</p>
+			</div>
+			<div class="col-xs-4">
+				<h4>Copyright Holder</h4>
+				<p class="detail_field">{{#if copyright_owner}}{{copyright_owner}}{{else}}<span class="default_detail_field">None</span>{{/if}}</p>
+			</div>
+		</div>
+	{{/if}}
+	{{#if node}}
+		<h4>Description</h4>
+		<p class="detail_field">{{#if node.description}}{{node.description}}{{else}}<span class="default_detail_field">No description</span>{{/if}}</p>
+	{{/if}}
+	<div class="ui-widget" id="tag_area_wrapper">
+		<h4>Tags</h4>
+		<div class="container-fluid">
+			{{#if no_tags}}<p class="detail_field"><span class="default_detail_field">No tags</span></p>{{/if}}
+			<div class="row view_only_tags" id="tag_area"></div>
+		</div>
+	</div>
+{{/if}}
