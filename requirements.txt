@@ -22,3 +22,5 @@ le-utils==0.0.9rc21
 gunicorn==19.6.0
 django-mailgun==0.9.1
 pressurecooker==0.0.12
+metaphone==0.6
+porter2stemmer==1.0

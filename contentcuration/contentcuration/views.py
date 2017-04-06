@@ -182,11 +182,14 @@ def file_create(request):
 
         file_object.save()
 
-        if preferences.get('auto_derive_video_thumbnail') and new_node.kind_id == content_kinds.VIDEO \
-            or preferences.get('auto_derive_audio_thumbnail') and new_node.kind_id == content_kinds.AUDIO \
-            or preferences.get('auto_derive_html5_thumbnail') and new_node.kind_id == content_kinds.HTML5 \
-            or preferences.get('auto_derive_document_thumbnail') and new_node.kind_id == content_kinds.DOCUMENT:
-            generate_thumbnail_from_node(new_node, set_node=True)
+        try:
+            if preferences.get('auto_derive_video_thumbnail') and new_node.kind_id == content_kinds.VIDEO \
+                or preferences.get('auto_derive_audio_thumbnail') and new_node.kind_id == content_kinds.AUDIO \
+                or preferences.get('auto_derive_html5_thumbnail') and new_node.kind_id == content_kinds.HTML5 \
+                or preferences.get('auto_derive_document_thumbnail') and new_node.kind_id == content_kinds.DOCUMENT:
+                generate_thumbnail_from_node(new_node, set_node=True)
+        except Exception:
+            pass
 
         return HttpResponse(json.dumps({
             "success": True,
