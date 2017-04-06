@@ -76,21 +76,6 @@
 .format_item{
     padding: 10px;
     border: 1px solid @gray-300;
-    .thumbnail_img{
-        width:130px;
-        height:130px;
-        object-fit: cover;
-    }
-    .format_section{
-        &.format_metadata_section{ padding-left: 30px; }
-        .name_content_input{ 
-            padding:2px 5px;
-            border:1px solid @gray-400;
-            width:100%;
-            margin-bottom: 10px;
-            font-size:14pt;
-        }
-    }
     .remove_from_dz{
         cursor:pointer;
         font-size:14pt;
@@ -104,6 +89,21 @@
     padding-bottom: 10px;
     border-bottom: 1px dotted @gray-300;
     .file_size_metadata{ font-size: 10pt; }
+}
+.thumbnail_img{
+    width:130px;
+    height:130px;
+    object-fit: cover;
+}
+.format_section{
+    &.format_metadata_section{ padding-left: 30px; }
+    .name_content_input{
+        padding:2px 5px;
+        border:1px solid @gray-400;
+        width:100%;
+        margin-bottom: 10px;
+        font-size:14pt;
+    }
 }
 
 .format_editor_list{
@@ -193,7 +193,7 @@
                 #generate_thumbnail_error{ display: block; }
             }
         }
-        
+
     }
 }
 

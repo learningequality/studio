@@ -6,10 +6,7 @@
 		{{#unless isoriginal}}<p class="text-center uploader-copied-warning"><i>Detected item(s) imported from another channel - fields disabled accordingly</i></p>{{/unless}}
 	{{/unless}}
 	{{#if node}}
-		<div class="row file_editor_row">
-			<div class="col-xs-3" id="node_thumbnail"></div>
-			<div class="col-xs-9">{{#if has_files}}<ul id="editmetadata_format_section" class="list-unstyled"></ul>{{/if}}</div>
-		</div>
+		<div id="editmetadata_format_section"></div>
 		<hr/>
 		<br/>
 		<h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>

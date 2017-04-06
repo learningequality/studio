@@ -18,14 +18,6 @@ from pressurecooker.videos import extract_thumbnail_from_video, compress_video
 from pressurecooker.images import create_tiled_image, create_image_from_pdf_page, create_waveform_image
 from pressurecooker.encodings import write_base64_to_file
 
-def get_image_from_audio(audio, node=None, preset_id=None, max_num_of_points=None, colormap_options=None):
-    ext = file_formats.PNG
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
-        tempf.close()
-        create_waveform_image(str(audio.file_on_disk), tempf.name, max_num_of_points=max_num_of_points, colormap_options=colormap_options)
-        with open(tempf.name, 'rb') as tf:
-            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
-
 
 def create_file_from_contents(contents, ext=None, node=None, preset_id=None):
     file_object = None
@@ -115,33 +107,43 @@ def get_image_from_pdf(document, node=None, preset_id=None):
         with open(tempf.name, 'rb') as tf:
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
 
+def get_image_from_audio(audio, node=None, preset_id=None, max_num_of_points=None):
+    ext = file_formats.PNG
+    cmap_options={'name': 'BuPu', 'vmin': 0.3, 'vmax': 0.7, 'color': 'black'}
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
+        tempf.close()
+        create_waveform_image(str(audio.file_on_disk), tempf.name, max_num_of_points=max_num_of_points, colormap_options=cmap_options)
+        with open(tempf.name, 'rb') as tf:
+            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
 
-def generate_thumbnail_from_node(node):
+def generate_thumbnail_from_node(node, set_node=None):
     thumbnail_object = None
+    assigned_node = node if set_node else None
     if node.kind_id == content_kinds.TOPIC:
         files = []
         for n in node.get_descendants().all():
             file_locations = n.files.filter(file_format_id__in=[file_formats.PNG, file_formats.JPG, file_formats.JPEG]).values_list('file_on_disk', flat=True)
             files += [str(f) for f in file_locations]
         assert any(files), "No images available to generate thumbnail"
-        thumbnail_object = create_tiled_image_wrapper(list(set(files)), format_presets.TOPIC_THUMBNAIL)
+        thumbnail_object = create_tiled_image_wrapper(list(set(files)), format_presets.TOPIC_THUMBNAIL, node=assigned_node)
     elif node.kind_id == content_kinds.VIDEO:
         file_object = node.files.filter(file_format_id=file_formats.MP4).first()
-        thumbnail_object = extract_thumbnail_wrapper(file_object, preset_id=format_presets.VIDEO_THUMBNAIL)
+        thumbnail_object = extract_thumbnail_wrapper(file_object, preset_id=format_presets.VIDEO_THUMBNAIL, node=assigned_node)
     elif node.kind_id == content_kinds.EXERCISE:
         file_ids = node.assessment_items.values_list('files__id', flat=True)
-        thumbnail_object = get_image_from_exercise(file_ids, preset_id=format_presets.EXERCISE_THUMBNAIL)
+        thumbnail_object = get_image_from_exercise(file_ids, preset_id=format_presets.EXERCISE_THUMBNAIL, node=assigned_node)
     elif node.kind_id == content_kinds.HTML5:
         htmlfile = node.files.filter(preset_id=format_presets.HTML5_ZIP).first()
-        thumbnail_object = get_image_from_htmlnode(htmlfile, preset_id=format_presets.HTML5_THUMBNAIL) if htmlfile else thumbnail_object
+        if htmlfile:
+            thumbnail_object = get_image_from_htmlnode(htmlfile, preset_id=format_presets.HTML5_THUMBNAIL, node=assigned_node)
     elif node.kind_id == content_kinds.DOCUMENT:
         document = node.files.filter(preset_id=format_presets.DOCUMENT).first()
-        thumbnail_object = get_image_from_pdf(document, preset_id=format_presets.DOCUMENT_THUMBNAIL) if document else thumbnail_object
+        if document:
+            thumbnail_object = get_image_from_pdf(document, preset_id=format_presets.DOCUMENT_THUMBNAIL, node=assigned_node)
     elif node.kind_id == content_kinds.AUDIO:
         audio = node.files.filter(preset_id=format_presets.AUDIO).first()
-        cmap_options={'name': 'cool', 'vmin': 0.2, 'vmax': 0.7}
         if audio:
-            thumbnail_object = get_image_from_audio(audio, preset_id=format_presets.AUDIO_THUMBNAIL, max_num_of_points=1000000, colormap_options=cmap_options)
+            thumbnail_object = get_image_from_audio(audio, preset_id=format_presets.AUDIO_THUMBNAIL, node=assigned_node, max_num_of_points=1500000)
     else:
         raise NotImplementedError("Thumbnail generation for this kind is not supported")
 

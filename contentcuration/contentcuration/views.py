@@ -34,6 +34,10 @@ from pressurecooker.videos import guess_video_preset_by_resolution, extract_thum
 from pressurecooker.images import create_tiled_image
 from pressurecooker.encodings import write_base64_to_file
 
+def get_nodes_by_ids(request):
+    if request.method == 'POST':
+        nodes = ContentNode.objects.filter(pk__in=json.loads(request.body))
+        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
 
 def base(request):
     if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
@@ -144,10 +148,9 @@ def file_upload(request):
     if request.method == 'POST':
         preset = FormatPreset.objects.get(id=request.META.get('HTTP_PRESET'))
         #Implement logic for switching out files without saving it yet
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
-        original_filename = request.FILES.values()[0]._name
+        filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
-        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, preset=preset)
+        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=filename, preset=preset)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
@@ -166,12 +169,13 @@ def file_create(request):
         file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename = original_filename, contentnode=new_node, file_size=size)
         file_object.save()
         if kind.pk == content_kinds.VIDEO:
-            extract_thumbnail_wrapper(file_object, node=new_node)
             file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))
         elif presets.filter(supplementary=False).count() == 1:
             file_object.preset = presets.filter(supplementary=False).first()
 
         file_object.save()
+
+        generate_thumbnail_from_node(new_node, set_node=True)
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -188,14 +192,13 @@ def generate_thumbnail(request):
         node = ContentNode.objects.get(pk=data["node_id"])
 
         thumbnail_object = generate_thumbnail_from_node(node)
-        
+
         return HttpResponse(json.dumps({
             "success": True,
             "file": JSONRenderer().render(FileSerializer(thumbnail_object).data),
             "path": generate_storage_url(str(thumbnail_object)),
         }))
 
-@csrf_exempt
 def thumbnail_upload(request):
     if request.method == 'POST':
         fobj = request.FILES.values()[0]
@@ -312,7 +315,6 @@ def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
 
     return new_node
 
-
 def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
 
@@ -388,8 +390,3 @@ def accessible_channels(request):
                         .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))\
                         .exclude(pk=data["channel_id"]).values_list('main_tree_id', flat=True))
         return HttpResponse(JSONRenderer().render(RootNodeSerializer(accessible_list, many=True).data))
-
-def get_nodes_by_ids(request):
-    if request.method == 'POST':
-        nodes = ContentNode.objects.filter(pk__in=json.loads(request.body))
-        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
