@@ -27,6 +27,15 @@ SITES = [
             "domain" : "127.0.0.1:8000",
         },
     },
+    {
+        "model" : Site,
+        "pk" : "id",
+        "fields": {
+            "id": 3,
+            "name"  : "Kolibri Studio (Develop)",
+            "domain" : "develop.contentworkshop.learningequality.org",
+        },
+    },
 ]
 
 LICENSES = [
