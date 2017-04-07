@@ -608,7 +608,9 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     get_thumbnail_url:function(){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
-        return (thumbnail)?  thumbnail.storage_url : "/static/img/" + this.model.get("kind") + "_placeholder.png";
+        if(thumbnail){ return thumbnail.storage_url; }
+        else if(this.model.get('kind')) { return "/static/img/" + this.model.get("kind") + "_placeholder.png"; }
+        else{ return "/static/img/kolibri_placeholder.png"; }
     },
     remove_image: function(){
         if(confirm("Are you sure you want to remove this image?")){

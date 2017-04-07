@@ -45,6 +45,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		};
 		var newView = this.create_new_view(new Models.ChannelModel(data));
 		this.$(this.list_selector).prepend(newView.el);
+		this.$(".default-item").css('display', 'none');
 		newView.edit_channel();
 		newView.set_is_new(true);
 	},
