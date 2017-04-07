@@ -584,6 +584,7 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.parentnode = options.parentnode;
         this.onchange = options.onchange;
         this.onrandom = options.onrandom;
+        this.allow_edit = options.allow_edit;
         this.listenTo(this.collection, "remove", this.render);
         this.collection = new Models.AssessmentItemCollection(this.model.get("assessment_items"));
         this.render();
@@ -599,13 +600,14 @@ var ExerciseView = ExerciseEditableListView.extend({
     render: function() {
         this.$el.html(this.template({
             node: this.model.toJSON(),
-            is_random: this.model.get('extra_fields').randomize
+            is_random: this.model.get('extra_fields').randomize,
+            allow_edit: this.allow_edit
         }));
-        this.load_content(this.collection.where({'deleted': false}), "Click '+ QUESTION' to begin...");
+        this.load_content(this.collection.where({'deleted': false}), (this.allow_edit)? "Click '+ QUESTION' to begin..." : "No questions associated with this exercise");
     },
     create_new_view:function(model){
         var new_exercise_item = null;
-        if(model.get('type') === "perseus_question"){
+        if(model.get('type') === "perseus_question" || !this.allow_edit){
             new_exercise_item = new AssessmentItemDisplayView({
                 model: model,
                 containing_list_view : this

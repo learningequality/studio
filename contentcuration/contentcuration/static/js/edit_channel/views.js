@@ -120,7 +120,7 @@ var BaseWorkspaceView = BaseView.extend({
 			current_user: window.current_user
 		});
 	},
-	edit_selected:function(){
+	edit_selected:function(allow_edit){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var list = this.get_selected();
 		var edit_collection = new Models.ContentNodeCollection();
@@ -141,7 +141,8 @@ var BaseWorkspaceView = BaseView.extend({
 			el: $("#dialog"),
 			model: content,
 			new_content: false,
-		    onsave: this.reload_ancestors
+		    onsave: this.reload_ancestors,
+		    allow_edit: allow_edit
 		});
 	},
 	add_to_trash:function(collection, message){
@@ -558,7 +559,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		            new_content: true,
 		            new_topic: true,
 		            onsave: self.reload_ancestors,
-		            onnew:self.add_nodes
+		            onnew:self.add_nodes,
+		            allow_edit: true
 		        });
         	},
         	error:function(obj, error){
@@ -618,7 +620,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		            new_content: true,
 		            new_exercise: true,
 		            onsave: self.reload_ancestors,
-		            onnew:self.add_nodes
+		            onnew:self.add_nodes,
+		            allow_edit: true
 		        });
         	},
         	error:function(obj, error){
@@ -897,7 +900,8 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		            new_content: true,
 		            new_topic: true,
 		            onsave: self.reload_ancestors,
-		            onnew:self.add_nodes
+		            onnew:self.add_nodes,
+		            allow_edit: true
 		        });
         	},
         	error:function(obj, error){

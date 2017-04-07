@@ -133,10 +133,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1;
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
-    var has_files = is_individual && (selected_items[0].model.get("assessment_items").length ||
-                    selected_items[0].model.get("files").find(function(f){
-                      return window.formatpresets.get({id:(f.preset.id)? f.preset.id:f.preset}).get("display");
-                    }));
+    var has_files = is_individual && selected_items[0].model.get("files").some(function(f){
+                      return window.formatpresets.get({id: f.preset.id || f.preset}).get("display");
+                    });
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
@@ -472,18 +471,19 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         is_file: this.shared_data && this.shared_data.all_files,
         none_selected: this.selected_items.length === 0,
         copyright_owner: copyright_owner,
-        license: this.get_license((!alloriginal)? original_source_license : this.shared_data.shared_license),
         author: author,
         selected_count: this.selected_items.length,
         has_files: has_files,
         is_exercise: this.shared_data && this.shared_data.all_exercises,
-        mastery: this.get_mastery_string(),
-        no_tags: !this.shared_data.shared_tags.length
       }));
     }
     this.handle_if_individual();
     if(this.shared_data){
+      var license_name = this.get_license((!alloriginal)? original_source_license : this.shared_data.shared_license)
+      this.$("#license_detail_field").text(license_name);
+      if(this.shared_data && this.shared_data.all_exercises) this.$("#mastery_detail_field").text(this.get_mastery_string());
       this.load_tags();
+      this.$("#tag_default_detail_field").css("display", (this.shared_data.shared_tags.length)? "none" : "block");
       this.$("#license_about").css("display", (this.shared_data.shared_license > 0)? "inline" : "none");
     }
   },
@@ -820,10 +820,9 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   handle_assessment_items:function(data){
     this.model.set('assessment_items', data);
-    // this.set_edited(true);
-    this.handle_change(false);
+    this.set_edited(true);
   },
-  handle_change:function(is_file){
+  handle_change:function(){
     this.set_edited(true);
     $("#metadata_preview_btn").css("display", "inline-block");
     this.preview_view.switch_preview(this.model);

@@ -43,17 +43,9 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     render_preview:function(){
         if(this.current_preview){
-            if (this.current_preview.preset && this.current_preview.preset.readable_name){
-                this.$(".preview_format_switch").text(this.current_preview.preset.readable_name);
-            }else{
-                this.$(".preview_format_switch").text("Q: " + this.parse_question(this.current_preview.question));
-            }
+            this.$(".preview_format_switch").text(this.current_preview.preset.readable_name);
             this.generate_preview(true);
         }
-    },
-    parse_question:function(question){
-        question = question || "";
-        return question.replace(/\$\$([^\$]+)\$\$/g, '[Formula]').replace(/!\[([^\]]*)\]\(([^\)]+)\)/g, '[Image]');
     },
     load_preview:function(){
         if(this.model){
@@ -62,34 +54,21 @@ var PreviewView = BaseViews.BaseView.extend({
         }
     },
     load_default_value:function(){
-        var default_preview = (this.model.get('kind')==="exercise") ?
-            _.min(this.model.get("assessment_items"), function(item){return item.order;}) :
-            _.min(this.model.get("files"), function(file){return file.preset.order});
+        var default_preview = _.min(this.model.get("files"), function(file){return file.preset.order});
         this.current_preview = default_preview;
     },
     load_presets:function(){
         return new Models.FormatPresetCollection(_.where(_.pluck(this.model.get("files"), "preset"), {'display': true}));
     },
-    load_questions:function(){
-        var self = this;
-        return new Models.AssessmentItemCollection(
-            _.chain(this.model.get("assessment_items")).clone()
-                .filter(function(item){return !item['deleted'];})
-                .map(function(item){ return {type: item.type, question: self.parse_question(item.question)}; }).value()
-        );
-    },
     load_preset_dropdown:function(){
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
-             presets: this.load_presets().toJSON(),
-             questions: this.load_questions().toJSON()
+             presets: this.load_presets().toJSON()
         }));
     },
 
     select_preview:function(event){
         // called internally
-        var selected_preview = ($(event.target).hasClass('preview_file'))?
-            _.find(this.model.get('files'), function(file){ return file.preset.id === event.target.getAttribute('value'); }) :
-            this.model.get('assessment_items')[event.target.value];
+        var selected_preview = _.find(this.model.get('files'), function(file){return file.preset.id === event.target.getAttribute('value');});
         this.current_preview = selected_preview;
         this.render_preview();
     },
@@ -98,62 +77,47 @@ var PreviewView = BaseViews.BaseView.extend({
         this.model = model;
         this.render();
     },
-
     generate_preview:function(force_load){
         if(this.current_preview){
-            if(this.current_preview.question !== null && this.current_preview.question !== undefined){
-                var ExerciseView = require("edit_channel/exercise_creation/views");
-                var assessment_item = new Models.AssessmentItemModel(this.current_preview);
-                if(this.exercise_item){
-                    this.exercise_item.remove();
-                }
-                this.exercise_item = new ExerciseView.AssessmentItemDisplayView({
-                    model: assessment_item,
-                    containing_list_view : null,
-                    nodeid:(this.model)? this.model.get('id') : null,
-                });
-                this.$("#preview_window").html(this.exercise_item.el);
-            }else{
-                extension = this.current_preview.file_format;
+            extension = this.current_preview.file_format;
 
-                var preview_template;
-                switch (extension){
-                    case "png":
-                    case "jpg":
-                    case "jpeg":
-                        preview_template = require("./hbtemplates/preview_templates/image.handlebars");
-                        break;
-                    case "pdf":
-                    case "PDF":
-                    case "vtt":
-                    case "srt":
-                        preview_template = require("./hbtemplates/preview_templates/document.handlebars");
-                        break;
-                    case "mp3":
-                    case "wav":
-                        preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
-                        break;
-                    case "mp4":
-                        preview_template = require("./hbtemplates/preview_templates/video.handlebars");
-                        break;
-                    case "perseus":
-                        preview_template = require("./hbtemplates/preview_templates/exercise.handlebars");
-                        break;
-                    case "zip":
-                        preview_template = require("./hbtemplates/preview_templates/html5.handlebars");
-                        break;
-                    default:
-                        preview_template = require("./hbtemplates/preview_templates/default.handlebars");
-                }
-                this.$("#preview_window").html(preview_template({
-                    source: this.current_preview.storage_url,
-                    extension:this.current_preview.mimetype,
-                    checksum:this.current_preview.checksum,
-                    subtitles : this.get_subtitles()
-                }));
-                if(force_load && this.current_preview.recommended_kind === "video"){
-                    $("#preview_window video").load();
-                }
+            var preview_template;
+            switch (extension){
+                case "png":
+                case "jpg":
+                case "jpeg":
+                    preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+                    break;
+                case "pdf":
+                case "PDF":
+                case "vtt":
+                case "srt":
+                    preview_template = require("./hbtemplates/preview_templates/document.handlebars");
+                    break;
+                case "mp3":
+                case "wav":
+                    preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
+                    break;
+                case "mp4":
+                    preview_template = require("./hbtemplates/preview_templates/video.handlebars");
+                    break;
+                case "perseus":
+                    preview_template = require("./hbtemplates/preview_templates/exercise.handlebars");
+                    break;
+                case "zip":
+                    preview_template = require("./hbtemplates/preview_templates/html5.handlebars");
+                    break;
+                default:
+                    preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+            }
+            this.$("#preview_window").html(preview_template({
+                source: this.current_preview.storage_url,
+                extension:this.current_preview.mimetype,
+                checksum:this.current_preview.checksum,
+                subtitles : this.get_subtitles()
+            }));
+            if(force_load && this.current_preview.recommended_kind === "video"){
+                $("#preview_window video").load();
             }
         }
     },

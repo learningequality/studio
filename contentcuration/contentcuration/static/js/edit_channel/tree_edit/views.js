@@ -212,7 +212,6 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 			if(self.edit_mode){
 				self.refresh_droppable();
 			}
-
 		});
 		setTimeout(function(){
 			self.$el.removeClass("pre_animation").addClass("post_animation");
