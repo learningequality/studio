@@ -338,7 +338,8 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
               onremove: this.remove_thumbnail,
               onerror: onerror,
               onfinish:onfinish,
-              onstart: onstart
+              onstart: onstart,
+              allow_edit: this.allow_edit
           });
         }
         this.$(".preview_thumbnail").append(this.thumbnail_view.el);
@@ -500,14 +501,16 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         'click .format_editor_remove ' : 'remove_item'
     },
     render: function() {
-        console.log(this.file)
         this.$el.html(this.template({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
             selector: this.selector(),
-            allow_edit: this.allow_edit
+            allow_edit: this.allow_edit,
+            src: (this.file)? this.file.get('storage_url') : null
         }));
-        _.defer(this.create_dropzone);
+        if(this.allow_edit){
+            _.defer(this.create_dropzone);
+        }
     },
     create_dropzone:function(){
         var dz_selector="#" + this.selector();
@@ -578,7 +581,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
 
 var ThumbnailUploadView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/thumbnail_upload.handlebars"),
-    dropzone_template: require("./hbtemplates/thumbnail_preview.handlebars"),
+    preview_template: require("./hbtemplates/thumbnail_preview.handlebars"),
+    dropzone_template: require("./hbtemplates/thumbnail_dropzone.handlebars"),
     initialize: function(options) {
         _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed', 'use_image');
         this.image_url = options.image_url;
@@ -591,6 +595,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         this.acceptedFiles = options.acceptedFiles;
         this.upload_url = options.upload_url;
         this.default_url = options.default_url;
+        this.allow_edit = options.allow_edit;
         this.render();
         this.dropzone = null;
         this.image_success = true;
@@ -600,12 +605,19 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         'click .open_thumbnail_generator': 'open_thumbnail_generator'
     },
     render: function() {
-        this.$el.html(this.template({
-            picture : this.get_thumbnail_url(),
-            selector: this.get_selector(),
-            preview_only: false // Will be used more fully for read-only views
-        }));
-        _.defer(this.create_dropzone, 1);
+        if(this.allow_edit){
+            this.$el.html(this.template({
+                picture : this.get_thumbnail_url(),
+                selector: this.get_selector()
+            }));
+            _.defer(this.create_dropzone, 1);
+        }else{
+            this.$el.html(this.preview_template({
+                has_thumbnail: _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; }),
+                picture : this.get_thumbnail_url(),
+                name: this.model.get('title')
+            }));
+        }
     },
     get_thumbnail_url:function(){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
