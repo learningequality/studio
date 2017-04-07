@@ -828,7 +828,8 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			new_content: false,
 			model: this.containing_list_view.model,
 		  	onsave: this.reload_ancestors,
-		  	allow_edit: allow_edit
+		  	allow_edit: allow_edit,
+		  	onnew: (!this.allow_edit)? this.containing_list_view.add_to_clipboard : null
 		});
 	},
 	handle_drop:function(models){

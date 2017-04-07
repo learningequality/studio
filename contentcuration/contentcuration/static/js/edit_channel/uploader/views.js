@@ -14,10 +14,12 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
   template: require("./hbtemplates/uploader_modal.handlebars"),
   initialize: function(options) {
     _.bindAll(this, "close_uploader");
+    this.allow_edit = options.allow_edit;
     this.render(this.close_uploader, {
       new_content: options.new_content,
       new_topic: options.new_topic,
-      title: (this.model)? ((this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name")) : null
+      title: (this.model)? ((this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name")) : null,
+      allow_edit: this.allow_edit
     });
     this.metadata_view = new EditMetadataView({
       el: this.$(".modal-body"),
@@ -30,11 +32,11 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       new_topic: options.new_topic,
       container:this,
       model:this.model,
-      allow_edit: options.allow_edit
+      allow_edit: this.allow_edit
     });
   },
   close_uploader:function(event){
-    if(!this.metadata_view.check_for_changes() || !event){
+    if(!this.allow_edit || !this.metadata_view.check_for_changes() || !event){
       this.close();
       $(".modal-backdrop").remove();
     }else if(confirm("Unsaved Metadata Detected! Exiting now will"
@@ -53,7 +55,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
 
   initialize: function(options) {
     _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'enable_submit', 'disable_submit',
-      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection');
+      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items');
     this.bind_edit_functions();
     this.collection = options.collection;
     this.new_content = options.new_content;
@@ -72,10 +74,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'click #metadata_preview_btn' : 'render_preview',
     'click #metadata_questions_btn': 'render_questions',
     'click #upload_save_button' : 'save_and_keep_open',
-    'click #upload_save_finish_button' : 'save_and_finish'
+    'click #upload_save_finish_button' : 'save_and_finish',
+    'click #copy_button': 'copy_items',
+    'click #close_uploader_button': 'close_upload'
   },
   render: function() {
-    this.$el.html(this.template());
+    this.$el.html(this.template({allow_edit: this.allow_edit}));
     this.load_list();
     if(this.collection.length > 1){
       this.load_editor(this.edit_list.selected_items);
@@ -165,6 +169,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       this.$("#upload_save_button, #upload_save_finish_button").prop("disabled", true);
       this.$("#upload_save_button, #upload_save_finish_button").css("cursor", "not-allowed");
   },
+  close_upload:function(){
+    this.onclose();
+  },
   save_and_keep_open:function(){
     var self = this;
     this.editor_view.add_tag(null);
@@ -178,6 +185,22 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.save("Saving Content...", this.save_nodes).then(function(collection){
       self.process_updated_collection(collection);
       self.onclose();
+    });
+  },
+  copy_items: function(){
+    var self = this;
+    var clipboard = window.workspace_manager.get_queue_view();
+    clipboard.switch_to_queue();
+    clipboard.open_queue();
+    console.log(this)
+    this.display_load("Copying Content...", function(load_resolve, load_reject){
+      self.collection.duplicate(clipboard.clipboard_queue.model).then(function(collection){
+        self.onnew(collection, "Copying Content...");
+        self.onclose();
+        load_resolve(true);
+      }).catch(function(error){
+        load_reject(error);
+      });
     });
   },
   save_nodes:function(){
@@ -780,7 +803,8 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
         parent_view: this,
         model:this.model,
         onchange: this.handle_assessment_items,
-        onrandom: this.set_random
+        onrandom: this.set_random,
+        allow_edit: this.allow_edit
       });
       formats_el.html(this.exercise_view.el);
   },
