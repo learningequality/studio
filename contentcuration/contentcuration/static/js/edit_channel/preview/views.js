@@ -54,8 +54,10 @@ var PreviewView = BaseViews.BaseView.extend({
         }
     },
     load_default_value:function(){
-        var default_preview = _.min(this.model.get("files"), function(file){return file.preset.order});
-        this.current_preview = default_preview;
+        this.current_preview = null;
+        if(this.model.get('files').length){
+            this.current_preview = _.min(this.model.get("files"), function(file){return file.preset.order});
+        }
     },
     load_presets:function(){
         return new Models.FormatPresetCollection(_.where(_.pluck(this.model.get("files"), "preset"), {'display': true}));

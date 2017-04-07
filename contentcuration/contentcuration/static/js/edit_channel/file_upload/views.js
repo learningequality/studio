@@ -85,7 +85,8 @@ var FileUploadView = BaseViews.BaseView.extend({
             new_exercise: false,
             new_content: true,
             new_topic: false,
-            collection: this.collection
+            collection: this.collection,
+            allow_edit: true
         }
         switch(stepNumber){
             case 1:
