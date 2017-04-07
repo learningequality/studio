@@ -2,6 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
+var FileUploader = require("edit_channel/file_upload/views");
 var Previewer = require("edit_channel/preview/views");
 var FileUploader = require("edit_channel/file_upload/views");
 var Exercise = require("edit_channel/exercise_creation/views");
@@ -124,12 +125,13 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     view.load_question_display(this.$("#metadata_questions"));
   },
   load_editor:function(selected_items){
-    var is_individual = selected_items.length === 1 && selected_items[0].model.get("kind") !== "topic";
+    var is_individual = selected_items.length === 1;
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
     var has_files = is_individual && (selected_items[0].model.get("assessment_items").length ||
                     selected_items[0].model.get("files").find(function(f){
                       return window.formatpresets.get({id:(f.preset.id)? f.preset.id:f.preset}).get("display");
                     }));
+    this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
     if(!is_individual){
@@ -324,7 +326,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     });
     this.container.load_editor(this.selected_items);
     if(this.selected_individual()){
-      this.container.load_preview(this.views[0]);
+      this.container.load_preview(this.selected_items[0]);
       if(this.selected_items[0].model.get("kind")==="exercise"){
         this.container.load_questions(this.selected_items[0]);
       }
@@ -384,14 +386,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.render();
   },
   render: function() {
-    var has_files = false;
-    if(this.selected_individual()){
-      has_files = this.selected_items[0].model.get("kind") !== "topic";
-      this.selected_items[0].model.get("files").forEach(function(file){
-        var preset = (file.preset.id)? file.preset.id:file.preset;
-        has_files = has_files || window.formatpresets.get({id:preset}).get("display");
-      });
-    }
+    var has_files = this.selected_individual() && _.some(this.selected_items[0].model.get("files"), function(f){console.log(f); return f.preset.display && !f.preset.thumbnail;});
 
     // Set license, author, copyright values based on whether selected items have been copied from another source
     var alloriginal = true;
@@ -445,9 +440,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   handle_if_individual:function(){
     if(this.selected_individual()){
       var view = this.selected_items[0];
-      if(view.model.get("kind") !== "topic"){
-        view.load_file_displays(this.$("#editmetadata_format_section"));
-      }
+      view.load_file_displays(this.$("#editmetadata_format_section"));
       if(view.model.get("kind")==="exercise"){
         this.container.load_questions(view);
       }
@@ -599,11 +592,13 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   className: "uploaded disable_on_error",
   tagName: "li",
   initialize: function(options) {
-      _.bindAll(this, 'remove_topic', 'check_item', 'select_item','update_name', 'set_edited','handle_change', 'handle_assessment_items', 'set_random');
+      _.bindAll(this, 'remove_topic', 'check_item', 'select_item','update_name', 'set_edited',
+              'handle_change', 'handle_assessment_items', 'set_random');
       this.bind_edit_functions();
       this.model.setExtraFields();
       this.containing_list_view = options.containing_list_view;
       this.container = options.container;
+      this.thumbnail = this.model.get('files').filter(function(f){ return f.preset.thumbnail; });
       this.edited = false;
       this.new_content = options.new_content;
       this.isNew = this.new_content;
@@ -725,6 +720,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
           containing_list_view:this
       });
       formats_el.html(this.format_view.el);
+      this.format_view.create_thumbnail_view(this.container.disable_submit, this.container.enable_submit, this.container.enable_submit);
       this.listenTo(this.model, "change:files", this.handle_change);
   },
   load_question_display:function(formats_el){

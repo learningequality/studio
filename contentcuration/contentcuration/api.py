@@ -47,6 +47,22 @@ def write_file_to_storage(fobj, check_valid = False, name=None):
         shutil.copyfileobj(fobj, destf)
     return full_filename
 
+def write_raw_content_to_storage(contents, ext=None):
+    # Check that hash is valid
+    checksum = hashlib.md5()
+    checksum.update(contents)
+    filename = checksum.hexdigest()
+    full_filename = "{}.{}".format(filename, ext)
+
+    # Get location of file
+    file_path = models.generate_file_on_disk_name(filename, full_filename)
+
+    # Write file
+    with open(file_path, 'wb') as destf:
+        destf.write(contents)
+
+    return filename, full_filename, file_path
+
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
     for child in ContentNode.objects.filter(parent=node).order_by('sort_order'):

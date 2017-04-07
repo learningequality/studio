@@ -1,13 +1,7 @@
 <div class="channel-container-wrapper {{#unless edit}}open_channel{{/unless}}">
 	<div class="profile pull-left text-center">
 		{{#if edit}}
-			<div class="new_channel_pic" id="dropzone">
-				<img id="dz-placeholder" src="{{picture}}"/>
-				<div id="finished_area">
-			        <a id="swap-thumbnail">Change Thumbnail</a>
-			    </div>
-			</div>
-
+			<div class="new_channel_pic"></div>
 		{{else}}
 			{{#if picture}}
 				<img class="channel_pic" alt="{{channel.name}} logo" src="{{picture}}"/>
