@@ -349,10 +349,10 @@ class ContentNode(MPTTModel, models.Model):
     def get_original_node(self):
         if self.original_channel_id and self.original_source_node_id:
             original_channel = Channel.objects.get(pk=self.original_channel_id)
-            return original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first()
+            return original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first() or self
 
         # TEMPORARY: until all nodes have proper sources set (e.g. source_node_id)
-        return self.original_node
+        return self.original_node or self
 
 
     def get_channel(self):
@@ -366,7 +366,7 @@ class ContentNode(MPTTModel, models.Model):
         # Detect if node has been moved to another tree
         if self.pk is not None and ContentNode.objects.filter(pk=self.pk).exists():
             original = ContentNode.objects.get(pk=self.pk)
-            if original.parent and original.parent_id != self.parent_id:
+            if original.parent and original.parent_id != self.parent_id and not original.parent.changed:
                 original.parent.changed = True
                 original.parent.save()
 
@@ -457,6 +457,7 @@ class AssessmentItem(models.Model):
     raw_data = models.TextField(blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
     randomize = models.BooleanField(default=False)
+    deleted = models.BooleanField(default=False)
 
 class File(models.Model):
     """

@@ -141,10 +141,10 @@ def api_commit_channel(request):
         obj.save()
 
         # Delete previous tree if it already exists
-        if old_tree:
-            with transaction.atomic():
-                with ContentNode.objects.delay_mptt_updates():
-                    old_tree.delete()
+#         if old_tree:
+#             with transaction.atomic():
+#                 with ContentNode.objects.delay_mptt_updates():
+#                     old_tree.delete()
 
         return HttpResponse(json.dumps({
             "success": True,

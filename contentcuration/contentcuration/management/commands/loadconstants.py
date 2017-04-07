@@ -27,6 +27,15 @@ SITES = [
             "domain" : "127.0.0.1:8000",
         },
     },
+    {
+        "model" : Site,
+        "pk" : "id",
+        "fields": {
+            "id": 3,
+            "name"  : "Kolibri Studio (Develop)",
+            "domain" : "develop.contentworkshop.learningequality.org",
+        },
+    },
 ]
 
 LICENSES = [
@@ -454,7 +463,7 @@ PRESETS = [
             "display": False,
             "order" : 3,
             "kind_id" : content_kinds.EXERCISE,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG, file_formats.GIF],
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG, file_formats.GIF, file_formats.SVG],
         },
     },
     {
