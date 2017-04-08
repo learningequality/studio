@@ -386,7 +386,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.render();
   },
   render: function() {
-    var has_files = this.selected_individual() && _.some(this.selected_items[0].model.get("files"), function(f){console.log(f); return f.preset.display && !f.preset.thumbnail;});
+    var has_files = this.selected_individual() && _.some(this.selected_items[0].model.get("files"), function(f){return f.preset.display && !f.preset.thumbnail;});
 
     // Set license, author, copyright values based on whether selected items have been copied from another source
     var alloriginal = true;

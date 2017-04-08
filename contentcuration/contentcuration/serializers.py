@@ -65,8 +65,6 @@ class FileListSerializer(serializers.ListSerializer):
                     'preset_id' : item['preset']['id'],
                     'language_id' : item.get('language')['id'] if item.get('language') else None
                 })
-                item.pop('preset', None)
-                item.pop('language', None)
 
                 # User should not be able to change files without a display
                 if item['preset']['display']:
@@ -75,6 +73,8 @@ class FileListSerializer(serializers.ListSerializer):
                     else:
                         # create new nodes
                         ret.append(File.objects.create(**item))
+                item.pop('preset', None)
+                item.pop('language', None)
 
         files_to_delete = []
         nodes_to_parse = []

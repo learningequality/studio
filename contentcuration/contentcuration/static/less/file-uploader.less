@@ -115,10 +115,23 @@
         div .name { font-weight: bold; }
     }
     .add_format_button{ margin-left: -15px; }
-    .language_dropdown{ width: 75px; }
+    .language_dropdown{ width: 100%; }
     .format_metadata{ padding: 0px 15px; }
-    .format_editor_remove{ cursor:pointer; }
+    .format_editor_remove, .multilanguage_folder{ cursor:pointer; }
     .format_editor_file_name_wrapper{ display:inline; }
+    .multilanguage_list{
+        margin-left: 5px;
+        padding-left: 10px;
+        padding-top: 5px;
+        border-left: 3px solid @blue-200;
+        .multilanguage_item_list{ padding-left: 25px; }
+        .multilanguage_name{ padding-left: 15px !important; }
+        .add_multilanguage_item_wrapper{margin-top:10px;}
+        .default-slot-item{
+            color: @gray-400;
+            padding: 5px;
+        }
+    }
     .format_editor_item{
         font-size:11pt;
         margin-bottom:5px;

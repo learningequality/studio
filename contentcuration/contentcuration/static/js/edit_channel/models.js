@@ -217,7 +217,7 @@ var ContentNodeCollection = BaseCollection.extend({
 				node.get("files").forEach(function(file){
 					var to_add = new FileModel(file);
 					var preset_data = to_add.get("preset");
-					preset_data.id = file.preset.name ? file.preset.name : file.preset.id;
+					preset_data.id = file.preset.name;
 					to_add.set('preset', preset_data);
 					to_add.set('contentnode', node.id);
 					fileCollection.add(to_add);
@@ -408,6 +408,9 @@ var FileModel = BaseModel.extend({
 		return window.formatpresets.get({'id':this.get("id")});
 	},
 	initialize: function () {
+		this.set_preset_id_and_name();
+	},
+	set_preset_id_and_name: function(){
 		if(this.get("preset") && this.get("language") &&
 			!this.get("preset").id.endsWith("_" + this.get("language").id)){
 			var preset_data = this.get("preset");
@@ -456,7 +459,10 @@ var FileCollection = BaseCollection.extend({
 var FormatPresetModel = BaseModel.extend({
 	root_list:"formatpreset-list",
 	attached_format: null,
-    model_name:"FormatPresetModel"
+    model_name:"FormatPresetModel",
+    initialize: function () {
+		this.set('name', this.id)
+	}
 });
 
 var FormatPresetCollection = BaseCollection.extend({

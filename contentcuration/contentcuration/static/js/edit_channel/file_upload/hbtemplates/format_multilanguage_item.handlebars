@@ -1,0 +1,20 @@
+<div class="col-xs-2 format_editor_format_name multilanguage_name">
+	<span class="format_preset_name">New:</span>
+</div>
+<div class="col-xs-3 format_editor_format_name">
+	<select id="{{selector}}_dropdown" class="language_dropdown text-center">
+		<option selected disabled><i>Select language</i></option>
+		{{#each languages}}
+			<option value="{{id}}" data-readable="{{readable_name}}" title="{{readable_name}} ({{ietf_name}})">{{readable_name}} ({{ietf_name}})</option>
+		{{/each}}
+	</select>
+</div>
+<div class = "col-xs-7">
+	<div id="{{selector}}" class="format_dropzone">
+      <div class="format_metadata">
+      	<div class="format_editor_file_name_wrapper">
+	        <a class="action-text add_format_button dz-clickable">+ ADD</a>
+      	</div>
+    </div>
+  </div>
+</div>
