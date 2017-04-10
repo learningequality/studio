@@ -227,10 +227,16 @@ class Channel(models.Model):
 
 
     def get_resource_size(self):
-        size = ChannelResourceSize.objects.filter(id=self.main_tree.tree_id).first()
-        if size:
-            return size.resource_size
-        return 0
+        # TODO: Add this back in once query filters out duplicated checksums
+        # size = ChannelResourceSize.objects.filter(id=self.main_tree.tree_id).first()
+        # if size:
+        #     return size.resource_size
+        # return 0
+
+        descendants = self.main_tree.get_descendants()
+        size_q = File.objects.filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
+                .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
+        return size_q['resource_size'] or 0
 
     def save(self, *args, **kwargs):
         original_node = None
@@ -348,7 +354,7 @@ class ContentNode(MPTTModel, models.Model):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
     sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
-    copyright_holder = models.CharField(max_length=200, blank=True, default="", help_text=_("Organization of person who holds the essential rights"))
+    copyright_holder = models.CharField(max_length=200, null=True, blank=True, default="", help_text=_("Organization of person who holds the essential rights"))
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
 
