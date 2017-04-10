@@ -113,69 +113,9 @@
 					img{
 						width:@channel-profile-width * .9;
 						height:@channel-profile-width * .9;
-						object-fit: cover;
 					}
+					.finished_area{width:@channel-profile-width * .9;}
 				}
-				#dropzone{
-					width:@channel-profile-width * .9;
-					height:90%;
-
-					#dz-placeholder{
-						width:@channel-profile-width * .9;
-						height:@channel-profile-width * .9;
-						object-fit: cover;
-						cursor:pointer;
-						border:4px dashed @gray-400;
-						font-style:italic;
-						opacity:0.8;
-					}
-
-					#progress_area{
-						margin-top: 10px;
-						width:100%;
-						display:block;
-
-						.file_upload_progress{
-							width:80%;
-							height:10px;
-						}
-
-						.progress-bar-success {
-							background: @blue-200;
-						}
-
-						.upload_option{
-							color: @blue-200;
-						}
-
-						.upload_cancel{
-							cursor:pointer;
-						}
-					}
-
-					#finished_area{
-						position:relative;
-						margin-top:-25px;
-						background-color:@gray-700;
-						opacity:0.8;
-						padding:3px;
-						visibility:hidden;
-
-						#swap-thumbnail{
-							color:white;
-							cursor:pointer;
-							font-weight:bold;
-							font-size:9pt;
-						}
-					}
-					#dz-overlay{
-						position:absolute;
-						z-index:100;
-						width:@channel-profile-width * .9;
-						margin-top:- @channel-profile-width * .9 / 3;
-					}
-				}
-				#dropzone:hover #finished_area{visibility:visible;}
 				.manage_area{
 					width:100%;
 					.open_channel {
