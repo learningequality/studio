@@ -829,24 +829,28 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         // Make sure different question types have valid answers
         if(this.model.get("type") === "input_question"){
             // Answers must be numeric for input questions
-            if(this.model.get('answers').some(function(a){return !NUM_REGEX.test(a.get('answer'));}))
+            if(_.some(this.model.get('answers'), function(a){return a && !NUM_REGEX.test(a.get('answer'));})){
                 this.errors.push({error: "Answers must be numeric"});
+            }
 
             // Input answers must have at least one answer
-            else if(this.model.get('answers').length === 0)
+            else if(this.model.get('answers').length === 0){
                 this.errors.push({error: "Question must have one or more answers"});
+            }
         }
 
         // Multiple selection questions must have at least one correct answer
         else if(this.model.get('type') === 'multiple_selection'){
-            if(this.model.get('answers').where({'correct': true}).length === 0)
+            if(this.model.get('answers').where({'correct': true}).length === 0){
                 this.errors.push({error: "Question must have at least one correct answer"});
+            }
         }
 
         // Single selection questions must have one correct answer
         else if(this.model.get('type') === 'single_selection'){
-            if(this.model.get('answers').where({'correct': true}).length !== 1)
+            if(this.model.get('answers').where({'correct': true}).length !== 1){
                 this.errors.push({error: "Question must have one correct answer"});
+            }
         }
         this.$(".error-list").html(this.error_template({errors: this.errors}));
         return this.errors.length === 0;
