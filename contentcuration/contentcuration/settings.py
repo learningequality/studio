@@ -72,6 +72,11 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
+if os.getenv("GCLOUD_ERROR_REPORTING"):
+    MIDDLEWARE_CLASSES = (
+        "contentcuration.middleware.ErrorReportingMiddleware",
+    ) + MIDDLEWARE_CLASSES
+
 SUPPORTED_BROWSERS = [
     'Chrome',
     'Firefox',
