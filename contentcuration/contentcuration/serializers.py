@@ -330,23 +330,24 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
-            descendants = node.get_descendants(include_self=True).annotate(change_count=Case(When(changed=True, then=Value(1)),default=Value(0),output_field=IntegerField()))
-            aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), is_changed=Sum('change_count'), assessment_size=Sum('assessment_items__files__file_size'))
+            descendants = node.get_descendants(include_self=True)
+            size_q = File.objects.filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
+                    .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
             return {
                 "total_count" : node.get_descendant_count(),
                 "resource_count" : descendants.exclude(kind=content_kinds.TOPIC).count(),
                 "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
-                "resource_size" : (aggregated['resource_size'] or 0) + (aggregated['assessment_size'] or 0),
-                "has_changed_descendant" : aggregated['is_changed'] != 0
+                "resource_size" : size_q['resource_size'] or 0,
+                "has_changed_descendant" : descendants.filter(changed=True).exists()
             }
         else:
-            assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
-            resource_size = node.files.aggregate(resource_size=Sum('file_size'))['resource_size'] or 0
+            size_q = File.objects.filter(Q(contentnode=node) | Q(assessment_item_id__in=node.assessment_items.values_list('id', flat=True)))\
+                    .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
             return {
                 "total_count" : 1,
                 "resource_count" : 1,
                 "max_sort_order" : node.sort_order,
-                "resource_size" : assessment_size + resource_size,
+                "resource_size" : size_q['resource_size'] or 0,
                 "has_changed_descendant" : node.changed
             }
 
