@@ -4,7 +4,6 @@ import uuid
 import hashlib
 import functools
 import json
-
 from django.conf import settings
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
@@ -14,11 +13,30 @@ from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
+from django.contrib.auth.models import PermissionsMixin
+from django.utils import timezone
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from rest_framework.authtoken.models import Token
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+
+DEFAULT_USER_PREFERENCES = json.dumps({
+    'license': licenses.CC_BY,
+    'language': None,
+    'author': None,
+    'copyright_holder': None,
+    'mastery_model': exercises.NUM_CORRECT_IN_A_ROW_5,
+    'm_value': 5,
+    'n_value': 5,
+    'auto_derive_video_thumbnail': True,
+    'auto_derive_audio_thumbnail': True,
+    'auto_derive_document_thumbnail': True,
+    'auto_derive_html5_thumbnail': True,
+    'auto_derive_exercise_thumbnail': True,
+    'auto_randomize_questions': True,
+})
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email, first_name, last_name, password=None):
@@ -41,13 +59,16 @@ class UserManager(BaseUserManager):
         new_user.save(using=self._db)
         return new_user
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=100, unique=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     is_admin = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(_('active'), default=False, help_text=_('Designates whether this user should be treated as active.'))
+    is_staff = models.BooleanField(_('staff status'), default=False, help_text=_('Designates whether the user can log into this admin site.'))
+    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
+    preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -327,12 +348,13 @@ class ContentNode(MPTTModel, models.Model):
     description = models.TextField(blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes', db_index=True)
     license = models.ForeignKey('License', null=True, default=settings.DEFAULT_LICENSE)
+    license_description = models.CharField(max_length=400, null=True, blank=True)
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
     is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship', symmetrical=False, blank=True)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
     sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
-    copyright_holder = models.CharField(max_length=200, blank=True, default="", help_text=_("Organization of person who holds the essential rights"))
+    copyright_holder = models.CharField(max_length=200, null=True, blank=True, default="", help_text=_("Organization of person who holds the essential rights"))
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
 

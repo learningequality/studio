@@ -26,19 +26,31 @@
 		max-width:700px;
 		width:60vw;
 
-		h4{
-			font-size:16pt;
-			font-weight:bold;
-		}
-
-		.settings_field{
-			margin-bottom: 20px;
-		}
-
+		h4, h5{ font-weight: bold; }
+		h4{ font-size:16pt; }
+		h5{ font-size: 12pt; }
+		.row{margin:0;}
+		.settings_field{ margin-bottom: 20px; }
+		label{ font-weight: normal; }
 
 		input[type=submit][disabled]{
 			cursor: not-allowed !important;
 			opacity: 0.5;
+		}
+		.form-control{
+			padding: 5px;
+		}
+
+		.preferences_form{
+			.settings_field{
+				padding-right: 10px;
+				float:left;
+			}
+		}
+
+		.criteria_label{
+			font-size: 12pt;
+    		padding-top: 5px;
 		}
 	}
 	.token{

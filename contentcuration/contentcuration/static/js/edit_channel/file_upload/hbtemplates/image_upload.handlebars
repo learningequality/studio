@@ -1,7 +1,7 @@
 <input type="text" id="alt_text_box" placeholder="Enter text to display if image fails to load" value="{{alt_text}}"/>
 <div id="dropzone" class="text-center">
 	{{#if file}}
-		<img id="dropzone_placeholder" alt="Error loading image" src="{{file.filepath}}"/>
+		<img id="dropzone_placeholder" alt="Error loading image" src="{{file.path}}"/>
 	{{else}}
 		<div id="dropzone_placeholder"><div id="placeholder_text">Click or drop file here...</div></div>
 	{{/if}}
