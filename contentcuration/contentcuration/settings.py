@@ -74,7 +74,7 @@ MIDDLEWARE_CLASSES = (
 
 if os.getenv("GCLOUD_ERROR_REPORTING"):
     MIDDLEWARE_CLASSES = (
-        "contentcuration.middleware.ErrorReportingMiddleware",
+        "contentcuration.middleware.error_reporting.ErrorReportingMiddleware",
     ) + MIDDLEWARE_CLASSES
 
 SUPPORTED_BROWSERS = [
