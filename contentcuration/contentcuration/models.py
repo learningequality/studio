@@ -343,6 +343,7 @@ class ContentNode(MPTTModel, models.Model):
     description = models.TextField(blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes', db_index=True)
     license = models.ForeignKey('License', null=True, default=settings.DEFAULT_LICENSE)
+    license_description = models.CharField(max_length=400, null=True, blank=True)
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
     is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship', symmetrical=False, blank=True)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
