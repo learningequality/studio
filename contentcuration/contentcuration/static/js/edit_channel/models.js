@@ -416,7 +416,7 @@ var FileModel = BaseModel.extend({
 			var preset_data = preset;
 			preset_data.name = preset_data.id;
 			preset_data.id = preset_data.id + "_" + language.id;
-			preset_data.readable_name = preset_data.readable_name + " (" + language.readable_name + ")";
+			preset_data.readable_name = language.readable_name;
 			this.set("preset", preset_data);
 		}
 	}
