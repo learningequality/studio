@@ -217,7 +217,7 @@ var ContentNodeCollection = BaseCollection.extend({
 				node.get("files").forEach(function(file){
 					var to_add = new FileModel(file);
 					var preset_data = to_add.get("preset");
-					preset_data.id = file.preset.name;
+					preset_data.id = file.preset.name || file.preset.id;
 					to_add.set('preset', preset_data);
 					to_add.set('contentnode', node.id);
 					fileCollection.add(to_add);
@@ -408,14 +408,15 @@ var FileModel = BaseModel.extend({
 		return window.formatpresets.get({'id':this.get("id")});
 	},
 	initialize: function () {
-		this.set_preset_id_and_name();
+		this.set_preset(this.get("preset"), this.get("language"));
 	},
-	set_preset_id_and_name: function(){
-		if(this.get("preset") && this.get("language") &&
-			!this.get("preset").id.endsWith("_" + this.get("language").id)){
-			var preset_data = this.get("preset");
-			preset_data.id = preset_data.id + "_" + this.get("language").id;
-			preset_data.readable_name = preset_data.readable_name + " (" + this.get("language").readable_name + ")";
+	set_preset: function(preset, language){
+		if(preset && language &&
+			!preset.id.endsWith("_" + language.id)){
+			var preset_data = preset;
+			preset_data.name = preset_data.id;
+			preset_data.id = preset_data.id + "_" + language.id;
+			preset_data.readable_name = preset_data.readable_name + " (" + language.readable_name + ")";
 			this.set("preset", preset_data);
 		}
 	}
@@ -434,12 +435,6 @@ var FileCollection = BaseCollection.extend({
 		var file = newCollection.findWhere(data);
     	return file;
     },
-    sort_by_preset:function(presets){
-    	this.comparator = function(file){
-    		return presets.findWhere({id: file.get("preset").id}).get("order");
-    	};
-    	this.sort();
-    },
     save: function() {
     	var self = this;
     	return new Promise(function(resolve, reject){
@@ -448,9 +443,7 @@ var FileCollection = BaseCollection.extend({
     			success:function(data){
     				resolve(new FileCollection(data));
     			},
-    			error:function(error){
-    				reject(error);
-    			}
+    			error:reject
     		});
     	});
 	}
@@ -459,10 +452,7 @@ var FileCollection = BaseCollection.extend({
 var FormatPresetModel = BaseModel.extend({
 	root_list:"formatpreset-list",
 	attached_format: null,
-    model_name:"FormatPresetModel",
-    initialize: function () {
-		this.set('name', this.id)
-	}
+    model_name:"FormatPresetModel"
 });
 
 var FormatPresetCollection = BaseCollection.extend({

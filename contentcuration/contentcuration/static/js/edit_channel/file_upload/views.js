@@ -419,12 +419,14 @@ var FormatFormatItem = FormatEditorItem.extend({
 });
 
 var FormatSlotList = BaseViews.BaseEditableListView.extend({
+    language_view: null,
     template: require("./hbtemplates/file_upload_format_slot_list.handlebars"),
     list_selector:">.preset_list",
     default_item:">.preset_list .default-slot-item",
 
     initialize: function(options) {
         this.content_node_view = options.content_node_view;
+        this.node = this.model;
         this.collection = options.collection;
         this.files = options.files;
         this.render();
@@ -443,16 +445,21 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
             containing_list_view: this,
             files: this.files,
             collection: this.collection,
-            content_node_view: this.content_node_view
+            content_node_view: this.content_node_view,
+            language_view: this.language_view
         });
         this.views.push(format_slot);
         return format_slot;
     },
     set_file_format:function(file, preset, originalFile){
-        var to_remove = this.files.filter(function(f) { return f && f.get("preset").id  == preset.toJSON().id});
-        this.files.remove(to_remove);
+        if(originalFile){
+            this.files.remove(originalFile);
+            this.collection.remove(preset)
+            this.node.set('files', _.reject(this.node.get('files'), function(f){ return f.id === originalFile.id; }));
+        }
         if(file){
             file.set({ "preset": preset.toJSON(), "contentnode": this.model.get("id") });
+            this.collection.add(preset)
             this.files.push(file);
         }
     },
@@ -467,7 +474,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     upload_in_progress:false,
     collapsedClass: "glyphicon-menu-up",
     expandedClass: "glyphicon-menu-down",
-    item_to_import: false,
 
     getToggler: function () { return this.$("#format_item_" + this.model.id); },
     getSubdirectory: function () {return this.$("#format_item_" + this.model.id +"_sub"); },
@@ -479,6 +485,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed','file_failed', 'create_dropzone', 'set_file', 'set_uploading');
         this.containing_list_view = options.containing_list_view;
         this.content_node_view = options.content_node_view;
+        this.language_view = options.language_view;
         this.file = options.file;
         this.originalFile = this.file;
         this.files = options.files;
@@ -507,7 +514,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         if(this.file){
             clickables.push(dz_selector + " .format_editor_file_name");
         }
-        var dropzone = new Dropzone(this.$(dz_selector).get(0), {
+        var dropzone = new Dropzone(dz_selector, {
            clickable: clickables,
            acceptedFiles: this.get_accepted_files(),
            url: window.Urls.file_upload(),
@@ -517,7 +524,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
            headers: {
                 "X-CSRFToken": get_cookie("csrftoken"),
                 "Node" : this.node.get('id'),
-                "Preset": this.model.get("id"),
+                "Preset": this.model.get("name") || this.model.id,
                 "Language": (this.file && this.file.get("language"))? this.file.get("language").id : null
             }
         });
@@ -529,8 +536,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         dropzone.on("error", this.file_failed);
     },
     get_accepted_files:function(){
-        var preset = window.formatpresets.findWhere({id: this.model.get('name')});
-        console.log(this.model, preset)
+        var preset_name = this.model.get('name') || this.model.id
+        var preset = window.formatpresets.findWhere({id: preset_name});
         return preset.get("associated_mimetypes").join(",");
     },
     file_uploaded:function(file){
@@ -561,9 +568,16 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.set_uploading(false);
     },
     remove_item:function(){
-        this.containing_list_view.set_file_format(null, this.model, this.file);
-        this.file = null;
-        this.render();
+        if(this.language_view){
+            this.language_view.add_language(new Models.LanguageModel(this.file.get('language')));
+            this.set_file(null);
+            this.remove();
+            this.containing_list_view.render();
+        }else{
+            this.set_file(null);
+            this.render();
+        }
+
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
@@ -593,13 +607,14 @@ var MultiLanguageSlotList = FormatSlotList.extend({
         this.preset_collection = options.collection;
         this.content_node_view = options.content_node_view;
         this.node = options.node;
-        this.files = new Models.FileCollection(options.files.where({name: this.model.id}));
+        var preset_id = this.model.id;
+        this.files = new Models.FileCollection(options.files.filter(function(f) { return f.get('preset').name === preset_id; }));
         this.collection = new Models.FormatPresetCollection(this.files.pluck('preset'));
         this.render();
     },
     render: function() {
         this.$el.html(this.template());
-        this.subtitle_base_view = new MultiLanguageUploadSlot({
+        this.language_view = new MultiLanguageUploadSlot({
             el: this.$(".add_multilanguage_item_wrapper"),
             model: this.model,
             node: this.node,
@@ -609,28 +624,21 @@ var MultiLanguageSlotList = FormatSlotList.extend({
         });
         this.load_content();
     },
-    remove_file_format:function(file){
-        if(file){
-            this.files.remove(file);
-            if(file.get('language') && file.get('preset').subtitle && this.subtitle_base_view){
-                this.subtitle_base_view.languages.add(new Models.LanguageModel(file.get('language')))
-                this.subtitle_base_view.render();
-            }
-        }
-    },
     add_slot:function(file, preset, target){
         this.files.push(file);
         this.collection.add(preset);
-        // Add preset to model's associated presets
-        // this.model.set('associated_presets', this.node.get('associated_presets').concat(preset.toJSON()));
+        var node_files = this.node.get('files')
+        var new_files = new Models.FileCollection(this.files.reject(function(f){return _.contains(node_files, f);})).toJSON();
+        this.node.set('files', node_files.concat(new_files));
         this.set_file_format(file, preset);
         this.render();
     }
 });
 
+
 var MultiLanguageUploadSlot = FormatSlot.extend({
     template: require("./hbtemplates/format_multilanguage_item.handlebars"),
-    dropzone_template : require("./hbtemplates/format_dropzone_item.handlebars"),
+    language_template: require("./hbtemplates/format_multilanguage_dropdown.handlebars"),
     className:"row format_editor_item",
     'id': function() { return "format_slot_item_" + this.model.get("id"); },
     selector: function() { return this.model.get("id") + "_"  + this.node.get('id') + "_dropzone"; },
@@ -644,98 +652,55 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
     },
     get_unassigned_languages: function(){
         var current_languages = _.pluck(_.filter(this.files.pluck('language'), function(l){ return l; }), "id");
-        return new Models.LanguageCollection(window.languages.reject(function(l){ return current_languages.indexOf(l.id) >= 0;}));
+        return new Models.LanguageCollection(window.languages.reject(function(l){ return _.contains(current_languages, l.id); }));
     },
     events: {
         'click .format_editor_remove ' : 'remove_item',
-        'change .language_dropdown' : 'check_set_language'
+        'change .language_dropdown' : 'check_and_set_language'
     },
     render: function() {
         this.$el.html(this.template({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
-            languages: this.languages.toJSON(),
             selector: this.selector(),
             preset_name : (this.file && this.file.get("display_name"))? this.file.get("display_name") : this.model.get("readable_name")
         }));
+        _.defer(this.create_dropzone);
+        this.load_languages();
+    },
+    load_languages: function(){
+        this.$(".language_dropdown").html(this.language_template({languages: this.languages.toJSON()}));
         if(!this.file){ this.language = null; }
         if(this.language) this.$('.language_dropdown').val(this.language);
-        _.defer(this.create_dropzone);
     },
-    check_set_language:function(event){
-        this.set_language(true);
+    check_and_set_language:function(event){
+        this.set_language();
     },
-    set_language:function(render){
+    add_language:function(language){
+        this.languages.add(language);
+        this.load_languages();
+    },
+    set_language:function(){
         this.language = this.$(".language_dropdown").val();
-        console.log(this.language, this.file)
         if(this.language && this.file){
-            var language_readable_name = this.$(".language_dropdown option:selected").data("readable");
-            var language_preset = this.model.clone();
-            var display_name = this.model.get("readable_name") + " (" + language_readable_name + ")";
-            language_preset.set({'readable_name': display_name, "id": this.model.id + "_" + this.language});
-            this.model.set("order", this.model.get("order") + 1);
+            var selected_lang = this.languages.findWhere({id:this.language});
+            this.file.set_preset(this.model.toJSON(), selected_lang.toJSON());
+            var new_preset = new Models.FormatPresetModel(this.file.get('preset'));
             this.file.set({
-                "language": this.languages.findWhere({id:this.language}).toJSON(),
-                "preset": language_preset,
-                "display_name": display_name
+                "language": selected_lang.toJSON(),
+                "display_name": new_preset.get('readable_name')
             });
-            this.containing_list_view.add_slot(this.file, language_preset, this);
+            this.containing_list_view.add_slot(this.file, new_preset, this);
             this.file = null;
             this.languages.remove(this.language);
-            if(render){ this.render(); }
         }
-    },
-    create_dropzone:function(){
-        var dz_selector="#" + this.selector();
-        if(!this.dropzone){
-            this.dropzone = new Dropzone(this.$(dz_selector).get(0), {
-               clickable: [dz_selector + " .dz-clickable"],
-               acceptedFiles: this.get_accepted_files(),
-               url: window.Urls.file_upload(),
-               previewTemplate:this.dropzone_template(),
-               maxFiles: 1,
-               previewsContainer: dz_selector,
-               headers: {
-                    "X-CSRFToken": get_cookie("csrftoken"),
-                    "Node" : this.node.get('id'),
-                    "Preset": this.model.get("id"),
-                    "Language": (this.file && this.file.get("language"))? this.file.get("language").id : null
-                }
-            });
-            this.dropzone.on("success", this.file_uploaded);
-
-            // Only enable the submit upload files button once all files have finished uploading.
-            this.dropzone.on("addedfile", this.file_added);
-            this.dropzone.on("removedfile", this.file_removed);
-            this.dropzone.on("error", this.file_failed);
-        }
-    },
-    get_accepted_files:function(){
-        return window.formatpresets.get({id: this.model.id}).get("associated_mimetypes").join(",");
-    },
-    file_uploaded:function(file){
-        var data = JSON.parse(file.xhr.response).file
-        var new_file = new Models.FileModel(JSON.parse(data));
-        this.set_file(new_file);
-        this.set_uploading(false);
     },
     set_file:function(file){
-        var originalFile = this.file;
         this.file = file;
-        (!originalFile) ? this.set_language(false) : this.containing_list_view.set_file_format(this.file, this.model, originalFile);
-        this.render();
-    },
-    file_added: function(file) {
-        this.$(".add_format_button").css("display", "none");
-        this.set_uploading(true);
-    },
-    file_removed: function(file) {
-        this.$(".add_format_button").css("display", "inline");
-    },
-    file_failed:function(file, error){
-        alert(error);
-        this.render();
-        this.set_uploading(false);
+        this.set_language();
+        if(!this.language){
+            this.render();
+        }
     }
 });
 

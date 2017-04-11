@@ -129,7 +129,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
     var has_files = is_individual && (selected_items[0].model.get("assessment_items").length ||
                     selected_items[0].model.get("files").find(function(f){
-                      return window.formatpresets.get({id:(f.preset.id)? f.preset.id:f.preset}).get("display");
+                      return window.formatpresets.get({id:f.preset.name || f.preset.id || f.preset}).get("display");
                     }));
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");

@@ -295,7 +295,6 @@ var EditorView = Backbone.View.extend({
             bufferText = this.convert_html_to_markdown(clipboardHtml);
         var self = this;
         setTimeout(function () { // Firefox fix
-            console.log(!self.numbersOnly || !isNaN(bufferText), bufferText)
             if(!self.numbersOnly || self.check_key(bufferText)){
                 document.execCommand('insertText', false, bufferText);
                 if(clipboardHtml){
