@@ -502,6 +502,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
   },
   get_license: function(license_id){
+    if(!license_id || license_id <= 0){ return null; }
     return window.licenses.get({id: license_id}).get('license_name');
   },
   selected_individual:function(){
