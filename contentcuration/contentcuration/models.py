@@ -13,6 +13,8 @@ from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
+from django.contrib.auth.models import PermissionsMixin
+from django.utils import timezone
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -35,6 +37,7 @@ DEFAULT_USER_PREFERENCES = json.dumps({
     'auto_randomize_questions': True,
 })
 
+
 class UserManager(BaseUserManager):
     def create_user(self, email, first_name, last_name, password=None):
         if not email:
@@ -56,12 +59,14 @@ class UserManager(BaseUserManager):
         new_user.save(using=self._db)
         return new_user
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=100, unique=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     is_admin = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(_('active'), default=False, help_text=_('Designates whether this user should be treated as active.'))
+    is_staff = models.BooleanField(_('staff status'), default=False, help_text=_('Designates whether the user can log into this admin site.'))
+    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
 
