@@ -109,6 +109,8 @@ If not, use these commands:
 
 		`python manage.py runserver`
 
+
+
 * Visit the localhost link that is presented on your console.
 
 ### Adding files, committing, and pushing to your local repo:
