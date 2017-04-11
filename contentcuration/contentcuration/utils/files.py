@@ -112,7 +112,7 @@ def get_image_from_audio(audio, node=None, preset_id=None, max_num_of_points=Non
     cmap_options={'name': 'BuPu', 'vmin': 0.3, 'vmax': 0.7, 'color': 'black'}
     with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
         tempf.close()
-        create_waveform_image(str(audio.file_on_disk), tempf.name, max_num_of_points=max_num_of_points, colormap_options=cmap_options)
+        create_waveform_image(audio.file_on_disk.name, tempf.name, max_num_of_points=max_num_of_points, colormap_options=cmap_options)
         with open(tempf.name, 'rb') as tf:
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
 

@@ -362,6 +362,7 @@ var FormatInlineItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_inline_item.handlebars"),
     'id': function() { return this.model.get("id"); },
     initialize: function(options) {
+        _.bindAll(this, 'set_thumbnail', 'remove_thumbnail');
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
         this.containing_list_view = options.containing_list_view;
@@ -391,7 +392,7 @@ var FormatFormatItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_format_item.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, 'update_name', 'remove_item', 'set_thumbnail', 'disable_next', 'enable_next');
+        _.bindAll(this, 'update_name', 'remove_item', 'set_thumbnail', 'disable_next', 'enable_next', 'remove_thumbnail');
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
         this.containing_list_view = options.containing_list_view;
@@ -622,7 +623,9 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     get_thumbnail_url:function(){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
-        return (thumbnail)?  thumbnail.storage_url : "/static/img/" + this.model.get("kind") + "_placeholder.png";
+        if(thumbnail){ return thumbnail.storage_url; }
+        else if(this.model.get('kind')) { return "/static/img/" + this.model.get("kind") + "_placeholder.png"; }
+        else{ return "/static/img/kolibri_placeholder.png"; }
     },
     remove_image: function(){
         if(confirm("Are you sure you want to remove this image?")){
@@ -676,12 +679,14 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     image_added:function(thumbnail){
         this.image_error = "Error uploading file: connection interrupted";
+        this.$(".finished_area").css('display', 'none');
         this.$("#" + this.get_selector() + "_placeholder").css("display", "none");
         if(this.onstart){ this.onstart(); }
     },
     image_removed:function(thumbnail){
         this.image_error = null;
         this.$("#" + this.get_selector() + "_placeholder").css("display", "block");
+        this.$(".finished_area").css('display', 'block');
         if(this.onfinish){ this.onfinish(); }
     },
     use_image:function(file){
