@@ -349,7 +349,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.shared_tags = _.intersection(this.shared_data.shared_tags, view.tags);
       this.shared_data.shared_copyright_owner = (this.shared_data.shared_copyright_owner === view.model.get("copyright_holder"))? this.shared_data.shared_copyright_owner : null;
       this.shared_data.shared_author = (this.shared_data.shared_author === view.model.get("author"))? this.shared_data.shared_author : null;
-      this.shared_data.shared_license = (this.shared_data.shared_license === view.model.get("license"))? this.shared_data.shared_license : 0;
+      this.shared_data.shared_license = (this.shared_data.shared_license == view.model.get("license"))? this.shared_data.shared_license : 0;
       this.shared_data.shared_license_description = (this.shared_data.shared_license_description === view.model.get("license_description"))? this.shared_data.shared_license_description : null;
       this.shared_data.all_files = this.shared_data.all_files && view.model.get("kind")  !== "topic";
       this.shared_data.all_exercises = this.shared_data.all_exercises && view.model.get("kind")  === "exercise";
@@ -399,7 +399,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
 
     // Set license, author, copyright values based on whether selected items have been copied from another source
     var alloriginal = this.all_original();
-
     var original_source_license = "---";
     if(this.shared_data && this.shared_data.shared_license){
       original_source_license = window.licenses.get({id: this.shared_data.shared_license}).get("license_name");
@@ -581,7 +580,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       var copyright_holder = (this.$("#input_license_owner").is(":visible") && (individual_selected || this.$("#input_license_owner").val() !== ""))? self.$("#input_license_owner").val().trim() : false;
       var author = (this.$("#author_field").is(":visible") && (individual_selected || this.$("#author_field").val() !== ""))? this.$("#author_field").val().trim() : false;
       var license_description = (this.$("#custom_license_description").is(":visible") && (individual_selected || this.$("#custom_license_description").val() !== ""))? this.$("#custom_license_description").val() : false;
-
       this.selected_items.forEach(function(view){
         view.set_node({
           title: (title===false)? view.model.get('title') : title,
