@@ -59,17 +59,17 @@
 		<p class="uploader-copied-warning">Read-Only: Imported from <b>{{node.original_channel.name}}</b></p>
 		{{/if}}
 		<div class="row">
-			<div class="col-xs-4">
+			<div class="col-xs-3">
 				<h4>Author</h4>
 				<p class="upload_input">{{author}}</p>
 			</div>
-			<div class="col-xs-4">
+			<div class="col-xs-5">
 				<h4>License</h4>
 				<p class="upload_input">
 					<span id="license_select">{{license}}</span>
-					<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" ></span>
+					<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" max-length=400></span>
 				</p>
-				<p id="custom_license_description">{{license_description}}</p>
+				<p id="custom_license_description" class="license_description_text">{{license_description}}</p>
 			</div>
 			<div class="col-xs-4">
 				<h4>Copyright Holder</h4>

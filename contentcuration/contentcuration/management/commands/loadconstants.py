@@ -135,7 +135,7 @@ LICENSES = [
             "license_name": licenses.SPECIAL_PERMISSIONS,
             "exists": False,
             "license_url": "",
-            "license_description": "Special Permissions is a custom license to use when the current licenses do not apply to your content. You are responsible for creating a description of what this license entails.",
+            "license_description": "Special Permissions is a custom license to use when the current licenses do not apply to the content. The owner of this license is responsible for creating a description of what this license entails.",
         },
     },
 ]

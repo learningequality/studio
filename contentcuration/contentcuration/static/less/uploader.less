@@ -129,11 +129,17 @@
 			font-style:italic;
 			font-size:9pt;
 		}
-		#custom_license_description.input_listener{
-			margin-top: 5px;
-			border: 1px solid @gray-400;
-			padding: 5px;
-			display: none;
+		#custom_license_description{
+			&.input_listener{
+				margin-top: 5px;
+				border: 1px solid @gray-400;
+				padding: 5px;
+				display: none;
+			}
+			&.license_description_text{
+				color: @gray-700;
+				font-style:italic;
+			}
 		}
 	}
 

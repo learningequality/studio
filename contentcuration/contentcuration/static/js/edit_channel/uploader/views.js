@@ -398,14 +398,11 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
 
     // Set license, author, copyright values based on whether selected items have been copied from another source
-    var alloriginal = true;
-    this.selected_items.forEach(function(item){
-      alloriginal = alloriginal && item.isoriginal;
-    });
+    var alloriginal = this.all_original();
 
     var original_source_license = "---";
     if(this.shared_data && this.shared_data.shared_license){
-      original_source_license = window.licenses.get(this.shared_data.shared_license).get("license_name");
+      original_source_license = window.licenses.get({id: this.shared_data.shared_license}).get("license_name");
     }
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
@@ -416,6 +413,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       is_file: this.shared_data && this.shared_data.all_files,
       none_selected: this.selected_items.length === 0,
       licenses: window.licenses.toJSON(),
+      license: original_source_license,
       copyright_owner: copyright_owner,
       author: author,
       selected_count: this.selected_items.length,
@@ -424,6 +422,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       is_exercise: this.shared_data && this.shared_data.all_exercises,
       m_value: this.m_value,
       n_value: this.n_value,
+      license_description: this.shared_data && this.shared_data.shared_license_description
     }));
     this.update_count();
     this.handle_if_individual();
@@ -447,14 +446,17 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   display_license_description: function(license_id){
     var license_name = license_id > 0 && window.licenses.get({id: license_id}).get('license_name')
     if(license_name==='Special Permissions'){
-      this.$("#custom_license_description").slideDown(100);
+      this.$("#custom_license_description").css('display', 'block');
       if(this.shared_data){
-        this.$("#custom_license_description").attr('placeholder', this.shared_data.shared_license_description !== null ? "Enter license description" : "---");
+        this.$("#custom_license_description").attr('placeholder', (this.selected_individual() || this.shared_data.shared_license_description !== null) ? "Enter license description" : "---");
         this.$("#custom_license_description").val(this.shared_data.shared_license_description);
       }
     } else {
-      this.$("#custom_license_description").slideUp(100);
+      this.$("#custom_license_description").css('display', 'none');
     }
+  },
+  all_original: function(){
+    return this.selected_items.every(function(item){ return item.isoriginal; });
   },
   selected_individual:function(){
     return this.selected_items.length === 1;
