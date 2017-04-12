@@ -48,3 +48,7 @@ LOGGING = {
         },
     },
 }
+
+# email settings
+EMAIL_BACKEND = "postmark.backends.PostmarkBackend"
+POSTMARK_API_KEY = os.getenv("EMAIL_CREDENTIALS_POSTMARK_API_KEY")

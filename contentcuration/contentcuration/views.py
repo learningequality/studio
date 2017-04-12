@@ -26,7 +26,7 @@ from contentcuration.api import write_file_to_storage, check_supported_browsers
 from contentcuration.utils.files import extract_thumbnail_wrapper, compress_video_wrapper,  generate_thumbnail_from_node, duplicate_file
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, FileSerializer
-from le_utils.constants import format_presets, content_kinds, file_formats, exercises
+from le_utils.constants import format_presets, content_kinds, file_formats, exercises, licenses
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -171,7 +171,9 @@ def file_create(request):
         author = preferences.get('author') if isinstance(preferences.get('author'), basestring) else request.user.get_full_name()
         license = License.objects.filter(license_name=preferences.get('license')).first() # Use filter/first in case preference hasn't been set
         license_id = license.pk if license else settings.DEFAULT_LICENSE
-        new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=license_id, author=author, copyright_holder=preferences.get('copyright_holder') )
+        new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=license_id, author=author, copyright_holder=preferences.get('copyright_holder'))
+        if license.license_name == licenses.SPECIAL_PERMISSIONS:
+            new_node.license_description = preferences.get('license_description')
         new_node.save()
         file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename = original_filename, contentnode=new_node, file_size=size)
         file_object.save()
