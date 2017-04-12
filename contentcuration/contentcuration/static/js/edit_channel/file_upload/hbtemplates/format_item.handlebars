@@ -3,18 +3,29 @@
 	<div id="{{selector}}" class="format_dropzone">
       <div class="format_metadata">
       	<div class="format_editor_options_wrapper pull-right">
+        {{#if allow_edit}}
           {{#if file}}
 		        <span class="format_editor_replace glyphicon glyphicon-file dz-clickable" title="Replace File" aria-hidden="true"></span>
 		        <span class="glyphicon glyphicon-remove format_editor_remove {{#unless preset.supplementary}}main_file_remove{{/unless}}" aria-hidden="true" title="Delete File"></span>
 	        {{/if}}
+        {{else}}
+          <a href="{{src}}" class="action-text" download="{{#if file.original_filename}}{{file.original_filename}}{{else}}File{{/if}}"><span class="glyphicon glyphicon-download-alt" title="Download File" aria-hidden="true"></span></a>
+        {{/if}}
 	    </div>
       <div class="format_editor_file_name_wrapper">
+      {{#if allow_edit}}
         {{#if file}}
           <div class="format_editor_file_name truncate" title="{{file.original_filename}}">{{#if file.original_filename}}{{file.original_filename}}{{else}}File{{/if}}</div>
           <i class="format_editor_selected_size">({{#format_file_size file.file_size}}{{/format_file_size}})</i>
         {{else}}
             <a class="action-text add_format_button dz-clickable">+ ADD</a>
         {{/if}}
+      {{else}}
+        <div class="format_editor_file_name truncate" title="{{file.original_filename}}">
+          <a href="{{src}}" class="format_link" download="{{#if file.original_filename}}{{file.original_filename}}{{else}}File{{/if}}">{{#if file.original_filename}}{{file.original_filename}}{{else}}File{{/if}}</a>
+        </div>
+        <i class="format_editor_selected_size">({{#format_file_size file.file_size}}{{/format_file_size}})</i>
+      {{/if}}
       </div>
     </div>
   </div>

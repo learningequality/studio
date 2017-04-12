@@ -85,7 +85,8 @@ var FileUploadView = BaseViews.BaseView.extend({
             new_exercise: false,
             new_content: true,
             new_topic: false,
-            collection: this.collection
+            collection: this.collection,
+            allow_edit: true
         }
         switch(stepNumber){
             case 1:
@@ -252,6 +253,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
 });
 
 var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
+    allow_edit: true,
     tagName:'div',
     className: "format_item_wrapper files",
     files: null,
@@ -289,7 +291,8 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
             el: this.$el.find(".format_editor_list"),
             model: this.model,
             content_node_view:this,
-            to_delete: this.to_delete
+            to_delete: this.to_delete,
+            allow_edit: this.allow_edit
         }
         this.subcontent_view = new FormatSlotList(data);
         this.update_metadata();
@@ -336,7 +339,8 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
               onremove: this.remove_thumbnail,
               onerror: onerror,
               onfinish:onfinish,
-              onstart: onstart
+              onstart: onstart,
+              allow_edit: this.allow_edit
           });
         }
         this.$(".preview_thumbnail").append(this.thumbnail_view.el);
@@ -363,6 +367,7 @@ var FormatInlineItem = FormatEditorItem.extend({
         this.originalData = this.model.toJSON();
         this.containing_list_view = options.containing_list_view;
         this.to_delete = new Models.ContentNodeCollection();
+        this.allow_edit = options.allow_edit;
         this.init_collections();
         this.render();
         this.listenTo(this.files, "add", this.sync_file_changes);
@@ -423,33 +428,29 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     template: require("./hbtemplates/file_upload_format_slot_list.handlebars"),
     list_selector:">.preset_list",
     default_item:">.preset_list .default-slot-item",
-
     initialize: function(options) {
         this.content_node_view = options.content_node_view;
-        this.collection = options.collection;
+        this.allow_edit = options.allow_edit;
         this.files = options.files;
+        this.collection = options.collection;
+        if(!this.allow_edit){
+            this.collection = new Models.FormatPresetCollection(_.reject(this.files.pluck('preset'),
+                function(preset){return preset.thumbnail || !preset.display; }));
+        }
         this.render();
-
     },
     render: function() {
         this.$el.html(this.template());
         this.load_content();
     },
     create_new_view: function(model){
-        var associated_file = null;
-        this.files.forEach(function(file){
-            if(file.get("preset")){
-                var preset_id = (file.get("preset").id)? file.get("preset").id : file.get("preset");
-                if(preset_id === model.get("id")){
-                    associated_file = file;
-                }
-            }
-        });
+        var associated_file = this.files.find(function(file){ return file.get("preset").id === model.get("id"); });
         var format_slot = new FormatSlot({
             model: model,
             node : this.model,
             file: associated_file,
-            containing_list_view: this
+            containing_list_view: this,
+            allow_edit: this.allow_edit
         });
         this.views.push(format_slot);
         return format_slot;
@@ -494,6 +495,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.containing_list_view = options.containing_list_view;
         this.file = options.file;
         this.originalFile = this.file;
+        this.allow_edit = options.allow_edit;
         this.node = options.node;
         this.render();
     },
@@ -504,9 +506,13 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
-            selector: this.selector()
+            selector: this.selector(),
+            allow_edit: this.allow_edit,
+            src: (this.file)? this.file.get('storage_url') : null
         }));
-        _.defer(this.create_dropzone);
+        if(this.allow_edit){
+            _.defer(this.create_dropzone);
+        }
     },
     create_dropzone:function(){
         var dz_selector="#" + this.selector();
@@ -577,7 +583,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
 
 var ThumbnailUploadView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/thumbnail_upload.handlebars"),
-    dropzone_template: require("./hbtemplates/thumbnail_preview.handlebars"),
+    preview_template: require("./hbtemplates/thumbnail_preview.handlebars"),
+    dropzone_template: require("./hbtemplates/thumbnail_dropzone.handlebars"),
     initialize: function(options) {
         _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed', 'use_image');
         this.image_url = options.image_url;
@@ -590,6 +597,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         this.acceptedFiles = options.acceptedFiles;
         this.upload_url = options.upload_url;
         this.default_url = options.default_url;
+        this.allow_edit = options.allow_edit;
         this.render();
         this.dropzone = null;
         this.image_success = true;
@@ -599,12 +607,18 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         'click .open_thumbnail_generator': 'open_thumbnail_generator'
     },
     render: function() {
-        this.$el.html(this.template({
-            picture : this.get_thumbnail_url(),
-            selector: this.get_selector(),
-            preview_only: false // Will be used more fully for read-only views
-        }));
-        _.defer(this.create_dropzone, 1);
+        if(this.allow_edit){
+            this.$el.html(this.template({
+                picture : this.get_thumbnail_url(),
+                selector: this.get_selector()
+            }));
+            _.defer(this.create_dropzone, 1);
+        }else{
+            this.$el.html(this.preview_template({
+                picture : this.get_thumbnail_url(),
+                name: this.model.get('title')
+            }));
+        }
     },
     get_thumbnail_url:function(){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });

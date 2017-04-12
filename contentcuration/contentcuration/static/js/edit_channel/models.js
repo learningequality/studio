@@ -275,9 +275,7 @@ var ContentNodeCollection = BaseCollection.extend({
 	    				resolve(fetched);
 	    			});
 	            },
-	            error:function(e){
-	            	reject(e);
-	            }
+	            error:reject
 	        });
     	});
     	return promise;

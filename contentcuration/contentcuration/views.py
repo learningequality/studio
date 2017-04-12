@@ -40,7 +40,7 @@ def get_nodes_by_ids(request):
         return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
 
 def base(request):
-    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
+    if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
         return redirect(reverse_lazy('unsupported_browser'))
     if request.user.is_authenticated():
         return redirect('channels')
