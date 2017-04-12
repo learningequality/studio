@@ -53,7 +53,8 @@ var ShareView = BaseViews.BaseView.extend({
     },
     get_share_modes: function(){
         if (!this.share_modes){
-            if(_.find(window.current_channel.get("editors"), function(u){return u === this.current_user.id})){
+            var user_is_editor = _.find(window.current_channel.get("editors"), function(u){return u === this.current_user.id});
+            if(user_is_editor){
                 this.share_modes = EDITOR_SHARE_MODES;
             }else{
                 this.share_modes = VIEWER_SHARE_MODES;
