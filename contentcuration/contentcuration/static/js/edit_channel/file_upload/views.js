@@ -627,7 +627,8 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         if(this.allow_edit){
             this.$el.html(this.template({
                 picture : this.get_thumbnail_url(),
-                selector: this.get_selector()
+                selector: this.get_selector(),
+                show_generate: this.model.get('kind') != undefined
             }));
             _.defer(this.create_dropzone, 1);
         }else{
@@ -639,8 +640,9 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     get_thumbnail_url:function(){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
-        if(thumbnail){ return thumbnail.storage_url; }
-        else if(this.model.get('kind')) { return "/static/img/" + this.model.get("kind") + "_placeholder.png"; }
+        if(this.image_url){ return this.image_url; }
+        else if(thumbnail){ return thumbnail.storage_url; }
+        else if(this.model.get('kind') != undefined) { return "/static/img/" + this.model.get("kind") + "_placeholder.png"; }
         else{ return "/static/img/kolibri_placeholder.png"; }
     },
     remove_image: function(){
@@ -661,7 +663,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             clickable: [selector + "_placeholder", selector + "_swap"],
             acceptedFiles: this.acceptedFiles,
             url: this.upload_url,
-            previewTemplate:this.dropzone_template({src:"/static/img/" + this.model.get("kind") + "_placeholder.png"}),
+            previewTemplate:this.dropzone_template({src:"/static/img/loading_placeholder.png"}),
             previewsContainer: selector,
             headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id, "Node": this.model.id}
         });
