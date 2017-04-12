@@ -8,10 +8,10 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-    	('contentcuration', '0057_assessmentitem_deleted'),
-        ('contentcuration', '0059_channelresourcesize'),
         ('contentcuration', '0059_auto_20170402_1504'),
         ('contentcuration', '0059_merge'),
+        ('contentcuration', '0057_assessmentitem_deleted'),
+        ('contentcuration', '0059_channelresourcesize'),
     ]
 
     operations = [

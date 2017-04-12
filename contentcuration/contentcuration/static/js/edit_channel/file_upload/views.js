@@ -615,7 +615,6 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             _.defer(this.create_dropzone, 1);
         }else{
             this.$el.html(this.preview_template({
-                has_thumbnail: _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; }),
                 picture : this.get_thumbnail_url(),
                 name: this.model.get('title')
             }));
