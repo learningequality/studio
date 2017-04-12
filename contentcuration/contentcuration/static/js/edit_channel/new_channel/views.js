@@ -163,13 +163,16 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	    	self.$(".copy-id-btn").removeClass("glyphicon-ok").removeClass("glyphicon-remove").addClass("glyphicon-copy");
 	    }, 2500);
 	},
-	update_title:function(event){
-		if (event.target.value.length === 0){
+	update_title:function(){
+		this.show_error(!this.$("#new_channel_name").val().length);
+	},
+	show_error: function(is_error){
+		if(is_error){
 			this.$("#channel_name_error").css("visibility", "visible");
 			this.$(".save_channel").attr("disabled", "disabled");
       		this.$(".save_channel").prop("disabled", true);
       		this.$(".save_channel").css("cursor", "not-allowed");
-		} else{
+		}else{
 			this.$("#channel_name_error").css("visibility", "hidden");
 			this.$(".save_channel").removeAttr("disabled");
 	        this.$(".save_channel").prop("disabled", false);
@@ -192,7 +195,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			onerror: this.reset_thumbnail,
 			oncancel:this.enable_submit,
 			onstart: this.disable_submit,
-			onremove: this.remove_thumbnail
+			onremove: this.remove_thumbnail,
+			allow_edit: true
 		});
 	},
 	delete_channel: function(event){
@@ -228,27 +232,36 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		}
 	},
 	save_channel: function(event){
-		this.containing_list_view.set_editing(false);
-		this.set_is_new(false);
-		var title = this.$el.find("#new_channel_name").val().trim();
-		var description = this.$el.find("#new_channel_description").val();
-		var data = {
-			name: title,
-			description: description,
-			thumbnail : this.thumbnail,
-			editors: this.model.get('editors'),
-			pending_editors: this.model.get('pending_editors')
-		};
-		this.original_thumbnail = this.thumbnail;
-		this.original_thumbnail_url = this.thumbnail_url;
-		this.edit = false;
+		if(this.validate()){
+			this.containing_list_view.set_editing(false);
+			this.set_is_new(false);
+			var title = this.$el.find("#new_channel_name").val().trim();
+			var description = this.$el.find("#new_channel_description").val();
+			var data = {
+				name: title,
+				description: description,
+				thumbnail : this.thumbnail,
+				editors: this.model.get('editors'),
+				pending_editors: this.model.get('pending_editors')
+			};
+			this.original_thumbnail = this.thumbnail;
+			this.original_thumbnail_url = this.thumbnail_url;
+			this.edit = false;
 
-		var self = this;
-		this.save(data, "Saving Channel...").then(function(channel){
-			self.model = channel;
-			self.render();
-			self.containing_list_view.handle_channel_change(channel, false);
-		});
+			var self = this;
+			this.save(data, "Saving Channel...").then(function(channel){
+				self.model = channel;
+				self.render();
+				self.containing_list_view.handle_channel_change(channel, false);
+			});
+		}
+	},
+	validate:function(){
+		if(!this.$("#new_channel_name").val().length){
+			this.show_error(true);
+			return false;
+		}
+		return true;
 	},
 	set_channel:function(){
 		this.set({
@@ -269,7 +282,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.enable_submit();
 	},
 	set_thumbnail:function(thumbnail, formatted_name, path){
-		this.thumbnail = thumbnail;
+		this.thumbnail = formatted_name;
 		this.thumbnail_url = path;
 		this.set_channel();
 		this.enable_submit();
