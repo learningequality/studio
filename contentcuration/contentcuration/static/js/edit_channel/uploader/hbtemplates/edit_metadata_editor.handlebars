@@ -36,7 +36,7 @@
 		<input type="text" id="author_field" class="upload_input input_listener" value="{{author}}" placeholder="Enter author name"/>
 		{{#if is_file}}
 		<div class="row">
-			<div class="content_nodes_only col-sm-5">
+			<div class="content_nodes_only col-sm-6">
 				<h4>License <label class="required">*</label></h4>
 				<select id="license_select">
 		            <option selected disabled value=0>---</option>
@@ -45,9 +45,9 @@
 		            {{/each}}
 		        </select>
 		        <span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" ></span>
+		        <textarea id="custom_license_description" class="input_listener" placeholder="Enter license description"></textarea>
 			</div>
-			<!-- <div class="col-sm-1">&nbsp;</div> -->
-			<div class="content_nodes_only col-sm-7">
+			<div class="content_nodes_only col-sm-6">
 				<h4>Copyright Holder</h4>
 				<input type="text" id="input_license_owner" class="license_input input_listener" placeholder="Enter copyright holder name" maxlength="200"value="{{copyright_owner}}"/>
 			</div>
@@ -59,16 +59,17 @@
 		<p class="uploader-copied-warning">Read-Only: Imported from <b>{{node.original_channel.name}}</b></p>
 		{{/if}}
 		<div class="row">
-			<div class="col-xs-4">
+			<div class="col-xs-3">
 				<h4>Author</h4>
 				<p class="upload_input">{{author}}</p>
 			</div>
-			<div class="col-xs-4">
+			<div class="col-xs-5">
 				<h4>License</h4>
 				<p class="upload_input">
 					<span id="license_select">{{license}}</span>
-					<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" ></span>
+					<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" max-length=400></span>
 				</p>
+				<p id="custom_license_description" class="license_description_text">{{license_description}}</p>
 			</div>
 			<div class="col-xs-4">
 				<h4>Copyright Holder</h4>

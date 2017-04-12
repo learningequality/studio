@@ -15,20 +15,20 @@
 		<div id="metadata_preview" class="container-fluid tab_panel"></div>
 	</div>
 	<br/>
-		{{#if allow_edit}}
-		<div class="metadata_save_buttons">
-			<div class="pull-right">
-				<a id="upload_save_button" class="disable_on_error editmetadata_save">APPLY CHANGES</a>
-				<a class="btn btn-default" id="upload_save_finish_button" class="disable_on_error editmetadata_save">SAVE &amp; FINISH</a>
-			</div>
+	{{#if allow_edit}}
+	<div class="metadata_save_buttons container-fluid">
+		<div class="pull-right">
+			<a id="upload_save_button" class="disable_on_error editmetadata_save">APPLY CHANGES</a>
+			<a class="btn btn-default" id="upload_save_finish_button" class="disable_on_error editmetadata_save">SAVE &amp; FINISH</a>
 		</div>
-		{{else}}
-		<div class="metadata_copy_buttons">
-			<div class="pull-right">
-				<a class="btn btn-default action-button" id="copy_button" class="disable_on_error editmetadata_save">COPY</a>
-			</div>
-			<a class="disable_on_error action-text" id="close_uploader_button">CLOSE</a>
-		</div>
-		{{/if}}
+		<a class="action-text" data-dismiss="modal" aria-label="Close">CANCEL</a>
 	</div>
+	{{else}}
+	<div class="metadata_copy_buttons container-fluid">
+		<div class="pull-right">
+			<a class="btn btn-default action-button" id="copy_button" class="disable_on_error editmetadata_save">COPY</a>
+		</div>
+		<a class="disable_on_error action-text" id="close_uploader_button">CLOSE</a>
+	</div>
+	{{/if}}
 </div>
