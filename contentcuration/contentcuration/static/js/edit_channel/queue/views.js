@@ -182,7 +182,6 @@ var ClipboardList = QueueList.extend({
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
 	// handle_drop:function(collection){
 	// 	this.$(this.default_item).css("display", "none");
-	// 	console.log(this.model)
 	// 	return collection.duplicate(this.model);
  // 	},
 });
