@@ -14,6 +14,20 @@ SITE_ID = 3
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
+if os.getenv("USE_DATADOG"):
+    INSTALLED_APPS = (
+        "ddtrace.contrib.django",
+    ) + INSTALLED_APPS
+
+    MIDDLEWARE_CLASSES = (
+        'ddtrace.contrib.django.TraceMiddleware',
+    ) + MIDDLEWARE_CLASSES
+
+    DATADOG_TRACE = {
+        'DEFAULT_SERVICE': 'contentworkshop',
+        'TAGS': {'env': 'production'},
+    }
+
 DATABASES = {
     'default': {
         'ENGINE':
