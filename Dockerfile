@@ -18,8 +18,6 @@ RUN apt-get autoremove -y gcc
 RUN mkdir -p contentcuration/static/js/bundles #
 RUN node build.js
 
-WORKDIR /contentcuration/contentcuration
-
 EXPOSE 8000
 
-ENTRYPOINT "make"
+ENTRYPOINT "make prodserver"
