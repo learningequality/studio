@@ -5,7 +5,7 @@ RUN apt-get update
 RUN apt-get -y install curl
 RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 RUN apt-get update
-RUN apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk
+RUN apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make
 
 COPY  . /contentcuration/
 WORKDIR /contentcuration
