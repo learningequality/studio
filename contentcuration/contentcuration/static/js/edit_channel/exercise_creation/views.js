@@ -757,10 +757,10 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
 
         // True/false questions will overwrite all answers
         if(new_type === "true_false"){
-            if(this.model.get("answers").length || confirm("Switching to true or false will remove any current answers. Continue?")){
+            if(!this.model.get("answers").length || confirm("Switching to true or false will remove any current answers. Continue?")){
                 // new_type = "single_selection";
-                var trueFalseCollection = new Backbone.Collection();
-                trueFalseCollection.add([{answer: "True", correct: true, order: 1}, {answer: "False", correct: false, order: 2}]);
+                var trueFalseCollection = this.model.get("answers");
+                trueFalseCollection.reset([{answer: "True", correct: true, order: 1}, {answer: "False", correct: false, order: 2}]);
                 this.model.set("answers", trueFalseCollection);
             }else{ new_type = this.model.get('type'); } // Keep current type
         }
@@ -779,11 +779,11 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         // Input questions will set all answers as being correct and remove non-numeric answers
         else if(new_type === "input_question" && this.model.get("answers").some(function(a){ return a.get('correct') || isNaN(a.get('answer')); })){
             if(confirm("Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?")){
-                this.model.set('answers', new Models.ContentNodeCollection(
-                    this.model.get('answers').chain()
+                var numInputCollection = this.model.get('answers');
+                numInputCollection.reset(this.model.get('answers').chain()
                         .reject( function(a){return isNaN(a.get('answer'));} )
-                        .each( function(a){ a.set('correct', true);} ).value()
-                ));
+                        .each( function(a){ a.set('correct', true);} ).value());
+                this.model.set('answers', numInputCollection);
             }else{ new_type = this.model.get('type'); }  // Keep current type
         }
 
