@@ -1,4 +1,5 @@
 var Handlebars = require("hbsfy/runtime");
+var _ = require("underscore");
 var marked = require("marked");
 var stringHelper = require("edit_channel/utils/string_helper");
 
@@ -33,12 +34,19 @@ Handlebars.registerHelper('url', function(url_name) {
 
 // A little bit of magic to let us render markdown into a Handlebars template
 Handlebars.registerHelper('markdown', function(markdown) {
-    if (markdown) {
-        markdown = markdown.toString().replace(/\n(\n)/g, "$1<br />");
-        return marked(markdown);
-    } else {
-        return "";
-    }
+  markdown = markdown || "";
+  markdown = markdown.toString().replace(/\n(\n)/g, "$1<br />");
+  var el = document.createElement( 'body' );
+  el.innerHTML = marked(markdown);
+  _.each(el.getElementsByTagName( 'img' ), function(img){
+      var groups = /(.+)\s=([0-9|.]*)x((?:[0-9|.]*))/g.exec(unescape(img.src));
+      if(groups){
+        if(groups[1]) {img.src = groups[1];}
+        if(groups[2]) {img.width = groups[2];}
+        if(groups[3]) {img.height = groups[3];}
+      }
+  });
+  return el.innerHTML;
 });
 
 // Replace newline characters with \n
@@ -97,15 +105,23 @@ Handlebars.registerHelper('format_question_type', function(type){
   switch (type){
       case "multiple_selection":
           return "Multiple Selection";
-      case "free_response":
-          return "Free Response";
       case "single_selection":
           return "Single Selection";
+        case "true_false":
+          return "True/False";
       case "input_question":
-          return "Input Answer";
+          return "Numeric Input";
       case "perseus_question":
           return "Perseus Question";
       default:
           return "Unknown Question Type";
   }
+});
+
+Handlebars.registerHelper('substring', function(text, chars){
+  return text.substring(0, chars);
+});
+
+Handlebars.registerHelper('question_default_text', function(type){
+  return type === "perseus_question"? "Perseus Question" : "No text provided";
 });

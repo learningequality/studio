@@ -9,9 +9,11 @@
 				<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
 					<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
 				</a>
+				<br/>
 				{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
 			{{else}}
-				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true"></span>
+				{{#if isfolder}}<span class="glyphicon glyphicon-list-alt edit_item_button" aria-hidden="true" title="View topic details"></span>{{/if}}
+				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true" title="Copy"></span>
 			{{/if}}
 		</div>
 		<h6 class="content_metadata_summary {{#unless isfolder}}open_file{{/unless}}">
@@ -21,7 +23,7 @@
 				&nbsp;
 				{{#if isexercise}}
 					<span class="glyphicon glyphicon-check" aria-hidden="true"></span>
-					{{#format_count "Question" node.assessment_items.length}}{{/format_count}}
+					{{#format_count "Question" num_questions}}{{/format_count}}
 				{{else}}
 					<span class="glyphicon glyphicon-file" aria-hidden="true"></span>
 					{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}
@@ -31,7 +33,7 @@
 					<em class="unpublished">{{#if node.published}}Updated{{else}}New{{/if}}</em>
 				{{/if}}
 				{{#unless node.valid}}
-					<em class="invalid">No files attached</em>
+					<em class="invalid">Incomplete</em>
 				{{/unless}}
 			</span>
 		</h6>
@@ -61,6 +63,7 @@
 		{{#if isfolder}}<div class="add_subtopic_item_button option">Add Subtopic</div>{{/if}}
 		<div class="edit_item_button option">Edit</div>
 		<div class="copy_item_button option">Copy</div>
+		<div class="move_item_button option">Move</div>
 		<div class="delete_item_button option">Delete</div>
 	</div>
 </div>
@@ -69,6 +72,7 @@
   	{{#if isfolder}}<div class="add_subtopic_item_button context-option">Add Subtopic</div>{{/if}}
 	<div class="edit_item_button context-option">Edit</div>
 	<div class="copy_item_button context-option">Copy</div>
+	<div class="move_item_button context-option">Move</div>
 	<div class="delete_item_button context-option">Delete</div>
 </nav>
 </div>

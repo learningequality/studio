@@ -69,12 +69,8 @@ var BaseCollection = Backbone.Collection.extend({
 	    	self.forEach(function(model){
 	    		promise_list.push(new Promise(function(subresolve, subreject){
 	    			model.destroy({
-	    				success:function(){
-	    					subresolve(true);
-	    				},
-	    				error:function(error){
-	    					subreject(error);
-	    				}
+	    				success:subresolve,
+	    				error:subreject
 	    			})
 	    		}))
 	    	});
@@ -100,6 +96,9 @@ var UserModel = BaseModel.extend({
     },
     get_clipboard:function(){
     	return  new ContentNodeModel(this.get("clipboard_tree"));
+    },
+    get_full_name: function(){
+    	return this.get('first_name') + " " + this.get('last_name');
     }
 });
 
@@ -127,6 +126,21 @@ var InvitationCollection = BaseCollection.extend({
 });
 
 /**** CHANNEL AND CONTENT MODELS ****/
+function fetch_nodes_by_ids(ids){
+	var self = this;
+	return new Promise(function(resolve, reject){
+        $.ajax({
+        	method:"POST",
+            url: window.Urls.get_nodes_by_ids(),
+            data:  JSON.stringify(ids),
+            error: reject,
+            success: function(data) {
+            	resolve(new ContentNodeCollection(JSON.parse(data)));
+            }
+        });
+	});
+}
+
 var ContentNodeModel = BaseModel.extend({
 	root_list:"contentnode-list",
 	model_name:"ContentNodeModel",
@@ -137,8 +151,55 @@ var ContentNodeModel = BaseModel.extend({
 		assessment_items:[],
 		metadata: {"resource_size" : 0, "resource_count" : 0},
 		created: new Date(),
-		ancestors: []
-    }
+		ancestors: [],
+		extra_fields: {}
+    },
+    generate_thumbnail:function(){
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.generate_thumbnail(),
+	            data:  JSON.stringify({"node_id": self.id}),
+	            success: function(result) {
+	            	file = JSON.parse(result).file
+	            	resolve(new FileModel(JSON.parse(file)));
+	            },
+	            error:reject
+	        });
+    	});
+    },
+    initialize: function () {
+		if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
+			this.set("extra_fields", JSON.parse(this.get("extra_fields")))
+		}
+	},
+	parse: function(response) {
+    	if (response !== undefined && response.extra_fields) {
+    		response.extra_fields = JSON.parse(response.extra_fields);
+    	}
+	    return response;
+	},
+	toJSON: function() {
+	    var attributes = _.clone(this.attributes);
+	    if (typeof attributes.extra_fields !== "string") {
+		    attributes.extra_fields = JSON.stringify(attributes.extra_fields);
+		}
+	    return attributes;
+	},
+	setExtraFields:function(){
+		if(typeof this.get('extra_fields') === 'string'){
+			this.set('extra_fields', JSON.parse(this.get('extra_fields')));
+		}
+		if(this.get('kind') === 'exercise'){
+			var data = (this.get('extra_fields'))? this.get('extra_fields') : {};
+			data['mastery_model'] = (data['mastery_model'])? data['mastery_model'] : window.preferences.mastery_model;
+		    data['m'] = (data['m'])? data['m'] : window.preferences.m_value;
+		    data['n'] = (data['n'])? data['n'] : window.preferences.n_value;
+		    data['randomize'] = (data['randomize'] !== undefined)? data['randomize'] : window.preferences.auto_randomize_questions;
+		    this.set('extra_fields', data);
+		}
+	}
 });
 
 var ContentNodeCollection = BaseCollection.extend({
@@ -149,16 +210,18 @@ var ContentNodeCollection = BaseCollection.extend({
 
 	save: function() {
 		var self = this;
-		var promise = new Promise(function(saveResolve, saveReject){
-			var fileCollection = new FileCollection()
+		return new Promise(function(saveResolve, saveReject){
+			var fileCollection = new FileCollection();
+			var assessmentCollection = new AssessmentItemCollection();
 			self.forEach(function(node){
 				node.get("files").forEach(function(file){
 					file.preset.id = file.preset.name ? file.preset.name : file.preset.id;
 				});
 
 				fileCollection.add(node.get("files"));
+				assessmentCollection.add(node.get('assessment_items'));
 			});
-			fileCollection.save().then(function(){
+			Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function() {
 				Backbone.sync("update", self, {
 		        	url: self.model.prototype.urlRoot(),
 		        	success: function(data){
@@ -172,6 +235,18 @@ var ContentNodeCollection = BaseCollection.extend({
 		});
         return promise;
 	},
+	get_all_fetch: function(ids, force_fetch){
+		force_fetch = (force_fetch)? true : false;
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+    		var idlists = _.partition(ids, function(id){return force_fetch || !self.get({'id': id});});
+    		var returnCollection = new ContentNodeCollection(self.filter(function(n){ return idlists[1].indexOf(n.id) >= 0; }))
+			fetch_nodes_by_ids(idlists[0]).then(function(fetched){
+				returnCollection.add(fetched.toJSON());
+				resolve(returnCollection);
+			});
+    	});
+    },
 	comparator : function(node){
     	return node.get("sort_order");
     },
@@ -200,33 +275,31 @@ var ContentNodeCollection = BaseCollection.extend({
 	    				resolve(fetched);
 	    			});
 	            },
-	            error:function(e){
-	            	reject(e);
-	            }
+	            error:reject
 	        });
     	});
     	return promise;
     },
-    move:function(target_parent){
+    move:function(target_parent, max_order, min_order){
     	var self = this;
-    	var promise = new Promise(function(resolve, reject){
-	        var data = {"nodes" : self.toJSON(),
-	                    "target_parent" : target_parent.get("id"),
-	                    "channel_id" : window.current_channel.id
+    	return new Promise(function(resolve, reject){
+	        var data = {
+	        	"nodes" : self.toJSON(),
+                "target_parent" : target_parent.get("id"),
+                "channel_id" : window.current_channel.id,
+                "max_order": max_order,
+                "min_order": min_order
 	        };
 	        $.ajax({
 	        	method:"POST",
 	            url: window.Urls.move_nodes(),
 	            data:  JSON.stringify(data),
-	            success: function(data) {
-	            	resolve(JSON.parse(data).nodes);
-	            },
-	            error:function(e){
-	            	reject(e);
+	            error:reject,
+	            success: function(moved) {
+	            	resolve(new ContentNodeCollection(JSON.parse(moved)));
 	            }
 	        });
     	});
-    	return promise;
 	}
 });
 
@@ -362,8 +435,7 @@ var FileCollection = BaseCollection.extend({
     				reject(error);
     			}
     		});
-    	})
-
+    	});
 	}
 });
 
@@ -378,10 +450,10 @@ var FormatPresetCollection = BaseCollection.extend({
 	list_name:"formatpreset-list",
     model_name:"FormatPresetCollection",
 	sort_by_order:function(){
-    	this.comparator = function(preset){
-    		return preset.get("order");
-    	};
     	this.sort();
+    },
+    comparator: function(preset){
+    	return preset.get("order");
     }
 });
 
@@ -417,6 +489,9 @@ var LicenseCollection = BaseCollection.extend({
 
     get_default:function(){
     	return this.findWhere({license_name:"CC-BY"});
+    },
+    comparator: function(license){
+    	return license.id;
     }
 });
 
@@ -462,31 +537,39 @@ var ExerciseCollection = BaseCollection.extend({
 	model_name:"ExerciseCollection"
 });
 
+var ExerciseItemCollection = Backbone.Collection.extend({
+	comparator: function(item){
+		return item.get('order');
+	}
+});
+
 var AssessmentItemModel = BaseModel.extend({
 	root_list:"assessmentitem-list",
 	model_name:"AssessmentItemModel",
 	defaults: {
+		type: "single_selection",
 		question: "",
 		answers: "[]",
-		hints: "[]"
+		hints: "[]",
+		files: []
 	},
 
 	initialize: function () {
 		if (typeof this.get("answers") !== "object") {
-			this.set("answers", new Backbone.Collection(JSON.parse(this.get("answers"))), {silent: true});
+			this.set("answers", new ExerciseItemCollection(JSON.parse(this.get("answers"))), {silent: true});
 		}
 		if (typeof this.get("hints") !== "object"){
-			this.set("hints", new Backbone.Collection(JSON.parse(this.get("hints"))), {silent:true});
+			this.set("hints", new ExerciseItemCollection(JSON.parse(this.get("hints"))), {silent:true});
 		}
 	},
 
 	parse: function(response) {
 	    if (response !== undefined) {
 	    	if (response.answers) {
-	    		response.answers = new Backbone.Collection(JSON.parse(response.answers));
+	    		response.answers = new ExerciseItemCollection(JSON.parse(response.answers));
 	    	}
 	    	if(response.hints){
-	    		response.hints = new Backbone.Collection(JSON.parse(response.hints));
+	    		response.hints = new ExerciseItemCollection(JSON.parse(response.hints));
 	    	}
 	    }
 	    return response;
@@ -502,12 +585,14 @@ var AssessmentItemModel = BaseModel.extend({
 		}
 	    return attributes;
 	}
-
 });
 
 var AssessmentItemCollection = BaseCollection.extend({
 	model: AssessmentItemModel,
 	model_name:"AssessmentItemCollection",
+	comparator : function(assessment_item){
+    	return assessment_item.get("order");
+    },
 	get_all_fetch: function(ids, force_fetch){
 		force_fetch = (force_fetch)? true : false;
     	var self = this;
@@ -542,9 +627,24 @@ var AssessmentItemCollection = BaseCollection.extend({
     	});
     	return promise;
     },
+    save:function(){
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+    		Backbone.sync("update", self, {
+    			url: self.model.prototype.urlRoot(),
+    			success:function(data){
+    				resolve(new AssessmentItemCollection(data));
+    			},
+    			error:function(error){
+    				reject(error);
+    			}
+    		});
+    	});
+    }
 });
 
 module.exports = {
+	fetch_nodes_by_ids: fetch_nodes_by_ids,
 	ContentNodeModel: ContentNodeModel,
 	ContentNodeCollection: ContentNodeCollection,
 	ChannelModel: ChannelModel,

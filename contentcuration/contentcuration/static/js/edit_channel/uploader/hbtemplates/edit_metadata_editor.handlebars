@@ -5,22 +5,39 @@
 		<h5 id="uploader-count-message">Editing data for {{selected_count}} items.</h5>
 		{{#unless isoriginal}}<p class="text-center uploader-copied-warning"><i>Detected item(s) imported from another channel - fields disabled accordingly</i></p>{{/unless}}
 	{{/unless}}
-	{{#if is_file}}
-		{{#if has_files}}
-			<ul id="editmetadata_format_section" class="list-unstyled"></ul>
-		{{/if}}
-	{{/if}}
 	{{#if node}}
+		<div id="editmetadata_format_section"></div>
+		<hr/>
+		<br/>
 		<h4>Title<label class="required">*<span id="title_error">Title cannot be blank.</span></label></h4>
 		<input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter a title" maxlength="200" value="{{node.title}}" required/>
+	{{/if}}
+	{{#if is_exercise}}
+		<h4>Mastery Criteria <label class="required">*</label></h4>
+		<select id="mastery_model_select">
+			<option disabled value=0>---</option>
+			<option value="num_correct_in_a_row_3" selected>3 in a Row</option>
+			<option value="num_correct_in_a_row_5">5 in a Row</option>
+			<option value="num_correct_in_a_row_10">10 in a Row</option>
+			<option value="do_all">100% Correct</option>
+			<option value="m_of_n">M out of N...</option>
+		</select>
+		<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="mastery_about" ></span>
+		<span id="mastery_custom_criterion">
+			<input type="number" id="m_value" min="1" max="20" value="{{m_value}}" maxlength="2" size="2"/>
+			&nbsp;of&nbsp;
+			<input type="number" id="n_value" min="1" max="20" value="{{n_value}}" maxlength="2" size="2"/>
+		</span>
+		<br/>
+		<br/>
 	{{/if}}
 	{{#if isoriginal}}
 		<h4>Author</h4>
 		<input type="text" id="author_field" class="upload_input input_listener" value="{{author}}" placeholder="Enter author name"/>
 		{{#if is_file}}
 		<div class="row">
-			<div class="content_nodes_only col-sm-5">
-				<h4>License</h4>
+			<div class="content_nodes_only col-sm-6">
+				<h4>License <label class="required">*</label></h4>
 				<select id="license_select">
 		            <option selected disabled value=0>---</option>
 		            {{#each licenses}}
@@ -28,11 +45,11 @@
 		            {{/each}}
 		        </select>
 		        <span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" ></span>
+		        <textarea id="custom_license_description" class="input_listener" placeholder="Enter license description"></textarea>
 			</div>
-			<!-- <div class="col-sm-1">&nbsp;</div> -->
-			<div class="content_nodes_only col-sm-7">
+			<div class="content_nodes_only col-sm-6">
 				<h4>Copyright Holder</h4>
-				<input type="text" id="input_license_owner" class="license_input input_listener" placeholder="Enter license owner name" maxlength="200"value="{{copyright_owner}}"/>
+				<input type="text" id="input_license_owner" class="license_input input_listener" placeholder="Enter copyright holder name" maxlength="200"value="{{copyright_owner}}"/>
 			</div>
 		</div>
 		{{/if}}
@@ -42,16 +59,17 @@
 		<p class="uploader-copied-warning">Read-Only: Imported from <b>{{node.original_channel.name}}</b></p>
 		{{/if}}
 		<div class="row">
-			<div class="col-xs-4">
+			<div class="col-xs-3">
 				<h4>Author</h4>
 				<p class="upload_input">{{author}}</p>
 			</div>
-			<div class="col-xs-4">
+			<div class="col-xs-5">
 				<h4>License</h4>
 				<p class="upload_input">
 					<span id="license_select">{{license}}</span>
-					<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" ></span>
+					<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about" max-length=400></span>
 				</p>
+				<p id="custom_license_description" class="license_description_text">{{license_description}}</p>
 			</div>
 			<div class="col-xs-4">
 				<h4>Copyright Holder</h4>

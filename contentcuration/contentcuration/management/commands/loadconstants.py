@@ -27,6 +27,15 @@ SITES = [
             "domain" : "127.0.0.1:8000",
         },
     },
+    {
+        "model" : Site,
+        "pk" : "id",
+        "fields": {
+            "id": 3,
+            "name"  : "Kolibri Studio (Develop)",
+            "domain" : "develop.contentworkshop.learningequality.org",
+        },
+    },
 ]
 
 LICENSES = [
@@ -116,6 +125,17 @@ LICENSES = [
             "exists": True,
             "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
             "license_description": "Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights.",
+        },
+    },
+    {
+        "model": models.License,
+        "pk": "id",
+        "fields": {
+            "id": 9,
+            "license_name": licenses.SPECIAL_PERMISSIONS,
+            "exists": False,
+            "license_url": "",
+            "license_description": "Special Permissions is a custom license to use when the current licenses do not apply to the content. The owner of this license is responsible for creating a description of what this license entails.",
         },
     },
 ]
@@ -454,7 +474,7 @@ PRESETS = [
             "display": False,
             "order" : 3,
             "kind_id" : content_kinds.EXERCISE,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG, file_formats.GIF],
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG, file_formats.GIF, file_formats.SVG],
         },
     },
     {
@@ -486,6 +506,21 @@ PRESETS = [
             "display": True,
             "order" : 0,
             "kind_id" : None,
+            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+        },
+    },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
+            "id" : format_presets.TOPIC_THUMBNAIL,
+            "readable_name": format_presets.TOPIC_THUMBNAIL_READABLE,
+            "multi_language" : False,
+            "supplementary" : True,
+            "thumbnail" : True,
+            "display": True,
+            "order" : 1,
+            "kind_id" : content_kinds.TOPIC,
             "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
         },
     },

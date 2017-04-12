@@ -6,33 +6,41 @@ import re
 import hashlib
 import shutil
 import tempfile
+import random
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
-from django.core import paginator
+from django.core import paginator, serializers
+from django.core.cache import cache
 from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField
+from django.db.models import Q, Case, When, Value, IntegerField, Max
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers
+from contentcuration.utils.files import extract_thumbnail_wrapper, compress_video_wrapper,  generate_thumbnail_from_node, duplicate_file
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer
-from django.core.cache import cache
-from le_utils.constants import format_presets, content_kinds, file_formats
+from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, FileSerializer
+from le_utils.constants import format_presets, content_kinds, file_formats, exercises
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from pressurecooker.videos import guess_video_preset_by_resolution, extract_thumbnail_from_video, compress_video
-from django.core.cache import cache
+from pressurecooker.images import create_tiled_image
+from pressurecooker.encodings import write_base64_to_file
+
+def get_nodes_by_ids(request):
+    if request.method == 'POST':
+        nodes = ContentNode.objects.filter(pk__in=json.loads(request.body))
+        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
 
 def base(request):
-    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
+    if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
         return redirect(reverse_lazy('unsupported_browser'))
     if request.user.is_authenticated():
         return redirect('channels')
@@ -76,7 +84,9 @@ def channel_page(request, channel, allow_edit=False):
                                                  "fpreset_list" : formatpresets,
                                                  "ckinds_list" : contentkinds,
                                                  "ctags": json_renderer.render(channel_tags_serializer.data),
-                                                 "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data)})
+                                                 "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data),
+                                                 "preferences" : request.user.preferences,
+                                                })
 
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -136,55 +146,18 @@ def get_or_set_cached_constants(constant, serializer):
     cache.set(constant.__name__, constant_data, None)
     return constant_data
 
-def exercise_list(request):
-
-    exercise_list = Exercise.objects.all().order_by('title')
-
-    paged_list = paginator.Paginator(exercise_list, 25)  # Show 25 exercises per page
-
-    page = request.GET.get('page')
-
-    try:
-        exercises = paged_list.page(page)
-    except paginator.PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        exercises = paged_list.page(1)
-    except paginator.EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        exercises = paged_list.page(paginator.num_pages)
-
-    # serializer = ExerciseSerializer(exercises.object_list, many=True)
-
-    return render(request, 'exercise_list.html', {"exercises": exercises, "blob": JSONRenderer().render(serializer.data)})
-
-
-def exercise(request, exercise_id):
-
-    exercise = get_object_or_404(ContentNode, id=exercise_id)
-
-    serializer = ContentNodeSerializer(exercise)
-
-    assessment_items = AssessmentItem.objects.filter(exercise=exercise)
-
-    assessment_serialize = AssessmentItemSerializer(assessment_items, many=True)
-
-    return render(request, 'exercise_edit.html', {"exercise": JSONRenderer().render(serializer.data), "assessment_items": JSONRenderer().render(assessment_serialize.data)})
-
-# TODO-BLOCKER: remove this csrf_exempt! People might upload random stuff here and we don't want that.
-@csrf_exempt
 def file_upload(request):
     if request.method == 'POST':
         preset = FormatPreset.objects.get(id=request.META.get('HTTP_PRESET'))
         #Implement logic for switching out files without saving it yet
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1]
-        original_filename = request.FILES.values()[0]._name
+        filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
-        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format=FileFormat.objects.get(extension=ext), original_filename = original_filename, preset=preset)
+        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=filename, preset=preset)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
             "filename": str(file_object),
-            "object_id": file_object.pk
+            "file": JSONRenderer().render(FileSerializer(file_object).data)
         }))
 
 def file_create(request):
@@ -193,61 +166,53 @@ def file_create(request):
         size = request.FILES.values()[0]._size
         presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:])
         kind = presets.first().kind
-        new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=settings.DEFAULT_LICENSE, author=request.user.get_full_name())
+        original_filename = request.FILES.values()[0]._name
+        preferences = json.loads(request.user.preferences)
+        author = preferences.get('author') if isinstance(preferences.get('author'), basestring) else request.user.get_full_name()
+        license = License.objects.filter(license_name=preferences.get('license')).first() # Use filter/first in case preference hasn't been set
+        license_id = license.pk if license else settings.DEFAULT_LICENSE
+        new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=license_id, author=author, copyright_holder=preferences.get('copyright_holder') )
         new_node.save()
         file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename = original_filename, contentnode=new_node, file_size=size)
         file_object.save()
-
         if kind.pk == content_kinds.VIDEO:
-            extract_thumbnail_wrapper(file_object)
             file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))
         elif presets.filter(supplementary=False).count() == 1:
             file_object.preset = presets.filter(supplementary=False).first()
 
         file_object.save()
 
+        try:
+            if preferences.get('auto_derive_video_thumbnail') and new_node.kind_id == content_kinds.VIDEO \
+                or preferences.get('auto_derive_audio_thumbnail') and new_node.kind_id == content_kinds.AUDIO \
+                or preferences.get('auto_derive_html5_thumbnail') and new_node.kind_id == content_kinds.HTML5 \
+                or preferences.get('auto_derive_document_thumbnail') and new_node.kind_id == content_kinds.DOCUMENT:
+                generate_thumbnail_from_node(new_node, set_node=True)
+        except Exception:
+            pass
+
         return HttpResponse(json.dumps({
             "success": True,
-            "object_id": new_node.pk
+            "node": JSONRenderer().render(ContentNodeSerializer(new_node).data)
         }))
 
-def extract_thumbnail_wrapper(file_object):
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(file_formats.PNG)) as tempf:
-        tempf.close()
-        extract_thumbnail_from_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
-        filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
-        checksum, ext = os.path.splitext(filename)
-        file_location = generate_file_on_disk_name(checksum, filename)
-        thumbnail_object = File(
-            file_on_disk=DjFile(open(file_location, 'rb')),
-            file_format_id=file_formats.PNG,
-            original_filename = 'Extracted Thumbnail',
-            contentnode=file_object.contentnode,
-            file_size=os.path.getsize(file_location),
-            preset_id=format_presets.VIDEO_THUMBNAIL,
-        )
-        thumbnail_object.save()
-        return thumbnail_object
+def generate_thumbnail(request):
+    logging.debug("Entering the generate_thumbnail endpoint")
 
-def compress_video_wrapper(file_object):
-    with tempfile.TemporaryFile(suffix=".{}".format(file_formats.MP4)) as tempf:
-        tempf.close()
-        compress_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
-        filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
-        checksum, ext = os.path.splitext(filename)
-        file_location = generate_file_on_disk_name(checksum, filename)
-        low_res_object = File(
-            file_on_disk=DjFile(open(file_location, 'rb')),
-            file_format_id=file_formats.MP4,
-            original_filename = file_object.original_filename,
-            contentnode=file_object.contentnode,
-            file_size=os.path.getsize(file_location),
-            preset_id=format_presets.VIDEO_LOW_RES,
-        )
-        low_res_object.save()
-        return low_res_object
+    if request.method != 'POST':
+        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+        node = ContentNode.objects.get(pk=data["node_id"])
 
-@csrf_exempt
+        thumbnail_object = generate_thumbnail_from_node(node)
+
+        return HttpResponse(json.dumps({
+            "success": True,
+            "file": JSONRenderer().render(FileSerializer(thumbnail_object).data),
+            "path": generate_storage_url(str(thumbnail_object)),
+        }))
+
 def thumbnail_upload(request):
     if request.method == 'POST':
         fobj = request.FILES.values()[0]
@@ -255,20 +220,32 @@ def thumbnail_upload(request):
 
         return HttpResponse(json.dumps({
             "success": True,
-            "filename": formatted_filename,
-            "file_url": generate_storage_url(formatted_filename),
+            "formatted_filename": formatted_filename,
+            "file":  None,
+            "path": generate_storage_url(formatted_filename),
         }))
 
-def exercise_image_upload(request):
-
+def image_upload(request):
     if request.method == 'POST':
-        node = ContentNode.objects.get(id=request.META.get('HTTP_NODE'))
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1].split(".")[-1] # gets file extension without leading period
-        file_object = File(file_on_disk=request.FILES.values()[0], file_format=FileFormat.objects.get(extension=ext), contentnode=node)
+        name, ext = os.path.splitext(request.FILES.values()[0]._name) # gets file extension without leading period
+        file_object = File(contentnode_id=request.META.get('HTTP_NODE'),original_filename=name, preset_id=request.META.get('HTTP_PRESET'), file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:])
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
-            "filename": file_object.file_on_disk.url,
+            "file": JSONRenderer().render(FileSerializer(file_object).data),
+            "path": generate_storage_url(str(file_object)),
+        }))
+
+def exercise_image_upload(request):
+    if request.method == 'POST':
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:] # gets file extension without leading period
+        file_object = File(preset_id=format_presets.EXERCISE_IMAGE, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext)
+        file_object.save()
+        return HttpResponse(json.dumps({
+            "success": True,
+            "formatted_filename": exercises.CONTENT_STORAGE_FORMAT.format(str(file_object)),
+            "file_id": file_object.pk,
+            "path": generate_storage_url(str(file_object)),
         }))
 
 def duplicate_nodes(request):
@@ -336,10 +313,7 @@ def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
 
     # copy file object too
     for fobj in node.files.all():
-        fobj_copy = copy.copy(fobj)
-        fobj_copy.id = None
-        fobj_copy.contentnode = new_node
-        fobj_copy.save()
+        duplicate_file(fobj, node=new_node)
 
     # copy assessment item object too
     for aiobj in node.assessment_items.all():
@@ -348,16 +322,12 @@ def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
         aiobj_copy.contentnode = new_node
         aiobj_copy.save()
         for fobj in aiobj.files.all():
-            fobj_copy = copy.copy(fobj)
-            fobj_copy.id = None
-            fobj_copy.assessment_item = aiobj_copy
-            fobj_copy.save()
+            duplicate_file(fobj, assessment_item=aiobj_copy)
 
     for c in node.children.all():
         _duplicate_node(c, parent=new_node.id)
 
     return new_node
-
 
 def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
@@ -371,20 +341,24 @@ def move_nodes(request):
             nodes = data["nodes"]
             target_parent = ContentNode.objects.get(pk=data["target_parent"])
             channel_id = data["channel_id"]
+            min_order = data.get("min_order") or 0
+            max_order = data.get("max_order") or min_order + len(nodes)
+
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
+        all_ids = []
         with transaction.atomic():
             for n in nodes:
+                min_order = min_order + float(max_order - min_order) / 2
                 node = ContentNode.objects.get(pk=n['id'])
-                _move_node(node, parent=target_parent, sort_order=n['sort_order'], channel_id=channel_id)
+                _move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
+                all_ids.append(n['id'])
 
-        return HttpResponse(json.dumps({
-            "success": True,
-            "nodes": [n['id'] for n in nodes]
-        }))
+        serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=all_ids), many=True).data
+        return HttpResponse(JSONRenderer().render(serialized))
 
-def _move_node(node, parent=None, sort_order=1, channel_id=None):
+def _move_node(node, parent=None, sort_order=None, channel_id=None):
     node.parent = parent
     node.sort_order = sort_order
     node.changed = True
@@ -394,10 +368,7 @@ def _move_node(node, parent=None, sort_order=1, channel_id=None):
     for tag in ContentTag.objects.filter(tagged_content__in=descendants).distinct():
         # If moving from another channel
         if tag.channel_id != channel_id:
-            t, is_new = ContentTag.objects.get_or_create(
-                tag_name=tag.tag_name,
-                channel_id=channel_id,
-            )
+            t, is_new = ContentTag.objects.get_or_create(tag_name=tag.tag_name, channel_id=channel_id)
 
             # Set descendants with this tag to correct tag
             for n in descendants.filter(tags=tag):

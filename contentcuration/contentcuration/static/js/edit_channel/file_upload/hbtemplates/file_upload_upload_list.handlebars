@@ -1,9 +1,11 @@
-<button class="btn btn-default fileinput-button dz-clickable action-button">
-    <span>Add More Files</span>
-</button>
+<div class="pull-right" id="show_uploading_wrapper">
+	<input type="checkbox" id="show_uploading"/> <label for="show_uploading">View uploading only</label>
+</div>
+<button class="btn btn-default fileinput-button dz-clickable action-button">ADD FILES</button>
 <em>&nbsp; (or drag and drop files below)</em>
+<div id="file_upload_count">0 files uploaded</div>
 <div id="dropzone" class="file_list">
 	<ul id="file_upload_list" class="list-unstyled">
-		<li class="default-item">Loading...</li>
+		<li class="default-item text-center">Loading...</li>
 	</ul>
 </div>
