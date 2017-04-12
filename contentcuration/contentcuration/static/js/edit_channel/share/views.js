@@ -6,6 +6,9 @@ require("share.less");
 var stringHelper = require("edit_channel/utils/string_helper");
 var dialog = require("edit_channel/utils/dialog");
 
+var VIEWER_SHARE_MODES = [{'share_mode': 'view', 'text': 'Can view'}]
+var EDITOR_SHARE_MODES = [{'share_mode': 'edit', 'text': 'Can edit'}].concat(VIEWER_SHARE_MODES);
+
 var ShareModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/share_modal.handlebars"),
     initialize: function(options) {
@@ -45,8 +48,20 @@ var ShareView = BaseViews.BaseView.extend({
     render: function() {
         this.$el.html(this.template({
             channel:this.model.toJSON(),
-            user: this.current_user.toJSON()
+            user: this.current_user.toJSON(),
+            share_modes: this.get_share_modes()
         }));
+    },
+    get_share_modes: function(){
+        if (!this.share_modes){
+            var user_is_editor = _.find(window.current_channel.get("editors"), function(u){return u === this.current_user.id});
+            if(user_is_editor){
+                this.share_modes = EDITOR_SHARE_MODES;
+            }else{
+                this.share_modes = VIEWER_SHARE_MODES;
+            }
+        }
+        return this.share_modes;
     },
     load_lists:function(){
         this.editor_list = this.model.get("editors").concat(this.model.get("viewers"));

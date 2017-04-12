@@ -9,9 +9,11 @@
 				<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
 					<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
 				</a>
+				<br/>
 				{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
 			{{else}}
-				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true"></span>
+				{{#if isfolder}}<span class="glyphicon glyphicon-list-alt edit_item_button" aria-hidden="true" title="View topic details"></span>{{/if}}
+				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true" title="Copy"></span>
 			{{/if}}
 		</div>
 		<h6 class="content_metadata_summary {{#unless isfolder}}open_file{{/unless}}">

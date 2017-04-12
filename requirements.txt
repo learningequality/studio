@@ -18,7 +18,12 @@ djangorestframework-bulk==0.2.1
 django-email-extras==0.3.3
 https://storage.googleapis.com/le-downloads/kolibri/kolibri-0.2.0b1.dev218-py2.py3-none-any.whl
 validators
-le-utils==0.0.9rc18
+le-utils==0.0.9rc23
 gunicorn==19.6.0
 django-mailgun==0.9.1
-pressurecooker==0.0.10
+pressurecooker==0.0.14
+metaphone==0.6
+porter2stemmer==1.0
+django-postmark==0.1.6
+google-cloud-error-reporting==0.24.0
+google-python-cloud-debugger

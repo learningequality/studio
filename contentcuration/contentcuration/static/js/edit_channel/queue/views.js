@@ -179,7 +179,7 @@ var ClipboardList = QueueList.extend({
         }, null);
 	},
 	edit_items:function(){
-		this.container.edit_selected();
+		this.container.edit_selected(true);
 	},
 	move_items:function(){
 		this.container.move_content();
@@ -313,8 +313,11 @@ var ClipboardItem = QueueItem.extend({
 	events: {
 		'click .delete_content' : 'delete_content',
 		'click .tog_folder' : 'toggle',
-		'click .edit_content' : 'open_edit',
+		'click .edit_content' : 'edit_item',
 		'change input[type=checkbox]': 'handle_checked'
+	},
+	edit_item:function(){
+		this.open_edit(true);
 	},
 	load_subfiles:function(){
 		if(!this.subcontent_view){

@@ -275,6 +275,7 @@ def create_node(node_data, parent_node, sort_order):
         description = node_data['description'],
         author = node_data['author'],
         license = license,
+        license_description = node_data.get('license_description'),
         copyright_holder = node_data.get('copyright_holder') or "",
         parent_id = parent_node,
         extra_fields = node_data['extra_fields'],

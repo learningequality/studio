@@ -96,6 +96,9 @@ var UserModel = BaseModel.extend({
     },
     get_clipboard:function(){
     	return  new ContentNodeModel(this.get("clipboard_tree"));
+    },
+    get_full_name: function(){
+    	return this.get('first_name') + " " + this.get('last_name');
     }
 });
 
@@ -151,6 +154,21 @@ var ContentNodeModel = BaseModel.extend({
 		ancestors: [],
 		extra_fields: {}
     },
+    generate_thumbnail:function(){
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.generate_thumbnail(),
+	            data:  JSON.stringify({"node_id": self.id}),
+	            success: function(result) {
+	            	file = JSON.parse(result).file
+	            	resolve(new FileModel(JSON.parse(file)));
+	            },
+	            error:reject
+	        });
+    	});
+    },
     initialize: function () {
 		if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
 			this.set("extra_fields", JSON.parse(this.get("extra_fields")))
@@ -175,10 +193,10 @@ var ContentNodeModel = BaseModel.extend({
 		}
 		if(this.get('kind') === 'exercise'){
 			var data = (this.get('extra_fields'))? this.get('extra_fields') : {};
-			data['mastery_model'] = (data['mastery_model'])? data['mastery_model'] : "num_correct_in_a_row_5";
-		    data['m'] = (data['m'])? data['m'] : 1;
-		    data['n'] = (data['n'])? data['n'] : 1;
-		    data['randomize'] = (data['randomize'] !== undefined)? data['randomize'] : true;
+			data['mastery_model'] = (data['mastery_model'])? data['mastery_model'] : window.preferences.mastery_model;
+		    data['m'] = (data['m'])? data['m'] : window.preferences.m_value;
+		    data['n'] = (data['n'])? data['n'] : window.preferences.n_value;
+		    data['randomize'] = (data['randomize'] !== undefined)? data['randomize'] : window.preferences.auto_randomize_questions;
 		    this.set('extra_fields', data);
 		}
 	}
@@ -257,9 +275,7 @@ var ContentNodeCollection = BaseCollection.extend({
 	    				resolve(fetched);
 	    			});
 	            },
-	            error:function(e){
-	            	reject(e);
-	            }
+	            error:reject
 	        });
     	});
     	return promise;
@@ -473,6 +489,9 @@ var LicenseCollection = BaseCollection.extend({
 
     get_default:function(){
     	return this.findWhere({license_name:"CC-BY"});
+    },
+    comparator: function(license){
+    	return license.id;
     }
 });
 

@@ -177,6 +177,7 @@
 
 .hint_modal, .assessment_item{
     word-wrap: break-word;
+    img{ max-width: 100% !important; }
     .error-list li, .note-error, .hint-errors{
         color: @red-error-color;
         font-weight: bold;
@@ -191,7 +192,6 @@
 
 .hint_modal, .assessment_item.active{
     .error-list, .hint-errors, .character_wrapper{display:none;}
-    img{ max-width: 100% !important; }
     .main_edit_area{
         .show_on_focus{ display:inline-block; }
         .question_area{
