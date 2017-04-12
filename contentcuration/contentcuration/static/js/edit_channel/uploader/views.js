@@ -482,12 +482,23 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
     this.handle_if_individual();
     if(this.shared_data){
+      this.display_license_description(this.shared_data.shared_license);
       var license_name = this.get_license((!alloriginal)? original_source_license : this.shared_data.shared_license)
       this.$("#license_detail_field").text(license_name);
       if(this.shared_data && this.shared_data.all_exercises) this.$("#mastery_detail_field").text(this.get_mastery_string());
       this.load_tags();
       this.$("#tag_default_detail_field").css("display", (this.shared_data.shared_tags.length)? "none" : "block");
       this.$("#license_about").css("display", (this.shared_data.shared_license > 0)? "inline" : "none");
+
+      // Set exercise fields according to shared exercise data
+      if(this.shared_data.all_exercises){
+        this.$("#mastery_model_select").val(this.shared_data.shared_exercise_data.mastery_model);
+        this.$("#mastery_custom_criterion").css('display', (this.shared_data.shared_exercise_data.mastery_model === "m_of_n") ? 'inline-block' : 'none');
+
+        var randomize = this.shared_data.shared_exercise_data.randomize;
+        this.$("#randomize_exercise").prop("indeterminate", randomize === null || randomize === undefined);
+        this.$("#randomize_exercise").prop("checked", randomize);
+      }
     }
   },
   get_mastery_string: function(){
@@ -507,18 +518,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   get_license: function(license_id){
     if(!license_id || license_id <= 0){ return null; }
     return window.licenses.get({id: license_id}).get('license_name');
-      this.display_license_description(this.shared_data.shared_license);
-
-      // Set exercise fields according to shared exercise data
-      if(this.shared_data.all_exercises){
-        this.$("#mastery_model_select").val(this.shared_data.shared_exercise_data.mastery_model);
-        this.$("#mastery_custom_criterion").css('display', (this.shared_data.shared_exercise_data.mastery_model === "m_of_n") ? 'inline-block' : 'none');
-
-        var randomize = this.shared_data.shared_exercise_data.randomize;
-        this.$("#randomize_exercise").prop("indeterminate", randomize === null || randomize === undefined);
-        this.$("#randomize_exercise").prop("checked", randomize);
-      }
-    }
   },
   display_license_description: function(license_id){
     var license_name = license_id > 0 && window.licenses.get({id: license_id}).get('license_name')
@@ -526,7 +525,11 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       this.$("#custom_license_description").css('display', 'block');
       if(this.shared_data){
         this.$("#custom_license_description").attr('placeholder', (this.selected_individual() || this.shared_data.shared_license_description !== null) ? "Enter license description" : "---");
-        this.$("#custom_license_description").val(this.shared_data.shared_license_description);
+        if(this.all_original() && this.allow_edit){
+          this.$("#custom_license_description").val(this.shared_data.shared_license_description);
+        } else{
+          this.$("#custom_license_description").text(this.shared_data.shared_license_description || "Permissions vary");
+        }
       }
     } else {
       this.$("#custom_license_description").css('display', 'none');

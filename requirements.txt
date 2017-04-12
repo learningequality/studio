@@ -21,7 +21,7 @@ validators
 le-utils==0.0.9rc22
 gunicorn==19.6.0
 django-mailgun==0.9.1
-pressurecooker==0.0.12
+pressurecooker==0.0.14
 metaphone==0.6
 porter2stemmer==1.0
 google-cloud-error-reporting==0.24.0

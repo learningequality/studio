@@ -20,16 +20,17 @@
 		<hr/>
 		{{#unless isoriginal}}<p class="uploader-copied-warning">Imported from <b>{{node.original_channel.name}}</b></p>{{/unless}}
 		<div class="row">
-			<div class="col-xs-4  text-center">
+			<div class="col-xs-3  text-center">
 				<h4>Author</h4>
 				<p class="detail_field wordwrap text-center">{{#if author}}{{author}}{{else}}<span class="default_detail_field">---</span>{{/if}}</p>
 			</div>
-			<div class="col-xs-4  text-center">
+			<div class="col-xs-5  text-center">
 				<h4>License</h4>
 				<p class="detail_field">
 					<span id="license_detail_field">{{#if license}}{{license}}{{else}}<span class="default_detail_field">---</span>{{/if}}</span>
 					<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about"></span>
 				</p>
+				<p id="custom_license_description" class="license_description_text">{{license_description}}</p>
 			</div>
 			<div class="col-xs-4  text-center">
 				<h4>Copyright Holder</h4>
