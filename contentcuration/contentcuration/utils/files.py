@@ -52,7 +52,7 @@ def extract_thumbnail_wrapper(file_object, node=None, preset_id=None):
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
 
 def compress_video_wrapper(file_object):
-    with tempfile.TemporaryFile(suffix=".{}".format(file_formats.MP4)) as tempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(file_formats.MP4)) as tempf:
         tempf.close()
         compress_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
         filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
@@ -77,7 +77,7 @@ def create_tiled_image_wrapper(files, preset_id, node=None):
     elif len(files) >= 1:
         files = files[:1]
 
-    with tempfile.TemporaryFile(suffix=".{}".format(ext)) as tempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
         tempf.close()
         create_tiled_image(files, tempf.name)
         with open(tempf.name, 'rb') as tf:
