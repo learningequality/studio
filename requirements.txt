@@ -24,5 +24,6 @@ django-mailgun==0.9.1
 pressurecooker==0.0.14
 metaphone==0.6
 porter2stemmer==1.0
+django-postmark==0.1.6
 google-cloud-error-reporting==0.24.0
 google-python-cloud-debugger

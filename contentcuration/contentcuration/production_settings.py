@@ -50,9 +50,5 @@ LOGGING = {
 }
 
 # email settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.getenv("EMAIL_CREDENTIALS_HOST")
-EMAIL_HOST_USER = os.getenv("EMAIL_CREDENTIALS_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_CREDENTIALS_PASSWORD")
-EMAIL_PORT = os.getenv("EMAIL_CREDENTIALS_PORT")
-EMAIL_USE_TLS = os.getenv("EMAIL_CREDENTIALS_USE_TLS")
+EMAIL_BACKEND = "postmark.backends.PostmarkBackend"
+POSTMARK_API_KEY = os.getenv("EMAIL_CREDENTIALS_POSTMARK_API_KEY")
