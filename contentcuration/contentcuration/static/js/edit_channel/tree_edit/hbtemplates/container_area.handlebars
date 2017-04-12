@@ -6,6 +6,11 @@
 					<div class="nav-button edit_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-pencil"></span></div>
 					<a class="nav-label edit_button disable-on-edit disable-none-selected">Edit</a>
 				</div>
+			{{else}}
+				<div class="nav-button-container">
+					<div class="nav-button edit_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-list-alt"></span></div>
+					<a class="nav-label edit_button disable-on-edit disable-none-selected">View</a>
+				</div>
 			{{/if}}
 				<div class="nav-button-container">
 					<div class="nav-button copy_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-duplicate"></span></div>
@@ -24,14 +29,14 @@
 		</div>
 		{{#if edit}}
 		<div class="nav-button-container">
-				<div class="nav-button archive_button disable-on-edit"><span class="glyphicon glyphicon-trash"></span></div>
-				<a class="nav-label permissions_button disable-on-edit">Archives</a>
-			</div>
-			<div class="nav-button-container">
-				<div class="nav-button permissions_button disable-on-edit"><span class="glyphicon glyphicon-user"></span></div>
-				<a class="nav-label permissions_button disable-on-edit">Invite</a>
-			</div>
+			<div class="nav-button archive_button disable-on-edit"><span class="glyphicon glyphicon-trash"></span></div>
+			<a class="nav-label archive_button disable-on-edit">Trash</a>
+		</div>
 		{{/if}}
+		<div class="nav-button-container">
+			<div class="nav-button permissions_button disable-on-edit"><span class="glyphicon glyphicon-user"></span></div>
+			<a class="nav-label permissions_button disable-on-edit">Invite</a>
+		</div>
 		<div class="hide-details-container">
 			<input type="checkbox" id="hide_details_checkbox"/>
 			<label for="hide_details_checkbox">Hide details</label>

@@ -35,9 +35,7 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
       "change #select_all_check" : "select_all"
     },
     render: function() {
-        this.$el.html(this.template({
-            is_empty:this.model.get("children").length===0,
-        }));
+        this.$el.html(this.template());
         this.main_archive_list = new ArchiveList({
             model : this.model,
             el: this.$("#archive_content"),
@@ -114,7 +112,7 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
 
 var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
     template: require("./hbtemplates/archive_list.handlebars"),
-    default_item:">.default-item",
+    default_item:">.archive-list >.default-item",
     list_selector: ">.archive-list",
     initialize: function(options) {
         _.bindAll(this, 'update_count', 'get_metadata');
@@ -137,7 +135,7 @@ var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
             self.$(self.default_item).text("No items found.");
             fetchedCollection.sort_by_order();
             self.load_content(fetchedCollection);
-            window.workspace_manager.put_list(self.model.get("id"), self);
+            window.workspace_manager.put_list(self.model.id, self);
         });
     },
     create_new_view:function(model){
@@ -202,7 +200,7 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     },
 
     initialize: function(options) {
-        _.bindAll(this, 'delete_content', 'update_count', 'restore_content');
+        _.bindAll(this, 'delete_content', 'update_count', 'restore_content', 'handle_move');
         this.bind_edit_functions();
         this.containing_list_view = options.containing_list_view;
         this.collection = new Models.ContentNodeCollection();
@@ -226,7 +224,7 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         this.load_folder_toggle();
         this.$el.find(".archive_checkbox").prop("checked", this.checked);
         this.set_disabled(this.checked);
-        window.workspace_manager.put_node(this.model.get("id"), this);
+        window.workspace_manager.put_node(this.model.id, this);
     },
     reload:function(model){
         this.model.set(model.attributes);
@@ -311,14 +309,24 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     restore_content:function(event){
         event.stopPropagation();
         event.preventDefault();
-        var moveCollection = new Models.ContentNodeCollection();
-        var self = this;
-        moveCollection.add(this.model);
-        this.container.move_content(moveCollection, function(){
-            self.metadata = {"count": 0, "size": 0};
-            self.item_to_archive = false;
-            self.containing_list_view.update_count();
-        });
+        this.open_move();
+    },
+    handle_move:function(target, moved, original_parents){
+        // Recalculate counts
+        this.reload_ancestors(original_parents, true);
+
+        // Remove where node originally was
+        window.workspace_manager.remove(this.model.id)
+
+        // Add nodes to correct place
+        var content = window.workspace_manager.get(target.id);
+        if(content && content.list){
+            content.list.add_nodes(moved);
+        }
+        this.metadata = {"count": 0, "size": 0};
+        this.item_to_archive = false;
+        this.checked = false;
+        this.containing_list_view.update_count();
     }
 });
 

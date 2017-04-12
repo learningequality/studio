@@ -14,6 +14,7 @@
 		var kinds = JSON.parse("{{ ckinds_list |escapejs }}");
 		var channel_tags = JSON.parse("{{ ctags |escapejs }}");
 		var user = JSON.parse("{{ current_user|escapejs }}");
+		var preferences = JSON.parse("{{ preferences|escapejs }}");
 	</script>
 	<script type="text/javascript">
 		var bundle = require("channel_edit");

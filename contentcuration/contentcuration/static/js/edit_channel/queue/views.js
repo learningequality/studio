@@ -140,10 +140,9 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		this.views.push(item_view);
 		return item_view;
 	},
-	
 	delete_items:function(){
-		if(confirm("Are you sure you want to delete these selected items?")){
-			this.delete_selected();
+		if(confirm("Are you sure you want to PERMANENTLY delete these selected items? Changes cannot be undone!")){
+			this.delete_items_permanently("Deleting Content...");
 			this.$(".select_all").attr("checked", false);
 		}
 	},
@@ -205,8 +204,11 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	events: {
 		'click .delete_content' : 'delete_content',
 		'click .tog_folder' : 'toggle',
-		'click .edit_content' : 'open_edit',
+		'click .edit_content' : 'edit_item',
 		'change input[type=checkbox]': 'handle_checked'
+	},
+	edit_item:function(){
+		this.open_edit(true);
 	},
 	load_subfiles:function(){
 		if(!this.subcontent_view){
@@ -223,10 +225,10 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		}
 	},
 	delete_content:function(){
-		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
-			this.add_to_trash();
+		if(confirm("Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!")){
+			this.delete(true, "Deleting Content...");
 		}
-	},
+	}
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
 	// handle_drop:function(collection){
 	// 	return collection.duplicate(window.workspace_manager.get_queue_view().clipboard_queue.model);
