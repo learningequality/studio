@@ -4,6 +4,8 @@ prodserver: collectstatic
 collectstatic:
 	python contentcuration/manage.py collectstatic --noinput
 	python contentcuration/manage.py collectstatic_js_reverse
+	python contentcuration/manage.py loadconstants
+
 
 migrate:
 	python contentcuration/manage.py migrate
