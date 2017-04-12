@@ -45,13 +45,13 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       var dialog = require("edit_channel/utils/dialog");
       dialog.dialog("Unsaved Changes!", "Exiting now will"
       + " undo any new changes. Are you sure you want to exit?", {
-          "Don't Save": function(){
+          "DON'T SAVE": function(){
               self.metadata_view.undo_changes();
               self.close();
               $(".modal-backdrop").remove();
           },
-          "Keep Open":function(){},
-          "Save & Close":function(){
+          "KEEP OPEN":function(){},
+          "SAVE & CLOSE":function(){
             self.metadata_view.save_and_finish();
           },
       }, null);

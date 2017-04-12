@@ -208,8 +208,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
             var dialog = require("edit_channel/utils/dialog");
             dialog.dialog("WARNING", "All content under this channel will be permanently deleted."
 					+ "\nAre you sure you want to delete this channel?", {
-                "Cancel":function(){},
-                "Delete Channel": function(){
+                "CANCEL":function(){},
+                "DELETE CHANNEL": function(){
 					self.save({"deleted":true}, "Deleting Channel...").then(function(){
 						self.containing_list_view.set_editing(false);
 						self.containing_list_view.collection.remove(self.model);

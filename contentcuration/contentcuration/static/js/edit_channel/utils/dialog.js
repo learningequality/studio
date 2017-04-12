@@ -22,6 +22,8 @@ function dialog(title, submessage, actions, onclose){
       if(onclose){
         onclose();
       }
+      $(document).off("keydown");
+      $(".modal").attr('tabindex', -1);
       $('.ui-widget-overlay').fadeOut(100);
     },
     open: function(){
@@ -31,14 +33,19 @@ function dialog(title, submessage, actions, onclose){
     }
   });
 
+  $(".modal").attr('tabindex', null);
   $("#dialog-box").dialog('open');
   $('.ui-widget-overlay').on('click', function() { $('#dialog-box').dialog( "close" ); });
   $('.ui-dialog').find("button").on('click', function() { $('#dialog-box').dialog( "close" ); });
 
+
   $(document).on('keydown', function(event) {
-    switch(event.keyCode || event.which){
+    switch(event.charCode || event.keyCode || event.which){
       case 27: // escape key
+        event.keyCode = event.which = event.charCode = 0;
+        event.returnValue = false;
         event.stopImmediatePropagation();
+        event.stopPropagation();
         event.preventDefault();
         $(document).off("keydown");
         $('#dialog-box').dialog( "close" );

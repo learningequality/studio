@@ -122,9 +122,9 @@ var ShareView = BaseViews.BaseView.extend({
         var result = this.collection.findWhere({"email": email});
         if(result){
             if (share_mode === "edit" && window.current_channel.get("viewers").indexOf(result.id) >= 0){
-                dialog.dialog("Grant permissions", "This person already has viewing access. Would you like to grant editing permissions?",{
-                    "No":function(){},
-                    "Yes": function(){
+                dialog.dialog("Granting Permissions", "This person already has viewing access. Would you like to grant editing permissions?",{
+                    "NO":function(){},
+                    "YES": function(){
                         callback();
                     }
                 }, function(){});
@@ -270,10 +270,9 @@ var SharePendingItem = ShareItem.extend({
     remove_editor:function(){
         this.cancel_actions(event);
         var self = this;
-        var dialog = require("edit_channel/utils/dialog");
-        dialog.dialog("Uninvite editor", "Are you sure you want to uninvite " + this.model.get("email") + "?", {
-            "Cancel":function(){},
-            "Uninvite": function(){
+        dialog.dialog("Uninviting Editor", "Are you sure you want to uninvite " + this.model.get("email") + "?", {
+            "CANCEL":function(){},
+            "UNINVITE": function(){
                 self.model.destroy();
                 self.remove();
             },
@@ -281,10 +280,9 @@ var SharePendingItem = ShareItem.extend({
     },
     reinvite_editor:function(){
         var self = this;
-        var dialog = require("edit_channel/utils/dialog");
-        dialog.dialog("Send Invitation", "Send invitation to edit to " + this.model.get("first_name") + " " + this.model.get("last_name") + " again?", {
-            "Cancel":function(){},
-            "Send": function(){
+        dialog.dialog("Sending Invitation", "Send invitation to edit to " + this.model.get("first_name") + " " + this.model.get("last_name") + " again?", {
+            "CANCEL":function(){},
+            "SEND": function(){
                 self.model.resend_invitation_email(self.containing_list_view.model).then(function(){
                     self.show_invitation_sent();
                 });
@@ -319,10 +317,10 @@ var ShareCurrentItem = ShareItem.extend({
     },
     remove_editor:function(){
         var self = this;
-        dialog.dialog("Remove editor", "Are you sure you want to remove " + this.model.get("first_name")
+        dialog.dialog("Removing Editor", "Are you sure you want to remove " + this.model.get("first_name")
             + " " + this.model.get("last_name") + " from the list?", {
-            "Cancel":function(){},
-            "Remove": function(){
+            "CANCEL":function(){},
+            "REMOVE": function(){
                 self.containing_list_view.remove_editor(self.model);
                 self.remove();
             },

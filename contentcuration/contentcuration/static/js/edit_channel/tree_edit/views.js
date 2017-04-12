@@ -4,6 +4,7 @@ var _ = require("underscore");
 require("content-container.less");
 var BaseViews = require("./../views");
 var DragHelper = require("edit_channel/utils/drag_drop");
+var dialog = require("edit_channel/utils/dialog");
 
 /**
  * Main view for all draft tree editing
@@ -97,10 +98,9 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	delete_content: function (event){
 		var self = this;
-        var dialog = require("edit_channel/utils/dialog");
         dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
-            "Cancel":function(){},
-            "Delete Items": function(){
+            "CANCEL":function(){},
+            "DELETE ITEMS": function(){
 				var deleteCollection = new Models.ContentNodeCollection();
 				for(var i = 0; i < self.lists.length; i++){
 					var list = self.lists[i].get_selected();
@@ -406,10 +406,9 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	delete_node:function(event){
 		this.cancel_actions(event);
 		var self = this;
-        var dialog = require("edit_channel/utils/dialog");
         dialog.dialog("WARNING", "Are you sure you want to delete " + this.model.get("title") + "?", {
-            "Cancel":function(){},
-            "Delete Items": function(){
+            "CANCEL":function(){},
+            "DELETE": function(){
 				self.add_to_trash();
 				if(self.subcontent_view){
 					self.subcontent_view.remove();

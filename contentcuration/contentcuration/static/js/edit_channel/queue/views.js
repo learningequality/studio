@@ -4,6 +4,7 @@ require("queue.less");
 var BaseViews = require("./../views");
 var Models = require("./../models");
 var DragHelper = require("edit_channel/utils/drag_drop");
+var dialog = require("edit_channel/utils/dialog");
 
 /* Loaded when user clicks clipboard button below navigation bar */
 var Queue = BaseViews.BaseWorkspaceView.extend({
@@ -169,10 +170,10 @@ var ClipboardList = QueueList.extend({
 	},
 	delete_items:function(){
 		var self = this;
-        var dialog = require("edit_channel/utils/dialog");
+
         dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
-            "Cancel":function(){},
-            "Delete Items": function(){
+            "CANCEL":function(){},
+            "DELETE ITEMS": function(){
 				self.delete_selected();
 				self.$(".select_all").attr("checked", false);
             },
@@ -239,10 +240,9 @@ var TrashList = QueueList.extend({
 	},
 	delete_items:function(){
 		var self = this;
-        var dialog = require("edit_channel/utils/dialog");
-        dialog.dialog("WARNING", "Are you sure you want to delete these selected items permanently? Changes cannot be undone!", {
-            "Cancel":function(){},
-            "Delete Items Permanently": function(){
+        dialog.dialog("WARNING", "Are you sure you want to delete these selected items PERMANENTLY? Changes cannot be undone!", {
+            "CANCEL":function(){},
+            "DELETE ITEMS": function(){
 				self.delete_items_permanently("Deleting Content...");
 				self.$(".select_all").attr("checked", false);
             },
@@ -334,10 +334,9 @@ var ClipboardItem = QueueItem.extend({
 	},
 	delete_content:function(){
 		var self = this;
-        var dialog = require("edit_channel/utils/dialog");
         dialog.dialog("WARNING", "Are you sure you want to delete " + this.model.get("title") + "?", {
-            "Cancel":function(){},
-            "Delete": function(){
+            "CANCEL":function(){},
+            "DELETE": function(){
 				self.add_to_trash();
             },
         }, null);
@@ -389,10 +388,9 @@ var TrashItem = QueueItem.extend({
 	},
 	delete_content:function(){
 		var self = this;
-        var dialog = require("edit_channel/utils/dialog");
         dialog.dialog("WARNING", "Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!", {
-            "Cancel":function(){},
-            "Delete Permanently": function(){
+            "CANCEL":function(){},
+            "DELETE": function(){
 				self.delete(true, "Deleting Content...");
             },
         }, null);
