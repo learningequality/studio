@@ -3,6 +3,7 @@ const CHARACTERS = require("./symbols.json");
 const MATHJAX_REGEX = /\$\$([^\$]+)\$\$/g;
 const IMG_PLACEHOLDER = "${☣ CONTENTSTORAGE}/"
 const IMG_REGEX = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
+const NUM_REGEX = /[0-9\,\.\-\/]+/g;
 
 /* MODULES */
 var Backbone = require("backbone");
@@ -277,14 +278,15 @@ var EditorView = Backbone.View.extend({
         if(this.numbersOnly){
             var key = event.keyCode || event.which;
             var allowedKeys = [46, 8, 9, 27, 32, 110, 37, 38, 39, 40, 109];
-            if(!this.check_key(String.fromCharCode(key), key) && !_.contains(allowedKeys, key) && !(event.ctrlKey || event.metaKey)){
+            if((event.shiftKey || !this.check_key(String.fromCharCode(key), key)) &&  // Key is a digit or allowed special characters
+               !_.contains(allowedKeys, key) && !(event.ctrlKey || event.metaKey)){   // Key is not a CMD key
                 event.preventDefault();
             }
         }
     },
     check_key: function(content, key){
-        var specialCharacterKeys = [188, 189, 190];
-        return !this.numbersOnly || /[0-9\,\.\-]+/g.test(content) || _.contains(specialCharacterKeys, key);
+        var specialCharacterKeys = [188, 189, 190, 191, 220];
+        return !this.numbersOnly || NUM_REGEX.test(content) || _.contains(specialCharacterKeys, key);
     },
     paste_content: function(event){
         var clipboard = (event.originalEvent || event).clipboardData || window.clipboardData;
@@ -516,14 +518,16 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
         this.set_editor(true);
     },
     set_open:function(){
-        this.containing_list_view.close_all_editors();
-        if(this.close_editors_on_focus){
-            this.containing_list_view.container.toggle_focus();
-            this.containing_list_view.container.remove_focus();
+        if(!this.open){
+            this.containing_list_view.close_all_editors();
+            if(this.close_editors_on_focus){
+                this.containing_list_view.container.toggle_focus();
+                this.containing_list_view.container.remove_focus();
+            }
+            this.set_toolbar_open();
+            this.editor_view.activate_editor();
+            this.open = true;
         }
-        this.set_toolbar_open();
-        this.editor_view.activate_editor();
-        this.open = true;
     },
     set_closed:function(){
         this.set_toolbar_closed();
@@ -827,24 +831,28 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         // Make sure different question types have valid answers
         if(this.model.get("type") === "input_question"){
             // Answers must be numeric for input questions
-            if(this.model.get('answers').some(function(a){ return isNaN(a.get('answer'));}))
+            if(_.some(this.model.get('answers'), function(a){return a && !NUM_REGEX.test(a.get('answer'));})){
                 this.errors.push({error: "Answers must be numeric"});
+            }
 
             // Input answers must have at least one answer
-            else if(this.model.get('answers').length === 0)
+            else if(this.model.get('answers').length === 0){
                 this.errors.push({error: "Question must have one or more answers"});
+            }
         }
 
         // Multiple selection questions must have at least one correct answer
         else if(this.model.get('type') === 'multiple_selection'){
-            if(this.model.get('answers').where({'correct': true}).length === 0)
+            if(this.model.get('answers').where({'correct': true}).length === 0){
                 this.errors.push({error: "Question must have at least one correct answer"});
+            }
         }
 
         // Single selection questions must have one correct answer
         else if(this.model.get('type') === 'single_selection'){
-            if(this.model.get('answers').where({'correct': true}).length !== 1)
+            if(this.model.get('answers').where({'correct': true}).length !== 1){
                 this.errors.push({error: "Question must have one correct answer"});
+            }
         }
         this.$(".error-list").html(this.error_template({errors: this.errors}));
         return this.errors.length === 0;
