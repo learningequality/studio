@@ -491,6 +491,9 @@ var LicenseCollection = BaseCollection.extend({
 
     get_default:function(){
     	return this.findWhere({license_name:"CC-BY"});
+    },
+    comparator: function(license){
+    	return license.id;
     }
 });
 
