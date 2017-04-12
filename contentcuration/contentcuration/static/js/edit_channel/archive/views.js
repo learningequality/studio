@@ -74,22 +74,35 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
         this.$("#archive_selected_count").html(status);
     },
     restore_content:function(){
-        var list = this.get_selected_views();
-        var moveCollection = new Models.ContentNodeCollection();
+        var list = this.get_selected();
+        var moveCollection = new Models.ContentNodeCollection(_.pluck(this.main_archive_list.get_selected(), 'model'));
         this.$("#select_all_check").attr("checked", false);
-        for(var i =0;i < list.length; i++){
-            var view = list[i];
-            if(view){
-                moveCollection.add(view.model);
-            }
-        }
         this.move_content(moveCollection);
     },
     delete_content:function(){
         if(confirm("Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
-            this.delete_items_permanently("Deleting Content...", this.get_selected_views(), this.update_count);
+            this.delete_items_permanently("Deleting Content...", this.get_selected(), this.update_count);
             this.$("#select_all_check").attr("checked", false);
         }
+    },
+    handle_move:function(target, moved, original_parents){
+        // Recalculate counts
+        var reloadCollection = new Models.ContentNodeCollection();
+        reloadCollection.add(original_parents.models);
+        reloadCollection.add(moved.models);
+        this.reload_ancestors(reloadCollection, true);
+
+        // Remove where nodes originally were
+        var content = window.workspace_manager.get(target.id);
+        // if(content  && content.node){ node.deselect(); }
+        moved.forEach(function(node){ window.workspace_manager.remove(node.id)});
+
+        // Add nodes to correct place
+        content = window.workspace_manager.get(target.id);
+        if(content && content.list) {
+            content.list.add_nodes(moved);
+        }
+        this.update_count();
     },
     get_selected_views:function(){
         var views = [];
@@ -101,13 +114,7 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
             })
         });
         return views;
-    },
-    // handle_move:function(target, moved, original_parents){
-    //     this.reload_ancestors(original_parents, true);
-    //     moved.forEach(function(node){window.workspace_manager.remove(node.id)});
-    //     var content = window.workspace_manager.get(target.id);
-    //     if(content.list){content.list.add_nodes(moved);}
-    // },
+    }
 });
 
 var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
@@ -200,7 +207,7 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     },
 
     initialize: function(options) {
-        _.bindAll(this, 'delete_content', 'update_count', 'restore_content', 'handle_move');
+        _.bindAll(this, 'delete_content', 'update_count', 'restore_content', 'handle_move', 'deselect');
         this.bind_edit_functions();
         this.containing_list_view = options.containing_list_view;
         this.collection = new Models.ContentNodeCollection();
@@ -323,9 +330,11 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         if(content && content.list){
             content.list.add_nodes(moved);
         }
+        this.deselect();
+    },
+    deselect: function(){
         this.metadata = {"count": 0, "size": 0};
-        this.item_to_archive = false;
-        this.checked = false;
+        this.item_to_archive = this.checked = false;
         this.containing_list_view.update_count();
     }
 });

@@ -443,6 +443,9 @@ var BaseEditableListView = BaseListView.extend({
       	this.views = _.reject(this.views, function(el) { return el.model.id === view.model.id; });
       	this.handle_if_empty();
       	// this.update_views();
+	},
+	remove_view:function(view){
+		this.views = _.reject(this.views, function(v){ return v.cid === view.cid; })
 	}
 });
 
