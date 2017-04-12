@@ -191,7 +191,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var clipboard = window.workspace_manager.get_queue_view();
     clipboard.switch_to_queue();
     clipboard.open_queue();
-    console.log(this)
     this.display_load("Copying Content...", function(load_resolve, load_reject){
       self.collection.duplicate(clipboard.clipboard_queue.model).then(function(collection){
         self.onnew(collection, "Copying Content...");
