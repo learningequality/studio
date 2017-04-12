@@ -26,6 +26,7 @@ DEFAULT_USER_PREFERENCES = json.dumps({
     'language': None,
     'author': None,
     'copyright_holder': None,
+    'license_description': None,
     'mastery_model': exercises.NUM_CORRECT_IN_A_ROW_5,
     'm_value': 5,
     'n_value': 5,
