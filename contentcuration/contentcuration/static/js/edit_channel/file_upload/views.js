@@ -208,10 +208,15 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     file_failed:function(file, error){
         this.uploads_in_progress --;
         $(file.previewTemplate).find(".dropzone_remove").css("display", "inline-block");
+        if (this.views.length === 0) {
+            this.disable_next(this.uploads_in_progress > 0);
+        }
     },
     all_files_uploaded: function() {
         this.uploads_in_progress = 0;
-        this.enable_next();
+        if(this.views.length > 0){
+            this.enable_next();
+        }
     },
     file_added: function(file) {
         this.uploads_in_progress ++;

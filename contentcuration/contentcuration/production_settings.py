@@ -14,6 +14,22 @@ SITE_ID = 3
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
+if os.getenv("USE_DATADOG"):
+    INSTALLED_APPS = (
+        "ddtrace.contrib.django",
+    ) + INSTALLED_APPS
+
+    MIDDLEWARE_CLASSES = (
+        'ddtrace.contrib.django.TraceMiddleware',
+    ) + MIDDLEWARE_CLASSES
+
+    DATADOG_TRACE = {
+        'DEFAULT_SERVICE': 'contentworkshop',
+        'AGENT_PORT': int(os.getenv("DATADOG_STATSD_PORT") or 8126),
+        'AGENT_HOSTNAME': os.getenv("DATADOG_STATSD_HOSTNAME"),
+        'TAGS': {'env': 'production'},
+    }
+
 DATABASES = {
     'default': {
         'ENGINE':
@@ -23,30 +39,12 @@ DATABASES = {
         'PASSWORD': os.getenv("DB_CREDENTIALS_PASSWORD"),
         'HOST': os.getenv("DB_CREDENTIALS_HOST"),
         'PORT': int(os.getenv("DB_CREDENTIALS_PORT")),
+        'CONN_MAX_AGE': 600,
     },
     'export_staging': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'export_staging.sqlite3')
     }
-}
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': '/tmp/django.log',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-    },
 }
 
 # email settings
