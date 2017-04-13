@@ -2,6 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
+var stringHelper = require("edit_channel/utils/string_helper");
 require("export.less");
 
 var ExportModalView = BaseViews.BaseModalView.extend({
@@ -13,7 +14,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             channel: window.current_channel.toJSON(),
             licenses: window.licenses.toJSON(),
             version: window.current_channel.get("version") + 1,
-            node: this.model.toJSON()
+            node: this.model.toJSON(),
         });
         this.onpublish = options.onpublish;
         this.export_view = new ExportListView({
@@ -21,6 +22,12 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             container: this,
             model: this.model,
             onpublish:this.onpublish
+        });
+
+        var self = this;
+        this.retrieve_nodes(this.model.get('children')).then(function(collection){
+            var size = collection.reduce(function(size, node){ return size + node.get('metadata').resource_size; }, 0);
+            self.$("#export_size").text("(" + stringHelper.format_size(size) + ")");
         });
     },
     events:{

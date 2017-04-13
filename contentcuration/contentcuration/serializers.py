@@ -300,7 +300,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     files = FileSerializer(many=True, read_only=True)
     assessment_items = AssessmentItemSerializer(many=True, read_only=True)
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
-    metadata = serializers.SerializerMethodField('retrieve_metadata')
+    # metadata = serializers.SerializerMethodField('retrieve_metadata')
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
     valid = serializers.SerializerMethodField('check_valid')
 
@@ -328,25 +328,25 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
             descendants = node.get_descendants(include_self=True)
-            size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
-                    .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
-                    .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
+            # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
+            #         .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
+            #         .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
             return {
                 "total_count" : node.get_descendant_count(),
                 "resource_count" : descendants.exclude(kind=content_kinds.TOPIC).count(),
                 "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
-                "resource_size" : size_q.get('resource_size') or 0,
+                "resource_size" : 2,
                 "has_changed_descendant" : descendants.filter(changed=True).exists()
             }
         else:
-            size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
-                    .filter(Q(contentnode=node) | Q(assessment_item_id__in=node.assessment_items.values_list('id', flat=True)))\
-                    .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
+            # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
+            #         .filter(Q(contentnode=node) | Q(assessment_item_id__in=node.assessment_items.values_list('id', flat=True)))\
+            #         .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
             return {
                 "total_count" : 1,
                 "resource_count" : 1,
                 "max_sort_order" : node.sort_order,
-                "resource_size" : size_q.get('resource_size') or 0,
+                "resource_size" : 2,
                 "has_changed_descendant" : node.changed
             }
 
@@ -468,7 +468,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel','original_source_node_id', 'source_node_id', 'node_id',
                  'copyright_holder', 'license', 'license_description', 'kind', 'children', 'parent', 'content_id','associated_presets', 'valid', 'original_channel_id', 'source_channel_id',
-                 'descendants', 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'source_id', 'source_domain')
+                 'descendants', 'ancestors', 'tags', 'files', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'source_id', 'source_domain')
 
 class RootNodeSerializer(serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -478,14 +478,11 @@ class RootNodeSerializer(serializers.ModelSerializer):
 
     def retrieve_metadata(self, node):
         descendants = node.get_descendants(include_self=True).annotate(change_count=Case(When(changed=True, then=Value(1)),default=Value(0),output_field=IntegerField()))
-        size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
-                    .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
-                    .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
         return {
             "total_count" : node.get_descendant_count(),
             "resource_count" : descendants.exclude(kind_id=content_kinds.TOPIC).count(),
             "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
-            "resource_size" : size_q.get('resource_size') or 0,
+            "resource_size" : 0,
             "has_changed_descendant" : descendants.filter(changed=True).exists()
         }
 
@@ -589,6 +586,12 @@ class CurrentUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id','clipboard_tree')
+
+class UserChannelListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'id')
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
