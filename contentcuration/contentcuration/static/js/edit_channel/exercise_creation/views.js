@@ -3,6 +3,7 @@ const CHARACTERS = require("./symbols.json");
 const MATHJAX_REGEX = /\$\$([^\$]+)\$\$/g;
 const IMG_PLACEHOLDER = "${☣ CONTENTSTORAGE}/"
 const IMG_REGEX = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
+const NUM_REGEX = /[0-9\,\.\-\/]+/g;
 
 /* MODULES */
 var Backbone = require("backbone");
@@ -276,15 +277,16 @@ var EditorView = Backbone.View.extend({
     process_key: function(event){
         if(this.numbersOnly){
             var key = event.keyCode || event.which;
-            var allowedKeys = [46, 8, 9, 27, 32, 110, 37, 38, 39, 40, 109];
-            if(!this.check_key(String.fromCharCode(key), key) && !_.contains(allowedKeys, key) && !(event.ctrlKey || event.metaKey)){
+            var allowedKeys = [46, 8, 9, 27, 110, 37, 38, 39, 40, 109];
+            if((event.shiftKey || !this.check_key(String.fromCharCode(key), key)) &&  // Key is a digit or allowed special characters
+               !_.contains(allowedKeys, key) && !(event.ctrlKey || event.metaKey)){   // Key is not a CMD key
                 event.preventDefault();
             }
         }
     },
     check_key: function(content, key){
-        var specialCharacterKeys = [188, 189, 190];
-        return !this.numbersOnly || /[0-9\,\.\-]+/g.test(content) || _.contains(specialCharacterKeys, key);
+        var specialCharacterKeys = [188, 189, 190, 191, 220];
+        return !this.numbersOnly || NUM_REGEX.test(content) || _.contains(specialCharacterKeys, key);
     },
     paste_content: function(event){
         var clipboard = (event.originalEvent || event).clipboardData || window.clipboardData;
@@ -515,14 +517,16 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
         this.set_editor(true);
     },
     set_open:function(){
-        this.containing_list_view.close_all_editors();
-        if(this.close_editors_on_focus){
-            this.containing_list_view.container.toggle_focus();
-            this.containing_list_view.container.remove_focus();
+        if(!this.open){
+            this.containing_list_view.close_all_editors();
+            if(this.close_editors_on_focus){
+                this.containing_list_view.container.toggle_focus();
+                this.containing_list_view.container.remove_focus();
+            }
+            this.set_toolbar_open();
+            this.editor_view.activate_editor();
+            this.open = true;
         }
-        this.set_toolbar_open();
-        this.editor_view.activate_editor();
-        this.open = true;
     },
     set_closed:function(){
         this.set_toolbar_closed();
@@ -583,6 +587,7 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.parentnode = options.parentnode;
         this.onchange = options.onchange;
         this.onrandom = options.onrandom;
+        this.allow_edit = options.allow_edit;
         this.listenTo(this.collection, "remove", this.render);
         this.collection = new Models.AssessmentItemCollection(this.model.get("assessment_items"));
         this.render();
@@ -598,13 +603,14 @@ var ExerciseView = ExerciseEditableListView.extend({
     render: function() {
         this.$el.html(this.template({
             node: this.model.toJSON(),
-            is_random: this.model.get('extra_fields').randomize
+            is_random: this.model.get('extra_fields').randomize,
+            allow_edit: this.allow_edit
         }));
-        this.load_content(this.collection.where({'deleted': false}), "Click '+ QUESTION' to begin...");
+        this.load_content(this.collection.where({'deleted': false}), (this.allow_edit)? "Click '+ QUESTION' to begin..." : "No questions associated with this exercise");
     },
     create_new_view:function(model){
         var new_exercise_item = null;
-        if(model.get('type') === "perseus_question"){
+        if(model.get('type') === "perseus_question" || !this.allow_edit){
             new_exercise_item = new AssessmentItemDisplayView({
                 model: model,
                 containing_list_view : this
@@ -751,10 +757,10 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
 
         // True/false questions will overwrite all answers
         if(new_type === "true_false"){
-            if(this.model.get("answers").length || confirm("Switching to true or false will remove any current answers. Continue?")){
+            if(!this.model.get("answers").length || confirm("Switching to true or false will remove any current answers. Continue?")){
                 // new_type = "single_selection";
-                var trueFalseCollection = new Backbone.Collection();
-                trueFalseCollection.add([{answer: "True", correct: true, order: 1}, {answer: "False", correct: false, order: 2}]);
+                var trueFalseCollection = this.model.get("answers");
+                trueFalseCollection.reset([{answer: "True", correct: true, order: 1}, {answer: "False", correct: false, order: 2}]);
                 this.model.set("answers", trueFalseCollection);
             }else{ new_type = this.model.get('type'); } // Keep current type
         }
@@ -773,11 +779,11 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         // Input questions will set all answers as being correct and remove non-numeric answers
         else if(new_type === "input_question" && this.model.get("answers").some(function(a){ return a.get('correct') || isNaN(a.get('answer')); })){
             if(confirm("Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?")){
-                this.model.set('answers', new Models.ContentNodeCollection(
-                    this.model.get('answers').chain()
+                var numInputCollection = this.model.get('answers');
+                numInputCollection.reset(this.model.get('answers').chain()
                         .reject( function(a){return isNaN(a.get('answer'));} )
-                        .each( function(a){ a.set('correct', true);} ).value()
-                ));
+                        .each( function(a){ a.set('correct', true);} ).value());
+                this.model.set('answers', numInputCollection);
             }else{ new_type = this.model.get('type'); }  // Keep current type
         }
 
@@ -824,24 +830,28 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         // Make sure different question types have valid answers
         if(this.model.get("type") === "input_question"){
             // Answers must be numeric for input questions
-            if(this.model.get('answers').some(function(a){ return isNaN(a.get('answer'));}))
+            if(_.some(this.model.get('answers'), function(a){return a && !NUM_REGEX.test(a.get('answer'));})){
                 this.errors.push({error: "Answers must be numeric"});
+            }
 
             // Input answers must have at least one answer
-            else if(this.model.get('answers').length === 0)
+            else if(this.model.get('answers').length === 0){
                 this.errors.push({error: "Question must have one or more answers"});
+            }
         }
 
         // Multiple selection questions must have at least one correct answer
         else if(this.model.get('type') === 'multiple_selection'){
-            if(this.model.get('answers').where({'correct': true}).length === 0)
+            if(this.model.get('answers').where({'correct': true}).length === 0){
                 this.errors.push({error: "Question must have at least one correct answer"});
+            }
         }
 
         // Single selection questions must have one correct answer
         else if(this.model.get('type') === 'single_selection'){
-            if(this.model.get('answers').where({'correct': true}).length !== 1)
+            if(this.model.get('answers').where({'correct': true}).length !== 1){
                 this.errors.push({error: "Question must have one correct answer"});
+            }
         }
         this.$(".error-list").html(this.error_template({errors: this.errors}));
         return this.errors.length === 0;

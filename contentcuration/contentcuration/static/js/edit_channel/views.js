@@ -120,7 +120,7 @@ var BaseWorkspaceView = BaseView.extend({
 			current_user: window.current_user
 		});
 	},
-	edit_selected:function(){
+	edit_selected:function(allow_edit){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var list = this.get_selected();
 		var edit_collection = new Models.ContentNodeCollection();
@@ -141,7 +141,8 @@ var BaseWorkspaceView = BaseView.extend({
 			el: $("#dialog"),
 			model: content,
 			new_content: false,
-		    onsave: this.reload_ancestors
+		    onsave: this.reload_ancestors,
+		    allow_edit: allow_edit
 		});
 	},
 	add_to_trash:function(collection, message){
@@ -558,7 +559,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		            new_content: true,
 		            new_topic: true,
 		            onsave: self.reload_ancestors,
-		            onnew:self.add_nodes
+		            onnew:self.add_nodes,
+		            allow_edit: true
 		        });
         	},
         	error:function(obj, error){
@@ -605,7 +607,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
             "title": (this.model.get('parent'))? this.model.get('title') + " Exercise" : "Exercise", // Avoid having exercises prefilled with 'email clipboard'
             "sort_order" : this.collection.length,
             "author": get_author(),
-            "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder
+            "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder,
+            "license_description": (window.preferences.license_description && window.preferences.license==="Special Permissions") ? window.preferences.license_description : ""
         }, {
         	success:function(new_node){
 		        var edit_collection = new Models.ContentNodeCollection([new_node]);
@@ -618,7 +621,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		            new_content: true,
 		            new_exercise: true,
 		            onsave: self.reload_ancestors,
-		            onnew:self.add_nodes
+		            onnew:self.add_nodes,
+		            allow_edit: true
 		        });
         	},
         	error:function(obj, error){
@@ -818,8 +822,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			content.list.add_nodes(moved);
 		}
 	},
-	open_edit:function(event){
-		this.cancel_actions(event);
+	open_edit:function(allow_edit){
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var editCollection =  new Models.ContentNodeCollection([this.model]);
@@ -828,7 +831,9 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			el: $("#dialog"),
 			new_content: false,
 			model: this.containing_list_view.model,
-		  	onsave: this.reload_ancestors
+		  	onsave: this.reload_ancestors,
+		  	allow_edit: allow_edit,
+		  	onnew: (!this.allow_edit)? this.containing_list_view.add_to_clipboard : null
 		});
 	},
 	handle_drop:function(models){
@@ -896,7 +901,8 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		            new_content: true,
 		            new_topic: true,
 		            onsave: self.reload_ancestors,
-		            onnew:self.add_nodes
+		            onnew:self.add_nodes,
+		            allow_edit: true
 		        });
         	},
         	error:function(obj, error){

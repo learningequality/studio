@@ -54,7 +54,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.formatpresets = this.formatpresets;
 		window.languages = this.languages;
 		window.contentkinds = this.contentkinds;
-		window.contenttags = new Models.TagCollection(window.channel_tags);
+		window.contenttags = new Models.TagCollection(window.current_channel.get('tags'));
 		window.licenses = new Models.LicenseCollection(window.license_list);
 
 		var EditViews = require("edit_channel/tree_edit/views");

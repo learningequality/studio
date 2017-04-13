@@ -85,7 +85,8 @@ var FileUploadView = BaseViews.BaseView.extend({
             new_exercise: false,
             new_content: true,
             new_topic: false,
-            collection: this.collection
+            collection: this.collection,
+            allow_edit: true
         }
         switch(stepNumber){
             case 1:
@@ -207,10 +208,15 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     file_failed:function(file, error){
         this.uploads_in_progress --;
         $(file.previewTemplate).find(".dropzone_remove").css("display", "inline-block");
+        if (this.views.length === 0) {
+            this.disable_next(this.uploads_in_progress > 0);
+        }
     },
     all_files_uploaded: function() {
         this.uploads_in_progress = 0;
-        this.enable_next();
+        if(this.views.length > 0){
+            this.enable_next();
+        }
     },
     file_added: function(file) {
         this.uploads_in_progress ++;
@@ -252,6 +258,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
 });
 
 var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
+    allow_edit: true,
     tagName:'div',
     className: "format_item_wrapper files",
     files: null,
@@ -288,7 +295,8 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
             el: this.$el.find(".format_editor_list"),
             model: this.model,
             content_node_view:this,
-            to_delete: this.to_delete
+            to_delete: this.to_delete,
+            allow_edit: this.allow_edit
         }
         this.subcontent_view = new FormatSlotList(data);
         this.update_metadata();
@@ -335,7 +343,8 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
               onremove: this.remove_thumbnail,
               onerror: onerror,
               onfinish:onfinish,
-              onstart: onstart
+              onstart: onstart,
+              allow_edit: this.allow_edit
           });
         }
         this.$(".preview_thumbnail").append(this.thumbnail_view.el);
@@ -362,6 +371,7 @@ var FormatInlineItem = FormatEditorItem.extend({
         this.originalData = this.model.toJSON();
         this.containing_list_view = options.containing_list_view;
         this.to_delete = new Models.ContentNodeCollection();
+        this.allow_edit = options.allow_edit;
         this.init_collections();
         this.render();
         this.listenTo(this.files, "add", this.sync_file_changes);
@@ -423,14 +433,18 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     template: require("./hbtemplates/file_upload_format_slot_list.handlebars"),
     list_selector:">.preset_list",
     default_item:">.preset_list .default-slot-item",
-
     initialize: function(options) {
         this.content_node_view = options.content_node_view;
         this.node = this.model;
         this.collection = options.collection;
+        this.allow_edit = options.allow_edit;
         this.files = options.files;
+        this.collection = options.collection;
+        if(!this.allow_edit){
+            this.collection = new Models.FormatPresetCollection(_.reject(this.files.pluck('preset'),
+                function(preset){return preset.thumbnail || !preset.display; }));
+        }
         this.render();
-
     },
     render: function() {
         this.$el.html(this.template());
@@ -446,7 +460,8 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
             files: this.files,
             collection: this.collection,
             content_node_view: this.content_node_view,
-            language_view: this.language_view
+            language_view: this.language_view,
+            allow_edit: this.allow_edit
         });
         this.views.push(format_slot);
         return format_slot;
@@ -465,6 +480,9 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     },
     set_uploading:function(uploading){
         this.content_node_view.set_uploading(uploading);
+    },
+    update_metadata:function(){
+        this.content_node_view.update_metadata();
     }
 });
 
@@ -490,6 +508,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.originalFile = this.file;
         this.files = options.files;
         this.collection = options.collection;
+        this.allow_edit = options.allow_edit;
         this.node = options.node;
         this.render();
     },
@@ -502,9 +521,11 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             file: (this.file)? this.file.toJSON() : null,
             preset: this.model.toJSON(),
             selector: this.selector(),
-            multi_language: this.model.get('multi_language') && !this.file
+            multi_language: this.model.get('multi_language') && !this.file,
+            allow_edit: this.allow_edit,
+            src: (this.file)? this.file.get('storage_url') : null
         }));
-        if(!this.model.get('multi_language') || this.file){
+        if(this.allow_edit && (!this.model.get('multi_language') || this.file)){
             _.defer(this.create_dropzone);
         }
     },
@@ -566,6 +587,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         alert(error);
         this.render();
         this.set_uploading(false);
+        this.containing_list_view.update_metadata();
     },
     remove_item:function(){
         if(this.language_view){
@@ -706,7 +728,8 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
 
 var ThumbnailUploadView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/thumbnail_upload.handlebars"),
-    dropzone_template: require("./hbtemplates/thumbnail_preview.handlebars"),
+    preview_template: require("./hbtemplates/thumbnail_preview.handlebars"),
+    dropzone_template: require("./hbtemplates/thumbnail_dropzone.handlebars"),
     initialize: function(options) {
         _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed', 'use_image');
         this.image_url = options.image_url;
@@ -719,6 +742,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         this.acceptedFiles = options.acceptedFiles;
         this.upload_url = options.upload_url;
         this.default_url = options.default_url;
+        this.allow_edit = options.allow_edit;
         this.render();
         this.dropzone = null;
         this.image_success = true;
@@ -728,17 +752,25 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         'click .open_thumbnail_generator': 'open_thumbnail_generator'
     },
     render: function() {
-        this.$el.html(this.template({
-            picture : this.get_thumbnail_url(),
-            selector: this.get_selector(),
-            preview_only: false // Will be used more fully for read-only views
-        }));
-        _.defer(this.create_dropzone, 1);
+        if(this.allow_edit){
+            this.$el.html(this.template({
+                picture : this.get_thumbnail_url(),
+                selector: this.get_selector(),
+                show_generate: this.model.get('kind') != undefined
+            }));
+            _.defer(this.create_dropzone, 1);
+        }else{
+            this.$el.html(this.preview_template({
+                picture : this.get_thumbnail_url(),
+                name: this.model.get('title')
+            }));
+        }
     },
     get_thumbnail_url:function(){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
-        if(thumbnail){ return thumbnail.storage_url; }
-        else if(this.model.get('kind')) { return "/static/img/" + this.model.get("kind") + "_placeholder.png"; }
+        if(this.image_url){ return this.image_url; }
+        else if(thumbnail){ return thumbnail.storage_url; }
+        else if(this.model.get('kind') != undefined) { return "/static/img/" + this.model.get("kind") + "_placeholder.png"; }
         else{ return "/static/img/kolibri_placeholder.png"; }
     },
     remove_image: function(){
@@ -759,7 +791,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             clickable: [selector + "_placeholder", selector + "_swap"],
             acceptedFiles: this.acceptedFiles,
             url: this.upload_url,
-            previewTemplate:this.dropzone_template({src:"/static/img/" + this.model.get("kind") + "_placeholder.png"}),
+            previewTemplate:this.dropzone_template({src:"/static/img/loading_placeholder.png"}),
             previewsContainer: selector,
             headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id, "Node": this.model.id}
         });

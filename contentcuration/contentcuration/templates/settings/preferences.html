@@ -5,7 +5,7 @@
 
 {% block settingscontent %}
 <h4>Preferences</h4>
-<p>Set defaults for filling out content details.</p>
+<p>Set defaults for filling out content details. Defaults will be applied when new content is created.</p>
 <hr/>
 	{% if success %}
 		<div class="alert alert-success" role="alert">Your preferences have been updated.</div>
@@ -40,6 +40,12 @@
 				<div class="input-group settings_field col-xs-7">
 				  <span class="input-group-addon">{{ form.copyright_holder.label }}</span>
 				  {{ form.copyright_holder }}
+				</div>
+			</div>
+			<div class="row" id="license_description_input">
+				<div class="input-group settings_field col-xs-12">
+				  <span class="input-group-addon">{{ form.license_description.label }}</span>
+				  {{ form.license_description }}
 				</div>
 			</div>
 			<br>
@@ -93,6 +99,7 @@
 </div>
 <script>
 	function registerChange(){
+		$("#license_description_input").css('display', ($("#id_license").val()==="Special Permissions")? "block" : "none");
 		$(".mastery_criteria").css('display', ($("#id_mastery_model").val()==="m_of_n")? "inline-table" : "none");
 		if(Number($("#id_m_value").val()) > Number($("#id_n_value").val())) $("#id_n_value").val($("#id_m_value").val());
 		$("#save").attr("disabled", false);
@@ -102,5 +109,6 @@
 	$(".setting_change").on("change", registerChange);
 
 	$(".mastery_criteria").css('display', ($("#id_mastery_model").val()==="m_of_n")? "inline-table" : "none");
+	$("#license_description_input").css('display', ($("#id_license").val()==="Special Permissions")? "block" : "none");
 </script>
 {% endblock settingscontent %}

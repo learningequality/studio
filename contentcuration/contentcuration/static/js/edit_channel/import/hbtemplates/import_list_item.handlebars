@@ -8,7 +8,7 @@
 	{{#if isfolder}}
 		{{#if node.children}}
 			<div id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-triangle-top"></div>
-			<em class="import_metadata">{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}</em>
+			{{#unless is_channel}}<em class="import_metadata">{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}</em>{{/unless}}
 		{{else}}
 			<em class="import_metadata">(empty)</em>
 		{{/if}}

@@ -109,10 +109,12 @@
 					height:100%;
 					width: @channel-profile-width;
 					margin: 5px 15px 5px 5px;
+					min-height:@channel-container-height;
 
 					img{
-						width:@channel-profile-width * .9;
-						height:@channel-profile-width * .9;
+					    width:130px;
+					    height:130px;
+					    object-fit: cover;
 					}
 					.finished_area{width:@channel-profile-width * .9;}
 				}
@@ -210,7 +212,6 @@
 					color: @delete-color;
 					font-weight: bold;
 					margin-top:10px;
-					margin-left:@channel-profile-width + 20px;
 					font-size:9pt;
 				}
 

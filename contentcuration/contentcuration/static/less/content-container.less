@@ -18,10 +18,7 @@
 	width:100%;
 	min-height: 0;
 
-	*{
-		vertical-align: middle;
-	}
-
+	*{ vertical-align: middle; }
 	li {
 		font-size: @larger-body-text;
 		cursor:pointer;
@@ -31,12 +28,11 @@
 		color:@gray-700;
 		padding:7px;
 		margin-right:15px;
+		&:hover{
+			background-color: transparent;
+			color:@blue-500;
+		}
 	}
-	a:hover{
-		background-color: transparent;
-		color:@blue-500;
-	}
-
 	#channel_select_dd_wrapper{
 		width:300px;
 		padding:3px;
@@ -78,7 +74,6 @@
 				right: 0;
 			}
 		}
-
 		.default-channel-item{
 			color:@annotation-gray;
 			padding:2px 15px;
@@ -224,34 +219,27 @@
 		width:100vw;
 		padding-left:40px;
 	}
-
 	.close_clipboard{
 		margin-top:10px;
 		font-size: 20pt;
 		color:gray;
 		cursor:pointer;
 	}
-
 	#container_area{
 		width:@container-last-width; /* will be added to as containers are added- extra padding for clipboard*/
 	}
-
 	#container_area_title{
 		margin-top: 0px;
 		color: @channel-edit-font-color;
 		margin-bottom: 10px;
 	}
-	#hide_details_checkbox{
-		cursor:pointer;
-	}
-
+	#hide_details_checkbox{ cursor:pointer; }
 	#hide_details_checkbox + label{
 		color:@channel-edit-font-color;
 		font-size:10pt;
 		font-weight:normal;
 		cusor:pointer;
 	}
-
 	.content-container{
 		padding:2px;
 		margin:0;
@@ -261,11 +249,7 @@
 		height:  @container-height;
 		min-height: @container-min-height;
 		cursor:default;
-
-		.back_button{
-			cursor:pointer;
-		}
-
+		.back_button{ cursor:pointer; }
 		h2{
 			color:@container-title-color;
 			font-size: @title-size;
@@ -304,7 +288,6 @@
 					margin: 6px 0 0 10px;
 					cursor:pointer;
 				}
-
 				label{
 					padding:5px;
 					vertical-align: middle;
@@ -318,10 +301,10 @@
 						font-size: @item-title-font-size;
 					}
 					.options{
-						width:@item-title-font-size;
 						visibility:hidden;
 						height:100%;
 						.glyphicon{
+							margin-left: 20px;
 							cursor:pointer;
 							font-size: @item-title-font-size;
 						}
@@ -337,9 +320,9 @@
 				}
 
 				.folder, .file{
-					width: @container-width - 55px;
+					width: @container-width - 65px;
 					h3{
-						width:@container-width - @item-title-font-size - 70px;
+						width:73%;
 					}
 				}
 				.folder{
@@ -411,9 +394,9 @@
 				margin-top: 5px;
 			}
 			.folder, .file{
-				width: @container-last-width - 55px;
+				width: @container-last-width - 60px;
 				h3{
-					width:@container-last-width  - @item-title-font-size - 100px;
+					width:73%;
 				}
 				.folder_open_icon{
 					margin-top:5px;
@@ -487,12 +470,6 @@
 
 				.current_topic{
 					border-left:4px solid @edit-current-folder-color;
-					label{
-						width: @container-width - 65px;
-						h3{
-							width:80%;
-						}
-					}
 				}
 			}
 
