@@ -37,6 +37,7 @@ DATABASES = {
         'PASSWORD': os.getenv("DB_CREDENTIALS_PASSWORD"),
         'HOST': os.getenv("DB_CREDENTIALS_HOST"),
         'PORT': int(os.getenv("DB_CREDENTIALS_PORT")),
+        'CONN_MAX_AGE': 600,
     },
     'export_staging': {
         'ENGINE': 'django.db.backends.sqlite3',
