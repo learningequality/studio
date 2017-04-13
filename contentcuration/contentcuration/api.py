@@ -173,4 +173,3 @@ def batch_add_tags(request):
     ThroughModel.objects.bulk_create(bulk_list)
 
     return HttpResponse("Tags are successfully saved.", status=200)
-
