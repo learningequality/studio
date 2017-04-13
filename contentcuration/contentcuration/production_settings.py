@@ -25,6 +25,8 @@ if os.getenv("USE_DATADOG"):
 
     DATADOG_TRACE = {
         'DEFAULT_SERVICE': 'contentworkshop',
+        'AGENT_PORT': os.getenv("DATADOG_STATSD_PORT"),
+        'AGENT_HOSTNAME': os.getenv("DATADOG_STATSD_HOSTNAME"),
         'TAGS': {'env': 'production'},
     }
 
