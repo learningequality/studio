@@ -163,16 +163,15 @@ def file_create(request):
         size = request.FILES.values()[0]._size
         presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:])
         kind = presets.first().kind
-        original_filename = request.FILES.values()[0]._name
         preferences = json.loads(request.user.preferences)
         author = preferences.get('author') if isinstance(preferences.get('author'), basestring) else request.user.get_full_name()
         license = License.objects.filter(license_name=preferences.get('license')).first() # Use filter/first in case preference hasn't been set
         license_id = license.pk if license else settings.DEFAULT_LICENSE
-        new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=license_id, author=author, copyright_holder=preferences.get('copyright_holder'))
+        new_node = ContentNode(title=original_filename, kind=kind, license_id=license_id, author=author, copyright_holder=preferences.get('copyright_holder'))
         if license.license_name == licenses.SPECIAL_PERMISSIONS:
             new_node.license_description = preferences.get('license_description')
         new_node.save()
-        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename = original_filename, contentnode=new_node, file_size=size)
+        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=original_filename, contentnode=new_node, file_size=size)
         file_object.save()
         if kind.pk == content_kinds.VIDEO:
             file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))
