@@ -151,12 +151,7 @@ def file_upload(request):
         #Implement logic for switching out files without saving it yet
         filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
-        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=request.FILES.values()[0]._name, preset=preset)
-
-        # Set language if provided
-        if 'HTTP_LANGUAGE' in request.META:
-            file_object.language = Language.objects.get(id=request.META.get('HTTP_LANGUAGE'))
-
+        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=request.FILES.values()[0]._name, preset=preset, language_id=request.META.get('HTTP_LANGUAGE'))
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
