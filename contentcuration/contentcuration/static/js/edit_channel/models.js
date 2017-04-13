@@ -275,9 +275,7 @@ var ContentNodeCollection = BaseCollection.extend({
 	    				resolve(fetched);
 	    			});
 	            },
-	            error:function(e){
-	            	reject(e);
-	            }
+	            error:reject
 	        });
     	});
     	return promise;
@@ -491,6 +489,9 @@ var LicenseCollection = BaseCollection.extend({
 
     get_default:function(){
     	return this.findWhere({license_name:"CC-BY"});
+    },
+    comparator: function(license){
+    	return license.id;
     }
 });
 

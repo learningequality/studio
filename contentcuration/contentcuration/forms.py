@@ -146,6 +146,7 @@ class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
     author = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     copyright_holder = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    license_description = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     license = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=licenses.choices)
     mastery_model = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=exercises.MASTERY_MODELS, label="Mastery at")
     m_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label="M")
@@ -158,13 +159,14 @@ class PreferencesSettingsForm(forms.Form):
 
     class Meta:
         model = User
-        fields = ('author', 'copyright_holder', 'license', 'mastery_model', 'm_value', 'n_value', 'auto_derive_video_thumbnail', 'auto_randomize_questions')
+        fields = ('author', 'copyright_holder', 'license', 'license_description', 'mastery_model', 'm_value', 'n_value', 'auto_derive_video_thumbnail', 'auto_randomize_questions')
 
     def save(self, user):
         user.preferences = json.dumps({
             'author': self.cleaned_data["author"] or "",
             'copyright_holder': self.cleaned_data["copyright_holder"],
             'license': self.cleaned_data["license"],
+            'license_description': self.cleaned_data['license_description'] if self.cleaned_data['license'] == 'Special Permissions' else None,
             'mastery_model': self.cleaned_data["mastery_model"],
             'auto_randomize_questions': self.cleaned_data["auto_randomize_questions"],
             'auto_derive_video_thumbnail': self.cleaned_data["auto_derive_video_thumbnail"],

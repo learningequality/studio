@@ -26,13 +26,14 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	events: {
 		'click .copy_button' : 'copy_content',
 		'click .delete_button' : 'delete_content',
-		'click .edit_button' : 'edit_selected',
+		'click .edit_button' : 'edit_content',
 		'click #hide_details_checkbox' :'toggle_details',
 		'change input[type=checkbox]' : 'handle_checked',
 		'click .permissions_button' : 'edit_permissions',
 		'click .archive_button' : 'open_archive',
 		'click .move_button' : 'move_content'
 	},
+	edit_content:function(){ this.edit_selected(this.is_edit_page)},
 	render: function() {
 		this.$el.html(this.template({
 			edit: this.is_edit_page,
@@ -211,7 +212,6 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 			if(self.edit_mode){
 				self.refresh_droppable();
 			}
-
 		});
 		setTimeout(function(){
 			self.$el.removeClass("pre_animation").addClass("post_animation");
@@ -278,7 +278,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	className: "content draggable to_publish",
 	initialize: function(options) {
-		_.bindAll(this, 'open_folder','preview_node', 'copy_node' , 'delete_node', 'move_node',
+		_.bindAll(this, 'open_folder','open_node', 'copy_node' , 'delete_node', 'move_node',
 				'add_new_subtopic', 'open_context_menu', 'toggle_description');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
@@ -343,9 +343,9 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		});
 	},
 	events: {
-		'click .edit_item_button': 'open_edit',
+		'click .edit_item_button': 'open_node',
 		'click .open_folder':'open_folder',
-		'click .open_file' : 'preview_node',
+		'click .open_file' : 'open_node',
 		'change input[type=checkbox]': 'handle_checked',
 		'click .delete_item_button' : 'delete_node',
 		'click .copy_item_button': 'copy_node',
@@ -386,9 +386,9 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			this.containing_list_view.set_current(this.model);
 		}
 	},
-	preview_node: function(event){
+	open_node: function(event){
 		this.cancel_actions(event);
-		(this.edit_mode)? this.open_edit(event) : this.open_preview();
+		this.open_edit(this.edit_mode);
 	},
 	copy_node:function(event){
 		this.cancel_actions(event);

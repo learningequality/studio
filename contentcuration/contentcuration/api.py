@@ -20,6 +20,8 @@ from le_utils.constants import format_presets, content_kinds, file_formats
 import contentcuration.models as models
 
 def check_supported_browsers(user_agent_string):
+    if not user_agent_string:
+        return False
     for browser in settings.SUPPORTED_BROWSERS:
         if browser in user_agent_string:
             return True

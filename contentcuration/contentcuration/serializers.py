@@ -465,7 +465,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel','original_source_node_id', 'source_node_id', 'node_id',
-                 'copyright_holder', 'license', 'kind', 'children', 'parent', 'content_id','associated_presets', 'valid', 'original_channel_id', 'source_channel_id',
+                 'copyright_holder', 'license', 'license_description', 'kind', 'children', 'parent', 'content_id','associated_presets', 'valid', 'original_channel_id', 'source_channel_id',
                  'descendants', 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'source_id', 'source_domain')
 
 class RootNodeSerializer(serializers.ModelSerializer):
@@ -576,7 +576,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id')
+        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id', 'is_staff')
 
 class CurrentUserSerializer(serializers.ModelSerializer):
     clipboard_tree = RootNodeSerializer(read_only=True)
