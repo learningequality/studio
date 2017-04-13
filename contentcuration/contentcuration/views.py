@@ -36,7 +36,8 @@ from pressurecooker.encodings import write_base64_to_file
 
 def get_nodes_by_ids(request):
     if request.method == 'POST':
-        nodes = ContentNode.objects.filter(pk__in=json.loads(request.body))
+        nodes = ContentNode.objects.prefetch_related('files').prefetch_related('assessment_items')\
+                .prefetch_related('tags').prefetch_related('children').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
 
 def base(request):
@@ -56,11 +57,21 @@ def unsupported_browser(request):
 def unauthorized(request):
     return render(request, 'unauthorized.html')
 
+def get_or_set_cached_constants(constant, serializer):
+    cached_data = cache.get(constant.__name__)
+    if cached_data:
+        return cached_data
+    constant_objects = constant.objects.all()
+    constant_serializer = serializer(constant_objects, many=True)
+    constant_data = JSONRenderer().render(constant_serializer.data)
+    cache.set(constant.__name__, constant_data, None)
+    return constant_data
+
 def channel_page(request, channel, allow_edit=False):
     channel_serializer =  ChannelSerializer(channel)
 
-    channel_list = Channel.objects.select_related('main_tree').exclude(id=channel.pk)\
-                            .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
+    channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors').prefetch_related('viewers')\
+                            .exclude(id=channel.pk).filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
                             .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
                             .distinct().values("id", "name", "is_view_only")
 
@@ -115,7 +126,7 @@ def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
 
     # Check user has permission to view channel
-    if request.user not in channel.editors.all() and not request.user.is_admin:
+    if not channel.editors.filter(id=request.user.id).exists() and not request.user.is_admin:
         return redirect(reverse_lazy('unauthorized'))
 
     return channel_page(request, channel, allow_edit=True)
@@ -131,20 +142,10 @@ def channel_view_only(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
 
     # Check user has permission to view channel
-    if request.user not in channel.editors.all() and request.user not in channel.viewers.all() and not request.user.is_admin:
+    if not channel.editors.filter(id=request.user.id).exists() and not channel.viewers.filter(id=request.user.id).exists() and not request.user.is_admin:
         return redirect(reverse_lazy('unauthorized'))
 
     return channel_page(request, channel)
-
-def get_or_set_cached_constants(constant, serializer):
-    cached_data = cache.get(constant.__name__)
-    if cached_data:
-        return cached_data
-    constant_objects = constant.objects.all()
-    constant_serializer = serializer(constant_objects, many=True)
-    constant_data = JSONRenderer().render(constant_serializer.data)
-    cache.set(constant.__name__, constant_data, None)
-    return constant_data
 
 def file_upload(request):
     if request.method == 'POST':

@@ -328,7 +328,8 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
             descendants = node.get_descendants(include_self=True)
-            size_q = File.objects.filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
+            size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
+                    .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
                     .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
             return {
                 "total_count" : node.get_descendant_count(),
@@ -338,7 +339,8 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
                 "has_changed_descendant" : descendants.filter(changed=True).exists()
             }
         else:
-            size_q = File.objects.filter(Q(contentnode=node) | Q(assessment_item_id__in=node.assessment_items.values_list('id', flat=True)))\
+            size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
+                    .filter(Q(contentnode=node) | Q(assessment_item_id__in=node.assessment_items.values_list('id', flat=True)))\
                     .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
             return {
                 "total_count" : 1,
