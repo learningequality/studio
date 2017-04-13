@@ -233,10 +233,17 @@ class Channel(models.Model):
 
 
     def get_resource_size(self):
+        # TODO: Add this back in once query filters out duplicated checksums
         size = ChannelResourceSize.objects.filter(id=self.main_tree.tree_id).first()
         if size:
             return size.resource_size
         return 0
+
+        # descendants = self.main_tree.get_descendants().prefetch_related('assessment_items')
+        # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
+        #         .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
+        #         .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
+        # return size_q['resource_size'] or 0
 
     def save(self, *args, **kwargs):
         original_node = None
