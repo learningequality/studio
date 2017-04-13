@@ -288,7 +288,6 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     enable_next:function(){
         this.containing_list_view.check_uploads_and_enable();
     },
-
     load_subfiles:function(){
         var data = {
             collection: this.presets,
@@ -484,6 +483,9 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     },
     set_uploading:function(uploading){
         this.content_node_view.set_uploading(uploading);
+    },
+    update_metadata:function(){
+        this.content_node_view.update_metadata();
     }
 });
 
@@ -575,6 +577,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         alert(error);
         this.render();
         this.set_uploading(false);
+        this.containing_list_view.update_metadata();
     },
     remove_item:function(){
         this.containing_list_view.set_file_format(null, this.model, this.file);
