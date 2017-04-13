@@ -151,7 +151,7 @@ def file_upload(request):
         #Implement logic for switching out files without saving it yet
         filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
-        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=filename, preset=preset)
+        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=request.FILES.values()[0]._name, preset=preset)
 
         # Set language if provided
         if 'HTTP_LANGUAGE' in request.META:
@@ -178,7 +178,7 @@ def file_create(request):
         if license.license_name == licenses.SPECIAL_PERMISSIONS:
             new_node.license_description = preferences.get('license_description')
         new_node.save()
-        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=original_filename, contentnode=new_node, file_size=size)
+        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=request.FILES.values()[0]._name, contentnode=new_node, file_size=size)
         file_object.save()
         if kind.pk == content_kinds.VIDEO:
             file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))

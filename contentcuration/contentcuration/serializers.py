@@ -43,10 +43,7 @@ class FormatPresetSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField('retrieve_name')
 
     def retrieve_mimetypes(self, preset):
-        mimetypes = []
-        for m in preset.allowed_formats.all():
-            mimetypes.append(m.mimetype)
-        return mimetypes
+        return preset.allowed_formats.values_list('mimetype', flat=True)
 
     def retrieve_name(self, preset):
         return preset.id

@@ -161,14 +161,6 @@ FILE_FORMATS = [
         "model": models.FileFormat,
         "pk": "extension",
         "fields": {
-            "extension": file_formats.SRT,
-            "mimetype" : file_formats.SRT_MIMETYPE,
-        },
-    },
-    {
-        "model": models.FileFormat,
-        "pk": "extension",
-        "fields": {
             "extension": file_formats.PDF,
             "mimetype" : file_formats.PDF_MIMETYPE,
         },

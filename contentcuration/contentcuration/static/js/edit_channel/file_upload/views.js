@@ -613,7 +613,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             files: this.files,
             collection: this.collection,
             containing_view: this,
-            content_node_view: this.content_node_view
+            content_node_view: this.content_node_view,
+            allow_edit: this.allow_edit
         }
         this.subcontent_view = new MultiLanguageSlotList(data);
     },
@@ -629,6 +630,7 @@ var MultiLanguageSlotList = FormatSlotList.extend({
         this.preset_collection = options.collection;
         this.content_node_view = options.content_node_view;
         this.node = options.node;
+        this.allow_edit = options.allow_edit;
         var preset_id = this.model.id;
         this.files = new Models.FileCollection(options.files.filter(function(f) { return f.get('preset').name === preset_id; }));
         this.collection = new Models.FormatPresetCollection(this.files.pluck('preset'));
@@ -636,14 +638,16 @@ var MultiLanguageSlotList = FormatSlotList.extend({
     },
     render: function() {
         this.$el.html(this.template());
-        this.language_view = new MultiLanguageUploadSlot({
-            el: this.$(".add_multilanguage_item_wrapper"),
-            model: this.model,
-            node: this.node,
-            files: this.files,
-            collection: this.collection,
-            containing_list_view: this
-        });
+        if(this.allow_edit){
+            this.language_view = new MultiLanguageUploadSlot({
+                el: this.$(".add_multilanguage_item_wrapper"),
+                model: this.model,
+                node: this.node,
+                files: this.files,
+                collection: this.collection,
+                containing_list_view: this,
+            });
+        }
         this.load_content();
     },
     add_slot:function(file, preset, target){
