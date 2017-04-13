@@ -440,10 +440,6 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         this.allow_edit = options.allow_edit;
         this.files = options.files;
         this.collection = options.collection;
-        if(!this.allow_edit){
-            this.collection = new Models.FormatPresetCollection(_.reject(this.files.pluck('preset'),
-                function(preset){return preset.thumbnail || !preset.display; }));
-        }
         this.render();
     },
     render: function() {
