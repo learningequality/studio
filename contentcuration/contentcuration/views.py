@@ -80,9 +80,6 @@ def channel_page(request, channel, allow_edit=False):
     formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
     contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
 
-    channel_tags = ContentTag.objects.select_related('channel').filter(channel_id=channel.pk)
-    channel_tags_serializer = TagSerializer(channel_tags, many=True)
-
     json_renderer = JSONRenderer()
 
     return render(request, 'channel_edit.html', {"allow_edit":allow_edit,
@@ -94,7 +91,6 @@ def channel_page(request, channel, allow_edit=False):
                                                  "license_list" : licenses,
                                                  "fpreset_list" : formatpresets,
                                                  "ckinds_list" : contentkinds,
-                                                 "ctags": json_renderer.render(channel_tags_serializer.data),
                                                  "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data),
                                                  "preferences" : request.user.preferences,
                                                 })
