@@ -200,9 +200,6 @@ var BaseWorkspaceView = BaseView.extend({
 		});
 	},
 	handle_move:function(target, moved, original_parents){
-		// Recalculate counts
-		this.reload_ancestors(original_parents, true);
-
 		// Remove where nodes originally were
 		moved.forEach(function(node){ window.workspace_manager.remove(node.id)});
 
@@ -210,6 +207,9 @@ var BaseWorkspaceView = BaseView.extend({
 		var content = window.workspace_manager.get(target.id);
 		if(content && content.list)
 			content.list.add_nodes(moved);
+
+		// Recalculate counts
+		this.reload_ancestors(original_parents, true);
 	}
 });
 

@@ -27,6 +27,8 @@ import contentcuration.view.registration_views as registration_views
 import contentcuration.view.settings_views as settings_views
 import contentcuration.view.internal_views as internal_views
 import contentcuration.view.zip_views as zip_views
+import contentcuration.view.file_views as file_views
+import contentcuration.view.node_views as node_views
 from rest_framework.authtoken import views as auth_view
 from contentcuration import api
 
@@ -108,25 +110,35 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api/', include(bulkrouter.urls)),
-    url(r'^api/duplicate_nodes/$', views.duplicate_nodes, name='duplicate_nodes'),
-    url(r'^api/move_nodes/$', views.move_nodes, name='move_nodes'),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
-    url(r'^api/generate_thumbnail/$', views.generate_thumbnail, name='generate_thumbnail'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^file_upload/', views.file_upload, name="file_upload"),
-    url(r'^file_create/', views.file_create, name="file_create"),
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^channels/(?P<channel_id>[^/]+)/edit', views.channel, name='channel'),
     url(r'^channels/(?P<channel_id>[^/]+)/view', views.channel_view_only, name='channel_view_only'),
-    url(r'^thumbnail_upload/', views.thumbnail_upload, name='thumbnail_upload'),
-    url(r'^exercise_image_upload/', views.exercise_image_upload, name='exercise_image_upload'),
-    url(r'^image_upload/', views.image_upload, name='image_upload'),
-    url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
     url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
     url(r'^healthz$', views.health, name='health'),
-    url(r'^get_nodes_by_ids$', views.get_nodes_by_ids, name='get_nodes_by_ids'),
+]
+
+# Add node api enpoints
+urlpatterns += [
+    url(r'^api/get_nodes_by_ids$', node_views.get_nodes_by_ids, name='get_nodes_by_ids'),
+    url(r'^api/get_total_size$', node_views.get_total_size, name='get_total_size'),
+    url(r'^api/duplicate_nodes/$', node_views.duplicate_nodes, name='duplicate_nodes'),
+    url(r'^api/move_nodes/$', node_views.move_nodes, name='move_nodes'),
+    url(r'^api/get_node_descendants/$', node_views.get_node_descendants, name='get_node_descendants'),
+]
+
+# Add file api enpoints
+urlpatterns += [
+     url(r'^api/thumbnail_upload/', file_views.thumbnail_upload, name='thumbnail_upload'),
+    url(r'^api/exercise_image_upload/', file_views.exercise_image_upload, name='exercise_image_upload'),
+    url(r'^api/image_upload/', file_views.image_upload, name='image_upload'),
+    url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
+    url(r'^api/file_upload/', file_views.file_upload, name="file_upload"),
+    url(r'^api/file_create/', file_views.file_create, name="file_create"),
+    url(r'^api/generate_thumbnail/$', file_views.generate_thumbnail, name='generate_thumbnail'),
 ]
 
 # Add account/registration endpoints

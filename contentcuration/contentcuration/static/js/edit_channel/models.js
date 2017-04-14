@@ -199,6 +199,21 @@ var ContentNodeModel = BaseModel.extend({
 		    data['randomize'] = (data['randomize'] !== undefined)? data['randomize'] : window.preferences.auto_randomize_questions;
 		    this.set('extra_fields', data);
 		}
+	},
+	calculate_size: function(){
+		var self = this;
+    	var promise = new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.get_total_size(),
+	            data:  JSON.stringify([self.id]),
+	            error:reject,
+	            success: function(data) {
+	    			resolve(JSON.parse(data).size);
+	            }
+	        });
+    	});
+    	return promise;
 	}
 });
 
@@ -235,6 +250,36 @@ var ContentNodeCollection = BaseCollection.extend({
 		});
         return promise;
 	},
+	get_descendant_ids: function(){
+		var self = this;
+    	var promise = new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.get_node_descendants(),
+	            data:  JSON.stringify(self.pluck('id')),
+	            success: function(data) {
+	                resolve(JSON.parse(data).node_ids.split(" "));
+	            },
+	            error:reject
+	        });
+    	});
+    	return promise;
+	},
+	calculate_size: function(){
+		var self = this;
+    	var promise = new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.get_total_size(),
+	            data:  JSON.stringify(self.pluck('id')),
+	            success: function(data) {
+	                resolve(JSON.parse(data).size);
+	            },
+	            error:reject
+	        });
+    	});
+    	return promise;
+	},
 	get_all_fetch: function(ids, force_fetch){
 		force_fetch = (force_fetch)? true : false;
     	var self = this;
@@ -270,10 +315,7 @@ var ContentNodeCollection = BaseCollection.extend({
 	            url: window.Urls.duplicate_nodes(),
 	            data:  JSON.stringify(data),
 	            success: function(data) {
-	                copied_list = JSON.parse(data).node_ids.split(" ");
-	                self.get_all_fetch(copied_list).then(function(fetched){
-	    				resolve(fetched);
-	    			});
+	                resolve(new ContentNodeCollection(JSON.parse(data)));
 	            },
 	            error:reject
 	        });

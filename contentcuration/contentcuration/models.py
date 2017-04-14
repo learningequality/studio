@@ -393,14 +393,17 @@ class ContentNode(MPTTModel, models.Model):
         return channel
 
     def save(self, *args, **kwargs):
-        # Detect if node has been moved to another tree
-        if self.pk is not None and ContentNode.objects.filter(pk=self.pk).exists():
-            original = ContentNode.objects.get(pk=self.pk)
-            if original.parent and original.parent_id != self.parent_id and not original.parent.changed:
-                original.parent.changed = True
-                original.parent.save()
+        is_new = self.pk is not None and ContentNode.objects.filter(pk=self.pk).exists()
+
+        # Update all current ancestors to be changed
+        if not is_new:
+            ContentNode.objects.get(pk=self.pk).get_ancestors(include_self=True).update(changed=True)
 
         super(ContentNode, self).save(*args, **kwargs)
+
+        if is_new:
+            self.get_ancestors(include_self=True).update(changed=True)
+
         post_save_changes = False
         if self.original_node is None:
             self.original_node = self

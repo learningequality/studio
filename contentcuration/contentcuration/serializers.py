@@ -39,10 +39,7 @@ class FormatPresetSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField('retrieve_name')
 
     def retrieve_mimetypes(self, preset):
-        mimetypes = []
-        for m in preset.allowed_formats.all():
-            mimetypes.append(m.mimetype)
-        return mimetypes
+        return preset.allowed_formats.values_list('mimetype', flat=True)
 
     def retrieve_name(self, preset):
         return preset.id
@@ -292,11 +289,9 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
 
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    tags = TagSerializer(many=True)
     id = serializers.CharField(required=False)
 
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
-    descendants = serializers.SerializerMethodField('get_node_descendants')
     files = FileSerializer(many=True, read_only=True)
     assessment_items = AssessmentItemSerializer(many=True, read_only=True)
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
@@ -331,14 +326,12 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
             # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
             #         .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
             #         .only('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
-            descendants = node.get_descendants(include_self=True).annotate(change_count=Case(When(changed=True, then=Value(1)),default=Value(0),output_field=IntegerField()))
-            aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), is_changed=Sum('change_count'), assessment_size=Sum('assessment_items__files__file_size'))
+            descendants = node.get_descendants(include_self=True)
             return {
                 "total_count" : node.get_descendant_count(),
                 "resource_count" : descendants.exclude(kind=content_kinds.TOPIC).count(),
                 "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
-                "resource_size" : (aggregated.get('resource_size') or 0) + (aggregated.get('assessment_size') or 0),
-                "has_changed_descendant" : aggregated.get('is_changed') != 0
+                "resource_size" : 0, # Make separate request
             }
         else:
             # TODO: Account for files duplicated on node
@@ -352,7 +345,6 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
                 "resource_count" : 1,
                 "max_sort_order" : node.sort_order,
                 "resource_size" : assessment_size + resource_size,
-                "has_changed_descendant" : node.changed
             }
 
     @staticmethod
@@ -465,15 +457,12 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def get_node_ancestors(self,node):
         return node.get_ancestors().values_list('id', flat=True)
 
-    def get_node_descendants(self, node):
-        return node.get_descendants().values_list('id', flat=True)
-
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel','original_source_node_id', 'source_node_id', 'node_id',
                  'copyright_holder', 'license', 'license_description', 'kind', 'children', 'parent', 'content_id','associated_presets', 'valid', 'original_channel_id', 'source_channel_id',
-                 'descendants', 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'source_id', 'source_domain')
+                 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'source_id', 'source_domain')
 
 class RootNodeSerializer(serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)

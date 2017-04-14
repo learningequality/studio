@@ -34,8 +34,6 @@ var MoveView = BaseViews.BaseListView.extend({
         this.onmove = options.onmove;
         this.collection = options.collection;
 
-        // Calculate valid moves using node descendants
-        this.to_move_ids = _.uniq(this.collection.reduce(function(l,n){ return l.concat(n.get('descendants')).concat(n.id);}, []));
         this.render();
     },
     events: {
@@ -69,13 +67,19 @@ var MoveView = BaseViews.BaseListView.extend({
         clipboard_node.set({'title': 'My Clipboard'});
         fetched.add(clipboard_node);
 
-        // Render list
-        this.targetList = new MoveList({
-            model: null,
-            el: $("#target_list_area"),
-            is_target: true,
-            collection:  fetched,
-            container: this
+        // Calculate valid moves using node descendants
+        var self = this;
+        this.collection.get_descendant_ids().then(function(ids){
+            self.to_move_ids = ids;
+
+            // Render list
+            self.targetList = new MoveList({
+                model: null,
+                el: $("#target_list_area"),
+                is_target: true,
+                collection:  fetched,
+                container: self
+            });
         });
     },
 

@@ -7,8 +7,12 @@
 	<div class="import_item_title truncate">{{node.title}}</div>
 	{{#if isfolder}}
 		{{#if node.children}}
+			{{#if isfolder}}
+				{{#unless is_channel}}<em class="import_metadata">{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}</em>{{/unless}}
+			{{else}}
+				<em class="import_metadata">{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}</em>
+			{{/if}}
 			<div id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-triangle-top"></div>
-			{{#unless is_channel}}<em class="import_metadata">{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}</em>{{/unless}}
 		{{else}}
 			<em class="import_metadata">(empty)</em>
 		{{/if}}

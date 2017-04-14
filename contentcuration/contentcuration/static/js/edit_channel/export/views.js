@@ -25,8 +25,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         });
 
         var self = this;
-        this.retrieve_nodes(this.model.get('children')).then(function(collection){
-            var size = collection.reduce(function(size, node){ return size + node.get('metadata').resource_size; }, 0);
+        this.model.calculate_size().then(function(size){
             self.$("#export_size").text("(" + stringHelper.format_size(size) + ")");
         });
     },
