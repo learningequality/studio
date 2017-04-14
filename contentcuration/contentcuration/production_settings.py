@@ -1,16 +1,13 @@
 import os
 from .settings import *
 
-
-SITE_ID = 3
-
 STORAGE_ROOT = "/contentworkshop_content/storage/"
 DB_ROOT = "/contentworkshop_content/databases/"
 STATIC_ROOT = "/contentworkshop_static/"
 
 MEDIA_ROOT = STORAGE_ROOT
 
-SITE_ID = 3
+SITE_ID = int(os.getenv("SITE_ID"))
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
