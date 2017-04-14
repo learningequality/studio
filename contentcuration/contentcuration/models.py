@@ -393,10 +393,10 @@ class ContentNode(MPTTModel, models.Model):
         return channel
 
     def save(self, *args, **kwargs):
-        is_new = self.pk is not None and ContentNode.objects.filter(pk=self.pk).exists()
+        is_new = self.pk is not None
 
         # Update all current ancestors to be changed
-        if not is_new:
+        if not is_new and ContentNode.objects.filter(pk=self.pk).exists():
             ContentNode.objects.get(pk=self.pk).get_ancestors(include_self=True).update(changed=True)
 
         super(ContentNode, self).save(*args, **kwargs)
