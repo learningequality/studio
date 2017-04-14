@@ -132,7 +132,7 @@ urlpatterns = [
 # Add account/registration endpoints
 urlpatterns += [
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
-    url(r'^accounts/password/reset/$',auth_views.password_reset,{'post_reset_redirect': reverse_lazy('auth_password_reset_done'),'email_template_name':'registration/password_reset_email.txt'}, name='auth_password_reset'), # Add 'html_email_template_name': 'registration/password_reset_email.html' to dict for html
+    url(r'^accounts/password/reset/$',registration_views.custom_password_reset,{'post_reset_redirect': reverse_lazy('auth_password_reset_done'),'email_template_name':'registration/password_reset_email.txt'}, name='auth_password_reset'), # Add 'html_email_template_name': 'registration/password_reset_email.html' to dict for html
     url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
