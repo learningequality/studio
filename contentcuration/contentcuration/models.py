@@ -6,6 +6,7 @@ import functools
 import json
 from django.conf import settings
 from django.contrib import admin
+from django.core.cache import cache
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connections, models, connection
 from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
@@ -377,13 +378,31 @@ class ContentNode(MPTTModel, models.Model):
     objects = TreeManager()
 
     def get_original_node(self):
+        key = "original_channel_{}".format(self.pk)
+        cached_data = cache.get(key)
+        if cached_data:
+            return cached_data
+        original_node = None
         if self.original_channel_id and self.original_source_node_id:
-            original_channel = Channel.objects.get(pk=self.original_channel_id)
-            return original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first() or self
+            current_channel = self.get_channel()
+            if current_channel and self.original_channel_id == current_channel.pk:
+                original_node = self
+            else:
+                original_channel = Channel.objects.get(pk=self.original_channel_id)
+                original_node = original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first() or self
+        else:
+            original_node = self.original_node or self
+        cache.set(key, original_node, None)
+        return original_node
 
-        # TEMPORARY: until all nodes have proper sources set (e.g. source_node_id)
-        return self.original_node or self
-
+    def get_associated_presets(self):
+        key = "associated_presets_{}".format(self.kind_id)
+        cached_data = cache.get(key)
+        if cached_data:
+            return cached_data
+        presets = FormatPreset.objects.filter(kind=self.kind).values()
+        cache.set(key, presets, None)
+        return presets
 
     def get_channel(self):
         root = self.get_root()

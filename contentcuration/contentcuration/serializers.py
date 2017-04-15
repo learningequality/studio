@@ -287,74 +287,12 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
             'hints', 'raw_data', 'order', 'source_url', 'randomize', 'deleted')
         list_serializer_class = AssessmentListSerializer
 
-class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
-    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    id = serializers.CharField(required=False)
-
-    ancestors = serializers.SerializerMethodField('get_node_ancestors')
-    files = FileSerializer(many=True, read_only=True)
-    assessment_items = AssessmentItemSerializer(many=True, read_only=True)
-    associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
-    metadata = serializers.SerializerMethodField('retrieve_metadata')
-    original_channel = serializers.SerializerMethodField('retrieve_original_channel')
-    valid = serializers.SerializerMethodField('check_valid')
-
-    def check_valid(self, node):
-        if node.kind_id == content_kinds.TOPIC:
-            return True
-        elif node.kind_id == content_kinds.EXERCISE:
-            for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):
-                answers = json.loads(aitem.answers)
-                correct_answers = filter(lambda a: a['correct'], answers)
-                if aitem.question == "" or len(answers) == 0 or len(correct_answers) == 0 or\
-                    any(filter(lambda a: a['answer'] == "", answers)) or\
-                    (aitem.type == exercises.SINGLE_SELECTION and len(correct_answers) > 1) or\
-                    any(filter(lambda h: h['hint'] == "", json.loads(aitem.hints))):
-                    return False
-            return True
-        else:
-            return node.files.filter(preset__supplementary=False).exists()
-
-    def retrieve_original_channel(self, node):
-        original = node.get_original_node()
-        channel = original.get_channel() if original else None
-        return {"id": channel.pk, "name": channel.name} if channel else None
-
-    def retrieve_metadata(self, node):
-        if node.kind_id == content_kinds.TOPIC:
-            # TODO: Account for files duplicated in tree
-            # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
-            #         .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
-            #         .only('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
-            descendants = node.get_descendants(include_self=True)
-            return {
-                "total_count" : node.get_descendant_count(),
-                "resource_count" : descendants.exclude(kind=content_kinds.TOPIC).count(),
-                "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
-                "resource_size" : 0, # Make separate request
-            }
-        else:
-            # TODO: Account for files duplicated on node
-            # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
-            #         .filter(Q(contentnode=node) | Q(assessment_item_id__in=node.assessment_items.values_list('id', flat=True)))\
-            #         .only('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
-            assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
-            resource_size = node.files.aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
-            return {
-                "total_count" : 1,
-                "resource_count" : 1,
-                "max_sort_order" : node.sort_order,
-                "resource_size" : assessment_size + resource_size,
-            }
-
+class ContentNodeBaseSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     @staticmethod
     def setup_eager_loading(queryset):
         """ Perform necessary eager loading of data. """
         queryset = queryset.prefetch_related('children').prefetch_related('files').prefetch_related('assessment_items')
         return queryset
-
-    def retrieve_associated_presets(self, node):
-        return FormatPreset.objects.filter(kind=node.kind).values()
 
     def to_internal_value(self, data):
         """
@@ -457,12 +395,88 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     def get_node_ancestors(self,node):
         return node.get_ancestors().values_list('id', flat=True)
 
+
+class ContentNodeEditSerializer(ContentNodeBaseSerializer):
+    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    id = serializers.CharField(required=False)
+    ancestors = serializers.SerializerMethodField('get_node_ancestors')
+    metadata = serializers.SerializerMethodField('retrieve_metadata')
+    valid = serializers.SerializerMethodField('check_valid')
+    original_channel = serializers.SerializerMethodField('retrieve_original_channel')
+    associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
+    files = FileSerializer(many=True, read_only=True)
+    assessment_items = AssessmentItemSerializer(many=True, read_only=True)
+
+    def retrieve_original_channel(self, node):
+        original = node.get_original_node()
+        channel = original.get_channel() if original else None
+        return {"id": channel.pk, "name": channel.name} if channel else None
+
+    def retrieve_associated_presets(self, node):
+        return node.get_associated_presets()
+
+    def check_valid(self, node):
+        if node.kind_id == content_kinds.TOPIC:
+            return True
+        elif node.kind_id == content_kinds.EXERCISE:
+            for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):
+                answers = json.loads(aitem.answers)
+                correct_answers = filter(lambda a: a['correct'], answers)
+                if aitem.question == "" or len(answers) == 0 or len(correct_answers) == 0 or\
+                    any(filter(lambda a: a['answer'] == "", answers)) or\
+                    (aitem.type == exercises.SINGLE_SELECTION and len(correct_answers) > 1) or\
+                    any(filter(lambda h: h['hint'] == "", json.loads(aitem.hints))):
+                    return False
+            return True
+        else:
+            return node.files.filter(preset__supplementary=False).exists()
+
+    def retrieve_metadata(self, node):
+        if node.kind_id == content_kinds.TOPIC:
+            # TODO: Account for files duplicated in tree
+            # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
+            #         .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
+            #         .only('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
+            descendants = node.get_descendants(include_self=True)
+            return {
+                "total_count" : node.get_descendant_count(),
+                "resource_count" : descendants.exclude(kind=content_kinds.TOPIC).count(),
+                "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
+                "resource_size" : 0, # Make separate request
+                "has_changed_descendant" : descendants.filter(changed=True).exists(),
+            }
+        else:
+            # TODO: Account for files duplicated on node
+            # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
+            #         .filter(Q(contentnode=node) | Q(assessment_item_id__in=node.assessment_items.values_list('id', flat=True)))\
+            #         .only('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
+            assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+            resource_size = node.files.aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
+            resource_count = 1
+            if node.kind_id == content_kinds.EXERCISE:
+                resource_count = node.assessment_items.filter(deleted=False).count()
+
+            return {
+                "total_count" : 1,
+                "resource_count" : resource_count,
+                "max_sort_order" : node.sort_order,
+                "resource_size" : assessment_size + resource_size,
+                "has_changed_descendant" : node.changed,
+            }
+
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
-        fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'original_node', 'cloned_source', 'original_channel','original_source_node_id', 'source_node_id', 'node_id',
-                 'copyright_holder', 'license', 'license_description', 'kind', 'children', 'parent', 'content_id','associated_presets', 'valid', 'original_channel_id', 'source_channel_id',
-                 'ancestors', 'tags', 'files', 'metadata', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'source_id', 'source_domain')
+        fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'copyright_holder', 'license', 'license_description','assessment_items', 'files',
+                 'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tags', 'extra_fields', 'original_channel')
+
+class ContentNodeSerializer(ContentNodeEditSerializer):
+    class Meta:
+        list_serializer_class = CustomListSerializer
+        model = ContentNode
+        fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'node_id', 'copyright_holder', 'license', 'license_description', 'kind',
+                 'original_channel','original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id', 'source_channel_id', 'source_id', 'source_domain',
+                 'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'files', 'valid', 'metadata')
 
 class RootNodeSerializer(serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -567,7 +581,6 @@ class ChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'view_only', 'published', 'pending_editors', 'editors', 'description', 'size', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'deleted')
-
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

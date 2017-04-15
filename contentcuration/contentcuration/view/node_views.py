@@ -12,7 +12,7 @@ from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
 from contentcuration.models import File, ContentNode, ContentTag
-from contentcuration.serializers import ContentNodeSerializer
+from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
 
 def get_total_size(request):
@@ -39,10 +39,9 @@ def get_node_descendants(request):
 
 def get_nodes_by_ids(request):
     if request.method == 'POST':
-        nodes = ContentNode.objects.prefetch_related('files').prefetch_related('assessment_items')\
-                .prefetch_related('tags').prefetch_related('children').filter(pk__in=json.loads(request.body))
-        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
-
+        nodes = ContentNode.objects.prefetch_related('children').prefetch_related('files')\
+                .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
+        return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
 
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
@@ -68,7 +67,7 @@ def duplicate_nodes(request):
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
+        serialized = ContentNodeEditSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
         return HttpResponse(JSONRenderer().render(serialized))
 
 def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
@@ -149,7 +148,7 @@ def move_nodes(request):
                 _move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
                 all_ids.append(n['id'])
 
-        serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=all_ids), many=True).data
+        serialized = ContentNodeEditSerializer(ContentNode.objects.filter(pk__in=all_ids), many=True).data
         return HttpResponse(JSONRenderer().render(serialized))
 
 def _move_node(node, parent=None, sort_order=None, channel_id=None):

@@ -239,6 +239,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     }
   },
   check_for_changes:function(){
+    if(!this.edit_list) return false;
     return _.findWhere(this.edit_list.views, {edited : true}) != null;
   },
   undo_changes:function(){
@@ -515,7 +516,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
   },
   get_license: function(license_id){
-    if(!license_id || license_id <= 0){ return null; }
+    if(isNaN(license_id)){ return license_id; }
+    else if(!license_id || license_id <= 0){ return null; }
     return window.licenses.get({id: license_id}).get('license_name');
   },
   display_license_description: function(license_id){

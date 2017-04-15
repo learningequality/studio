@@ -24,7 +24,7 @@
 				{{#unless isfolder}}
 					{{#if isexercise}}
 						<span class="glyphicon glyphicon-check" aria-hidden="true"></span>
-						{{#format_count "Question" num_questions}}{{/format_count}}
+						{{#format_count "Question" node.metadata.resource_count}}{{/format_count}}
 					{{else}}
 						<span class="glyphicon glyphicon-file" aria-hidden="true"></span>
 						{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}

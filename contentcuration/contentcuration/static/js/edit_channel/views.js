@@ -545,7 +545,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		var new_topic = this.collection.create({
             "kind":"topic",
             "title": "Topic",
-            "sort_order" : this.collection.length,
             "author": get_author(),
         }, {
         	success:function(new_topic){
@@ -605,7 +604,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		var new_exercise = this.collection.create({
             "kind":"exercise",
             "title": (this.model.get('parent'))? this.model.get('title') + " Exercise" : "Exercise", // Avoid having exercises prefilled with 'email clipboard'
-            "sort_order" : this.collection.length,
             "author": get_author(),
             "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder,
             "license_description": (window.preferences.license_description && window.preferences.license==="Special Permissions") ? window.preferences.license_description : ""
