@@ -65,7 +65,7 @@ If not, use these commands:
 
 	3. Create a database
 
-	`# CREATE DATABASE "content-curation" WITH TEMPLATE = template0 OWNER = learningequality"; `
+	`# CREATE DATABASE "contentcuration" WITH TEMPLATE = template0 OWNER = "learningequality"; `
 
 	4. Make database migrations
 
