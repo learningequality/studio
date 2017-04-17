@@ -1,5 +1,5 @@
 prodserver: collectstatic
-	cd contentcuration/ && gunicorn contentcuration.wsgi:application --workers=3 --bind=0.0.0.0:8000 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
+	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=500 --workers=3 --bind=0.0.0.0:8000 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
 
 collectstatic:
 	python contentcuration/manage.py collectstatic --noinput
