@@ -263,7 +263,7 @@ def duplicate_nodes(request):
             new_nodes = []
 
             with transaction.atomic():
-                with ContentNode.objects.delay_mptt_updates():
+                with ContentNode.objects.disable_mptt_updates():
                     for node_data in nodes:
                         new_node = _duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
                         new_nodes.append(new_node.pk)
@@ -282,6 +282,7 @@ def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
+    # keep track of the in-memory models so that we can bulk-create them at the end (for efficiency)
     to_create = {
         "nodes": [],
         "node_files": [],
@@ -289,8 +290,10 @@ def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
         "assessments": [],
     }
 
+    # perform the actual recursive node cloning
     new_node = _duplicate_node_bulk_recursive(node=node, sort_order=sort_order, parent=parent, channel_id=channel_id, to_create=to_create)
 
+    # create nodes, one level at a time, starting from the top of the tree (so that we have IDs to pass as "parent" for next level down)
     for node_level in to_create["nodes"]:
         for node in node_level:
             node.parent_id = node.parent.id
@@ -299,12 +302,15 @@ def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
             for tag in node._meta.tags_to_add:
                 node.tags.add(tag)
 
+    # rebuild MPTT tree for this channel (since we're inside "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
     ContentNode.objects.partial_rebuild(to_create["nodes"][0][0].tree_id)
 
+    # create each of the assessment items
     for a in to_create["assessments"]:
         a.contentnode_id = a.contentnode.id
     AssessmentItem.objects.bulk_create(to_create["assessments"])
 
+    # create the file objects, for both nodes and assessment items
     for f in to_create["node_files"]:
         f.contentnode_id = f.contentnode.id
     for f in to_create["assessment_files"]:
@@ -321,6 +327,7 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     if isinstance(parent, int) or isinstance(parent, basestring):
         parent = ContentNode.objects.get(pk=parent)
 
+    # clone the model (in-memory) and update the fields on the cloned model
     new_node = copy.copy(node)
     new_node.id = None
     new_node.tree_id = parent.tree_id
@@ -330,11 +337,12 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     new_node.cloned_source = node
     new_node.source_channel_id = channel_id
 
+    # store the new unsaved model in a list, at the appropriate level, for later creation
     while len(to_create["nodes"]) <= level:
         to_create["nodes"].append([])
     to_create["nodes"][level].append(new_node)
 
-    # add tags now
+    # find or create any tags that are needed, and store them under _meta on the node so we can add them to it later
     new_node._meta.tags_to_add = []
     for tag in node.tags.all():
         new_tag, is_new = ContentTag.objects.get_or_create(
@@ -343,12 +351,12 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
         )
         new_node._meta.tags_to_add.append(new_tag)
 
-    # copy file object too
+    # clone the file objects for later saving
     for fobj in node.files.all():
         f = duplicate_file(fobj, node=new_node, save=False)
         to_create["node_files"].append(f)
 
-    # copy assessment item object too
+    # copy assessment item objects, and associated files
     for aiobj in node.assessment_items.prefetch_related("files").all():
         aiobj_copy = copy.copy(aiobj)
         aiobj_copy.id = None
@@ -358,8 +366,9 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
             f = duplicate_file(fobj, assessment_item=aiobj_copy, save=False)
             to_create["assessment_files"].append(f)
 
+    # recurse down the tree and clone the children
     for child in node.children.all():
-        _duplicate_node_bulk_recursive(node=child, sort_order=sort_order, parent=new_node, channel_id=channel_id, to_create=to_create, level=level+1)
+        _duplicate_node_bulk_recursive(node=child, sort_order=None, parent=new_node, channel_id=channel_id, to_create=to_create, level=level+1)
 
     return new_node
 
