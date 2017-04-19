@@ -32,7 +32,7 @@ def create_file_from_contents(contents, ext=None, node=None, preset_id=None):
             contentnode = node
         )
 
-def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None):
+def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None, save=True):
     if not file_object:
         return None
     file_copy = copy.copy(file_object)
@@ -40,7 +40,8 @@ def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None)
     file_copy.contentnode = node
     file_copy.assessment_item = assessment_item
     file_copy.preset_id = preset_id or file_object.preset_id
-    file_copy.save()
+    if save:
+        file_copy.save()
     return file_copy
 
 def extract_thumbnail_wrapper(file_object, node=None, preset_id=None):

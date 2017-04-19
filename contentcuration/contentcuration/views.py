@@ -5,6 +5,7 @@ import os
 import re
 import hashlib
 import shutil
+import time
 import tempfile
 import random
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
@@ -250,7 +251,7 @@ def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
 
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
@@ -262,10 +263,11 @@ def duplicate_nodes(request):
             new_nodes = []
 
             with transaction.atomic():
-                for node_data in nodes:
-                    new_node = _duplicate_node(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
-                    new_nodes.append(new_node.pk)
-                    sort_order+=1
+                with ContentNode.objects.delay_mptt_updates():
+                    for node_data in nodes:
+                        new_node = _duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
+                        new_nodes.append(new_node.pk)
+                        sort_order+=1
 
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -275,55 +277,89 @@ def duplicate_nodes(request):
             "node_ids": " ".join(new_nodes)
         }))
 
-def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
+def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
+
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
-    original_channel = node.get_original_node().get_channel() if node.get_original_node() else None
+    to_create = {
+        "nodes": [],
+        "node_files": [],
+        "assessment_files": [],
+        "assessments": [],
+    }
 
-    new_node = ContentNode.objects.create(
-        title=node.title,
-        description=node.description,
-        kind=node.kind,
-        license=node.license,
-        parent=ContentNode.objects.get(pk=parent) if parent else None,
-        sort_order=sort_order or node.sort_order,
-        copyright_holder=node.copyright_holder,
-        changed=True,
-        original_node=node.original_node or node,
-        cloned_source=node,
-        original_channel_id = node.original_channel_id or original_channel.id if original_channel else None,
-        source_channel_id = node.get_channel().id if node.get_channel() else None,
-        original_source_node_id = node.original_source_node_id or node.node_id,
-        source_node_id = node.node_id,
-        author=node.author,
-        content_id=node.content_id,
-        extra_fields=node.extra_fields,
-    )
+    new_node = _duplicate_node_bulk_recursive(node=node, sort_order=sort_order, parent=parent, channel_id=channel_id, to_create=to_create)
+
+    for node_level in to_create["nodes"]:
+        for node in node_level:
+            node.parent_id = node.parent.id
+        ContentNode.objects.bulk_create(node_level)
+        for node in node_level:
+            for tag in node._meta.tags_to_add:
+                node.tags.add(tag)
+
+    ContentNode.objects.partial_rebuild(to_create["nodes"][0][0].tree_id)
+
+    for a in to_create["assessments"]:
+        a.contentnode_id = a.contentnode.id
+    AssessmentItem.objects.bulk_create(to_create["assessments"])
+
+    for f in to_create["node_files"]:
+        f.contentnode_id = f.contentnode.id
+    for f in to_create["assessment_files"]:
+        f.assessment_item_id = f.assessment_item.id
+    File.objects.bulk_create(to_create["node_files"] + to_create["assessment_files"])
+
+    return new_node
+
+def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0):
+
+    if isinstance(node, int) or isinstance(node, basestring):
+        node = ContentNode.objects.get(pk=node)
+
+    if isinstance(parent, int) or isinstance(parent, basestring):
+        parent = ContentNode.objects.get(pk=parent)
+
+    new_node = copy.copy(node)
+    new_node.id = None
+    new_node.tree_id = parent.tree_id
+    new_node.parent = parent
+    new_node.sort_order = sort_order or node.sort_order
+    new_node.changed = True
+    new_node.cloned_source = node
+    new_node.source_channel_id = channel_id
+
+    while len(to_create["nodes"]) <= level:
+        to_create["nodes"].append([])
+    to_create["nodes"][level].append(new_node)
 
     # add tags now
+    new_node._meta.tags_to_add = []
     for tag in node.tags.all():
         new_tag, is_new = ContentTag.objects.get_or_create(
             tag_name=tag.tag_name,
             channel_id=channel_id,
         )
-        new_node.tags.add(new_tag)
+        new_node._meta.tags_to_add.append(new_tag)
 
     # copy file object too
     for fobj in node.files.all():
-        duplicate_file(fobj, node=new_node)
+        f = duplicate_file(fobj, node=new_node, save=False)
+        to_create["node_files"].append(f)
 
     # copy assessment item object too
-    for aiobj in node.assessment_items.all():
+    for aiobj in node.assessment_items.prefetch_related("files").all():
         aiobj_copy = copy.copy(aiobj)
         aiobj_copy.id = None
         aiobj_copy.contentnode = new_node
-        aiobj_copy.save()
+        to_create["assessments"].append(aiobj_copy)
         for fobj in aiobj.files.all():
-            duplicate_file(fobj, assessment_item=aiobj_copy)
+            f = duplicate_file(fobj, assessment_item=aiobj_copy, save=False)
+            to_create["assessment_files"].append(f)
 
-    for c in node.children.all():
-        _duplicate_node(c, parent=new_node.id)
+    for child in node.children.all():
+        _duplicate_node_bulk_recursive(node=child, sort_order=sort_order, parent=new_node, channel_id=channel_id, to_create=to_create, level=level+1)
 
     return new_node
 
