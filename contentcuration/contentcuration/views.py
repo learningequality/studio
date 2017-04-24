@@ -26,7 +26,7 @@ from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers
 from contentcuration.utils.files import extract_thumbnail_wrapper, compress_video_wrapper,  generate_thumbnail_from_node, duplicate_file
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, UserChannelListSerializer, FileSerializer
+from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, SimplifiedContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, UserChannelListSerializer, FileSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, exercises, licenses
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -40,6 +40,11 @@ def get_nodes_by_ids(request):
         nodes = ContentNode.objects.prefetch_related('files').prefetch_related('assessment_items')\
                 .prefetch_related('tags').prefetch_related('children').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
+
+def get_nodes_by_ids_simplified(request):
+    if request.method == 'POST':
+        nodes = ContentNode.objects.prefetch_related('children').filter(pk__in=json.loads(request.body))
+        return HttpResponse(JSONRenderer().render(SimplifiedContentNodeSerializer(nodes, many=True).data))
 
 def base(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):

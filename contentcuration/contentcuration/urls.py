@@ -127,6 +127,7 @@ urlpatterns = [
     url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
     url(r'^healthz$', views.health, name='health'),
     url(r'^get_nodes_by_ids$', views.get_nodes_by_ids, name='get_nodes_by_ids'),
+    url(r'^get_nodes_by_ids_simplified$', views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
 ]
 
 # Add account/registration endpoints
