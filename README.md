@@ -101,8 +101,8 @@ Type in `deactivate` to exit your virtual environment.
 
 Then:
 
-	`git add .`
-	`git commit -m "message that says what your code accomplished"`
-	`git push origin yourbranch`
+	git add .
+	git commit -m "message that says what your code accomplished"
+	git push origin yourbranch
 
 And visit the [pull request page](https://github.com/fle-internal/fle-home/pulls) to get your code in!
