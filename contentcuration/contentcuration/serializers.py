@@ -290,6 +290,34 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
             'hints', 'raw_data', 'order', 'source_url', 'randomize', 'deleted')
         list_serializer_class = AssessmentListSerializer
 
+
+class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    metadata = serializers.SerializerMethodField('retrieve_metadata')
+
+    def retrieve_metadata(self, node):
+        if node.kind_id == content_kinds.TOPIC:
+            # descendants = node.get_descendants(include_self=True)
+            # aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
+            return {
+                "total_count" : node.get_descendant_count(),
+                "resource_count" : node.get_descendants().exclude(kind=content_kinds.TOPIC).count(),
+                # "resource_size" : (aggregated.get('resource_size') or 0) + (aggregated.get('assessment_size') or 0),
+            }
+        else:
+            # assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+            # resource_size = node.files.aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
+            return {
+                "total_count" : 1,
+                "resource_count" : 1,
+                # "resource_size" : assessment_size + resource_size,
+            }
+
+    class Meta:
+        model = ContentNode
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata',)
+
+
 class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     tags = TagSerializer(many=True)
@@ -335,7 +363,7 @@ class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
             aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), is_changed=Sum('change_count'), assessment_size=Sum('assessment_items__files__file_size'))
             return {
                 "total_count" : node.get_descendant_count(),
-                "resource_count" : descendants.exclude(kind=content_kinds.TOPIC).count(),
+                "resource_count" : node.get_descendants().exclude(kind=content_kinds.TOPIC).count(),
                 "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
                 "resource_size" : (aggregated.get('resource_size') or 0) + (aggregated.get('assessment_size') or 0),
                 "has_changed_descendant" : aggregated.get('is_changed') != 0

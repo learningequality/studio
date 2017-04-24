@@ -140,6 +140,21 @@ function fetch_nodes_by_ids(ids){
         });
 	});
 }
+function fetch_nodes_by_ids_simplified(ids){
+    var self = this;
+    return new Promise(function(resolve, reject){
+        $.ajax({
+            method:"POST",
+            url: window.Urls.get_nodes_by_ids_simplified(),
+            data:  JSON.stringify(ids),
+            error: reject,
+            success: function(data) {
+                resolve(new ContentNodeCollection(JSON.parse(data)));
+            }
+        });
+    });
+}
+
 
 var ContentNodeModel = BaseModel.extend({
 	root_list:"contentnode-list",
@@ -246,6 +261,18 @@ var ContentNodeCollection = BaseCollection.extend({
 				resolve(returnCollection);
 			});
     	});
+    },
+    get_all_fetch_simplified: function(ids, force_fetch){
+        force_fetch = (force_fetch)? true : false;
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var idlists = _.partition(ids, function(id){return force_fetch || !self.get({'id': id});});
+            var returnCollection = new ContentNodeCollection(self.filter(function(n){ return idlists[1].indexOf(n.id) >= 0; }))
+            fetch_nodes_by_ids_simplified(idlists[0]).then(function(fetched){
+                returnCollection.add(fetched.toJSON());
+                resolve(returnCollection);
+            });
+        });
     },
 	comparator : function(node){
     	return node.get("sort_order");
