@@ -12,7 +12,7 @@ from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
 from contentcuration.models import File, ContentNode, ContentTag
-from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer
+from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
 
 def get_total_size(request):
@@ -40,13 +40,14 @@ def get_node_descendants(request):
 def get_nodes_by_ids(request):
     if request.method == 'POST':
         nodes = ContentNode.objects.prefetch_related('children').prefetch_related('files')\
-                .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
+                .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))\
+                .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
         return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
 
 def get_nodes_by_ids_simplified(request):
     if request.method == 'POST':
         nodes = ContentNode.objects.prefetch_related('children').filter(pk__in=json.loads(request.body))
-        return HttpResponse(JSONRenderer().render(ContentNodeBaseSerializer(nodes, many=True).data))
+        return HttpResponse(JSONRenderer().render(SimplifiedContentNodeSerializer(nodes, many=True).data))
 
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")

@@ -61,7 +61,7 @@ var ExportListView = BaseViews.BaseListView.extend({
         this.$el.html(this.template({id: this.model.get("id")}));
         var self = this;
         this.fetch_model(this.model).then(function(fetched){
-            self.collection.get_all_fetch(fetched.get("children")).then(function(fetchedCollection){
+            self.collection.get_all_fetch_simplified(fetched.get("children")).then(function(fetchedCollection){
                 self.load_content(fetchedCollection);
             });
         })
