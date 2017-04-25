@@ -5,7 +5,7 @@
         {{#if isempty}}
             <em class="annotation">(empty)</em>
         {{else}}
-            <em class="export_metadata">{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}</em>
+            <em class="annotation">{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}</em>
             <span id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-menu-right"></span>
         {{/if}}
     {{/if}}
