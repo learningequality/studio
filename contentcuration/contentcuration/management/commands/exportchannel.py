@@ -394,6 +394,7 @@ def map_tags_to_node(kolibrinode, ccnode):
 def prepare_export_database(tempdb):
     call_command("flush", "--noinput", database=get_active_content_database())  # clears the db!
     call_command("migrate",
+                 "content",
                  run_syncdb=True,
                  database=get_active_content_database(),
                  noinput=True)
