@@ -229,8 +229,8 @@ def process_assessment_metadata(ccnode, kolibrinode):
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
     if mastery_model['type'] == exercises.M_OF_N:
-        mastery_model.update({'n':exercise_data.get('m') or min(5, assessment_items.count()) or 1})
-        mastery_model.update({'m':exercise_data.get('n') or min(5, assessment_items.count()) or 1})
+        mastery_model.update({'n':exercise_data.get('n') or min(5, assessment_items.count()) or 1})
+        mastery_model.update({'m':exercise_data.get('m') or min(5, assessment_items.count()) or 1})
 
     exercise_data.update({
         'mastery_model': mastery_model['type'],
