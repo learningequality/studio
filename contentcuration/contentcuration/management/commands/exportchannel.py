@@ -254,7 +254,6 @@ def process_assessment_metadata(ccnode, kolibrinode):
     return exercise_data
 
 
-
 def create_perseus_zip(ccnode, exercise_data, write_to_path):
     with zipfile.ZipFile(write_to_path, "w") as zf:
         try:
@@ -286,7 +285,6 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
 
         finally:
             zf.close()
-
 
 def write_to_zipfile(filename, content, zf):
     info = zipfile.ZipInfo(filename, date_time=(2013, 3, 14, 1, 59, 26))
