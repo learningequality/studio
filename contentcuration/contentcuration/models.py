@@ -382,14 +382,13 @@ class ContentNode(MPTTModel, models.Model):
         cached_data = cache.get(key)
         if cached_data:
             return cached_data
-        original_node = None
-        if self.original_channel_id and self.original_source_node_id:
-            current_channel = self.get_channel()
-            if current_channel and self.original_channel_id == current_channel.pk:
-                original_node = self
-            else:
-                original_channel = Channel.objects.get(pk=self.original_channel_id)
-                original_node = original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first() or self
+
+        original_node = self
+        if self.original_node:
+            original_node = self.original_node
+        elif self.original_channel_id and self.original_source_node_id:
+            original_channel = Channel.objects.get(pk=self.original_channel_id)
+            original_node = original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first() or self
         else:
             original_node = self.original_node or self
         cache.set(key, original_node, None)

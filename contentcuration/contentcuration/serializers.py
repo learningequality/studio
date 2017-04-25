@@ -395,6 +395,97 @@ class ContentNodeBaseSerializer(BulkSerializerMixin, serializers.ModelSerializer
     def get_node_ancestors(self,node):
         return node.get_ancestors().values_list('id', flat=True)
 
+class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    metadata = serializers.SerializerMethodField('retrieve_metadata')
+
+    def retrieve_metadata(self, node):
+        if node.kind_id == content_kinds.TOPIC:
+            # descendants = node.get_descendants(include_self=True)
+            # aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
+            return {
+                "total_count" : node.get_descendant_count(),
+                "resource_count" : node.get_descendants().exclude(kind=content_kinds.TOPIC).count(),
+                # "resource_size" : (aggregated.get('resource_size') or 0) + (aggregated.get('assessment_size') or 0),
+            }
+        else:
+            # assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+            # resource_size = node.files.aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
+            return {
+                "total_count" : 1,
+                "resource_count" : 1,
+                # "resource_size" : assessment_size + resource_size,
+            }
+
+    class Meta:
+        model = ContentNode
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata',)
+
+
+class ContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    tags = TagSerializer(many=True)
+    id = serializers.CharField(required=False)
+
+    ancestors = serializers.SerializerMethodField('get_node_ancestors')
+    descendants = serializers.SerializerMethodField('get_node_descendants')
+    files = FileSerializer(many=True, read_only=True)
+    assessment_items = AssessmentItemSerializer(many=True, read_only=True)
+    associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
+    metadata = serializers.SerializerMethodField('retrieve_metadata')
+    original_channel = serializers.SerializerMethodField('retrieve_original_channel')
+    valid = serializers.SerializerMethodField('check_valid')
+
+    def check_valid(self, node):
+        if node.kind_id == content_kinds.TOPIC:
+            return True
+        elif node.kind_id == content_kinds.EXERCISE:
+            for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):
+                answers = json.loads(aitem.answers)
+                correct_answers = filter(lambda a: a['correct'], answers)
+                if aitem.question == "" or len(answers) == 0 or len(correct_answers) == 0 or\
+                    any(filter(lambda a: a['answer'] == "", answers)) or\
+                    (aitem.type == exercises.SINGLE_SELECTION and len(correct_answers) > 1) or\
+                    any(filter(lambda h: h['hint'] == "", json.loads(aitem.hints))):
+                    return False
+            return True
+        else:
+            return node.files.filter(preset__supplementary=False).exists()
+
+    def retrieve_original_channel(self, node):
+        original = node.get_original_node()
+        channel = original.get_channel() if original else None
+        return {"id": channel.pk, "name": channel.name} if channel else None
+
+    def retrieve_metadata(self, node):
+        if node.kind_id == content_kinds.TOPIC:
+            # TODO: Account for files duplicated in tree
+            # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
+            #         .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
+            #         .only('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
+            descendants = node.get_descendants(include_self=True).annotate(change_count=Case(When(changed=True, then=Value(1)),default=Value(0),output_field=IntegerField()))
+            aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), is_changed=Sum('change_count'), assessment_size=Sum('assessment_items__files__file_size'))
+            return {
+                "total_count" : node.get_descendant_count(),
+                "resource_count" : node.get_descendants().exclude(kind=content_kinds.TOPIC).count(),
+                "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
+                "resource_size" : (aggregated.get('resource_size') or 0) + (aggregated.get('assessment_size') or 0),
+                "has_changed_descendant" : aggregated.get('is_changed') != 0
+            }
+        else:
+            # TODO: Account for files duplicated on node
+            # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
+            #         .filter(Q(contentnode=node) | Q(assessment_item_id__in=node.assessment_items.values_list('id', flat=True)))\
+            #         .only('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
+            assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+            resource_size = node.files.aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
+            return {
+                "total_count" : 1,
+                "resource_count" : 1,
+                "max_sort_order" : node.sort_order,
+                "resource_size" : assessment_size + resource_size,
+                "has_changed_descendant" : node.changed
+            }
 
 class ContentNodeEditSerializer(ContentNodeBaseSerializer):
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)

@@ -249,7 +249,7 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
     },
     load_subfiles:function(){
         var self = this;
-        this.collection.get_all_fetch(this.model.get("children")).then(function(fetched){
+        this.collection.get_all_fetch_simplified(this.model.get("children")).then(function(fetched){
             var data = {
                 model : this.model,
                 el: $(self.getSubdirectory()),
