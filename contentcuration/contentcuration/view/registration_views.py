@@ -9,6 +9,8 @@ from django.shortcuts import render, get_object_or_404, redirect, render_to_resp
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.views import password_reset
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
@@ -50,7 +52,8 @@ def send_invitation_email(request):
                             'channel_id' : channel_id,
                             'invitation_key': invitation.id,
                             'is_new': recipient.is_active is False,
-                            'channel': channel.name
+                            'channel': channel.name,
+                            'domain': request.META.get('HTTP_ORIGIN'),
                         }
             subject = render_to_string('permissions/permissions_email_subject.txt', ctx_dict)
             message = render_to_string('permissions/permissions_email.txt', ctx_dict)
@@ -201,7 +204,8 @@ class UserRegistrationView(RegistrationView):
         activation_key = self.get_activation_key(user)
         context = self.get_email_context(activation_key)
         context.update({
-            'user': user
+            'user': user,
+            'domain': self.request.META.get('HTTP_ORIGIN'),
         })
         subject = render_to_string(self.email_subject_template, context)
         subject = ''.join(subject.splitlines())
@@ -221,3 +225,7 @@ def add_editor_to_channel(invitation):
         invitation.channel.editors.add(invitation.invited)
     invitation.channel.save()
     invitation.delete()
+
+def custom_password_reset(request, **kwargs):
+    return password_reset(request, extra_email_context={'domain': request.META.get('HTTP_ORIGIN')}, **kwargs)
+

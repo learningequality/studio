@@ -8,19 +8,19 @@ Django app for the Content Curation project.
 
 * Then, clone the repository into your local files
 
-	`git clone https://github.com/fle-internal/content-curation.git`
+	git clone https://github.com/fle-internal/content-curation.git
 
 * Type in `git remote -v` to check what origin and upstream are tracking. Make sure origin refers to your remote repository, `yourusername/content-curation.git` and upstream refers to `fle-internal/content-curation.git`.
 If not, use these commands:
 
 	Tracking upstream:
 
-		`git remote add upstream git@github.com:fle-internal/content-curation.git`
-		`git remote set-url upstream git@github.com:fle-internal/content-curation.git`
+		git remote add upstream git@github.com:fle-internal/content-curation.git
+		git remote set-url upstream git@github.com:fle-internal/content-curation.git
 
 	Tracking origin:
 
-		`git remote set-url origin git@github.com:yourusername/content-curation.git`
+		git remote set-url origin git@github.com:yourusername/content-curation.git
 
 ### Setting up your environment
 
@@ -65,7 +65,7 @@ If not, use these commands:
 
 	3. Create a database
 
-	`# CREATE DATABASE "content-curation" WITH TEMPLATE = template0 OWNER = learningequality"; `
+	`# CREATE DATABASE "contentcuration" WITH TEMPLATE = template0 OWNER = "learningequality"; `
 
 	4. Make database migrations
 
@@ -101,8 +101,8 @@ Type in `deactivate` to exit your virtual environment.
 
 Then:
 
-	`git add .`
-	`git commit -m "message that says what your code accomplished"`
-	`git push origin yourbranch`
+	git add .
+	git commit -m "message that says what your code accomplished"
+	git push origin yourbranch
 
 And visit the [pull request page](https://github.com/fle-internal/fle-home/pulls) to get your code in!
