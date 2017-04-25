@@ -294,45 +294,43 @@ def write_to_zipfile(filename, content, zf):
     zf.writestr(info, content)
 
 def write_assessment_item(assessment_item, zf):
-    if assessment_item.type != exercises.PERSEUS_QUESTION:
-        template=''
-        if assessment_item.type == exercises.MULTIPLE_SELECTION:
-            template = 'perseus/multiple_selection.json'
-        elif assessment_item.type == exercises.SINGLE_SELECTION or assessment_item.type == 'true_false':
-            template = 'perseus/multiple_selection.json'
-        elif assessment_item.type == exercises.INPUT_QUESTION:
-            template = 'perseus/input_question.json'
-        elif assessment_item.type == exercises.PERSEUS_QUESTION:
-            template = 'perseus/perseus_question.json'
-        else:
-            raise TypeError("Unrecognized question type on item {}".format(assessment_item.assessment_id))
+    if assessment_item.type == exercises.MULTIPLE_SELECTION:
+        template = 'perseus/multiple_selection.json'
+    elif assessment_item.type == exercises.SINGLE_SELECTION or assessment_item.type == 'true_false':
+        template = 'perseus/multiple_selection.json'
+    elif assessment_item.type == exercises.INPUT_QUESTION:
+        template = 'perseus/input_question.json'
+    elif assessment_item.type == exercises.PERSEUS_QUESTION:
+        template = 'perseus/perseus_question.json'
+    else:
+        raise TypeError("Unrecognized question type on item {}".format(assessment_item.assessment_id))
 
-        question, question_images = process_image_strings(assessment_item.question)
+    question, question_images = process_image_strings(assessment_item.question)
 
-        answer_data = json.loads(assessment_item.answers)
-        for answer in answer_data:
-            answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
-            # In case perseus doesn't support =wxh syntax, use below code
-            # answer['answer'], answer_images = process_image_strings(answer['answer'])
-            # answer.update({'images': answer_images})
+    answer_data = json.loads(assessment_item.answers)
+    for answer in answer_data:
+        answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
+        # In case perseus doesn't support =wxh syntax, use below code
+        # answer['answer'], answer_images = process_image_strings(answer['answer'])
+        # answer.update({'images': answer_images})
 
-        hint_data = json.loads(assessment_item.hints)
-        for hint in hint_data:
-            hint['hint'], hint_images = process_image_strings(hint['hint'])
-            hint.update({'images': hint_images})
+    hint_data = json.loads(assessment_item.hints)
+    for hint in hint_data:
+        hint['hint'], hint_images = process_image_strings(hint['hint'])
+        hint.update({'images': hint_images})
 
-        context = {
-            'question': question,
-            'question_images': question_images,
-            'answers': sorted(answer_data, lambda x,y: cmp(x.get('order'), y.get('order'))),
-            'multiple_select': assessment_item.type == exercises.MULTIPLE_SELECTION,
-            'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR),
-            'hints': sorted(hint_data, lambda x,y: cmp(x.get('order'), y.get('order'))),
-            'randomize': assessment_item.randomize,
-        }
+    context = {
+        'question': question,
+        'question_images': question_images,
+        'answers': sorted(answer_data, lambda x,y: cmp(x.get('order'), y.get('order'))),
+        'multiple_select': assessment_item.type == exercises.MULTIPLE_SELECTION,
+        'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR),
+        'hints': sorted(hint_data, lambda x,y: cmp(x.get('order'), y.get('order'))),
+        'randomize': assessment_item.randomize,
+    }
 
-        result = render_to_string(template, context).encode('utf-8', "ignore")
-        write_to_zipfile("{0}.json".format(assessment_item.assessment_id), result, zf)
+    result = render_to_string(template, context).encode('utf-8', "ignore")
+    write_to_zipfile("{0}.json".format(assessment_item.assessment_id), result, zf)
 
 def process_image_strings(content):
     image_list = []
