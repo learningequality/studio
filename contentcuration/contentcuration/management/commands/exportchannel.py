@@ -254,6 +254,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
     return exercise_data
 
 
+
 def create_perseus_zip(ccnode, exercise_data, write_to_path):
     with zipfile.ZipFile(write_to_path, "w") as zf:
         try:
@@ -263,28 +264,29 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
             exercise_result = render_to_string('perseus/exercise.json', exercise_context)
             write_to_zipfile("exercise.json", exercise_result, zf)
 
-            for question in ccnode.assessment_items.all().order_by('order'):
+            for question in ccnode.assessment_items.prefetch_related('files').all().order_by('order'):
                 for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE).order_by('checksum'):
                     image_name = "images/{}.{}".format(image.checksum, image.file_format_id)
                     if image_name not in zf.namelist():
-                        image.file_on_disk.open(mode="rb")
-                        write_to_zipfile(image_name, image.file_on_disk.read(), zf)
+                        with open(ccmodels.generate_storage_url(str(image)), 'rb') as content:
+                            write_to_zipfile(image_name, content.read(), zf)
 
                 for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE).order_by('checksum'):
                     svg_name = "images/{0}.svg".format(image.original_filename)
                     json_name = "images/{0}-data.json".format(image.original_filename)
                     if svg_name not in zf.namelist() or json_name not in zf.namelist():
-                        image.file_on_disk.open(mode="rb")
-                        content = image.file_on_disk.read()
-                        content = content.split(exercises.GRAPHIE_DELIMITER)
-                        write_to_zipfile(svg_name, content[0], zf)
-                        write_to_zipfile(json_name, content[1], zf)
+                        with open(ccmodels.generate_storage_url(str(image)), 'rb') as content:
+                            content = content.read()
+                            content = content.split(exercises.GRAPHIE_DELIMITER)
+                            write_to_zipfile(svg_name, content[0], zf)
+                            write_to_zipfile(json_name, content[1], zf)
 
             for item in ccnode.assessment_items.all().order_by('order'):
                 write_assessment_item(item, zf)
 
         finally:
             zf.close()
+
 
 def write_to_zipfile(filename, content, zf):
     info = zipfile.ZipInfo(filename, date_time=(2013, 3, 14, 1, 59, 26))
