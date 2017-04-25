@@ -204,7 +204,7 @@ def generate_thumbnail(request):
     logging.debug("Entering the generate_thumbnail endpoint")
 
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
         node = ContentNode.objects.get(pk=data["node_id"])
@@ -381,7 +381,7 @@ def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
 
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
@@ -429,7 +429,7 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
 def publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
