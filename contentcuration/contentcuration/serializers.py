@@ -230,7 +230,6 @@ class TagSerializer(serializers.ModelSerializer):
     model = ContentTag
     fields = ('tag_name', 'channel', 'id')
 
-
 class AssessmentListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
         ret = []
@@ -266,7 +265,6 @@ class AssessmentListSerializer(serializers.ListSerializer):
                 ret.append(aitem)
 
         return ret
-
 
 class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     contentnode = serializers.PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
@@ -502,7 +500,7 @@ class RootNodeSerializer(serializers.ModelSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
 
     def retrieve_metadata(self, node):
-        descendants = node.get_descendants(include_self=True).annotate(change_count=Case(When(changed=True, then=Value(1)),default=Value(0),output_field=IntegerField()))
+        descendants = node.get_descendants(include_self=True)
         return {
             "total_count" : node.get_descendant_count(),
             "resource_count" : descendants.exclude(kind_id=content_kinds.TOPIC).count(),

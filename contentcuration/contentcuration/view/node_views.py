@@ -11,7 +11,7 @@ from django.db import transaction
 from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
-from contentcuration.models import File, ContentNode, ContentTag
+from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
 
