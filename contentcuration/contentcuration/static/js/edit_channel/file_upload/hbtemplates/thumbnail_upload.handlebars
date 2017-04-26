@@ -3,7 +3,9 @@
     <div class="finished_area">
         <div class="image_options">
             <span id="{{selector}}_swap" class="image_option glyphicon glyphicon-picture" aria-hidden="true"></span>
-            <span class="image_option glyphicon glyphicon-random open_thumbnail_generator" aria-hidden="true"></span>
+            {{#if show_generate}}<span class="image_option glyphicon glyphicon-random open_thumbnail_generator" aria-hidden="true"></span>
+            {{else}}&nbsp;
+            {{/if}}
             <span class="image_option glyphicon glyphicon-remove remove_image" aria-hidden="true"></span>
         </div>
     </div>

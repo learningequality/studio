@@ -208,10 +208,15 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     file_failed:function(file, error){
         this.uploads_in_progress --;
         $(file.previewTemplate).find(".dropzone_remove").css("display", "inline-block");
+        if (this.views.length === 0) {
+            this.disable_next(this.uploads_in_progress > 0);
+        }
     },
     all_files_uploaded: function() {
         this.uploads_in_progress = 0;
-        this.enable_next();
+        if(this.views.length > 0){
+            this.enable_next();
+        }
     },
     file_added: function(file) {
         this.uploads_in_progress ++;
@@ -283,7 +288,6 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     enable_next:function(){
         this.containing_list_view.check_uploads_and_enable();
     },
-
     load_subfiles:function(){
         var data = {
             collection: this.presets,
@@ -479,6 +483,9 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     },
     set_uploading:function(uploading){
         this.content_node_view.set_uploading(uploading);
+    },
+    update_metadata:function(){
+        this.content_node_view.update_metadata();
     }
 });
 
@@ -570,6 +577,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         alert(error);
         this.render();
         this.set_uploading(false);
+        this.containing_list_view.update_metadata();
     },
     remove_item:function(){
         this.containing_list_view.set_file_format(null, this.model, this.file);
@@ -610,7 +618,8 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         if(this.allow_edit){
             this.$el.html(this.template({
                 picture : this.get_thumbnail_url(),
-                selector: this.get_selector()
+                selector: this.get_selector(),
+                show_generate: this.model.get('kind') != undefined
             }));
             _.defer(this.create_dropzone, 1);
         }else{
@@ -622,8 +631,9 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     get_thumbnail_url:function(){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
-        if(thumbnail){ return thumbnail.storage_url; }
-        else if(this.model.get('kind')) { return "/static/img/" + this.model.get("kind") + "_placeholder.png"; }
+        if(this.image_url){ return this.image_url; }
+        else if(thumbnail){ return thumbnail.storage_url; }
+        else if(this.model.get('kind') != undefined) { return "/static/img/" + this.model.get("kind") + "_placeholder.png"; }
         else{ return "/static/img/kolibri_placeholder.png"; }
     },
     remove_image: function(){
@@ -644,7 +654,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             clickable: [selector + "_placeholder", selector + "_swap"],
             acceptedFiles: this.acceptedFiles,
             url: this.upload_url,
-            previewTemplate:this.dropzone_template({src:"/static/img/" + this.model.get("kind") + "_placeholder.png"}),
+            previewTemplate:this.dropzone_template({src:"/static/img/loading_placeholder.png"}),
             previewsContainer: selector,
             headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id, "Node": this.model.id}
         });

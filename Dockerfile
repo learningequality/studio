@@ -20,4 +20,4 @@ RUN node build.js
 
 EXPOSE 8000
 
-ENTRYPOINT "make prodserver"
+ENTRYPOINT ["make", "prodserver"]

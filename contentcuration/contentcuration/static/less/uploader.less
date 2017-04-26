@@ -6,13 +6,6 @@
 	cursor:pointer;
 }
 
-.ui-autocomplete {
-	max-height: 100px;
-	overflow-y: auto;
-	/* prevent horizontal scrollbar */
-	overflow-x: hidden;
-}
-
 
 #metadata{
 	width: @metadata-width;
@@ -216,6 +209,11 @@
 		position:absolute;
 		background-color: white;
 		border: 1px solid @blue-200;
+		max-height: 100px;
+		overflow-y: auto;
+		/* prevent horizontal scrollbar */
+		overflow-x: hidden;
+		z-index:999;
 		.ui-menu {
 		    list-style:none;
 		    padding:0;
@@ -239,8 +237,8 @@
 	}
 	.view_only_tags .delete_tag{display:none;}
 	.tag{
-		background-color: lightgray;
-		border:1px solid gray;
+		background-color: @gray-300;
+		border:1px solid @gray-700;
 		margin: 3px;
 		width:auto;
 		max-width: @metadata-width / 3.2;

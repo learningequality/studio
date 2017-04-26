@@ -642,7 +642,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
             "title": (this.model.get('parent'))? this.model.get('title') + " Exercise" : "Exercise", // Avoid having exercises prefilled with 'email clipboard'
             "sort_order" : this.collection.length,
             "author": get_author(),
-            "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder
+            "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder,
+            "license_description": (window.preferences.license_description && window.preferences.license==="Special Permissions") ? window.preferences.license_description : ""
         }, {
         	success:function(new_node){
 		        var edit_collection = new Models.ContentNodeCollection([new_node]);

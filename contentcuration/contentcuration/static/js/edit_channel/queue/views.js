@@ -207,7 +207,8 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'click .edit_content' : 'edit_item',
 		'change input[type=checkbox]': 'handle_checked'
 	},
-	edit_item:function(){
+	edit_item:function(event){
+		event.stopPropagation();
 		this.open_edit(true);
 	},
 	load_subfiles:function(){

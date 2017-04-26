@@ -5,6 +5,7 @@ import os
 import re
 import hashlib
 import shutil
+import time
 import tempfile
 import random
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
@@ -25,8 +26,8 @@ from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers
 from contentcuration.utils.files import extract_thumbnail_wrapper, compress_video_wrapper,  generate_thumbnail_from_node, duplicate_file
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, FileSerializer
-from le_utils.constants import format_presets, content_kinds, file_formats, exercises
+from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, SimplifiedContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, UserChannelListSerializer, FileSerializer
+from le_utils.constants import format_presets, content_kinds, file_formats, exercises, licenses
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -36,8 +37,14 @@ from pressurecooker.encodings import write_base64_to_file
 
 def get_nodes_by_ids(request):
     if request.method == 'POST':
-        nodes = ContentNode.objects.filter(pk__in=json.loads(request.body))
+        nodes = ContentNode.objects.prefetch_related('files').prefetch_related('assessment_items')\
+                .prefetch_related('tags').prefetch_related('children').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
+
+def get_nodes_by_ids_simplified(request):
+    if request.method == 'POST':
+        nodes = ContentNode.objects.prefetch_related('children').filter(pk__in=json.loads(request.body))
+        return HttpResponse(JSONRenderer().render(SimplifiedContentNodeSerializer(nodes, many=True).data))
 
 def base(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
@@ -56,83 +63,6 @@ def unsupported_browser(request):
 def unauthorized(request):
     return render(request, 'unauthorized.html')
 
-def channel_page(request, channel, allow_edit=False):
-    channel_serializer =  ChannelSerializer(channel)
-    channel_list = Channel.objects.select_related('main_tree').exclude(id=channel.pk)\
-                            .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
-                            .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
-                            .distinct().values("id", "name", "is_view_only")
-    fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
-    licenses = get_or_set_cached_constants(License, LicenseSerializer)
-    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
-    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
-    channel_tags = ContentTag.objects.select_related('channel').filter(channel_id=channel.pk)
-    channel_tags_serializer = TagSerializer(channel_tags, many=True)
-
-    json_renderer = JSONRenderer()
-
-    return render(request, 'channel_edit.html', {"allow_edit":allow_edit,
-                                                "channel" : json_renderer.render(channel_serializer.data),
-                                                "channel_id" : channel.pk,
-                                                "channel_name": channel.name,
-                                                "channel_list" : channel_list,
-                                                "fileformat_list" : fileformats,
-                                                 "license_list" : licenses,
-                                                 "fpreset_list" : formatpresets,
-                                                 "ckinds_list" : contentkinds,
-                                                 "ctags": json_renderer.render(channel_tags_serializer.data),
-                                                 "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data),
-                                                 "preferences" : request.user.preferences,
-                                                })
-
-@login_required
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def channel_list(request):
-    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
-        return redirect(reverse_lazy('unsupported_browser'))
-
-    channel_list = Channel.objects.select_related('main_tree').filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
-                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
-
-    channel_serializer = ChannelListSerializer(channel_list, many=True)
-
-    return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
-                                                 "channel_name" : False,
-                                                 "current_user" : JSONRenderer().render(UserSerializer(request.user).data)})
-
-@login_required
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def channel(request, channel_id):
-    # Check if browser is supported
-    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
-        return redirect(reverse_lazy('unsupported_browser'))
-
-    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
-
-    # Check user has permission to view channel
-    if request.user not in channel.editors.all() and not request.user.is_admin:
-        return redirect(reverse_lazy('unauthorized'))
-
-    return channel_page(request, channel, allow_edit=True)
-
-@login_required
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def channel_view_only(request, channel_id):
-    # Check if browser is supported
-    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
-        return redirect(reverse_lazy('unsupported_browser'))
-
-    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
-
-    # Check user has permission to view channel
-    if request.user not in channel.editors.all() and request.user not in channel.viewers.all() and not request.user.is_admin:
-        return redirect(reverse_lazy('unauthorized'))
-
-    return channel_page(request, channel)
-
 def get_or_set_cached_constants(constant, serializer):
     cached_data = cache.get(constant.__name__)
     if cached_data:
@@ -143,13 +73,87 @@ def get_or_set_cached_constants(constant, serializer):
     cache.set(constant.__name__, constant_data, None)
     return constant_data
 
+def channel_page(request, channel, allow_edit=False):
+    channel_serializer =  ChannelSerializer(channel)
+    channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors').prefetch_related('viewers')\
+                            .exclude(id=channel.pk).filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
+                            .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
+                            .distinct().values("id", "name", "is_view_only")
+    fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
+    licenses = get_or_set_cached_constants(License, LicenseSerializer)
+    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
+    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
+
+    json_renderer = JSONRenderer()
+
+    return render(request, 'channel_edit.html', {"allow_edit":allow_edit,
+                                                "channel" : json_renderer.render(channel_serializer.data),
+                                                "channel_id" : channel.pk,
+                                                "channel_name": channel.name,
+                                                "channel_list" : channel_list,
+                                                "fileformat_list" : fileformats,
+                                                "license_list" : licenses,
+                                                "fpreset_list" : formatpresets,
+                                                "ckinds_list" : contentkinds,
+                                                "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data),
+                                                "preferences" : request.user.preferences,
+                                            })
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def channel_list(request):
+    if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
+        return redirect(reverse_lazy('unsupported_browser'))
+
+    channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers').filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
+                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
+
+    channel_serializer = ChannelListSerializer(channel_list, many=True)
+
+    return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
+                                                 "channel_name" : False,
+                                                 "current_user" : JSONRenderer().render(UserChannelListSerializer(request.user).data)})
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def channel(request, channel_id):
+    # Check if browser is supported
+    if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
+        return redirect(reverse_lazy('unsupported_browser'))
+
+    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
+
+    # Check user has permission to view channel
+    if not channel.editors.filter(id=request.user.id).exists() and not request.user.is_admin:
+        return redirect(reverse_lazy('unauthorized'))
+
+    return channel_page(request, channel, allow_edit=True)
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def channel_view_only(request, channel_id):
+    # Check if browser is supported
+    if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
+        return redirect(reverse_lazy('unsupported_browser'))
+
+    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
+
+    # Check user has permission to view channel
+    if not channel.editors.filter(id=request.user.id).exists() and not channel.viewers.filter(id=request.user.id).exists() and not request.user.is_admin:
+        return redirect(reverse_lazy('unauthorized'))
+
+    return channel_page(request, channel)
+
 def file_upload(request):
     if request.method == 'POST':
         preset = FormatPreset.objects.get(id=request.META.get('HTTP_PRESET'))
         #Implement logic for switching out files without saving it yet
         filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
-        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=filename, preset=preset)
+        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=request.FILES.values()[0]._name, preset=preset)
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
@@ -163,14 +167,15 @@ def file_create(request):
         size = request.FILES.values()[0]._size
         presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:])
         kind = presets.first().kind
-        original_filename = request.FILES.values()[0]._name
         preferences = json.loads(request.user.preferences)
         author = preferences.get('author') if isinstance(preferences.get('author'), basestring) else request.user.get_full_name()
         license = License.objects.filter(license_name=preferences.get('license')).first() # Use filter/first in case preference hasn't been set
         license_id = license.pk if license else settings.DEFAULT_LICENSE
-        new_node = ContentNode(title=original_filename.split(".")[0], kind=kind, license_id=license_id, author=author, copyright_holder=preferences.get('copyright_holder') )
+        new_node = ContentNode(title=original_filename, kind=kind, license_id=license_id, author=author, copyright_holder=preferences.get('copyright_holder'))
+        if license.license_name == licenses.SPECIAL_PERMISSIONS:
+            new_node.license_description = preferences.get('license_description')
         new_node.save()
-        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename = original_filename, contentnode=new_node, file_size=size)
+        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=request.FILES.values()[0]._name, contentnode=new_node, file_size=size)
         file_object.save()
         if kind.pk == content_kinds.VIDEO:
             file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))
@@ -197,7 +202,7 @@ def generate_thumbnail(request):
     logging.debug("Entering the generate_thumbnail endpoint")
 
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
         node = ContentNode.objects.get(pk=data["node_id"])
@@ -249,7 +254,7 @@ def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
 
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
@@ -261,10 +266,11 @@ def duplicate_nodes(request):
             new_nodes = []
 
             with transaction.atomic():
-                for node_data in nodes:
-                    new_node = _duplicate_node(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
-                    new_nodes.append(new_node.pk)
-                    sort_order+=1
+                with ContentNode.objects.disable_mptt_updates():
+                    for node_data in nodes:
+                        new_node = _duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
+                        new_nodes.append(new_node.pk)
+                        sort_order+=1
 
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -274,55 +280,98 @@ def duplicate_nodes(request):
             "node_ids": " ".join(new_nodes)
         }))
 
-def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
+def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
+
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
-    original_channel = node.get_original_node().get_channel() if node.get_original_node() else None
+    # keep track of the in-memory models so that we can bulk-create them at the end (for efficiency)
+    to_create = {
+        "nodes": [],
+        "node_files": [],
+        "assessment_files": [],
+        "assessments": [],
+    }
 
-    new_node = ContentNode.objects.create(
-        title=node.title,
-        description=node.description,
-        kind=node.kind,
-        license=node.license,
-        parent=ContentNode.objects.get(pk=parent) if parent else None,
-        sort_order=sort_order or node.sort_order,
-        copyright_holder=node.copyright_holder,
-        changed=True,
-        original_node=node.original_node or node,
-        cloned_source=node,
-        original_channel_id = node.original_channel_id or original_channel.id if original_channel else None,
-        source_channel_id = node.get_channel().id if node.get_channel() else None,
-        original_source_node_id = node.original_source_node_id or node.node_id,
-        source_node_id = node.node_id,
-        author=node.author,
-        content_id=node.content_id,
-        extra_fields=node.extra_fields,
-    )
+    # perform the actual recursive node cloning
+    new_node = _duplicate_node_bulk_recursive(node=node, sort_order=sort_order, parent=parent, channel_id=channel_id, to_create=to_create)
 
-    # add tags now
+    # create nodes, one level at a time, starting from the top of the tree (so that we have IDs to pass as "parent" for next level down)
+    for node_level in to_create["nodes"]:
+        for node in node_level:
+            node.parent_id = node.parent.id
+        ContentNode.objects.bulk_create(node_level)
+        for node in node_level:
+            for tag in node._meta.tags_to_add:
+                node.tags.add(tag)
+
+    # rebuild MPTT tree for this channel (since we're inside "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
+    ContentNode.objects.partial_rebuild(to_create["nodes"][0][0].tree_id)
+
+    # create each of the assessment items
+    for a in to_create["assessments"]:
+        a.contentnode_id = a.contentnode.id
+    AssessmentItem.objects.bulk_create(to_create["assessments"])
+
+    # create the file objects, for both nodes and assessment items
+    for f in to_create["node_files"]:
+        f.contentnode_id = f.contentnode.id
+    for f in to_create["assessment_files"]:
+        f.assessment_item_id = f.assessment_item.id
+    File.objects.bulk_create(to_create["node_files"] + to_create["assessment_files"])
+
+    return new_node
+
+def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0):
+
+    if isinstance(node, int) or isinstance(node, basestring):
+        node = ContentNode.objects.get(pk=node)
+
+    if isinstance(parent, int) or isinstance(parent, basestring):
+        parent = ContentNode.objects.get(pk=parent)
+
+    # clone the model (in-memory) and update the fields on the cloned model
+    new_node = copy.copy(node)
+    new_node.id = None
+    new_node.tree_id = parent.tree_id
+    new_node.parent = parent
+    new_node.sort_order = sort_order or node.sort_order
+    new_node.changed = True
+    new_node.cloned_source = node
+    new_node.source_channel_id = channel_id
+
+    # store the new unsaved model in a list, at the appropriate level, for later creation
+    while len(to_create["nodes"]) <= level:
+        to_create["nodes"].append([])
+    to_create["nodes"][level].append(new_node)
+
+    # find or create any tags that are needed, and store them under _meta on the node so we can add them to it later
+    new_node._meta.tags_to_add = []
     for tag in node.tags.all():
         new_tag, is_new = ContentTag.objects.get_or_create(
             tag_name=tag.tag_name,
             channel_id=channel_id,
         )
-        new_node.tags.add(new_tag)
+        new_node._meta.tags_to_add.append(new_tag)
 
-    # copy file object too
+    # clone the file objects for later saving
     for fobj in node.files.all():
-        duplicate_file(fobj, node=new_node)
+        f = duplicate_file(fobj, node=new_node, save=False)
+        to_create["node_files"].append(f)
 
-    # copy assessment item object too
-    for aiobj in node.assessment_items.all():
+    # copy assessment item objects, and associated files
+    for aiobj in node.assessment_items.prefetch_related("files").all():
         aiobj_copy = copy.copy(aiobj)
         aiobj_copy.id = None
         aiobj_copy.contentnode = new_node
-        aiobj_copy.save()
+        to_create["assessments"].append(aiobj_copy)
         for fobj in aiobj.files.all():
-            duplicate_file(fobj, assessment_item=aiobj_copy)
+            f = duplicate_file(fobj, assessment_item=aiobj_copy, save=False)
+            to_create["assessment_files"].append(f)
 
-    for c in node.children.all():
-        _duplicate_node(c, parent=new_node.id)
+    # recurse down the tree and clone the children
+    for child in node.children.all():
+        _duplicate_node_bulk_recursive(node=child, sort_order=None, parent=new_node, channel_id=channel_id, to_create=to_create, level=level+1)
 
     return new_node
 
@@ -330,7 +379,7 @@ def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
 
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
@@ -378,7 +427,7 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
 def publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 

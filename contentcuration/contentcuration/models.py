@@ -26,6 +26,7 @@ DEFAULT_USER_PREFERENCES = json.dumps({
     'language': None,
     'author': None,
     'copyright_holder': None,
+    'license_description': None,
     'mastery_model': exercises.NUM_CORRECT_IN_A_ROW_5,
     'm_value': 5,
     'n_value': 5,
@@ -232,10 +233,17 @@ class Channel(models.Model):
 
 
     def get_resource_size(self):
+        # TODO: Add this back in once query filters out duplicated checksums
         size = ChannelResourceSize.objects.filter(id=self.main_tree.tree_id).first()
         if size:
             return size.resource_size
         return 0
+
+        # descendants = self.main_tree.get_descendants().prefetch_related('assessment_items')
+        # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
+        #         .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
+        #         .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
+        # return size_q['resource_size'] or 0
 
     def save(self, *args, **kwargs):
         original_node = None
@@ -369,12 +377,15 @@ class ContentNode(MPTTModel, models.Model):
     objects = TreeManager()
 
     def get_original_node(self):
+
+        if self.original_node:
+            return self.original_node
+
         if self.original_channel_id and self.original_source_node_id:
             original_channel = Channel.objects.get(pk=self.original_channel_id)
             return original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first() or self
 
-        # TEMPORARY: until all nodes have proper sources set (e.g. source_node_id)
-        return self.original_node or self
+        return self
 
 
     def get_channel(self):

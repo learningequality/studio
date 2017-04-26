@@ -32,7 +32,7 @@ def create_file_from_contents(contents, ext=None, node=None, preset_id=None):
             contentnode = node
         )
 
-def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None):
+def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None, save=True):
     if not file_object:
         return None
     file_copy = copy.copy(file_object)
@@ -40,7 +40,8 @@ def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None)
     file_copy.contentnode = node
     file_copy.assessment_item = assessment_item
     file_copy.preset_id = preset_id or file_object.preset_id
-    file_copy.save()
+    if save:
+        file_copy.save()
     return file_copy
 
 def extract_thumbnail_wrapper(file_object, node=None, preset_id=None):
@@ -52,7 +53,7 @@ def extract_thumbnail_wrapper(file_object, node=None, preset_id=None):
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
 
 def compress_video_wrapper(file_object):
-    with tempfile.TemporaryFile(suffix=".{}".format(file_formats.MP4)) as tempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(file_formats.MP4)) as tempf:
         tempf.close()
         compress_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
         filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
@@ -77,7 +78,7 @@ def create_tiled_image_wrapper(files, preset_id, node=None):
     elif len(files) >= 1:
         files = files[:1]
 
-    with tempfile.TemporaryFile(suffix=".{}".format(ext)) as tempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
         tempf.close()
         create_tiled_image(files, tempf.name)
         with open(tempf.name, 'rb') as tf:

@@ -191,7 +191,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var clipboard = window.workspace_manager.get_queue_view();
     clipboard.switch_to_queue();
     clipboard.open_queue();
-    console.log(this)
     this.display_load("Copying Content...", function(load_resolve, load_reject){
       self.collection.duplicate(clipboard.clipboard_queue.model).then(function(collection){
         self.onnew(collection, "Copying Content...");
@@ -483,7 +482,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.handle_if_individual();
     if(this.shared_data){
       this.display_license_description(this.shared_data.shared_license);
-      var license_name = this.get_license((!alloriginal)? original_source_license : this.shared_data.shared_license)
+      var license_name = !alloriginal ? original_source_license : this.get_license(this.shared_data.shared_license);
       this.$("#license_detail_field").text(license_name);
       if(this.shared_data && this.shared_data.all_exercises) this.$("#mastery_detail_field").text(this.get_mastery_string());
       this.load_tags();
