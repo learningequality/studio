@@ -321,9 +321,7 @@ def map_files_to_assessment_item(question, data):
     """ Generate files that reference the content node's assessment items """
     for file_data in data:
         file_hash = file_data['filename'].split(".")
-        kind_preset = FormatPreset.objects.get(id=file_data['preset'])
-
-        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
+        file_path = generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
 
@@ -335,7 +333,7 @@ def map_files_to_assessment_item(question, data):
             source_url=file_data.get('source_url'),
             file_size = file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
-            preset=kind_preset,
+            preset_id=file_data['preset'],
         )
         file_obj.save()
 
@@ -360,4 +358,3 @@ def create_exercises(node, data):
             order += 1
             question_obj.save()
             map_files_to_assessment_item(question_obj, question['files'])
-
