@@ -115,33 +115,3 @@ def exercise_image_upload(request):
             "file_id": file_object.pk,
             "path": generate_storage_url(str(file_object)),
         }))
-
-def duplicate_nodes(request):
-    logging.debug("Entering the copy_node endpoint")
-
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-    else:
-        data = json.loads(request.body)
-
-        try:
-            nodes = data["nodes"]
-            sort_order = data.get("sort_order") or 1
-            target_parent = data["target_parent"]
-            channel_id = data["channel_id"]
-            new_nodes = []
-
-            with transaction.atomic():
-                with ContentNode.objects.disable_mptt_updates():
-                    for node_data in nodes:
-                        new_node = _duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
-                        new_nodes.append(new_node.pk)
-                        sort_order+=1
-
-        except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-        return HttpResponse(json.dumps({
-            "success": True,
-            "node_ids": " ".join(new_nodes)
-        }))

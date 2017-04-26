@@ -53,7 +53,7 @@ def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
 
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
@@ -65,17 +65,17 @@ def duplicate_nodes(request):
             new_nodes = []
 
             with transaction.atomic():
-                for node_data in nodes:
-                    new_node = _duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
-                    new_nodes.append(new_node.pk)
-                    sort_order+=1
+                with ContentNode.objects.disable_mptt_updates():
+                    for node_data in nodes:
+                        new_node = _duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
+                        new_nodes.append(new_node.pk)
+                        sort_order+=1
 
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
         serialized = ContentNodeEditSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
         return HttpResponse(JSONRenderer().render(serialized))
-
 
 def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
 
@@ -244,18 +244,19 @@ def move_nodes(request):
 
         all_ids = []
         with transaction.atomic():
-            for n in nodes:
-                min_order = min_order + float(max_order - min_order) / 2
-                node = ContentNode.objects.get(pk=n['id'])
-                _move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
-                all_ids.append(n['id'])
+            with ContentNode.objects.delay_mptt_updates():
+                for n in nodes:
+                    min_order = min_order + float(max_order - min_order) / 2
+                    node = ContentNode.objects.get(pk=n['id'])
+                    _move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
+                    all_ids.append(n['id'])
 
         serialized = ContentNodeEditSerializer(ContentNode.objects.filter(pk__in=all_ids), many=True).data
         return HttpResponse(JSONRenderer().render(serialized))
 
 def _move_node(node, parent=None, sort_order=None, channel_id=None):
-    node.parent = parent
-    node.sort_order = sort_order
+    node.parent = parent or node.parent
+    node.sort_order = sort_order or node.sort_order
     node.changed = True
     descendants = node.get_descendants(include_self=True)
     node.save()
