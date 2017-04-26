@@ -378,15 +378,11 @@ class ContentNode(MPTTModel, models.Model):
 
     def get_original_node(self):
 
-        if self.original_node:
-            return self.original_node
-
         if self.original_channel_id and self.original_source_node_id:
             original_channel = Channel.objects.get(pk=self.original_channel_id)
             return original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first() or self
 
-        return self
-
+        return self.original_node or self
 
     def get_channel(self):
         root = self.get_root()
