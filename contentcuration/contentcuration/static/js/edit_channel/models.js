@@ -300,11 +300,11 @@ var ContentNodeCollection = BaseCollection.extend({
     	var self = this;
     	return new Promise(function(resolve, reject){
     		var idlists = _.partition(ids, function(id){return force_fetch || !self.get({'id': id});});
-    		console.log(self, idlists)
     		var returnCollection = new ContentNodeCollection(self.filter(function(n){ return idlists[1].indexOf(n.id) >= 0; }))
 			fetch_nodes_by_ids(idlists[0]).then(function(fetched){
 				returnCollection.add(fetched.toJSON());
 				self.add(fetched.toJSON());
+				self.sort();
 				resolve(returnCollection);
 			});
     	});

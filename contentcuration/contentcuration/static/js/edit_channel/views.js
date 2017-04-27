@@ -503,11 +503,10 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 					});
 					collection.move(self.model, max, min).then(function(savedCollection){
 						self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
-							self.reload_ancestors(fetched);
+							self.container.handle_move(self.model, savedCollection, fetched);
 							resolve(true);
 						});
 					}).catch(function(error){
-		        		// console.log(error.responseText);
 		        		alert(error.responseText);
 		        		$(".content-list").sortable( "cancel" );
 		        		$(".content-list").sortable( "enable" );
@@ -536,6 +535,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			var new_view = self.create_new_view(entry);
 			self.$(self.list_selector).append(new_view.el);
 		});
+		this.model.set('children', this.model.get('children').concat(collection.pluck('id')));
 		this.reload_ancestors(collection, false);
 		this.handle_if_empty();
 	},
