@@ -8,6 +8,7 @@ import shutil
 import time
 import tempfile
 import random
+import uuid
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
@@ -204,7 +205,7 @@ def generate_thumbnail(request):
     logging.debug("Entering the generate_thumbnail endpoint")
 
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
         node = ContentNode.objects.get(pk=data["node_id"])
@@ -283,7 +284,6 @@ def duplicate_nodes(request):
         }))
 
 def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
-
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
@@ -310,16 +310,24 @@ def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
     # rebuild MPTT tree for this channel (since we're inside "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
     ContentNode.objects.partial_rebuild(to_create["nodes"][0][0].tree_id)
 
+    ai_node_ids = []
+
     # create each of the assessment items
     for a in to_create["assessments"]:
         a.contentnode_id = a.contentnode.id
+        ai_node_ids.append(a.contentnode_id)
     AssessmentItem.objects.bulk_create(to_create["assessments"])
+
+    # build up a mapping of contentnode/assessment_id onto assessment item IDs, so we can point files to them correctly after
+    aid_mapping = {}
+    for a in AssessmentItem.objects.filter(contentnode_id__in=ai_node_ids):
+        aid_mapping[a.contentnode_id + ":" + a.assessment_id] = a.id
 
     # create the file objects, for both nodes and assessment items
     for f in to_create["node_files"]:
         f.contentnode_id = f.contentnode.id
     for f in to_create["assessment_files"]:
-        f.assessment_item_id = f.assessment_item.id
+        f.assessment_item_id = aid_mapping[f.assessment_item.contentnode_id + ":" + f.assessment_item.assessment_id]
     File.objects.bulk_create(to_create["node_files"] + to_create["assessment_files"])
 
     return new_node
@@ -340,7 +348,9 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     new_node.sort_order = sort_order or node.sort_order
     new_node.changed = True
     new_node.cloned_source = node
-    new_node.source_channel_id = channel_id
+    new_node.source_channel_id = node.get_channel().id if node.get_channel() else None
+    new_node.node_id = uuid.uuid4().hex
+    new_node.source_node_id = node.node_id
 
     # store the new unsaved model in a list, at the appropriate level, for later creation
     while len(to_create["nodes"]) <= level:
@@ -381,7 +391,7 @@ def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
 
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
@@ -429,7 +439,7 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
 def publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
