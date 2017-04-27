@@ -46,7 +46,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 	clipboard_page:function(){
 		this.open_channel(true, true, window.current_user.get_clipboard());
 	},
-
 	open_channel: function(edit_mode_on, is_clipboard, root){
 		window.fileformats = this.fileformats ;
 		window.channels = this.channelCollection;
