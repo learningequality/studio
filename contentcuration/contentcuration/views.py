@@ -8,6 +8,7 @@ import shutil
 import time
 import tempfile
 import random
+import uuid
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
