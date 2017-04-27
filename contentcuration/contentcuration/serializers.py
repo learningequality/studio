@@ -276,7 +276,30 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
             'hints', 'raw_data', 'order', 'source_url', 'randomize', 'deleted')
         list_serializer_class = AssessmentListSerializer
 
-class ContentNodeBaseSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+
+class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    id = serializers.CharField(required=False)
+    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    metadata = serializers.SerializerMethodField('retrieve_metadata')
+
+    def retrieve_metadata(self, node):
+        if node.kind_id == content_kinds.TOPIC:
+            # descendants = node.get_descendants(include_self=True)
+            # aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
+            return {
+                "total_count" : node.get_descendant_count(),
+                "resource_count" : node.get_descendants().exclude(kind=content_kinds.TOPIC).count(),
+                # "resource_size" : (aggregated.get('resource_size') or 0) + (aggregated.get('assessment_size') or 0),
+            }
+        else:
+            # assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+            # resource_size = node.files.aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
+            return {
+                "total_count" : 1,
+                "resource_count" : 1,
+                # "resource_size" : assessment_size + resource_size,
+            }
+
     @staticmethod
     def setup_eager_loading(queryset):
         """ Perform necessary eager loading of data. """
@@ -384,48 +407,35 @@ class ContentNodeBaseSerializer(BulkSerializerMixin, serializers.ModelSerializer
     def get_node_ancestors(self,node):
         return node.get_ancestors().values_list('id', flat=True)
 
-class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
-    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    metadata = serializers.SerializerMethodField('retrieve_metadata')
-
-    def retrieve_metadata(self, node):
-        if node.kind_id == content_kinds.TOPIC:
-            # descendants = node.get_descendants(include_self=True)
-            # aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
-            return {
-                "total_count" : node.get_descendant_count(),
-                "resource_count" : node.get_descendants().exclude(kind=content_kinds.TOPIC).count(),
-                # "resource_size" : (aggregated.get('resource_size') or 0) + (aggregated.get('assessment_size') or 0),
-            }
-        else:
-            # assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
-            # resource_size = node.files.aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
-            return {
-                "total_count" : 1,
-                "resource_count" : 1,
-                # "resource_size" : assessment_size + resource_size,
-            }
-
     class Meta:
         model = ContentNode
         fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata',)
 
-class ContentNodeEditSerializer(ContentNodeBaseSerializer):
-    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    id = serializers.CharField(required=False)
-    ancestors = serializers.SerializerMethodField('get_node_ancestors')
-    metadata = serializers.SerializerMethodField('retrieve_metadata')
-    valid = serializers.SerializerMethodField('check_valid')
-    original_channel = serializers.SerializerMethodField('retrieve_original_channel')
-    associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
-    files = FileSerializer(many=True, read_only=True)
-    tags = TagSerializer(many=True)
-    assessment_items = AssessmentItemSerializer(many=True, read_only=True)
+class RootNodeSerializer(SimplifiedContentNodeSerializer):
+    channel_name = serializers.SerializerMethodField('retrieve_channel_name')
 
-    def retrieve_original_channel(self, node):
-        original = node.get_original_node()
-        channel = original.get_channel() if original else None
-        return {"id": channel.pk, "name": channel.name} if channel else None
+    def retrieve_metadata(self, node):
+        descendants = node.get_descendants(include_self=True)
+        return {
+            "total_count" : node.get_descendant_count(),
+            "resource_count" : descendants.exclude(kind_id=content_kinds.TOPIC).count(),
+            "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
+            "resource_size" : 0,
+            "has_changed_descendant" : descendants.filter(changed=True).exists()
+        }
+
+    def retrieve_channel_name(self, node):
+        channel = node.get_channel()
+        return channel.name if channel else None
+
+    class Meta:
+        model = ContentNode
+        fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'channel_name')
+
+class ContentNodeSerializer(SimplifiedContentNodeSerializer):
+    ancestors = serializers.SerializerMethodField('get_node_ancestors')
+    valid = serializers.SerializerMethodField('check_valid')
+    associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
 
     def retrieve_associated_presets(self, node):
         return node.get_associated_presets()
@@ -448,10 +458,6 @@ class ContentNodeEditSerializer(ContentNodeBaseSerializer):
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
-            # TODO: Account for files duplicated in tree
-            # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
-            #         .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
-            #         .only('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
             descendants = node.get_descendants(include_self=True)
             return {
                 "total_count" : node.get_descendant_count(),
@@ -483,9 +489,27 @@ class ContentNodeEditSerializer(ContentNodeBaseSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'copyright_holder', 'license', 'license_description','assessment_items', 'files',
+                 'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tags', 'extra_fields')
+
+class ContentNodeEditSerializer(ContentNodeSerializer):
+    original_channel = serializers.SerializerMethodField('retrieve_original_channel')
+    files = FileSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True)
+    assessment_items = AssessmentItemSerializer(many=True, read_only=True)
+
+    def retrieve_original_channel(self, node):
+        original = node.get_original_node()
+        channel = original.get_channel() if original else None
+        return {"id": channel.pk, "name": channel.name} if channel else None
+
+    class Meta:
+        list_serializer_class = CustomListSerializer
+        model = ContentNode
+        fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'copyright_holder', 'license', 'license_description','assessment_items', 'files',
                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tags', 'extra_fields', 'original_channel')
 
-class ContentNodeSerializer(ContentNodeEditSerializer):
+
+class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
@@ -493,29 +517,6 @@ class ContentNodeSerializer(ContentNodeEditSerializer):
                  'original_channel','original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id', 'source_channel_id', 'source_id', 'source_domain',
                  'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'files', 'valid', 'metadata')
 
-class RootNodeSerializer(serializers.ModelSerializer):
-    children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    id = serializers.CharField(required=False)
-    metadata = serializers.SerializerMethodField('retrieve_metadata')
-    channel_name = serializers.SerializerMethodField('retrieve_channel_name')
-
-    def retrieve_metadata(self, node):
-        descendants = node.get_descendants(include_self=True)
-        return {
-            "total_count" : node.get_descendant_count(),
-            "resource_count" : descendants.exclude(kind_id=content_kinds.TOPIC).count(),
-            "max_sort_order" : node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
-            "resource_size" : 0,
-            "has_changed_descendant" : descendants.filter(changed=True).exists()
-        }
-
-    def retrieve_channel_name(self, node):
-        channel = node.get_channel()
-        return channel.name if channel else None
-
-    class Meta:
-        model = ContentNode
-        fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'channel_name')
 
 class ChannelSerializer(serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')

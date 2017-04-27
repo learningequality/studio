@@ -43,12 +43,18 @@ def get_nodes_by_ids(request):
         nodes = ContentNode.objects.prefetch_related('children').prefetch_related('files')\
                 .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))\
                 .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
-        return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
+        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
 
 def get_nodes_by_ids_simplified(request):
     if request.method == 'POST':
         nodes = ContentNode.objects.prefetch_related('children').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(SimplifiedContentNodeSerializer(nodes, many=True).data))
+
+def get_nodes_by_ids_complete(request):
+    if request.method == 'POST':
+        nodes = ContentNode.objects.prefetch_related('children').prefetch_related('files')\
+                .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
+        return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
 
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")

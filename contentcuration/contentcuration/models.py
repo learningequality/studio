@@ -400,7 +400,7 @@ class ContentNode(MPTTModel, models.Model):
 
     def get_channel(self):
         root = self.get_root()
-        channel = root.channel_main or root.channel_trash or root.channel_language or root.channel_previous
+        channel = root.channel_main or root.channel_trash or root.channel_staging or root.channel_previous
         if channel:
             return channel.first()
         return channel

@@ -126,12 +126,11 @@ var InvitationCollection = BaseCollection.extend({
 });
 
 /**** CHANNEL AND CONTENT MODELS ****/
-function fetch_nodes_by_ids(ids){
-	var self = this;
+function fetch_nodes(ids, url){
 	return new Promise(function(resolve, reject){
         $.ajax({
         	method:"POST",
-            url: window.Urls.get_nodes_by_ids(),
+            url: url,
             data:  JSON.stringify(ids),
             error: reject,
             success: function(data) {
@@ -140,21 +139,9 @@ function fetch_nodes_by_ids(ids){
         });
 	});
 }
-function fetch_nodes_by_ids_simplified(ids){
-    var self = this;
-    return new Promise(function(resolve, reject){
-        $.ajax({
-            method:"POST",
-            url: window.Urls.get_nodes_by_ids_simplified(),
-            data:  JSON.stringify(ids),
-            error: reject,
-            success: function(data) {
-                resolve(new ContentNodeCollection(JSON.parse(data)));
-            }
-        });
-    });
+function fetch_nodes_by_ids(ids){
+	return fetch_nodes(ids, window.Urls.get_nodes_by_ids());
 }
-
 
 var ContentNodeModel = BaseModel.extend({
 	root_list:"contentnode-list",
@@ -263,11 +250,10 @@ var ContentNodeCollection = BaseCollection.extend({
 		        });
 			});
 		});
-        return promise;
 	},
 	get_descendant_ids: function(){
 		var self = this;
-    	var promise = new Promise(function(resolve, reject){
+    	return new Promise(function(resolve, reject){
 	        $.ajax({
 	        	method:"POST",
 	            url: window.Urls.get_node_descendants(),
@@ -278,11 +264,10 @@ var ContentNodeCollection = BaseCollection.extend({
 	            error:reject
 	        });
     	});
-    	return promise;
 	},
 	calculate_size: function(){
 		var self = this;
-    	var promise = new Promise(function(resolve, reject){
+    	return new Promise(function(resolve, reject){
 	        $.ajax({
 	        	method:"POST",
 	            url: window.Urls.get_total_size(),
@@ -293,30 +278,33 @@ var ContentNodeCollection = BaseCollection.extend({
 	            error:reject
 	        });
     	});
-    	return promise;
+	},
+	has_all_data: function(){
+		return this.every(function(node){
+			return _.every(node.get('files'), function(file){
+				return typeof file == 'object';
+			});
+		});
 	},
 	get_all_fetch: function(ids, force_fetch){
-		force_fetch = (force_fetch)? true : false;
-    	var self = this;
-    	return new Promise(function(resolve, reject){
-    		var idlists = _.partition(ids, function(id){return force_fetch || !self.get({'id': id});});
-    		var returnCollection = new ContentNodeCollection(self.filter(function(n){ return idlists[1].indexOf(n.id) >= 0; }))
-			fetch_nodes_by_ids(idlists[0]).then(function(fetched){
-				returnCollection.add(fetched.toJSON());
-				self.add(fetched.toJSON());
-				self.sort();
-				resolve(returnCollection);
-			});
-    	});
+    	return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids(), force_fetch);
     },
     get_all_fetch_simplified: function(ids, force_fetch){
-        force_fetch = (force_fetch)? true : false;
+    	return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids_simplified(), force_fetch);
+    },
+    fetch_nodes_by_ids_complete: function(ids, force_fetch){
+    	return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids_complete(), force_fetch);
+    },
+    get_fetch_nodes: function(ids, url, force_fetch){
+    	force_fetch = (force_fetch)? true : false;
         var self = this;
         return new Promise(function(resolve, reject){
             var idlists = _.partition(ids, function(id){return force_fetch || !self.get({'id': id});});
             var returnCollection = new ContentNodeCollection(self.filter(function(n){ return idlists[1].indexOf(n.id) >= 0; }))
-            fetch_nodes_by_ids_simplified(idlists[0]).then(function(fetched){
+            fetch_nodes(idlists[0], url).then(function(fetched){
                 returnCollection.add(fetched.toJSON());
+                self.add(fetched.toJSON());
+				self.sort();
                 resolve(returnCollection);
             });
         });
@@ -330,7 +318,7 @@ var ContentNodeCollection = BaseCollection.extend({
     },
     duplicate:function(target_parent){
     	var self = this;
-    	var promise = new Promise(function(resolve, reject){
+    	return new Promise(function(resolve, reject){
 			var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
 	        var parent_id = target_parent.get("id");
 
@@ -349,7 +337,6 @@ var ContentNodeCollection = BaseCollection.extend({
 	            error:reject
 	        });
     	});
-    	return promise;
     },
     move:function(target_parent, max_order, min_order){
     	var self = this;
