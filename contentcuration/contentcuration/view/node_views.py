@@ -2,6 +2,7 @@ import copy
 import json
 import logging
 import os
+import uuid
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
@@ -135,7 +136,9 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     new_node.sort_order = sort_order or node.sort_order
     new_node.changed = True
     new_node.cloned_source = node
-    new_node.source_channel_id = channel_id
+    new_node.source_channel_id = node.get_channel().id if node.get_channel() else None
+    new_node.node_id = uuid.uuid4().hex
+    new_node.source_node_id = node.node_id
 
     # store the new unsaved model in a list, at the appropriate level, for later creation
     while len(to_create["nodes"]) <= level:
