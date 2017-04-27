@@ -101,7 +101,7 @@
 				<p class="message-invitation-instructions">{% blocktrans %}Click here to activate your account.</p>
 				<p class="message-invitation-instructions">This link is valid for <strong>{{ expiration_days }} days</strong>.{% endblocktrans %}</p>
 				<p class="message-link">
-					<a href="http://{{ site.domain }}{% url 'registration_activate' activation_key %}"  class="accept-btn">ACTIVATE</a>
+					<a href="{{ domain }}{% url 'registration_activate' activation_key %}"  class="accept-btn">ACTIVATE</a>
 				</p>
 				<p></p>
 			</div>

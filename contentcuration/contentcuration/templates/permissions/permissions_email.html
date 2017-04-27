@@ -104,12 +104,12 @@
 				<p class="message-invitation-instructions">Click one of the following links to either accept or decline your invitation:</p>
 				<p>
 					{% if is_new %}
-					<a href="http://{{ site.domain }}{% url 'accept_invitation_and_registration' user.id invitation_key %}"  class="accept-btn">ACCEPT</a>
+					<a href="{{ domain }}{% url 'accept_invitation_and_registration' user.id invitation_key %}"  class="accept-btn">ACCEPT</a>
 					{% else %}
-					<a href="http://{{ site.domain }}{% url 'accept_invitation' invitation_key %}" class="accept-btn">ACCEPT</a>
+					<a href="{{ domain }}{% url 'accept_invitation' invitation_key %}" class="accept-btn">ACCEPT</a>
 					{% endif %}
 
-					<a href="http://{{ site.domain }}{% url 'decline_invitation' invitation_key %}" class="reject-btn">DECLINE</a>
+					<a href="{{ domain }}{% url 'decline_invitation' invitation_key %}" class="reject-btn">DECLINE</a>
 				</p>
 			</div>
 		</div>
