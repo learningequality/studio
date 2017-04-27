@@ -65,7 +65,7 @@ class ContentKindViewSet(viewsets.ModelViewSet):
 
 class ContentNodeViewSet(BulkModelViewSet):
     queryset = ContentNode.objects.all()
-    serializer_class = serializers.ContentNodeCompleteSerializer
+    serializer_class = serializers.ContentNodeSerializer
 
     def get_queryset(self):
         queryset = ContentNode.objects.all()
