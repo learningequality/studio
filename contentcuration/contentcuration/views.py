@@ -310,16 +310,24 @@ def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
     # rebuild MPTT tree for this channel (since we're inside "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
     ContentNode.objects.partial_rebuild(to_create["nodes"][0][0].tree_id)
 
+    ai_node_ids = []
+
     # create each of the assessment items
     for a in to_create["assessments"]:
         a.contentnode_id = a.contentnode.id
+        ai_node_ids.append(a.contentnode_id)
     AssessmentItem.objects.bulk_create(to_create["assessments"])
+
+    # build up a mapping of contentnode/assessment_id onto assessment item IDs, so we can point files to them correctly after
+    aid_mapping = {}
+    for a in AssessmentItem.objects.filter(contentnode_id__in=ai_node_ids):
+        aid_mapping[a.contentnode_id + ":" + a.assessment_id] = a.id
 
     # create the file objects, for both nodes and assessment items
     for f in to_create["node_files"]:
         f.contentnode_id = f.contentnode.id
     for f in to_create["assessment_files"]:
-        f.assessment_item_id = f.assessment_item.id
+        f.assessment_item_id = aid_mapping[f.assessment_item.contentnode_id + ":" + f.assessment_item.assessment_id]
     File.objects.bulk_create(to_create["node_files"] + to_create["assessment_files"])
 
     return new_node
