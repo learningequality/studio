@@ -237,9 +237,9 @@ def convert_data_to_nodes(content_data, parent_node):
     """ Parse dict and create nodes accordingly """
     try:
         root_mapping = {}
-        sort_order = 1
-        parent = ContentNode.objects.get(pk=parent_node)
+        sort_order = ContentNode.objects.get(pk=parent_node).children.count() + 1
         existing_node_ids = parent.children.values_list('node_id', flat=True) if parent else []
+        existing_node_ids = ContentNode.objects.filter(parent_id=parent_node).values_list('node_id', flat=True)
 
         with transaction.atomic():
             for node_data in content_data:

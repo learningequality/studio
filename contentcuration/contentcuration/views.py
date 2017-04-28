@@ -80,7 +80,7 @@ def channel_page(request, channel, allow_edit=False):
     channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors').prefetch_related('viewers')\
                             .exclude(id=channel.pk).filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
                             .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
-                            .distinct().values("id", "name", "is_view_only")
+                            .distinct().values("id", "name", "is_view_only").order_by('name')
 
     fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
@@ -355,7 +355,8 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     # There might be some legacy nodes that don't have these, so ensure they are added
     if not new_node.original_channel_id or not new_node.original_source_node_id:
         original_node = node.get_original_node()
-        new_node.original_channel_id = original_node.get_channel().id if original_node.get_channel() else None
+        original_channel = original_node.get_channel()
+        new_node.original_channel_id = original_channel.id if original_channel else None
         new_node.original_source_node_id = original_node.node_id
 
     # store the new unsaved model in a list, at the appropriate level, for later creation
