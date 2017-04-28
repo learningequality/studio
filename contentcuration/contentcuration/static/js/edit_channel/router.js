@@ -59,7 +59,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
 			collection: this.nodeCollection,
-			edit: edit_mode_on,
+			edit: edit_mode_on && !window.current_channel.get('ricecooker_version'),
 			model : root,
 			is_clipboard : is_clipboard,
 		});
