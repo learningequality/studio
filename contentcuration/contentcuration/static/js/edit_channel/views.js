@@ -200,9 +200,6 @@ var BaseWorkspaceView = BaseView.extend({
 		});
 	},
 	handle_move:function(target, moved, original_parents){
-		// Recalculate counts
-		this.reload_ancestors(original_parents, true);
-
 		// Remove where nodes originally were
 		moved.forEach(function(node){ window.workspace_manager.remove(node.id)});
 
@@ -210,6 +207,9 @@ var BaseWorkspaceView = BaseView.extend({
 		var content = window.workspace_manager.get(target.id);
 		if(content && content.list)
 			content.list.add_nodes(moved);
+
+		// Recalculate counts
+		this.reload_ancestors(original_parents, true);
 	}
 });
 
@@ -503,11 +503,10 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 					});
 					collection.move(self.model, max, min).then(function(savedCollection){
 						self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
-							self.reload_ancestors(fetched);
+							self.container.handle_move(self.model, savedCollection, fetched);
 							resolve(true);
 						});
 					}).catch(function(error){
-		        		// console.log(error.responseText);
 		        		alert(error.responseText);
 		        		$(".content-list").sortable( "cancel" );
 		        		$(".content-list").sortable( "enable" );
@@ -536,6 +535,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			var new_view = self.create_new_view(entry);
 			self.$(self.list_selector).append(new_view.el);
 		});
+		this.model.set('children', this.model.get('children').concat(collection.pluck('id')));
 		this.reload_ancestors(collection, false);
 		this.handle_if_empty();
 	},
@@ -545,7 +545,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		var new_topic = this.collection.create({
             "kind":"topic",
             "title": "Topic",
-            "sort_order" : this.collection.length,
             "author": get_author(),
         }, {
         	success:function(new_topic){
@@ -605,7 +604,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		var new_exercise = this.collection.create({
             "kind":"exercise",
             "title": (this.model.get('parent'))? this.model.get('title') + " Exercise" : "Exercise", // Avoid having exercises prefilled with 'email clipboard'
-            "sort_order" : this.collection.length,
             "author": get_author(),
             "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder,
             "license_description": (window.preferences.license_description && window.preferences.license==="Special Permissions") ? window.preferences.license_description : ""
