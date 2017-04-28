@@ -2,6 +2,13 @@
 
 *Briefly describe the issue and please DELETE the non applicable headings below. *
 
+## Cateogry
+
+- [x] Bug
+- [ ] Enhancement
+- [ ] Question
+- [ ] Other (describe)
+
 ## Usage Details
 
 *Please give details in how were you using the Content Curation Server.*
