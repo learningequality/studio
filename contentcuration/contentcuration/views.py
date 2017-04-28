@@ -352,6 +352,12 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     new_node.node_id = uuid.uuid4().hex
     new_node.source_node_id = node.node_id
 
+    # There might be some legacy nodes that don't have these, so ensure they are added
+    if not new_node.original_channel_id or not new_node.original_source_node_id:
+        original_node = node.get_original_node()
+        new_node.original_channel_id = original_node.get_channel().id if original_node.get_channel() else None
+        new_node.original_source_node_id = original_node.node_id
+
     # store the new unsaved model in a list, at the appropriate level, for later creation
     while len(to_create["nodes"]) <= level:
         to_create["nodes"].append([])
