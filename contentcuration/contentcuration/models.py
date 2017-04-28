@@ -405,6 +405,7 @@ class ContentNode(MPTTModel, models.Model):
         if self.cloned_source is None:
             self.cloned_source = self
             post_save_changes = True
+
         if self.original_channel_id is None and self.get_channel():
             self.original_channel_id = self.get_channel().id
             post_save_changes = True
