@@ -4,10 +4,10 @@
 
 ## Cateogry
 
-[x] Bug
-[] Enhancement
-[] Question
-[] Other (describe)
+- [x] Bug
+- [ ] Enhancement
+- [ ] Question
+- [ ] Other (describe)
 
 
 ## System information
