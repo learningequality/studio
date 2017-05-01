@@ -75,7 +75,7 @@ def duplicate_nodes(request):
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        serialized = ContentNodeEditSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
+        serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
         return HttpResponse(JSONRenderer().render(serialized))
 
 def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
@@ -146,6 +146,13 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     new_node.source_channel_id = node.get_channel().id if node.get_channel() else None
     new_node.node_id = uuid.uuid4().hex
     new_node.source_node_id = node.node_id
+
+    # There might be some legacy nodes that don't have these, so ensure they are added
+    if not new_node.original_channel_id or not new_node.original_source_node_id:
+        original_node = node.get_original_node()
+        original_channel = original_node.get_channel()
+        new_node.original_channel_id = original_channel.id if original_channel else None
+        new_node.original_source_node_id = original_node.node_id
 
     # store the new unsaved model in a list, at the appropriate level, for later creation
     while len(to_create["nodes"]) <= level:
@@ -238,7 +245,7 @@ def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
 
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
 
@@ -250,7 +257,7 @@ def move_nodes(request):
             max_order = data.get("max_order") or min_order + len(nodes)
 
         except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+            return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
         all_ids = []
         with transaction.atomic():
@@ -261,7 +268,7 @@ def move_nodes(request):
                     _move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
                     all_ids.append(n['id'])
 
-        serialized = ContentNodeEditSerializer(ContentNode.objects.filter(pk__in=all_ids), many=True).data
+        serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=all_ids), many=True).data
         return HttpResponse(JSONRenderer().render(serialized))
 
 def _move_node(node, parent=None, sort_order=None, channel_id=None):

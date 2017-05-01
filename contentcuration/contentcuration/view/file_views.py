@@ -68,7 +68,7 @@ def generate_thumbnail(request):
     logging.debug("Entering the generate_thumbnail endpoint")
 
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     else:
         data = json.loads(request.body)
         node = ContentNode.objects.get(pk=data["node_id"])
