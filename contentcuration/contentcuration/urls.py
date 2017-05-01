@@ -127,7 +127,6 @@ urlpatterns += [
     url(r'^api/get_total_size$', node_views.get_total_size, name='get_total_size'),
     url(r'^api/duplicate_nodes/$', node_views.duplicate_nodes, name='duplicate_nodes'),
     url(r'^api/move_nodes/$', node_views.move_nodes, name='move_nodes'),
-    url(r'^api/get_node_descendants/$', node_views.get_node_descendants, name='get_node_descendants'),
     url(r'^api/get_nodes_by_ids_simplified$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
 ]
 

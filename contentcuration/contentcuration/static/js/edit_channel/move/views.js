@@ -34,8 +34,8 @@ var MoveView = BaseViews.BaseListView.extend({
         this.onmove = options.onmove;
         this.collection = options.collection;
 
-        // Calculate valid moves using node descendants
-        this.to_move_ids = _.uniq(this.collection.reduce(function(l,n){ return l.concat(n.get('descendants')).concat(n.id);}, []));
+        // Calculate valid moves
+        this.to_move_ids = this.collection.pluck('id');
         this.render();
     },
     events: {
