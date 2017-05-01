@@ -4,7 +4,7 @@
 
 ## Cateogry
 
-Select one: BUG/ENHANCEMENT/QUESTION/OTHER (if OTHER, describe)
+Select one: BUG | ENHANCEMENT | QUESTION | OTHER (describe)
 
 ## Usage Details
 
