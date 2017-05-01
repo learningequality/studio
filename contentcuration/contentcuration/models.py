@@ -400,10 +400,7 @@ class ContentNode(MPTTModel, models.Model):
 
     def get_channel(self):
         root = self.get_root()
-        channel = root.channel_main or root.channel_trash or root.channel_staging or root.channel_previous
-        if channel:
-            return channel.first()
-        return channel
+        return root.channel_main.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
 
     def save(self, *args, **kwargs):
         # Detect if node has been moved to another tree
