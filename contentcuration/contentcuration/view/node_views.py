@@ -31,13 +31,6 @@ def delete_nodes(request):
         nodes = ContentNode.objects.filter(pk__in=data['nodes']).delete()
         return HttpResponse({'success':True})
 
-def get_node_descendants(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        nodes = ContentNode.objects.filter(pk__in=data).get_descendants(include_self=True).values_list('id', flat=True)
-        return HttpResponse(json.dumps({'success':True, "node_ids": " ".join(nodes)}))
-
-
 def get_nodes_by_ids(request):
     if request.method == 'POST':
         nodes = ContentNode.objects.prefetch_related('children').prefetch_related('files')\

@@ -251,20 +251,6 @@ var ContentNodeCollection = BaseCollection.extend({
 			});
 		});
 	},
-	get_descendant_ids: function(){
-		var self = this;
-    	return new Promise(function(resolve, reject){
-	        $.ajax({
-	        	method:"POST",
-	            url: window.Urls.get_node_descendants(),
-	            data:  JSON.stringify(self.pluck('id')),
-	            success: function(data) {
-	                resolve(JSON.parse(data).node_ids.split(" "));
-	            },
-	            error:reject
-	        });
-    	});
-	},
 	calculate_size: function(){
 		var self = this;
     	return new Promise(function(resolve, reject){
