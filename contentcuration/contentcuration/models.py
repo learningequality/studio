@@ -378,15 +378,10 @@ class ContentNode(MPTTModel, models.Model):
     objects = TreeManager()
 
     def get_original_node(self):
-        key = "original_channel_{}".format(self.original_source_node_id or self.pk)
-        cached_data = cache.get(key)
-        if cached_data:
-            return cached_data
         original_node = self.original_node or self
         if self.original_channel_id and self.original_source_node_id:
             original_channel = Channel.objects.get(pk=self.original_channel_id)
             original_node = original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first() or self
-        cache.set(key, original_node, None)
         return original_node
 
     def get_associated_presets(self):
