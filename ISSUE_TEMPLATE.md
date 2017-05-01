@@ -4,10 +4,7 @@
 
 ## Cateogry
 
-- [x] Bug
-- [ ] Enhancement
-- [ ] Question
-- [ ] Other (describe)
+* Select one: BUG/ENHANCEMENT/QUESTION/OTHER (describe) *
 
 ## Usage Details
 
