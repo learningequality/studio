@@ -535,7 +535,7 @@ class ChannelSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
 
     def get_date_created(self, channel):
-        return channel.main_tree.created
+        return channel.main_tree.created.strftime("%X %x")
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
