@@ -35,7 +35,7 @@ var MoveView = BaseViews.BaseListView.extend({
         this.collection = options.collection;
 
         // Calculate valid moves using node descendants
-        this.to_move_ids = _.uniq(this.collection.reduce(function(l,n){ return l.concat(n.get('descendants')).concat(n.id);}, []));
+        this.to_move_ids = this.collection.pluck('id');
         this.render();
     },
     events: {
@@ -176,15 +176,16 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
             node:this.model.toJSON(),
             isfolder: this.model.get("kind") === "topic",
             is_target:this.is_target,
-            has_descendants: (this.is_target)? has_descendants : this.model.get("children").length
+            has_descendants: (this.is_target)? has_descendants : this.model.get("children").length,
+            is_disabled: this.is_target && (_.contains(this.container.to_move_ids, this.model.id))
         }));
     },
     load_subfiles:function(){
         var self = this;
-        var filter_ids = this.container.to_move_ids
+        var filter_ids = this.container.to_move_ids;
         this.collection.get_all_fetch(this.model.get('children')).then(function(fetched){
             var nodes = fetched.filter(function(n) {
-                return !self.is_target || (n.get('kind') === 'topic' && !_.contains(filter_ids, n.id));
+                return !self.is_target || (n.get('kind') === 'topic');
             });
             self.subcontent_view = new MoveList({
                 model: self.model,
