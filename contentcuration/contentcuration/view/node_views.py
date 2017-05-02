@@ -188,58 +188,6 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
 
     return new_node
 
-def _duplicate_node(node, sort_order=None, parent=None, channel_id=None):
-    if isinstance(node, int) or isinstance(node, basestring):
-        node = ContentNode.objects.get(pk=node)
-
-    original_channel = node.get_original_node().get_channel() if node.get_original_node() else None
-
-    new_node = ContentNode.objects.create(
-        title=node.title,
-        description=node.description,
-        kind=node.kind,
-        license=node.license,
-        parent=ContentNode.objects.get(pk=parent) if parent else None,
-        sort_order=sort_order or node.sort_order,
-        copyright_holder=node.copyright_holder,
-        changed=True,
-        original_node=node.original_node or node,
-        cloned_source=node,
-        original_channel_id = node.original_channel_id or original_channel.id if original_channel else None,
-        source_channel_id = node.get_channel().id if node.get_channel() else None,
-        original_source_node_id = node.original_source_node_id or node.node_id,
-        source_node_id = node.node_id,
-        author=node.author,
-        content_id=node.content_id,
-        extra_fields=node.extra_fields,
-    )
-
-    # add tags now
-    for tag in node.tags.all():
-        new_tag, is_new = ContentTag.objects.get_or_create(
-            tag_name=tag.tag_name,
-            channel_id=channel_id,
-        )
-        new_node.tags.add(new_tag)
-
-    # copy file object too
-    for fobj in node.files.all():
-        duplicate_file(fobj, node=new_node)
-
-    # copy assessment item object too
-    for aiobj in node.assessment_items.all():
-        aiobj_copy = copy.copy(aiobj)
-        aiobj_copy.id = None
-        aiobj_copy.contentnode = new_node
-        aiobj_copy.save()
-        for fobj in aiobj.files.all():
-            duplicate_file(fobj, assessment_item=aiobj_copy)
-
-    for c in node.children.all():
-        _duplicate_node(c, parent=new_node.id)
-
-    return new_node
-
 def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
 

@@ -380,8 +380,8 @@ class ContentNode(MPTTModel, models.Model):
     def get_original_node(self):
         original_node = self.original_node or self
         if self.original_channel_id and self.original_source_node_id:
-            original_channel = Channel.objects.get(pk=self.original_channel_id)
-            original_node = original_channel.main_tree.get_descendants().filter(node_id=self.original_source_node_id).first() or self
+            original_channel = Channel.objects.get(pk=self.original_channel_id).prefetch_related("main_tree")
+            original_node = ContentNode.objects.filter(tree_id=original_channel.main_tree.tree_id, node_id=self.original_source_node_id).first() or self
         return original_node
 
     def get_associated_presets(self):
