@@ -15,28 +15,33 @@
 		</p>
 	</div> -->
 	<div id="editor_list_area">
-		<h4>People who can access this channel</h4>
+		<h4>Invite people to this channel</h4>
 		<div id="share_email">
 			<p id="share_error"></p>
+			<p id="share_success"></p>
 			<input type="text" placeholder="Enter email address..." id="share_email_address">
-			<select id="share_mode">
+			<select id="share_mode" {{#if single_share_option}}title="You can only grant {{share_modes.0.share_mode}} access" class="disabled" disabled{{/if}}>
 				{{#each share_modes}}<option value="{{share_mode}}">{{text}}</option>{{/each}}
 			</select>
 			<input type="submit" class="action-button" value="Invite" id="share_invite_button">
 		</div>
-		<div id="editor_list_wrapper">
-			<ul class="list-unstyled">
-				<li id="share_item_{{user.id}}" class="share_list_item">
-					<span class="editor_name truncate" title="{{user.first_name}} {{user.last_name}}">
-						{{user.first_name}} {{user.last_name}}
-					</span>
-					<span class="editor_email">&nbsp;({{user.email}})</span>
-					<div class="pull-right"><span class="pending_indicator"><strong>You</strong></span></div>
-				</li>
-			</ul>
-			<div id="current_list_wrapper"><em>Loading editor list...</em></div>
-			<div id="pending_list_wrapper"></div>
-		</div>
+		{{#if show_list}}
+			<hr/>
+			<h4>People who can access this channel</h4>
+			<div id="editor_list_wrapper">
+				<ul class="list-unstyled">
+					<li id="share_item_{{user.id}}" class="share_list_item">
+						<span class="editor_name truncate" title="{{user.first_name}} {{user.last_name}}">
+							{{user.first_name}} {{user.last_name}}
+						</span>
+						<span class="editor_email">&nbsp;({{user.email}})</span>
+						<div class="pull-right"><span class="pending_indicator"><strong>You</strong></span></div>
+					</li>
+				</ul>
+				<div id="current_list_wrapper"><em>Loading editor list...</em></div>
+				<div id="pending_list_wrapper"></div>
+			</div>
+		{{/if}}
 	</div>
 	<br/>
 	<div id="share_bottom_container">
