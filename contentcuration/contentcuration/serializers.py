@@ -627,6 +627,12 @@ class UserChannelListSerializer(serializers.ModelSerializer):
         fields = ('email', 'first_name', 'last_name', 'id')
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    channel_name = serializers.SerializerMethodField('retrieve_channel_name')
+    sender = UserSerializer(read_only=True)
+
+    def retrieve_channel_name(self, invitation):
+        return invitation.channel.name
+
     class Meta:
         model = Invitation
-        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode')
+        fields = ('id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')

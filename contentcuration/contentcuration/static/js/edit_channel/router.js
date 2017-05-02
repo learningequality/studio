@@ -31,7 +31,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 
 	navigate_channel_home: function() {
 		var ChannelManageView = require("edit_channel/new_channel/views");
-		var channel_manager_view = new ChannelManageView.ChannelList ({
+		var channel_manager_view = new ChannelManageView.ChannelListPage ({
 			el: $("#channel-container"),
 			collection: this.channelCollection
 		});

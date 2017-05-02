@@ -99,6 +99,33 @@ var UserModel = BaseModel.extend({
     },
     get_full_name: function(){
     	return this.get('first_name') + " " + this.get('last_name');
+    },
+    get_channels: function(){
+    	var self = this;
+	    return new Promise(function(resolve, reject){
+	        $.ajax({
+	            method:"GET",
+	            url: window.Urls.get_user_channels(),
+	            error: reject,
+	            success: function(data) {
+	            	resolve(new ChannelCollection(JSON.parse(data)));
+	            }
+	        });
+	    });
+    },
+    get_pending_invites: function(){
+    	var self = this;
+	    return new Promise(function(resolve, reject){
+	        $.ajax({
+	            method:"GET",
+	            url: window.Urls.get_user_pending_channels(),
+	            error: reject,
+	            success: function(data) {
+	            	console.log(JSON.parse(data));
+	            	resolve(new InvitationCollection(data.channels));
+	            }
+	        });
+	    });
     }
 });
 
