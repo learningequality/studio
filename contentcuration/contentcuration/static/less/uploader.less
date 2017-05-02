@@ -15,6 +15,7 @@
 		width: @metadata-width * 0.28;
 		margin-right:10px;
 	}
+	.tab_button{ display:none; }
 	#uploader_select_all{
 		margin-left:20px;
 		*{ cursor:pointer; }
@@ -53,6 +54,13 @@
 		padding: 10px 0;
 		margin-bottom: 30px;
 		overflow:hidden;
+		#metadata_placeholder{
+			min-height: 300px;
+			padding-top: 15%;
+		    font-size: 14pt;
+		    font-weight: bold;
+		    color: @gray-400;
+		}
 		.file_editor_row{ margin:0px; }
 		#title_error{ display:none; }
 		h4 {

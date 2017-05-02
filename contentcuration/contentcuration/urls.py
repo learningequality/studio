@@ -65,7 +65,7 @@ class ContentKindViewSet(viewsets.ModelViewSet):
 
 class ContentNodeViewSet(BulkModelViewSet):
     queryset = ContentNode.objects.all()
-    serializer_class = serializers.ContentNodeSerializer
+    serializer_class = serializers.ContentNodeCompleteSerializer
 
     def get_queryset(self):
         queryset = ContentNode.objects.all()
@@ -128,6 +128,7 @@ urlpatterns += [
     url(r'^api/duplicate_nodes/$', node_views.duplicate_nodes, name='duplicate_nodes'),
     url(r'^api/move_nodes/$', node_views.move_nodes, name='move_nodes'),
     url(r'^api/get_nodes_by_ids_simplified$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
+    url(r'^api/get_nodes_by_ids_complete$', node_views.get_nodes_by_ids_complete, name='get_nodes_by_ids_complete'),
 ]
 
 # Add file api enpoints

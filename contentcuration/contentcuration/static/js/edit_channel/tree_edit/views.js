@@ -297,8 +297,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			checked: this.checked,
 			isexercise: this.model.get("kind") === "exercise",
 			description_first: description[0],
-			description_overflow: description[1],
-			num_questions: _.where(this.model.get('assessment_items'), {'deleted': false}).length
+			description_overflow: description[1]
 		}));
 		this.handle_checked();
 		if(this.isSelected){
