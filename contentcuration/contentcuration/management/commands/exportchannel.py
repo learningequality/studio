@@ -219,14 +219,14 @@ def create_perseus_exercise(ccnode, kolibrinode):
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
 def process_assessment_metadata(ccnode, kolibrinode):
-    # Get mastery model information, set to default if none provided
+        # Get mastery model information, set to default if none provided
     assessment_items = ccnode.assessment_items.all().order_by('order')
-    exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
-    exercise_data = {} if exercise_data is None else exercise_data
+    exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, basestring) else {}
 
     mastery_model = {'type' : exercise_data.get('mastery_model') or exercises.M_OF_N}
     randomize = exercise_data.get('randomize') or True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
+
 
     if mastery_model['type'] == exercises.M_OF_N:
         mastery_model.update({'n':exercise_data.get('n') or min(5, assessment_items.count()) or 1})
