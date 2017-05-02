@@ -325,8 +325,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 });
 
 var PendingChannelList  = BaseViews.BaseEditableListView.extend({
-	template: require("./hbtemplates/channel_list_current.handlebars"),
-	list_selector: "#channel_list_current",
+	template: require("./hbtemplates/channel_list_pending.handlebars"),
+	list_selector: "#channel_list_pending",
 	default_item: ".default-item",
 
 	initialize: function(options) {
@@ -365,6 +365,7 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		this.listenTo(this.model, "sync", this.render);
 		this.containing_list_view = options.containing_list_view;
 		this.render();
+		console.log(this.model.toJSON());
 	},
 	render: function() {
 		this.$el.html(this.template({invitation: this.model.toJSON()}));

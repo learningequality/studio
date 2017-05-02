@@ -121,8 +121,7 @@ var UserModel = BaseModel.extend({
 	            url: window.Urls.get_user_pending_channels(),
 	            error: reject,
 	            success: function(data) {
-	            	console.log(JSON.parse(data));
-	            	resolve(new InvitationCollection(data.channels));
+	            	resolve(new InvitationCollection(JSON.parse(data)));
 	            }
 	        });
 	    });
