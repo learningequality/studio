@@ -69,7 +69,6 @@ var MoveView = BaseViews.BaseListView.extend({
         clipboard_node.set({'title': 'My Clipboard'});
         fetched.add(clipboard_node);
 
-        // Render list
         this.targetList = new MoveList({
             model: null,
             el: $("#target_list_area"),

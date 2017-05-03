@@ -25,8 +25,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         });
 
         var self = this;
-        this.retrieve_nodes(this.model.get('children')).then(function(collection){
-            var size = collection.reduce(function(size, node){ return size + node.get('metadata').resource_size; }, 0);
+        this.model.calculate_size().then(function(size){
             self.$("#export_size").text("(" + stringHelper.format_size(size) + ")");
         });
     },
@@ -62,7 +61,7 @@ var ExportListView = BaseViews.BaseListView.extend({
         this.$el.html(this.template({id: this.model.get("id")}));
         var self = this;
         this.fetch_model(this.model).then(function(fetched){
-            self.collection.get_all_fetch(fetched.get("children")).then(function(fetchedCollection){
+            self.collection.get_all_fetch_simplified(fetched.get("children")).then(function(fetchedCollection){
                 self.load_content(fetchedCollection);
             });
         })

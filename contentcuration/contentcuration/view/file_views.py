@@ -10,7 +10,7 @@ from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage
 from contentcuration.utils.files import generate_thumbnail_from_node
 from contentcuration.models import File, FormatPreset, ContentNode, License, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import FileSerializer, ContentNodeSerializer
+from contentcuration.serializers import FileSerializer, ContentNodeEditSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, exercises, licenses
 from pressurecooker.videos import guess_video_preset_by_resolution
 
@@ -61,7 +61,7 @@ def file_create(request):
 
         return HttpResponse(json.dumps({
             "success": True,
-            "node": JSONRenderer().render(ContentNodeSerializer(new_node).data)
+            "node": JSONRenderer().render(ContentNodeEditSerializer(new_node).data)
         }))
 
 def generate_thumbnail(request):
