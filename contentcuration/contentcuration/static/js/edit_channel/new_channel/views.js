@@ -339,7 +339,7 @@ var PendingChannelList  = BaseViews.BaseEditableListView.extend({
 		var self = this;
 		window.current_user.get_pending_invites().then(function(invitations){
 			self.collection.reset(invitations.toJSON());
-			self.load_content();
+			self.load_content(self.collection, " ");
 		});
 	},
 	create_new_view:function(data){
@@ -357,7 +357,7 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 	id: function(){
 		return (this.model)? this.model.get("id") : "new";
 	},
-	className:"channel_container container",
+	className:"pending_container row",
 	template: require("./hbtemplates/channel_item_pending.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
@@ -378,7 +378,9 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		console.log("ACCEPTING");
 	},
 	decline: function(){
-		console.log("REJECTING");
+		if(confirm("Are you sure you want to decline this invitation?")){
+			console.log("REJECTING");
+		}
 	}
 });
 
