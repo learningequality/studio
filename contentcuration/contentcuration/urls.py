@@ -120,6 +120,7 @@ urlpatterns = [
     url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
     url(r'^get_user_channels/$', views.get_user_channels, name='get_user_channels'),
     url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
+    url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
     url(r'^healthz$', views.health, name='health'),
 ]
 

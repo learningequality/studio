@@ -176,7 +176,7 @@ def batch_add_tags(request):
 
 
 def add_editor_to_channel(invitation):
-    if invitation.share_mode == "view":
+    if invitation.share_mode == models.VIEW_ACCESS:
         if invitation.invited in invitation.channel.editors.all():
             invitation.channel.editors.remove(invitation.invited)
         invitation.channel.viewers.add(invitation.invited)

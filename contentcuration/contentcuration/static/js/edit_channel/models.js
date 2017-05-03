@@ -142,6 +142,26 @@ var InvitationModel = BaseModel.extend({
     },
     resend_invitation_email:function(channel){
     	return mail_helper.send_mail(channel, this.get("email"), this.get("share_mode"));
+    },
+    accept_invitation:function(){
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.accept_channel_invite(),
+	            data:  JSON.stringify({ "invitation_id" : self.id }),
+	            error: reject,
+	            success: function(data){
+	            	resolve(new ChannelModel(JSON.parse(data)));
+	            }
+	        });
+		});
+    },
+    decline_invitation:function(){
+    	var self = this;
+    	return new Promise(function(resolve, reject){
+    		self.destroy({ success: resolve, error: reject });
+	    });
     }
 });
 

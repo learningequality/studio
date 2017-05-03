@@ -22,6 +22,9 @@ from django.template.loader import render_to_string
 from rest_framework.authtoken.models import Token
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
+EDIT_ACCESS = "edit"
+VIEW_ACCESS = "view"
+
 DEFAULT_USER_PREFERENCES = json.dumps({
     'license': licenses.CC_BY,
     'language': None,
@@ -611,7 +614,7 @@ class Invitation(models.Model):
     """ Invitation to edit channel """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     invited = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='sent_to')
-    share_mode = models.CharField(max_length=50, default='edit')
+    share_mode = models.CharField(max_length=50, default=EDIT_ACCESS)
     email = models.EmailField(max_length=100, null=True)
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='sent_by', null=True)
     channel = models.ForeignKey('Channel', on_delete=models.SET_NULL, null=True, related_name='pending_editors')

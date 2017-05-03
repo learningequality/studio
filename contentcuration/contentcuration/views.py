@@ -24,9 +24,9 @@ from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import write_file_to_storage, check_supported_browsers
+from contentcuration.api import write_file_to_storage, check_supported_browsers, add_editor_to_channel
 from contentcuration.utils.files import extract_thumbnail_wrapper, compress_video_wrapper,  generate_thumbnail_from_node, duplicate_file
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
+from contentcuration.models import VIEW_ACCESS, Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, UserChannelListSerializer, FileSerializer, InvitationSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, exercises, licenses
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -180,3 +180,14 @@ def accessible_channels(request):
                         .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))\
                         .exclude(pk=data["channel_id"]).values_list('main_tree_id', flat=True))
         return HttpResponse(JSONRenderer().render(RootNodeSerializer(accessible_list, many=True).data))
+
+def accept_channel_invite(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        invitation = Invitation.objects.get(pk=data['invitation_id'])
+        channel = invitation.channel
+        channel.is_view_only = invitation.share_mode == VIEW_ACCESS
+        channel_serializer = ChannelListSerializer(channel)
+        add_editor_to_channel(invitation)
+
+        return HttpResponse(JSONRenderer().render(channel_serializer.data))

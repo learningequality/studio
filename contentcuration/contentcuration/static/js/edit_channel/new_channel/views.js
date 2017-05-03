@@ -20,14 +20,17 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 	},
 	render: function() {
 		this.$el.html(this.template());
-		this.current_channel_list = new CurrentChannelList({el: this.$("#channel_list")});
-		this.pending_channel_list = new PendingChannelList({el: this.$("#pending_list")});
+		this.current_channel_list = new CurrentChannelList({container: this, el: this.$("#channel_list")});
+		this.pending_channel_list = new PendingChannelList({container: this, el: this.$("#pending_list")});
 	},
 	events: {
 		'click .new_channel_button' : 'new_channel'
 	},
 	new_channel: function(){
 		this.current_channel_list.new_channel();
+	},
+	add_channel: function(channel){
+		this.current_channel_list.add_channel(channel);
 	}
 });
 
@@ -36,6 +39,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 
 	initialize: function(options) {
 		this.bind_edit_functions();
+		this.container = options.container;
 		this.render();
 	},
 	create_new_view:function(data){
@@ -95,6 +99,15 @@ var CurrentChannelList  = ChannelList.extend({
 		this.$(".default-item").css('display', 'none');
 		newView.edit_channel();
 		newView.set_is_new(true);
+	},
+	add_channel: function(channel){
+		this.collection.add(channel);
+		var newView = this.create_new_view(channel);
+		newView.$el.css('display', 'none');
+		newView.$el.fadeIn(300);
+		this.$(this.list_selector).prepend(newView.el);
+		this.$(".default-item").css('display', 'none');
+
 	}
 });
 
@@ -331,6 +344,7 @@ var PendingChannelList  = BaseViews.BaseEditableListView.extend({
 
 	initialize: function(options) {
 		this.bind_edit_functions();
+		this.container = options.container;
 		this.collection = new Models.InvitationCollection();
 		this.render();
 	},
@@ -349,6 +363,12 @@ var PendingChannelList  = BaseViews.BaseEditableListView.extend({
 		});
 		this.views.push(newView);
   		return newView;
+	},
+	invitation_submitted: function(invitation, channel){
+		this.collection.remove(invitation);
+		if(channel){
+			this.container.add_channel(channel);
+		}
 	}
 });
 
@@ -378,23 +398,24 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		'click .decline_invite':'decline'
 	},
 	accept: function(){
-		this.submit_invitation(true);
+		var self = this;
+		this.model.accept_invitation().then(function(channel){
+			self.submit_invitation(true, channel);
+		}).catch(function(error){ alert(error.responseText); });
 	},
 	decline: function(){
 		if(confirm("Are you sure you want to decline this invitation?")){
-			this.submit_invitation(false);
+			var self = this;
+			this.model.decline_invitation().then(function(){
+				self.submit_invitation(false, null);
+			}).catch(alert);
 		}
 	},
-	submit_invitation: function(accepted){
+	submit_invitation: function(accepted, channel){
 		// Show invitation was accepted
 		this.status = {"accepted" : accepted};
 		this.render();
-		// Destroy model this.model.destroy();
-		// Add accepted channel to list
-		if (accepted){
-
-		}
-		// Make sure removed invitations disappear on back (don't dismiss)
+		this.containing_list_view.invitation_submitted(this.model, channel)
 	}
 });
 
