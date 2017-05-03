@@ -357,30 +357,41 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 	id: function(){
 		return (this.model)? this.model.get("id") : "new";
 	},
-	className:"pending_container row",
+	className:"pending_container",
 	template: require("./hbtemplates/channel_item_pending.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'accept','decline');
+		_.bindAll(this, 'accept','decline', 'submit_invitation');
 		this.listenTo(this.model, "sync", this.render);
 		this.containing_list_view = options.containing_list_view;
+		this.status = null;
 		this.render();
-		console.log(this.model.toJSON());
 	},
 	render: function() {
-		this.$el.html(this.template({invitation: this.model.toJSON()}));
+		this.$el.html(this.template({
+			invitation: this.model.toJSON(),
+			status: this.status
+		}));
 	},
 	events: {
 		'click .accept_invite':'accept',
 		'click .decline_invite':'decline'
 	},
 	accept: function(){
-		console.log("ACCEPTING");
+		this.submit_invitation(true);
 	},
 	decline: function(){
 		if(confirm("Are you sure you want to decline this invitation?")){
-			console.log("REJECTING");
+			this.submit_invitation(false);
 		}
+	},
+	submit_invitation: function(accepted){
+		// Show invitation was accepted
+		this.status = {"accepted" : accepted};
+		this.render();
+		// Destroy model this.model.destroy();
+		// Add accepted channel to
+		// Make sure removed invitations disappear on back (don't dismiss)
 	}
 });
 

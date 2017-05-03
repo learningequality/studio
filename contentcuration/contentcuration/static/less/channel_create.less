@@ -88,18 +88,22 @@
 		#pending_list{
 			margin-bottom: 30px;
 			.pending_container{
-				padding: 10px 5px;
-			    background-color: @blue-000;
-			    margin-bottom: 10px;
 		        font-size: 12pt;
-		        .pending_text{ padding-top: 5px;}
+		        .pending_text{ padding: 5px;}
 		        .btn-pending {
 		        	background-color: white;
 		        	font-weight:bold;
 		        	width: 100%;
-		        	&.accept_invite { color: @blue-500; }
-		        	&.decline_invite { color: #D14C4C; }
+		        	border: 2px solid white;
+		        	&.accept_invite { color: @blue-500; &:hover{ border-color: @blue-500; }}
+		        	&.decline_invite { color: #D14C4C;  &:hover{ border-color: #D14C4C; }}
 		        }
+		        .alert{
+		        	margin-bottom: 15px;
+		        	padding: 5px 15px;
+		        	button{ right: 0px; top: 5px; }
+		        }
+		        &:last-child{ margin-bottom: 50px; }
 			}
 		}
 		#channel_list {
