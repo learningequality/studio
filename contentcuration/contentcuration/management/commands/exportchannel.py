@@ -221,8 +221,7 @@ def create_perseus_exercise(ccnode, kolibrinode):
 def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
     assessment_items = ccnode.assessment_items.all().order_by('order')
-    exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
-    exercise_data = {} if exercise_data is None else exercise_data
+    exercise_data = json.loads(ccnode.extra_fields) if ccnode.extra_fields else {}
 
     mastery_model = {'type' : exercise_data.get('mastery_model') or exercises.M_OF_N}
     randomize = exercise_data.get('randomize') or True
