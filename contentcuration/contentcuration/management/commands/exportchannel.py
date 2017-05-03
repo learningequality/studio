@@ -221,8 +221,7 @@ def create_perseus_exercise(ccnode, kolibrinode):
 def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
     assessment_items = ccnode.assessment_items.all().order_by('order')
-    exercise_data = json.loads(ccnode.extra_fields) if isinstance(ccnode.extra_fields, str) else {}
-    exercise_data = {} if exercise_data is None else exercise_data
+    exercise_data = json.loads(ccnode.extra_fields) if ccnode.extra_fields else {}
 
     mastery_model = {'type' : exercise_data.get('mastery_model') or exercises.M_OF_N}
     randomize = exercise_data.get('randomize') or True
@@ -267,14 +266,14 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                 for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE).order_by('checksum'):
                     image_name = "images/{}.{}".format(image.checksum, image.file_format_id)
                     if image_name not in zf.namelist():
-                        with open(ccmodels.generate_storage_url(str(image)), 'rb') as content:
+                        with open(ccmodels.generate_file_on_disk_name(image.checksum, str(image)), 'rb') as content:
                             write_to_zipfile(image_name, content.read(), zf)
 
                 for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE).order_by('checksum'):
                     svg_name = "images/{0}.svg".format(image.original_filename)
                     json_name = "images/{0}-data.json".format(image.original_filename)
                     if svg_name not in zf.namelist() or json_name not in zf.namelist():
-                        with open(ccmodels.generate_storage_url(str(image)), 'rb') as content:
+                        with open(ccmodels.generate_file_on_disk_name(image.checksum, str(image)), 'rb') as content:
                             content = content.read()
                             content = content.split(exercises.GRAPHIE_DELIMITER)
                             write_to_zipfile(svg_name, content[0], zf)
