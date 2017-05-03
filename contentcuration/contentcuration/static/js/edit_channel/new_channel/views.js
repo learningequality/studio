@@ -390,7 +390,10 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		this.status = {"accepted" : accepted};
 		this.render();
 		// Destroy model this.model.destroy();
-		// Add accepted channel to
+		// Add accepted channel to list
+		if (accepted){
+
+		}
 		// Make sure removed invitations disappear on back (don't dismiss)
 	}
 });
