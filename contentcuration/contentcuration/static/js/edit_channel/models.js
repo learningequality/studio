@@ -265,6 +265,22 @@ var ContentNodeCollection = BaseCollection.extend({
 	        });
     	});
 	},
+	create_new_node: function(data){
+		var self = this;
+    	return new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.create_new_node(),
+	            data:  JSON.stringify(data),
+	            success: function(data) {
+	            	var new_node = new ContentNodeModel(JSON.parse(data));
+	            	self.add(new_node);
+	                resolve(new_node);
+	            },
+	            error:reject
+	        });
+    	});
+	},
 	has_all_data: function(){
 		return this.every(function(node){
 			return _.every(node.get('files'), function(file){

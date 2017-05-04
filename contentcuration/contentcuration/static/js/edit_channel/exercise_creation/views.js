@@ -293,8 +293,11 @@ var EditorView = Backbone.View.extend({
         event.preventDefault();
         var bufferText = clipboard.getData("Text");
         var clipboardHtml = clipboard.getData('text/html');
-        if(clipboardHtml)
-            bufferText = this.convert_html_to_markdown(clipboardHtml);
+        if(clipboardHtml){
+            var div = document.createElement("DIV");
+            div.innerHTML = this.convert_html_to_markdown(clipboardHtml);
+            bufferText = div.textContent || tmp.innerText || bufferText;
+        }
         var self = this;
         setTimeout(function () { // Firefox fix
             if(!self.numbersOnly || self.check_key(bufferText)){

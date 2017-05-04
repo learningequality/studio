@@ -337,14 +337,16 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
   },
   add_topic:function(){
     var self = this;
-    var data = {
+    this.collection.create_new_node({
       "kind":"topic",
       "title": "Topic",
       "sort_order" : this.collection.length,
       "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
-    };
-    this.create_new_item(data, true, " ").then(function(newView){
-      newView.select_item();
+    }).then(function(new_topic){
+      var new_view = self.create_new_view(new_topic);
+      self.$(self.list_selector).append(new_view.el);
+      self.handle_if_empty();
+      new_view.select_item();
     });
   },
   update_checked:function(){
