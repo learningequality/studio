@@ -57,7 +57,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'enable_submit', 'disable_submit',
       'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items');
     this.bind_edit_functions();
-    this.collection = options.collection;
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
     this.onsave = options.onsave;
@@ -80,10 +79,15 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   render: function() {
     this.$el.html(this.template({allow_edit: this.allow_edit}));
-    this.load_list();
-    if(this.collection.length > 1){
-      this.load_editor(this.edit_list.selected_items);
-    }
+
+    var self = this;
+    this.collection.fetch_nodes_by_ids_complete(this.collection.pluck('id'), !this.collection.has_all_data()).then(function(fetched){
+      self.collection.reset(fetched.toJSON());
+      self.load_list();
+      if(self.collection.length > 1){
+        self.load_editor(self.edit_list.selected_items);
+      }
+    });
   },
   render_details:function(){
     this.switchPanel("details");

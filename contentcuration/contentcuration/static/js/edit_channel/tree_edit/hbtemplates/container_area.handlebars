@@ -42,11 +42,15 @@
 			<label for="hide_details_checkbox">Hide details</label>
 		</div>
 	</nav>
+	{{#unless channel.view_only}}
+		{{#if channel.ricecooker_version}}
+			<div id="ricecooker_header">
+				This channel was created using <b><a href="https://github.com/learningequality/ricecooker" target="_blank">Ricecooker</a></b> v{{channel.ricecooker_version}} (@ {{channel.created}}). Update content by running the Ricecooker again.
+			</div>
+		{{/if}}
+	{{/unless}}
 
 	<div id="container-wrapper">
-		{{#if is_clipboard}}
-			<h1 id="clipboard_header">{{channel.name}} Clipboard</h1>
-		{{/if}}
 		<ul id="container_area" class="list-unstyled">
 		</ul>
 	</div>
