@@ -84,7 +84,8 @@ def sync_node_tags(node, original, channel_id):
         changed = True
 
     if changed:
-        node.update(changed=True)
+        node.changed = True
+        node.save()
 
 def sync_node_files(node, original):
 
@@ -110,7 +111,8 @@ def sync_node_files(node, original):
         changed = True
 
     if changed:
-        node.update(changed=True)
+        node.changed = True
+        node.save()
 
 def sync_node_assessment_items(node, original):
     node.extra_fields = original.extra_fields
