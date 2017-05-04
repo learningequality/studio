@@ -25,7 +25,7 @@ var createBundles = function (b, bundles) {
     b.bundle(
       function(err, buf){
         if (err) {
-          errLog(err, 'came from functions error catcher');
+          errLog(err);
         }
 
         fs.createWriteStream(__dirname + '/contentcuration' + (staticfiles ? '' : '/contentcuration') + '/static/js/bundles/common.js').write(buf);
@@ -34,7 +34,7 @@ var createBundles = function (b, bundles) {
     );
   }
   catch (err) {
-    errLog(err, 'came from try/catch');
+    errLog(err);
   }
 };
 
@@ -119,7 +119,7 @@ if (watch) {
   b.on('log', infoLog);
 
   b.on('error', function(error) {
-    errLog(error , 'came from watch');
+    errLog(error);
     this.emit('end');
   });
 }
