@@ -12,9 +12,17 @@ from django.db import transaction
 from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
-from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem
-from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer
+from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License
+from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
+
+def create_new_node(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        license = License.objects.filter(license_name=data.get('license_name')).first() # Use filter/first in case preference hasn't been set
+        license_id = license.pk if license else settings.DEFAULT_LICENSE
+        new_node = ContentNode.objects.create(kind_id=data.get('kind'), title=data.get('title'), author=data.get('author'), copyright_holder=data.get('copyright_holder'), license_id=license_id, license_description=data.get('license_description'))
+        return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
 
 def get_total_size(request):
     if request.method == 'POST':
