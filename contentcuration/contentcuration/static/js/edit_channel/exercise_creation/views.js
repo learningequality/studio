@@ -277,7 +277,7 @@ var EditorView = Backbone.View.extend({
     process_key: function(event){
         if(this.numbersOnly){
             var key = event.keyCode || event.which;
-            var allowedKeys = [46, 8, 9, 27, 110, 37, 38, 39, 40, 109];
+            var allowedKeys = [46, 8, 9, 27, 110, 32, 37, 38, 39, 40, 109];
             if((event.shiftKey || !this.check_key(String.fromCharCode(key), key)) &&  // Key is a digit or allowed special characters
                !_.contains(allowedKeys, key) && !(event.ctrlKey || event.metaKey)){   // Key is not a CMD key
                 event.preventDefault();
@@ -439,7 +439,8 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     get_default_attributes: function(){ return {}; }, // Default attributes to use when adding to list
     get_next_order: function(){
         if(this.collection.length > 0){
-            return this.collection.max(function(i){ return i.get('order');}).get('order') + 1
+            var max = this.collection.max(function(i){ return i.get('order');});
+            return (max >= 0)? max.get('order') + 1 : 1;
         }
         return 1;
     },
@@ -593,6 +594,7 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.allow_edit = options.allow_edit;
         this.listenTo(this.collection, "remove", this.render);
         this.collection = new Models.AssessmentItemCollection(this.model.get("assessment_items"));
+        console.log(this.collection, this.model.get("assessment_items"))
         this.render();
         this.listenTo(this.collection, "add", this.add_item_view);
     },
