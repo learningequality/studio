@@ -98,7 +98,7 @@ var BaseWorkspaceView = BaseView.extend({
 	lists: [],
 	bind_workspace_functions:function(){
 		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move',
-			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions');
+			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'sync_content');
 	},
 	publish:function(){
 		if(!$("#channel-publish-button").hasClass("disabled")){
@@ -210,6 +210,16 @@ var BaseWorkspaceView = BaseView.extend({
 
 		// Recalculate counts
 		this.reload_ancestors(original_parents, true);
+	},
+	sync_content:function(){
+		var SyncView = require("edit_channel/sync/views");
+		$("#main-content-area").append("<div id='dialog'></div>");
+
+		var sync = new SyncView.SyncModalView({
+			el: $("#dialog"),
+		    onsync: this.reload_ancestors,
+		    model: window.current_channel.get_root("main_tree")
+		});
 	}
 });
 

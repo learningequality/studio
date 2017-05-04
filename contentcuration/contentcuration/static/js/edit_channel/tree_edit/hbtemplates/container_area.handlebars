@@ -27,6 +27,12 @@
 				</div>
 			{{/if}}
 		</div>
+		{{#if edit}}
+			<div class="nav-button-container">
+				<div class="nav-button sync_button disable-on-edit"><span class="glyphicon glyphicon-retweet"></span></div>
+				<a class="nav-label sync_button disable-on-edit">Sync</a>
+			</div>
+		{{/if}}
 		<div class="nav-button-container">
 			<div class="nav-button permissions_button disable-on-edit"><span class="glyphicon glyphicon-user"></span></div>
 			<a class="nav-label permissions_button disable-on-edit">Invite</a>
