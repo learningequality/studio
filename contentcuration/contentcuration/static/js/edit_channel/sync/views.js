@@ -26,7 +26,6 @@ var SyncView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/sync_dialog.handlebars"),
     onsync:null,
     lists: [],
-    target_node:null,
 
     initialize: function(options) {
         _.bindAll(this, 'sync_content');
@@ -45,6 +44,11 @@ var SyncView = BaseViews.BaseListView.extend({
     /*********** LOADING METHODS ***********/
     render: function() {
         this.$el.html(this.template());
+        this.preview = new SyncPreviewView({
+            el: this.$("#sync_preview_section"),
+            model: new Models.ContentNodeModel(),
+            changed: new Models.ContentNodeModel()
+        })
     },
 
     /*********** MOVING METHODS ***********/
@@ -63,6 +67,24 @@ var SyncView = BaseViews.BaseListView.extend({
         this.$("#move_content_button").removeClass("disabled");
     }
 });
+
+var SyncPreviewView = BaseViews.BaseView.extend({
+    template: require("./hbtemplates/sync_preview.handlebars"),
+
+    initialize: function(options) {
+        this.changed = options.changed;
+        this.render();
+    },
+    /*********** LOADING METHODS ***********/
+    render: function() {
+        this.$el.html(this.template({'node': this.model.toJSON(), 'changed': this.changed.toJSON()}));
+    },
+    set_selected: function(selected_item){
+        this.model = selected_item;
+        this.render();
+    }
+});
+
 
 /*********** VIEW FOR MOVE LISTS (SOURCE AND DESTINATION) ***********/
 var MoveList = BaseViews.BaseListView.extend({
