@@ -237,6 +237,9 @@ var ContentNodeCollection = BaseCollection.extend({
 
 				fileCollection.add(node.get("files"));
 				assessmentCollection.add(node.get('assessment_items'));
+				assessmentCollection.forEach(function(item){
+					item.set('contentnode', node.id);
+				})
 			});
 			Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function() {
 				Backbone.sync("update", self, {
@@ -283,9 +286,13 @@ var ContentNodeCollection = BaseCollection.extend({
 	},
 	has_all_data: function(){
 		return this.every(function(node){
-			return _.every(node.get('files'), function(file){
+			var files_objects = _.every(node.get('files'), function(file){
 				return typeof file == 'object';
 			});
+			var ai_objects = _.every(node.get('assessment_items'), function(ai){
+				return typeof ai == 'object';
+			});
+			return files_objects && ai_objects;
 		});
 	},
 	get_all_fetch: function(ids, force_fetch){
