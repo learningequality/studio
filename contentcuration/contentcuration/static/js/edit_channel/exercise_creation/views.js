@@ -594,7 +594,6 @@ var ExerciseView = ExerciseEditableListView.extend({
         this.allow_edit = options.allow_edit;
         this.listenTo(this.collection, "remove", this.render);
         this.collection = new Models.AssessmentItemCollection(this.model.get("assessment_items"));
-        console.log(this.collection, this.model.get("assessment_items"))
         this.render();
         this.listenTo(this.collection, "add", this.add_item_view);
     },
