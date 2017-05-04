@@ -26,10 +26,11 @@ var createBundles = function (b, bundles) {
       function(err, buf){
         if (err) {
           errLog(err);
+        } else {
+          fs.createWriteStream(__dirname + '/contentcuration' + (staticfiles ? '' : '/contentcuration') + '/static/js/bundles/common.js').write(buf);
+          infoLog(bundles.length + ' Bundles written.');
         }
 
-        fs.createWriteStream(__dirname + '/contentcuration' + (staticfiles ? '' : '/contentcuration') + '/static/js/bundles/common.js').write(buf);
-        infoLog(bundles.length + ' Bundles written.');
       }
     );
   }
