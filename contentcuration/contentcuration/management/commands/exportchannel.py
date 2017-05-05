@@ -223,16 +223,25 @@ def process_assessment_metadata(ccnode, kolibrinode):
     assessment_items = ccnode.assessment_items.all().order_by('order')
     exercise_data = json.loads(ccnode.extra_fields) if ccnode.extra_fields else {}
 
-    mastery_model = {'type' : exercise_data.get('mastery_model') or exercises.M_OF_N}
     randomize = exercise_data.get('randomize') or True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
+    mastery_model = { 'type' : exercise_data.get('mastery_model') or exercises.M_OF_N }
     if mastery_model['type'] == exercises.M_OF_N:
-        mastery_model.update({'n':exercise_data.get('n') or min(5, assessment_items.count()) or 1})
-        mastery_model.update({'m':exercise_data.get('m') or min(5, assessment_items.count()) or 1})
+        mastery_model.update({'n': exercise_data.get('n') or min(5, assessment_items.count()) or 1})
+        mastery_model.update({'m': exercise_data.get('m') or min(5, assessment_items.count()) or 1})
+    elif mastery_model['type'] == exercises.DO_ALL:
+        mastery_model.update({'n': assessment_items.count() or 1, 'm': assessment_items.count() or 1})
+    elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_3:
+        mastery_model.update({'n': 3, 'm': 3})
+    elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_5:
+        mastery_model.update({'n': 5, 'm': 5})
+    elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_10:
+        mastery_model.update({'n': 10, 'm': 10})
 
     exercise_data.update({
-        'mastery_model': mastery_model['type'],
+        'mastery_model': exercises.M_OF_N,
+        'legacy_mastery_model': mastery_model['type'],
         'randomize': randomize,
         'n': mastery_model.get('n'),
         'm': mastery_model.get('m'),
