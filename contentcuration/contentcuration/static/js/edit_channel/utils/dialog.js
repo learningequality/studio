@@ -38,8 +38,7 @@ function dialog(title, submessage, actions, onclose){
   $('.ui-widget-overlay').on('click', function() { $('#dialog-box').dialog( "close" ); });
   $('.ui-dialog').find("button").on('click', function() { $('#dialog-box').dialog( "close" ); });
 
-
-  $(document).on('keydown', function(event) {
+  $(document).on('keydown', function(event){
     switch(event.charCode || event.keyCode || event.which){
       case 27: // escape key
         event.keyCode = event.which = event.charCode = 0;
@@ -48,13 +47,18 @@ function dialog(title, submessage, actions, onclose){
         event.stopPropagation();
         event.preventDefault();
         $(document).off("keydown");
+        $(document).unbind("keydown", this);
         $('#dialog-box').dialog( "close" );
         return false;
       case 37: // left key
         $('.ui-dialog').find("button:focus").prev().focus();
+        event.stopPropagation();
+        event.preventDefault();
         break;
       case 39: // right key
         $('.ui-dialog').find("button:focus").next().focus();
+        event.stopPropagation();
+        event.preventDefault();
         break;
     }
   });
