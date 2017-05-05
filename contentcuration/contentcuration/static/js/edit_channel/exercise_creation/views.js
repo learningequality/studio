@@ -165,7 +165,7 @@ var EditorView = Backbone.View.extend({
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
         _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key",
-               "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content");
+               "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content", "check_key");
         this.edit_key = options.edit_key;
         this.editing = false;
         this.numbersOnly = options.numbersOnly || false;
@@ -285,7 +285,7 @@ var EditorView = Backbone.View.extend({
         }
     },
     check_key: function(content, key){
-        var specialCharacterKeys = [188, 189, 190, 191, 220];
+        var specialCharacterKeys = [32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 188, 189, 190, 191, 220];
         return !this.numbersOnly || NUM_REGEX.test(content) || _.contains(specialCharacterKeys, key);
     },
     paste_content: function(event){
