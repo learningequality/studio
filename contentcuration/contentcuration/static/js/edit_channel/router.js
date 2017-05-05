@@ -46,7 +46,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 	clipboard_page:function(){
 		this.open_channel(true, true, window.current_user.get_clipboard());
 	},
-
 	open_channel: function(edit_mode_on, is_clipboard, root){
 		window.fileformats = this.fileformats ;
 		window.channels = this.channelCollection;
@@ -59,7 +58,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
 			collection: this.nodeCollection,
-			edit: edit_mode_on,
+			edit: edit_mode_on && !window.current_channel.get('ricecooker_version'),
 			model : root,
 			is_clipboard : is_clipboard,
 		});

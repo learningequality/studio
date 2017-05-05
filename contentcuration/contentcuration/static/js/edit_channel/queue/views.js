@@ -4,6 +4,7 @@ require("queue.less");
 var BaseViews = require("./../views");
 var Models = require("./../models");
 var DragHelper = require("edit_channel/utils/drag_drop");
+var dialog = require("edit_channel/utils/dialog");
 
 /* Loaded when user clicks clipboard button below navigation bar */
 var Queue = BaseViews.BaseWorkspaceView.extend({
@@ -122,6 +123,17 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	  		});
 		}
 	},
+	delete_items:function(){
+		var self = this;
+
+        dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
+            "CANCEL":function(){},
+            "DELETE ITEMS": function(){
+				self.delete_selected();
+				self.$(".select_all").attr("checked", false);
+            },
+        }, null);
+	},
 	handle_if_empty:function(){
 		this.$(this.default_item).css("display", (this.model.get("children").length > 0) ? "none" : "block");
 		this.update_badge_count();
@@ -141,10 +153,14 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		return item_view;
 	},
 	delete_items:function(){
-		if(confirm("Are you sure you want to PERMANENTLY delete these selected items? Changes cannot be undone!")){
-			this.delete_items_permanently("Deleting Content...");
-			this.$(".select_all").attr("checked", false);
-		}
+		var self = this;
+        dialog.dialog("WARNING", "Are you sure you want to delete these selected items PERMANENTLY? Changes cannot be undone!", {
+            "CANCEL":function(){},
+            "DELETE ITEMS": function(){
+				self.delete_items_permanently("Deleting Content...");
+				self.$(".select_all").attr("checked", false);
+            },
+        }, null);
 	},
 	edit_items:function(){
 		this.container.edit_selected();
@@ -209,6 +225,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	edit_item:function(event){
 		event.stopPropagation();
+		event.preventDefault();
 		this.open_edit(true);
 	},
 	load_subfiles:function(){
@@ -226,10 +243,11 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		}
 	},
 	delete_content:function(){
-		if(confirm("Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!")){
-			this.delete(true, "Deleting Content...");
-		}
-	}
+        dialog.dialog("WARNING", "Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!", {
+            "CANCEL":function(){},
+            "DELETE": this.add_to_trash,
+        }, null);
+	},
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
 	// handle_drop:function(collection){
 	// 	return collection.duplicate(window.workspace_manager.get_queue_view().clipboard_queue.model);

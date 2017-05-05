@@ -22,7 +22,27 @@
 			}
 		}
 		.topic_list{
-			margin-left:15px;
+			margin-left:30px;
+		}
+		.disabled{
+			color:@gray-700;
+			input[type=checkbox]{
+				cursor:not-allowed !important;
+			}
+			.selected_counter{
+				background-color:@gray-400 !important;
+			}
+		}
+	}
+	#import_bottom_container{
+		height:50px;
+		#import_content_submit{
+			margin-right:20px;
+		}
+		#import_file_metadata{
+			padding-right:20px;
+			font-size:12pt;
+			margin-top:2px;
 		}
 	}
 }

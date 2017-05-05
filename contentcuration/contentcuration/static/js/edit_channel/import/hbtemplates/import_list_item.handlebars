@@ -7,7 +7,12 @@
 	<div class="import_item_title truncate modal-item-title-default">{{node.title}}</div>
 	{{#if isfolder}}
 		{{#if node.children}}
-			<div id="menu_toggle_{{node.id}}" class="toggler tog_folder glyphicon glyphicon-triangle-top"></div>
+			{{#if isfolder}}
+				{{#unless is_channel}}<em class="import_metadata">{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}</em>{{/unless}}
+			{{else}}
+				<em class="import_metadata">{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}</em>
+			{{/if}}
+			<div id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-triangle-top"></div>
 		{{else}}
 			<em class="import_metadata modal-item-metadata-default">(empty)</em>
 		{{/if}}

@@ -1,14 +1,13 @@
-<label class="{{#if isfolder}} folder_item {{#unless isempty}}export_folder{{/unless}}{{/if}}" title="{{node.title}}">
-    {{#unless isfolder}}<span class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></span>{{/unless}}
-    <span class="export_item_title modal-item-title-default truncate">{{node.title}}</span>
+<div class="{{#if isfolder}} folder_item {{#unless isempty}}export_folder{{/unless}}{{/if}}" title="{{node.title}}">
+    {{#unless isfolder}}<span class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}} content_icon"></span>{{/unless}}
+    <div class="export_item_title truncate">{{node.title}}</div>
     {{#if isfolder}}
         {{#if isempty}}
             <em class="annotation">(empty)</em>
         {{else}}
-            <span id="menu_toggle_{{node.id}}" class="tog_folder glyphicon glyphicon-menu-right"></span>
+            <em class="annotation">{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}</em>
+            <span id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-menu-right"></span>
         {{/if}}
-    {{else}}
-        <em class="annotation">({{#format_file_size node.metadata.resource_size}}{{/format_file_size}})</em>
     {{/if}}
 </label>
 

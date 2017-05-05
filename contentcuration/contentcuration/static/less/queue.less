@@ -20,10 +20,6 @@
 	pointer-events:none;
 	z-index:999;
 	cursor:default;
-	overflow:hidden;
-	padding:0;
-	margin:0;
-
 	*{
 		margin:0;
 		padding:0;
@@ -108,7 +104,6 @@
 				font-weight:bold;
 			}
 			#queue_content{
-				width:@queue-width - 32px;
 				height:@queue-height * 0.94;
 				min-height:@queue-min-height * 0.94;
 				overflow:hidden;
@@ -121,7 +116,6 @@
 					width: 100%;
 					height:100%;
 					padding-top:20px;
-					position:relative;
 					padding-bottom:@queue-list-item-height * 3;
 					margin-top: 10px;
 					.default-item{ padding:20px; }
@@ -149,6 +143,7 @@
 						padding-left:5px;
 						width:@queue-width - 32px;
 						background-color: white;
+						&:hover{ background-color: @highlight-color; }
 						input[type=checkbox]{
 							display:inline-block;
 							width:20px;
@@ -157,38 +152,30 @@
 							cursor:pointer;
 						}
 						label{
+							*{ vertical-align: middle; display:inline; }
 							font-size:16px;
-							vertical-align:middle;
 							cursor:pointer;
 							height:@queue-list-item-height;
 							width:@queue-width - 70px;
-							*{
-								display:inline-block;
-								vertical-align: middle;
-							}
-							.content-item-icon{ padding-right:5px; }
-							.tog_folder{ padding: 8px 10px; }							
+							.content-item-icon{ padding-left:5px; }
+							.queue-options{ margin-top: 5px; }
+							.toggle-icon{ padding: 5px; }
+							&:hover .glyphicon{ visibility:visible; }
 							.edit_content, .delete_content{
 								visibility:hidden;
 								margin: 15px 10px 0 0;
 							}
 							.queue_item_title{
 								overflow:hidden;
-								max-width:@queue-width / 1.8;
+								max-width:60%;
 								display:inline-block;
-								margin-right:5px;
-								margin-top:10px;
+								margin-left:5px;
 							}
 							.clipboard-topic-count{
 								background-color:@blue-200;
-								padding:2px 4px;
-								display:inline-block;
-								margin-top:-5px;
+								padding:1px 5px;
+								margin-top:10px;
 							}
-						}
-						&:hover{
-							background-color: @highlight-color;
-							.glyphicon{ visibility:visible; }
 						}
 					}
 					.subdirectory{

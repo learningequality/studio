@@ -27,11 +27,64 @@
 	}
 
 	.move_list_section{
-		.move-list li {
-			cursor:pointer;
-			padding-left:0px;
-			.move_item .move_item_title{
-				max-width:250px;
+		background-color:white;
+		overflow:auto;
+		.move-list{
+			height:auto;
+			margin:0px;
+			padding:0px;
+			width: -moz-max-content;
+			width: -webkit-max-content;
+			width: max-content;
+			li {
+				cursor:pointer;
+				padding-left:10px;
+				.disabled *{cursor:not-allowed !important;}
+				input[type=radio]{
+					cursor:pointer;
+					display:inline-block;
+					width:16px;
+					height:16px;
+					vertical-align:middle;
+					margin: 0px 4px;
+				}
+				input[type=radio]:checked + label{
+					font-weight:bold;
+				}
+				label *{
+					display:inline-block;
+					vertical-align:middle;
+				}
+				.move_item{
+					cursor:pointer;
+					font-size:16px;
+					height:@move-list-item-height;
+					font-weight:normal;
+					.tog_folder{
+						font-size:11pt;
+						padding:5px;
+						display:inline-block;
+					}
+					.move_item_title{
+						margin-right:15px;
+						font-size:13pt;
+						overflow:hidden;
+						max-width:250px;
+						-webkit-touch-callout: none;
+						-webkit-user-select: none;
+						-khtml-user-select: none;
+						-moz-user-select: none;
+						-ms-user-select: none;
+						user-select: none;
+					}
+					.move_empty{
+						font-size: 10pt;
+						color:gray;
+					}
+				}
+				.subdirectory{
+					display:none;
+				}
 			}
 		}
 		.to-move-list{
