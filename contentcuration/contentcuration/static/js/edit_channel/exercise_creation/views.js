@@ -165,7 +165,7 @@ var EditorView = Backbone.View.extend({
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
         _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key",
-               "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content", "check_key");
+               "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content");
         this.edit_key = options.edit_key;
         this.editing = false;
         this.numbersOnly = options.numbersOnly || false;
