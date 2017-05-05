@@ -46,9 +46,9 @@ function dialog(title, submessage, actions, onclose){
         event.stopImmediatePropagation();
         event.stopPropagation();
         event.preventDefault();
-        $(document).off("keydown");
-        $(document).unbind("keydown", this);
         $('#dialog-box').dialog( "close" );
+        $(document).off("keydown", this);
+        $(document).unbind("keydown", this);
         return false;
       case 37: // left key
         $('.ui-dialog').find("button:focus").prev().focus();

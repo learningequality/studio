@@ -771,18 +771,18 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
                 this.set_true_false();
             } else{
                 dialog.dialog("Changing Question Type", "Switching to single selection will set only one answer as correct. Continue?", {
-                    "CANCEL":function(){ self.commit_type_change(self.model.get('type'));},
+                    "CANCEL":function(){},
                     "CHANGE": function(){
                         self.set_true_false();
                     },
-                }, function(){});
+                }, function(){ self.commit_type_change(self.model.get('type')); });
             }
         }
 
         // Single selection questions will set only one answer as being correct
         else if(new_type === "single_selection" && this.model.get("answers").where({'correct': true}).length > 1){
             dialog.dialog("Changing Question Type", "Switching to true or false will remove any current answers. Continue?", {
-                "CANCEL":function(){ self.commit_type_change(self.model.get('type'));},
+                "CANCEL":function(){},
                 "CHANGE": function(){
                     var correct_answer_set = false;
                     self.model.get('answers').forEach(function(item){
@@ -791,13 +791,13 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
                     });
                     self.commit_type_change(new_type);
                 },
-            }, function(){  });
+            }, function(){ self.commit_type_change(self.model.get('type')); });
         }
 
         // Input questions will set all answers as being correct and remove non-numeric answers
         else if(new_type === "input_question" && this.model.get("answers").some(function(a){ return a.get('correct') || isNaN(a.get('answer')); })){
             dialog.dialog("Changing Question Type", "Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?", {
-                "CANCEL":function(){ self.commit_type_change(self.model.get('type'));},
+                "CANCEL":function(){},
                 "CHANGE": function(){
                     var newCollection = self.model.get('answers');
                     newCollection.reset(self.model.get('answers').chain()
@@ -806,7 +806,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
                     self.model.set('answers', newCollection);
                     self.commit_type_change(new_type);
                 },
-            }, function(){});
+            }, function(){ self.commit_type_change(self.model.get('type')); });
         }
 
         else {
