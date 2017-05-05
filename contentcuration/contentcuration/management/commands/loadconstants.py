@@ -576,8 +576,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            cache.clear() # Clear any cached values
-
             self.stdout.write("***** Loading Constants *****")
             for constant_list in CONSTANTS:
                 current_model = ""
