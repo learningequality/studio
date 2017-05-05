@@ -278,7 +278,7 @@ var EditorView = Backbone.View.extend({
     process_key: function(event){
         if(this.numbersOnly){
             var key = event.keyCode || event.which;
-            var allowedKeys = [46, 8, 9, 27, 110, 37, 38, 39, 40, 109];
+            var allowedKeys = [46, 8, 9, 27, 110, 32, 37, 38, 39, 40, 109];
             if((event.shiftKey || !this.check_key(String.fromCharCode(key), key)) &&  // Key is a digit or allowed special characters
                !_.contains(allowedKeys, key) && !(event.ctrlKey || event.metaKey)){   // Key is not a CMD key
                 event.preventDefault();
@@ -286,7 +286,7 @@ var EditorView = Backbone.View.extend({
         }
     },
     check_key: function(content, key){
-        var specialCharacterKeys = [188, 189, 190, 191, 220];
+        var specialCharacterKeys = [32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 188, 189, 190, 191, 220];
         return !this.numbersOnly || NUM_REGEX.test(content) || _.contains(specialCharacterKeys, key);
     },
     paste_content: function(event){
@@ -294,8 +294,11 @@ var EditorView = Backbone.View.extend({
         event.preventDefault();
         var bufferText = clipboard.getData("Text");
         var clipboardHtml = clipboard.getData('text/html');
-        if(clipboardHtml)
-            bufferText = this.convert_html_to_markdown(clipboardHtml);
+        if(clipboardHtml){
+            var div = document.createElement("DIV");
+            div.innerHTML = this.convert_html_to_markdown(clipboardHtml);
+            bufferText = div.textContent || tmp.innerText || bufferText;
+        }
         var self = this;
         setTimeout(function () { // Firefox fix
             if(!self.numbersOnly || self.check_key(bufferText)){
@@ -437,7 +440,8 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     get_default_attributes: function(){ return {}; }, // Default attributes to use when adding to list
     get_next_order: function(){
         if(this.collection.length > 0){
-            return this.collection.max(function(i){ return i.get('order');}).get('order') + 1
+            var max = this.collection.max(function(i){ return i.get('order');});
+            return (max >= 0)? max.get('order') + 1 : 1;
         }
         return 1;
     },

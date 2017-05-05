@@ -215,10 +215,15 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     file_failed:function(file, error){
         this.uploads_in_progress --;
         $(file.previewTemplate).find(".dropzone_remove").css("display", "inline-block");
+        if (this.views.length === 0) {
+            this.disable_next(this.uploads_in_progress > 0);
+        }
     },
     all_files_uploaded: function() {
         this.uploads_in_progress = 0;
-        this.enable_next();
+        if(this.views.length > 0){
+            this.enable_next();
+        }
     },
     file_added: function(file) {
         this.uploads_in_progress ++;
@@ -290,7 +295,6 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     enable_next:function(){
         this.containing_list_view.check_uploads_and_enable();
     },
-
     load_subfiles:function(){
         var data = {
             collection: this.presets,
@@ -489,6 +493,9 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     },
     set_uploading:function(uploading){
         this.content_node_view.set_uploading(uploading);
+    },
+    update_metadata:function(){
+        this.content_node_view.update_metadata();
     }
 });
 
@@ -585,7 +592,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             self.set_uploading(false);
             self.containing_list_view.update_metadata();
         });
-
     },
     remove_item:function(){
         this.containing_list_view.set_file_format(null, this.model, this.file);

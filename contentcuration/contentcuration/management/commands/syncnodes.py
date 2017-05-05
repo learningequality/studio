@@ -66,9 +66,13 @@ def sync_node(node, original):
     node.save()
 
 def sync_node_tags(node, original, channel_id):
+
+    changed = False
+
     # Remove tags that aren't in original
     for tag in node.tags.exclude(tag_name__in=original.tags.values_list('tag_name', flat=True)):
         node.tags.remove(tag)
+        changed = True
 
     # Add tags that are in original
     for tag in original.tags.exclude(tag_name__in=node.tags.values_list('tag_name', flat=True)):
@@ -77,8 +81,16 @@ def sync_node_tags(node, original, channel_id):
             channel_id=channel_id,
         )
         node.tags.add(new_tag)
+        changed = True
+
+    if changed:
+        node.changed = True
+        node.save()
 
 def sync_node_files(node, original):
+
+    changed = False
+
     # Delete files that aren't in original
     node.files.exclude(checksum__in=original.files.values_list('checksum', flat=True)).delete()
 
@@ -90,14 +102,21 @@ def sync_node_files(node, original):
             if original_file.checksum == f.checksum: # No need to copy file- nothing has changed
                 continue
             original_file.delete()
+            changed = True
 
         fcopy = copy.copy(f)
         fcopy.id = None
         fcopy.contentnode = node
         fcopy.save()
+        changed = True
+
+    if changed:
+        node.changed = True
+        node.save()
 
 def sync_node_assessment_items(node, original):
     node.extra_fields = original.extra_fields
+    node.changed = True
     node.save()
 
     # Clear assessment items on node

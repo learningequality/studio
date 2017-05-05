@@ -118,6 +118,23 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			channel_link : this.model.get("id"),
 			picture : this.thumbnail_url
 		}));
+		if(this.edit){
+			this.image_upload = new FileViews.ThumbnailUploadView({
+				model: this.model,
+				el: this.$(".new_channel_pic"),
+				preset_id: 'channel_thumbnail',
+				upload_url: window.Urls.thumbnail_upload(),
+				acceptedFiles: 'image/jpeg,image/jpeg,image/png',
+				image_url: this.thumbnail_url,
+				default_url: "/static/img/kolibri_placeholder.png",
+				onsuccess: this.set_thumbnail,
+				onerror: this.reset_thumbnail,
+				oncancel:this.enable_submit,
+				onstart: this.disable_submit,
+				onremove: this.remove_thumbnail,
+				allow_edit: true
+			});
+		}
 	},
 	events: {
 		'click .edit_channel':'edit_channel',
@@ -183,21 +200,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.containing_list_view.set_editing(true);
 		this.edit = true;
 		this.render();
-		this.image_upload = new FileViews.ThumbnailUploadView({
-			model: this.model,
-			el: this.$(".new_channel_pic"),
-			preset_id: 'channel_thumbnail',
-			upload_url: window.Urls.thumbnail_upload(),
-			acceptedFiles: 'image/jpeg,image/jpeg,image/png',
-			image_url: this.thumbnail_url,
-			default_url: "/static/img/kolibri_placeholder.png",
-			onsuccess: this.set_thumbnail,
-			onerror: this.reset_thumbnail,
-			oncancel:this.enable_submit,
-			onstart: this.disable_submit,
-			onremove: this.remove_thumbnail,
-			allow_edit: true
-		});
 	},
 	delete_channel: function(event){
 		if(this.isNew){

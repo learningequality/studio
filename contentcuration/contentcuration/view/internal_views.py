@@ -237,22 +237,27 @@ def convert_data_to_nodes(content_data, parent_node):
     """ Parse dict and create nodes accordingly """
     try:
         root_mapping = {}
-        sort_order = 1
+        sort_order = ContentNode.objects.get(pk=parent_node).children.count() + 1
+        existing_node_ids = ContentNode.objects.filter(parent_id=parent_node).values_list('node_id', flat=True)
+
         with transaction.atomic():
             for node_data in content_data:
-                # Create the node
-                new_node = create_node(node_data, parent_node, sort_order)
+                # Check if node id is already in the tree to avoid duplicates
+                if node_data['node_id'] not in existing_node_ids:
+                    # Create the node
+                    new_node = create_node(node_data, parent_node, sort_order)
 
-                # Create files associated with node
-                map_files_to_node(new_node, node_data['files'])
+                    # Create files associated with node
+                    map_files_to_node(new_node, node_data['files'])
 
-                # Create questions associated with node
-                create_exercises(new_node, node_data['questions'])
-                sort_order += 1
+                    # Create questions associated with node
+                    create_exercises(new_node, node_data['questions'])
+                    sort_order += 1
 
-                # Track mapping between newly created node and node id
-                root_mapping.update({node_data['node_id'] : new_node.pk})
+                    # Track mapping between newly created node and node id
+                    root_mapping.update({node_data['node_id'] : new_node.pk})
             return root_mapping
+
     except KeyError as e:
         raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
 
@@ -321,9 +326,7 @@ def map_files_to_assessment_item(question, data):
     """ Generate files that reference the content node's assessment items """
     for file_data in data:
         file_hash = file_data['filename'].split(".")
-        kind_preset = FormatPreset.objects.get(id=file_data['preset'])
-
-        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
+        file_path = generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
 
@@ -335,7 +338,7 @@ def map_files_to_assessment_item(question, data):
             source_url=file_data.get('source_url'),
             file_size = file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
-            preset=kind_preset,
+            preset_id=file_data['preset'],
         )
         file_obj.save()
 
@@ -360,4 +363,3 @@ def create_exercises(node, data):
             order += 1
             question_obj.save()
             map_files_to_assessment_item(question_obj, question['files'])
-
