@@ -55,8 +55,9 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     load_default_value:function(){
         this.current_preview = null;
-        if(this.model.get('files').length){
-            this.current_preview = _.min(this.model.get("files"), function(file){return file.preset.order});
+        var preview_files = _.filter(this.model.get("files"), function(f){ return f.preset.display; });
+        if(preview_files.length){
+            this.current_preview = _.min(preview_files, function(file){return file.preset.order});
         }
     },
     load_presets:function(){
@@ -116,7 +117,7 @@ var PreviewView = BaseViews.BaseView.extend({
                 checksum:this.current_preview.checksum,
                 subtitles : this.get_subtitles()
             }));
-            if(force_load && this.current_preview.recommended_kind === "video"){
+            if(force_load && this.model.get('kind') === "video"){
                 $("#preview_window video").load();
             }
         }

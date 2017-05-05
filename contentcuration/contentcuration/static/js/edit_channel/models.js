@@ -126,12 +126,11 @@ var InvitationCollection = BaseCollection.extend({
 });
 
 /**** CHANNEL AND CONTENT MODELS ****/
-function fetch_nodes_by_ids(ids){
-	var self = this;
+function fetch_nodes(ids, url){
 	return new Promise(function(resolve, reject){
         $.ajax({
         	method:"POST",
-            url: window.Urls.get_nodes_by_ids(),
+            url: url,
             data:  JSON.stringify(ids),
             error: reject,
             success: function(data) {
@@ -139,6 +138,9 @@ function fetch_nodes_by_ids(ids){
             }
         });
 	});
+}
+function fetch_nodes_by_ids(ids){
+	return fetch_nodes(ids, window.Urls.get_nodes_by_ids());
 }
 
 var ContentNodeModel = BaseModel.extend({
@@ -199,6 +201,21 @@ var ContentNodeModel = BaseModel.extend({
 		    data['randomize'] = (data['randomize'] !== undefined)? data['randomize'] : window.preferences.auto_randomize_questions;
 		    this.set('extra_fields', data);
 		}
+	},
+	calculate_size: function(){
+		var self = this;
+    	var promise = new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.get_total_size(),
+	            data:  JSON.stringify([self.id]),
+	            error:reject,
+	            success: function(data) {
+	    			resolve(JSON.parse(data).size);
+	            }
+	        });
+    	});
+    	return promise;
 	}
 });
 
@@ -223,6 +240,9 @@ var ContentNodeCollection = BaseCollection.extend({
 					fileCollection.add(to_add);
 				});
 				assessmentCollection.add(node.get('assessment_items'));
+				assessmentCollection.forEach(function(item){
+					item.set('contentnode', node.id);
+				})
 			});
 			Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function() {
 				Backbone.sync("update", self, {
@@ -236,19 +256,70 @@ var ContentNodeCollection = BaseCollection.extend({
 		        });
 			});
 		});
-        return promise;
+	},
+	calculate_size: function(){
+		var self = this;
+    	return new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.get_total_size(),
+	            data:  JSON.stringify(self.pluck('id')),
+	            success: function(data) {
+	                resolve(JSON.parse(data).size);
+	            },
+	            error:reject
+	        });
+    	});
+	},
+	create_new_node: function(data){
+		var self = this;
+    	return new Promise(function(resolve, reject){
+	        $.ajax({
+	        	method:"POST",
+	            url: window.Urls.create_new_node(),
+	            data:  JSON.stringify(data),
+	            success: function(data) {
+	            	var new_node = new ContentNodeModel(JSON.parse(data));
+	            	self.add(new_node);
+	                resolve(new_node);
+	            },
+	            error:reject
+	        });
+    	});
+	},
+	has_all_data: function(){
+		return this.every(function(node){
+			var files_objects = _.every(node.get('files'), function(file){
+				return typeof file == 'object';
+			});
+			var ai_objects = _.every(node.get('assessment_items'), function(ai){
+				return typeof ai == 'object';
+			});
+			return files_objects && ai_objects;
+		});
 	},
 	get_all_fetch: function(ids, force_fetch){
-		force_fetch = (force_fetch)? true : false;
-    	var self = this;
-    	return new Promise(function(resolve, reject){
-    		var idlists = _.partition(ids, function(id){return force_fetch || !self.get({'id': id});});
-    		var returnCollection = new ContentNodeCollection(self.filter(function(n){ return idlists[1].indexOf(n.id) >= 0; }))
-			fetch_nodes_by_ids(idlists[0]).then(function(fetched){
-				returnCollection.add(fetched.toJSON());
-				resolve(returnCollection);
-			});
-    	});
+    	return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids(), force_fetch);
+    },
+    get_all_fetch_simplified: function(ids, force_fetch){
+    	return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids_simplified(), force_fetch);
+    },
+    fetch_nodes_by_ids_complete: function(ids, force_fetch){
+    	return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids_complete(), force_fetch);
+    },
+    get_fetch_nodes: function(ids, url, force_fetch){
+    	force_fetch = (force_fetch)? true : false;
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var idlists = _.partition(ids, function(id){return force_fetch || !self.get({'id': id});});
+            var returnCollection = new ContentNodeCollection(self.filter(function(n){ return idlists[1].indexOf(n.id) >= 0; }))
+            fetch_nodes(idlists[0], url).then(function(fetched){
+                returnCollection.add(fetched.toJSON());
+                self.add(fetched.toJSON());
+				self.sort();
+                resolve(returnCollection);
+            });
+        });
     },
 	comparator : function(node){
     	return node.get("sort_order");
@@ -259,7 +330,7 @@ var ContentNodeCollection = BaseCollection.extend({
     },
     duplicate:function(target_parent){
     	var self = this;
-    	var promise = new Promise(function(resolve, reject){
+    	return new Promise(function(resolve, reject){
 			var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
 	        var parent_id = target_parent.get("id");
 
@@ -273,15 +344,11 @@ var ContentNodeCollection = BaseCollection.extend({
 	            url: window.Urls.duplicate_nodes(),
 	            data:  JSON.stringify(data),
 	            success: function(data) {
-	                copied_list = JSON.parse(data).node_ids.split(" ");
-	                self.get_all_fetch(copied_list).then(function(fetched){
-	    				resolve(fetched);
-	    			});
+	                resolve(new ContentNodeCollection(JSON.parse(data)));
 	            },
 	            error:reject
 	        });
     	});
-    	return promise;
     },
     move:function(target_parent, max_order, min_order){
     	var self = this;

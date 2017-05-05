@@ -4,6 +4,7 @@ require("queue.less");
 var BaseViews = require("./../views");
 var Models = require("./../models");
 var DragHelper = require("edit_channel/utils/drag_drop");
+var dialog = require("edit_channel/utils/dialog");
 
 /* Loaded when user clicks clipboard button below navigation bar */
 var Queue = BaseViews.BaseWorkspaceView.extend({
@@ -168,10 +169,15 @@ var ClipboardList = QueueList.extend({
 		'click .create_exercise_button' : 'add_exercise'
 	},
 	delete_items:function(){
-		if(confirm("Are you sure you want to delete these selected items?")){
-			this.delete_selected();
-			this.$(".select_all").attr("checked", false);
-		}
+		var self = this;
+
+        dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
+            "CANCEL":function(){},
+            "DELETE ITEMS": function(){
+				self.delete_selected();
+				self.$(".select_all").attr("checked", false);
+            },
+        }, null);
 	},
 	edit_items:function(){
 		this.container.edit_selected(true);
@@ -233,10 +239,14 @@ var TrashList = QueueList.extend({
 		return item_view;
 	},
 	delete_items:function(){
-		if(confirm("Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
-			this.delete_items_permanently("Deleting Content...");
-			this.$(".select_all").attr("checked", false);
-		}
+		var self = this;
+        dialog.dialog("WARNING", "Are you sure you want to delete these selected items PERMANENTLY? Changes cannot be undone!", {
+            "CANCEL":function(){},
+            "DELETE ITEMS": function(){
+				self.delete_items_permanently("Deleting Content...");
+				self.$(".select_all").attr("checked", false);
+            },
+        }, null);
 	},
 	move_trash:function(){
 		var list = this.get_selected();
@@ -305,7 +315,9 @@ var ClipboardItem = QueueItem.extend({
 		'click .edit_content' : 'edit_item',
 		'change input[type=checkbox]': 'handle_checked'
 	},
-	edit_item:function(){
+	edit_item:function(event){
+		event.stopPropagation();
+		event.preventDefault();
 		this.open_edit(true);
 	},
 	load_subfiles:function(){
@@ -323,9 +335,13 @@ var ClipboardItem = QueueItem.extend({
 		}
 	},
 	delete_content:function(){
-		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
-			this.add_to_trash();
-		}
+		var self = this;
+        dialog.dialog("WARNING", "Are you sure you want to delete " + this.model.get("title") + "?", {
+            "CANCEL":function(){},
+            "DELETE": function(){
+				self.add_to_trash();
+            },
+        }, null);
 	},
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
 	// handle_drop:function(collection){
@@ -373,9 +389,13 @@ var TrashItem = QueueItem.extend({
 		}
 	},
 	delete_content:function(){
-		if(confirm("Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!")){
-			this.delete(true, "Deleting Content...");
-		}
+		var self = this;
+        dialog.dialog("WARNING", "Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!", {
+            "CANCEL":function(){},
+            "DELETE": function(){
+				self.delete(true, "Deleting Content...");
+            },
+        }, null);
 	}
 });
 

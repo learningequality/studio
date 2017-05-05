@@ -8,6 +8,7 @@ require("file-uploader.less");
 require("dropzone/dist/dropzone.css");
 var stringHelper = require("edit_channel/utils/string_helper");
 var browserHelper = require("edit_channel/utils/browser_functions");
+var dialog = require("edit_channel/utils/dialog");
 
 var FileModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/file_upload_modal.handlebars"),
@@ -35,14 +36,20 @@ var FileModalView = BaseViews.BaseModalView.extend({
         }
     },
     close_file_uploader:function(event){
+        var self = this;
         if(this.file_upload_view.collection.length === 0){
             this.close();
-        }else if(confirm("Unsaved Metadata Detected! Exiting now will"
-            + " undo any new changes. \n\nAre you sure you want to exit?")){
-            this.file_upload_view.reset();
-            this.close();
         }else{
-            this.cancel_actions(event);
+            dialog.dialog("Unsaved Changes!", "Exiting now will"
+            + " undo any new changes. Are you sure you want to exit?", {
+                "DON'T SAVE": function(){
+                    self.file_upload_view.reset();
+                    self.close();
+                    $(".modal-backdrop").remove();
+                },
+                "KEEP OPEN":function(){},
+            }, null);
+            self.cancel_actions(event);
         }
     }
 });
@@ -446,6 +453,9 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         this.$el.html(this.template());
         this.load_content();
     },
+    update_metadata: function(model){
+        this.content_node_view.update_metadata();
+    },
     create_new_view: function(model){
         var associated_file = this.files.find(function(f){ return f.get("preset").id  === model.get("id");});
         var format_slot = new FormatSlot({
@@ -580,10 +590,14 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         this.$(".add_format_button").css("display", "inline");
     },
     file_failed:function(file, error){
-        alert(error);
-        this.render();
-        this.set_uploading(false);
-        this.containing_list_view.update_metadata();
+        var self = this;
+        dialog.dialog("Error Uploading File", error, {
+            "OK":function(){}
+        }, function(){
+            self.render();
+            self.set_uploading(false);
+            self.containing_list_view.update_metadata();
+        });
     },
     remove_item:function(){
         if(this.language_view){
@@ -774,12 +788,16 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         else{ return "/static/img/kolibri_placeholder.png"; }
     },
     remove_image: function(){
-        if(confirm("Are you sure you want to remove this image?")){
-            this.image = null;
-            this.image_url = this.default_url;
-            this.render();
-            this.onremove();
-        }
+        var self = this;
+        dialog.dialog("Removing Image", "Are you sure you want to remove this image?", {
+            "CANCEL":function(){},
+            "REMOVE": function(){
+                self.image = null;
+                self.image_url = self.default_url;
+                self.onremove();
+                self.render();
+            },
+        }, function(){});
     },
     get_selector: function(){
         return "dropzone_" + this.cid;
@@ -812,7 +830,8 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     image_completed:function(){
         if(this.image_error){
-            alert(this.image_error);
+            var self = this;
+            dialog.dialog("Image Error", this.image_error, { "OK":function(){} }, null);
             if(this.onerror){ this.onerror(); }
         }else{
             if(this.onsuccess){ this.onsuccess(this.image, this.image_formatted_name, this.image_url); }
@@ -987,7 +1006,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
     },
     file_complete:function(){
         if(this.file_error){
-            alert(this.file_error);
+            dialog.dialog("Image Error", this.file_error, { "OK":function(){} }, null);
         }
         this.render_dropzone();
     }
