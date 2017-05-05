@@ -24,13 +24,14 @@
 		min-height:@exporter-height;
 		background-color:@exporter-background-color;
 		label, #export_license_select{ font-size: 14pt; }
+		#export_totals{ margin-right:10px; }
 		#version_number{
 			color:gray;
 			padding-right:10px;
 		}
-		#export_totals{ margin-right:10px; }
 		.annotation{
 			color:@gray-400;
+			font-size:10pt;
 			font-weight:normal;
 		    white-space: nowrap;
 		}
@@ -54,6 +55,9 @@
 				border-left:2px solid @blue-500;
 				.export_item{
 					padding:5px;
+					.export_folder{ cursor:pointer; }
+					.folder_item{ font-weight:bold; }
+					.subdirectory{ display:none; }
 					.export_item_title{
 						font-size:13pt;
 						max-width: 350px;
@@ -64,6 +68,5 @@
 				}
 			}
 		}
-
 	}
 }

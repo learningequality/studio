@@ -542,29 +542,24 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	add_topic: function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var self = this;
-		var new_topic = this.collection.create({
+		this.collection.create_new_node({
             "kind":"topic",
-            "title": "Topic",
+            "title": (this.model.get('parent'))? this.model.get('title') + " Topic" : "Topic",
             "author": get_author(),
-        }, {
-        	success:function(new_topic){
-		        var edit_collection = new Models.ContentNodeCollection([new_topic]);
-		        $("#main-content-area").append("<div id='dialog'></div>");
+        }).then(function(new_topic){
+        	var edit_collection = new Models.ContentNodeCollection([new_topic]);
+	        $("#main-content-area").append("<div id='dialog'></div>");
 
-		        var metadata_view = new UploaderViews.MetadataModalView({
-		            el : $("#dialog"),
-		            collection: edit_collection,
-		            model: self.model,
-		            new_content: true,
-		            new_topic: true,
-		            onsave: self.reload_ancestors,
-		            onnew:self.add_nodes,
-		            allow_edit: true
-		        });
-        	},
-        	error:function(obj, error){
-            	console.log("Error message:", error);
-        	}
+	        var metadata_view = new UploaderViews.MetadataModalView({
+	            el : $("#dialog"),
+	            collection: edit_collection,
+	            model: self.model,
+	            new_content: true,
+	            new_topic: true,
+	            onsave: self.reload_ancestors,
+	            onnew:self.add_nodes,
+	            allow_edit: true
+	        });
         });
 	},
 	import_content:function(){
@@ -601,31 +596,27 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	add_exercise:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var self = this;
-		var new_exercise = this.collection.create({
+		this.collection.create_new_node({
             "kind":"exercise",
             "title": (this.model.get('parent'))? this.model.get('title') + " Exercise" : "Exercise", // Avoid having exercises prefilled with 'email clipboard'
             "author": get_author(),
             "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder,
+            "license_name": window.preferences.license,
             "license_description": (window.preferences.license_description && window.preferences.license==="Special Permissions") ? window.preferences.license_description : ""
-        }, {
-        	success:function(new_node){
-		        var edit_collection = new Models.ContentNodeCollection([new_node]);
-		        $("#main-content-area").append("<div id='dialog'></div>");
+        }).then(function(new_exercise){
+        	var edit_collection = new Models.ContentNodeCollection([new_exercise]);
+	        $("#main-content-area").append("<div id='dialog'></div>");
 
-		        var metadata_view = new UploaderViews.MetadataModalView({
-		            el : $("#dialog"),
-		            collection: edit_collection,
-		            model: self.model,
-		            new_content: true,
-		            new_exercise: true,
-		            onsave: self.reload_ancestors,
-		            onnew:self.add_nodes,
-		            allow_edit: true
-		        });
-        	},
-        	error:function(obj, error){
-            	console.log("Error message:", error);
-        	}
+	        var metadata_view = new UploaderViews.MetadataModalView({
+	            el : $("#dialog"),
+	            collection: edit_collection,
+	            model: self.model,
+	            new_content: true,
+	            new_exercise: true,
+	            onsave: self.reload_ancestors,
+	            onnew:self.add_nodes,
+	            allow_edit: true
+	        });
         });
 	}
 });
