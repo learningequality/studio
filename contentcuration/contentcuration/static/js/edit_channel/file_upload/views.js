@@ -585,9 +585,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     file_failed:function(file, error){
         var self = this;
-        dialog.dialog("Error Uploading File", error, {
-            "OK":function(){}
-        }, function(){
+        dialog.alert("Error Uploading File", error, function(){
             self.render();
             self.set_uploading(false);
             self.containing_list_view.update_metadata();
@@ -693,8 +691,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     image_completed:function(){
         if(this.image_error){
-            var self = this;
-            dialog.dialog("Image Error", this.image_error, { "OK":function(){} }, null);
+            dialog.alert("Image Error", this.image_error, null);
             if(this.onerror){ this.onerror(); }
         }else{
             if(this.onsuccess){ this.onsuccess(this.image, this.image_formatted_name, this.image_url); }
@@ -869,7 +866,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
     },
     file_complete:function(){
         if(this.file_error){
-            dialog.dialog("Image Error", this.file_error, { "OK":function(){} }, null);
+            dialog.alert("Image Error", this.file_error, null);
         }
         this.render_dropzone();
     }

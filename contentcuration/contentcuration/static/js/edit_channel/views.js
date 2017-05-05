@@ -508,9 +508,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						});
 					}).catch(function(error){
 				        var dialog = require("edit_channel/utils/dialog");
-				        dialog.dialog("Error Moving Content", error.responseText, {
-				            "OK":function(){}
-				        }, function(){
+				        dialog.alert("Error Moving Content", error.responseText, function(){
 				        	$(".content-list").sortable( "cancel" );
 			        		$(".content-list").sortable( "enable" );
 			        		$(".content-list").sortable( "refresh" );

@@ -64,6 +64,13 @@ function dialog(title, submessage, actions, onclose){
   });
 }
 
+function alert(title, message, callback){
+  dialog(title, message, {
+      "OK":function(){}
+  }, callback);
+}
+
 module.exports = {
-  dialog : dialog
+  dialog : dialog,
+  alert : alert
 }

@@ -8,6 +8,7 @@ var BaseViews = require("edit_channel/views");
 var FileViews = require("edit_channel/file_upload/views");
 var get_cookie = require("utils/get_cookie");
 var stringHelper = require("edit_channel/utils/string_helper")
+var dialog = require("edit_channel/utils/dialog");
 
 var ChannelListPage  = BaseViews.BaseView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
@@ -244,7 +245,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.containing_list_view.set_editing(false);
 		}else{
 			var self = this;
-            var dialog = require("edit_channel/utils/dialog");
             dialog.dialog("WARNING", "All content under this channel will be permanently deleted."
 					+ "\nAre you sure you want to delete this channel?", {
                 "CANCEL":function(){},
@@ -405,15 +405,18 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		var self = this;
 		this.model.accept_invitation().then(function(channel){
 			self.submit_invitation(true, channel);
-		}).catch(function(error){ alert(error.responseText); });
+		}).catch(function(error){
+			dialog.alert("Invitation Error", error.responseText, null);
+        });
 	},
 	decline: function(){
-		if(confirm("Are you sure you want to decline this invitation?")){
-			var self = this;
-			this.model.decline_invitation().then(function(){
-				self.submit_invitation(false, null);
-			}).catch(alert);
-		}
+		var self = this;
+		dialog.dialog("Declining Invitation", "Are you sure you want to decline this invitation?", {
+            "CANCEL":function(){},
+            "DECLINE": function(){
+                self.submit_invitation(false, null);
+            },
+        }, function(){ });
 	},
 	submit_invitation: function(accepted, channel){
 		// Show invitation was accepted
