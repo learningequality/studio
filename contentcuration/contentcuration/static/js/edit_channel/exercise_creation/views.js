@@ -285,7 +285,7 @@ var EditorView = Backbone.View.extend({
         }
     },
     check_key: function(content, key){
-        var specialCharacterKeys = [188, 189, 190, 191, 220];
+        var specialCharacterKeys = [32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 188, 189, 190, 191, 220];
         return !this.numbersOnly || NUM_REGEX.test(content) || _.contains(specialCharacterKeys, key);
     },
     paste_content: function(event){
