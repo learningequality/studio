@@ -507,16 +507,19 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 							resolve(true);
 						});
 					}).catch(function(error){
-		        		alert(error.responseText);
-		        		$(".content-list").sortable( "cancel" );
-		        		$(".content-list").sortable( "enable" );
-		        		$(".content-list").sortable( "refresh" );
-
-		        		// Revert back to original positions
-		        		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
-							self.reload_ancestors(fetched);
-							self.render();
-						});
+				        var dialog = require("edit_channel/utils/dialog");
+				        dialog.dialog("Error Moving Content", error.responseText, {
+				            "OK":function(){}
+				        }, function(){
+				        	$(".content-list").sortable( "cancel" );
+			        		$(".content-list").sortable( "enable" );
+			        		$(".content-list").sortable( "refresh" );
+				            // Revert back to original positions
+			        		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
+								self.reload_ancestors(fetched);
+								self.render();
+							});
+				        });
 		        	});
 				});
 			}

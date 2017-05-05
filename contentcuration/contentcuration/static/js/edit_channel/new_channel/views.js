@@ -242,18 +242,22 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		if(this.isNew){
 			this.delete(true, " ");
 			this.containing_list_view.set_editing(false);
-		}
-		else if(confirm("WARNING: All content under this channel will be permanently deleted."
-					+ "\nAre you sure you want to delete this channel?")){
-			var self = this;
-			this.save({"deleted":true}, "Deleting Channel...").then(function(){
-				self.containing_list_view.set_editing(false);
-				self.containing_list_view.collection.remove(self.model);
-				self.containing_list_view.render();
-				self.containing_list_view.handle_channel_change(self.model, true);
-			});
 		}else{
-			this.cancel_actions(event);
+			var self = this;
+            var dialog = require("edit_channel/utils/dialog");
+            dialog.dialog("WARNING", "All content under this channel will be permanently deleted."
+					+ "\nAre you sure you want to delete this channel?", {
+                "CANCEL":function(){},
+                "DELETE CHANNEL": function(){
+					self.save({"deleted":true}, "Deleting Channel...").then(function(){
+						self.containing_list_view.set_editing(false);
+						self.containing_list_view.collection.remove(self.model);
+						self.containing_list_view.render();
+						self.containing_list_view.handle_channel_change(self.model, true);
+					});
+                },
+            }, null);
+            self.cancel_actions(event);
 		}
 	},
 	toggle_channel: function(event){

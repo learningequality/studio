@@ -1,5 +1,5 @@
 <div class="{{#if isfolder}} folder_item {{#unless isempty}}export_folder{{/unless}}{{/if}}" title="{{node.title}}">
-    {{#unless isfolder}}<span class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></span>{{/unless}}
+    {{#unless isfolder}}<span class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}} content_icon"></span>{{/unless}}
     <div class="export_item_title truncate">{{node.title}}</div>
     {{#if isfolder}}
         {{#if isempty}}

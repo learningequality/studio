@@ -4,6 +4,7 @@ var _ = require("underscore");
 require("content-container.less");
 var BaseViews = require("./../views");
 var DragHelper = require("edit_channel/utils/drag_drop");
+var dialog = require("edit_channel/utils/dialog");
 
 /**
  * Main view for all draft tree editing
@@ -96,29 +97,33 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		this.$("#container_area").toggleClass("hidden_details");
 	},
 	delete_content: function (event){
-		if(confirm("Are you sure you want to delete these selected items?")){
-			var deleteCollection = new Models.ContentNodeCollection();
-			for(var i = 0; i < this.lists.length; i++){
-				var list = this.lists[i].get_selected();
-				var open_folder = null;
-				for(var j = 0; j < list.length; j++){
-					var view = list[j];
-					if(view){
-						deleteCollection.add(view.model);
-						view.remove();
+		var self = this;
+        dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
+            "CANCEL":function(){},
+            "DELETE ITEMS": function(){
+				var deleteCollection = new Models.ContentNodeCollection();
+				for(var i = 0; i < self.lists.length; i++){
+					var list = self.lists[i].get_selected();
+					var open_folder = null;
+					for(var j = 0; j < list.length; j++){
+						var view = list[j];
+						if(view){
+							deleteCollection.add(view.model);
+							view.remove();
+						}
+						if(view.subcontent_view){
+							open_folder = view.subcontent_view;
+							break;
+		    			}
 					}
-					if(view.subcontent_view){
-						open_folder = view.subcontent_view;
+					if(open_folder){
+						self.remove_containers_from(open_folder.index-1);
 						break;
 	    			}
 				}
-				if(open_folder){
-					this.remove_containers_from(open_folder.index-1);
-					break;
-    			}
-			}
-			this.add_to_trash(deleteCollection, "Deleting Content...");
-		}
+				self.add_to_trash(deleteCollection, "Deleting Content...");
+            },
+        }, null);
 	},
 	copy_content: function(event){
 		var self = this;
@@ -399,12 +404,16 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	delete_node:function(event){
 		this.cancel_actions(event);
-		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
-			this.add_to_trash();
-			if(this.subcontent_view){
-				this.subcontent_view.remove();
-			}
-		}
+		var self = this;
+        dialog.dialog("WARNING", "Are you sure you want to delete " + this.model.get("title") + "?", {
+            "CANCEL":function(){},
+            "DELETE": function(){
+				self.add_to_trash();
+				if(self.subcontent_view){
+					self.subcontent_view.remove();
+				}
+            },
+        }, null);
 	},
 	add_new_subtopic:function(event){
 		this.cancel_actions(event);
