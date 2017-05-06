@@ -4,6 +4,7 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("archive.less");
 var stringHelper = require("edit_channel/utils/string_helper");
+var dialog = require("edit_channel/utils/dialog");
 
 var ArchiveModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/archive_modal.handlebars"),
@@ -308,9 +309,11 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         dialog.dialog("WARNING", "Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!", {
             "CANCEL":function(){},
             "DELETE": function(){
-                self.metadata = {"count": 0, "size": 0};
-                self.item_to_archive = false;
-                self.containing_list_view.update_count();
+                self.delete(true, "Deleting Content...", function(){
+                    self.metadata = {"count": 0, "size": 0};
+                    self.item_to_archive = false;
+                    self.containing_list_view.update_count();
+                });
             },
         }, null);
     },
