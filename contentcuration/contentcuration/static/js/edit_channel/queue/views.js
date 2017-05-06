@@ -243,9 +243,12 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		}
 	},
 	delete_content:function(){
+		var self = this;
         dialog.dialog("WARNING", "Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!", {
             "CANCEL":function(){},
-            "DELETE": this.add_to_trash,
+            "DELETE": function(){
+            	self.add_to_trash()
+            }
         }, null);
 	},
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
