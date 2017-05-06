@@ -222,6 +222,10 @@ var BaseWorkspaceView = BaseView.extend({
 		});
 	},
 	handle_move:function(target, moved, original_parents){
+		var reloadCollection = new Models.ContentNodeCollection();
+ 		reloadCollection.add(original_parents.models);
+ 		reloadCollection.add(moved.models);
+
 		// Remove where nodes originally were
 		moved.forEach(function(node){ window.workspace_manager.remove(node.id)});
 
@@ -318,9 +322,7 @@ var BaseListView = BaseView.extend({
 	},
 	update_views:function(){
 		var self = this;
-		this.retrieve_nodes(this.model.get("children")).then(function(fetched){
-			self.load_content(fetched);
-		});
+		this.retrieve_nodes(this.model.get("children")).then(this.load_content);
 	},
 	load_content: function(collection, default_text){
 		collection = (collection)? collection : this.collection;

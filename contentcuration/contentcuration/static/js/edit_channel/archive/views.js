@@ -304,14 +304,15 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     delete_content:function(event){
         event.stopPropagation();
         event.preventDefault();
-        if(confirm("Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!")){
-            var self = this;
-            this.delete(true, "Deleting Content...", function(){
+        var self = this;
+        dialog.dialog("WARNING", "Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!", {
+            "CANCEL":function(){},
+            "DELETE": function(){
                 self.metadata = {"count": 0, "size": 0};
                 self.item_to_archive = false;
                 self.containing_list_view.update_count();
-            });
-        }
+            },
+        }, null);
     },
     restore_content:function(event){
         event.stopPropagation();
