@@ -125,3 +125,10 @@ Handlebars.registerHelper('substring', function(text, chars){
 Handlebars.registerHelper('question_default_text', function(type){
   return type === "perseus_question"? "Perseus Question" : "No text provided";
 });
+
+
+var TABINDEX = 0;
+Handlebars.registerHelper('tabindex', function(increment){
+  TABINDEX += (isNaN(increment))? 1 : Number(increment);
+  return TABINDEX;
+});

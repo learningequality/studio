@@ -7,24 +7,24 @@
             </div>
             <div class="modal-body">
                 <div id="export_area">
-                    <div class="input-tab-control" tabindex="1" data-next="#export_cancel"></div>
-                    <div class="input-tab-control" tabindex="4" data-next="#publish_btn"></div>
+                    <div class="input-tab-control" tabindex="{{#tabindex}}{{/tabindex}}" data-next="#export_cancel"></div>
                     <em >PUBLISH ID: {{channel.id}}</em>
                     <em class="pull-right" id="version_number">Current Version: {{version}}</em>
                     <h4>The following content will be published:</h4>
                     <div id="export_preview"></div>
                     <div id="export_buttons">
-                        <button class="action-button pull-right" id="publish_btn" tabindex="2" >
+                        <button class="action-button pull-right" id="publish_btn" tabindex="{{#tabindex}}{{/tabindex}}" >
                             <span>PUBLISH</span>
                         </button>
                         <span id="export_totals" class="pull-right">
                             {{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}
                             <em class="annotation" id="export_size">(Calculating...)</em>
                         </span>
-                        <a class="action-text" id="export_cancel" data-dismiss="modal" tabindex="3" >
+                        <a class="action-text" id="export_cancel" data-dismiss="modal" tabindex="{{#tabindex}}{{/tabindex}}" >
                             <span>CANCEL</span>
                         </a>
                     </div>
+                    <div class="input-tab-control" tabindex="{{#tabindex}}{{/tabindex}}" data-next="#publish_btn"></div>
                 </div>
             </div>
         </div>

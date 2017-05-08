@@ -99,7 +99,7 @@ var FileUploadView = BaseViews.BaseView.extend({
             case 1:
                 $("#metadata_step_number").removeClass("active_number");
                 this.current_view = new FileUploadList(data);
-                this.current_view.check_completed() ? this.enable_next() : this.disable_next();
+                this.enable_next();
                 break;
             case 2:
                 var UploaderViews = require("edit_channel/uploader/views");
@@ -243,68 +243,9 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         if(this.check_completed() && this.uploads_in_progress === 0){
             this.enable_next();
         }
-    }
-});
-
-var FileFormatList  = FileBaseList.extend({
-    template: require("./hbtemplates/file_upload_format_list.handlebars"),
-    selectedClass: "file-selected",
-
-    initialize: function(options) {
-        _.bindAll(this, "hide_assigned");
-        this.container = options.container;
-        this.collection = options.collection;
-        this.uploads_in_progress = 0;
-        this.index = 1;
-        this.render();
-    },
-    events:{
-      "click #show_unassigned" : "hide_assigned"
-    },
-    render: function() {
-        this.$el.html(this.template({last_tab_index: this.collection.length * 2 + 1}));
-        this.load_content();
-        if(this.views.length > 0){
-            this.views[0].set_focus();
-        }
-    },
-    remove_view: function(view){
-        this.views.splice(this.views.indexOf(this), 1);
-        this.collection.remove(view.model);
-        view.remove();
-        this.handle_if_empty();
-        (this.views.length === 0)? this.container.switch_view(1) : this.handle_completed();
-    },
-    check_completed:function(){
-        return _.some(this.views, function(view){ return view.check_for_completion(); });
-    },
-    create_new_view:function(model){
-        this.index += 2; //Increment by 2 in case format dropdown is rendered
-        var new_format_item = new FormatFormatItem({
-            model: model,
-            containing_list_view : this,
-            tab_index: this.index
-        });
-
-        this.views.push(new_format_item);
-        return new_format_item;
-    },
-    show_uploading:function(event){
-        var is_checked = this.$("#show_uploading").is(":checked");
-        (is_checked)? this.$el.addClass('hide_uploaded') : this.$el.removeClass('hide_uploaded');
-        this.$(this.default_item).css("display", (this.$(".format_item").length || is_checked) ? "none" : "block");
-        this.$("#file_upload_count").css("display", (is_checked) ? "flex" : "none");
-    },
-    handle_completed:function(){
-        if(this.check_completed() && this.uploads_in_progress === 0){
-            this.enable_next();
-        }
     },
     update_count:function(){
         $("#file_upload_count").text(this.views.length + (this.views.length===1? " file" : " files") + " uploaded");
-    },
-    set_uploading:function(is_uploading){
-        is_uploading? this.disable_next(true) : this.enable_next();
     }
 });
 
@@ -447,7 +388,7 @@ var FormatFormatItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_format_item.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, 'update_name', 'set_initial_format', 'remove_item', 'set_focus', 'set_thumbnail', 'disable_next', 'enable_next', 'remove_thumbnail');
+        _.bindAll(this, 'update_name', 'remove_item', 'set_focus', 'set_thumbnail', 'disable_next', 'enable_next', 'remove_thumbnail');
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
         this.tab_index = options.tab_index;
@@ -717,20 +658,22 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     create_dropzone:function(){
         var selector = "#" + this.get_selector();
-        this.dropzone = new Dropzone(this.$(selector).get(0), {
-            maxFiles: 1,
-            clickable: [selector + "_placeholder", selector + "_swap"],
-            acceptedFiles: this.acceptedFiles,
-            url: this.upload_url,
-            previewTemplate:this.dropzone_template({src:"/static/img/loading_placeholder.png"}),
-            previewsContainer: selector,
-            headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id, "Node": this.model.id}
-        });
-        this.dropzone.on("success", this.image_uploaded);
-        this.dropzone.on("addedfile", this.image_added);
-        this.dropzone.on("removedfile", this.image_removed);
-        this.dropzone.on("queuecomplete", this.image_completed);
-        this.dropzone.on("error", this.image_failed);
+        if(this.$(selector).is(":visible")){
+            this.dropzone = new Dropzone(this.$(selector).get(0), {
+                maxFiles: 1,
+                clickable: [selector + "_placeholder", selector + "_swap"],
+                acceptedFiles: this.acceptedFiles,
+                url: this.upload_url,
+                previewTemplate:this.dropzone_template({src:"/static/img/loading_placeholder.png"}),
+                previewsContainer: selector,
+                headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id, "Node": this.model.id}
+            });
+            this.dropzone.on("success", this.image_uploaded);
+            this.dropzone.on("addedfile", this.image_added);
+            this.dropzone.on("removedfile", this.image_removed);
+            this.dropzone.on("queuecomplete", this.image_completed);
+            this.dropzone.on("error", this.image_failed);
+        }
     },
     image_uploaded:function(image){
         this.image_error = null;
@@ -802,7 +745,6 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
         this.$el.html(this.template());
         $("body").append(this.el);
         this.$("#thumbnail_modal").modal({show: true});
-        this.$("#thumbnail_modal").on("hide.bs.modal", this.close);
         this.render_preview()
         this.$(".modal").on("hide.bs.modal", this.close);
         this.$(".modal").on("hidden.bs.modal", this.closed_modal);

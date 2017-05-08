@@ -5,6 +5,7 @@
 		<a class="btn btn-tab tab_button" id="metadata_questions_btn">Questions</a>
 		<a class="btn btn-tab tab_button" id="metadata_preview_btn">Preview</a>
 	</nav>
+	<div class="input-tab-control" tabindex="{{#tabindex}}{{/tabindex}}" data-next="{{#if allow_edit}}#tag_box{{else}}#license_about{{/if}}"></div>
 	<div  class="metadata_panel">
 		<div id="metadata_edit_details" class="input_area tab_panel">
 			<div class="section pull-left edit_details_section">
@@ -18,17 +19,17 @@
 	{{#if allow_edit}}
 	<div class="metadata_save_buttons container-fluid">
 		<div class="pull-right">
-			<a id="upload_save_button" class="disable_on_error editmetadata_save" tabindex="9">APPLY CHANGES</a>
-			<a class="btn btn-default" id="upload_save_finish_button" class="disable_on_error editmetadata_save" tabindex="10">SAVE &amp; CLOSE</a>
+			<a id="upload_save_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">APPLY CHANGES</a>
+			<a class="btn btn-default" id="upload_save_finish_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">SAVE &amp; CLOSE</a>
 		</div>
-		<a class="action-text" data-dismiss="modal" aria-label="Close">CANCEL</a>
+		<a class="action-text" data-dismiss="modal" aria-label="Close"  tabindex="{{#tabindex}}{{/tabindex}}">CLOSE</a>
 	</div>
 	{{else}}
 	<div class="metadata_copy_buttons container-fluid">
 		<div class="pull-right">
-			<a class="btn btn-default action-button" id="copy_button" class="disable_on_error editmetadata_save">COPY</a>
+			<a class="btn btn-default action-button" id="copy_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">COPY</a>
 		</div>
-		<a class="disable_on_error action-text" id="close_uploader_button">CLOSE</a>
+		<a class="disable_on_error action-text" id="close_uploader_button" tabindex="{{#tabindex}}{{/tabindex}}">CLOSE</a>
 	</div>
 	{{/if}}
 </div>

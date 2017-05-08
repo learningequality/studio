@@ -1,15 +1,14 @@
-<div class="input-tab-control" tabindex="1" data-next="#share_invite_button"></div>
-<div class="input-tab-control" tabindex="5" data-next="#share_email_address"></div>
+<div class="input-tab-control" tabindex="{{#tabindex}}{{/tabindex}}" data-next="#share_close_button"></div>
 <div id="share_area">
 	<div id="editor_list_area">
 		<h4>People who can access this channel</h4>
 		<div id="share_email">
 			<p id="share_error"></p>
-			<input type="text" placeholder="Enter email address..." id="share_email_address" tabindex='2' autofocus>
-			<select id="share_mode" tabindex='3'>
+			<input type="text" placeholder="Enter email address..." id="share_email_address" tabindex='{{#tabindex}}{{/tabindex}}' autofocus>
+			<select id="share_mode" tabindex='{{#tabindex}}{{/tabindex}}'>
 				{{#each share_modes}}<option value="{{share_mode}}">{{text}}</option>{{/each}}
 			</select>
-			<input type="submit" class="action-button" value="Invite" id="share_invite_button" tabindex='4'>
+			<input type="submit" class="action-button" value="Invite" id="share_invite_button" tabindex='{{#tabindex}}{{/tabindex}}'>
 		</div>
 		<div id="editor_list_wrapper">
 			<ul class="list-unstyled">
@@ -27,7 +26,7 @@
 	</div>
 	<br/>
 	<div id="share_bottom_container">
-		<a class="action-text" data-dismiss="modal">
+		<a id="share_close_button" class="action-text" data-dismiss="modal" tabindex="{{#tabindex}}{{/tabindex}}">
 			<span>CLOSE</span>
 		</a>
 		<!-- <button class="action-button pull-right" id="share_content_submit">
@@ -36,3 +35,4 @@
 		<span id="share_change_indicator" class="pull-right">Changes Saved</span>
 	</div>
 </div>
+<div class="input-tab-control" tabindex="5" data-next="#share_email_address"></div>

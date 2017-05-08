@@ -35,6 +35,14 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       allow_edit: this.allow_edit
     });
   },
+  events: {
+    'keydown #uploaderModal': 'handle_escape',
+  },
+  handle_escape: function(event){
+    if(event && (event.keyCode || event.which) === 27){
+      this.close_uploader();
+    }
+  },
   close_uploader:function(event){
     if(!this.allow_edit || (this.metadata_view && !this.metadata_view.check_for_changes()) || !event){
       this.close();
@@ -64,7 +72,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
 
   initialize: function(options) {
-    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'enable_submit', 'disable_submit',
+    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'enable_submit', 'disable_submit', 'loop_focus',
       'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items');
     this.bind_edit_functions();
     this.new_content = options.new_content;
@@ -86,7 +94,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'click #upload_save_finish_button' : 'save_and_finish',
     'keypress #upload_save_finish_button': 'handle_save_and_finish_key',
     'click #copy_button': 'copy_items',
-    'click #close_uploader_button': 'close_upload'
+    'click #close_uploader_button': 'close_upload',
+    'focus .input-tab-control': 'loop_focus',
   },
   render: function() {
     this.$el.html(this.template({allow_edit: this.allow_edit}));
@@ -98,7 +107,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       if(self.collection.length > 1){
         self.load_editor(self.edit_list.selected_items);
       }
-      _.defer(self.editor_view.set_initial_focus, 500);
     });
   },
   render_details:function(){
@@ -432,7 +440,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   selected_items: [],
 
   initialize: function(options) {
-    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'loop_focus', 'select_tag');
+    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'loop_focus', 'select_tag', 'set_initial_focus');
     this.new_content = options.new_content;
     this.selected_items = options.selected_items;
     this.shared_data = options.shared_data;
@@ -525,6 +533,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         this.$("#randomize_exercise").prop("checked", randomize);
       }
     }
+    _.defer(this.set_initial_focus, 500);
   },
   get_mastery_string: function(){
     switch(this.shared_data.shared_exercise_data.mastery_model){
@@ -539,11 +548,12 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       case "m_of_n":
         return this.m_value + " of " + this.n_value
     }
-    this.set_initial_focus();
   },
   set_initial_focus:function(){
     var element = null;
-      if($("#input_title").length > 0){
+      if(!this.allow_edit){
+        element = $("#copy_button");
+      } else if($("#input_title").length > 0){
         element = $('#input_title');
       }else if($("#author_field").length > 0){
         element = $('#author_field');
@@ -603,7 +613,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     "change #license_select" : "select_license",
     'keypress #tag_box' : 'add_tag',
     'click .delete_tag':'remove_tag',
-    'focus .input-tab-control': 'loop_focus',
     'change #mastery_model_select': 'change_mastery_model',
     'change #m_value': 'set_mastery',
     'change #n_value': 'set_mastery',
