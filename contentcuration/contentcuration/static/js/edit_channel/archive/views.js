@@ -52,7 +52,7 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
         })
     },
     update_count:function(){
-        var collection = this.get_selected_views();
+        var collection = new Models.ContentNodeCollection(_.pluck(this.get_selected_views(), "model"));
         if(collection.length ===0){
             $(".archive_option").attr("disabled", "disabled");
             $(".archive_option").addClass("disabled");
@@ -67,12 +67,17 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
                 status = "";
                 break;
             case 1:
-                status = collection.length + " item selected, " + stringHelper.format_size(data.size);
+                status = collection.length + " item selected ";
                 break;
             default:
-                status = collection.length + " items selected, " + stringHelper.format_size(data.size);
+                status = collection.length + " items selected ";
         }
         this.$("#archive_selected_count").html(status);
+        this.$("#archive_selected_size").text("(Calculating size...)");
+        var self = this;
+        collection.calculate_size().then(function(size){
+            self.$("#archive_selected_size").text("(" + stringHelper.format_size(size) + ")");
+        });
     },
     restore_content:function(){
         var list = this.get_selected();
