@@ -246,7 +246,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
         'n': mastery_model.get('n'),
         'm': mastery_model.get('m'),
         'all_assessment_items': assessment_item_ids,
-        'assessment_mapping': {a.assessment_id : a.type for a in assessment_items},
+        'assessment_mapping': {a.assessment_id : a.type if a.type != 'true_false' else exercises.SINGLE_SELECTION.decode('utf-8') for a in assessment_items},
     })
 
     kolibriassessmentmetadatamodel = kolibrimodels.AssessmentMetaData.objects.create(
