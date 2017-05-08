@@ -19,9 +19,7 @@
 		margin-left:5px;
 		color:#EF2121;
 	}
-	.modal-dialog{
-		width: @exporter-width;
-	}
+	.modal-dialog{ width: @exporter-width; }
 	.modal-content{
 		min-height:@exporter-height;
 		background-color:@exporter-background-color;
@@ -35,11 +33,14 @@
 			color:@gray-400;
 			font-size:10pt;
 			font-weight:normal;
-			margin-left: 10px;
+		    white-space: nowrap;
+		}
+		.toggler, .content_icon, .annotation, .export_item_title{
+			display:table-cell;
+			padding-right: 10px;
 		}
 		#export_buttons{
-			margin-top:40px;
-			margin-bottom:30px;
+			margin-top:20px;
 			*{
 				display:inline-block;
 				vertical-align:middle;
@@ -60,8 +61,10 @@
 					.export_item_title{
 						font-size:13pt;
 						max-width: 350px;
-    					display: inline-block;
 					}
+					.export_folder{	cursor:pointer; }
+					.folder_item{ font-weight:bold; }
+					.subdirectory{ display:none; }
 				}
 			}
 		}
