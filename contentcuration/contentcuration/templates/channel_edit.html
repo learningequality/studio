@@ -4,17 +4,16 @@
 {% load i18n %}
 
 {% block content %}
-	 <script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
 
 	<script>
 		var channel = JSON.parse("{{ channel|escapejs}}");
-		var accessible_channels = JSON.parse("{{ accessible_channels |escapejs }}");
 		var license_list = JSON.parse("{{ license_list|escapejs}}");
 		var fformats = JSON.parse("{{ fileformat_list|escapejs }}");
 		var presets = JSON.parse("{{ fpreset_list|escapejs }}");
 		var kinds = JSON.parse("{{ ckinds_list |escapejs }}");
-		var channel_tags = JSON.parse("{{ ctags |escapejs }}");
 		var user = JSON.parse("{{ current_user|escapejs }}");
+		var preferences = JSON.parse("{{ preferences|escapejs }}");
 	</script>
 	<script type="text/javascript">
 		var bundle = require("channel_edit");

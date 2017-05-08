@@ -49,10 +49,14 @@ INSTALLED_APPS = (
     'rest_framework',
     'django_js_reverse',
     'kolibri.content',
+    'kolibri.auth.apps.KolibriAuthConfig',
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
 )
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
+
 
 MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
@@ -67,6 +71,11 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
+
+if os.getenv("GCLOUD_ERROR_REPORTING"):
+    MIDDLEWARE_CLASSES = (
+        "contentcuration.middleware.error_reporting.ErrorReportingMiddleware",
+    ) + MIDDLEWARE_CLASSES
 
 SUPPORTED_BROWSERS = [
     'Chrome',

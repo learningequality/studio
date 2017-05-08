@@ -3,12 +3,7 @@
 <div class="channel-container-wrapper {{#unless edit}}open_channel{{/unless}}">
 	<div class="profile pull-left text-center">
 		{{#if edit}}
-			<div class="new_channel_pic" id="dropzone">
-				<img id="dz-placeholder" src="{{picture}}"/>
-				<div id="finished_area">
-			        <a id="swap-thumbnail">Change Thumbnail</a>
-			    </div>
-			</div>
+			<div class="new_channel_pic"></div>
 		{{else}}
 			{{#if picture}}
 				<img class="channel_pic" alt="{{channel.name}} logo" src="{{picture}}"/>
@@ -29,17 +24,17 @@
 			<span class="resource_count">{{resource_count}}</span> Resource(s)
 			<span class="glyphicon glyphicon-file resource-icon" aria-hidden="true"></span>{{#format_file_size total_file_size}}{{/format_file_size}}
 			&nbsp;ID:
-			{{#if channel.main_tree.published}}
+			{{#if channel.published}}
 				<input type="text" class="copy-id-text text-center" value="{{channel.id}}" readonly size='30'/>
 				<span class="glyphicon glyphicon-copy copy-id-btn" aria-hidden="true" title="Copy ID to clipboard"></span>
 			{{else}}<em>(Unpublished)</em>
 			{{/if}}
-			{{#if view_only}}
+			{{#if channel.view_only}}
 				<b class="pull-right">&nbsp;View Only</b>
 			{{/if}}
 		</span>
 		<h4>
-			{{#unless view_only}}
+			{{#unless channel.view_only}}
 				<span class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right"></span>
 			{{/unless}}
 			<p class="truncate channel_name" title="{{channel.name}}">{{channel.name}}</p>

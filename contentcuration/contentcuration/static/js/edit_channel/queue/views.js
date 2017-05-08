@@ -4,6 +4,7 @@ require("queue.less");
 var BaseViews = require("./../views");
 var Models = require("./../models");
 var DragHelper = require("edit_channel/utils/drag_drop");
+var dialog = require("edit_channel/utils/dialog");
 
 /* Loaded when user clicks clipboard button below navigation bar */
 var Queue = BaseViews.BaseWorkspaceView.extend({
@@ -122,7 +123,7 @@ var ClipboardList = QueueList.extend({
 	list_wrapper_selector: "#clipboard-queue",
 
 	initialize: function(options) {
-		_.bindAll(this, 'delete_items', 'create_new_view', 'edit_items', 'handle_drop');
+		_.bindAll(this, 'delete_items', 'create_new_view', 'edit_items', 'handle_drop', 'move_items');
 		this.bind_queue_list_functions();
 		this.collection = options.collection;
 		this.container = options.container;
@@ -161,23 +162,32 @@ var ClipboardList = QueueList.extend({
 		'change .select_all' : 'check_all',
 		'click .delete_items' : 'delete_items',
 		'click .edit_items' : 'edit_items',
+		'click .move_items' : 'move_items',
 		'click .create_new_content' : 'add_topic',
 		'click .upload_files_button': 'add_files',
-		'click .import_content' : 'import_content'
+		'click .import_content' : 'import_content',
+		'click .create_exercise_button' : 'add_exercise'
 	},
 	delete_items:function(){
-		if(confirm("Are you sure you want to delete these selected items?")){
-			this.delete_selected();
-			this.$(".select_all").attr("checked", false);
-		}
+		var self = this;
+
+        dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
+            "CANCEL":function(){},
+            "DELETE ITEMS": function(){
+				self.delete_selected();
+				self.$(".select_all").attr("checked", false);
+            },
+        }, null);
 	},
 	edit_items:function(){
-		this.container.edit_selected();
+		this.container.edit_selected(true);
 	},
+	move_items:function(){
+		this.container.move_content();
+	}
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
 	// handle_drop:function(collection){
 	// 	this.$(this.default_item).css("display", "none");
-	// 	console.log(this.model)
 	// 	return collection.duplicate(this.model);
  // 	},
 });
@@ -229,10 +239,14 @@ var TrashList = QueueList.extend({
 		return item_view;
 	},
 	delete_items:function(){
-		if(confirm("Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
-			this.delete_items_permanently("Deleting Content...");
-			this.$(".select_all").attr("checked", false);
-		}
+		var self = this;
+        dialog.dialog("WARNING", "Are you sure you want to delete these selected items PERMANENTLY? Changes cannot be undone!", {
+            "CANCEL":function(){},
+            "DELETE ITEMS": function(){
+				self.delete_items_permanently("Deleting Content...");
+				self.$(".select_all").attr("checked", false);
+            },
+        }, null);
 	},
 	move_trash:function(){
 		var list = this.get_selected();
@@ -298,8 +312,13 @@ var ClipboardItem = QueueItem.extend({
 	events: {
 		'click .delete_content' : 'delete_content',
 		'click .tog_folder' : 'toggle',
-		'click .edit_content' : 'open_edit',
+		'click .edit_content' : 'edit_item',
 		'change input[type=checkbox]': 'handle_checked'
+	},
+	edit_item:function(event){
+		event.stopPropagation();
+		event.preventDefault();
+		this.open_edit(true);
 	},
 	load_subfiles:function(){
 		if(!this.subcontent_view){
@@ -316,9 +335,13 @@ var ClipboardItem = QueueItem.extend({
 		}
 	},
 	delete_content:function(){
-		if(confirm("Are you sure you want to delete " + this.model.get("title") + "?")){
-			this.add_to_trash();
-		}
+		var self = this;
+        dialog.dialog("WARNING", "Are you sure you want to delete " + this.model.get("title") + "?", {
+            "CANCEL":function(){},
+            "DELETE": function(){
+				self.add_to_trash();
+            },
+        }, null);
 	},
 	/* Implementation for creating copies of nodes when dropped onto clipboard */
 	// handle_drop:function(collection){
@@ -366,9 +389,13 @@ var TrashItem = QueueItem.extend({
 		}
 	},
 	delete_content:function(){
-		if(confirm("Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!")){
-			this.delete(true, "Deleting Content...");
-		}
+		var self = this;
+        dialog.dialog("WARNING", "Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!", {
+            "CANCEL":function(){},
+            "DELETE": function(){
+				self.delete(true, "Deleting Content...");
+            },
+        }, null);
 	}
 });
 

@@ -8,17 +8,27 @@
 	<div  class="metadata_panel">
 		<div id="metadata_edit_details" class="input_area tab_panel">
 			<div class="section pull-left edit_details_section">
-				<div id="edit_details_wrapper"></div>
+				<div id="edit_details_wrapper"><div id="metadata_placeholder" class="container-fluid text-center">Loading content...</div></div>
 			</div>
 		</div>
 		<div id="metadata_questions" class="container-fluid tab_panel"></div>
 		<div id="metadata_preview" class="container-fluid tab_panel"></div>
 	</div>
 	<br/>
-	<div class="metadata_save_buttons">
+	{{#if allow_edit}}
+	<div class="metadata_save_buttons container-fluid">
 		<div class="pull-right">
 			<a id="upload_save_button" class="disable_on_error editmetadata_save" tabindex="9">APPLY CHANGES</a>
-			<a class="btn btn-default action-button" id="upload_save_finish_button" class="disable_on_error editmetadata_save" tabindex="10">SAVE &amp; FINISH</a>
+			<a class="btn btn-default" id="upload_save_finish_button" class="disable_on_error editmetadata_save" tabindex="10">SAVE &amp; CLOSE</a>
 		</div>
+		<a class="action-text" data-dismiss="modal" aria-label="Close">CANCEL</a>
 	</div>
+	{{else}}
+	<div class="metadata_copy_buttons container-fluid">
+		<div class="pull-right">
+			<a class="btn btn-default action-button" id="copy_button" class="disable_on_error editmetadata_save">COPY</a>
+		</div>
+		<a class="disable_on_error action-text" id="close_uploader_button">CLOSE</a>
+	</div>
+	{{/if}}
 </div>

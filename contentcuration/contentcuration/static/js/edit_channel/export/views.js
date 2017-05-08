@@ -2,6 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
+var stringHelper = require("edit_channel/utils/string_helper");
 require("export.less");
 
 var ExportModalView = BaseViews.BaseModalView.extend({
@@ -13,7 +14,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             channel: window.current_channel.toJSON(),
             licenses: window.licenses.toJSON(),
             version: window.current_channel.get("version") + 1,
-            node: this.model.toJSON()
+            node: this.model.toJSON(),
         });
         this.onpublish = options.onpublish;
         this.export_view = new ExportListView({
@@ -24,6 +25,10 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         });
         this.listenTo(this.export_view, "loadFinish", function(){
             $("#publish_btn").focus();
+        });
+        var self = this;
+        this.model.calculate_size().then(function(size){
+            self.$("#export_size").text("(" + stringHelper.format_size(size) + ")");
         });
     },
     events:{
@@ -59,7 +64,7 @@ var ExportListView = BaseViews.BaseListView.extend({
         this.$el.html(this.template({id: this.model.get("id")}));
         var self = this;
         this.fetch_model(this.model).then(function(fetched){
-            self.collection.get_all_fetch(fetched.get("children")).then(function(fetchedCollection){
+            self.collection.get_all_fetch_simplified(fetched.get("children")).then(function(fetchedCollection){
                 self.load_content(fetchedCollection);
                 self.trigger('loadFinish');
             });

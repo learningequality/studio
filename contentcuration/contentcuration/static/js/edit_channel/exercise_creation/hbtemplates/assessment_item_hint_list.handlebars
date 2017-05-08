@@ -1,5 +1,9 @@
-<ul class="list-group">
-<li class="list-group-item addhint show_on_focus">
-	<a class="action-text" title="Add Hint"><span class="glyphicon glyphicon-plus"></span> ADD HINT</a>
-</li>
+<div class="hint-errors">Please fix the items below before closing</div>
+<ul class="list-unstyled hint_list">
+	<div class="default-item">Loading...</div>
 </ul>
+{{#unless isdisplay}}
+<div class="addhint show_on_focus text-center" title="Add">
+	<span class="glyphicon glyphicon-plus"></span>&nbsp; HINT
+</div>
+{{/unless}}

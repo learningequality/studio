@@ -1,24 +1,10 @@
 {{#if uploading}}
 	<div class="input-tab-control" tabindex="1" data-next=".file-upload-cancel"></div>
-    <div class="input-tab-control" tabindex="5" data-next=".fileinput-button"></div>
-	<button disabled class="action-button pull-right go_to_formats disabled" tabindex="3">
+    <div class="input-tab-control" tabindex="5" data-next=".go_to_metadata"></div>
+    <button disabled class="action-button pull-right go_to_metadata disabled" tabindex="2">
 		<span>Add files to continue</span>
 	</button>
 	<a class="action-text file-upload-cancel" data-dismiss="modal" tabindex="4">
 		<span>CANCEL</span>
 	</a>
-{{else}}
-	{{#if formatting}}
-		<div class="input-tab-control" tabindex="1" data-next=".go_to_metadata"></div>
-		<button disabled class="action-button pull-right go_to_metadata disabled">
-			<span>Assign formats to continue</span>
-		</button>
-		<a class="action-text go_to_upload">
-			<span>BACK</span>
-		</a>
-	{{else}}
-		<a class="action-text go_to_upload_from_metadata">
-			<span>ADD MORE</span>
-		</a>
-	{{/if}}
 {{/if}}

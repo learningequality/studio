@@ -7,13 +7,13 @@ Hello {% if is_new %}{{ user.email }}{% else %}{{ user.first_name }}{% endif %},
 
 Please follow this link to accept the invitation:
 {% if is_new %}
-http://{{ site.domain }}{% url 'accept_invitation_and_registration' user.id invitation_key %}
+{{ domain }}{% url 'accept_invitation_and_registration' user.id invitation_key %}
 {% else %}
-http://{{ site.domain }}{% url 'accept_invitation' invitation_key %}
+{{ domain }}{% url 'accept_invitation' invitation_key %}
 {% endif %}
 
 or if you'd like to decline the invitation, follow this link:
-http://{{ site.domain }}{% url 'decline_invitation' invitation_key %}
+{{ domain }}{% url 'decline_invitation' invitation_key %}
 
 Thanks for using our site!
 

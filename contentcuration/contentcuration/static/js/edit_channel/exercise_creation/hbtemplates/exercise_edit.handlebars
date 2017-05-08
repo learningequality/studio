@@ -1,58 +1,19 @@
 <div class="container-fluid" id="exercisecreation">
-	<div class="row">
-		<div class="col-sm-12">
-			{{#if show_metadata}}
-			<input type="text" id="exercise_title" placeholder="Exercise Name" value="{{node.title}}">
-			{{/if}}
-		</div>
+	<div class="toggle_question_order pull-right">
+		<input id="randomize_question_order" class="randomize_exercise" type="checkbox" {{#if is_random}}checked{{/if}} {{#unless allow_edit}}disabled{{/unless}}>
+		<label for="randomize_question_order" class="randomize_exercise"> Randomize question order for learners</label>
 	</div>
-	<div class="row">
-		<div class="col-sm-6 show_question_toggle">
-			<input type="checkbox" id="exercise_show_answers"/>
-			<label for="exercise_show_answers">View questions only</label>
-		</div>
-		<div class="col-sm-4">
-			<label for="mastery_model_select">Mastery at:</label>
-			<select id="mastery_model_select" disabled>
-				<option value="do_all" selected>Do All</option>
-				<option value="num_correct_in_a_row_3">3 in a Row</option>
-				<option value="num_correct_in_a_row_5">5 in a Row</option>
-				<option value="num_correct_in_a_row_10">10 in a Row</option>
-				<option value="skill_check">Skill Check</option>
-				<option value="m_of_n">M out of N</option>
-			</select>
-		</div>
-		<div class="col-sm-2">
-			<input id="randomize_exercise" type="checkbox" checked disabled>
-			<label for="randomize_exercise">Randomize</label>
-			<!-- <span class="action-text download glyphicon glyphicon-download-alt" title="Download"></span> -->
-		</div>
+	<div class="show_question_toggle">
+		<input type="checkbox" id="exercise_show_answers"/>
+		<label for="exercise_show_answers"> View questions only</label>
 	</div>
 	<br/>
 	<ol class="panel-group" id="exercise_list" role="tablist" aria-multiselectable="true">
-		<div class="default-item">Loading...</div>
+		<div class="default-item container-fluid text-center">Loading...</div>
 	</ol>
-	<!-- <div class="dropup">
-	  	<button type="button" class="btn btn-default add_question" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Question Types">
-	  		<span class="glyphicon glyphicon-plus"></span>
-			ADD QUESTION
-		</button>
-	    <span class="sr-only">Add Question</span>
-	  </button>
-	  <ul class="dropdown-menu add_question_dropdown">
-	    <li class="multiple_selection"><a >Multiple Selection</a></li>
-	    <li class="single_selection"><a >Single Selection</a></li>
-	    <li class="true_false"><a >True/False</a></li>
-	    <li class="input_answer"><a >Input Answer</a></li>
-	    <li class="free_response"><a >Free Response</a></li>
-	  </ul>
-	</div> -->
-	{{#if show_metadata}}
-	<div id="exercise_buttons">
-		<a class="action-text" data-dismiss="modal" aria-label="Close">CANCEL</a>
-		<span class="pull-right">
-			<button class="action-button" id="createexercise">SAVE</button>
-		</span>
+	{{#if allow_edit}}
+	<div class="addquestion text-center container-fluid" id="addquestion">
+		<span class="glyphicon glyphicon-plus"></span>&nbsp; QUESTION
 	</div>
 	{{/if}}
 </div>

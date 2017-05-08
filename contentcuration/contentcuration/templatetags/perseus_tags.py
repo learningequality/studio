@@ -1,15 +1,10 @@
-import re
+import json
 from django import template
 from django.template.defaultfilters import stringfilter
 
 register = template.Library()
 
-@register.filter
+@register.filter(is_safe=True)
 @stringfilter
-def escape_newline(value):
-	return value.replace('\n', '\\n')
-
-@register.filter
-@stringfilter
-def escape_chars(value):
-	return value.replace('\n', '\\n').replace('\\"', '"')
+def jsonify(value):
+    return json.dumps(value, ensure_ascii=False)[1:-1]

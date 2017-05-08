@@ -1,4 +1,4 @@
-<div id="import_from_channel_box">{{#if is_empty}}<div id="import_empty_text">No channels to import from...</div>{{/if}}</div>
+<div id="import_from_channel_box"><div id="import_empty_text">Loading...</div></div>
 <br/>
 <div id="import_bottom_container">
 	<a class="action-text" data-dismiss="modal">
@@ -7,5 +7,8 @@
 	<button disabled class="action-button pull-right" id="import_content_submit">
 		Select content to import...
 	</button>
-	<span id="import_file_count" class="pull-right"><em>No files selected</em></span>
+	<span id="import_file_metadata" class="pull-right">
+		<span id="import_file_count">0 Topics, 0 Resources</span>
+		(<em id="import_file_size">0B</em>)
+	</span>
 </div>

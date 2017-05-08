@@ -6,13 +6,15 @@
             <h4 class="modal-title text-center">{{license.license_name}}</h4>
         </div>
         <div class="modal-body">
-        	<div id="license_description_wrapper">
+        	<div  class="modal-body-content">
             	<p>{{license.license_description}}</p>
             </div>
-			<a target="_blank" href="{{license.license_url}}" class="action-text">LEARN MORE</a>
-			<a class="action-text pull-right" data-dismiss="modal">
-	            <span>CLOSE</span>
-	        </a>
+            <div class="container-fluid">
+    			{{#if license.license_url}}<a target="_blank" href="{{license.license_url}}" class="action-text">LEARN MORE</a>{{/if}}
+    			<a class="action-text pull-right" data-dismiss="modal">
+    	            <span>CLOSE</span>
+    	        </a>
+            </div>
         </div>
     </div>
 </div>

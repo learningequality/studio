@@ -18,10 +18,7 @@
 	width:100%;
 	min-height: 0;
 
-	*{
-		vertical-align: middle;
-	}
-
+	*{ vertical-align: middle; }
 	li {
 		font-size: @larger-body-text;
 		cursor:pointer;
@@ -31,12 +28,11 @@
 		color:@gray-700;
 		padding:7px;
 		margin-right:15px;
+		&:hover{
+			background-color: transparent;
+			color:@blue-500;
+		}
 	}
-	a:hover{
-		background-color: transparent;
-		color:@blue-500;
-	}
-
 	#channel_select_dd_wrapper{
 		width:300px;
 		padding:3px;
@@ -78,7 +74,6 @@
 				right: 0;
 			}
 		}
-
 		.default-channel-item{
 			color:@annotation-gray;
 			padding:2px 15px;
@@ -118,8 +113,56 @@
 	width:100vw;
 	background-color:@blue-100;
 	margin:0;
-	margin-bottom:20px;
 	padding: 13px 0 0 30px;
+	.nav-button-container {
+		width: 50px;
+		.inline-block;
+		margin-right: 35px;
+		.nav-button {
+			width: 100%;
+			height: 40px;
+			background: @body-background;
+			border-radius: 2px;
+			cursor: pointer;
+			span {
+				font-size: 23px;
+			    text-align: center;
+			    display: block;
+			    top: 8px;
+			    color: @blue-500;
+			}
+		}
+		a {
+			color: @body-font-color;
+			display: block;
+			text-align: center;
+			&:hover {
+				text-decoration: none;
+			}
+		}
+	}
+	.hide-details-container {
+		position: relative;
+		bottom: 22px;
+		.inline-block;
+		input {
+			width: 20px;
+			height: 20px;
+		}
+		label {
+			font-size: 14px;
+			color: @body-font-color;
+			position: relative;
+			bottom: 4px;
+		}
+	}
+}
+
+#ricecooker_header{
+	padding: 10px;
+    background-color: blanchedalmond;
+    color: @gray-700;
+    font-style: italic;
 }
 
 #publish-id{
@@ -181,35 +224,29 @@
 		position:absolute;
 		width:100vw;
 		padding-left:40px;
+		margin-top:20px;
 	}
-
 	.close_clipboard{
 		margin-top:10px;
 		font-size: 20pt;
 		color:gray;
 		cursor:pointer;
 	}
-
 	#container_area{
 		width:@container-last-width; /* will be added to as containers are added- extra padding for clipboard*/
 	}
-
 	#container_area_title{
 		margin-top: 0px;
 		color: @channel-edit-font-color;
 		margin-bottom: 10px;
 	}
-	#hide_details_checkbox{
-		cursor:pointer;
-	}
-
+	#hide_details_checkbox{ cursor:pointer; }
 	#hide_details_checkbox + label{
 		color:@channel-edit-font-color;
 		font-size:10pt;
 		font-weight:normal;
 		cusor:pointer;
 	}
-
 	.content-container{
 		padding:2px;
 		margin:0;
@@ -219,11 +256,7 @@
 		height:  @container-height;
 		min-height: @container-min-height;
 		cursor:default;
-
-		.back_button{
-			cursor:pointer;
-		}
-
+		.back_button{ cursor:pointer; }
 		h2{
 			color:@container-title-color;
 			font-size: @title-size;
@@ -249,11 +282,19 @@
 				font-size:@item-title-font-size;
 				font-weight:bold;
 			}
+			.current_topic{
+				background-color: @highlighted-file;
+			}
 			li{
-				input[type="radio"]{
-					display:none;
-				}
 				background-color: @item-color;
+				input[type=checkbox]{
+					display:inline-block;
+					width:20px;
+					height:20px;
+					vertical-align:middle;
+					margin: 6px 0 0 10px;
+					cursor:pointer;
+				}
 				label{
 					padding:5px;
 					vertical-align: middle;
@@ -266,6 +307,15 @@
 					h3{
 						font-size: @item-title-font-size;
 					}
+					.options{
+						visibility:hidden;
+						height:100%;
+						.glyphicon{
+							margin-left: 20px;
+							cursor:pointer;
+							font-size: @item-title-font-size;
+						}
+					}
 					.metadata_to_hide, .description, .filler{
 						display:none;
 					}
@@ -273,6 +323,13 @@
 					.item-text-area{
 						display:inline-block;
 						vertical-align: middle;
+					}
+				}
+
+				.folder, .file{
+					width: @container-width - 65px;
+					h3{
+						width:73%;
 					}
 				}
 				.folder{
@@ -285,6 +342,9 @@
 			}
 			li:hover{
 				background-color: @highlighted-file;
+				.options{
+					visibility:visible !important;
+				}
 			}
 			.editing{
 				.error_msg{
@@ -337,9 +397,16 @@
 					}
 				}
 			}
-			.folder{
+			.folder h3{
+				margin-top: 5px;
+			}
+			.folder, .file{
+				width: @container-last-width - 60px;
 				h3{
-					margin-top: 5px;
+					width:73%;
+				}
+				.folder_open_icon{
+					margin-top:5px;
 				}
 			}
 			.unpublished, .invalid{
@@ -382,50 +449,6 @@
 		@edit-new-content-color: #89C0B1;
 		@edit-current-folder-color:#666666;
 
-		#button_bar {
-			.nav-button-container {
-				width: 50px;
-				.inline-block;
-				margin-right: 35px;
-				.nav-button {
-					width: 100%;
-					height: 40px;
-					background: @body-background;
-					border-radius: 2px;
-					cursor: pointer;
-					span {
-						font-size: 23px;
-					    text-align: center;
-					    display: block;
-					    top: 8px;
-					    color: @blue-500;
-					}
-				}
-				a {
-					color: @body-font-color;
-					display: block;
-					text-align: center;
-					&:hover {
-						text-decoration: none;
-					}
-				}
-			}
-			.hide-details-container {
-				position: relative;
-				bottom: 22px;
-				.inline-block;
-				input {
-					width: 20px;
-					height: 20px;
-				}
-				label {
-					font-size: 14px;
-					color: @body-font-color;
-					position: relative;
-					bottom: 4px;
-				}
-			}
-		}
 		.content-container{
 			background-color: @edit-container-color;
 			border: 2px solid @edit-container-color;
@@ -439,83 +462,21 @@
 
 				li{
 					border-top: 1px solid  @edit-container-color;
-				}
-				input[type=checkbox]{
-					display:inline-block;
-					width:20px;
-					height:20px;
-					vertical-align:middle;
-					margin: 6px 0 0 10px
-				}
-				label{
-					.title_wrapper{
-						width:auto;
-					}
-					.options{
-						width:@item-title-font-size;
-						height:100%;
-						.glyphicon{
-							cursor:pointer;
-							font-size: @item-title-font-size;
+					label{
+						.title_wrapper{
+							width:auto;
 						}
 						.content-options-dropdown{
-							visibility:hidden;
 							margin:0;
 							padding:0;
 							border:none;
 							background-color:transparent;
 						}
+					}
+				}
 
-						.disable-on-edit{
-							visibility:hidden;
-						}
-					}
-
-					.node_title_textbox, .topic_textarea{
-						width:100%;
-						resize:none;
-					}
-					.item_edit_options{
-						.glyphicon{
-							font-size: @item-title-font-size;
-							cursor:pointer;
-						}
-						.submit_edit{
-							margin-right:20px;
-						}
-					}
-				}
-				label:hover .content-options-dropdown, .active-popover{
-					visibility:visible !important;
-				}
-				.folder, .file{
-					width: @container-width - 55px;
-					h3{
-						width:@container-width - @item-title-font-size - 70px;
-					}
-				}
 				.current_topic{
-					background-color: @highlighted-file;
 					border-left:4px solid @edit-current-folder-color;
-					label{
-						width: @container-width - 65px;
-						h3{
-							width:80%;
-						}
-					}
-				}
-				.under_topic{
-					.list_item_wrapper{
-						background-color:@blue-100;
-					}
-				}
-				.under_topic_placeholder{
-					display:none;
-					height:@collapsed-height;
-					background-color: @gray-200;
-				}
-				.under_topic_placeholder:hover{
-					background-color:@edit-current-folder-color;
 				}
 			}
 
@@ -538,6 +499,8 @@
 			}
 			.popover{
 				border-radius: 0;
+				margin-top: 15px;
+				.arrow{top:40% !important;}
 				.popover-content {
 					padding:0px;
 					.option{
@@ -575,15 +538,6 @@
 		}
 
 		#container_area .content-container:last-child{
-			.folder, .file{
-				width: @container-last-width - 55px;
-				h3{
-					width:@container-last-width  - @item-title-font-size - 100px;
-				}
-				.folder_open_icon{
-					margin-top:5px;
-				}
-			}
 			.add_content_button{
 				padding:5px 20px;
 				width:150px;
@@ -594,25 +548,12 @@
 				margin-left:@container-last-width * .55 ;
 			}
 		}
-
-		#container_area li:first-child .back_button{
-			display:none;
-		}
-
 	}
 
 	#preview{
 		@preview-container-color:#DEEDE9;
 		@preview-selected-folder:#6B959C;
 
-		h1{
-			font-size:12pt;
-			margin-top: 0;
-
-			input[type="checkbox"] {
-				margin: 4px 0 0 10px;
-			}
-		}
 		.content-container{
 			background-color: @preview-container-color;
 			::-webkit-scrollbar-track {
@@ -621,77 +562,16 @@
 			.content-list{
 				height:@container-height * 0.87;
 				min-height: @container-min-height * 0.87;
-
-				/*.glyphicon{
-					display:none;
-				}*/
-				.edit_folder_button{
-					visibility:hidden;
-				}
 				li{
 					border-top: 1px solid  @preview-container-color;
-					cursor:pointer;
-
-					.folder_open_icon{
-						display:none;
-					}
 				}
 				.current_topic{
-					background-color: @highlighted-file;
 					border-left:4px solid @preview-selected-folder;
 				}
-				label{
-					width: 100%;
-					margin:2px;
-					cursor:pointer;
-					.unpublished{
-						visibility: hidden;
-					}
-				}
-				.folder{
-					h3{
-						width:@container-width - @item-title-font-size - 30px;
-					}
-				}
-				.options, .item_edit_options, .context-menu{
+				.folder_open_icon, .unpublished, .context-menu{
 					display:none !important;
 				}
-
 			}
 		}
-
-		#container_area li:last-child{
-			.folder{
-				h3{
-					width:@container-last-width - @item-title-font-size - 30px;
-				}
-			}
-		}
-	}
-
-	.hidden_details{
-		.metadata_to_hide, .description, .filler{
-			display:none !important;
-		}
-	}
-}
-#clipboard{
-	@clipboard-button-color: #915194;
-	@clipboard-background-color: #EDDEED;
-	#channel-edit-content-wrapper{
-		background-color: @clipboard-background-color !important;
-	}
-	#button_bar .nav-button-container .nav-button span{
-		color:@clipboard-button-color !important;
-	}
-	#clipboard_header{
-		margin:0;
-		font-size:18pt;
-		font-style:italic;
-		color:gray;
-		position:fixed;
-	}
-	#container_area{
-		margin-top:40px;
 	}
 }

@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import hashlib
+from distutils.version import LooseVersion
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
 from django.contrib.auth.decorators import login_required
@@ -14,7 +15,8 @@ from django.core.management import call_command
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from contentcuration.api import write_file_to_storage
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, generate_file_on_disk_name
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, Language, generate_file_on_disk_name
+from contentcuration import ricecooker_versions as rc
 from le_utils.constants import content_kinds
 from django.db.models.functions import Concat
 from django.core.files import File as DjFile
@@ -25,6 +27,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from collections import namedtuple
+
+VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
+VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
+VERSION_SOFT_WARNING = VersionStatus(version=rc.VERSION_SOFT_WARNING, status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE)
+VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
+VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
@@ -33,6 +42,30 @@ def authenticate_user_internal(request):
     """ Verify user is valid """
     logging.debug("Logging in user")
     return HttpResponse(json.dumps({'success': True, 'username':unicode(request.user)}))
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def check_version(request):
+    """ Get version of Ricecooker with which CC is compatible """
+    logging.debug("Entering the check_version endpoint")
+    version = json.loads(request.body)['version']
+    status = None
+
+    if LooseVersion(version) >= LooseVersion(VERSION_OK[0]):
+        status = VERSION_OK
+    elif LooseVersion(version) >= LooseVersion(VERSION_SOFT_WARNING[0]):
+        status = VERSION_SOFT_WARNING
+    elif LooseVersion(version) >= LooseVersion(VERSION_HARD_WARNING[0]):
+        status = VERSION_HARD_WARNING
+    else:
+        status = VERSION_ERROR
+
+    return HttpResponse(json.dumps({
+        'success': True,
+        'status':status[1],
+        'message':status[2].format(version, VERSION_OK[0]),
+    }))
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
@@ -108,8 +141,10 @@ def api_commit_channel(request):
         obj.save()
 
         # Delete previous tree if it already exists
-        if old_tree is not None:
-            old_tree.delete()
+#         if old_tree:
+#             with transaction.atomic():
+#                 with ContentNode.objects.delay_mptt_updates():
+#                     old_tree.delete()
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -172,16 +207,28 @@ def create_channel(channel_data, user):
     channel.description = channel_data['description']
     channel.thumbnail = channel_data['thumbnail']
     channel.deleted = False
+    channel.source_id = channel_data.get('source_id')
+    channel.source_domain = channel_data.get('source_domain')
+    channel.ricecooker_version = channel_data.get('ricecooker_version')
 
     old_staging_tree = channel.staging_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
     # Set up initial staging tree
-    channel.staging_tree = ContentNode.objects.create(title=channel.name + " root", kind_id="topic", sort_order=0, published=is_published)
+    channel.staging_tree = ContentNode.objects.create(
+        title = channel.name,
+        kind_id = content_kinds.TOPIC,
+        sort_order = 0,
+        published = is_published,
+        content_id = channel.id,
+        node_id = channel.id,
+        source_id = channel.source_id,
+        source_domain = channel.source_domain,
+    )
     channel.staging_tree.save()
     channel.save()
 
     # Delete staging tree if it already exists
-    if old_staging_tree is not None and old_staging_tree != channel.main_tree:
+    if old_staging_tree and old_staging_tree != channel.main_tree:
         old_staging_tree.delete()
 
     return channel # Return new channel
@@ -190,36 +237,32 @@ def convert_data_to_nodes(content_data, parent_node):
     """ Parse dict and create nodes accordingly """
     try:
         root_mapping = {}
-        sort_order = 1
+        sort_order = ContentNode.objects.get(pk=parent_node).children.count() + 1
+        existing_node_ids = ContentNode.objects.filter(parent_id=parent_node).values_list('node_id', flat=True)
+
         with transaction.atomic():
             for node_data in content_data:
-                # Create the node
-                new_node = create_node(node_data, parent_node, sort_order)
+                # Check if node id is already in the tree to avoid duplicates
+                if node_data['node_id'] not in existing_node_ids:
+                    # Create the node
+                    new_node = create_node(node_data, parent_node, sort_order)
 
-                # Create files associated with node
-                map_files_to_node(new_node, node_data['files'])
+                    # Create files associated with node
+                    map_files_to_node(new_node, node_data['files'])
 
-                # Create questions associated with node
-                create_exercises(new_node, node_data['questions'])
-                sort_order += 1
+                    # Create questions associated with node
+                    create_exercises(new_node, node_data['questions'])
+                    sort_order += 1
 
-                # Track mapping between newly created node and node id
-                root_mapping.update({node_data['node_id'] : new_node.pk})
+                    # Track mapping between newly created node and node id
+                    root_mapping.update({node_data['node_id'] : new_node.pk})
             return root_mapping
+
     except KeyError as e:
         raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
 
 def create_node(node_data, parent_node, sort_order):
     """ Generate node based on node dict """
-    title=node_data['title']
-    node_id=node_data['node_id']
-    content_id=node_data['content_id']
-    description=node_data['description']
-    author = node_data['author']
-    kind = ContentKind.objects.get(kind=node_data['kind'])
-    copyright_holder = node_data.get('copyright_holder') or ""
-    extra_fields = node_data['extra_fields']
-
     # Make sure license is valid
     license = None
     license_name = node_data['license']
@@ -230,17 +273,20 @@ def create_node(node_data, parent_node, sort_order):
             raise ObjectDoesNotExist("Invalid license found")
 
     return ContentNode.objects.create(
-        title=title,
-        kind=kind,
-        node_id=node_id,
-        content_id=content_id,
-        description = description,
-        author=author,
-        license=license,
-        copyright_holder=copyright_holder,
+        title = node_data['title'],
+        kind_id = node_data['kind'],
+        node_id = node_data['node_id'],
+        content_id = node_data['content_id'],
+        description = node_data['description'],
+        author = node_data['author'],
+        license = license,
+        license_description = node_data.get('license_description'),
+        copyright_holder = node_data.get('copyright_holder') or "",
         parent_id = parent_node,
-        extra_fields=extra_fields,
+        extra_fields = node_data['extra_fields'],
         sort_order = sort_order,
+        source_id = node_data.get('source_id'),
+        source_domain = node_data.get('source_domain'),
     )
 
 def map_files_to_node(node, data):
@@ -255,6 +301,10 @@ def map_files_to_node(node, data):
         else:
             kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
+        language = None
+        if file_data.get('language'):
+            language = Language.objects.get(pk=file_data['language'])
+
         file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
@@ -268,17 +318,15 @@ def map_files_to_node(node, data):
             file_size = file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
+            language=language,
         )
         file_obj.save()
-
 
 def map_files_to_assessment_item(question, data):
     """ Generate files that reference the content node's assessment items """
     for file_data in data:
         file_hash = file_data['filename'].split(".")
-        kind_preset = FormatPreset.objects.get(id=file_data['preset'])
-
-        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
+        file_path = generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
 
@@ -290,7 +338,7 @@ def map_files_to_assessment_item(question, data):
             source_url=file_data.get('source_url'),
             file_size = file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
-            preset=kind_preset,
+            preset_id=file_data['preset'],
         )
         file_obj.save()
 
@@ -309,8 +357,9 @@ def create_exercises(node, data):
                 contentnode = node,
                 assessment_id = question.get('assessment_id'),
                 raw_data = question.get('raw_data'),
+                source_url=question.get('source_url'),
+                randomize=question.get('randomize') or False,
             )
             order += 1
             question_obj.save()
             map_files_to_assessment_item(question_obj, question['files'])
-

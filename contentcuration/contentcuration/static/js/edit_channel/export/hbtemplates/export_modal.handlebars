@@ -19,7 +19,7 @@
                         </button>
                         <span id="export_totals" class="pull-right">
                             {{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}
-                            <em class="annotation">({{#format_file_size node.metadata.resource_size}}{{/format_file_size}})</em>
+                            <em class="annotation" id="export_size">(Calculating...)</em>
                         </span>
                         <a class="action-text" id="export_cancel" data-dismiss="modal" tabindex="3" >
                             <span>CANCEL</span>
