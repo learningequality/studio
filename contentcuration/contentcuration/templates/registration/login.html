@@ -8,56 +8,59 @@
 
 {% block content %}
 
-<div id="login-container">
-	<div id="login-overlay" class="text-center">
-		<br/>
-		<div id="login-form" class="container">
-			<div id="login-title-area">
-				<img id="login-image" class="pull-left" src="{% static 'img/kolibri_login.png' %}"/>
-				<h1 id="login-title">Kolibri</h1>
-				<p id="login-subheading">Content Curation</p>
-			</div>
+<div class="login container-fluid">
+	<!-- Branding block -->
+	<div class="login-branding center-block text-center col-md-4">
+			<img class="login-branding-kolibri-logo img-responsive" src="{% static 'img/kolibri_login.png' %}"/>
+			<h1 class="login-branding-kolibri-title"> Kolibri </h1>
+			<p class="login-branding-subtitle"> Content Curation </p>
 
-
-				<ul>
-					{% if form.errors %}
-					<li>{% trans "Your username and password didn't match. Please try again." %}</li>
-					{% endif %}
-
-					{% if next %}
-					    {% if user.is_authenticated %}
-					    <li>{% trans "Your account doesn't have access to this page. To proceed, please login with an account that has access." %}</li>
-					    {% else %}
-					    <li>{% trans "Please login to see this page." %}</li>
-					    {% endif %}
-					{% endif %}
-				</ul>
-
-				<form method="post" action="{% url 'django.contrib.auth.views.login' %}">
-					<div id="form-wrapper">
-						{% csrf_token %}
-						<div class="form-group">
-						    {{ form.username.label_tag }}
-						    {{ form.username }}
-						</div>
-						<div class="form-group">
-						    {{ form.password.label_tag }}
-						    {{ form.password }}
-						    {# Assumes you setup the password_reset view in your URLconf #}
-							<p id="lost_password_prompt"><a  class="action-text login-action-text" href="{% url 'auth_password_reset' %}">{% trans "Lost password?" %}</a></p>
-						</div>
-					</div>
-
-
-				<input class="btn btn-login" type="submit" value="Login" />
-				<input type="hidden" name="next" value="{{ next }}" />
-			</form>
-			<a href="/accounts/register" class="action-text login-action-text" id="register_prompt">Create an Account</a>
-
-
-		</div>
-		<a id="login_le" href="https://learningequality.org/" target="_blank"><img src="{% static 'img/le_logo.png' %}" id="le_img">Learning Equality</a>
+			<a href="https://learningequality.org/" class="pull-left login-branding-footer" target="_blank">
+				<img src="{% static 'img/le_logo.png' %}" class="login-branding-footer-le-logo img-responsive">
+				<span class="login-branding-footer-le-title"> Learning Equality </span
+			</a>
 	</div>
-</div>
+
+
+	<!-- Login Form Block -->
+	<form method="post" class="col-md-8 login-form text-center" action="{% url 'django.contrib.auth.views.login' %}">
+		{% csrf_token %}
+		<div class="form-group">
+		    {{ form.username.label_tag }}
+		    {{ form.username }}
+		</div>
+		<div class="form-group">
+		    {{ form.password.label_tag }}
+		    {{ form.password }}
+		    {# Assumes you setup the password_reset view in your URLconf #}
+			<p class="lost_password_prompt">
+				<a  class="action-text login-action-text" href="{% url 'auth_password_reset' %}">
+					{% trans "Lost password?" %}
+				</a>
+			</p>
+		</div>
+
+		<ul>
+			{% if form.errors %}
+			<li>{% trans "Your username and password didn't match. Please try again." %}</li>
+			{% endif %}
+
+			{% if next %}
+			{% if user.is_authenticated %}
+			<li>{% trans "Your account doesn't have access to this page. To proceed, please login with an account that has access." %}</li>
+			{% else %}
+			<li>{% trans "Please login to see this page." %}</li>
+			{% endif %}
+			{% endif %}
+		</ul>
+
+		<input class="btn btn-login" type="submit" value="Login" />
+		<input type="hidden" name="next" value="{{ next }}" />
+
+		<a href="/accounts/register" class="action-text login-action-text" class="register_prompt">Create an Account</a>
+	</form>
+
+
+	</div>
 
 {% endblock %}
