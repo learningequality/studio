@@ -83,12 +83,16 @@ var ImportView = BaseViews.BaseListView.extend({
             }else{
                 totalCount += entry.get("metadata").total_count;
             }
-
         });
         var data = this.importList.get_metadata();
         totalCount = totalCount - data.count;
 
-        this.$("#import_file_count").html(totalCount + " Topic" + ((totalCount == 1)? ", " : "s, ") + data.count + " Resource" + ((data.count == 1)? "   " : "s   ") + stringHelper.format_size(data.size));
+        this.$("#import_file_count").html(totalCount + " Topic" + ((totalCount == 1)? ", " : "s, ") + data.count + " Resource" + ((data.count == 1)? "" : "s"));
+        var self = this;
+        this.$("#import_file_size").html("Calculating...")
+        collection.calculate_size().then(function(size){
+            self.$("#import_file_size").html(stringHelper.format_size(size));
+        });
     },
     import_content:function(){
         var self = this;
@@ -172,7 +176,6 @@ var ImportList = BaseViews.BaseListView.extend({
         this.metadata = {"count" : 0, "size":0};
         this.views.forEach(function(entry){
             self.metadata.count += entry.metadata.count;
-            self.metadata.size += entry.metadata.size;
         });
         return this.metadata;
     }
