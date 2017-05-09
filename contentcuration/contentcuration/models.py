@@ -199,6 +199,7 @@ class Channel(models.Model):
     description = models.CharField(max_length=400, blank=True)
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True, null=True)
+    thumbnail_encoding = models.TextField(blank=True, null=True)
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='editable_channels',
@@ -366,6 +367,7 @@ class ContentNode(MPTTModel, models.Model):
     copyright_holder = models.CharField(max_length=200, null=True, blank=True, default="", help_text=_("Organization of person who holds the essential rights"))
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
+    thumbnail_encoding = models.TextField(blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
