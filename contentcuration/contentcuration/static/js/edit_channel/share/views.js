@@ -56,7 +56,9 @@ var ShareView = BaseViews.BaseView.extend({
         }));
     },
     show_list: function(){
-        return _.find(window.current_channel.get("editors"), function(u){return u === this.current_user.id});
+        return _.find(window.current_channel.get("editors"), function(u){
+            return u === this.current_user.id
+        });
     },
     get_share_modes: function(){
         if (!this.share_modes){
@@ -123,7 +125,8 @@ var ShareView = BaseViews.BaseView.extend({
         if(this.current_user.get("email")===email){
             this.$("#share_error").text("You already have editing permission for this channel.");
             if(this.show_list){
-                this.$("#share_item_" + this.current_user.id).addClass("error_share_list_item");
+                var item_selector = "#share_item_" + this.current_user.id;
+                this.$(item_selector).addClass("error_share_list_item");
             }
             return false;
         }
@@ -157,7 +160,8 @@ var ShareView = BaseViews.BaseView.extend({
             }
             this.$("#share_error").text("This person has already been invited.");
             if(this.show_list){
-                this.$("#share_item_" + result.get("id")).addClass("error_share_list_item");
+                var item_selector = "#share_item_" + result.get("id");
+                this.$(item_selector).addClass("error_share_list_item");
                 $('#editor_list_wrapper').animate({
                     scrollTop : this.$("#share_item_" + result.get("id")).position().top,
                 }, 100);
