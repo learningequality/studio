@@ -5,7 +5,7 @@ var Dropzone = require("dropzone");
 require("dropzone/dist/dropzone.css");
 var Models = require("edit_channel/models");
 var BaseViews = require("edit_channel/views");
-var FileViews = require("edit_channel/file_upload/views");
+var ImageViews = require("edit_channel/image/views");
 var get_cookie = require("utils/get_cookie");
 var stringHelper = require("edit_channel/utils/string_helper")
 
@@ -119,7 +119,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			picture : this.thumbnail_url
 		}));
 		if(this.edit){
-			this.image_upload = new FileViews.ThumbnailUploadView({
+			this.image_upload = new ImageViews.ThumbnailUploadView({
 				model: this.model,
 				el: this.$(".new_channel_pic"),
 				preset_id: 'channel_thumbnail',
@@ -132,7 +132,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				oncancel:this.enable_submit,
 				onstart: this.disable_submit,
 				onremove: this.remove_thumbnail,
-				allow_edit: true
+				allow_edit: true,
+				is_channel: true
 			});
 		}
 	},

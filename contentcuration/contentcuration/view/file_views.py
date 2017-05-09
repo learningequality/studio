@@ -96,7 +96,7 @@ def thumbnail_upload(request):
 def image_upload(request):
     if request.method == 'POST':
         name, ext = os.path.splitext(request.FILES.values()[0]._name) # gets file extension without leading period
-        file_object = File(contentnode_id=request.META.get('HTTP_NODE'),original_filename=name, preset_id=request.META.get('HTTP_PRESET'), file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:])
+        file_object = File(contentnode_id=request.META.get('HTTP_NODE'),original_filename=name, preset_id=request.META.get('HTTP_PRESET'), file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:].lower())
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
@@ -107,7 +107,7 @@ def image_upload(request):
 def exercise_image_upload(request):
     if request.method == 'POST':
         ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:] # gets file extension without leading period
-        file_object = File(preset_id=format_presets.EXERCISE_IMAGE, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext)
+        file_object = File(preset_id=format_presets.EXERCISE_IMAGE, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext.lower())
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,

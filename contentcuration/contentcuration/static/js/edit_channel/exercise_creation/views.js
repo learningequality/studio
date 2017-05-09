@@ -10,7 +10,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var FileUploader = require('edit_channel/file_upload/views');
+var ImageUploader = require('edit_channel/image/views');
 var UndoManager = require("backbone-undo");
 require("summernote");
 require("../../utils/mathquill.min.js");
@@ -112,7 +112,7 @@ var UploadImage = function (context) {
         contents: '<i class="note-icon-picture"/>',
         tooltip: 'Image',
         click: function () {
-            var view = new FileUploader.ImageUploadView({
+            var view = new ImageUploader.ImageUploadView({
                 callback: context.options.callbacks.onImageUpload,
                 preset_id: 'exercise_image'
             });

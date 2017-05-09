@@ -104,19 +104,24 @@
 				border:4px solid @panel-container-color;
 				cursor:pointer;
 
-
 				.profile{
 					height:100%;
 					width: @channel-profile-width;
 					margin: 5px 15px 5px 5px;
 					min-height:@channel-container-height;
-
+					.image_dropzone{ width: auto; }
 					img{
 					    width:130px;
 					    height:130px;
 					    object-fit: cover;
 					}
-					.finished_area{width:@channel-profile-width * .9;}
+					.crop-img img{
+						width: auto;
+						height: auto;
+					}
+					.finished_area{
+						margin-top: -15px;
+					}
 				}
 				.manage_area{
 					width:100%;

@@ -181,12 +181,13 @@ video::-webkit-media-controls-fullscreen-button { display: none; }
 	.upload_cancel{ cursor:pointer; }
 }
 
-@default-image-width: 120px;
+@default-image-width: 160px;
+@default-image-height: 90px;
 .image_dropzone{
 	width:@default-image-width;
 	.dz-placeholder{
 		width:@default-image-width;
-		height:@default-image-width;
+		height:@default-image-height;
 		object-fit: cover;
 		cursor:pointer;
 		border:4px dashed @gray-400;
