@@ -257,7 +257,7 @@ var BaseListView = BaseView.extend({
 	},
 	update_views:function(){
 		var self = this;
-		this.retrieve_nodes(this.model.get("children")).then(function(fetched){
+		this.retrieve_nodes(this.model.get("children"), true).then(function(fetched){
 			self.load_content(fetched);
 		});
 	},
