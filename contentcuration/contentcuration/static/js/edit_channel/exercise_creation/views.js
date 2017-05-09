@@ -166,7 +166,7 @@ var EditorView = Backbone.View.extend({
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
         _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key",
-               "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content");
+               "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content", "check_key");
         this.edit_key = options.edit_key;
         this.editing = false;
         this.numbersOnly = options.numbersOnly || false;
@@ -278,7 +278,7 @@ var EditorView = Backbone.View.extend({
     process_key: function(event){
         if(this.numbersOnly){
             var key = event.keyCode || event.which;
-            var allowedKeys = [46, 8, 9, 27, 110, 32, 37, 38, 39, 40, 109];
+            var allowedKeys = [46, 8, 9, 27, 110, 37, 38, 39, 40, 109];
             if((event.shiftKey || !this.check_key(String.fromCharCode(key), key)) &&  // Key is a digit or allowed special characters
                !_.contains(allowedKeys, key) && !(event.ctrlKey || event.metaKey)){   // Key is not a CMD key
                 event.preventDefault();
