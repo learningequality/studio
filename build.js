@@ -1,119 +1,128 @@
 var browserify = require('browserify');
 var lessify = require('node-lessify');
-var hbsfy = require("hbsfy");
-var fs = require("fs");
-var _ = require("underscore");
+var hbsfy = require('hbsfy');
+var fs = require('fs');
+var _ = require('underscore');
 
-var watch = false;
-var debug = false;
-var staticfiles = false;
+var watch = (process.argv.indexOf('--watch') > -1) || (process.argv.indexOf('-w') > -1);
+var debug = (process.argv.indexOf('--debug') > -1) || (process.argv.indexOf('-d') > -1);
+var staticfiles = (process.argv.indexOf('--staticfiles') > -1) || (process.argv.indexOf('-s') > -1);
 
-if (process.argv.indexOf("--watch") > -1 || process.argv.indexOf("-w") > -1) {
-    watch = true;
-}
+var infoLog = function(msg) {
+  console.info('Watchify: ' + msg);
+};
+var errLog = function(msg) {
+  console.error('Watchify: ' + msg);
+};
 
-if (process.argv.indexOf("--debug") > -1 || process.argv.indexOf("-d") > -1) {
-    debug = true;
-}
-
-if (process.argv.indexOf("--staticfiles") > -1 || process.argv.indexOf("-s") > -1) {
-    staticfiles = true;
-}
-
-var log = function(msg) {
-    console.log("Watchify: " + msg);
-}
-
-var create_bundles = function (b, bundles) {
-    b.plugin('factor-bundle', { outputs: _.map(bundles, function(item) {return item.target_file;}) });
+var createBundles = function (b, bundles) {
+  b.plugin('factor-bundle', { outputs: _.map(bundles, function(item) {return item.target_file;}) });
     // Don't use minifyify except in production.
-    if (!debug) {
-        b.plugin('minifyify', {map: false});
-    }
-    try {
-        b.bundle(function(err, buf){
-            if (err) {
-                log(err);
-            } else {
-                fs.createWriteStream(__dirname + '/contentcuration' + (staticfiles ? '' : '/contentcuration') + '/static/js/bundles/common.js').write(buf);
-                log(bundles.length + " Bundles written.");
-            }
-        });
-    }
-    catch (err) {
-        log(err);
-    }
+  if (!debug) {
+    b.plugin('minifyify', {map: false});
+  }
+  try {
+    b.bundle(
+      function(err, buf){
+        if (err) {
+          errLog(err);
+        } else {
+          fs.createWriteStream(__dirname + '/contentcuration' + (staticfiles ? '' : '/contentcuration') + '/static/js/bundles/common.js').write(buf);
+          infoLog(bundles.length + ' Bundles written.');
+        }
+
+      }
+    );
+  }
+  catch (err) {
+    errLog(err);
+  }
+};
+
+var staticContentDir = __dirname + '/contentcuration/contentcuration/static/';
+
+var bundles = [];
+
+// path of modules, catches files that aren't included inside of explicit module files
+var modulePaths = [];
+
+var jsModules = staticContentDir + 'js';
+if (fs.existsSync(jsModules)) {
+  modulePaths.push(jsModules);
+}
+var lessModules = staticContentDir + 'less';
+if (fs.existsSync(lessModules)) {
+  modulePaths.push(lessModules);
 }
 
-fs.readdir(__dirname + "/contentcuration", function(err, filenames) {
-    if (err || !filenames) {
-        console.log(err);
-        return false;
-    }
-    var bundles = [];
-    var module_paths = [];
-    for (var i = 0; i < filenames.length; i++) {
-        var module_js = __dirname + "/contentcuration/" + filenames[i] + "/static/js";
-        if (fs.existsSync(module_js)) {
-            module_paths.push(module_js);
-        }
-        var module_less = __dirname + "/contentcuration/" + filenames[i] + "/static/less";
-        if (fs.existsSync(module_less)) {
-            module_paths.push(module_less);
-        }
-        var bundle_path = __dirname + "/contentcuration/" + filenames[i] + "/static/js/bundle_modules";
-        if (fs.existsSync(bundle_path)) {
-            var dir_bundles = fs.readdirSync(bundle_path);
-            for (var j = 0; j < dir_bundles.length; j++) {
-                bundles.push({
-                    target_file: __dirname + "/contentcuration" + (staticfiles ? '' :  "/" + filenames[i]) + "/static/js/bundles/" + dir_bundles[j],
-                    bundle: bundle_path + "/" + dir_bundles[j],
-                    alias: dir_bundles[j].split(".").slice(0,-1).join(".")
-                });
-            }
-            if (dir_bundles.length > 0) {
-                if (!fs.existsSync(__dirname + "/contentcuration" + (staticfiles ? '' :  "/" + filenames[i]) + "/static/js/bundles")) {
-                    fs.mkdirSync(__dirname + "/contentcuration" + (staticfiles ? '' :  "/" + filenames[i]) + "/static/js/bundles");
-                }
-            }
-        }
-    }
+var bundleModulesPath = staticContentDir + 'js/bundle_modules';
 
-    log("Found " + bundles.length + " bundle" + (bundles.length !== 1 ? "s" : "") + ", compiling.");
-
-    if (!fs.existsSync(__dirname + '/contentcuration' + (staticfiles ? '' : '/contentcuration') + '/static/js/bundles/')) {
-        fs.mkdirSync(__dirname + '/contentcuration' + (staticfiles ? '' : '/contentcuration') + '/static/js/bundles/');
-    }
-
-    var b = browserify({
-        paths: module_paths,
-        cache: {},
-        packageCache: {},
-        debug: true,
+// add existing bundle modules to the things we're going to write
+if (fs.existsSync(bundleModulesPath)) {
+  var dir_bundles = fs.readdirSync(bundleModulesPath);
+  for (var j = 0; j < dir_bundles.length; j++) {
+    bundles.push({
+      target_file: staticContentDir + 'js/bundles/' + dir_bundles[j],
+      bundle: bundleModulesPath + '/' + dir_bundles[j],
+      alias: dir_bundles[j].split('.').slice(0,-1).join('.')
     });
+  }
+}
 
-    _.each(bundles, function(item) {b.add(item.bundle, {expose: item.alias});})
+infoLog('Found ' + bundles.length + ' bundle' + (bundles.length !== 1 ? 's' : '') + ', compiling.');
 
-    b.transform(hbsfy);
-    b.transform(lessify, {global: true});
+// create the bundles directory regardless of whether or not there are bundle modules - the static check
+if (!fs.existsSync(__dirname + '/contentcuration' + (staticfiles ? '' : '/contentcuration') + '/static/js/bundles/')) {
+  fs.mkdirSync(__dirname + '/contentcuration' + (staticfiles ? '' : '/contentcuration') + '/static/js/bundles/');
+}
 
-    if (watch) {
-        var watchify = require("watchify");
-        b = watchify(b, {
-            verbose: true
-        });
-        log("Starting watcher");
-        b.on('update', function (ids) {
-            log('files changed, bundle updated');
-            _.each(ids, function(id) {log(id + " changed");});
-            create_bundles(b, bundles);
-        });
-        b.on('log', log);
-        b.on('error', function(error) {
-            log(error);
-            this.emit("end");
-        });
-    }
-
-    create_bundles(b, bundles);
+// now that we've collected the bundle modules we need, set up browserify
+var b = browserify({
+  paths: modulePaths,
+  cache: {},
+  packageCache: {},
+  debug: true,
 });
+
+// all the files are being included inplicitly by watching the modules we hand-write
+_.each(bundles,
+  function(item) {
+    b.add(item.bundle, {expose: item.alias});
+  }
+);
+
+// handlebars translation
+b.transform(hbsfy);
+
+// less translation
+b.transform(lessify,
+  { // less options
+    global: true,
+  }
+);
+
+if (watch) {
+  var watchify = require('watchify');
+  b.plugin(watchify,
+    { // watchify options
+      verbose: true
+    }
+  );
+
+  infoLog('Starting watcher');
+
+  b.on('update', function (ids) {
+    infoLog('files changed, bundle updated');
+    _.each(ids, function(id) {infoLog(id + ' changed');});
+    createBundles(b, bundles);
+  });
+
+  b.on('log', infoLog);
+
+  b.on('error', function(error) {
+    errLog(error);
+    this.emit('end');
+  });
+}
+
+createBundles(b, bundles);

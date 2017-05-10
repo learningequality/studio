@@ -14,6 +14,7 @@ var FileUploader = require('edit_channel/file_upload/views');
 var UndoManager = require("backbone-undo");
 require("summernote");
 require("../../utils/mathquill.min.js");
+var dialog = require("edit_channel/utils/dialog");
 
 /* PARSERS */
 var Katex = require("katex");
@@ -165,7 +166,7 @@ var EditorView = Backbone.View.extend({
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
         _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key",
-               "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content");
+               "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content", "check_key");
         this.edit_key = options.edit_key;
         this.editing = false;
         this.numbersOnly = options.numbersOnly || false;
@@ -285,7 +286,7 @@ var EditorView = Backbone.View.extend({
         }
     },
     check_key: function(content, key){
-        var specialCharacterKeys = [188, 189, 190, 191, 220];
+        var specialCharacterKeys = [32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 188, 189, 190, 191, 220];
         return !this.numbersOnly || NUM_REGEX.test(content) || _.contains(specialCharacterKeys, key);
     },
     paste_content: function(event){
@@ -293,8 +294,11 @@ var EditorView = Backbone.View.extend({
         event.preventDefault();
         var bufferText = clipboard.getData("Text");
         var clipboardHtml = clipboard.getData('text/html');
-        if(clipboardHtml)
-            bufferText = this.convert_html_to_markdown(clipboardHtml);
+        if(clipboardHtml){
+            var div = document.createElement("DIV");
+            div.innerHTML = this.convert_html_to_markdown(clipboardHtml);
+            bufferText = div.textContent || tmp.innerText || bufferText;
+        }
         var self = this;
         setTimeout(function () { // Firefox fix
             if(!self.numbersOnly || self.check_key(bufferText)){
@@ -436,7 +440,8 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     get_default_attributes: function(){ return {}; }, // Default attributes to use when adding to list
     get_next_order: function(){
         if(this.collection.length > 0){
-            return this.collection.max(function(i){ return i.get('order');}).get('order') + 1
+            var max = this.collection.max(function(i){ return i.get('order');});
+            return (max >= 0)? max.get('order') + 1 : 1;
         }
         return 1;
     },
@@ -715,8 +720,8 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     open_toolbar_template: require("./hbtemplates/assessment_item_edit_toolbar_open.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed",
-                "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus",
+        _.bindAll(this, "set_toolbar_open", "toggle", "set_toolbar_closed", "commit_type_change",
+                "set_undo_redo_listener", "unset_undo_redo_listener", "toggle_focus", "set_true_false",
                 "toggle_undo_redo", "update_hints", "set_type", "set_open");
         this.originalData = this.model.toJSON();
         this.onchange = options.onchange;
@@ -744,49 +749,77 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     /*********** EDITING METHODS ***********/
     delete: function(event) {
         this.stop_events(event); // Don't activate editor on deleting question
-        if(confirm("Are you sure you want to delete this question?")){
-            this.model.set('deleted', true);
-            this.propagate_changes();
-            this.containing_list_view.views.splice(this, 1);
-            this.containing_list_view.handle_if_empty();
-            this.remove();
-        }
+        var self = this;
+        dialog.dialog("Deleting Question", "Are you sure you want to delete this question?", {
+            "CANCEL":function(){},
+            "DELETE": function(){
+                self.model.set('deleted', true);
+                self.propagate_changes();
+                self.containing_list_view.views.splice(self, 1);
+                self.containing_list_view.handle_if_empty();
+                self.remove();
+            },
+        }, function(){});
     },
     set_type:function(event){
         var new_type = event.target.value;
+        var self = this;
 
         // True/false questions will overwrite all answers
         if(new_type === "true_false"){
-            if(!this.model.get("answers").length || confirm("Switching to true or false will remove any current answers. Continue?")){
-                // new_type = "single_selection";
-                var trueFalseCollection = this.model.get("answers");
-                trueFalseCollection.reset([{answer: "True", correct: true, order: 1}, {answer: "False", correct: false, order: 2}]);
-                this.model.set("answers", trueFalseCollection);
-            }else{ new_type = this.model.get('type'); } // Keep current type
+            if(!this.model.get('answers').length){
+                this.set_true_false();
+            } else{
+                dialog.dialog("Changing Question Type", "Switching to single selection will set only one answer as correct. Continue?", {
+                    "CANCEL":function(){},
+                    "CHANGE": function(){
+                        self.set_true_false();
+                    },
+                }, function(){ self.commit_type_change(self.model.get('type')); });
+            }
         }
 
         // Single selection questions will set only one answer as being correct
         else if(new_type === "single_selection" && this.model.get("answers").where({'correct': true}).length > 1){
-            if(confirm("Switching to single selection will set only one answer as correct. Continue?")){
-                var correct_answer_set = false;
-                this.model.get('answers').forEach(function(item){
-                    if(correct_answer_set) item.set('correct', false);
-                    correct_answer_set = correct_answer_set || item.get('correct');
-                });
-            }else{ new_type = this.model.get('type'); } // Keep current type
+            dialog.dialog("Changing Question Type", "Switching to true or false will remove any current answers. Continue?", {
+                "CANCEL":function(){},
+                "CHANGE": function(){
+                    var correct_answer_set = false;
+                    self.model.get('answers').forEach(function(item){
+                        if(correct_answer_set) item.set('correct', false);
+                        correct_answer_set = correct_answer_set || item.get('correct');
+                    });
+                    self.commit_type_change(new_type);
+                },
+            }, function(){ self.commit_type_change(self.model.get('type')); });
         }
 
         // Input questions will set all answers as being correct and remove non-numeric answers
         else if(new_type === "input_question" && this.model.get("answers").some(function(a){ return a.get('correct') || isNaN(a.get('answer')); })){
-            if(confirm("Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?")){
-                var numInputCollection = this.model.get('answers');
-                numInputCollection.reset(this.model.get('answers').chain()
+            dialog.dialog("Changing Question Type", "Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?", {
+                "CANCEL":function(){},
+                "CHANGE": function(){
+                    var newCollection = self.model.get('answers');
+                    newCollection.reset(self.model.get('answers').chain()
                         .reject( function(a){return isNaN(a.get('answer'));} )
                         .each( function(a){ a.set('correct', true);} ).value());
-                this.model.set('answers', numInputCollection);
-            }else{ new_type = this.model.get('type'); }  // Keep current type
+                    self.model.set('answers', newCollection);
+                    self.commit_type_change(new_type);
+                },
+            }, function(){ self.commit_type_change(self.model.get('type')); });
         }
 
+        else {
+            this.commit_type_change(new_type);
+        }
+    },
+    set_true_false: function(){
+        var trueFalseCollection = this.model.get('answers');
+        trueFalseCollection.reset([{answer: "True", correct: true, order: 1}, {answer: "False", correct: false, order: 2}]);
+        this.model.set("answers", trueFalseCollection);
+        this.commit_type_change("true_false");
+    },
+    commit_type_change:function(new_type){
         // Set type and re-render answers accordingly
         this.model.set('type', new_type);
         if(this.answer_editor){

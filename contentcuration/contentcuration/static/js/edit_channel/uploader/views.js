@@ -39,13 +39,23 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     if(!this.allow_edit || (this.metadata_view && !this.metadata_view.check_for_changes()) || !event){
       this.close();
       $(".modal-backdrop").remove();
-    }else if(confirm("Unsaved Metadata Detected! Exiting now will"
-      + " undo any new changes. \n\nAre you sure you want to exit?")){
-      this.metadata_view.undo_changes();
-      this.close();
-      $(".modal-backdrop").remove();
     }else{
-      this.cancel_actions(event);
+      var t = event.target;
+      var self = this;
+      var dialog = require("edit_channel/utils/dialog");
+      dialog.dialog("Unsaved Changes!", "Exiting now will"
+      + " undo any new changes. Are you sure you want to exit?", {
+          "DON'T SAVE": function(){
+              self.metadata_view.undo_changes();
+              self.close();
+              $(".modal-backdrop").remove();
+          },
+          "KEEP OPEN":function(){},
+          "SAVE & CLOSE":function(){
+            self.metadata_view.save_and_finish();
+          },
+      }, null);
+      self.cancel_actions(event);
     }
   }
 });
@@ -57,7 +67,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'enable_submit', 'disable_submit',
       'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items');
     this.bind_edit_functions();
-    this.collection = options.collection;
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
     this.onsave = options.onsave;
@@ -80,10 +89,15 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   render: function() {
     this.$el.html(this.template({allow_edit: this.allow_edit}));
-    this.load_list();
-    if(this.collection.length > 1){
-      this.load_editor(this.edit_list.selected_items);
-    }
+
+    var self = this;
+    this.collection.fetch_nodes_by_ids_complete(this.collection.pluck('id'), !this.collection.has_all_data()).then(function(fetched){
+      self.collection.reset(fetched.toJSON());
+      self.load_list();
+      if(self.collection.length > 1){
+        self.load_editor(self.edit_list.selected_items);
+      }
+    });
   },
   render_details:function(){
     this.switchPanel("details");
@@ -333,14 +347,16 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
   },
   add_topic:function(){
     var self = this;
-    var data = {
+    this.collection.create_new_node({
       "kind":"topic",
       "title": "Topic",
       "sort_order" : this.collection.length,
       "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
-    };
-    this.create_new_item(data, true, " ").then(function(newView){
-      newView.select_item();
+    }).then(function(new_topic){
+      var new_view = self.create_new_view(new_topic);
+      self.$(self.list_selector).append(new_view.el);
+      self.handle_if_empty();
+      new_view.select_item();
     });
   },
   update_checked:function(){
