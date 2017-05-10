@@ -131,8 +131,9 @@ def map_content_nodes(root_node):
                 kolibrinode = create_bare_contentnode(node)
 
                 if node.kind.kind == content_kinds.EXERCISE:
+                    exercise_data = process_assessment_metadata(ccnode, kolibrinode)
                     if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
-                        create_perseus_exercise(node, kolibrinode)
+                        create_perseus_exercise(node, kolibrinode, exercise_data)
                 if node.kind.kind != content_kinds.TOPIC:
                     create_associated_file_objects(kolibrinode, node)
                 map_tags_to_node(kolibrinode, node)
@@ -199,12 +200,11 @@ def create_associated_file_objects(kolibrinode, ccnode):
             thumbnail=preset.thumbnail,
         )
 
-def create_perseus_exercise(ccnode, kolibrinode):
+def create_perseus_exercise(ccnode, kolibrinode, exercise_data):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
-        data = process_assessment_metadata(ccnode, kolibrinode)
-        create_perseus_zip(ccnode, data, tempf)
+        create_perseus_zip(ccnode, exercise_data, tempf)
         file_size = tempf.tell()
         tempf.flush()
 
