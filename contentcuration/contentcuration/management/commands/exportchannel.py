@@ -74,9 +74,11 @@ class Command(BaseCommand):
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
 
-def create_kolibri_license_object(license):
+def create_kolibri_license_object(ccnode):
+    use_license_description = ccnode.license.license_name != licenses.SPECIAL_PERMISSIONS
     return kolibrimodels.License.objects.get_or_create(
-        license_name=license.license_name
+        license_name=ccnode.license.license_name,
+        license_description=ccnode.license.license_description if use_license_description else ccnode.license_description
     )
 
 
@@ -129,8 +131,9 @@ def map_content_nodes(root_node):
                 kolibrinode = create_bare_contentnode(node)
 
                 if node.kind.kind == content_kinds.EXERCISE:
+                    exercise_data = process_assessment_metadata(ccnode, kolibrinode)
                     if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
-                        create_perseus_exercise(node, kolibrinode)
+                        create_perseus_exercise(node, kolibrinode, exercise_data)
                 if node.kind.kind != content_kinds.TOPIC:
                     create_associated_file_objects(kolibrinode, node)
                 map_tags_to_node(kolibrinode, node)
@@ -141,7 +144,7 @@ def create_bare_contentnode(ccnode):
 
     kolibri_license = None
     if ccnode.license is not None:
-        kolibri_license = create_kolibri_license_object(ccnode.license)[0]
+        kolibri_license = create_kolibri_license_object(ccnode)[0]
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
@@ -197,12 +200,11 @@ def create_associated_file_objects(kolibrinode, ccnode):
             thumbnail=preset.thumbnail,
         )
 
-def create_perseus_exercise(ccnode, kolibrinode):
+def create_perseus_exercise(ccnode, kolibrinode, exercise_data):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
-        data = process_assessment_metadata(ccnode, kolibrinode)
-        create_perseus_zip(ccnode, data, tempf)
+        create_perseus_zip(ccnode, exercise_data, tempf)
         file_size = tempf.tell()
         tempf.flush()
 
