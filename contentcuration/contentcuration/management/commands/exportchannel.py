@@ -74,9 +74,11 @@ class Command(BaseCommand):
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
 
-def create_kolibri_license_object(license):
+def create_kolibri_license_object(ccnode):
+    use_license_description = ccnode.license.license_name != licenses.SPECIAL_PERMISSIONS
     return kolibrimodels.License.objects.get_or_create(
-        license_name=license.license_name
+        license_name=ccnode.license.license_name,
+        license_description=ccnode.license.license_description if use_license_description else ccnode.license_description
     )
 
 
@@ -141,7 +143,7 @@ def create_bare_contentnode(ccnode):
 
     kolibri_license = None
     if ccnode.license is not None:
-        kolibri_license = create_kolibri_license_object(ccnode.license)[0]
+        kolibri_license = create_kolibri_license_object(ccnode)[0]
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
