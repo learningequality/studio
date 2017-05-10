@@ -1,0 +1,45 @@
+@import "global-variables.less";
+
+@default-image-width: 170px;
+@default-image-height: 100px;
+.image_dropzone{
+	width:@default-image-width;
+	.dz-placeholder{
+		width:@default-image-width;
+		height:@default-image-height;
+		object-fit: cover;
+		cursor:pointer;
+		border:4px dashed @gray-400;
+		font-style:italic;
+		opacity:0.8;
+	}
+	.crop-img {
+		margin-bottom: -15px !important;
+		img{
+			width: auto !important;
+			height: auto !important;
+		}
+	}
+	.finished_area{
+		position:relative;
+		background-color: rgba(0,0,0,0.7);
+		padding:3px;
+		margin-top: -4px;
+		visibility: hidden;
+		.image_option{
+			color:@gray-400;
+			cursor:pointer;
+			font-size:13pt;
+			margin: 1% 3%;
+			padding: 3px;
+			&:hover{ color:white; }
+			&.croppie_option{display:none; margin: 1% 10% !important;}
+		}
+	}
+	&:hover .finished_area{ visibility: visible; }
+	.dz-overlay{
+		position:absolute;
+		z-index:100;
+		width:@default-image-width;
+	}
+}

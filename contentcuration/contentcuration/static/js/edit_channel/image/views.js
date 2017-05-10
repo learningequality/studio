@@ -5,23 +5,26 @@ var Models = require("edit_channel/models");
 var Dropzone = require("dropzone");
 var Croppie = require("croppie");
 var get_cookie = require("utils/get_cookie");
-require("file-uploader.less");
+require("images.less");
 require("dropzone/dist/dropzone.css");
 require("croppie/croppie.css");
 var dialog = require("edit_channel/utils/dialog");
 
 const CHANNEL_ASPECT_RATIO = { width: 130,  height: 130 };
-const CHANNEL_CROP_BOUNDARY = { width: 150,  height: 150 };
+const CHANNEL_CROP_BOUNDARY = { width: CHANNEL_ASPECT_RATIO.width + 20,  height: CHANNEL_ASPECT_RATIO.height + 20 };
 const THUMBNAIL_ASPECT_RATIO = { width: 160,  height: 90 };
-const THUMBNAIL_CROP_BOUNDARY = { width: 180,  height: 110 };
+const THUMBNAIL_CROP_BOUNDARY = { width: THUMBNAIL_ASPECT_RATIO.width + 10,  height: THUMBNAIL_ASPECT_RATIO.height + 10 };
 
 var ThumbnailUploadView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/thumbnail_upload.handlebars"),
     preview_template: require("./hbtemplates/thumbnail_preview.handlebars"),
     dropzone_template: require("./hbtemplates/thumbnail_dropzone.handlebars"),
     initialize: function(options) {
-        _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed', 'use_image', 'create_croppie');
+        _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed',
+                         'use_image', 'create_croppie', 'cancel_croppie', 'submit_image', 'get_image_encoding');
         this.image_url = options.image_url;
+        this.thumbnail_encoding = this.model.get('thumbnail_encoding');
+        this.original_thumbnail_encoding = this.thumbnail_encoding;
         this.onsuccess = options.onsuccess;
         this.onremove = options.onremove;
         this.onerror = options.onerror;
@@ -41,17 +44,19 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     events: {
         'click .remove_image ' : 'remove_image',
         'click .open_thumbnail_generator': 'open_thumbnail_generator',
-        'click .get_image': 'get_image'
+        'click .crop_image': 'create_croppie',
+        'click .cancel_image': 'cancel_croppie',
+        'click .submit_image': 'submit_croppie'
     },
     render: function() {
         if(this.allow_edit){
             this.$el.html(this.template({
                 picture : this.get_thumbnail_url(),
                 selector: this.get_selector(),
-                show_generate: this.model.get('kind') != undefined
+                show_generate: this.model.get('kind') != undefined,
+                show_crop: true
             }));
             _.defer(this.create_dropzone, 1);
-            _.defer(this.create_croppie, 2);
         }else{
             this.$el.html(this.preview_template({
                 picture : this.get_thumbnail_url(),
@@ -59,9 +64,15 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             }));
         }
     },
-    get_thumbnail_url:function(){
+    get_thumbnail_url:function(ignore_encoding){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
-        if(this.image_url){ return this.image_url; }
+        if(!ignore_encoding && this.thumbnail_encoding){
+            if(typeof this.thumbnail_encoding === "string"){
+                this.thumbnail_encoding = JSON.parse(this.thumbnail_encoding);
+            }
+            return this.thumbnail_encoding.base64;
+        }
+        else if(this.image_url){ return this.image_url; }
         else if(thumbnail){ return thumbnail.storage_url; }
         else if(this.model.get('kind') != undefined) { return "/static/img/" + this.model.get("kind") + "_placeholder.png"; }
         else{ return "/static/img/kolibri_placeholder.png"; }
@@ -73,6 +84,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             "REMOVE": function(){
                 self.image = null;
                 self.image_url = self.default_url;
+                self.thumbnail_encoding = null;
                 self.onremove();
                 self.render();
             },
@@ -99,18 +111,43 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         this.dropzone.on("error", this.image_failed);
     },
     create_croppie:function(){
+        this.$(".thumbnail_option").css("display", "none");
+        this.$(".croppie_option").css("display", "inline-block");
         var selector = "#" + this.get_selector() + "_placeholder";
+        var self = this;
         this.croppie = new Croppie(this.$(selector).get(0),{
             boundary: this.boundary,
             viewport: this.aspect_ratio,
             showZoomer: false,
-            customClass: "crop-img"
+            customClass: "crop-img",
+            update: function(result) { _.defer(function() {self.get_image_encoding(result);}, 500); }
         });
+        this.croppie.bind({
+            points: (this.thumbnail_encoding)? this.thumbnail_encoding.points : [],
+            zoom: (this.thumbnail_encoding)? this.thumbnail_encoding.zoom : 1,
+            url: this.get_thumbnail_url(true)
+        }).then(function(){})
     },
-    get_image: function(){
-        this.croppie.result({type: 'base64', size: this.aspect_ratio}).then(function(image){
-            console.log(image)
-        })
+    cancel_croppie: function(){
+        this.thumbnail_encoding = this.original_thumbnail_encoding;
+        this.render();
+    },
+    submit_croppie: function(){
+        this.$(".croppie_option").css("display", "none");
+        this.submit_image();
+        this.render();
+    },
+    get_image_encoding: function(result){
+        var self = this;
+        this.croppie.result({type: 'base64', size: this.aspect_ratio, quality: 0.5}).then(function(image){
+            if(!self.thumbnail_encoding || self.thumbnail_encoding.points !== result.points || self.thumbnail_encoding.zoom !== result.zoom){
+                self.thumbnail_encoding = {
+                    "points": result.points,
+                    "zoom": result.zoom,
+                    "base64": image
+                };
+            }
+        });
     },
     image_uploaded:function(image){
         this.image_error = null;
@@ -127,10 +164,15 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             dialog.dialog("Image Error", this.image_error, { "OK":function(){} }, null);
             if(this.onerror){ this.onerror(); }
         }else{
-            if(this.onsuccess){ this.onsuccess(this.image, this.image_formatted_name, this.image_url); }
-            if(this.onfinish){ this.onfinish(); }
+            this.thumbnail_encoding = null;
+            this.submit_image();
         }
         this.render();
+    },
+    submit_image:function(){
+        this.original_thumbnail_encoding = this.thumbnail_encoding;
+        if(this.onsuccess){ this.onsuccess(this.image, this.thumbnail_encoding, this.image_formatted_name, this.image_url); }
+        if(this.onfinish){ this.onfinish(); }
     },
     image_failed:function(data, error){
         this.image_error = error;
@@ -150,7 +192,8 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     use_image:function(file){
         this.image = file;
         this.image_url = file.get('storage_url');
-        this.onsuccess(this.image, this.image_formatted_name, this.image_url);
+        this.thumbnail_encoding = null;
+        this.onsuccess(this.image, null, this.image_formatted_name, this.image_url);
         this.render();
         if(this.onfinish){ this.onfinish(); }
     },

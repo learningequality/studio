@@ -180,39 +180,3 @@ video::-webkit-media-controls-fullscreen-button { display: none; }
 	.upload_option{ color: @blue-200; }
 	.upload_cancel{ cursor:pointer; }
 }
-
-@default-image-width: 160px;
-@default-image-height: 90px;
-.image_dropzone{
-	width:@default-image-width;
-	.dz-placeholder{
-		width:@default-image-width;
-		height:@default-image-height;
-		object-fit: cover;
-		cursor:pointer;
-		border:4px dashed @gray-400;
-		font-style:italic;
-		opacity:0.8;
-	}
-	.finished_area{
-		position:relative;
-		margin-top:-25px;
-		background-color: rgba(0,0,0,0.7);
-		padding:3px;
-		visibility:hidden;
-		.image_option{
-			color:@gray-400;
-			cursor:pointer;
-			font-size:13pt;
-			margin: 2%;
-			padding: 3%;
-			&:hover{ color:white; }
-		}
-	}
-	.dz-overlay{
-		position:absolute;
-		z-index:100;
-		width:@default-image-width;
-	}
-	&:hover .finished_area{visibility:visible;}
-}

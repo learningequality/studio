@@ -359,15 +359,16 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
         this.$(".preview_thumbnail").append(this.thumbnail_view.el);
     },
     remove_thumbnail:function(){
-        this.set_thumbnail(null);
+        this.set_thumbnail(null, null);
     },
-    set_thumbnail:function(thumbnail){
+    set_thumbnail:function(thumbnail, encoding){
         var files = _.reject(this.model.get('files'), function(f){ return f.preset.thumbnail; });
         if(thumbnail){
             thumbnail.set('contentnode', this.model.id);
             files = files.concat(thumbnail.toJSON());
         }
         this.model.set('files', files);
+        this.model.set('thumbnail_encoding', encoding);
     }
 });
 

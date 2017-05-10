@@ -93,6 +93,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.containing_list_view = options.containing_list_view;
 		this.original_thumbnail = this.model.get("thumbnail");
 		this.original_thumbnail_url = this.model.get("thumbnail_url");
+		this.original_thumbnail_encoding = this.model.get("thumbnail_encoding");
+		this.thumbnail_encoding = this.original_thumbnail_encoding;
 		this.thumbnail_url = this.original_thumbnail_url;
 		this.thumbnail = this.original_thumbnail;
 		this.originalData = (this.model)? this.model.toJSON() : null;
@@ -116,7 +118,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			total_file_size: this.model.get("size"),
 			resource_count: this.model.get("count"),
 			channel_link : this.model.get("id"),
-			picture : this.thumbnail_url
+			picture : (this.thumbnail_encoding && this.thumbnail_encoding.base64) || this.thumbnail_url
 		}));
 		if(this.edit){
 			this.image_upload = new ImageViews.ThumbnailUploadView({
@@ -229,6 +231,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		event.preventDefault();
 		this.thumbnail = this.original_thumbnail;
 		this.thumbnail_url = this.original_thumbnail_url;
+		this.thumbnail_encoding = this.original_thumbnail_encoding;
 		this.containing_list_view.set_editing(false);
 		if(this.isNew){
 			this.delete(true, " ");
@@ -248,6 +251,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				name: title,
 				description: description,
 				thumbnail : this.thumbnail,
+				thumbnail_encoding: this.thumbnail_encoding,
 				editors: this.model.get('editors'),
 				pending_editors: this.model.get('pending_editors')
 			};
@@ -274,7 +278,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.set({
 			name: (this.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : this.$el.find("#new_channel_name").val().trim(),
 			description: this.$el.find("#new_channel_description").val(),
-			thumbnail : this.thumbnail
+			thumbnail : this.thumbnail,
+			thumbnail_encoding: this.thumbnail_encoding
 		});
 	},
 	reset_thumbnail:function(){
@@ -285,12 +290,14 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	remove_thumbnail:function(){
 		this.thumbnail = null;
 		this.thumbnail_url = "/static/img/kolibri_placeholder.png";
+		this.thumbnail_encoding = null;
 		this.set_channel();
 		this.enable_submit();
 	},
-	set_thumbnail:function(thumbnail, formatted_name, path){
+	set_thumbnail:function(thumbnail, encoding, formatted_name, path){
 		this.thumbnail = formatted_name;
 		this.thumbnail_url = path;
+		this.thumbnail_encoding = encoding;
 		this.set_channel();
 		this.enable_submit();
 	},

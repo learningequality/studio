@@ -175,10 +175,16 @@ var ContentNodeModel = BaseModel.extend({
 		if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
 			this.set("extra_fields", JSON.parse(this.get("extra_fields")))
 		}
+		if (this.get("thumbnail_encoding") && typeof this.get("thumbnail_encoding") !== "object"){
+			this.set("thumbnail_encoding", JSON.parse(this.get("thumbnail_encoding")))
+		}
 	},
 	parse: function(response) {
     	if (response !== undefined && response.extra_fields) {
     		response.extra_fields = JSON.parse(response.extra_fields);
+    	}
+    	if (response !== undefined && response.thumbnail_encoding) {
+    		response.thumbnail_encoding = JSON.parse(response.thumbnail_encoding);
     	}
 	    return response;
 	},
@@ -186,6 +192,9 @@ var ContentNodeModel = BaseModel.extend({
 	    var attributes = _.clone(this.attributes);
 	    if (typeof attributes.extra_fields !== "string") {
 		    attributes.extra_fields = JSON.stringify(attributes.extra_fields);
+		}
+		if (typeof attributes.thumbnail_encoding !== "string") {
+		    attributes.thumbnail_encoding = JSON.stringify(attributes.thumbnail_encoding);
 		}
 	    return attributes;
 	},
@@ -386,7 +395,24 @@ var ChannelModel = BaseModel.extend({
     get_root:function(tree_name){
     	return new ContentNodeModel(this.get(tree_name));
     },
-
+    initialize: function () {
+    	if (this.get("thumbnail_encoding") && typeof this.get("thumbnail_encoding") !== "object"){
+			this.set("thumbnail_encoding", JSON.parse(this.get("thumbnail_encoding").replace(/u*'/g, "\"")))
+		}
+	},
+	parse: function(response) {
+    	if (response.thumbnail_encoding !== undefined && response.thumbnail_encoding) {
+    		response.thumbnail_encoding = JSON.parse(response.thumbnail_encoding.replace(/u*'/g, "\""));
+    	}
+	    return response;
+	},
+	toJSON: function() {
+	    var attributes = _.clone(this.attributes);
+		if (attributes.thumbnail_encoding && typeof attributes.thumbnail_encoding !== "string") {
+		    attributes.thumbnail_encoding = JSON.stringify(attributes.thumbnail_encoding);
+		}
+	    return attributes;
+	},
     publish:function(callback){
     	var self = this;
     	return new Promise(function(resolve, reject){
