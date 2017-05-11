@@ -23,6 +23,10 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed',
                          'use_image', 'create_croppie', 'cancel_croppie', 'submit_image', 'get_croppie_encoding', 'submit_croppie');
         this.image_url = options.image_url;
+        this.image = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
+        if(this.image){
+            this.image = new Models.FileModel(this.image);
+        }
         this.thumbnail_encoding = this.model.get('thumbnail_encoding');
         this.original_thumbnail_encoding = this.thumbnail_encoding;
         this.onsuccess = options.onsuccess;
@@ -55,7 +59,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
                 picture : thumbnail_src,
                 selector: this.get_selector(),
                 show_generate: this.model.get('kind') != undefined,
-                show_crop: !thumbnail_src.includes("static")
+                show_crop: this.image_url != this.default_url
             }));
             _.defer(this.create_dropzone, 1);
         }else{
@@ -71,7 +75,6 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         return "dropzone_" + this.cid;
     },
     get_thumbnail_url:function(ignore_encoding){
-        console.log(this.formatted_filename)
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
         if(!ignore_encoding && this.thumbnail_encoding){
             if(typeof this.thumbnail_encoding === "string")
@@ -137,7 +140,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     get_croppie_encoding: function(result){
         var self = this;
-        this.croppie.result({type: 'base64', size: this.aspect_ratio, quality: 0.5}).then(function(image){
+        this.croppie.result({type: 'base64', size: this.aspect_ratio}).then(function(image){
             if(!self.thumbnail_encoding || self.thumbnail_encoding.points !== result.points || self.thumbnail_encoding.zoom !== result.zoom){
                 self.thumbnail_encoding = {
                     "points": result.points,

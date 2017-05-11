@@ -346,6 +346,7 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
               model: this.model,
               preset_id: preset_id,
               upload_url: window.Urls.image_upload(),
+              default_url: "/static/img/" + this.model.get("kind") + "_placeholder.png",
               acceptedFiles: window.formatpresets.get({id:preset_id}).get('associated_mimetypes').join(','),
               onsuccess: this.set_thumbnail,
               onremove: this.remove_thumbnail,

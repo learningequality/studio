@@ -193,7 +193,7 @@ var ContentNodeModel = BaseModel.extend({
 	    if (typeof attributes.extra_fields !== "string") {
 		    attributes.extra_fields = JSON.stringify(attributes.extra_fields);
 		}
-		if (typeof attributes.thumbnail_encoding !== "string") {
+		if (attributes.thumbnail_encoding !== null && typeof attributes.thumbnail_encoding !== "string") {
 		    attributes.thumbnail_encoding = JSON.stringify(attributes.thumbnail_encoding);
 		}
 	    return attributes;

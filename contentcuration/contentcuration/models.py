@@ -379,6 +379,17 @@ class ContentNode(MPTTModel, models.Model):
 
     objects = TreeManager()
 
+    def __init__(self, *args, **kwargs):
+        super(ContentNode, self).__init__(*args, **kwargs)
+        self._original_fields = self._as_dict()
+
+    def _as_dict(self):
+        return dict([(f.name, getattr(self, f.name)) for f in self._meta.local_fields if not f.rel])
+
+    def get_changed_fields(self):
+        new_state = self._as_dict()
+        return dict([(key, value) for key, value in self._original_fields.iteritems() if value != new_state[key]])
+
     def get_original_node(self):
         original_node = self.original_node or self
         if self.original_channel_id and self.original_source_node_id:
@@ -400,6 +411,8 @@ class ContentNode(MPTTModel, models.Model):
         return root.channel_main.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
 
     def save(self, *args, **kwargs):
+        self.changed = len(self.get_changed_fields()) > 0
+
         # Detect if node has been moved to another tree
         if self.pk and ContentNode.objects.filter(pk=self.pk).exists():
             original = ContentNode.objects.get(pk=self.pk)

@@ -1,3 +1,4 @@
+import ast
 import collections
 import os
 import zipfile
@@ -22,6 +23,7 @@ from le_utils.constants import content_kinds,file_formats, format_presets, licen
 from pressurecooker.encodings import write_base64_to_file
 
 from contentcuration import models as ccmodels
+from contentcuration.utils.files import create_file_from_contents
 from kolibri.content import models as kolibrimodels
 from kolibri.content.utils.search import fuzz
 from kolibri.content.content_db_router import using_content_database, THREAD_LOCAL
@@ -172,12 +174,14 @@ def create_bare_contentnode(ccnode):
 
     return kolibrinode
 
-def create_thumbnail(thumbnail_string, file_format_id=file_formats.PNG):
-    thumbnail_data = json.loads(thumbnail_string.replace("'", "\""))
+def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None):
+    thumbnail_data = ast.literal_eval(thumbnail_string)
     if thumbnail_data.get('base64'):
-        with tempfile.NamedTemporaryFile(suffix=file_format_id) as tempf:
+        with tempfile.NamedTemporaryFile(suffix=".{}".format(file_format_id), delete=False) as tempf:
+            tempf.close()
             write_base64_to_file(thumbnail_data['base64'], tempf.name)
-            import pdb; pdb.set_trace()
+            with open(tempf.name, 'rb') as tf:
+                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id)
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating File objects for Node {}".format(kolibrinode.id))
@@ -190,9 +194,8 @@ def create_associated_file_objects(kolibrinode, ccnode):
                 lang_code=ccfilemodel.language.lang_code,
                 lang_subcode=ccfilemodel.language.lang_subcode
             )
-
-        if ccfilemodel.preset.thumbnail and ccnode.thumbnail_encoding:
-            result = create_thumbnail(ccnode.thumbnail_encoding, ccfilemodel.file_format_id)
+        if preset.thumbnail and ccnode.thumbnail_encoding:
+            ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
 
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
@@ -389,8 +392,7 @@ def convert_channel_thumbnail(channel):
         return ""
 
     if channel.thumbnail_encoding:
-        import pdb; pdb.set_trace()
-        thumbnail_data = json.loads(channel.thumbnail_encoding.replace("'", "\""))
+        thumbnail_data = ast.literal_eval(channel.thumbnail_encoding)
         if thumbnail_data.get("base64"):
             return thumbnail_data["base64"]
 
