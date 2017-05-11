@@ -131,7 +131,7 @@ def map_content_nodes(root_node):
                 kolibrinode = create_bare_contentnode(node)
 
                 if node.kind.kind == content_kinds.EXERCISE:
-                    exercise_data = process_assessment_metadata(ccnode, kolibrinode)
+                    exercise_data = process_assessment_metadata(node, kolibrinode)
                     if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
                         create_perseus_exercise(node, kolibrinode, exercise_data)
                 create_associated_file_objects(kolibrinode, node)
