@@ -131,8 +131,7 @@ def map_content_nodes(root_node):
                 if node.kind.kind == content_kinds.EXERCISE:
                     if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
                         create_perseus_exercise(node, kolibrinode)
-                if node.kind.kind != content_kinds.TOPIC:
-                    create_associated_file_objects(kolibrinode, node)
+                create_associated_file_objects(kolibrinode, node)
                 map_tags_to_node(kolibrinode, node)
 
 def create_bare_contentnode(ccnode):
