@@ -25,16 +25,17 @@ var createBundles = function (b, bundles) {
     b.bundle(
       function(err, buf){
         if (err) {
-          errLog(err, 'came from functions error catcher');
+          errLog(err);
+        } else {
+          fs.createWriteStream(__dirname + '/contentcuration' + (staticfiles ? '' : '/contentcuration') + '/static/js/bundles/common.js').write(buf);
+          infoLog(bundles.length + ' Bundles written.');
         }
 
-        fs.createWriteStream(__dirname + '/contentcuration' + (staticfiles ? '' : '/contentcuration') + '/static/js/bundles/common.js').write(buf);
-        infoLog(bundles.length + ' Bundles written.');
       }
     );
   }
   catch (err) {
-    errLog(err, 'came from try/catch');
+    errLog(err);
   }
 };
 

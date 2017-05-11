@@ -19,7 +19,7 @@ def file_upload(request):
         #Implement logic for switching out files without saving it yet
         filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
-        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=request.FILES.values()[0]._name, preset_id=request.META.get('HTTP_PRESET'))
+        file_object = File(file_size=size, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:].lower(), original_filename=request.FILES.values()[0]._name, preset_id=request.META.get('HTTP_PRESET'))
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
@@ -31,7 +31,7 @@ def file_create(request):
     if request.method == 'POST':
         original_filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
-        presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:])
+        presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
         kind = presets.first().kind
         preferences = json.loads(request.user.preferences)
         author = preferences.get('author') if isinstance(preferences.get('author'), basestring) else request.user.get_full_name()
@@ -41,7 +41,7 @@ def file_create(request):
         if license.license_name == licenses.SPECIAL_PERMISSIONS:
             new_node.license_description = preferences.get('license_description')
         new_node.save()
-        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:], original_filename=request.FILES.values()[0]._name, contentnode=new_node, file_size=size)
+        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:].lower(), original_filename=request.FILES.values()[0]._name, contentnode=new_node, file_size=size)
         file_object.save()
         if kind.pk == content_kinds.VIDEO:
             file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))
