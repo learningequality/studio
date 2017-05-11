@@ -8,10 +8,11 @@
 	.sync_header{
     	font-size: 13pt;
     	font-weight:bold;
-    	&.sync_header_bottom{
-    		border-top: 1px solid @gray-300;
-    		padding-top: 10px;
-    		margin: 10px 0px;
+    	&:first-child{ padding-left: 25px; }
+    	.sync_helper{
+    		font-size: 11pt;
+		    font-style: italic;
+		    font-weight: normal;
     	}
     }
 	.modal-body{ padding-top: 0px; }
@@ -42,11 +43,16 @@
 		    width: 100%;
 		}
 		#sync_preview_diff{
+			cursor: default;
 			.item{
 				margin:0px;
 				padding-top: 5px;
 				&:hover{ background-color: cornsilk; }
-				&.item_header{background-color: @gray-300; }
+				&.item_header{
+					background-color: @gray-300;
+					padding-bottom: 3px;
+					font-weight: bold;
+				}
 				.item_field_title{
 					text-align: center;
 					font-weight: bold;

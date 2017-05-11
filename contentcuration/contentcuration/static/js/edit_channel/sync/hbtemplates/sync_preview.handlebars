@@ -1,14 +1,90 @@
 <div id="sync_preview_diff">
+	<div id="sync_original_channel_header" class="truncate">Imported from <b>{{node.original_channel.name}}</b></div>
 	<div class="row item item_header">
-		<div class="col-xs-2">Field</div>
-		<div class="col-xs-10">Update</div>
+		<div class="col-xs-2">FIELD</div>
+		<div class="col-xs-10">UPDATE</div>
 	</div>
+	{{#if changed.files}}
+		<div id="editmetadata_format_section"></div>
+	{{/if}}
 	{{#if changed.title}}
 		<div class="row item">
 			<div class="col-xs-2 item_field_title">Title</div>
 			<div class="col-xs-10 item_field">
-				<div class="original">{{node.title}}</div>
-				<div class="updated">{{changed.title}}</div>
+				<div class="original">BEFORE: {{node.title}}</div>
+				<div class="updated">AFTER: {{changed.title}}</div>
+			</div>
+		</div>
+	{{/if}}
+	{{#if changed.description}}
+		<div class="row item">
+			<div class="col-xs-2 item_field_title">Description</div>
+			<div class="col-xs-10 item_field">
+				<div class="original">BEFORE: {{node.description}}</div>
+				<div class="updated">AFTER: {{changed.description}}</div>
+			</div>
+		</div>
+	{{/if}}
+	{{#if changed.mastery_model}}
+		<div class="row item">
+			<div class="col-xs-2 item_field_title">Mastery Criteria</div>
+			<div class="col-xs-10 item_field">
+				<div class="original">BEFORE: {{node.mastery_model}}</div>
+				<div class="updated">AFTER: {{changed.mastery_model}}</div>
+			</div>
+		</div>
+	{{/if}}
+	{{#if changed.mastery_model}}
+		<div class="row item">
+			<div class="col-xs-2 item_field_title">Mastery Criteria</div>
+			<div class="col-xs-10 item_field">
+				<div class="original">BEFORE: {{node.mastery_model}}</div>
+				<div class="updated">AFTER: {{changed.mastery_model}}</div>
+			</div>
+		</div>
+	{{/if}}
+	{{#if changed.author}}
+		<div class="row item">
+			<div class="col-xs-2 item_field_title">Author</div>
+			<div class="col-xs-10 item_field">
+				<div class="original">BEFORE: {{node.author}}</div>
+				<div class="updated">AFTER: {{changed.author}}</div>
+			</div>
+		</div>
+	{{/if}}
+	{{#if changed.license}}
+		<div class="row item">
+			<div class="col-xs-2 item_field_title">License</div>
+			<div class="col-xs-10 item_field">
+				<div class="original">BEFORE: {{node.license}}</div>
+				<div class="updated">AFTER: {{changed.license}}</div>
+			</div>
+		</div>
+	{{/if}}
+	{{#if changed.license_description}}
+		<div class="row item">
+			<div class="col-xs-2 item_field_title">License Description</div>
+			<div class="col-xs-10 item_field">
+				<div class="original">BEFORE: {{node.license_description}}</div>
+				<div class="updated">AFTER: {{changed.license_description}}</div>
+			</div>
+		</div>
+	{{/if}}
+	{{#if changed.copyright_owner}}
+		<div class="row item">
+			<div class="col-xs-2 item_field_title">Copyright Holder</div>
+			<div class="col-xs-10 item_field">
+				<div class="original">BEFORE: {{node.copyright_owner}}</div>
+				<div class="updated">AFTER: {{changed.copyright_owner}}</div>
+			</div>
+		</div>
+	{{/if}}
+	{{#if changed.tags}}
+		<div class="row item">
+			<div class="col-xs-2 item_field_title">Tags</div>
+			<div class="col-xs-10 item_field">
+				<div class="original">BEFORE: {{node.tags}}</div>
+				<div class="updated">AFTER: {{changed.tags}}</div>
 			</div>
 		</div>
 	{{/if}}
