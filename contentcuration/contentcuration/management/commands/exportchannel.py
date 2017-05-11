@@ -19,6 +19,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.template.loader import render_to_string
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from pressurecooker.encodings import write_base64_to_file
 
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
@@ -171,6 +172,12 @@ def create_bare_contentnode(ccnode):
 
     return kolibrinode
 
+def create_thumbnail(thumbnail_string, file_format_id=file_formats.PNG):
+    thumbnail_data = json.loads(thumbnail_string.replace("'", "\""))
+    if thumbnail_data.get('base64'):
+        with tempfile.NamedTemporaryFile(suffix=file_format_id) as tempf:
+            write_base64_to_file(thumbnail_data['base64'], tempf.name)
+            import pdb; pdb.set_trace()
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating File objects for Node {}".format(kolibrinode.id))
@@ -183,6 +190,9 @@ def create_associated_file_objects(kolibrinode, ccnode):
                 lang_code=ccfilemodel.language.lang_code,
                 lang_subcode=ccfilemodel.language.lang_subcode
             )
+
+        if ccfilemodel.preset.thumbnail and ccnode.thumbnail_encoding:
+            result = create_thumbnail(ccnode.thumbnail_encoding, ccfilemodel.file_format_id)
 
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
@@ -361,24 +371,30 @@ def map_channel_to_kolibri_channel(channel):
         name=channel.name,
         description=channel.description,
         version=channel.version,
-        thumbnail=convert_channel_thumbnail(channel.thumbnail),
+        thumbnail=convert_channel_thumbnail(channel),
         root_pk=channel.main_tree.node_id,
     )
     logging.info("Generated the channel metadata.")
 
     return kolibri_channel
 
-def convert_channel_thumbnail(thumbnail):
+def convert_channel_thumbnail(channel):
     """ encode_thumbnail: gets base64 encoding of thumbnail
         Args:
             thumbnail (str): file path or url to channel's thumbnail
         Returns: base64 encoding of thumbnail
     """
     encoding = None
-    if thumbnail is None or thumbnail=='' or 'static' in thumbnail:
+    if not channel.thumbnail or channel.thumbnail=='' or 'static' in channel.thumbnail:
         return ""
 
-    with open(ccmodels.generate_file_on_disk_name(thumbnail.split('.')[0], thumbnail), 'rb') as file_obj:
+    if channel.thumbnail_encoding:
+        import pdb; pdb.set_trace()
+        thumbnail_data = json.loads(channel.thumbnail_encoding.replace("'", "\""))
+        if thumbnail_data.get("base64"):
+            return thumbnail_data["base64"]
+
+    with open(ccmodels.generate_file_on_disk_name(channel.thumbnail.split('.')[0], channel.thumbnail), 'rb') as file_obj:
         encoding = base64.b64encode(file_obj.read()).decode('utf-8')
     return "data:image/png;base64," + encoding
 
