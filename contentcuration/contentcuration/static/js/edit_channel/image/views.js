@@ -21,7 +21,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     dropzone_template: require("./hbtemplates/thumbnail_dropzone.handlebars"),
     initialize: function(options) {
         _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed',
-                         'use_image', 'create_croppie', 'cancel_croppie', 'submit_image', 'get_image_encoding');
+                         'use_image', 'create_croppie', 'cancel_croppie', 'submit_image', 'get_croppie_encoding', 'submit_croppie');
         this.image_url = options.image_url;
         this.thumbnail_encoding = this.model.get('thumbnail_encoding');
         this.original_thumbnail_encoding = this.thumbnail_encoding;
@@ -49,27 +49,33 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         'click .submit_image': 'submit_croppie'
     },
     render: function() {
+        var thumbnail_src = this.get_thumbnail_url();
         if(this.allow_edit){
             this.$el.html(this.template({
-                picture : this.get_thumbnail_url(),
+                picture : thumbnail_src,
                 selector: this.get_selector(),
                 show_generate: this.model.get('kind') != undefined,
-                show_crop: true
+                show_crop: !thumbnail_src.includes("static")
             }));
             _.defer(this.create_dropzone, 1);
         }else{
             this.$el.html(this.preview_template({
-                picture : this.get_thumbnail_url(),
+                picture : thumbnail_src,
                 name: this.model.get('title')
             }));
         }
     },
+
+    /*********** GET IMAGE INFORMATION ***********/
+    get_selector: function(){
+        return "dropzone_" + this.cid;
+    },
     get_thumbnail_url:function(ignore_encoding){
+        console.log(this.formatted_filename)
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
         if(!ignore_encoding && this.thumbnail_encoding){
-            if(typeof this.thumbnail_encoding === "string"){
+            if(typeof this.thumbnail_encoding === "string")
                 this.thumbnail_encoding = JSON.parse(this.thumbnail_encoding);
-            }
             return this.thumbnail_encoding.base64;
         }
         else if(this.image_url){ return this.image_url; }
@@ -77,6 +83,8 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         else if(this.model.get('kind') != undefined) { return "/static/img/" + this.model.get("kind") + "_placeholder.png"; }
         else{ return "/static/img/kolibri_placeholder.png"; }
     },
+
+    /*********** UPDATE IMAGE FIELDS ***********/
     remove_image: function(){
         var self = this;
         dialog.dialog("Removing Image", "Are you sure you want to remove this image?", {
@@ -90,11 +98,77 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             },
         }, function(){});
     },
-    get_selector: function(){
-        return "dropzone_" + this.cid;
+    submit_image:function(){
+        this.original_thumbnail_encoding = this.thumbnail_encoding;
+        if(this.onsuccess){ this.onsuccess(this.image, this.thumbnail_encoding, this.image_formatted_name, this.image_url); }
+        if(this.onfinish){ this.onfinish(); }
     },
+
+    /*********** CROPPIE FUNCTIONS ***********/
+    create_croppie:function(){
+        this.$(".thumbnail_option").css("display", "none");
+        this.$(".croppie_option").css("display", "inline-block");
+        this.$(".finished_area").css("visibility", "visible");
+        var selector = "#" + this.get_selector() + "_placeholder";
+        var self = this;
+        this.croppie = new Croppie(this.$(selector).get(0),{
+            boundary: this.boundary,
+            viewport: this.aspect_ratio,
+            showZoomer: false,
+            customClass: "crop-img",
+            update: function(result) { _.defer(function() {self.get_croppie_encoding(result);}, 500); }
+        });
+        this.croppie.bind({
+            points: (this.thumbnail_encoding)? this.thumbnail_encoding.points : [],
+            zoom: (this.thumbnail_encoding)? this.thumbnail_encoding.zoom : 1,
+            url: this.get_thumbnail_url(true)
+        }).then(function(){})
+    },
+    cancel_croppie: function(){
+        this.thumbnail_encoding = this.original_thumbnail_encoding;
+        this.render();
+    },
+    submit_croppie: function(){
+        this.$(".croppie_option").css("display", "none");
+        this.$(".finished_area").css("visibility", "hidden");
+        this.get_croppie_encoding(this.croppie.get());
+        this.submit_image();
+        this.render();
+    },
+    get_croppie_encoding: function(result){
+        var self = this;
+        this.croppie.result({type: 'base64', size: this.aspect_ratio, quality: 0.5}).then(function(image){
+            if(!self.thumbnail_encoding || self.thumbnail_encoding.points !== result.points || self.thumbnail_encoding.zoom !== result.zoom){
+                self.thumbnail_encoding = {
+                    "points": result.points,
+                    "zoom": result.zoom,
+                    "base64": image
+                };
+            }
+        });
+    },
+
+    /*********** GENERATE IMAGE FUNCTIONS ***********/
+    open_thumbnail_generator:function(){
+        var thumbnail_modal = new ThumbnailModalView({
+            node: this.model,
+            onuse: this.use_image,
+            model: this.image
+        });
+    },
+    use_image:function(file){
+        this.image = file;
+        this.image_url = file.get('storage_url');
+        this.thumbnail_encoding = null;
+        this.render();
+        this.submit_image();
+        // this.create_croppie();
+    },
+
+    /*********** DROPZONE FUNCTIONS ***********/
     create_dropzone:function(){
         var selector = "#" + this.get_selector();
+        Dropzone.autoDiscover = false;
         this.dropzone = new Dropzone(this.$(selector).get(0), {
             maxFiles: 1,
             clickable: [selector + "_placeholder", selector + "_swap"],
@@ -109,70 +183,6 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         this.dropzone.on("removedfile", this.image_removed);
         this.dropzone.on("queuecomplete", this.image_completed);
         this.dropzone.on("error", this.image_failed);
-    },
-    create_croppie:function(){
-        this.$(".thumbnail_option").css("display", "none");
-        this.$(".croppie_option").css("display", "inline-block");
-        var selector = "#" + this.get_selector() + "_placeholder";
-        var self = this;
-        this.croppie = new Croppie(this.$(selector).get(0),{
-            boundary: this.boundary,
-            viewport: this.aspect_ratio,
-            showZoomer: false,
-            customClass: "crop-img",
-            update: function(result) { _.defer(function() {self.get_image_encoding(result);}, 500); }
-        });
-        this.croppie.bind({
-            points: (this.thumbnail_encoding)? this.thumbnail_encoding.points : [],
-            zoom: (this.thumbnail_encoding)? this.thumbnail_encoding.zoom : 1,
-            url: this.get_thumbnail_url(true)
-        }).then(function(){})
-    },
-    cancel_croppie: function(){
-        this.thumbnail_encoding = this.original_thumbnail_encoding;
-        this.render();
-    },
-    submit_croppie: function(){
-        this.$(".croppie_option").css("display", "none");
-        this.submit_image();
-        this.render();
-    },
-    get_image_encoding: function(result){
-        var self = this;
-        this.croppie.result({type: 'base64', size: this.aspect_ratio, quality: 0.5}).then(function(image){
-            if(!self.thumbnail_encoding || self.thumbnail_encoding.points !== result.points || self.thumbnail_encoding.zoom !== result.zoom){
-                self.thumbnail_encoding = {
-                    "points": result.points,
-                    "zoom": result.zoom,
-                    "base64": image
-                };
-            }
-        });
-    },
-    image_uploaded:function(image){
-        this.image_error = null;
-        result = JSON.parse(image.xhr.response)
-        if(result.file){
-            this.image = new Models.FileModel(JSON.parse(result.file));
-        }
-        this.image_url = result.path;
-        this.image_formatted_name = result.formatted_filename;
-    },
-    image_completed:function(){
-        if(this.image_error){
-            var self = this;
-            dialog.dialog("Image Error", this.image_error, { "OK":function(){} }, null);
-            if(this.onerror){ this.onerror(); }
-        }else{
-            this.thumbnail_encoding = null;
-            this.submit_image();
-        }
-        this.render();
-    },
-    submit_image:function(){
-        this.original_thumbnail_encoding = this.thumbnail_encoding;
-        if(this.onsuccess){ this.onsuccess(this.image, this.thumbnail_encoding, this.image_formatted_name, this.image_url); }
-        if(this.onfinish){ this.onfinish(); }
     },
     image_failed:function(data, error){
         this.image_error = error;
@@ -189,20 +199,27 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         this.$(".finished_area").css('display', 'block');
         if(this.onfinish){ this.onfinish(); }
     },
-    use_image:function(file){
-        this.image = file;
-        this.image_url = file.get('storage_url');
-        this.thumbnail_encoding = null;
-        this.onsuccess(this.image, null, this.image_formatted_name, this.image_url);
-        this.render();
-        if(this.onfinish){ this.onfinish(); }
+    image_uploaded:function(image){
+        this.image_error = null;
+        result = JSON.parse(image.xhr.response)
+        if(result.file){
+            this.image = new Models.FileModel(JSON.parse(result.file));
+        }
+        this.image_url = result.path;
+        this.image_formatted_name = result.formatted_filename;
     },
-    open_thumbnail_generator:function(){
-        var thumbnail_modal = new ThumbnailModalView({
-            node: this.model,
-            onuse: this.use_image,
-            model: this.image
-        });
+    image_completed:function(){
+        if(this.image_error){
+            var self = this;
+            dialog.dialog("Image Error", this.image_error, { "OK":function(){} }, null);
+            if(this.onerror){ this.onerror(); }
+            this.render();
+        }else{
+            this.thumbnail_encoding = null;
+            this.render();
+            this.submit_image();
+            // this.create_croppie();
+        }
     }
 });
 
