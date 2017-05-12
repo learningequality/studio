@@ -1,4 +1,4 @@
-Django==1.9.7
+Django==1.9.13
 django-filter==0.9.2
 django-mptt==0.8.5
 djangorestframework==3.3.3
