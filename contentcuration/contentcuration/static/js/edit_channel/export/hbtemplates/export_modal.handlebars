@@ -1,34 +1,29 @@
 <div class="modal fade" id="export_modal" tabindex="-1">
+    <div class="input-tab-control tab_item" data-next="#export_cancel"></div>
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close tab_item" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title">Publishing {{channel.name}}</h4>
             </div>
             <div class="modal-body">
                 <div id="export_area">
-                    <div class="input-tab-control" tabindex="{{#tabindex}}{{/tabindex}}" data-next="#export_cancel"></div>
+
                     <em >PUBLISH ID: {{channel.id}}</em>
                     <em class="pull-right" id="version_number">Current Version: {{version}}</em>
                     <h4>The following content will be published:</h4>
                     <div id="export_preview"></div>
                     <div id="export_buttons">
-                        <button class="action-button pull-right" id="publish_btn" tabindex="{{#tabindex}}{{/tabindex}}" >
-                            <span>PUBLISH</span>
-                        </button>
+                        <button class="action-button pull-right tab_item" id="publish_btn">PUBLISH</button>
                         <span id="export_totals" class="pull-right">
                             {{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}
                             <em class="annotation" id="export_size">(Calculating...)</em>
                         </span>
-                        <a class="action-text" id="export_cancel" data-dismiss="modal" tabindex="{{#tabindex}}{{/tabindex}}" >
-                            <span>CANCEL</span>
-                        </a>
+                        <button class="action-text tab_item" id="export_cancel" data-dismiss="modal">CANCEL</button>
                     </div>
-                    <div class="input-tab-control" tabindex="{{#tabindex}}{{/tabindex}}" data-next="#publish_btn"></div>
                 </div>
             </div>
         </div>
     </div>
+    <div class="input-tab-control tab_item" data-next="#publish_btn"></div>
 </div>
-
-<!-- <div class="modal fade" id="license_modal"></div> -->

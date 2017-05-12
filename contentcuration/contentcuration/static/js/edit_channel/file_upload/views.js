@@ -56,10 +56,11 @@ var FileModalView = BaseViews.BaseModalView.extend({
 });
 
 var FileUploadView = BaseViews.BaseView.extend({
+    'id': "file_upload_view_el",
     template: require("./hbtemplates/file_upload.handlebars"),
     navigation_template: require("./hbtemplates/file_upload_buttons.handlebars"),
     initialize: function(options) {
-        _.bindAll(this,"go_to_upload", "go_to_metadata", "close_file_uploader");
+        _.bindAll(this,"go_to_upload", "go_to_metadata", "close_file_uploader", "set_initial_focus", "set_indices", 'loop_focus');
         this.container = options.container;
         this.collection = new Models.ContentNodeCollection();
         this.onsave = options.onsave;
@@ -67,7 +68,8 @@ var FileUploadView = BaseViews.BaseView.extend({
         this.switch_view(1);
     },
     events:{
-      "click .go_to_metadata": "go_to_metadata"
+      "click .go_to_metadata": "go_to_metadata",
+      'focus .input-tab-control': 'loop_focus'
     },
     go_to_upload:function(){
         this.switch_view(1);
@@ -108,6 +110,9 @@ var FileUploadView = BaseViews.BaseView.extend({
                 this.current_view = new UploaderViews.EditMetadataView(data);
                 break;
         }
+    },
+    set_initial_focus: function(){
+        this.current_view.set_initial_focus();
     },
     close_file_uploader:function(){
         this.container.close();
@@ -150,6 +155,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         (this.views.length)? this.enable_next() : this.disable_next(this.uploads_in_progress);
     },
     set_initial_focus: function(){
+        this.container.set_indices();
         this.$(".fileinput-button").focus();
     },
     events:{
@@ -419,9 +425,10 @@ var FormatFormatItem = FormatEditorItem.extend({
         this.update_metadata();
         this.load_subfiles();
         this.create_thumbnail_view(this.disable_next, this.enable_next, this.enable_next);
-        this.set_focus();
+        _.defer(this.set_focus);
     },
     set_focus:function(){
+        this.containing_list_view.set_initial_focus();
         this.$(".name_content_input").focus();
         this.$(".name_content_input").select();
     },

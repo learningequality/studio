@@ -19,17 +19,17 @@
 	{{#if allow_edit}}
 	<div class="metadata_save_buttons container-fluid">
 		<div class="pull-right">
-			<a id="upload_save_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">APPLY CHANGES</a>
-			<a class="btn btn-default" id="upload_save_finish_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">SAVE &amp; CLOSE</a>
+			<button id="upload_save_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">APPLY CHANGES</button>
+			<button class="btn btn-default" id="upload_save_finish_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">SAVE &amp; CLOSE</button>
 		</div>
-		<a class="action-text" data-dismiss="modal" aria-label="Close"  tabindex="{{#tabindex}}{{/tabindex}}">CLOSE</a>
+		<button class="action-text" data-dismiss="modal" aria-label="Close"  tabindex="{{#tabindex}}{{/tabindex}}">CLOSE</button>
 	</div>
 	{{else}}
 	<div class="metadata_copy_buttons container-fluid">
 		<div class="pull-right">
-			<a class="btn btn-default action-button" id="copy_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">COPY</a>
+			<button class="btn btn-default action-button" id="copy_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">COPY</button>
 		</div>
-		<a class="disable_on_error action-text" id="close_uploader_button" tabindex="{{#tabindex}}{{/tabindex}}">CLOSE</a>
+		<button class="disable_on_error action-text" id="close_uploader_button" tabindex="{{#tabindex}}{{/tabindex}}">CLOSE</button>
 	</div>
 	{{/if}}
 </div>

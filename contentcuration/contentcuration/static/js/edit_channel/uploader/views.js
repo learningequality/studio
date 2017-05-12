@@ -73,7 +73,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
 
   initialize: function(options) {
-    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'enable_submit', 'disable_submit', 'loop_focus',
+    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'enable_submit', 'disable_submit', 'loop_focus', 'set_indices',
       'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items', 'set_editor_focus');
     this.bind_edit_functions();
     this.new_content = options.new_content;
@@ -182,6 +182,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     if(this.edit_list){
       this.edit_list.adjust_list_height();
     }
+    this.set_indices();
   },
   set_editor_focus: function(){
     if(this.editor_view){

@@ -86,7 +86,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	template: require("./hbtemplates/channel_container.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','update_title', 'loop_focus', 'copy_id',
+		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','update_title', 'loop_focus', 'copy_id', 'set_indices',
 						'open_channel', 'set_thumbnail', 'reset_thumbnail','enable_submit', 'disable_submit', 'remove_thumbnail');
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = false;
@@ -119,8 +119,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			channel_link : this.model.get("id"),
 			picture : this.thumbnail_url
 		}));
-		this.$("#new_channel_name").focus();
-		this.$("#new_channel_name").select();
 		if(this.edit){
 			this.image_upload = new FileViews.ThumbnailUploadView({
 				model: this.model,
@@ -138,6 +136,9 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				allow_edit: true
 			});
 		}
+		this.set_indices();
+		this.$("#new_channel_name").focus();
+		this.$("#new_channel_name").select();
 	},
 	events: {
 		'click .edit_channel':'edit_channel',

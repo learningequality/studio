@@ -14,6 +14,13 @@ var BaseView = Backbone.View.extend({
 			this.$(element.data('next')).select();
 		}
 	},
+	set_indices: function(){
+        var n = 1;
+        var selector = (this.el.id)? "#" + this.el.id : "." + this.el.className;
+        $(selector + " .tab_item").each(function(){
+            $(this).attr('tabindex', n++);
+        });
+    },
 	display_load:function(message, callback){
     	var self = this;
     	if(message.trim()!=""){

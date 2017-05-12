@@ -1,10 +1,5 @@
 {{#if uploading}}
-	<div class="input-tab-control" tabindex="1" data-next=".file-upload-cancel"></div>
-    <div class="input-tab-control" tabindex="5" data-next=".go_to_metadata"></div>
-    <button disabled class="action-button pull-right go_to_metadata disabled" tabindex="2">
-		<span>Add files to continue</span>
-	</button>
-	<a class="action-text file-upload-cancel" data-dismiss="modal" tabindex="4">
-		<span>CANCEL</span>
-	</a>
+    <button disabled class="action-button pull-right go_to_metadata disabled tab_item">Add files to continue</button>
+	<button class="action-text file-upload-cancel tab_item" data-dismiss="modal">CANCEL</button>
+	<div class="input-tab-control tab_item" data-next=".fileinput-button"></div>
 {{/if}}
