@@ -10,20 +10,20 @@
 
 <div class="login container-fluid">
 	<!-- Branding block -->
-	<div class="login-branding center-block text-center col-md-4">
-			<img class="login-branding-kolibri-logo img-responsive" src="{% static 'img/kolibri_login.png' %}"/>
+	<div class="login-branding center-block text-center col-md-5 container">
+			<img class="login-branding-kolibri-logo img-responsive col-md-5" src="{% static 'img/kolibri_login.png' %}"/>
 			<h1 class="login-branding-kolibri-title"> Kolibri </h1>
 			<p class="login-branding-subtitle"> Content Curation </p>
 
 			<a href="https://learningequality.org/" class="pull-left login-branding-footer" target="_blank">
 				<img src="{% static 'img/le_logo.png' %}" class="login-branding-footer-le-logo img-responsive">
-				<span class="login-branding-footer-le-title"> Learning Equality </span
-			</a>
+				<span class="login-branding-footer-le-title"> Learning Equality </span>
+			<a>
 	</div>
 
-
+	<div class="col-md-7 login-content"
 	<!-- Login Form Block -->
-	<form method="post" class="col-md-8 login-form text-center" action="{% url 'django.contrib.auth.views.login' %}">
+	<form method="post" class="login-content-form text-center" action="{% url 'django.contrib.auth.views.login' %}">
 		{% csrf_token %}
 		<div class="form-group">
 		    {{ form.username.label_tag }}

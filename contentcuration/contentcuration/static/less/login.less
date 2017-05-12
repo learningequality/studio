@@ -1,17 +1,33 @@
 @import "global-variables.less";
 
-html, body, .login, .login-branding, .login-form{
+html, body, .login, .login-branding, .login-content{
+	// standardizing height across the app
 	height: 100%
 }
+
+.content-padding-top(){
+	padding-top: 20%;
+}
+
+@iphone-screen-width: 480px;
+
 // /* LOGIN STYLING */
 .login{
+	// fighting container-fluid
+	padding: 0;
+
 	&-branding{
 		background: black;
+		.content-padding-top();
+
 		&-kolibri{
+
 			&-logo{
 					display: inline-block;
+					width: @iphone-screen-width;
 			}
-			&-title{
+
+			&-title {
 					display: inline-block;
 			}
 		}
@@ -20,14 +36,29 @@ html, body, .login, .login-branding, .login-form{
 			position: absolute;
 			bottom: 0;
 			left: 0;
+
 			&-le-logo{
+				//TODO make this a variable
 				height: 40px;
 				width: auto;
 			}
+
 			&-le-title{
 				text-align: left;
 			}
 		}
+	}
+
+	&-content{
+		.content-padding-top();
+		background-color: red;
+
+		&-form{
+			width: @iphone-screen-width;
+			max-width: 100%;
+			overflow-y: auto;
+		}
+
 	}
 }
 //
