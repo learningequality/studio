@@ -71,7 +71,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			});
 			this.lists.push(container_view);
 			var self = this;
-			setTimeout(function(){
+			_.defer(function(){
 				self.$("#container_area").width(self.$("#container_area").width() + self.lists[0].$el.width());
 			}, 400)
 

@@ -21,7 +21,8 @@ var FileModalView = BaseViews.BaseModalView.extend({
             onsave: options.onsave,
             onnew: options.onnew
         });
-        this.$(".modal-body").append(this.file_upload_view.el)
+        this.$(".modal-body").append(this.file_upload_view.el);
+        this.$(".modal").on('shown.bs.modal', this.file_upload_view.set_initial_focus);
     },
     events:{
       "click .go_to_upload" : "go_to_upload",
@@ -137,7 +138,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     file_upload_template: require("./hbtemplates/file_upload_dropzone_item.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded",  "all_files_uploaded", "file_added", "file_removed","file_failed", "create_dropzone");
+        _.bindAll(this, "file_uploaded",  "all_files_uploaded", "file_added", "file_removed","file_failed", "create_dropzone", "set_initial_focus");
         this.container = options.container;
         this.collection = options.collection;
         this.acceptedFiles = this.get_accepted_files();
@@ -145,8 +146,11 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         this.onnew = options.onnew;
         this.uploads_in_progress = 0;
         this.render();
-        _.defer($(".fileinput-button").focus, 500);
+        _.defer(this.set_initial_focus);
         (this.views.length)? this.enable_next() : this.disable_next(this.uploads_in_progress);
+    },
+    set_initial_focus: function(){
+        this.$(".fileinput-button").focus();
     },
     events:{
       "click #show_uploading" : "show_uploading"

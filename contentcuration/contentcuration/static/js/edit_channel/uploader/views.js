@@ -34,6 +34,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       model:this.model,
       allow_edit: this.allow_edit
     });
+    this.$(".modal").on('shown.bs.modal', this.metadata_view.set_editor_focus);
   },
   events: {
     'keydown #uploaderModal': 'handle_escape',
@@ -73,7 +74,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
 
   initialize: function(options) {
     _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'enable_submit', 'disable_submit', 'loop_focus',
-      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items');
+      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items', 'set_editor_focus');
     this.bind_edit_functions();
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
@@ -180,6 +181,11 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
     if(this.edit_list){
       this.edit_list.adjust_list_height();
+    }
+  },
+  set_editor_focus: function(){
+    if(this.editor_view){
+      _.defer(this.editor_view.set_initial_focus, 0);
     }
   },
   enable_submit:function(){
@@ -533,7 +539,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         this.$("#randomize_exercise").prop("checked", randomize);
       }
     }
-    _.defer(this.set_initial_focus, 500);
+    _.defer(this.set_initial_focus, 1);
   },
   get_mastery_string: function(){
     switch(this.shared_data.shared_exercise_data.mastery_model){
@@ -631,11 +637,12 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   load_license:function(){
     var iscopied = this.selected_individual() && !this.selected_items[0].isoriginal
     var license_modal = new LicenseModalView({
-      select_license : window.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()})
+      select_license : window.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()}),
+      return_focus: this.set_initial_focus
     });
   },
   load_mastery:function(){
-    new MasteryModalView();
+    new MasteryModalView({return_focus: this.set_initial_focus});
   },
   update_count:function(){
     if(this.selected_individual()){
@@ -939,36 +946,56 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
 
 var LicenseModalView = BaseViews.BaseModalView.extend({
   template: require("./hbtemplates/license_modal.handlebars"),
+  default_focus_button_selector: "#license_close_button",
 
   initialize: function(options) {
+      _.bindAll(this,'focus', 'loop_focus', 'handle_closed');
       this.modal = true;
+      this.return_focus = options.return_focus;
       this.select_license = options.select_license;
       this.render();
   },
-
+  events: {
+    'focus .input-tab-control': 'loop_focus'
+  },
   render: function() {
       this.$el.html(this.template({
           license: this.select_license.toJSON()
       }));
       $("body").append(this.el);
       this.$("#license_modal").modal({show: true});
-      this.$("#license_modal").on("hidden.bs.modal", this.closed_modal);
+      this.$("#license_modal").on("hidden.bs.modal", this.handle_closed);
+      this.$("#license_modal").on("shown.bs.modal", this.focus);
+  },
+  handle_closed: function(){
+    this.closed_modal();
+    this.return_focus();
   }
 });
 
 var MasteryModalView = BaseViews.BaseModalView.extend({
   template: require("./hbtemplates/mastery_modal.handlebars"),
+  default_focus_button_selector: "#mastery_modal_close_button",
 
   initialize: function(options) {
+      _.bindAll(this,'focus', 'loop_focus', 'handle_closed');
       this.modal = true;
+      this.return_focus = options.return_focus;
       this.render();
   },
-
+  events: {
+    'focus .input-tab-control': 'loop_focus'
+  },
   render: function() {
       this.$el.html(this.template());
       $("body").append(this.el);
       this.$("#mastery_modal").modal({show: true});
-      this.$("#mastery_modal").on("hidden.bs.modal", this.closed_modal);
+      this.$("#mastery_modal").on("hidden.bs.modal", this.handle_closed);
+      this.$("#mastery_modal").on("shown.bs.modal", this.focus);
+  },
+  handle_closed: function(){
+    this.closed_modal();
+    this.return_focus();
   }
 });
 

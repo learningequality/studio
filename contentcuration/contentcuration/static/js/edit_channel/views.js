@@ -222,11 +222,15 @@ var BaseWorkspaceView = BaseView.extend({
 
 var BaseModalView = BaseView.extend({
   callback:null,
+  default_focus_button_selector: null,
   render: function(closeFunction, renderData) {
     this.$el.html(this.template(renderData));
     $("body").append(this.el);
     this.$(".modal").modal({show: true});
     this.$(".modal").on("hide.bs.modal", closeFunction);
+  },
+  focus: function(){
+    this.$(this.default_focus_button_selector).focus();
   },
   close: function() {
   	if(this.modal){
@@ -472,7 +476,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	},
 	refresh_droppable:function(){
 		var self = this;
-		setTimeout(function(){
+		_.defer(function(){
 			$( self.list_selector ).sortable( "enable" );
 			$( self.list_selector ).sortable( "refresh" );
 		}, 100);

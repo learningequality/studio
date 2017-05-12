@@ -72,9 +72,11 @@ var ImportView = BaseViews.BaseListView.extend({
         if(collection.length ===0){
             $("#import_content_submit").text("Select content to import...");
             $("#import_content_submit").attr("disabled", "disabled");
+            $("#import_content_submit").addClass("disabled");
         }else{
             $("#import_content_submit").text("IMPORT");
             $("#import_content_submit").removeAttr("disabled");
+            $("#import_content_submit").removeClass("disabled");
         }
         var totalCount = 0;
         collection.forEach(function(entry){

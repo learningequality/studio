@@ -23,13 +23,12 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             model: this.model,
             onpublish:this.onpublish
         });
-        this.listenTo(this.export_view, "loadFinish", function(){
-            $("#publish_btn").focus();
-        });
         var self = this;
         this.model.calculate_size().then(function(size){
             self.$("#export_size").text("(" + stringHelper.format_size(size) + ")");
+            _.defer(function(){$("#publish_btn").focus();});
         });
+        this.$(".modal").on("shown.bs.modal", function(){$("#publish_btn").focus();});
     },
     events:{
       "click #publish_btn" : "publish",
@@ -66,7 +65,6 @@ var ExportListView = BaseViews.BaseListView.extend({
         this.fetch_model(this.model).then(function(fetched){
             self.collection.get_all_fetch_simplified(fetched.get("children")).then(function(fetchedCollection){
                 self.load_content(fetchedCollection);
-                self.trigger('loadFinish');
             });
         })
 
