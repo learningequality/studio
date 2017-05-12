@@ -208,7 +208,7 @@ SITE_ID = 1
 # MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
-DEFAULT_FROM_EMAIL = 'Kolibri Content Curation <info@learningequality.org>'
+DEFAULT_FROM_EMAIL = 'Kolibri Content Workshop (Do Not Reply) <noreply@learningequality.org>'
 DEFAULT_LICENSE = 1
 
 SERVER_EMAIL = 'curation-errors@learningequality.org'
