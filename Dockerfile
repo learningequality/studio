@@ -22,7 +22,7 @@ COPY  . /contentcuration/
 WORKDIR /contentcuration
 
 # Generate the gcloud debugger context file
-RUN gcloud debug source gen-repo-info-file --output-directory=/contentcuration/
+RUN gcloud debug source gen-repo-info-file --output-directory=/contentcuration/contentcuration/
 
 RUN pip install -r requirements.txt
 RUN npm install
