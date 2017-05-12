@@ -127,8 +127,8 @@ Handlebars.registerHelper('question_default_text', function(type){
 });
 
 
-var TABINDEX = 0;
-Handlebars.registerHelper('tabindex', function(increment){
-  TABINDEX += (isNaN(increment))? 1 : Number(increment);
-  return TABINDEX;
+var COUNTER = 0;
+Handlebars.registerHelper('counter', function(increment){
+  COUNTER += (isNaN(increment))? 1 : Number(increment);
+  return COUNTER;
 });

@@ -5,7 +5,7 @@
 		<a class="btn btn-tab tab_button" id="metadata_questions_btn">Questions</a>
 		<a class="btn btn-tab tab_button" id="metadata_preview_btn">Preview</a>
 	</nav>
-	<div class="input-tab-control" tabindex="{{#tabindex}}{{/tabindex}}" data-next="{{#if allow_edit}}#tag_box{{else}}#license_about{{/if}}"></div>
+	<div class="input-tab-control tab_item" data-next="{{#if allow_edit}}#tag_box{{else}}#license_about{{/if}}"></div>
 	<div  class="metadata_panel">
 		<div id="metadata_edit_details" class="input_area tab_panel">
 			<div class="section pull-left edit_details_section">
@@ -19,17 +19,17 @@
 	{{#if allow_edit}}
 	<div class="metadata_save_buttons container-fluid">
 		<div class="pull-right">
-			<button id="upload_save_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">APPLY CHANGES</button>
-			<button class="btn btn-default" id="upload_save_finish_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">SAVE &amp; CLOSE</button>
+			<button id="upload_save_button" class="disable_on_error editmetadata_save tab_item">APPLY CHANGES</button>
+			<button class="btn btn-default" id="upload_save_finish_button" class="disable_on_error editmetadata_save tab_item">SAVE &amp; CLOSE</button>
 		</div>
-		<button class="action-text" data-dismiss="modal" aria-label="Close"  tabindex="{{#tabindex}}{{/tabindex}}">CLOSE</button>
+		<button class="action-text tab_item" data-dismiss="modal" aria-label="Close">CLOSE</button>
 	</div>
 	{{else}}
 	<div class="metadata_copy_buttons container-fluid">
 		<div class="pull-right">
-			<button class="btn btn-default action-button" id="copy_button" class="disable_on_error editmetadata_save" tabindex="{{#tabindex}}{{/tabindex}}">COPY</button>
+			<button class="btn btn-default action-button" id="copy_button" class="disable_on_error editmetadata_save tab_item">COPY</button>
 		</div>
-		<button class="disable_on_error action-text" id="close_uploader_button" tabindex="{{#tabindex}}{{/tabindex}}">CLOSE</button>
+		<button class="disable_on_error action-text tab_item" id="close_uploader_button">CLOSE</button>
 	</div>
 	{{/if}}
 </div>
