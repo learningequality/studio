@@ -5,7 +5,7 @@
 		<div id="share_email">
 			<p id="share_error"></p>
 			<p id="share_success"></p>
-			<input type="text" placeholder="Enter email address..." id="share_email_address" tabindex='{{#tabindex}}{{/tabindex}}' autofocus>
+			<input type="text" placeholder="Enter email address..." id="share_email_address" tabindex='{{#tabindex}}{{/tabindex}}'>
 			<select id="share_mode" tabindex='{{#tabindex}}{{/tabindex}}' {{#if single_share_option}}title="You can only grant {{share_modes.0.share_mode}} access" class="disabled" disabled{{/if}}>
 				{{#each share_modes}}<option value="{{share_mode}}">{{text}}</option>{{/each}}
 			</select>
@@ -31,13 +31,11 @@
 	</div>
 	<br/>
 	<div id="share_bottom_container">
-		<a id="share_close_button" class="action-text" data-dismiss="modal" tabindex="{{#tabindex}}{{/tabindex}}">
-			<span>CLOSE</span>
-		</a>
+		<button id="share_close_button" class="action-text" data-dismiss="modal" tabindex="{{#tabindex}}{{/tabindex}}">CLOSE</button>
 		<!-- <button class="action-button pull-right" id="share_content_submit">
 			<span>SAVE</span>
 		</button> -->
 		<span id="share_change_indicator" class="pull-right">Changes Saved</span>
 	</div>
 </div>
-<div class="input-tab-control" tabindex="5" data-next="#share_email_address"></div>
+<div class="input-tab-control" tabindex="{{#tabindex}}{{/tabindex}}" data-next="#share_email_address"></div>
