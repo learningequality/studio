@@ -20,7 +20,7 @@ try:
 
     if os.getenv("RUN_CLOUD_DEBUGGER"):
         googleclouddebugger.AttachDebugger(
-            version=subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']),
+            version=os.getenv("GCLOUD_DEBUGGER_APP_IDENTIFIER"),
             project_id=os.getenv('GOOGLE_CLOUD_PROJECT'),
             project_number=os.getenv('GOOGLE_CLOUD_PROJECT_NUMBER'),
             enable_service_account_auth=True,
