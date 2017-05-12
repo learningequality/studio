@@ -16,7 +16,7 @@ RUN echo "deb https://packages.cloud.google.com/apt cloud-sdk-trusty main" | tee
 RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 
 # Update the package list and install the Cloud SDK
-RUN apt-get update && apt-get install google-cloud-sdk
+RUN apt-get update && apt-get -y install google-cloud-sdk
 
 COPY  . /contentcuration/
 WORKDIR /contentcuration
