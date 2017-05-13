@@ -159,6 +159,7 @@ def publish_channel(request):
             "channel": channel_id
         }))
 
+
 def accessible_channels(request):
     if request.method == 'POST':
         data = json.loads(request.body)
