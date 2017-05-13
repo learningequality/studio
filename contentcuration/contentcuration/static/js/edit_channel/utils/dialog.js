@@ -65,6 +65,7 @@ function dialog(title, submessage, actions, onclose){
 }
 
 function alert(title, message, callback){
+  callback = callback || function(){};
   dialog(title, message, {
       "OK":function(){}
   }, callback);

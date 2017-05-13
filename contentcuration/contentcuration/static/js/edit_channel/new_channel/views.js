@@ -406,7 +406,7 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		this.model.accept_invitation().then(function(channel){
 			self.submit_invitation(true, channel);
 		}).catch(function(error){
-			dialog.alert("Invitation Error", error.responseText, null);
+			dialog.alert("Invitation Error", error.responseText);
         });
 	},
 	decline: function(){
