@@ -15,7 +15,7 @@ from django.core.management import call_command
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 from contentcuration.api import write_file_to_storage
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, Language, generate_file_on_disk_name
+from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, Language, generate_file_on_disk_name, generate_storage_url
 from contentcuration import ricecooker_versions as rc
 from le_utils.constants import content_kinds
 from django.db.models.functions import Concat
@@ -305,6 +305,10 @@ def map_files_to_node(node, data):
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
 
+        language = None
+        if file_data.get('language'):
+            language = Language.objects.get(pk=file_data['language'])
+
         file_obj = File(
             checksum=file_hash[0],
             contentnode=node,
@@ -322,7 +326,7 @@ def map_files_to_assessment_item(question, data):
     """ Generate files that reference the content node's assessment items """
     for file_data in data:
         file_hash = file_data['filename'].split(".")
-        file_path = generate_file_on_disk_name(file_hash[0], file_data['filename'])
+        file_path = generate_file_on_disk_name(file_data['filename'])
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
 

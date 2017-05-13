@@ -35,7 +35,7 @@ def write_file_to_storage(fobj, check_valid = False, name=None):
     name = name or fobj._name or ""
     filename, ext = os.path.splitext(name)
     hashed_filename = checksum.hexdigest()
-    full_filename = "{}{}".format(hashed_filename, ext)
+    full_filename = "{}{}".format(hashed_filename, ext.lower())
     fobj.seek(0)
 
     if check_valid and hashed_filename != filename:
@@ -54,7 +54,7 @@ def write_raw_content_to_storage(contents, ext=None):
     checksum = hashlib.md5()
     checksum.update(contents)
     filename = checksum.hexdigest()
-    full_filename = "{}.{}".format(filename, ext)
+    full_filename = "{}.{}".format(filename, ext.lower())
 
     # Get location of file
     file_path = models.generate_file_on_disk_name(filename, full_filename)
