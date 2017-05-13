@@ -305,7 +305,7 @@ def map_files_to_node(node, data):
         if file_data.get('language'):
             language = Language.objects.get(pk=file_data['language'])
 
-        file_path=generate_file_on_disk_name(file_data['filename'])
+        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
 
@@ -326,7 +326,7 @@ def map_files_to_assessment_item(question, data):
     """ Generate files that reference the content node's assessment items """
     for file_data in data:
         file_hash = file_data['filename'].split(".")
-        file_path = generate_file_on_disk_name(file_data['filename'])
+        file_path = generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
 
