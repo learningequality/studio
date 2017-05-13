@@ -61,7 +61,7 @@ var PreviewView = BaseViews.BaseView.extend({
         }
     },
     load_presets:function(){
-        return new Models.FormatPresetCollection(_.where(_.pluck(this.model.get("files"), "preset"), {'display': true}));
+        return new Models.FormatPresetCollection(_.where(_.pluck(this.model.get("files"), "preset"), {'display': true, 'subtitle': false}));
     },
     load_preset_dropdown:function(){
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
