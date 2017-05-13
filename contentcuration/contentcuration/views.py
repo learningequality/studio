@@ -26,8 +26,8 @@ from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, check_supported_browsers, add_editor_to_channel
 from contentcuration.utils.files import extract_thumbnail_wrapper, compress_video_wrapper,  generate_thumbnail_from_node, duplicate_file
-from contentcuration.models import VIEW_ACCESS, Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, UserChannelListSerializer, FileSerializer, InvitationSerializer
+from contentcuration.models import VIEW_ACCESS, Language, Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
+from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, UserChannelListSerializer, FileSerializer, InvitationSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, exercises, licenses
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -75,6 +75,7 @@ def channel_page(request, channel, allow_edit=False):
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
     contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
+    languages = get_or_set_cached_constants(Language, LanguageSerializer)
 
     json_renderer = JSONRenderer()
 
@@ -87,6 +88,7 @@ def channel_page(request, channel, allow_edit=False):
                                                 "license_list" : licenses,
                                                 "fpreset_list" : formatpresets,
                                                 "ckinds_list" : contentkinds,
+                                                "langs_list" : languages,
                                                 "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data),
                                                 "preferences" : request.user.preferences,
                                             })
@@ -172,6 +174,7 @@ def publish_channel(request):
             "success": True,
             "channel": channel_id
         }))
+
 
 def accessible_channels(request):
     if request.method == 'POST':

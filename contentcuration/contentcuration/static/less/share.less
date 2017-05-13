@@ -48,19 +48,23 @@
 		}
 	}
 	#editor_list_area{
-		width:@share-width;
 		padding-right:20px;
 		padding-top:2px;
+		h4{
+			font-weight:bold;
+			font-size: 12pt
+		}
 		#share_email{
 			margin-top:15px;
 			margin-left:30px;
 
-			#share_error{
-				color:@red-error-color;
+			#share_error, #share_success{
 				font-size:10pt;
 				font-weight:bold;
 				margin-bottom:2px;
 			}
+			#share_success{ color:@blue-500; }
+			#share_error{ color:@red-error-color; }
 
 			#share_email_address{
 				width: @share-width / 1.85;
@@ -91,7 +95,7 @@
 
 
 		#editor_list_wrapper{
-			margin: 10px 40px 10px 30px;
+			margin: 10px 0px 10px 15px;
 			min-height:@content-height;
 
 			.share_list_item{
@@ -103,6 +107,11 @@
 					color:gray;
 					font-size:10pt;
 					font-style:italic;
+				}
+				.share_item_email{
+					display:table-cell;
+					max-width:275px;
+					padding-right: 5px;
 				}
 
 				.glyphicon{
@@ -138,6 +147,7 @@
 	#share_bottom_container{
 		padding:10px;
 		padding-left:0;
+		min-height: 35px;
 		#share_change_indicator{
 			display:none;
 			font-style:italic;

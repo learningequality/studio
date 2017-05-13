@@ -20,6 +20,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		this.fileformats = new Models.FileFormatCollection(window.fformats);
 		this.formatpresets = new Models.FormatPresetCollection(window.presets);
 		this.contentkinds = new Models.ContentKindCollection(window.kinds);
+		this.languages = new Models.LanguageCollection(window.langs);
   },
 
   routes: {
@@ -50,6 +51,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.fileformats = this.fileformats ;
 		window.channels = this.channelCollection;
 		window.formatpresets = this.formatpresets;
+		window.languages = this.languages;
 		window.contentkinds = this.contentkinds;
 		window.contenttags = new Models.TagCollection(window.current_channel.get('tags'));
 		window.licenses = new Models.LicenseCollection(window.license_list);

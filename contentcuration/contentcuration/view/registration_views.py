@@ -41,11 +41,15 @@ def send_invitation_email(request):
             channel = Channel.objects.get(id=channel_id)
             invitation = Invitation.objects.get_or_create(invited = recipient,
                                                         email = user_email,
-                                                        share_mode=share_mode,
-                                                        sender=request.user,
                                                         channel_id = channel_id,
                                                         first_name=recipient.first_name if recipient.is_active else "Guest",
                                                         last_name=recipient.last_name if recipient.is_active else " ")[0]
+
+            # Handle these values separately as different users might invite the same user again
+            invitation.share_mode = share_mode
+            invitation.sender = invitation.sender or request.user
+            invitation.save()
+
             ctx_dict = {    'sender' : request.user,
                             'site' : get_current_site(request),
                             'user' : recipient,

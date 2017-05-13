@@ -148,7 +148,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var is_individual = selected_items.length === 1;
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
     var has_files = is_individual && selected_items[0].model.get("files").some(function(f){
-                      return window.formatpresets.get({id: f.preset.id || f.preset}).get("display");
+                      return window.formatpresets.get({id: f.preset.name || f.preset.id || f.preset}).get("display");
                     });
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
@@ -434,13 +434,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.render();
   },
   render: function() {
-    var has_files = false;
-    if(this.selected_individual()){
-      this.selected_items[0].model.get("files").forEach(function(file){
-        var preset = (file.preset.id)? file.preset.id:file.preset;
-        has_files = has_files || (window.formatpresets.get({id:preset}).get("display") && !window.formatpresets.get({id:preset}).get("thumbnail"));
-      });
-    }
+    var has_files = this.selected_individual() && _.some(this.selected_items[0].model.get("files"), function(f){return f.preset.display && !f.preset.thumbnail;});
 
     // Set license, author, copyright values based on whether selected items have been copied from another source
     var alloriginal = this.all_original();

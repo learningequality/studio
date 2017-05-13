@@ -278,10 +278,13 @@ var ContentNodeCollection = BaseCollection.extend({
             var assessmentCollection = new AssessmentItemCollection();
             self.forEach(function(node){
                 node.get("files").forEach(function(file){
-                    file.preset.id = file.preset.name ? file.preset.name : file.preset.id;
+                    var to_add = new FileModel(file);
+                    var preset_data = to_add.get("preset");
+                    preset_data.id = file.preset.name || file.preset.id;
+                    to_add.set('preset', preset_data);
+                    to_add.set('contentnode', node.id);
+                    fileCollection.add(to_add);
                 });
-
-                fileCollection.add(node.get("files"));
                 assessmentCollection.add(node.get('assessment_items'));
                 assessmentCollection.forEach(function(item){
                     item.set('contentnode', node.id);
@@ -514,6 +517,19 @@ var FileModel = BaseModel.extend({
     model_name:"FileModel",
     get_preset:function(){
         return window.formatpresets.get({'id':this.get("id")});
+    },
+    initialize: function () {
+        this.set_preset(this.get("preset"), this.get("language"));
+    },
+    set_preset: function(preset, language){
+        if(preset && language &&
+            !preset.id.endsWith("_" + language.id)){
+            var preset_data = preset;
+            preset_data.name = preset_data.id;
+            preset_data.id = preset_data.id + "_" + language.id;
+            preset_data.readable_name = language.readable_name;
+            this.set("preset", preset_data);
+        }
     }
 });
 
@@ -530,12 +546,6 @@ var FileCollection = BaseCollection.extend({
         var file = newCollection.findWhere(data);
         return file;
     },
-    sort_by_preset:function(presets){
-        this.comparator = function(file){
-            return presets.findWhere({id: file.get("preset").id}).get("order");
-        };
-        this.sort();
-    },
     save: function() {
         var self = this;
         return new Promise(function(resolve, reject){
@@ -544,9 +554,7 @@ var FileCollection = BaseCollection.extend({
                 success:function(data){
                     resolve(new FileCollection(data));
                 },
-                error:function(error){
-                    reject(error);
-                }
+                error:reject
             });
         });
     }
@@ -562,11 +570,8 @@ var FormatPresetCollection = BaseCollection.extend({
     model: FormatPresetModel,
     list_name:"formatpreset-list",
     model_name:"FormatPresetCollection",
-    sort_by_order:function(){
-        this.sort();
-    },
-    comparator: function(preset){
-        return preset.get("order");
+    comparator : function(preset){
+        return [preset.get('order'), preset.get('readable_name')];
     }
 });
 
@@ -616,7 +621,10 @@ var LanguageModel = BaseModel.extend({
 var LanguageCollection = BaseCollection.extend({
     model: LanguageModel,
     list_name:"language-list",
-    model_name:"LanguageCollection"
+    model_name:"LanguageCollection",
+    comparator: function(language){
+        return language.get("readable_name");
+    }
 });
 
 var ContentKindModel = BaseModel.extend({
@@ -770,6 +778,8 @@ module.exports = {
     FileModel: FileModel,
     FormatPresetModel: FormatPresetModel,
     FormatPresetCollection: FormatPresetCollection,
+    LanguageModel : LanguageModel,
+    LanguageCollection : LanguageCollection,
     ContentKindModel: ContentKindModel,
     ContentKindCollection : ContentKindCollection,
     UserModel:UserModel,

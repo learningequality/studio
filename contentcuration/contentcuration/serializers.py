@@ -22,10 +22,14 @@ class LicenseSerializer(serializers.ModelSerializer):
 
 class LanguageSerializer(serializers.ModelSerializer):
     id = serializers.CharField(required=False)
+    ietf_name = serializers.SerializerMethodField('generate_ietf_name')
+
+    def generate_ietf_name(self, language):
+        return str(language)
 
     class Meta:
         model = Language
-        fields = ('lang_code', 'lang_subcode', 'id', 'readable_name')
+        fields = ('lang_code', 'lang_subcode', 'id', 'readable_name', 'ietf_name')
 
 class FileFormatSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,7 +56,6 @@ class FileListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
         ret = []
         update_files = {}
-
         with transaction.atomic():
             for item in validated_data:
                 item.update({
@@ -297,7 +300,6 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
             return {
                 "total_count" : 1,
                 "resource_count" : 1,
-                # "resource_size" : assessment_size + resource_size,
             }
 
     @staticmethod
