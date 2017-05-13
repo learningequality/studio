@@ -414,7 +414,9 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		dialog.dialog("Declining Invitation", "Are you sure you want to decline this invitation?", {
             "CANCEL":function(){},
             "DECLINE": function(){
-                self.submit_invitation(false, null);
+            	self.model.decline_invitation().then(function(){
+            		self.submit_invitation(false, null);
+            	});
             },
         }, function(){ });
 	},
