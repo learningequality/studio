@@ -457,7 +457,9 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         this.content_node_view.update_metadata();
     },
     create_new_view: function(model){
-        var associated_file = this.files.find(function(f){ return f.get("preset").id  === model.get("id");});
+        var associated_file = this.files.find(function(file){
+            return file.get("preset").id  === model.get("id");
+        });
         var format_slot = new FormatSlot({
             model: model,
             node : this.model,

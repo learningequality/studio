@@ -576,7 +576,7 @@ var LanguageCollection = BaseCollection.extend({
 	model: LanguageModel,
 	list_name:"language-list",
 	model_name:"LanguageCollection",
-	comparator : function(language){
+	comparator: function(language){
     	return language.get("readable_name");
     }
 });
