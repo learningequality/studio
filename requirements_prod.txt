@@ -1,0 +1,2 @@
+google-cloud-error-reporting==0.24.0
+google-python-cloud-debugger==
