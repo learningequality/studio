@@ -37,7 +37,7 @@ We've set up a `vagrant` virtual machine to simplify the development process!
 
 * Run the server
 
-	`make devserver`
+	`make vagrantdevserver`
 
 	Note: See the other `make` commands in `Makefile`.
 
