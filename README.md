@@ -15,21 +15,57 @@ If not, use these commands:
 
 	Tracking upstream:
 
-		git remote add upstream git@github.com:fle-internal/content-curation.git
-		git remote set-url upstream git@github.com:fle-internal/content-curation.git
+	`git remote add upstream git@github.com:fle-internal/content-curation.git`
+	`git remote set-url upstream git@github.com:fle-internal/content-curation.git`
 
 	Tracking origin:
 
-		git remote set-url origin git@github.com:yourusername/content-curation.git
+	`git remote set-url origin git@github.com:yourusername/content-curation.git`
 
-### Setting up your environment
+### Running your server inside of vagrant
 
-* [Download Python 2.7.10](https://www.python.org/downloads/) if you don't have it already.
+We've set up a `vagrant` virtual machine to simplify the development process!
 
-* [Install pip](https://pypi.python.org/pypi/pip) if you don't have it already.
+* Make sure you've installed:
+	- vagrant
+	- virtualbox (or any other virtual machine software. You're on your own there.)
 
 
-* [Install ffmpeg](https://ffmpeg.org/) if you don't have it already.
+* set up your machine (this will take a while)
+
+	`vagrant up`
+
+* Run the server
+
+	`make devserver`
+
+	see the other `make` commands in `Makefile`.
+
+* Turn off the machine when you're done:
+
+	`vagrant halt`
+
+### Setting up your environment manually
+
+Note: If you're running ubuntu, you can use the `provision.sh` script that we use in the vagrantfile to do the entire process for you. You'll need sudo!
+
+* You're going to need the following packages to run the server:
+	- python (2.7)
+	- python-pip
+	- python-dev
+	- postgresql-server-dev-all
+	- postgresql-contrib
+	- postgresql-client
+	- postgresql
+	- ffmpeg
+	- nodejs
+	- python-tk
+	- libmagickwand-dev
+
+
+* If you're on ubuntu, you can use `apt` to install the packages:
+
+`apt-get install -y python python-pip python-dev postgresql-server-dev-all postgresql-contrib postgresql-client postgresql ffmpeg nodejs python-tk libmagickwand-dev`
 
 * Set up your virtual environment
 
@@ -45,8 +81,9 @@ If not, use these commands:
 
 	`pip install -r requirements_dev.txt` will also install dependencies that will be helpful for development and required if you're using the `--settings=contentcuration.dev_settings` flag to run your server (see below)
 
-* [install node](http://nodejs.org/download/) if you don't have it already.
-	Install the dependencies listed in packages.json: `npm install`
+*	Install the javascript dependencies listed in packages.json:
+
+	`npm install`
 
 * Set up the database
 
