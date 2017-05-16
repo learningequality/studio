@@ -25,6 +25,7 @@ WORKDIR /contentcuration
 RUN gcloud debug source gen-repo-info-file --output-directory=/contentcuration/contentcuration/
 
 RUN pip install -r requirements.txt
+RUN pip install -r requirements_prod.txt
 RUN npm install
 RUN apt-get autoremove -y gcc
 
