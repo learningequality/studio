@@ -8,7 +8,6 @@ https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/
 """
 
 import os
-import subprocess
 
 from django.core.wsgi import get_wsgi_application
 
@@ -26,6 +25,14 @@ try:
             enable_service_account_auth=True,
             service_account_json_file=os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
         )
+except ImportError:
+    pass
+
+# Attach newrelic APM
+try:
+    import newrelic.agent
+
+    newrelic.agent.initialize()
 except ImportError:
     pass
 
