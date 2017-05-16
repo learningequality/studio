@@ -16,7 +16,7 @@ django-registration==2.1.2
 django-hashedfilenamestorage==1.0.0
 djangorestframework-bulk==0.2.1
 django-email-extras==0.3.3
-https://storage.googleapis.com/le-downloads/kolibri/kolibri-0.4.0b1.dev20-py2.py3-none-any.whl
+https://github.com/learningequality/kolibri/releases/download/v0.4.0-beta2/kolibri-0.4.0b2-py2.py3-none-any.whl
 validators
 le-utils==0.0.9rc23
 gunicorn==19.6.0
