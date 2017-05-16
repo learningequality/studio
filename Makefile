@@ -12,3 +12,7 @@ migrate:
 
 devserver:
 	cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8000
+
+vagrantdevserver:
+	echo "Server to run on 0.0.0.0:8000"
+	vagrant ssh -c 'cd /vagrant/contentcuration;python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8000;cd -;'
