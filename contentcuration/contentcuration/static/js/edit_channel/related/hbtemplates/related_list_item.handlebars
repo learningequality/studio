@@ -1,0 +1,22 @@
+<div class="select_item_wrapper">
+	<input type="checkbox" id="select_item_{{node.id}}_check" class="select_checkbox"></input>
+	<label for="select_item_{{node.id}}_check" class="select_item {{#if node.children}}tog_folder{{/if}}" title="{{node.title}}">
+		{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
+		<div class="select_item_title truncate">{{node.title}}</div>
+		{{#if isfolder}}
+			{{#if node.children}}
+				{{#if isfolder}}
+					{{#unless is_channel}}<em class="select_metadata">{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}</em>{{/unless}}
+				{{else}}
+					<em class="select_metadata">{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}</em>
+				{{/if}}
+				<div id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-triangle-top"></div>
+			{{else}}
+				<em class="select_metadata">(empty)</em>
+			{{/if}}
+		{{/if}}
+		{{#if isfolder}}<i class="badge selected_counter" id="select_item_{{node.id}}_count">{{node.metadata.resource_count}}</i>{{/if}}
+		{{#if is_channel}}<i class="badge selected_counter" id="select_item_{{node.id}}_count">{{node.metadata.resource_count}}</i>{{/if}}
+	</label>
+</div>
+{{#if isfolder}}<div id="select_item_{{node.id}}_sub" class="subdirectory"><em class="default-item">Loading...</em></div>{{/if}}

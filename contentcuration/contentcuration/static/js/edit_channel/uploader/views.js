@@ -2,10 +2,11 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var FileUploader = require("edit_channel/file_upload/views");
+var Related = require("edit_channel/related/views");
 var Previewer = require("edit_channel/preview/views");
 var FileUploader = require("edit_channel/file_upload/views");
 var Exercise = require("edit_channel/exercise_creation/views");
+var Info = require("edit_channel/information/views");
 var stringHelper = require("edit_channel/utils/string_helper");
 var autoCompleteHelper = require("edit_channel/utils/autocomplete");
 require("uploader.less");
@@ -64,8 +65,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
 
   initialize: function(options) {
-    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'enable_submit', 'disable_submit',
-      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items');
+    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit',
+      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items', 'set_prerequisites');
     this.bind_edit_functions();
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
@@ -82,6 +83,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'click #metadata_details_btn' : 'render_details',
     'click #metadata_preview_btn' : 'render_preview',
     'click #metadata_questions_btn': 'render_questions',
+    'click #metadata_prerequisites_btn': 'render_prerequisites',
     'click #upload_save_button' : 'save_and_keep_open',
     'click #upload_save_finish_button' : 'save_and_finish',
     'click #copy_button': 'copy_items',
@@ -106,7 +108,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.switchPanel("preview");
   },
   render_questions:function(){
-    this.switchPanel("questions")
+    this.switchPanel("questions");
+  },
+  render_prerequisites: function(){
+    this.switchPanel("prerequisites")
   },
   switchPanel:function(panel_to_show){
     this.$(".tab_button").removeClass("btn-tab-active");
@@ -119,6 +124,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       case "questions":
         $("#metadata_questions_btn").addClass("btn-tab-active");
         $("#metadata_questions").css("display", "block");
+        break;
+      case "prerequisites":
+        $("#metadata_prerequisites_btn").addClass("btn-tab-active");
+        $("#metadata_prerequisites").css("display", "block");
         break;
       default:
         $("#metadata_details_btn").addClass("btn-tab-active");
@@ -144,6 +153,29 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   load_questions:function(view){
     view.load_question_display(this.$("#metadata_questions"));
   },
+  load_prerequisites:function(selected_items){
+    if(this.prerequisite_view){
+      this.prerequisite_view.stopListening();
+      this.prerequisite_view.undelegateEvents();
+    }
+    this.prerequisite_view = new Related.RelatedView({
+      modal: false,
+      model: this.model,
+      onselect: this.set_prerequisites,
+      views_to_update: selected_items,
+      collection: new Models.ContentNodeCollection(_.uniq(_.pluck(selected_items, "model"))),
+      el: this.$("#metadata_prerequisites")
+    });
+  },
+  set_prerequisites:function(prerequisite_collection, selected_items){
+      var self = this;
+      this.selected_items.forEach(function(view){
+        // TODO: Handle prerequisites that were previously set on the node if multiple selected
+        // view.set_node({'prerequisite': prerequisite_collection.pluck('id')});
+        console.log(view.model.get('prerequisite'));
+        view.set_edited(true);
+      });
+  },
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1;
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
@@ -152,6 +184,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
                     });
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
+    this.$("#metadata_prerequisites_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
     if(!is_individual){
       this.render_details();
@@ -219,12 +252,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var sort_order = (this.model && this.new_content) ? Math.ceil(this.model.get("metadata").max_sort_order) : 0;
     var self = this;
     this.edit_list.views.forEach(function(entry){
-      var tags = [];
-      entry.tags.forEach(function(tag){
-        tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
-      });
+      var tags = entry.tags.reduce(function(list, tag){
+        return list.concat(JSON.stringify({tag_name: tag, channel: window.current_channel.get("id")}));
+      }, []);
       entry.set({
-        tags: tags
+        tags: tags,
+        prerequisite: entry.model.get('prerequisite')
       });
       if(self.new_content){
         entry.set({
@@ -232,6 +265,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
           sort_order:++sort_order
         });
       }
+      console.log(entry.model.toJSON())
     });
   },
   process_updated_collection:function(collection){
@@ -339,11 +373,15 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         this.selected_items.push(this.views[0]);
         this.update_shared_values(true, this.views[0]);
         this.container.load_editor(this.selected_items);
+        this.container.load_prerequisites(this.selected_items);
         this.container.load_preview(this.views[0]);
       }else{
         this.views[0].select_item();
       }
     }
+  },
+  get_selected_items: function(){
+    return this.selected_items;
   },
   add_topic:function(){
     var self = this;
@@ -369,6 +407,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         }
     });
     this.container.load_editor(this.selected_items);
+    this.container.load_prerequisites(this.selected_items);
     if(this.selected_individual()){
       this.container.load_preview(this.selected_items[0]);
       if(this.selected_items[0].model.get("kind")==="exercise"){
@@ -556,6 +595,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     if(this.selected_individual()){
       var view = this.selected_items[0];
       view.load_file_displays(this.$("#editmetadata_format_section"));
+      this.container.load_prerequisites(view);
       if(view.model.get("kind")==="exercise"){
         this.container.load_questions(view);
       }
@@ -589,12 +629,12 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   load_license:function(){
     var iscopied = this.selected_individual() && !this.selected_items[0].isoriginal
-    var license_modal = new LicenseModalView({
+    var license_modal = new Info.LicenseModalView({
       select_license : window.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()})
     });
   },
   load_mastery:function(){
-    new MasteryModalView();
+    new Info.MasteryModalView();
   },
   update_count:function(){
     if(this.selected_individual()){
@@ -894,41 +934,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
         (uploading)? this.uploads_in_progress++ : this.uploads_in_progress--;
         (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
     }
-});
-
-var LicenseModalView = BaseViews.BaseModalView.extend({
-  template: require("./hbtemplates/license_modal.handlebars"),
-
-  initialize: function(options) {
-      this.modal = true;
-      this.select_license = options.select_license;
-      this.render();
-  },
-
-  render: function() {
-      this.$el.html(this.template({
-          license: this.select_license.toJSON()
-      }));
-      $("body").append(this.el);
-      this.$("#license_modal").modal({show: true});
-      this.$("#license_modal").on("hidden.bs.modal", this.closed_modal);
-  }
-});
-
-var MasteryModalView = BaseViews.BaseModalView.extend({
-  template: require("./hbtemplates/mastery_modal.handlebars"),
-
-  initialize: function(options) {
-      this.modal = true;
-      this.render();
-  },
-
-  render: function() {
-      this.$el.html(this.template());
-      $("body").append(this.el);
-      this.$("#mastery_modal").modal({show: true});
-      this.$("#mastery_modal").on("hidden.bs.modal", this.closed_modal);
-  }
 });
 
 module.exports = {

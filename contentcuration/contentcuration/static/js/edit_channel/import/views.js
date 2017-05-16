@@ -2,7 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-require("import.less");
+require("selected.less");
 var stringHelper = require("edit_channel/utils/string_helper");
 
 var ImportModalView = BaseViews.BaseModalView.extend({
@@ -84,10 +84,10 @@ var ImportView = BaseViews.BaseListView.extend({
                 totalCount += entry.get("metadata").total_count;
             }
         });
-        var data = this.importList.get_metadata();
-        totalCount = totalCount - data.count;
+        var count = this.importList.get_metadata();
+        totalCount = totalCount - count;
 
-        this.$("#import_file_count").html(totalCount + " Topic" + ((totalCount == 1)? ", " : "s, ") + data.count + " Resource" + ((data.count == 1)? "" : "s"));
+        this.$("#import_file_count").html(totalCount + " Topic" + ((totalCount == 1)? ", " : "s, ") + count + " Resource" + ((count == 1)? "" : "s"));
         var self = this;
         this.$("#import_file_size").html("Calculating...")
         collection.calculate_size().then(function(size){
@@ -210,7 +210,7 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.render();
     },
     events: {
-        'click .import_channel_item' : 'toggle',
+        'click .select_header_item' : 'toggle',
         'click .tog_folder' : 'toggle',
         'click >.import_checkbox' : 'handle_checked'
     },

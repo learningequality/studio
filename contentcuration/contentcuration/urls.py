@@ -133,11 +133,12 @@ urlpatterns += [
     url(r'^api/get_nodes_by_ids_simplified$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
     url(r'^api/get_nodes_by_ids_complete$', node_views.get_nodes_by_ids_complete, name='get_nodes_by_ids_complete'),
     url(r'^api/create_new_node$', node_views.create_new_node, name='create_new_node'),
+    url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
 ]
 
 # Add file api enpoints
 urlpatterns += [
-     url(r'^api/thumbnail_upload/', file_views.thumbnail_upload, name='thumbnail_upload'),
+    url(r'^api/thumbnail_upload/', file_views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^api/exercise_image_upload/', file_views.exercise_image_upload, name='exercise_image_upload'),
     url(r'^api/image_upload/', file_views.image_upload, name='image_upload'),
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),

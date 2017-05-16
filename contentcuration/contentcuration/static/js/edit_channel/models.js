@@ -303,6 +303,20 @@ var ContentNodeCollection = BaseCollection.extend({
             });
         });
     },
+    get_prerequisites: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                url: window.Urls.get_prerequisites(),
+                data:  JSON.stringify(self.pluck('id')),
+                success: function(data) {
+                    resolve(JSON.parse(data));
+                },
+                error:reject
+            });
+        });
+    },
     calculate_size: function(){
         var self = this;
         return new Promise(function(resolve, reject){

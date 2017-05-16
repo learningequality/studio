@@ -396,6 +396,13 @@ class ContentNode(MPTTModel, models.Model):
         cache.set(key, presets, None)
         return presets
 
+    def get_prerequisites(self):
+        prerequisites = self.prerequisite.all()
+        r = list(prerequisites)
+        for c in prerequisites:
+            r.extend(c.get_prerequisites())
+        return r
+
     def get_channel(self):
         root = self.get_root()
         return root.channel_main.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
@@ -584,6 +591,8 @@ class PrerequisiteContentRelationship(models.Model):
         self.full_clean()
         super(PrerequisiteContentRelationship, self).save(*args, **kwargs)
 
+    def __unicode__(self):
+        return u'%s' % (self.pk)
 
 
 class RelatedContentRelationship(models.Model):

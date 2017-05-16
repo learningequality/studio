@@ -24,6 +24,16 @@ def create_new_node(request):
         new_node = ContentNode.objects.create(kind_id=data.get('kind'), title=data.get('title'), author=data.get('author'), copyright_holder=data.get('copyright_holder'), license_id=license_id, license_description=data.get('license_description'))
         return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
 
+def get_prerequisites(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        nodes = ContentNode.objects.prefetch_related('prerequisite').filter(id__in=data)
+        prerequisites = list(nodes)
+        for n in nodes:
+            prerequisites.extend(n.get_prerequisites())
+        import pdb; pdb.set_trace()
+        return HttpResponse(JSONRenderer().render(SimplifiedContentNodeSerializer(nodes, many=True).data))
+
 def get_total_size(request):
     if request.method == 'POST':
         data = json.loads(request.body)
