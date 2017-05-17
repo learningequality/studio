@@ -155,7 +155,7 @@ def create_bare_contentnode(ccnode):
             'sort_order': ccnode.sort_order,
             'license_owner': ccnode.copyright_holder or "",
             'license': kolibri_license,
-            'available': True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
+            'available': ccnode.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists(),  # Hide empty topics
             'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
         }
     )
