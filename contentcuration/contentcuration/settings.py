@@ -48,7 +48,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rest_framework',
     'django_js_reverse',
-    'morango',
     'kolibri.content',
     'email_extras',
     'le_utils',
