@@ -49,7 +49,6 @@ INSTALLED_APPS = (
     'rest_framework',
     'django_js_reverse',
     'kolibri.content',
-    'kolibri.auth.apps.KolibriAuthConfig',
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
