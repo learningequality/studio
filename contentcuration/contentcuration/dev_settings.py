@@ -3,7 +3,7 @@ from .settings import *
 import logging
 
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["192.168.31.9"]
 
 ACCOUNT_ACTIVATION_DAYS=7
 # EMAIL_BACKEND = 'email_extras.backends.BrowsableEmailBackend'

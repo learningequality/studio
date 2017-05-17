@@ -301,13 +301,14 @@ def map_files_to_node(node, data):
         else:
             kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
+        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
+        if not os.path.isfile(file_path):
+            raise IOError('{} not found'.format(file_path))
+
         language = None
         if file_data.get('language'):
             language = Language.objects.get(pk=file_data['language'])
 
-        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
-        if not os.path.isfile(file_path):
-            raise IOError('{} not found'.format(file_path))
 
         file_obj = File(
             checksum=file_hash[0],
@@ -318,7 +319,7 @@ def map_files_to_node(node, data):
             file_size = file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
-            language=language,
+            language_id=file_data.get('language'),
         )
         file_obj.save()
 

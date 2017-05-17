@@ -11,4 +11,4 @@ migrate:
 	python contentcuration/manage.py migrate
 
 devserver:
-	python contentcuration/manage.py runserver --settings=contentcuration.dev_settings
+	cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8000
