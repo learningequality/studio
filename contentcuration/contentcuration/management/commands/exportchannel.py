@@ -233,6 +233,8 @@ def process_assessment_metadata(ccnode, kolibrinode):
         mastery_model.update({'m': exercise_data.get('m') or min(5, assessment_items.count()) or 1})
     elif mastery_model['type'] == exercises.DO_ALL:
         mastery_model.update({'n': assessment_items.count() or 1, 'm': assessment_items.count() or 1})
+    elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_2:
+        mastery_model.update({'n': 2, 'm': 2})
     elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_3:
         mastery_model.update({'n': 3, 'm': 3})
     elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_5:
