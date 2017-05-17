@@ -48,12 +48,12 @@ var RelatedView = BaseViews.BaseListView.extend({
     render: function() {
         this.$el.html(this.template());
         var self = this;
-        console.log(this.selected_collection)
 
         this.selected_collection.get_prerequisites().then(function(nodes){
             self.collection.get_all_fetch_simplified(window.current_channel.get('main_tree').children).then(function(collection){
                 self.collection = collection;
                 if(self.collection.length > 0){
+                    console.log(nodes)
                     self.relatedList = new RelatedList({
                         model: null,
                         el: self.$(".select_main_box"),
