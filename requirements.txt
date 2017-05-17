@@ -25,5 +25,6 @@ pressurecooker==0.0.15
 metaphone==0.6
 porter2stemmer==1.0
 django-postmark==0.1.6
+google-cloud-error-reporting==0.24.0
 ddtrace==0.8.0
 jsonfield==2.0.1
