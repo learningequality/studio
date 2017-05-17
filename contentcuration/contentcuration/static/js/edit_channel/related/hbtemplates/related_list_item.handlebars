@@ -1,6 +1,6 @@
-<div class="select_item_wrapper">
-	<input type="checkbox" id="select_item_{{node.id}}_check" class="select_checkbox"></input>
-	<label for="select_item_{{node.id}}_check" class="select_item {{#if node.children}}tog_folder{{/if}}" title="{{node.title}}">
+<div class="select_item_wrapper {{#if isinvalid}}disabled{{/if}}">
+	<input type="checkbox" id="select_item_{{node.id}}_check" class="select_checkbox" {{#if checked}}checked{{/if}} {{#if isinvalid}}disabled{{/if}}></input>
+	<label for="select_item_{{node.id}}_check" class="select_item {{#if node.children}}tog_folder{{/if}}" title="{{node.title}}" {{#if isinvalid}}disabled title="Cannot select item"{{/if}}>
 		{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
 		<div class="select_item_title truncate">{{node.title}}</div>
 		{{#if isfolder}}

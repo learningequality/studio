@@ -38,7 +38,8 @@ var RelatedView = BaseViews.BaseListView.extend({
 
     initialize: function(options) {
         this.modal = options.modal;
-        this.collection = options.collection;
+        this.selected_collection = options.collection;
+        this.collection = new Models.ContentNodeCollection();
         this.onselect = options.onselect;
         this.views_to_update = options.views_to_update;
         this.lists=[];
@@ -47,32 +48,38 @@ var RelatedView = BaseViews.BaseListView.extend({
     render: function() {
         this.$el.html(this.template());
         var self = this;
-        console.log(this.collection)
+        console.log(this.selected_collection)
 
-        this.collection.get_prerequisites().then(function(collection){
-            self.collection = collection;
-            if(self.collection.length > 0){
-                self.relatedList = new RelatedList({
-                    model: null,
-                    el: self.$(".select_main_box"),
-                    collection: self.collection,
-                    parent_node_view: null,
-                    container: self
-                });
-            }else{
-                self.$(".empty_default").text("No content found");
-            }
+        this.selected_collection.get_prerequisites().then(function(nodes){
+            self.collection.get_all_fetch_simplified(window.current_channel.get('main_tree').children).then(function(collection){
+                self.collection = collection;
+                if(self.collection.length > 0){
+                    self.relatedList = new RelatedList({
+                        model: null,
+                        el: self.$(".select_main_box"),
+                        collection: self.collection,
+                        parent_node_view: null,
+                        container: self,
+                        filter_list: nodes.postrequisites,
+                        prerequisites: nodes.prerequisites
+                    });
+                }else{
+                    self.$(".empty_default").text("No content found");
+                }
+            });
         });
     },
-    update_count:function(){
+    update_count:function(skip_update){
         var prerequisite_collection = this.get_selected_collection();
-        var totalCount = collection.reduce(function(sum, entry){
+        var totalCount = this.collection.reduce(function(sum, entry){
             return sum + entry.get("metadata").total_count + (entry.get('kind') === 'topic');
         }, 0);
         var count = this.relatedList.get_metadata();
         totalCount = totalCount - count;
         this.$("#select_file_count").html(totalCount + " Topic" + ((totalCount == 1)? ", " : "s, ") + count + " Resource" + ((count == 1)? "" : "s"));
-        this.onselect(prerequisite_collection, this.views_to_update);
+        if(!skip_update){
+            this.onselect(prerequisite_collection, this.views_to_update);
+        }
     },
     get_selected_collection:function(){
         return new Models.ContentNodeCollection(_.chain(this.lists).pluck('views').flatten().where({'item_to_select': true}).pluck('model').value());
@@ -88,6 +95,9 @@ var RelatedList = BaseViews.BaseListView.extend({
         this.container = options.container;
         this.count = 0;
         this.parent_node_view = options.parent_node_view;
+        this.filter_list = options.filter_list;
+        this.isdisabled = options.isdisabled;
+        this.prerequisites = options.prerequisites;
         this.render();
         this.container.lists.push(this);
     },
@@ -100,7 +110,10 @@ var RelatedList = BaseViews.BaseListView.extend({
             containing_list_view: this,
             model: model,
             checked: (this.parent_node_view)? this.parent_node_view.checked : false,
-            container: this.container
+            container: this.container,
+            filter_list: this.filter_list,
+            prerequisites: this.prerequisites,
+            isdisabled: this.isdisabled
         });
         this.views.push(new_view);
         return new_view;
@@ -112,8 +125,8 @@ var RelatedList = BaseViews.BaseListView.extend({
             if(entry.subcontent_view){ entry.subcontent_view.check_all(checked); }
         });
     },
-    update_count:function(){
-        (this.parent_node_view)? this.parent_node_view.update_count() : this.container.update_count();
+    update_count:function(skip_update){
+        (this.parent_node_view)? this.parent_node_view.update_count(skip_update) : this.container.update_count(skip_update);
     },
     get_metadata:function(){
         this.count = this.views.reduce(function(sum, entry) { return sum + entry.count; }, 0);
@@ -138,7 +151,10 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
         this.containing_list_view = options.containing_list_view;
         this.collection = new Models.ContentNodeCollection();
         this.container = options.container;
+        this.prerequisites = options.prerequisites;
         this.checked = options.checked;
+        this.filter_list = options.filter_list;
+        this.isdisabled = options.isdisabled || this.filter_list.contains(this.model);
         this.count = 0;
         this.render();
     },
@@ -149,17 +165,23 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
     render: function() {
         this.$el.html(this.template({
             node:this.model.toJSON(),
-            isfolder: this.model.get("kind") === "topic"
+            isfolder: this.model.get("kind") === "topic",
+            checked: this.prerequisites.contains(this.model),
+            isinvalid: this.isdisabled,
         }));
-        this.$el.find(".select_checkbox").prop("checked", this.checked);
-        this.set_disabled(this.checked);
+        var self = this;
+        _.defer(function(){
+            self.handle_checked(true);
+            self.$el.find(".select_checkbox").prop("checked", self.checked);
+            self.set_disabled(self.checked);
+        });
     },
-    handle_checked:function(){
+    handle_checked:function(skip_update){
         this.checked =  this.$("#" + this.id() + "_check").is(":checked");
         this.item_to_select = this.checked;
         this.count = (this.checked)? this.model.get("metadata").resource_count : 0;
         if(this.subcontent_view){ this.subcontent_view.check_all(this.checked); }
-        this.update_count();
+        this.update_count(skip_update);
     },
     check_item:function(checked){
         this.item_to_select = false;
@@ -177,7 +199,9 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
                 el: $(self.getSubdirectory()),
                 collection: fetched,
                 parent_node_view:self,
-                container: self.containing_list_view.container
+                container: self.containing_list_view.container,
+                filter_list: self.filter_list,
+                isdisabled: self.isdisabled
             });
         });
     },
@@ -190,11 +214,11 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
             this.$("#" + this.id() + "_check").removeAttr("disabled");
         }
     },
-    update_count:function(){
+    update_count:function(skip_update){
         this.count = (this.subcontent_view)? this.subcontent_view.get_metadata() : this.count;
         this.$("#" + this.id() + "_count").css("visibility", (this.count === 0)? "hidden" : "visible");
         this.$("#" + this.id() + "_count").text(this.count);
-        this.containing_list_view.update_count();
+        this.containing_list_view.update_count(skip_update);
     }
 });
 

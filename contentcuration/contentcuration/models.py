@@ -403,6 +403,13 @@ class ContentNode(MPTTModel, models.Model):
             r.extend(c.get_prerequisites())
         return r
 
+    def get_postrequisites(self):
+        postrequisites = self.is_prerequisite_of.all()
+        r = list(postrequisites)
+        for c in postrequisites:
+            r.extend(c.get_postrequisites())
+        return r
+
     def get_channel(self):
         root = self.get_root()
         return root.channel_main.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()

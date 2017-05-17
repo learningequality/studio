@@ -223,7 +223,6 @@ class CustomListSerializer(serializers.ListSerializer):
                                 original_parent.save()
 
                         # potential optimization opportunity
-                        import pdb; pdb.set_trace()
                         for attr, value in data.items():
                             setattr(node, attr, value)
                         node.tags = taglist

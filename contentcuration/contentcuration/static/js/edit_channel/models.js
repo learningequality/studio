@@ -309,9 +309,13 @@ var ContentNodeCollection = BaseCollection.extend({
             $.ajax({
                 method:"POST",
                 url: window.Urls.get_prerequisites(),
-                data:  JSON.stringify(self.pluck('id')),
+                data:  JSON.stringify({'nodes': self.pluck('id'), 'channel_id': window.current_channel.id}),
                 success: function(data) {
-                    resolve(JSON.parse(data));
+                    nodes = JSON.parse(data);
+                    resolve({
+                        "prerequisites": new ContentNodeCollection(JSON.parse(nodes.prerequisites)),
+                        "postrequisites": new ContentNodeCollection(JSON.parse(nodes.postrequisites)),
+                    });
                 },
                 error:reject
             });

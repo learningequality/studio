@@ -12,7 +12,7 @@ from django.db import transaction
 from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
-from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License
+from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
 
@@ -27,12 +27,19 @@ def create_new_node(request):
 def get_prerequisites(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        nodes = ContentNode.objects.prefetch_related('prerequisite').filter(id__in=data)
-        prerequisites = list(nodes)
+        channel = Channel.objects.get(pk=data['channel_id'])
+        nodes = ContentNode.objects.prefetch_related('prerequisite').filter(id__in=data['nodes'])
+        prerequisites = []
+        postrequisites = list(nodes)
+
         for n in nodes:
             prerequisites.extend(n.get_prerequisites())
-        import pdb; pdb.set_trace()
-        return HttpResponse(JSONRenderer().render(SimplifiedContentNodeSerializer(nodes, many=True).data))
+            postrequisites.extend(n.get_postrequisites())
+
+        return HttpResponse(json.dumps({
+            "prerequisites" : JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisites, many=True).data),
+            "postrequisites": JSONRenderer().render(SimplifiedContentNodeSerializer(postrequisites, many=True).data),
+        }))
 
 def get_total_size(request):
     if request.method == 'POST':
