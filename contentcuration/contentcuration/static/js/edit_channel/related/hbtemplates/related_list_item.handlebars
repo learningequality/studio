@@ -1,6 +1,6 @@
-<div class="select_item_wrapper {{#if isinvalid}}disabled{{/if}}">
-	<input type="checkbox" id="select_item_{{node.id}}_check" class="select_checkbox" {{#if checked}}checked{{/if}} {{#if isinvalid}}disabled{{/if}}></input>
-	<label for="select_item_{{node.id}}_check" class="select_item {{#if node.children}}tog_folder{{/if}}" title="{{node.title}}" {{#if isinvalid}}disabled title="Cannot select item"{{/if}}>
+<div class="select_item_wrapper">
+	<input type="checkbox" id="select_item_{{node.id}}_check" class="select_checkbox" {{#if checked}}checked{{/if}} {{#if isinvalid}}disabled title="Cannot select this item"{{/if}}></input>
+	<label for="select_item_{{node.id}}_check" class="select_item {{#if node.children}}tog_folder{{/if}} {{#if isinvalid}}disabled{{/if}}" {{#if isinvalid}}disabled{{/if}}  title="{{node.title}}">
 		{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
 		<div class="select_item_title truncate">{{node.title}}</div>
 		{{#if isfolder}}
@@ -17,6 +17,8 @@
 		{{/if}}
 		{{#if isfolder}}<i class="badge selected_counter" id="select_item_{{node.id}}_count">{{node.metadata.resource_count}}</i>{{/if}}
 		{{#if is_channel}}<i class="badge selected_counter" id="select_item_{{node.id}}_count">{{node.metadata.resource_count}}</i>{{/if}}
+		{{#if is_selected}}[SELECTED]{{/if}}
+		<span class="prerequisite_label">[IN PREREQUISITES]</span>
 	</label>
 </div>
 {{#if isfolder}}<div id="select_item_{{node.id}}_sub" class="subdirectory"><em class="default-item">Loading...</em></div>{{/if}}

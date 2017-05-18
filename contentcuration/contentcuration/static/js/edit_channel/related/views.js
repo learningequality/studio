@@ -5,6 +5,14 @@ var Models = require("edit_channel/models");
 require("selected.less");
 var stringHelper = require("edit_channel/utils/string_helper");
 
+var MAPPING = {
+    "prerequisites": [],
+    "postrequisites": [],
+    "immediate_prerequisites": [],
+    "selected": [],
+    "ancestors": []
+};
+
 var RelatedModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/related_modal.handlebars"),
 
@@ -48,20 +56,23 @@ var RelatedView = BaseViews.BaseListView.extend({
     render: function() {
         this.$el.html(this.template());
         var self = this;
-
         this.selected_collection.get_prerequisites().then(function(nodes){
             self.collection.get_all_fetch_simplified(window.current_channel.get('main_tree').children).then(function(collection){
                 self.collection = collection;
                 if(self.collection.length > 0){
-                    console.log(nodes)
+                    MAPPING = {
+                        "prerequisites": nodes.prerequisites,
+                        "postrequisites": nodes.postrequisites,
+                        "immediate_prerequisites": _.flatten(self.selected_collection.pluck('prerequisite')),
+                        "selected": self.selected_collection,
+                        "ancestors": []
+                    }
                     self.relatedList = new RelatedList({
                         model: null,
                         el: self.$(".select_main_box"),
                         collection: self.collection,
                         parent_node_view: null,
-                        container: self,
-                        filter_list: nodes.postrequisites,
-                        prerequisites: nodes.prerequisites
+                        container: self
                     });
                 }else{
                     self.$(".empty_default").text("No content found");
@@ -71,12 +82,8 @@ var RelatedView = BaseViews.BaseListView.extend({
     },
     update_count:function(skip_update){
         var prerequisite_collection = this.get_selected_collection();
-        var totalCount = this.collection.reduce(function(sum, entry){
-            return sum + entry.get("metadata").total_count + (entry.get('kind') === 'topic');
-        }, 0);
         var count = this.relatedList.get_metadata();
-        totalCount = totalCount - count;
-        this.$("#select_file_count").html(totalCount + " Topic" + ((totalCount == 1)? ", " : "s, ") + count + " Resource" + ((count == 1)? "" : "s"));
+        this.$("#select_file_count").html(count + " Prerequisite" + ((count == 1)? "" : "s"));
         if(!skip_update){
             this.onselect(prerequisite_collection, this.views_to_update);
         }
@@ -95,9 +102,7 @@ var RelatedList = BaseViews.BaseListView.extend({
         this.container = options.container;
         this.count = 0;
         this.parent_node_view = options.parent_node_view;
-        this.filter_list = options.filter_list;
         this.isdisabled = options.isdisabled;
-        this.prerequisites = options.prerequisites;
         this.render();
         this.container.lists.push(this);
     },
@@ -111,8 +116,6 @@ var RelatedList = BaseViews.BaseListView.extend({
             model: model,
             checked: (this.parent_node_view)? this.parent_node_view.checked : false,
             container: this.container,
-            filter_list: this.filter_list,
-            prerequisites: this.prerequisites,
             isdisabled: this.isdisabled
         });
         this.views.push(new_view);
@@ -151,10 +154,9 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
         this.containing_list_view = options.containing_list_view;
         this.collection = new Models.ContentNodeCollection();
         this.container = options.container;
-        this.prerequisites = options.prerequisites;
         this.checked = options.checked;
-        this.filter_list = options.filter_list;
-        this.isdisabled = options.isdisabled || this.filter_list.contains(this.model);
+        this.isdisabled = options.isdisabled || (!_.contains(MAPPING.immediate_prerequisites, this.model.id)
+            && (_.contains(MAPPING.postrequisites.pluck('id'), this.model.id) || _.contains(MAPPING.prerequisites.pluck('id'), this.model.id)));
         this.count = 0;
         this.render();
     },
@@ -166,20 +168,23 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             node:this.model.toJSON(),
             isfolder: this.model.get("kind") === "topic",
-            checked: this.prerequisites.contains(this.model),
-            isinvalid: this.isdisabled,
+            checked: _.contains(MAPPING.prerequisites.pluck('id'), this.model.id),
+            count: MAPPING.prerequisites.length,
+            is_selected: _.contains(MAPPING.selected.pluck('id'), this.model.id),
         }));
         var self = this;
         _.defer(function(){
-            self.handle_checked(true);
+            var is_checked = self.checked;
+            self.handle_checked(null, true);
             self.$el.find(".select_checkbox").prop("checked", self.checked);
-            self.set_disabled(self.checked);
+            self.set_disabled(is_checked || self.isdisabled);
         });
     },
-    handle_checked:function(skip_update){
+    handle_checked:function(event, skip_update){
         this.checked =  this.$("#" + this.id() + "_check").is(":checked");
         this.item_to_select = this.checked;
         this.count = (this.checked)? this.model.get("metadata").resource_count : 0;
+        console.log(this.model.attributes, this.count)
         if(this.subcontent_view){ this.subcontent_view.check_all(this.checked); }
         this.update_count(skip_update);
     },
@@ -188,29 +193,31 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
         this.count = (checked)? this.model.get("metadata").resource_count : 0;
         this.$("#" + this.id() + "_check").prop("checked", checked);
         this.$("#" + this.id() + "_count").text(this.model.get("metadata").resource_count);
-        this.$("#" + this.id() + "_count").css("visibility", (checked)?"visible" : "hidden" );
+        this.$("#" + this.id() + "_count").css("visibility", (checked)? "visible" : "hidden" );
+        this.$(".prerequisite_label").css('visibility', (checked)? "visible" : "hidden");
         this.checked = checked;
     },
     load_subfiles:function(){
         var self = this;
         this.collection.get_all_fetch_simplified(this.model.get("children")).then(function(fetched){
             self.subcontent_view = new RelatedList({
-                model : this.model,
+                model : self.model,
                 el: $(self.getSubdirectory()),
                 collection: fetched,
                 parent_node_view:self,
                 container: self.containing_list_view.container,
-                filter_list: self.filter_list,
                 isdisabled: self.isdisabled
             });
         });
     },
     set_disabled:function(isDisabled){
         if(isDisabled){
-            this.$el.addClass("disabled");
+            this.$(".select_item").addClass("disabled");
+            this.$(".prerequisite_label").css('visibility', (this.checked)? 'visible': 'hidden');
             this.$("#" + this.id() + "_check").attr("disabled", "disabled");
         }else{
-            this.$el.removeClass("disabled");
+            this.$(".select_item").removeClass("disabled");
+            this.$(".prerequisite_label").css('visibility', 'hidden');
             this.$("#" + this.id() + "_check").removeAttr("disabled");
         }
     },

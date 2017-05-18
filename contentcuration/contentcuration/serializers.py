@@ -173,10 +173,13 @@ class CustomListSerializer(serializers.ListSerializer):
                 if 'id' in item:
                     update_nodes[item['id']] = item
                     tag_mapping[item['id']] = item_tags
+                    prerequisite_mapping.update({item['id']: item.pop('prerequisite')})
                 else:
                     # create new nodes
-                    ret.append(ContentNode.objects.create(**item))
-                prerequisite_mapping.update({item['id']: item.pop('prerequisite')})
+                    new_node = ContentNode.objects.create(**item)
+                    ret.append(new_node)
+                    prerequisite_mapping.update({new_node.pk: item.pop('prerequisite')})
+
 
         # get all ContentTag objects, if doesn't exist, create them.
         all_tags = []
@@ -197,40 +200,41 @@ class CustomListSerializer(serializers.ListSerializer):
             ThroughModel.objects.bulk_create(bulk_adding_list)
 
         # Perform updates.
-        if update_nodes:
-            with transaction.atomic():
-                with ContentNode.objects.delay_mptt_updates():
-                    for node_id, data in update_nodes.items():
-                        node, is_new = ContentNode.objects.get_or_create(pk=node_id)
+        with transaction.atomic():
+            with ContentNode.objects.delay_mptt_updates():
+                for node_id, data in update_nodes.items():
+                    node, is_new = ContentNode.objects.get_or_create(pk=node_id)
 
-                        taglist = []
-                        for tag_data in tag_mapping.get(node_id, None):
-                            # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
-                            if isinstance(tag_data, unicode):
-                                tag_data = json.loads(tag_data)
+                    taglist = []
+                    for tag_data in tag_mapping.get(node_id, None):
+                        # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
+                        if isinstance(tag_data, unicode):
+                            tag_data = json.loads(tag_data)
 
-                            # this requires optimization
-                            for tag_itm in all_tags:
-                                if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
-                                    taglist.append(tag_itm)
+                        # this requires optimization
+                        for tag_itm in all_tags:
+                            if tag_itm.tag_name==tag_data['tag_name'] and tag_itm.channel_id==tag_data['channel']:
+                                taglist.append(tag_itm)
 
-                        # Detect if model has been moved to a different tree
-                        if node.pk is not None:
-                            original = ContentNode.objects.get(pk=node.pk)
-                            if original.parent_id and original.parent_id != node.parent_id:
-                                original_parent = ContentNode.objects.get(pk=original.parent_id)
-                                original_parent.changed = True
-                                original_parent.save()
+                    # Detect if model has been moved to a different tree
+                    if node.pk is not None:
+                        original = ContentNode.objects.get(pk=node.pk)
+                        if original.parent_id and original.parent_id != node.parent_id:
+                            original_parent = ContentNode.objects.get(pk=original.parent_id)
+                            original_parent.changed = True
+                            original_parent.save()
 
-                        # potential optimization opportunity
-                        for attr, value in data.items():
-                            setattr(node, attr, value)
-                        node.tags = taglist
-                        node.save()
-                        ret.append(node)
+                    # potential optimization opportunity
+                    for attr, value in data.items():
+                        setattr(node, attr, value)
+                    node.tags = taglist
 
-        # for node_id, prereqs in prerequisite_mapping.items():
-        #     import pdb; pdb.set_trace()
+                    PrerequisiteContentRelationship.objects.filter(target_node_id=node_id).delete()
+                    for prereq_node in prerequisite_mapping.get(node_id) or []:
+                        PrerequisiteContentRelationship.objects.get_or_create(target_node_id=node_id, prerequisite_id=prereq_node.id)
+
+                    node.save()
+                    ret.append(node)
 
         return ret
 

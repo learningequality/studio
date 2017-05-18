@@ -169,6 +169,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   set_prerequisites:function(prerequisite_collection, selected_items){
       var self = this;
+      console.log(selected_items)
       selected_items.forEach(function(view){
         // TODO: Handle prerequisites that were previously set on the node if multiple selected
         view.set_node({'prerequisite': prerequisite_collection.pluck('id')});
@@ -595,7 +596,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     if(this.selected_individual()){
       var view = this.selected_items[0];
       view.load_file_displays(this.$("#editmetadata_format_section"));
-      this.container.load_prerequisites(view);
+      this.container.load_prerequisites([view]);
       if(view.model.get("kind")==="exercise"){
         this.container.load_questions(view);
       }
