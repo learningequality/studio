@@ -553,6 +553,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   get_mastery_string: function(){
     switch(this.shared_data.shared_exercise_data.mastery_model){
+      case "num_correct_in_a_row_2":
+        return "2 in a Row";
       case "num_correct_in_a_row_3":
         return "3 in a Row";
       case "num_correct_in_a_row_5":
@@ -834,6 +836,9 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     switch(mastery_model){
       case "skill_check":
         m_value = n_value = 1;
+        break;
+      case "num_correct_in_a_row_2":
+        m_value = n_value = 2;
         break;
       case "num_correct_in_a_row_3":
         m_value = n_value = 3;
