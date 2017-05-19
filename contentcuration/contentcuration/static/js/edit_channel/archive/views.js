@@ -73,11 +73,6 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
                 status = collection.length + " items selected ";
         }
         this.$("#archive_selected_count").html(status);
-        this.$("#archive_selected_size").text("(Calculating size...)");
-        var self = this;
-        collection.calculate_size().then(function(size){
-            self.$("#archive_selected_size").text("(" + stringHelper.format_size(size) + ")");
-        });
     },
     restore_content:function(){
         var list = this.get_selected();
