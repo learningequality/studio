@@ -24,10 +24,10 @@ from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import write_file_to_storage, check_supported_browsers
+from contentcuration.api import write_file_to_storage, check_supported_browsers, add_editor_to_channel
 from contentcuration.utils.files import extract_thumbnail_wrapper, compress_video_wrapper,  generate_thumbnail_from_node, duplicate_file
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
-from contentcuration.serializers import RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, UserChannelListSerializer, FileSerializer
+from contentcuration.models import VIEW_ACCESS, Language, Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
+from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, UserChannelListSerializer, FileSerializer, InvitationSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, exercises, licenses
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -74,6 +74,7 @@ def channel_page(request, channel, allow_edit=False):
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
     formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
     contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
+    languages = get_or_set_cached_constants(Language, LanguageSerializer)
 
     json_renderer = JSONRenderer()
 
@@ -86,6 +87,7 @@ def channel_page(request, channel, allow_edit=False):
                                                 "license_list" : licenses,
                                                 "fpreset_list" : formatpresets,
                                                 "ckinds_list" : contentkinds,
+                                                "langs_list" : languages,
                                                 "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data),
                                                 "preferences" : request.user.preferences,
                                             })
@@ -105,6 +107,20 @@ def channel_list(request):
     return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
                                                  "channel_name" : False,
                                                  "current_user" : JSONRenderer().render(UserChannelListSerializer(request.user).data)})
+
+def get_user_channels(request):
+    channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers').filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
+                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
+    channel_serializer = ChannelListSerializer(channel_list, many=True)
+
+    return HttpResponse(JSONRenderer().render(channel_serializer.data))
+
+def get_user_pending_channels(request):
+    pending_list = Invitation.objects.select_related('channel').select_related('sender').filter(invited=request.user)
+    invitation_serializer = InvitationSerializer(pending_list, many=True)
+
+    return HttpResponse(JSONRenderer().render(invitation_serializer.data))
+
 
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -158,6 +174,7 @@ def publish_channel(request):
             "channel": channel_id
         }))
 
+
 def accessible_channels(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -165,3 +182,14 @@ def accessible_channels(request):
                         .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))\
                         .exclude(pk=data["channel_id"]).values_list('main_tree_id', flat=True))
         return HttpResponse(JSONRenderer().render(RootNodeSerializer(accessible_list, many=True).data))
+
+def accept_channel_invite(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        invitation = Invitation.objects.get(pk=data['invitation_id'])
+        channel = invitation.channel
+        channel.is_view_only = invitation.share_mode == VIEW_ACCESS
+        channel_serializer = ChannelListSerializer(channel)
+        add_editor_to_channel(invitation)
+
+        return HttpResponse(JSONRenderer().render(channel_serializer.data))

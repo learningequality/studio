@@ -154,15 +154,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.VTT,
-            "mimetype" : file_formats.VTT_MIMETYPE,
-        },
-    },
-    {
-        "model": models.FileFormat,
-        "pk": "extension",
-        "fields": {
-            "extension": file_formats.SRT,
-            "mimetype" : file_formats.SRT_MIMETYPE,
+            "mimetype" : ".vtt",
         },
     },
     {
@@ -359,10 +351,10 @@ PRESETS = [
             "supplementary" : True,
             "thumbnail" : False,
             "subtitle": True,
-            "display": False,
+            "display": True,
             "order" : 4,
             "kind_id" : content_kinds.VIDEO,
-            "allowed_formats" : [file_formats.VTT, file_formats.SRT],
+            "allowed_formats" : [file_formats.VTT],
         },
     },
     {

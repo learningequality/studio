@@ -41,6 +41,7 @@ var BaseView = Backbone.View.extend({
 		collection.forEach(function(entry){
       		$.merge(list_to_reload, entry.get("ancestors"));
 		});
+		list_to_reload.push(window.current_channel.get("main_tree").id)
 		this.retrieve_nodes($.unique(list_to_reload), true).then(function(fetched){
 			fetched.forEach(function(model){
 				var object = window.workspace_manager.get(model.get("id"));
@@ -321,8 +322,7 @@ var BaseListView = BaseView.extend({
 		this.model.set(model.toJSON());
 	},
 	update_views:function(){
-		var self = this;
-		this.retrieve_nodes(this.model.get("children")).then(this.load_content);
+		this.retrieve_nodes(this.model.get("children"), true).then(this.load_content);
 	},
 	load_content: function(collection, default_text){
 		collection = (collection)? collection : this.collection;
@@ -541,9 +541,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						});
 					}).catch(function(error){
 				        var dialog = require("edit_channel/utils/dialog");
-				        dialog.dialog("Error Moving Content", error.responseText, {
-				            "OK":function(){}
-				        }, function(){
+				        dialog.alert("Error Moving Content", error.responseText, function(){
 				        	$(".content-list").sortable( "cancel" );
 			        		$(".content-list").sortable( "enable" );
 			        		$(".content-list").sortable( "refresh" );

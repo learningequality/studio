@@ -61,7 +61,7 @@ var PreviewView = BaseViews.BaseView.extend({
         }
     },
     load_presets:function(){
-        return new Models.FormatPresetCollection(_.where(_.pluck(this.model.get("files"), "preset"), {'display': true}));
+        return new Models.FormatPresetCollection(_.where(_.pluck(this.model.get("files"), "preset"), {'display': true, 'subtitle': false}));
     },
     load_preset_dropdown:function(){
         this.$("#preview_tabs_dropdown").html(this.tabs_template({
@@ -83,7 +83,6 @@ var PreviewView = BaseViews.BaseView.extend({
     generate_preview:function(force_load){
         if(this.current_preview){
             extension = this.current_preview.file_format;
-
             var preview_template;
             switch (extension){
                 case "png":
@@ -98,7 +97,6 @@ var PreviewView = BaseViews.BaseView.extend({
                     preview_template = require("./hbtemplates/preview_templates/document.handlebars");
                     break;
                 case "mp3":
-                case "wav":
                     preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
                     break;
                 case "mp4":
@@ -128,7 +126,7 @@ var PreviewView = BaseViews.BaseView.extend({
         var subtitles = [];
         this.model.get("files").forEach(function(file){
             var file_json = (file.attributes)? file.attributes : file;
-            var preset_id = (file_json.preset && file_json.preset.id)? file_json.preset.id : file_json.preset;
+            var preset_id = (file_json.preset && file_json.preset.name)? file_json.preset.name : file_json.preset;
             var current_preset = window.formatpresets.get({id:preset_id});
             if(current_preset && current_preset.get("subtitle")){
                 subtitles.push(file_json);

@@ -1,60 +1,13 @@
 <div id="channel_area_wrapper">
-	<nav id="manage-channel-nav" class="container">
-		<!--<h2 class="text-center">Welcome back, {{user}}</h2>
-		<input type="text" placeholder="Start finding great educational content..." id="search_channels_input"/>
-		<div class="row">
-			<div class="col-xs-2 search_section text-center">
-				<p>Show Only</p>
-			</div>
-			<div class="col-xs-1 search_section">
-				<a class="btn btn-filter">Channels</a>
-			</div>
-			<div class="col-xs-1 search_section">
-				<a class="btn btn-filter">Video</a>
-			</div>
-			<div class="col-xs-1 search_section">
-				<a class="btn btn-filter">Audio</a>
-			</div>
-			<div class="col-xs-1 search_section">
-				<a class="btn btn-filter">Exercises</a>
-			</div>
-			<div class="col-xs-1 search_section">
-				<a class="btn btn-filter">PDF</a>
-			</div>
-			<div class="col-xs-4 search_section">
-				<select id="language_filter_input">
-					<option>Arabic</option>
-					<option>Castillian</option>
-					<option>Danish</option>
-					<option selected>English</option>
-					<option>German</option>
-					<option>Hindi</option>
-					<option>Swahili</option>
-					<option>Spanish</option>
-				</select>
-			</div>
-			<div class="col-xs-1 search_section">
-				<a class="btn" id="channel_find_button">Find</a>
-			</div>
-		</div>
-		<hr/>-->
-	</nav>
-	<!--<div id="bookmark-area" class="pull-right">
-		<a class="btn btn-default" id="subscribed_clipboard_button">Clipboard<span class="badge">0</span></a>
-		<h4>My Subscriptions</h4>
-		<p><em>(under construction)</em></p>
-		<ul id="bookmark_list" class="list-unstyled">
-		</ul>
-	</div>-->
+	<nav id="manage-channel-nav" class="container"></nav>
 	<div id="channel-list-area">
+		<div id="pending_list"></div>
 		<h3>
 			My Channels
 			<a class="action-button pull-right disable-on-edit new_channel_button" title="Create a new channel">
 				<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Channel
 			</a>
 		</h3>
-		<ul id="channel_list" class="list-unstyled">
-			<li class='default-item'><em>No channels found.</em></li>
-		</ul>
+		<div id="channel_list"></div>
 	</div>
 </div>

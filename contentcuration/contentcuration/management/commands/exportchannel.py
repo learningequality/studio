@@ -74,9 +74,11 @@ class Command(BaseCommand):
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
 
-def create_kolibri_license_object(license):
+def create_kolibri_license_object(ccnode):
+    use_license_description = ccnode.license.license_name != licenses.SPECIAL_PERMISSIONS
     return kolibrimodels.License.objects.get_or_create(
-        license_name=license.license_name
+        license_name=ccnode.license.license_name,
+        license_description=ccnode.license.license_description if use_license_description else ccnode.license_description
     )
 
 
@@ -129,10 +131,10 @@ def map_content_nodes(root_node):
                 kolibrinode = create_bare_contentnode(node)
 
                 if node.kind.kind == content_kinds.EXERCISE:
+                    exercise_data = process_assessment_metadata(node, kolibrinode)
                     if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
-                        create_perseus_exercise(node, kolibrinode)
-                if node.kind.kind != content_kinds.TOPIC:
-                    create_associated_file_objects(kolibrinode, node)
+                        create_perseus_exercise(node, kolibrinode, exercise_data)
+                create_associated_file_objects(kolibrinode, node)
                 map_tags_to_node(kolibrinode, node)
 
 def create_bare_contentnode(ccnode):
@@ -141,7 +143,7 @@ def create_bare_contentnode(ccnode):
 
     kolibri_license = None
     if ccnode.license is not None:
-        kolibri_license = create_kolibri_license_object(ccnode.license)[0]
+        kolibri_license = create_kolibri_license_object(ccnode)[0]
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
@@ -153,7 +155,7 @@ def create_bare_contentnode(ccnode):
             'sort_order': ccnode.sort_order,
             'license_owner': ccnode.copyright_holder or "",
             'license': kolibri_license,
-            'available': True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
+            'available': ccnode.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists(),  # Hide empty topics
             'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
         }
     )
@@ -197,12 +199,11 @@ def create_associated_file_objects(kolibrinode, ccnode):
             thumbnail=preset.thumbnail,
         )
 
-def create_perseus_exercise(ccnode, kolibrinode):
+def create_perseus_exercise(ccnode, kolibrinode, exercise_data):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
-        data = process_assessment_metadata(ccnode, kolibrinode)
-        create_perseus_zip(ccnode, data, tempf)
+        create_perseus_zip(ccnode, exercise_data, tempf)
         file_size = tempf.tell()
         tempf.flush()
 
@@ -223,21 +224,32 @@ def process_assessment_metadata(ccnode, kolibrinode):
     assessment_items = ccnode.assessment_items.all().order_by('order')
     exercise_data = json.loads(ccnode.extra_fields) if ccnode.extra_fields else {}
 
-    mastery_model = {'type' : exercise_data.get('mastery_model') or exercises.M_OF_N}
     randomize = exercise_data.get('randomize') or True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
+    mastery_model = { 'type' : exercise_data.get('mastery_model') or exercises.M_OF_N }
     if mastery_model['type'] == exercises.M_OF_N:
-        mastery_model.update({'n':exercise_data.get('n') or min(5, assessment_items.count()) or 1})
-        mastery_model.update({'m':exercise_data.get('m') or min(5, assessment_items.count()) or 1})
+        mastery_model.update({'n': exercise_data.get('n') or min(5, assessment_items.count()) or 1})
+        mastery_model.update({'m': exercise_data.get('m') or min(5, assessment_items.count()) or 1})
+    elif mastery_model['type'] == exercises.DO_ALL:
+        mastery_model.update({'n': assessment_items.count() or 1, 'm': assessment_items.count() or 1})
+    elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_2:
+        mastery_model.update({'n': 2, 'm': 2})
+    elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_3:
+        mastery_model.update({'n': 3, 'm': 3})
+    elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_5:
+        mastery_model.update({'n': 5, 'm': 5})
+    elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_10:
+        mastery_model.update({'n': 10, 'm': 10})
 
     exercise_data.update({
-        'mastery_model': mastery_model['type'],
+        'mastery_model': exercises.M_OF_N,
+        'legacy_mastery_model': mastery_model['type'],
         'randomize': randomize,
         'n': mastery_model.get('n'),
         'm': mastery_model.get('m'),
         'all_assessment_items': assessment_item_ids,
-        'assessment_mapping': {a.assessment_id : a.type for a in assessment_items},
+        'assessment_mapping': {a.assessment_id : a.type if a.type != 'true_false' else exercises.SINGLE_SELECTION.decode('utf-8') for a in assessment_items},
     })
 
     kolibriassessmentmetadatamodel = kolibrimodels.AssessmentMetaData.objects.create(
