@@ -19,6 +19,7 @@ from contentcuration.models import Exercise, AssessmentItem, Channel, License, F
 from contentcuration import ricecooker_versions as rc
 from le_utils.constants import content_kinds
 from django.db.models.functions import Concat
+from contentcuration.contentcuration.utils.logging import trace
 from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db import transaction
@@ -233,6 +234,8 @@ def create_channel(channel_data, user):
 
     return channel # Return new channel
 
+
+@trace
 def convert_data_to_nodes(content_data, parent_node):
     """ Parse dict and create nodes accordingly """
     try:
