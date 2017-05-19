@@ -14,7 +14,7 @@ from django.core.context_processors import csrf
 from django.core.management import call_command
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
-from contentcuration.api import write_file_to_storage
+from contentcuration.api import write_file_to_storage, commit_channel
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, Language, generate_file_on_disk_name, generate_storage_url
 from contentcuration import ricecooker_versions as rc
 from le_utils.constants import content_kinds
@@ -117,7 +117,7 @@ def api_create_channel_endpoint(request):
 
         return HttpResponse(json.dumps({
             "success": True,
-            "root": obj.staging_tree.pk,
+            "root": obj.chef_tree.pk,
             "channel_id": obj.pk,
         }))
     except KeyError:
@@ -134,17 +134,21 @@ def api_commit_channel(request):
 
         obj = Channel.objects.get(pk=channel_id)
 
-        old_tree = obj.previous_tree
-        obj.previous_tree = obj.main_tree
-        obj.main_tree = obj.staging_tree
-        obj.staging_tree = None
-        obj.save()
+        # rebuild MPTT tree for this channel (since we set "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
+        ContentNode.objects.partial_rebuild(obj.chef_tree.tree_id)
 
-        # Delete previous tree if it already exists
-#         if old_tree:
-#             with transaction.atomic():
-#                 with ContentNode.objects.delay_mptt_updates():
-#                     old_tree.delete()
+        if data.get('no_activation'): # If user says to stage rather than submit, skip changing trees at this step
+            old_staging = channel.staging_tree
+            channel.staging_tree = channel.chef_tree
+            channel.chef_tree = None
+            channel.save()
+            # Delete old staging tree if it already exists
+            if old_staging:
+                with transaction.atomic():
+                    with ContentNode.objects.disable_mptt_updates():
+                        old_staging.delete()
+        else:
+            commit_channel(obj)
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -162,11 +166,11 @@ def api_add_nodes_to_tree(request):
     try:
         content_data = data['content_data']
         parent_id = data['root_id']
-
-        return HttpResponse(json.dumps({
-            "success": True,
-            "root_ids": convert_data_to_nodes(content_data, parent_id)
-        }))
+        with ContentNode.objects.disable_mptt_updates():
+            return HttpResponse(json.dumps({
+                "success": True,
+                "root_ids": convert_data_to_nodes(content_data, parent_id)
+            }))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
@@ -211,10 +215,10 @@ def create_channel(channel_data, user):
     channel.source_domain = channel_data.get('source_domain')
     channel.ricecooker_version = channel_data.get('ricecooker_version')
 
-    old_staging_tree = channel.staging_tree
+    old_chef_tree = channel.chef_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
     # Set up initial staging tree
-    channel.staging_tree = ContentNode.objects.create(
+    channel.chef_tree = ContentNode.objects.create(
         title = channel.name,
         kind_id = content_kinds.TOPIC,
         sort_order = 0,
@@ -224,12 +228,12 @@ def create_channel(channel_data, user):
         source_id = channel.source_id,
         source_domain = channel.source_domain,
     )
-    channel.staging_tree.save()
+    channel.chef_tree.save()
     channel.save()
 
     # Delete staging tree if it already exists
-    if old_staging_tree and old_staging_tree != channel.main_tree:
-        old_staging_tree.delete()
+    if old_chef_tree and old_chef_tree != channel.main_tree:
+        old_chef_tree.delete()
 
     return channel # Return new channel
 

@@ -221,6 +221,7 @@ class Channel(models.Model):
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
     main_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
     staging_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_staging')
+    chef_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_chef')
     previous_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_previous')
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -398,7 +399,7 @@ class ContentNode(MPTTModel, models.Model):
 
     def get_channel(self):
         root = self.get_root()
-        return root.channel_main.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
+        return root.channel_main.first() or root.channel_chef.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
 
     def save(self, *args, **kwargs):
         # Detect if node has been moved to another tree
