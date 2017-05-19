@@ -26,6 +26,7 @@ ChannelEditRouter  = Backbone.Router.extend({
   routes: {
 		"": "navigate_channel_home",
 		":channel/edit": "edit_page",
+		":channel/draft": "draft_page",
 		":channel/view": "preview_page",
 		":channel/clipboard": "clipboard_page"
   },
@@ -40,6 +41,9 @@ ChannelEditRouter  = Backbone.Router.extend({
 
 	edit_page : function(){
 		this.open_channel(true, false, window.current_channel.get_root("main_tree"));
+	},
+	draft_page: function(){
+		this.open_channel(true, false, window.current_channel.get_root("draft_tree"));
 	},
 	preview_page : function(){
 		this.open_channel(false, false, window.current_channel.get_root("main_tree"));

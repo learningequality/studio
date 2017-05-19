@@ -115,12 +115,14 @@ urlpatterns = [
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^channels/(?P<channel_id>[^/]+)/edit', views.channel, name='channel'),
     url(r'^channels/(?P<channel_id>[^/]+)/view', views.channel_view_only, name='channel_view_only'),
+    url(r'^channels/(?P<channel_id>[^/]+)/draft', views.channel_draft, name='channel_draft'),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
     url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
     url(r'^get_user_channels/$', views.get_user_channels, name='get_user_channels'),
     url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
     url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
+    url(r'^activate_channel/$', views.activate_channel, name='activate_channel'),
     url(r'^healthz$', views.health, name='health'),
 ]
 

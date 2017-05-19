@@ -24,7 +24,7 @@ from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import write_file_to_storage, check_supported_browsers, add_editor_to_channel
+from contentcuration.api import write_file_to_storage, check_supported_browsers, add_editor_to_channel, commit_channel
 from contentcuration.utils.files import extract_thumbnail_wrapper, compress_video_wrapper,  generate_thumbnail_from_node, duplicate_file
 from contentcuration.models import VIEW_ACCESS, Language, Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, User, Invitation, generate_file_on_disk_name, generate_storage_url
 from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, AssessmentItemSerializer, AccessibleChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, ContentNodeSerializer, TagSerializer, UserSerializer, CurrentUserSerializer, UserChannelListSerializer, FileSerializer, InvitationSerializer
@@ -155,6 +155,22 @@ def channel_view_only(request, channel_id):
 
     return channel_page(request, channel)
 
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def channel_draft(request, channel_id):
+    # Check if browser is supported
+    if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
+        return redirect(reverse_lazy('unsupported_browser'))
+
+    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
+
+    # Check user has permission to edit channel
+    if not channel.editors.filter(id=request.user.id).exists() and not request.user.is_admin:
+        return redirect(reverse_lazy('unauthorized'))
+
+    return channel_page(request, channel)
+
 @csrf_exempt
 def publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
@@ -194,3 +210,11 @@ def accept_channel_invite(request):
         add_editor_to_channel(invitation)
 
         return HttpResponse(JSONRenderer().render(channel_serializer.data))
+
+def activate_channel(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        channel = Channel.objects.get(pk=data['channel_id'])
+        commit_channel(channel)
+
+        return HttpResponse(json.dumps({"success": True}))
