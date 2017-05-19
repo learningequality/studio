@@ -23,6 +23,7 @@ from contentcuration.utils.logging import trace
 from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db import transaction
+from rest_framework.exceptions import ValidationError
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -313,8 +314,14 @@ def map_files_to_node(node, data):
             raise IOError('{} not found'.format(file_path))
 
         language = None
-        if file_data.get('language'):
-            language = Language.objects.get(pk=file_data['language'])
+
+        try:
+            if file_data.get('language'):
+                language = Language.objects.get(pk=file_data['language'])
+        except ObjectDoesNotExist as e:
+            invalid_lang = file_data.get('language')
+            logging.warning("file_data with language {} does not exist.".format(invalid_lang))
+            raise ValidationError("file_data given was invalid; expected string, got {}".format(invalid_lang))
 
 
         file_obj = File(
