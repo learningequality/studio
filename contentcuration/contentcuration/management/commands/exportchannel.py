@@ -123,19 +123,18 @@ def map_content_nodes(root_node):
                 logging.debug("Mapping node with id {id}".format(
                     id=node.pk))
 
-                children = (node.children.
-                            # select_related('parent', 'files__preset', 'files__file_format').
-                            all())
-                node_queue.extend(children)
+                if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists():
+                    children = (node.children.all())
+                    node_queue.extend(children)
 
-                kolibrinode = create_bare_contentnode(node)
+                    kolibrinode = create_bare_contentnode(node)
 
-                if node.kind.kind == content_kinds.EXERCISE:
-                    exercise_data = process_assessment_metadata(node, kolibrinode)
-                    if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
-                        create_perseus_exercise(node, kolibrinode, exercise_data)
-                create_associated_file_objects(kolibrinode, node)
-                map_tags_to_node(kolibrinode, node)
+                    if node.kind.kind == content_kinds.EXERCISE:
+                        exercise_data = process_assessment_metadata(node, kolibrinode)
+                        if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
+                            create_perseus_exercise(node, kolibrinode, exercise_data)
+                    create_associated_file_objects(kolibrinode, node)
+                    map_tags_to_node(kolibrinode, node)
 
 def create_bare_contentnode(ccnode):
     logging.debug("Creating a Kolibri node for instance id {}".format(
