@@ -31,12 +31,20 @@ def get_prerequisites(request):
         nodes = ContentNode.objects.prefetch_related('prerequisite').filter(id__in=data['nodes'])
         prerequisites = []
         postrequisites = list(nodes)
+        prerequisite_mapping = {}
+        postrequisite_mapping = {}
 
         for n in nodes:
-            prerequisites.extend(n.get_prerequisites())
-            postrequisites.extend(n.get_postrequisites())
+            prereqs, prerequisite_mapping = n.get_prerequisites()
+            prerequisite_mapping.update({n.pk: [p.pk for p in prereqs]})
+            postreqs, postrequisite_mapping = n.get_postrequisites()
+
+            prerequisites.extend(prereqs)
+            postrequisites.extend(postreqs)
 
         return HttpResponse(json.dumps({
+            "prerequisite_mapping": prerequisite_mapping,
+            "postrequisite_mapping": postrequisite_mapping,
             "prerequisites" : JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisites, many=True).data),
             "postrequisites": JSONRenderer().render(SimplifiedContentNodeSerializer(postrequisites, many=True).data),
         }))

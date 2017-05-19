@@ -1,5 +1,6 @@
 import logging
 import os
+import copy
 import uuid
 import hashlib
 import functools
@@ -396,19 +397,25 @@ class ContentNode(MPTTModel, models.Model):
         cache.set(key, presets, None)
         return presets
 
-    def get_prerequisites(self):
+    def get_prerequisites(self, prerequisite_mapping=None):
+        prerequisite_mapping = prerequisite_mapping or {}
         prerequisites = self.prerequisite.all()
         r = list(prerequisites)
         for c in prerequisites:
-            r.extend(c.get_prerequisites())
-        return r
+            prereqs, prerequisite_mapping= c.get_prerequisites()
+            prerequisite_mapping.update({c.pk: [p.pk for p in prereqs]})
+            r.extend(prereqs)
+        return r, prerequisite_mapping
 
-    def get_postrequisites(self):
+    def get_postrequisites(self, postrequisite_mapping=None):
+        postrequisite_mapping = postrequisite_mapping or {}
         postrequisites = self.is_prerequisite_of.all()
         r = list(postrequisites)
         for c in postrequisites:
-            r.extend(c.get_postrequisites())
-        return r
+            postreqs, postrequisite_mapping = c.get_postrequisites()
+            postrequisite_mapping.update({c.pk: [p.pk for p in postreqs]})
+            r.extend(postreqs)
+        return r, postrequisite_mapping
 
     def get_channel(self):
         root = self.get_root()

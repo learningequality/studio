@@ -5,13 +5,33 @@ var Models = require("edit_channel/models");
 require("selected.less");
 var stringHelper = require("edit_channel/utils/string_helper");
 
-var MAPPING = {
-    "prerequisites": [],
-    "postrequisites": [],
-    "immediate_prerequisites": [],
-    "selected": [],
-    "ancestors": []
-};
+function PrerequisiteTree() {
+    this.prerequisites = [];
+    this.postrequisites = [];
+    this.selected = [];
+    this.prerequisite_mapping = {};
+    this.postrequisite_mapping = {};
+    this.is_selected = function(id){ return _.contains(this.selected, id); };
+    this.is_prerequisite = function(id){ return _.contains(this.prerequisites, id); };
+    this.is_postrequisite = function(id){ return _.contains(this.postrequisites, id); };
+    this.get_prerequisite_count_for = function(id){ return this.prerequisite_mapping[id] && this.prerequisite_mapping[id].length; };
+    this.prerequisite_count = function(){ return this.prerequisites.length; };
+    this.is_immediate_prerequisite = function(id){
+        return _.chain(this.prerequisite_mapping).values().flatten().filter(function(node){return node === id;}).size().value() === 1;
+    };
+    this.set = function(prerequisites, postrequisites, selected){
+        this.prerequisites = prerequisites.pluck('id');
+        this.postrequisites = postrequisites.pluck('id');
+        this.selected = selected.pluck('id');
+    };
+    this.update_tree = function(prerequisite_mapping, postrequisite_mapping){
+        var self = this;
+        _.each(_.keys(prerequisite_mapping), function(key){ self.prerequisite_mapping[key] = prerequisite_mapping[key]; });
+        _.each(_.keys(postrequisite_mapping), function(key){ self.postrequisite_mapping[key] = postrequisite_mapping[key]; });
+    };
+}
+
+var PrereqTree = new PrerequisiteTree();
 
 var RelatedModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/related_modal.handlebars"),
@@ -50,7 +70,7 @@ var RelatedView = BaseViews.BaseListView.extend({
         this.collection = new Models.ContentNodeCollection();
         this.onselect = options.onselect;
         this.views_to_update = options.views_to_update;
-        this.lists=[];
+        this.lists = [];
         this.render();
     },
     render: function() {
@@ -60,13 +80,8 @@ var RelatedView = BaseViews.BaseListView.extend({
             self.collection.get_all_fetch_simplified(window.current_channel.get('main_tree').children).then(function(collection){
                 self.collection = collection;
                 if(self.collection.length > 0){
-                    MAPPING = {
-                        "prerequisites": nodes.prerequisites,
-                        "postrequisites": nodes.postrequisites,
-                        "immediate_prerequisites": _.flatten(self.selected_collection.pluck('prerequisite')),
-                        "selected": self.selected_collection,
-                        "ancestors": []
-                    }
+                    PrereqTree.set(nodes.prerequisites, nodes.postrequisites, self.selected_collection);
+                    PrereqTree.update_tree(nodes.prerequisite_mapping, nodes.postrequisite_mapping)
                     self.relatedList = new RelatedList({
                         model: null,
                         el: self.$(".select_main_box"),
@@ -155,8 +170,8 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
         this.collection = new Models.ContentNodeCollection();
         this.container = options.container;
         this.checked = options.checked;
-        this.isdisabled = options.isdisabled || (!_.contains(MAPPING.immediate_prerequisites, this.model.id)
-            && (_.contains(MAPPING.postrequisites.pluck('id'), this.model.id) || _.contains(MAPPING.prerequisites.pluck('id'), this.model.id)));
+        this.isdisabled = options.isdisabled || PrereqTree.is_postrequisite(this.model.id)
+                || (!PrereqTree.is_immediate_prerequisite(this.model.id) && PrereqTree.is_prerequisite(this.model.id));
         this.count = 0;
         this.render();
     },
@@ -168,9 +183,10 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             node:this.model.toJSON(),
             isfolder: this.model.get("kind") === "topic",
-            checked: _.contains(MAPPING.prerequisites.pluck('id'), this.model.id),
-            count: MAPPING.prerequisites.length,
-            is_selected: _.contains(MAPPING.selected.pluck('id'), this.model.id),
+            checked: PrereqTree.is_prerequisite(this.model.id),
+            count: PrereqTree.prerequisite_count(),
+            is_selected: PrereqTree.is_selected(this.model.id),
+            is_dependent: this.isdisabled && !PrereqTree.is_selected(this.model.id)
         }));
         var self = this;
         _.defer(function(){
@@ -184,7 +200,6 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
         this.checked =  this.$("#" + this.id() + "_check").is(":checked");
         this.item_to_select = this.checked;
         this.count = (this.checked)? this.model.get("metadata").resource_count : 0;
-        console.log(this.model.attributes, this.count)
         if(this.subcontent_view){ this.subcontent_view.check_all(this.checked); }
         this.update_count(skip_update);
     },
@@ -222,6 +237,7 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
         }
     },
     update_count:function(skip_update){
+        // PrereqTree.get_prerequisite_count_for()
         this.count = (this.subcontent_view)? this.subcontent_view.get_metadata() : this.count;
         this.$("#" + this.id() + "_count").css("visibility", (this.count === 0)? "hidden" : "visible");
         this.$("#" + this.id() + "_count").text(this.count);
