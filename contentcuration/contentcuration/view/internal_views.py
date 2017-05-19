@@ -144,10 +144,10 @@ def api_commit_channel(request):
             channel.chef_tree = None
             channel.save()
             # Delete old staging tree if it already exists
-            if old_staging:
-                with transaction.atomic():
-                    with ContentNode.objects.disable_mptt_updates():
-                        old_staging.delete()
+            # if old_staging:
+            #     with transaction.atomic():
+            #         with ContentNode.objects.disable_mptt_updates():
+            #             old_staging.delete()
         else:
             commit_channel(obj)
 
