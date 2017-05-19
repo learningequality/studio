@@ -20,6 +20,7 @@ from contentcuration import ricecooker_versions as rc
 from le_utils.constants import content_kinds
 from django.db.models.functions import Concat
 from contentcuration.contentcuration.utils.logging import trace
+from contentcuration.utils.logging import trace
 from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db import transaction
