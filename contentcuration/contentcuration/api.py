@@ -187,7 +187,7 @@ def add_editor_to_channel(invitation):
     invitation.channel.save()
     invitation.delete()
 
-def commit_channel(channel):
+def activate_channel(channel):
     old_tree = channel.previous_tree
     channel.previous_tree = channel.main_tree
     channel.main_tree = channel.staging_tree

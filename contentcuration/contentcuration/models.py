@@ -7,6 +7,7 @@ import json
 from django.conf import settings
 from django.contrib import admin
 from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connections, models, connection
 from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
@@ -398,8 +399,11 @@ class ContentNode(MPTTModel, models.Model):
         return presets
 
     def get_channel(self):
-        root = self.get_root()
-        return root.channel_main.first() or root.channel_chef.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
+        try:
+            root = self.get_root()
+            return root.channel_main.first() or root.channel_chef.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
+        except ObjectDoesNotExist:
+            return None
 
     def save(self, *args, **kwargs):
         # Detect if node has been moved to another tree

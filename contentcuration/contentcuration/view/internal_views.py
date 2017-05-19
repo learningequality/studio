@@ -14,11 +14,12 @@ from django.core.context_processors import csrf
 from django.core.management import call_command
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
-from contentcuration.api import write_file_to_storage, commit_channel
+from contentcuration.api import write_file_to_storage, activate_channel
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, Language, generate_file_on_disk_name, generate_storage_url
 from contentcuration import ricecooker_versions as rc
 from le_utils.constants import content_kinds
 from django.db.models.functions import Concat
+from contentcuration.utils.logging import trace
 from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db import transaction
@@ -136,19 +137,19 @@ def api_commit_channel(request):
 
         # rebuild MPTT tree for this channel (since we set "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
         ContentNode.objects.partial_rebuild(obj.chef_tree.tree_id)
+        obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=obj.pk, source_channel_id=obj.pk)
 
-        if data.get('no_activation'): # If user says to stage rather than submit, skip changing trees at this step
-            old_staging = channel.staging_tree
-            channel.staging_tree = channel.chef_tree
-            channel.chef_tree = None
-            channel.save()
-            # Delete old staging tree if it already exists
-            if old_staging:
-                with transaction.atomic():
-                    with ContentNode.objects.disable_mptt_updates():
-                        old_staging.delete()
-        else:
-            commit_channel(obj)
+        old_staging = obj.staging_tree
+        obj.staging_tree = obj.chef_tree
+        obj.chef_tree = None
+        obj.save()
+
+        # Delete staging tree if it already exists
+        if old_staging and old_staging != obj.main_tree:
+            old_staging.delete()
+
+        if not data.get('no_activation'): # If user says to stage rather than submit, skip changing trees at this step
+            activate_channel(obj)
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -231,12 +232,14 @@ def create_channel(channel_data, user):
     channel.chef_tree.save()
     channel.save()
 
-    # Delete staging tree if it already exists
-    if old_chef_tree and old_chef_tree != channel.main_tree:
+    # Delete chef tree if it already exists
+    if old_chef_tree and old_chef_tree != channel.staging_tree:
         old_chef_tree.delete()
 
     return channel # Return new channel
 
+
+@trace
 def convert_data_to_nodes(content_data, parent_node):
     """ Parse dict and create nodes accordingly """
     try:

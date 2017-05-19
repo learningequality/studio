@@ -8,7 +8,6 @@
 	padding:10px;
 
 	.empty_default{	margin-top: 40%; }
-
 	.move_section_wrapper {
 	    display: flex;
   		flex-wrap: wrap;
@@ -90,33 +89,17 @@
 		}
 		.to-move-list{
 			border-left:2px solid @gray-400;
+			padding-left:10px;
 		}
 		.target-list{
-			border-left:2px solid @blue-500;
-			margin-left: 10px;
+			margin-left: 15px;
 		}
-		.to-move-list .move_item_title, .disabled{
+		.to-move-list .move_item_title{
 			color:@gray-700;
 		}
 	}
 
 	#target_list_area > .target-list{
 		margin-left: 0px;
-	}
-
-	#move_bottom_container{
-		min-height:30px;
-		#move_status{
-			margin-right:20px;
-			font-size:12pt;
-			margin-top:2px;
-			font-style:italic;
-			max-width:@uploader-width / 2.5;
-			overflow:hidden;
-			padding-right: 10px;
-		}
-		#move_content_button{
-			margin-right:20px;
-		}
 	}
 }
