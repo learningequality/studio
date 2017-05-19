@@ -86,7 +86,7 @@ var MoveView = BaseViews.BaseListView.extend({
             var original_parents = self.collection.pluck('parent');
             // Get original parents
             self.collection.move(self.target_node, null, sort_order).then(function(moved){
-                self.collection.get_all_fetch(original_parents).then(function(fetched){
+                self.collection.get_all_fetch_simplified(original_parents).then(function(fetched){
                     fetched.add(self.target_node);
                     self.onmove(self.target_node, moved, fetched);
                     self.close_move();
@@ -143,7 +143,7 @@ var MoveList = BaseViews.BaseListView.extend({
 var MoveItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/move_list_item.handlebars"),
     tagName: "li",
-    className: "move_list_item",
+    className: "move_list_item modal-list-item-default",
     selectedClass: "move-selected",
     collapsedClass: "glyphicon-triangle-top",
     expandedClass: "glyphicon-triangle-bottom",
@@ -154,7 +154,6 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
     'id': function() {
         return "move_item_" + this.model.get("id");
     },
-
     initialize: function(options) {
         _.bindAll(this, "render");
         this.bind_node_functions();
@@ -182,7 +181,7 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
     load_subfiles:function(){
         var self = this;
         var filter_ids = this.container.to_move_ids;
-        this.collection.get_all_fetch(this.model.get('children')).then(function(fetched){
+        this.collection.get_all_fetch_simplified(this.model.get('children')).then(function(fetched){
             var nodes = fetched.filter(function(n) {
                 return !self.is_target || (n.get('kind') === 'topic');
             });
@@ -196,7 +195,9 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
         });
     },
     handle_checked:function(event){
-        this.container.handle_target_selection(this.model);
+        if(this.$(event.target).is(':checked')){
+            this.container.handle_target_selection(this.model);
+        }
     }
 });
 

@@ -65,7 +65,6 @@ def get_or_set_cached_constants(constant, serializer):
 
 def channel_page(request, channel, allow_edit=False):
     channel_serializer =  ChannelSerializer(channel)
-
     channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors').prefetch_related('viewers')\
                             .exclude(id=channel.pk).filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
                             .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
