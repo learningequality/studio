@@ -158,7 +158,7 @@ def create_bare_contentnode(ccnode):
             'sort_order': ccnode.sort_order,
             'license_owner': ccnode.copyright_holder or "",
             'license': kolibri_license,
-            'available': True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
+            'available': ccnode.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists(),  # Hide empty topics
             'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
         }
     )
@@ -246,6 +246,8 @@ def process_assessment_metadata(ccnode, kolibrinode):
         mastery_model.update({'m': exercise_data.get('m') or min(5, assessment_items.count()) or 1})
     elif mastery_model['type'] == exercises.DO_ALL:
         mastery_model.update({'n': assessment_items.count() or 1, 'm': assessment_items.count() or 1})
+    elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_2:
+        mastery_model.update({'n': 2, 'm': 2})
     elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_3:
         mastery_model.update({'n': 3, 'm': 3})
     elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_5:

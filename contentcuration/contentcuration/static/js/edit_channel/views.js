@@ -41,7 +41,6 @@ var BaseView = Backbone.View.extend({
 						.union((include_collection) ? collection.pluck("id") : [])
 						.union([window.current_channel.get("main_tree").id])
 						.uniq().value();
-		var self = this;
 		this.retrieve_nodes($.unique(list_to_reload), true).then(function(fetched){
 			fetched.forEach(function(model){
 				var object = window.workspace_manager.get(model.get("id"));
@@ -509,9 +508,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						});
 					}).catch(function(error){
 				        var dialog = require("edit_channel/utils/dialog");
-				        dialog.dialog("Error Moving Content", error.responseText, {
-				            "OK":function(){}
-				        }, function(){
+				        dialog.alert("Error Moving Content", error.responseText, function(){
 				        	$(".content-list").sortable( "cancel" );
 			        		$(".content-list").sortable( "enable" );
 			        		$(".content-list").sortable( "refresh" );

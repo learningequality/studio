@@ -167,7 +167,7 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
     events: {
         'dblclick .dblclick_toggle' : 'toggle',
         'click .tog_folder' : 'toggle',
-        'change >.move_checkbox' : 'handle_checked'
+        'change >.move_item_wrapper .move_checkbox' : 'handle_checked'
     },
     render: function() {
         var has_descendants = this.model.get('metadata').resource_count < this.model.get('metadata').total_count;

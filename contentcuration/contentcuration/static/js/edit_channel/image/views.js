@@ -214,7 +214,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     image_completed:function(){
         if(this.image_error){
             var self = this;
-            dialog.dialog("Image Error", this.image_error, { "OK":function(){} }, null);
+            dialog.alert("Image Error", this.image_error);
             if(this.onerror){ this.onerror(); }
             this.render();
         }else{
@@ -362,7 +362,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
     },
     file_complete:function(){
         if(this.file_error){
-            dialog.dialog("Image Error", this.file_error, { "OK":function(){} }, null);
+            dialog.alert("Image Error", this.file_error);
         }
         this.render_dropzone();
     }
