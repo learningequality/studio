@@ -5,6 +5,7 @@ var ChannelEditRouter = require("edit_channel/router");
 
 $(function() {
 	$("#channel-publish-button").on("click", publish_nodes);
+	$("#channel-activate-button").on("click", approve_channel);
 	$("#publish-id-help").on("click", show_publish_help);
 	$("#publish-id-copy").on("click", function(){ copy_publish_id($("#publish_id_text")[0]); });
 	$("#modal-copy-btn").on("click", function(){ copy_publish_id($("#modal-copy-text")[0]); });
@@ -21,6 +22,10 @@ function close_popups(){
 
 function publish_nodes(){
 	window.workspace_manager.get_main_view().publish();
+}
+
+function approve_channel(){
+	window.workspace_manager.get_main_view().activate_channel();
 }
 
 function show_publish_help(){

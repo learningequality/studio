@@ -1,7 +1,7 @@
 import xmlrpclib
 from socket import gaierror
 
-VERSION_OK = "0.5.9"
+VERSION_OK = "0.5.10"
 
 try:
 	pypi = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')

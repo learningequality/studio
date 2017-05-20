@@ -33,6 +33,12 @@
 			color:@blue-500;
 		}
 	}
+	.channel_edit_label{
+	    padding: 5px 20px;
+	    font-size: 15pt;
+	    font-weight: bold;
+	    color: @gray-500;
+	}
 	#channel_select_dd_wrapper{
 		width:300px;
 		padding:3px;
@@ -85,10 +91,11 @@
 		*{
 			vertical-align: middle;
 		}
-		#channel-publish-button{
+		#channel-publish-button, #channel-activate-button{
 			margin: 0 40px 0 0;
 			.action-button;
 		}
+		#channel-activate-button{ background-color: #2A982A; &:hover{background-color: #67D267;}}
 		#publish-id{
 			font-size:12pt;
 			.glyphicon{
@@ -116,6 +123,7 @@
 	padding: 13px 0 0 30px;
 	.nav-button-container {
 		width: 50px;
+		text-align: center;
 		.inline-block;
 		margin-right: 35px;
 		.nav-button {
@@ -132,14 +140,10 @@
 			    color: @blue-500;
 			}
 		}
-		a {
-			color: @body-font-color;
-			display: block;
-			text-align: center;
-			&:hover {
-				text-decoration: none;
-			}
-		}
+	}
+	a {
+		color: @body-font-color;
+		&:hover, &:focus, &:active { text-decoration: none; }
 	}
 	.hide-details-container {
 		position: relative;
@@ -577,4 +581,8 @@
 			}
 		}
 	}
+}
+
+.staging_channel_wrapper{
+	.copy_item_button{ display: none !important; }
 }

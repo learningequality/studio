@@ -22,6 +22,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
+		this.staging = options.staging;
 		this.render();
 	},
 	events: {
@@ -39,7 +40,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		this.$el.html(this.template({
 			edit: this.is_edit_page,
 			channel : window.current_channel.toJSON(),
-			is_clipboard : this.is_clipboard
+			is_clipboard : this.is_clipboard,
+			staging: this.staging
 		}));
 		if(this.is_clipboard){
 			$("#secondary-nav").css("display","none");

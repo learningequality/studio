@@ -110,6 +110,20 @@ var BaseWorkspaceView = BaseView.extend({
 			});
 		}
 	},
+	activate_channel: function(){
+		var dialog = require("edit_channel/utils/dialog");
+		dialog.dialog("Approve Channel?", "Are you sure you want to approve this channel?", {
+			'Keep Reviewing': function(){},
+			'Approve': function(){
+				window.current_channel.activate_channel().then(function(){
+					window.location.href = '/channels/' + window.current_channel.id + '/edit';
+				}).catch(function(error){
+					dialog.alert("Channel not approved", error);
+				});
+			}
+		}, null);
+
+	},
 	handle_published:function(collection){
 		this.reload_ancestors(collection);
 		$("#publish-get-id-modal").modal("show");

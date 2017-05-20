@@ -1,5 +1,12 @@
 <div id={{#if is_clipboard}}"clipboard"{{else}}{{#if edit}}"edit"{{else}}"preview"{{/if}}{{/if}}>
 	<nav id="button_bar">
+		{{#if staging}}
+		<a href="/channels/{{channel.id}}/{{#if channel.view_only}}view{{else}}edit{{/if}}">
+		<div class="nav-button-container">
+			<div class="nav-button disable-on-edit"><span class="glyphicon glyphicon-arrow-left"></span></div>
+			<a class="nav-label review_button disable-on-edit">Back</a>
+		</div></a>
+		{{/if}}
 		<div id="disable-none-selected-wrapper">
 			{{#if edit}}
 				<div class="nav-button-container">
@@ -12,10 +19,12 @@
 					<a class="nav-label edit_button disable-on-edit disable-none-selected">View</a>
 				</div>
 			{{/if}}
+			{{#unless staging}}
 				<div class="nav-button-container">
 					<div class="nav-button copy_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-duplicate"></span></div>
 					<a class="nav-label copy_button disable-on-edit disable-none-selected">Copy</a>
 				</div>
+			{{/unless}}
 			{{#if edit}}
 				<div class="nav-button-container">
 					<div class="nav-button move_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-move"></span></div>
@@ -33,10 +42,22 @@
 			<a class="nav-label archive_button disable-on-edit">Trash</a>
 		</div>
 		{{/if}}
+		{{#unless staging}}
 		<div class="nav-button-container">
 			<div class="nav-button permissions_button disable-on-edit"><span class="glyphicon glyphicon-user"></span></div>
 			<a class="nav-label permissions_button disable-on-edit">Invite</a>
 		</div>
+		{{/unless}}
+		{{#unless channel.view_only}}
+		{{#unless staging}}
+			{{#if channel.staging_tree}}<a href="/channels/{{channel.id}}/staging">{{/if}}
+			<div class="nav-button-container" {{#unless channel.staging_tree}}title="No updates to review from Ricecooker" disabled{{/unless}}>
+				<div class="nav-button review_button disable-on-edit {{#unless channel.staging_tree}}disabled{{/unless}}"><span class="glyphicon glyphicon-ok-circle"></span></div>
+				<a class="nav-label review_button disable-on-edit {{#unless channel.staging_tree}}disabled{{/unless}}">Review</a>
+			</div>
+			{{#if channel.staging_tree}}</a>{{/if}}
+		{{/unless}}
+		{{/unless}}
 		<div class="hide-details-container">
 			<input type="checkbox" id="hide_details_checkbox"/>
 			<label for="hide_details_checkbox">Hide details</label>

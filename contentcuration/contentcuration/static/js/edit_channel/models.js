@@ -469,6 +469,19 @@ var ChannelModel = BaseModel.extend({
             });
         });
         return promise;
+    },
+    activate_channel:function(){
+        var self = this;
+        var promise = new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({'channel_id': self.id}),
+                url: window.Urls.activate_channel(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+        return promise;
     }
 });
 

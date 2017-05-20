@@ -26,7 +26,7 @@ ChannelEditRouter  = Backbone.Router.extend({
   routes: {
 		"": "navigate_channel_home",
 		":channel/edit": "edit_page",
-		":channel/draft": "draft_page",
+		":channel/staging": "staging_page",
 		":channel/view": "preview_page",
 		":channel/clipboard": "clipboard_page"
   },
@@ -40,18 +40,19 @@ ChannelEditRouter  = Backbone.Router.extend({
   },
 
 	edit_page : function(){
-		this.open_channel(true, false, window.current_channel.get_root("main_tree"));
+		this.open_channel(true, false, false, window.current_channel.get_root("main_tree"));
 	},
-	draft_page: function(){
-		this.open_channel(true, false, window.current_channel.get_root("draft_tree"));
+	staging_page: function(){
+		window.staging = true;
+		this.open_channel(true, false, true, window.current_channel.get_root("staging_tree"));
 	},
 	preview_page : function(){
-		this.open_channel(false, false, window.current_channel.get_root("main_tree"));
+		this.open_channel(false, false, false, window.current_channel.get_root("main_tree"));
 	},
 	clipboard_page:function(){
-		this.open_channel(true, true, window.current_user.get_clipboard());
+		this.open_channel(true, true, false, window.current_user.get_clipboard());
 	},
-	open_channel: function(edit_mode_on, is_clipboard, root){
+	open_channel: function(edit_mode_on, is_clipboard, is_staging, root){
 		window.fileformats = this.fileformats ;
 		window.channels = this.channelCollection;
 		window.formatpresets = this.formatpresets;
@@ -67,14 +68,17 @@ ChannelEditRouter  = Backbone.Router.extend({
 			edit: edit_mode_on && !window.current_channel.get('ricecooker_version'),
 			model : root,
 			is_clipboard : is_clipboard,
+			staging: is_staging
 		});
-		var QueueView = require("edit_channel/queue/views");
-		var queue = new QueueView.Queue({
-	 		el: $("#queue-area"),
-	 		collection: this.nodeCollection,
-	 		clipboard_root : window.current_user.get_clipboard(),
-			trash_root : window.current_channel.get_root("trash_tree"),
-	 	});
+		if(!is_staging){
+			var QueueView = require("edit_channel/queue/views");
+			var queue = new QueueView.Queue({
+		 		el: $("#queue-area"),
+		 		collection: this.nodeCollection,
+		 		clipboard_root : window.current_user.get_clipboard(),
+				trash_root : window.current_channel.get_root("trash_tree"),
+		 	});
+		}
 	}
 });
 
