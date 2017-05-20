@@ -299,7 +299,11 @@ def create_node(node_data, parent_node, sort_order):
 
 def map_files_to_node(node, data):
     """ Generate files that reference the content node """
-    for file_data in data:
+
+    # filter for file data that's not empty;
+    valid_data = (d for d in data if d)
+
+    for file_data in valid_data:
         file_hash = file_data['filename'].split(".")
 
         # Determine a preset if none is given
