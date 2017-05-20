@@ -23,6 +23,7 @@ from contentcuration.utils.logging import trace
 from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db import transaction
+from rest_framework.exceptions import ValidationError
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -298,7 +299,11 @@ def create_node(node_data, parent_node, sort_order):
 
 def map_files_to_node(node, data):
     """ Generate files that reference the content node """
-    for file_data in data:
+
+    # filter for file data that's not empty;
+    valid_data = (d for d in data if d)
+
+    for file_data in valid_data:
         file_hash = file_data['filename'].split(".")
 
         # Determine a preset if none is given
@@ -313,8 +318,14 @@ def map_files_to_node(node, data):
             raise IOError('{} not found'.format(file_path))
 
         language = None
-        if file_data.get('language'):
-            language = Language.objects.get(pk=file_data['language'])
+
+        try:
+            if file_data.get('language'):
+                language = Language.objects.get(pk=file_data['language'])
+        except ObjectDoesNotExist as e:
+            invalid_lang = file_data.get('language')
+            logging.warning("file_data with language {} does not exist.".format(invalid_lang))
+            raise ValidationError("file_data given was invalid; expected string, got {}".format(invalid_lang))
 
 
         file_obj = File(
