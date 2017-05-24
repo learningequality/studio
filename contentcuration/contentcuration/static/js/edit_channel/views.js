@@ -41,7 +41,7 @@ var BaseView = Backbone.View.extend({
 		collection.forEach(function(entry){
       		$.merge(list_to_reload, entry.get("ancestors"));
 		});
-		if(window.current_channel.id){
+		if(window.current_channel.get("main_tree")){
 			list_to_reload.push(window.current_channel.get("main_tree").id)
 		}
 		this.retrieve_nodes($.unique(list_to_reload), true).then(function(fetched){
