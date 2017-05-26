@@ -66,7 +66,11 @@
 	{{#unless channel.view_only}}
 		{{#if channel.ricecooker_version}}
 			<div id="ricecooker_header">
-				This channel was created using <b><a href="https://github.com/learningequality/ricecooker" target="_blank">Ricecooker</a></b> v{{channel.ricecooker_version}} (@ {{channel.created}}). Update content by running the Ricecooker again.
+				{{#if staging}}
+					This channel was updated at <b>{{channel.updated}}</b>. Live channel was created at <b>{{channel.created}}</b>. <b><a class="approve_channel">Approve updated channel?</a></b>
+				{{else}}
+					This channel was created using <b><a href="https://github.com/learningequality/ricecooker" target="_blank">Ricecooker</a></b> v{{channel.ricecooker_version}} (@ {{channel.created}}). {{#if channel.staging_tree}}<b><a href="/channels/{{channel.id}}/staging">Updated content is available to review.</a></b>{{else}}Update content by running the Ricecooker again.{{/if}}
+				{{/if}}
 			</div>
 		{{/if}}
 	{{/unless}}

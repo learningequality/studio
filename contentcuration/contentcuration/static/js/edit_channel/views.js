@@ -112,7 +112,7 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	activate_channel: function(){
 		var dialog = require("edit_channel/utils/dialog");
-		dialog.dialog("Approve Channel?", "Are you sure you want to approve this channel?", {
+		dialog.dialog("Approve Channel?", "Approving this channel will replace the live channel with this updated channel. Are you sure you want to approve this channel?", {
 			'Keep Reviewing': function(){},
 			'Approve': function(){
 				window.current_channel.activate_channel().then(function(){
