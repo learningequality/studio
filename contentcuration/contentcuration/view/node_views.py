@@ -29,24 +29,25 @@ def get_prerequisites(request):
         data = json.loads(request.body)
         channel = Channel.objects.get(pk=data['channel_id'])
         nodes = ContentNode.objects.prefetch_related('prerequisite').filter(id__in=data['nodes'])
-        prerequisites = []
-        postrequisites = list(nodes)
+
         prerequisite_mapping = {}
         postrequisite_mapping = {}
+        prerequisite_tree_nodes = []
 
+        print "\n\n\n"
+        print nodes.values('id')
         for n in nodes:
-            prereqs, prerequisite_mapping = n.get_prerequisites()
-            prerequisite_mapping.update({n.pk: [p.pk for p in prereqs]})
-            postreqs, postrequisite_mapping = n.get_postrequisites()
+            prereqs, prereqmapping = n.get_prerequisites()
+            postreqs, postreqmapping = n.get_postrequisites()
 
-            prerequisites.extend(prereqs)
-            postrequisites.extend(postreqs)
-
+            prerequisite_mapping.update(prereqmapping)
+            postrequisite_mapping.update(postreqmapping)
+            prerequisite_tree_nodes += prereqs + postreqs + [n]
+        print "\n\n\n"
         return HttpResponse(json.dumps({
             "prerequisite_mapping": prerequisite_mapping,
             "postrequisite_mapping": postrequisite_mapping,
-            "prerequisites" : JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisites, many=True).data),
-            "postrequisites": JSONRenderer().render(SimplifiedContentNodeSerializer(postrequisites, many=True).data),
+            "prerequisite_tree_nodes" : JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data)
         }))
 
 def get_total_size(request):

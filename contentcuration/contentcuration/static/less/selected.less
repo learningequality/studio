@@ -100,11 +100,33 @@
 	.select_checkbox[disabled="disabled"]{cursor: not-allowed !important;}
 	.select_item.disabled{ cursor: pointer !important; }
 	.prerequisites_header{ margin-bottom: 10px; font-weight:bold;}
-	.prerequisite_label{ visibility: hidden; }
+	.prerequisite_label{ outline:none; }
+	.view_tree{
+		font-size: 14pt;
+   		margin-top: -10px;
+   		cursor: pointer;
+	}
 	.select_topic_img{
 		height: 15px;
 	    margin-top: -10px;
 	    margin-left: 20px;
 	    margin-right: 5px;
+	}
+}
+
+#prerequisite_modal{
+	.modal-body-content{ min-height: 200px; }
+	.node{
+		circle {
+		   fill: @blue-500;
+		   stroke: white;
+		   stroke-width: 3px;
+	 	}
+	 	text { font-size: 12pt; }
+	}
+	.link {
+		fill: none;
+		stroke: @gray-300;
+		stroke-width: 2px;
 	}
 }

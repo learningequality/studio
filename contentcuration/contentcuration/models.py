@@ -397,25 +397,26 @@ class ContentNode(MPTTModel, models.Model):
         cache.set(key, presets, None)
         return presets
 
-    def get_prerequisites(self, prerequisite_mapping=None):
-        prerequisite_mapping = prerequisite_mapping or {}
+    def get_prerequisites(self):
+        prerequisite_mapping = {}
         prerequisites = self.prerequisite.all()
-        r = list(prerequisites)
-        for c in prerequisites:
-            prereqs, prerequisite_mapping= c.get_prerequisites()
-            prerequisite_mapping.update({c.pk: [p.pk for p in prereqs]})
-            r.extend(prereqs)
-        return r, prerequisite_mapping
+        prereqlist = list(prerequisites)
+        for prereq in prerequisites:
+            prlist, prereqmapping = prereq.get_prerequisites()
+            prerequisite_mapping.update({prereq.pk: prereqmapping})
+            print prerequisite_mapping
+            prereqlist.extend(prlist)
+        return prereqlist, prerequisite_mapping
 
-    def get_postrequisites(self, postrequisite_mapping=None):
-        postrequisite_mapping = postrequisite_mapping or {}
+    def get_postrequisites(self):
+        postrequisite_mapping = {}
         postrequisites = self.is_prerequisite_of.all()
-        r = list(postrequisites)
-        for c in postrequisites:
-            postreqs, postrequisite_mapping = c.get_postrequisites()
-            postrequisite_mapping.update({c.pk: [p.pk for p in postreqs]})
-            r.extend(postreqs)
-        return r, postrequisite_mapping
+        postreqlist = list(postrequisites)
+        for postreq in postrequisites:
+            prlist, postreqmapping = postreq.get_postrequisites()
+            postrequisite_mapping.update({postreq.pk: postreqmapping})
+            postreqlist.extend(prlist)
+        return postreqlist, postrequisite_mapping
 
     def get_channel(self):
         root = self.get_root()

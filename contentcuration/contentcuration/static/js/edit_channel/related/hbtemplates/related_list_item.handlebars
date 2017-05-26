@@ -23,7 +23,9 @@
 		{{#if is_channel}}<i class="badge selected_counter" id="select_item_{{node.id}}_count">{{node.metadata.resource_count}}</i>{{/if}}
 		{{#if is_selected}}[SELECTED]{{/if}}
 		{{#unless checked}}{{#if is_dependent}}[IN POSTREQUISITES]{{/if}}{{/unless}}
-		<span class="prerequisite_label">[IN PREREQUISITES]</span>
+		{{#if is_prerequisite}}
+			<a class="prerequisite_label action-text">✔ IN PREREQUISITE TREE</a>
+		{{/if}}
 	</label>
 </div>
 {{#if isfolder}}<div id="select_item_{{node.id}}_sub" class="subdirectory"><em class="default-item">Loading...</em></div>{{/if}}

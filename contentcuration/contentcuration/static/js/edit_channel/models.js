@@ -312,12 +312,10 @@ var ContentNodeCollection = BaseCollection.extend({
                 data:  JSON.stringify({'nodes': self.pluck('id'), 'channel_id': window.current_channel.id}),
                 success: function(data) {
                     nodes = JSON.parse(data);
-                    console.log(nodes)
                     resolve({
                         "prerequisite_mapping": nodes.prerequisite_mapping,
                         "postrequisite_mapping": nodes.postrequisite_mapping,
-                        "prerequisites": new ContentNodeCollection(JSON.parse(nodes.prerequisites)),
-                        "postrequisites": new ContentNodeCollection(JSON.parse(nodes.postrequisites)),
+                        "prerequisite_tree_nodes": new ContentNodeCollection(JSON.parse(nodes.prerequisite_tree_nodes))
                     });
                 },
                 error:reject
