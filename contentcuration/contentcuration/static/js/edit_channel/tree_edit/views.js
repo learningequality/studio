@@ -42,7 +42,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			edit: this.is_edit_page,
 			channel : window.current_channel.toJSON(),
 			is_clipboard : this.is_clipboard,
-			staging: this.staging
+			staging: this.staging,
+			view_only: _.contains(window.current_channel.get('viewers'), window.current_user.id)
 		}));
 		if(this.is_clipboard){
 			$("#secondary-nav").css("display","none");
