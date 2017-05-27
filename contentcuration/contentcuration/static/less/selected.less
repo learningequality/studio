@@ -116,17 +116,20 @@
 
 #prerequisite_modal{
 	.modal-body-content{ min-height: 200px; }
-	.node{
-		circle {
-		   fill: @blue-500;
-		   stroke: white;
-		   stroke-width: 3px;
-	 	}
-	 	text { font-size: 12pt; }
+	#prerequisite_tree_wrapper{
+		overflow-x: auto;
+    	overflow-y: hidden;
 	}
-	.link {
-		fill: none;
-		stroke: @gray-300;
-		stroke-width: 2px;
+	.tree_node{
+		padding: 15px;
+		border: 4px solid @blue-500;
+		max-width: 250px;
+	    text-align: center;
+	    display: inline-block;
+	    margin: 10px;
+	    font-size: 12pt;
 	}
+	#root_container{ font-weight:bold; }
+	.tree_layer{ text-align: center; display:block; margin: 20px;}
+	.tree_layer_container{display:inline-flex; margin: 10px;}
 }

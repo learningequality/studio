@@ -7,6 +7,7 @@ var stringHelper = require("edit_channel/utils/string_helper");
 var treeBuilder = require("edit_channel/utils/tree_builder");
 
 function PrerequisiteTree() {
+    var self = this;
     this.prerequisites = {};
     this.postrequisites = {};
     this.prerequisite_list = [];
@@ -29,7 +30,6 @@ function PrerequisiteTree() {
         this.update_tree(prereqmapping, postreqmapping);
     };
     this.update_tree = function(prerequisite_mapping, postrequisite_mapping){
-        var self = this;
         _.each(_.keys(prerequisite_mapping), function(key){ self.prerequisites[key] = prerequisite_mapping[key]; });
         _.each(_.keys(postrequisite_mapping), function(key){ self.postrequisites[key] = postrequisite_mapping[key]; });
         this.prerequisite_list = this.get_all_keys(this.prerequisites);
@@ -38,12 +38,10 @@ function PrerequisiteTree() {
         this.flat_postrequisite_tree = this.get_flat_tree(this.postrequisites);
     };
     this.get_all_keys = function(jsonObject){
-        var self = this;
         return _.chain(jsonObject).map(function(item){ return self.get_all_keys(item); }).union(_.keys(jsonObject)).uniq().flatten().value();
     };
     this.get_flat_tree = function(jsonObject, tree_dict){
         tree_dict = tree_dict || {};
-        var self = this;
         _.each(_.keys(jsonObject), function(key){
             tree_dict[key] = _.keys(jsonObject[key]);
             self.get_flat_tree(jsonObject[key], tree_dict);
@@ -53,48 +51,37 @@ function PrerequisiteTree() {
     this.get_postrequisite_collection_for = function(id){
         var collection = new Models.ContentNodeCollection();
         if(this.flat_postrequisite_tree[id]){
-            var self = this;
             collection.reset(this.tree_collection.filter(function(item){ return _.contains(self.flat_postrequisite_tree[id], item.id); }));
         }
         return collection;
     };
-    this.get_simplified_tree = function(related_key){
-        var tree_dict = {
-            "title": "Node 1",
-            "children": [
-                {
-                    "title": "Node 2",
-                    "children":[
-                        {
-                            "title": "Node 8"
-                        },
-                        {
-                            "title": "Node 9"
-                        }
-                    ]
-                },
-                {
-                    "title": "Node 3",
-                }
-            ],
-            "parents":[
-                {
-                    "title": "Node 4",
-                    "parents": [
-                        {
-                            "title": "Node 6",
-                        },
-                        {
-                            "title": "Node 7",
-                        },
-                    ],
-                },
-                {
-                    "title": "Node 5",
-                }
-            ]
-        };
-        return tree_dict;
+    this.get_simplified_tree = function(node_list, relation){
+        node_list = node_list || this.selected;
+        var trees = [];
+        relation = relation || "root";
+        _.each(node_list, function(node){
+            var parents = [];
+            var children = [];
+            switch(relation){
+                case "root":
+                    parents = self.tree_collection.get(node).get('prerequisite');
+                    children = self.tree_collection.get(node).get('is_prerequisite_of');
+                    break;
+                case "parent":
+                    parents = self.flat_prerequisite_tree[node];
+                    break;
+                case "child":
+                    children = self.flat_postrequisite_tree[node];
+                    break;
+            }
+            trees.push({
+                "id": node,
+                "title": self.tree_collection.get(node).get('title'),
+                "parents": self.get_simplified_tree(parents, "parent"),
+                "children": self.get_simplified_tree(children, "child")
+            });
+        });
+        return trees;
     };
 }
 var PrereqTree = new PrerequisiteTree();
@@ -362,9 +349,10 @@ var PrerequisiteModalView = BaseViews.BaseModalView.extend({
         $("body").append(this.el);
         this.$("#prerequisite_modal").modal({show: true});
         this.$("#prerequisite_modal").on("hidden.bs.modal", this.closed_modal);
-
-        var tree = new treeBuilder.CollapsibleTree("#prerequisite_tree_wrapper");
-        tree.update(PrereqTree.get_simplified_tree());
+        this.$("#prerequisite_modal").on("shown.bs.modal", this.create_tree)
+    },
+    create_tree: function(){
+        _.defer(function(){new treeBuilder.flowchart("#prerequisite_tree_wrapper", PrereqTree.get_simplified_tree());})
     }
 });
 
