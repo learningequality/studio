@@ -98,7 +98,13 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	delete_content: function (event){
 		var self = this;
-        dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
+		var title = "WARNING";
+		var message = "Are you sure you want to delete these selected items?";
+		if(this.model.get('is_prerequisite_of').length){
+			title = "PREREQUISITES DETECTED!";
+			message = "One or more of these items has postrequisites. Deleting these items will remove them from all prerequisite trees. " + message;
+		}
+        dialog.dialog(title, message, {
             "CANCEL":function(){},
             "DELETE ITEMS": function(){
 				var deleteCollection = new Models.ContentNodeCollection();
@@ -405,7 +411,13 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	delete_node:function(event){
 		this.cancel_actions(event);
 		var self = this;
-        dialog.dialog("WARNING", "Are you sure you want to delete " + this.model.get("title") + "?", {
+		var title = "WARNING";
+		var message = "Are you sure you want to delete " + this.model.get("title") + "?";
+		if(this.model.get('is_prerequisite_of').length){
+			title = "PREREQUISITES DETECTED!";
+			message = "This item has " + this.model.get('is_prerequisite_of').length + " postrequisite(s). Deleting this content will remove it from all prerequisite trees. " + message;
+		}
+        dialog.dialog(title, message, {
             "CANCEL":function(){},
             "DELETE": function(){
 				self.add_to_trash();

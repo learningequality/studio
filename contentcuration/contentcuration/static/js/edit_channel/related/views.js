@@ -254,7 +254,6 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
             is_dependent: this.isdisabled && !PrereqTree.is_selected(this.model.id)
         }));
         var self = this;
-        // this.create_popover();
         _.defer(function(){
             var is_checked = self.checked;
             self.handle_checked(null, true);
@@ -262,27 +261,6 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
             self.set_disabled(is_checked || self.isdisabled);
         });
     },
-    // create_popover:function(){
-    //     var self = this;
-    //     this.$(".prerequisite_label").popover({
-    //         animation:false,
-    //         'placement': 'top',
-    //         'title': 'Prerequisite to...',
-    //         'trigger': 'focus',
-    //         'selector': '[rel="popover"]',
-    //         'html': true,
-    //         content:function(){ return $("#popover_" + self.model.id).html(); }
-    //     }).click(function(event){
-    //         var hadClass = $(this).hasClass("active-popover");
-    //         self.container.close_all_popups();
-    //         if(!hadClass){
-    //             $(this).popover('show');
-    //             $(this).addClass("active-popover");
-    //         }
-    //         event.preventDefault();
-    //         event.stopPropagation();
-    //     });
-    // },
     show_tree: function(event){
         event.stopPropagation();
         event.preventDefault();

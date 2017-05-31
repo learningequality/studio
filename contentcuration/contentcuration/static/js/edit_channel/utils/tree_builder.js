@@ -2,7 +2,7 @@ require('jsplumb');
 var template = require("edit_channel/utils/hbtemplates/tree.handlebars");
 var node_template = require("edit_channel/utils/hbtemplates/node.handlebars");
 var _ = require('underscore');
-        var tree = [{
+    var tree = [{
         'id': 'a',
         'title': 'Item A',
         'children': [
@@ -58,7 +58,6 @@ var _ = require('underscore');
     }]
 
 var flowchart = function(elt, trees) {
-    var jsplumb = jsPlumb.getInstance();
     this.get_layer = function(level, is_parent){
         var layer_selector = (is_parent)? "parent_layer_" + level : "child_layer_" + level;
         var html = "<div id='" + layer_selector + "' class='tree_layer'></div>";
@@ -66,15 +65,14 @@ var flowchart = function(elt, trees) {
             (is_parent)? $(elt).prepend(html) : $(elt).append(html);
         return $(elt).find("#" + layer_selector);
     };
-    this.connect = function(source, target){
+    this.connect = function(source, target, jsplumb){
         jsplumb.connect({
             source: "tree_item_" + source.id,
             target: "tree_item_" + target.id,
-            connector: "Flowchart",
-            anchor: ['Bottom', 'Top'],
-            paintStyle:{ stroke:"gray", strokeWidth:4},
+            connector:  [ "Flowchart", {stub:5}],
+            anchors: [["Bottom", "Top"], "Continuous"],
             endpoint: "Blank",
-            overlays: [["Arrow" , { width:10, length:10, location:1 }]],
+            overlays: [["Arrow" , { width:15, length:15, location:1 }]],
         });
     }
     this.build_parents = function(source, level){
@@ -83,12 +81,10 @@ var flowchart = function(elt, trees) {
             this.get_layer(level, true).append(template({selector: selector}));
             var self = this;
             _.each(source.parents, function(parent){
-                if(!$(elt).find("#tree_item_" + parent.id).length){
-                    $(elt).find("#" + selector).append(node_template(parent));
-                }
+                $(elt).find("#tree_item_" + parent.id).remove();
+                $(elt).find("#" + selector).append(node_template(parent));
                 self.build_parents(parent, level + 1);
             });
-            _.each(source.parents, function(parent){self.connect(parent, source);});
         }
     }
     this.build_children = function(source, level){
@@ -98,23 +94,31 @@ var flowchart = function(elt, trees) {
 
             var self = this;
             _.each(source.children, function(child){
-                if(!$(elt).find("#tree_item_" + child.id).length){
-                    $(elt).find("#" + selector).append(node_template(child));
-                }
+                $(elt).find("#tree_item_" + child.id).remove();
+                $(elt).find("#" + selector).append(node_template(child));
                 self.build_children(child, level + 1);
             });
-            _.each(source.children, function(child){ self.connect(source, child); });
         }
-
+    }
+    this.connect_parents = function(source, jsplumb){
+        _.each(source.parents, function(parent){self.connect(parent, source, jsplumb);});
+        _.each(source.parents, function(parent){self.connect_parents(parent, jsplumb);});
+    }
+    this.connect_children = function(source, jsplumb){
+        _.each(source.children, function(child){ self.connect(source, child, jsplumb); });
+        _.each(source.children, function(child){ self.connect_children(child, jsplumb); });
     }
 
     var level = 0;
     this.get_layer(level, true).html(template({selector: "root_container"}));
     var self = this;
     _.each(trees, function(tree) {
+        var jsplumb = jsPlumb.getInstance();
         $(elt).find("#root_container").append(node_template(tree))
         self.build_parents(tree, level + 1);
         self.build_children(tree, level + 1);
+        self.connect_parents(tree, jsplumb);
+        self.connect_children(tree, jsplumb);
     });
 }
 

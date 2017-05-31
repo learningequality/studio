@@ -432,6 +432,9 @@ class ContentNode(MPTTModel, models.Model):
 
         super(ContentNode, self).save(*args, **kwargs)
 
+        if self.is_prerequisite_of.exists() and self.get_root().channel_trash.exists():
+            PrerequisiteContentRelationship.objects.filter(prerequisite_id=self.id).delete()
+
         post_save_changes = False
         if self.original_node is None:
             self.original_node = self

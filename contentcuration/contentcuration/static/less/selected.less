@@ -102,9 +102,10 @@
 	.prerequisites_header{ margin-bottom: 10px; font-weight:bold;}
 	.prerequisite_label{ outline:none; }
 	.view_tree{
-		font-size: 14pt;
    		margin-top: -10px;
    		cursor: pointer;
+   		font-size: 12pt;
+   		&:not(:hover){ font-weight: normal; }
 	}
 	.select_topic_img{
 		height: 15px;
@@ -122,14 +123,35 @@
 	}
 	.tree_node{
 		padding: 15px;
-		border: 4px solid @blue-500;
+		background: rgba(220,220,220, 0.8);
+		border: 4px solid @blue-200;
 		max-width: 250px;
 	    text-align: center;
 	    display: inline-block;
 	    margin: 10px;
-	    font-size: 12pt;
+	    font-size: 11pt;
+	    z-index: 99999999;
 	}
-	#root_container{ font-weight:bold; }
+	#root_container .tree_node{
+		font-weight:bold;
+		font-size: 13pt;
+		border-color: @blue-500;
+	}
+	.jtk-connector{
+		path {
+			stroke: @gray-400;
+			fill: @gray-400;
+			&:first-child{ stroke-width: 5; }
+		}
+		&:hover{
+			z-index: 99999999;
+			path {
+				fill: @blue-500;
+				stroke: @blue-500;
+				z-index: 999999999;
+			}
+		}
+	}
 	.tree_layer{ text-align: center; display:block; margin: 20px;}
 	.tree_layer_container{display:inline-flex; margin: 10px;}
 }
