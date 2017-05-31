@@ -448,7 +448,8 @@ var ChannelModel = BaseModel.extend({
         count: 0,
         size: 0,
         published: false,
-        view_only: false
+        view_only: false,
+        viewers: []
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
