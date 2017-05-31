@@ -8,6 +8,7 @@ import json
 from django.conf import settings
 from django.contrib import admin
 from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connections, models, connection
 from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
@@ -222,6 +223,7 @@ class Channel(models.Model):
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
     main_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
     staging_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_staging')
+    chef_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_chef')
     previous_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_previous')
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -419,8 +421,11 @@ class ContentNode(MPTTModel, models.Model):
         return postreqlist, postrequisite_mapping
 
     def get_channel(self):
-        root = self.get_root()
-        return root.channel_main.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
+        try:
+            root = self.get_root()
+            return root.channel_main.first() or root.channel_chef.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
+        except ObjectDoesNotExist:
+            return None
 
     def save(self, *args, **kwargs):
         # Detect if node has been moved to another tree

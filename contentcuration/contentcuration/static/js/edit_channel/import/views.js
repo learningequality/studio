@@ -132,7 +132,7 @@ var ImportList = BaseViews.BaseListView.extend({
         this.is_channel = options.is_channel;
         this.collection = options.collection;
         this.container = options.container;
-        this.metadata = {"count": 0, "size": 0};
+        this.count = 0;
         this.parent_node_view = options.parent_node_view;
         this.render();
         this.container.lists.push(this);
@@ -172,12 +172,8 @@ var ImportList = BaseViews.BaseListView.extend({
         }
     },
     get_metadata:function(){
-        var self = this;
-        this.metadata = {"count" : 0, "size":0};
-        this.views.forEach(function(entry){
-            self.metadata.count += entry.metadata.count;
-        });
-        return this.metadata;
+        this.count = _.reduce(this.views, function(sum, item){ return sum + item.count}, 0);
+        return this.count;
     }
 });
 
@@ -185,7 +181,7 @@ var ImportList = BaseViews.BaseListView.extend({
 var ImportItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/import_list_item.handlebars"),
     tagName: "li",
-    className: "import_list_item",
+    className: "import_list_item modal-list-item-default",
     selectedClass: "import-selected",
     collapsedClass: "glyphicon-triangle-top",
     expandedClass: "glyphicon-triangle-bottom",
@@ -206,7 +202,7 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.container = options.container;
         this.checked = options.checked;
 
-        this.metadata = {"count": 0, "size": 0};
+        this.count = 0;
         this.render();
     },
     events: {
@@ -227,10 +223,10 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.checked =  this.$("#" + this.id() + "_check").is(":checked");
         if(this.checked){
             this.item_to_import = true;
-            this.metadata = {"count" : this.model.get("metadata").resource_count, "size": this.model.get("metadata").resource_size};
+            this.count = this.model.get("metadata").resource_count;
         }else{
             this.item_to_import = false;
-            this.metadata = {"count" : 0, "size": 0};
+            this.count = 0;
         }
         if(this.subcontent_view){
             this.subcontent_view.check_all(this.checked);
@@ -239,9 +235,7 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
     },
     check_item:function(checked){
         this.item_to_import = false;
-        this.metadata = (checked)?
-                        {"count": this.model.get("metadata").resource_count, "size": this.model.get("metadata").resource_size}
-                        : {"count": 0, "size": 0}
+        this.count = (checked)? this.model.get("metadata").resource_count : 0;
         this.$("#" + this.id() + "_check").prop("checked", checked);
         this.$("#" + this.id() + "_count").text(this.model.get("metadata").resource_count);
         this.$("#" + this.id() + "_count").css("visibility", (checked)?"visible" : "hidden" );
@@ -272,10 +266,10 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
     },
     update_count:function(){
         if(this.subcontent_view){
-            this.metadata = this.subcontent_view.get_metadata();
+            this.count = this.subcontent_view.get_metadata();
         }
-        this.$("#" + this.id() + "_count").css("visibility", (this.metadata.count === 0)? "hidden" : "visible");
-        this.$("#" + this.id() + "_count").text(this.metadata.count);
+        this.$("#" + this.id() + "_count").css("visibility", (this.count === 0)? "hidden" : "visible");
+        this.$("#" + this.id() + "_count").text(this.count);
         this.containing_list_view.update_count();
     }
 });

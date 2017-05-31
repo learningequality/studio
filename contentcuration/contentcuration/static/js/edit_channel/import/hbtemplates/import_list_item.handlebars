@@ -4,7 +4,7 @@
 
 <label for="import_item_{{node.id}}_check" class="{{#if is_channel}}select_header_item{{else}}select_item{{/if}} {{#unless is_channel}}{{#if node.children}}tog_folder{{/if}}{{/unless}}" title="{{node.title}}">
 	{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
-	<div class="select_item_title truncate">{{node.title}}</div>
+	<div class="select_item_title truncate modal-item-title-default">{{node.title}}</div>
 	{{#if isfolder}}
 		{{#if node.children}}
 			{{#if isfolder}}
@@ -14,7 +14,7 @@
 			{{/if}}
 			<div id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-triangle-top"></div>
 		{{else}}
-			<em class="select_metadata">(empty)</em>
+			<em class="select_metadata modal-item-metadata-default">(empty)</em>
 		{{/if}}
 	{{/if}}
 	{{#if isfolder}}<i class="badge selected_counter" id="import_item_{{node.id}}_count">{{node.metadata.resource_count}}</i>{{/if}}
