@@ -37,9 +37,12 @@ We've set up a `vagrant` virtual machine to simplify the development process!
 
 * Run the server
 
-	`make devserver`
+	`make vagrantdevserver`
 
-	see the other `make` commands in `Makefile`.
+	Note: See the other `make` commands in `Makefile`.
+
+* Access your server on `192.168.31.9:8000`
+
 
 * Turn off the machine when you're done:
 

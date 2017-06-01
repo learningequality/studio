@@ -22,4 +22,4 @@ python manage.py migrate $devSettings
 python manage.py loadconstants $devSettings
 npm install
 
-# python manage.py calculateresources --init $devSettings
+python manage.py calculateresources --init $devSettings
