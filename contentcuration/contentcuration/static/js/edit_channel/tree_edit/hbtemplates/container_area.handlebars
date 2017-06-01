@@ -15,7 +15,7 @@
 				</div>
 			{{else}}
 				<div class="nav-button-container">
-					<div class="nav-button edit_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-list-alt"></span></div>
+					<div class="nav-button edit_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-new-window"></span></div>
 					<a class="nav-label edit_button disable-on-edit disable-none-selected">View</a>
 				</div>
 			{{/if}}
@@ -59,9 +59,9 @@
 			{{/unless}}
 		{{/unless}}
 		{{#if staging}}
-			<div class="nav-button-container">
-				<div class="nav-button stats_button disable-on-edit"><span class="glyphicon glyphicon-stats"></span></div>
-				<a class="nav-label stats_button disable-on-edit">Stats</a>
+			<div class="nav-button-container" title="Summary of last Ricecooker run">
+				<div class="nav-button stats_button disable-on-edit"><span class="glyphicon glyphicon-list-alt"></span></div>
+				<a class="nav-label stats_button disable-on-edit">Summary</a>
 			</div>
 		{{/if}}
 		<div class="hide-details-container">
