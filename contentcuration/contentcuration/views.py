@@ -20,7 +20,7 @@ from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.context_processors import csrf
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum
+from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum, Count
 from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
@@ -224,3 +224,53 @@ def activate_channel_endpoint(request):
         activate_channel(channel)
 
         return HttpResponse(json.dumps({"success": True}))
+
+def get_staged_diff(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        channel = Channel.objects.get(pk=data['channel_id'])
+        main_descendants = channel.main_tree.get_descendants()
+        updated_descendants = channel.staging_tree.get_descendants()
+
+        original_stats = main_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by()
+        updated_stats = updated_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by()
+
+        original_file_sizes = main_descendants.aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'), assessment_count=Count('assessment_items'))
+        updated_file_sizes = updated_descendants.aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'), assessment_count=Count('assessment_items'))
+        original_file_size = (original_file_sizes['resource_size'] or 0) + (original_file_sizes['assessment_size'] or 0)
+        updated_file_size = (updated_file_sizes['resource_size'] or 0) + (updated_file_sizes['assessment_size'] or 0)
+        original_question_count =  original_file_sizes['assessment_count'] or 0
+        updated_question_count =  updated_file_sizes['assessment_count'] or 0
+
+        stats = [
+            {
+                "field": "Time Created",
+                "original": channel.main_tree.created.strftime("%X"),
+                "updated": channel.staging_tree.created.strftime("%X"),
+            },
+            {
+                "field": "Date Created",
+                "original": channel.main_tree.created.strftime("%x"),
+                "updated": channel.staging_tree.created.strftime("%x"),
+            },
+            {
+                "field": "File Size",
+                "original": original_file_size,
+                "updated": updated_file_size,
+                "difference": updated_file_size - original_file_size,
+                "format_size": True,
+            },
+            {
+                "field": "# of Questions",
+                "original": original_question_count,
+                "updated": updated_question_count,
+                "difference": updated_question_count - original_question_count,
+            },
+        ]
+
+        for kind, name in content_kinds.choices:
+            original = original_stats.get(kind_id=kind)['count'] if original_stats.filter(kind_id=kind).exists() else 0
+            updated = updated_stats.get(kind_id=kind)['count'] if updated_stats.filter(kind_id=kind).exists() else 0
+            stats.append({ "field": "# of {}s".format(name), "original": original, "updated": updated, "difference": updated - original })
+
+        return HttpResponse(json.dumps(stats))

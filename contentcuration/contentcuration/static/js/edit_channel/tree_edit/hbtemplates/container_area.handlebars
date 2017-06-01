@@ -58,6 +58,12 @@
 				{{#if channel.staging_tree}}</a>{{/if}}
 			{{/unless}}
 		{{/unless}}
+		{{#if staging}}
+			<div class="nav-button-container">
+				<div class="nav-button stats_button disable-on-edit"><span class="glyphicon glyphicon-stats"></span></div>
+				<a class="nav-label stats_button disable-on-edit">Stats</a>
+			</div>
+		{{/if}}
 		<div class="hide-details-container">
 			<input type="checkbox" id="hide_details_checkbox"/>
 			<label for="hide_details_checkbox">Hide details</label>
@@ -67,7 +73,7 @@
 		{{#if channel.ricecooker_version}}
 			<div id="ricecooker_header">
 				{{#if staging}}
-					This channel was updated at <b>{{channel.updated}}</b>. Live channel was created at <b>{{channel.created}}</b>. <b><a class="approve_channel">Approve updated channel?</a></b>
+					These updates have not been deployed to the live channel. <b><a class="approve_channel">Deploy updated channel?</a></b>
 				{{else}}
 					This channel was created using <b><a href="https://github.com/learningequality/ricecooker" target="_blank">Ricecooker</a></b> v{{channel.ricecooker_version}} (@ {{channel.created}}). {{#if channel.staging_tree}}<b><a href="/channels/{{channel.id}}/staging">Updated content is available to review.</a></b>{{else}}Update content by running the Ricecooker again.{{/if}}
 				{{/if}}

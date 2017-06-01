@@ -586,3 +586,32 @@
 .staging_channel_wrapper{
 	.copy_item_button{ display: none !important; }
 }
+
+#stats_modal{
+	.modal-content-default{
+		display:block;
+		#stats_table{
+			.table-header{
+				font-weight:bold;
+				background-color: @blue-100;
+				padding: 7px;
+    			margin-top: 20px;
+    			font-size: 11pt;
+    			cursor: default;
+			}
+			.table-row{
+				border-bottom: 1px solid @gray-300;
+				&:last-child{ border: none; }
+				&:hover{ background-color: @gray-200; font-weight:bold;}
+				.table-cell{
+					padding: 7px;
+					cursor: default;
+					.positive{ color: green; font-weight: bold; }
+					.negative{ color: red; font-weight: bold; }
+				}
+			}
+
+		}
+
+	}
+}

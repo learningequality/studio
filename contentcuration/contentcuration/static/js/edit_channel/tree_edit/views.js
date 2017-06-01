@@ -34,7 +34,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		'click .permissions_button' : 'edit_permissions',
 		'click .archive_button' : 'open_archive',
 		'click .move_button' : 'move_items',
-		'click .approve_channel' : 'activate_channel'
+		'click .approve_channel' : 'activate_channel',
+		'click .stats_button': 'open_stats'
 	},
 	edit_content:function(){ this.edit_selected(this.is_edit_page)},
 	render: function() {
@@ -168,6 +169,9 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			move_collection.add(model);
 		}
 		this.move_content(move_collection);
+	},
+	open_stats: function(){
+		new DiffModalView();
 	}
 });
 
@@ -435,6 +439,28 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.cancel_actions(event);
 		this.add_topic();
 	}
+});
+
+
+var DiffModalView = BaseViews.BaseModalView.extend({
+  modal_template: require("./hbtemplates/stats_modal.handlebars"),
+  template: require("./hbtemplates/stats_table.handlebars"),
+  initialize: function(options) {
+      this.modal = true;
+      this.render();
+  },
+
+  render: function() {
+      this.$el.html(this.modal_template());
+      $("body").append(this.el);
+      this.$("#stats_modal").modal({show: true});
+      this.$("#stats_modal").on("hidden.bs.modal", this.closed_modal);
+
+      var self = this;
+      window.current_channel.get_staged_diff().then(function(stats){
+      	self.$("#stats_table_wrapper").html(self.template({stats: stats, channel: window.current_channel.toJSON()}));
+      });
+  }
 });
 
 module.exports = {

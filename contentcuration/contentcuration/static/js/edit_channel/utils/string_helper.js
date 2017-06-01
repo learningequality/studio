@@ -3,14 +3,16 @@ function format_size(text){
     return "0B";
   }
   var value = Number(text);
+  var isnegative = value < 0;
+  value = Math.abs(value)
   if(value > 999999999)
-    return parseInt(value/1000000000) + "GB";
+    return (isnegative ? "-" : "") + parseInt(value/1000000000) + "GB";
   else if(value > 999999)
-    return parseInt(value/1000000) + "MB";
+    return (isnegative ? "-" : "") + parseInt(value/1000000) + "MB";
   else if(value > 999)
-    return parseInt(value/1000) + "KB";
+    return (isnegative ? "-" : "") + parseInt(value/1000) + "KB";
   else
-    return parseInt(value) + "B";
+    return (isnegative ? "-" : "") + parseInt(value) + "B";
 }
 
 function escape_str(text){

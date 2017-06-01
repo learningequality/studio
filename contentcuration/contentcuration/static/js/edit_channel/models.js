@@ -482,6 +482,20 @@ var ChannelModel = BaseModel.extend({
             });
         });
         return promise;
+    },
+    get_staged_diff: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({'channel_id': self.id}),
+                url: window.Urls.get_staged_diff(),
+                success: function(data){
+                    resolve(JSON.parse(data))
+                },
+                error:function(error){reject(error.responseText);}
+            });
+        });
     }
 });
 
