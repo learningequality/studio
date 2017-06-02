@@ -167,13 +167,11 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       el: this.$("#metadata_prerequisites")
     });
   },
-  set_prerequisites:function(prerequisite_collection, selected_items){
+  set_prerequisites:function(prerequisite_list, selected_items){
       var self = this;
-      console.log(selected_items)
       selected_items.forEach(function(view){
         // TODO: Handle prerequisites that were previously set on the node if multiple selected
-        view.set_node({'prerequisite': prerequisite_collection.pluck('id')});
-        console.log(view.model.get('prerequisite'));
+        view.set_node({'prerequisite': prerequisite_list});
         view.set_edited(true);
       });
   },
@@ -185,7 +183,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
                     });
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
-    this.$("#metadata_prerequisites_btn").css("display", (is_individual) ? "inline-block" : "none");
+    this.$("#metadata_prerequisites_btn").css("display", (is_individual && (has_files || is_exercise)) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
     if(!is_individual){
       this.render_details();

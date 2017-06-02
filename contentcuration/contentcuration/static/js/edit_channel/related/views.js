@@ -21,15 +21,22 @@ function PrerequisiteTree() {
     this.is_postrequisite = function(id){ return _.contains(this.postrequisite_list, id); };
     this.prerequisite_count = function(){ return this.prerequisite_list.length; };
     this.is_immediate_prerequisite = function(id){ return _.contains(_.keys(this.prerequisites), id); };
-    this.set = function(prereqmapping, postreqmapping, selected, tree_collection){
+    this.set = function(selected){
         this.selected = selected.pluck('id');
-        this.tree_collection = tree_collection;
-        this.ancestors = _.uniq(_.flatten(this.tree_collection.pluck('ancestors')));
-        this.prerequisites = {}
-        this.postrequisites = {}
-        this.update_tree(prereqmapping, postreqmapping);
+        this.prerequisite_fetch_list = [];
+        this.prerequisites = {};
+        this.postrequisites = {};
+        return new Promise(function(resolve, reject){
+            self.tree_collection.get_prerequisites(self.selected, true).then(function(nodes){
+                self.tree_collection = nodes.prerequisite_tree_nodes;
+                self.ancestors = _.uniq(_.flatten(self.tree_collection.pluck('ancestors')));
+                self.update_tree(nodes.prerequisite_mapping, nodes.postrequisite_mapping);
+                resolve(true);
+            });
+        });
     };
     this.update_tree = function(prerequisite_mapping, postrequisite_mapping){
+        var self = this;
         _.each(_.keys(prerequisite_mapping), function(key){ self.prerequisites[key] = prerequisite_mapping[key]; });
         _.each(_.keys(postrequisite_mapping), function(key){ self.postrequisites[key] = postrequisite_mapping[key]; });
         this.prerequisite_list = this.get_all_keys(this.prerequisites);
@@ -39,6 +46,9 @@ function PrerequisiteTree() {
     };
     this.get_all_keys = function(jsonObject){
         return _.chain(jsonObject).map(function(item){ return self.get_all_keys(item); }).union(_.keys(jsonObject)).uniq().flatten().value();
+    };
+    this.get_immediate_prerequisites = function(){
+        return _.keys(this.prerequisites);
     };
     this.get_flat_tree = function(jsonObject, tree_dict){
         tree_dict = tree_dict || {};
@@ -82,6 +92,25 @@ function PrerequisiteTree() {
             });
         });
         return trees;
+    };
+    this.add_prerequisite = function(model){
+        this.prerequisite_fetch_list = _.uniq(this.prerequisite_fetch_list.concat(model.id));
+    };
+    this.remove_prerequisite = function(model){
+        this.prerequisite_fetch_list = _.reject(this.prerequisite_fetch_list, function(id) {return id === model.id;});
+        delete this.prerequisites[model.id];
+    };
+    this.fetch_prerequisites = function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            self.tree_collection.get_prerequisites(self.prerequisite_fetch_list, false).then(function(nodes){
+                self.tree_collection.add(nodes.prerequisite_tree_nodes.toJSON());
+                self.ancestors = _.uniq(_.flatten(self.tree_collection.pluck('ancestors')));
+                self.update_tree(nodes.prerequisite_mapping, {});
+                resolve(true);
+            });
+        });
+
     };
 }
 var PrereqTree = new PrerequisiteTree();
@@ -132,11 +161,10 @@ var RelatedView = BaseViews.BaseListView.extend({
     render: function() {
         this.$el.html(this.template());
         var self = this;
-        this.selected_collection.get_prerequisites().then(function(nodes){
+        PrereqTree.set(this.selected_collection).then(function(){
             self.collection.get_all_fetch_simplified(window.current_channel.get('main_tree').children).then(function(collection){
                 self.collection = collection;
                 if(self.collection.length > 0){
-                    PrereqTree.set(nodes.prerequisite_mapping, nodes.postrequisite_mapping, self.selected_collection, nodes.prerequisite_tree_nodes);
                     self.relatedList = new RelatedList({
                         model: null,
                         el: self.$(".select_main_box"),
@@ -151,15 +179,12 @@ var RelatedView = BaseViews.BaseListView.extend({
         });
     },
     update_count:function(skip_update){
-        var prerequisite_collection = this.get_selected_collection();
-        var count = this.relatedList.get_metadata();
-        this.$("#select_file_count").html(count + " Prerequisite" + ((count == 1)? "" : "s"));
-        if(!skip_update){
-            this.onselect(prerequisite_collection, this.views_to_update);
+        if(skip_update){
+            var prereqlist = PrereqTree.get_immediate_prerequisites();
+            this.$("#select_file_count").html(prereqlist.length + " Prerequisite" + ((prereqlist.length == 1)? "" : "s"));
+        } else{
+            this.set_tree_nodes();
         }
-    },
-    get_selected_collection:function(){
-        return new Models.ContentNodeCollection(_.chain(this.lists).pluck('views').flatten().where({'item_to_select': true}).pluck('model').value());
     },
     close_all_popups: function(){
         $('.prerequisite_label').each(function() {
@@ -169,6 +194,18 @@ var RelatedView = BaseViews.BaseListView.extend({
     },
     show_tree: function(){
         var tree_modal = new PrerequisiteModalView({ collection: this.selected_collection });
+    },
+    set_tree_nodes: function(){
+        this.$("#related_content_wrapper").addClass('disabled');
+        this.$("#select_file_count").html("Loading prerequisites...");
+        var self = this;
+        PrereqTree.fetch_prerequisites().then(function(){
+            self.$("#select_file_count").html(PrereqTree.prerequisite_count() + " Prerequisite" + ((PrereqTree.prerequisite_count() == 1)? "" : "s"));
+            self.relatedList.set_tree_nodes();
+            self.onselect(PrereqTree.get_immediate_prerequisites(), self.views_to_update);
+            self.$("#related_content_wrapper").removeClass('disabled');
+        })
+
     }
 });
 
@@ -210,9 +247,8 @@ var RelatedList = BaseViews.BaseListView.extend({
     update_count:function(skip_update){
         (this.parent_node_view)? this.parent_node_view.update_count(skip_update) : this.container.update_count(skip_update);
     },
-    get_metadata:function(){
-        this.count = this.views.reduce(function(sum, entry) { return sum + entry.count; }, 0);
-        return this.count;
+    set_tree_nodes: function(){
+        this.views.forEach(function(view) { view.set_tree_node()});
     }
 });
 
@@ -229,6 +265,7 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
     getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },
     'id': function() { return "select_item_" + this.model.get("id"); },
     initialize: function(options) {
+        _.bindAll(this, 'set_tree_node');
         this.bind_node_functions();
         this.containing_list_view = options.containing_list_view;
         this.collection = new Models.ContentNodeCollection();
@@ -258,7 +295,7 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
             var is_checked = self.checked;
             self.handle_checked(null, true);
             self.$el.find(".select_checkbox").prop("checked", self.checked);
-            self.set_disabled(is_checked || self.isdisabled);
+            self.set_disabled(self.isdisabled);
         });
     },
     show_tree: function(event){
@@ -266,15 +303,21 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
         event.preventDefault();
         this.container.show_tree();
     },
+    set_tree_node: function(){
+        this.isdisabled = this.isdisabled || PrereqTree.is_postrequisite(this.model.id);
+        this.render();
+        if(this.subcontent_view){
+            this.subcontent_view.set_tree_nodes();
+        }
+    },
     handle_checked:function(event, skip_update){
         this.checked =  this.$("#" + this.id() + "_check").is(":checked");
-        this.item_to_select = this.checked;
         this.count = (this.checked)? this.model.get("metadata").resource_count : 0;
         if(this.subcontent_view){ this.subcontent_view.check_all(this.checked); }
+        (this.checked)? PrereqTree.add_prerequisite(this.model) : PrereqTree.remove_prerequisite(this.model);
         this.update_count(skip_update);
     },
     check_item:function(checked){
-        this.item_to_select = false;
         this.count = (checked)? this.model.get("metadata").resource_count : 0;
         this.$("#" + this.id() + "_check").prop("checked", checked);
         this.$("#" + this.id() + "_count").text(this.model.get("metadata").resource_count);
@@ -305,9 +348,6 @@ var RelatedItem = BaseViews.BaseListNodeItemView.extend({
         }
     },
     update_count:function(skip_update){
-        this.count = (this.subcontent_view)? this.subcontent_view.get_metadata() : this.count;
-        this.$("#" + this.id() + "_count").css("visibility", (this.count === 0)? "hidden" : "visible");
-        this.$("#" + this.id() + "_count").text(this.count);
         this.containing_list_view.update_count(skip_update);
     }
 });

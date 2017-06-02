@@ -19,8 +19,6 @@
 				<em class="select_metadata">(empty)</em>
 			{{/if}}
 		{{/if}}
-		{{#if isfolder}}<i class="badge selected_counter" id="select_item_{{node.id}}_count">{{node.metadata.resource_count}}</i>{{/if}}
-		{{#if is_channel}}<i class="badge selected_counter" id="select_item_{{node.id}}_count">{{node.metadata.resource_count}}</i>{{/if}}
 		{{#if is_selected}}[SELECTED]{{/if}}
 		{{#unless checked}}{{#if is_dependent}}[IN POSTREQUISITES]{{/if}}{{/unless}}
 		{{#if is_prerequisite}}

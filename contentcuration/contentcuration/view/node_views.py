@@ -27,23 +27,25 @@ def create_new_node(request):
 def get_prerequisites(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        channel = Channel.objects.get(pk=data['channel_id'])
-        nodes = ContentNode.objects.prefetch_related('prerequisite').filter(id__in=data['nodes'])
+        nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=data['nodes'])
 
         prerequisite_mapping = {}
         postrequisite_mapping = {}
         prerequisite_tree_nodes = []
 
         print "\n\n\n"
-        print nodes.values('id')
         for n in nodes:
             prereqs, prereqmapping = n.get_prerequisites()
-            postreqs, postreqmapping = n.get_postrequisites()
-
-            prerequisite_mapping.update(prereqmapping)
-            postrequisite_mapping.update(postreqmapping)
-            prerequisite_tree_nodes += prereqs + postreqs + [n]
+            if data.get('get_postrequisites'):
+                postreqs, postreqmapping = n.get_postrequisites()
+                postrequisite_mapping.update(postreqmapping)
+                prerequisite_mapping.update(prereqmapping)
+                prerequisite_tree_nodes += prereqs + postreqs + [n]
+            else:
+                prerequisite_mapping.update({n.pk: prereqmapping})
+                prerequisite_tree_nodes += prereqs + [n]
         print "\n\n\n"
+
         return HttpResponse(json.dumps({
             "prerequisite_mapping": prerequisite_mapping,
             "postrequisite_mapping": postrequisite_mapping,

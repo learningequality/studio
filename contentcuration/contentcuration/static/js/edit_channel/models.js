@@ -303,13 +303,13 @@ var ContentNodeCollection = BaseCollection.extend({
             });
         });
     },
-    get_prerequisites: function(){
+    get_prerequisites: function(ids, get_postrequisites){
         var self = this;
         return new Promise(function(resolve, reject){
             $.ajax({
                 method:"POST",
                 url: window.Urls.get_prerequisites(),
-                data:  JSON.stringify({'nodes': self.pluck('id'), 'channel_id': window.current_channel.id}),
+                data:  JSON.stringify({"nodes": ids, "get_postrequisites": get_postrequisites}),
                 success: function(data) {
                     nodes = JSON.parse(data);
                     resolve({

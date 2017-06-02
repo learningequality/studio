@@ -70,7 +70,7 @@ var flowchart = function(elt, trees) {
             source: "tree_item_" + source.id,
             target: "tree_item_" + target.id,
             connector:  [ "Flowchart", {stub:5}],
-            anchors: [["Bottom", "Top"], "Continuous"],
+            anchors: [["Continuous", "Bottom"], ["Continuous", "Top"]],
             endpoint: "Blank",
             overlays: [["Arrow" , { width:15, length:15, location:1 }]],
         });
@@ -83,8 +83,10 @@ var flowchart = function(elt, trees) {
             _.each(source.parents, function(parent){
                 $(elt).find("#tree_item_" + parent.id).remove();
                 $(elt).find("#" + selector).append(node_template(parent));
-                self.build_parents(parent, level + 1);
             });
+
+            // Need to iterate again to ensure nested parents are the main references for prerequisites
+            _.each(source.parents, function(parent){ self.build_parents(parent, level + 1); });
         }
     }
     this.build_children = function(source, level){
@@ -96,8 +98,10 @@ var flowchart = function(elt, trees) {
             _.each(source.children, function(child){
                 $(elt).find("#tree_item_" + child.id).remove();
                 $(elt).find("#" + selector).append(node_template(child));
-                self.build_children(child, level + 1);
             });
+
+            // Need to iterate again to ensure nested children are the main references for postrequisites
+            _.each(source.children, function(child){ self.build_children(child, level + 1); });
         }
     }
     this.connect_parents = function(source, jsplumb){
