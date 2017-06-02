@@ -257,8 +257,6 @@ class Channel(models.Model):
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
             original_node = Channel.objects.get(pk=self.pk)
 
-        newrelic.agent.record_custom_metric('Custom/ChannelStats/NumCreatedChannels', 1)
-
         record_channel_stats(original_node is None)
 
         super(Channel, self).save(*args, **kwargs)
@@ -305,6 +303,8 @@ def record_channel_stats(is_create):
     """
     :param is_create: Whether action is channel creation.
     """
+    newrelic.agent.record_custom_metric('Custom/ChannelStats/NumCreatedChannels', 1)
+    
     if is_create:
         newrelic.agent.record_custom_event("ChannelStats", {"action": "Create"})
     # else:
