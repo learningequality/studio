@@ -149,7 +149,7 @@ def api_commit_channel(request):
         if old_staging and old_staging != obj.main_tree:
             old_staging.delete()
 
-        if not data.get('no_activate'): # If user says to stage rather than submit, skip changing trees at this step
+        if not data.get('stage'): # If user says to stage rather than submit, skip changing trees at this step
             activate_channel(obj)
 
         return HttpResponse(json.dumps({
