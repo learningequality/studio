@@ -43,7 +43,6 @@ ChannelEditRouter  = Backbone.Router.extend({
 		this.open_channel(true, false, false, window.current_channel.get_root("main_tree"));
 	},
 	staging_page: function(){
-		window.staging = true;
 		this.open_channel(true, false, true, window.current_channel.get_root("staging_tree"));
 	},
 	preview_page : function(){
@@ -53,6 +52,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		this.open_channel(true, true, false, window.current_user.get_clipboard());
 	},
 	open_channel: function(edit_mode_on, is_clipboard, is_staging, root){
+		window.staging = is_staging;
 		window.fileformats = this.fileformats ;
 		window.channels = this.channelCollection;
 		window.formatpresets = this.formatpresets;

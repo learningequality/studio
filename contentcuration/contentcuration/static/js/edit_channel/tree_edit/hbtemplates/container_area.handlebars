@@ -48,16 +48,18 @@
 			<a class="nav-label permissions_button disable-on-edit">Invite</a>
 		</div>
 		{{/unless}}
-		{{#unless view_only}}
-			{{#unless staging}}
-				{{#if channel.staging_tree}}<a href="/channels/{{channel.id}}/staging">{{/if}}
-				<div class="nav-button-container" {{#unless channel.staging_tree}}title="No updates to review from Ricecooker" disabled{{/unless}}>
-					<div class="nav-button review_button disable-on-edit {{#unless channel.staging_tree}}disabled{{/unless}}"><span class="glyphicon glyphicon-ok-circle"></span></div>
-					<a class="nav-label review_button disable-on-edit {{#unless channel.staging_tree}}disabled{{/unless}}">Review</a>
-				</div>
-				{{#if channel.staging_tree}}</a>{{/if}}
+		{{#if channel.ricecooker_version}}
+			{{#unless view_only}}
+				{{#unless staging}}
+					{{#if channel.staging_tree}}<a href="/channels/{{channel.id}}/staging">{{/if}}
+					<div class="nav-button-container" {{#unless channel.staging_tree}}title="No updates to review from Ricecooker" disabled{{/unless}}>
+						<div class="nav-button review_button disable-on-edit {{#unless channel.staging_tree}}disabled{{/unless}}"><span class="glyphicon glyphicon-ok-circle"></span></div>
+						<a class="nav-label review_button disable-on-edit {{#unless channel.staging_tree}}disabled{{/unless}}">Review</a>
+					</div>
+					{{#if channel.staging_tree}}</a>{{/if}}
+				{{/unless}}
 			{{/unless}}
-		{{/unless}}
+		{{/if}}
 		{{#if staging}}
 			<div class="nav-button-container" title="Summary of last Ricecooker run">
 				<div class="nav-button stats_button disable-on-edit"><span class="glyphicon glyphicon-list-alt"></span></div>
@@ -73,7 +75,7 @@
 		{{#if channel.ricecooker_version}}
 			<div id="ricecooker_header">
 				{{#if staging}}
-					These updates have not been deployed to the live channel. <b><a class="approve_channel">Deploy updated channel?</a></b>
+					These staged changes have not been deployed to the live channel. <b><a class="approve_channel">Deploy staged channel?</a></b>
 				{{else}}
 					This channel was created using <b><a href="https://github.com/learningequality/ricecooker" target="_blank">Ricecooker</a></b> v{{channel.ricecooker_version}} (@ {{channel.created}}). {{#if channel.staging_tree}}<b><a href="/channels/{{channel.id}}/staging">Updated content is available to review.</a></b>{{else}}Update content by running the Ricecooker again.{{/if}}
 				{{/if}}

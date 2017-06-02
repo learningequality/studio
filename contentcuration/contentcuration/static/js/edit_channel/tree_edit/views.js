@@ -464,5 +464,6 @@ var DiffModalView = BaseViews.BaseModalView.extend({
 });
 
 module.exports = {
-	TreeEditView: TreeEditView
+	TreeEditView: TreeEditView,
+	DiffModalView: DiffModalView
 }
