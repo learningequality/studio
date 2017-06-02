@@ -257,8 +257,9 @@ class Channel(models.Model):
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
             original_node = Channel.objects.get(pk=self.pk)
 
-        if original_node is None:
-            newrelic.agent.record_custom_metric('Custom/ChannelStats/NumCreatedChannels', 1)
+        newrelic.agent.record_custom_metric('Custom/ChannelStats/NumCreatedChannels', 1)
+
+        record_channel_stats(original_node is None)
 
         super(Channel, self).save(*args, **kwargs)
 
@@ -298,6 +299,17 @@ class Channel(models.Model):
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
+
+
+def record_channel_stats(is_create):
+    """
+    :param is_create: Whether action is channel creation.
+    """
+    if is_create:
+        newrelic.agent.record_custom_event("ChannelStats", {"action": "Create"})
+    # else:
+        # Called three times for create, need to find out why
+        # newrelic.agent.record_custom_event("ChannelStats", {"action": "Update"})
 
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
