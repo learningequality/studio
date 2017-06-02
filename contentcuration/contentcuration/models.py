@@ -4,7 +4,6 @@ import uuid
 import hashlib
 import functools
 import json
-import newrelic.agent
 from django.conf import settings
 from django.contrib import admin
 from django.core.cache import cache
@@ -303,8 +302,9 @@ def record_channel_stats(is_create):
     """
     :param is_create: Whether action is channel creation.
     """
+    import newrelic.agent
     newrelic.agent.record_custom_metric('Custom/ChannelStats/NumCreatedChannels', 1)
-    
+
     if is_create:
         newrelic.agent.record_custom_event("ChannelStats", {"action": "Create"})
     # else:
