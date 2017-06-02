@@ -4,6 +4,7 @@ import uuid
 import hashlib
 import functools
 import json
+import newrelic.agent
 from django.conf import settings
 from django.contrib import admin
 from django.core.cache import cache
@@ -255,6 +256,9 @@ class Channel(models.Model):
         original_node = None
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
             original_node = Channel.objects.get(pk=self.pk)
+
+        if original_node is None:
+            newrelic.agent.record_custom_metric('Custom/ChannelStats/NumCreatedChannels', 1)
 
         super(Channel, self).save(*args, **kwargs)
 
