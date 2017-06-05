@@ -1,0 +1,22 @@
+{{#if status}}
+	{{#if status.accepted}}
+		<div class="row alert alert-success alert-dismissible" role="alert">
+			<div class="col-xs-11 pending_text truncate">Accepted invitation to {{invitation.share_mode}} <b>{{invitation.channel_name}}</b></div>
+			<div class="col-xs-1"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
+		</div>
+	{{else}}
+		<div class="row alert alert-danger alert-dismissible" role="alert">
+			<div class="col-xs-11 pending_text truncate">Declined invitation to {{invitation.share_mode}} <b>{{invitation.channel_name}}</b></div>
+			<div class="col-xs-1"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
+		</div>
+	{{/if}}
+{{else}}
+<div class="row alert alert-info" role="alert">
+	<div class="col-xs-8 pending_text truncate">
+		{{invitation.sender.first_name}} {{invitation.sender.last_name}} has invited you to {{invitation.share_mode}}
+		<b title="{{invitation.channel_name}}">{{invitation.channel_name}}</b>
+	</div>
+	<div class="col-xs-2"><div class="btn btn-pending accept_invite"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> &nbsp;ACCEPT</div></div>
+	<div class="col-xs-2"><div class="btn btn-pending decline_invite"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> &nbsp;DECLINE</div></div>
+</div>
+{{/if}}

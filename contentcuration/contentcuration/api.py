@@ -173,3 +173,28 @@ def batch_add_tags(request):
     ThroughModel.objects.bulk_create(bulk_list)
 
     return HttpResponse("Tags are successfully saved.", status=200)
+
+
+def add_editor_to_channel(invitation):
+    if invitation.share_mode == models.VIEW_ACCESS:
+        if invitation.invited in invitation.channel.editors.all():
+            invitation.channel.editors.remove(invitation.invited)
+        invitation.channel.viewers.add(invitation.invited)
+    else:
+        if invitation.invited in invitation.channel.viewers.all():
+            invitation.channel.viewers.remove(invitation.invited)
+        invitation.channel.editors.add(invitation.invited)
+    invitation.channel.save()
+    invitation.delete()
+
+def activate_channel(channel):
+    old_tree = channel.previous_tree
+    channel.previous_tree = channel.main_tree
+    channel.main_tree = channel.staging_tree
+    channel.staging_tree = None
+    channel.save()
+    # Delete previous tree if it already exists
+    # if old_tree:
+    #     with transaction.atomic():
+    #         with ContentNode.objects.delay_mptt_updates():
+    #             old_tree.delete()

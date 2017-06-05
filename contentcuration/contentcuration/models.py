@@ -7,6 +7,7 @@ import json
 from django.conf import settings
 from django.contrib import admin
 from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connections, models, connection
 from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
@@ -21,6 +22,9 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from rest_framework.authtoken.models import Token
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+
+EDIT_ACCESS = "edit"
+VIEW_ACCESS = "view"
 
 DEFAULT_USER_PREFERENCES = json.dumps({
     'license': licenses.CC_BY,
@@ -218,6 +222,7 @@ class Channel(models.Model):
     clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
     main_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
     staging_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_staging')
+    chef_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_chef')
     previous_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_previous')
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -250,6 +255,8 @@ class Channel(models.Model):
         original_node = None
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
             original_node = Channel.objects.get(pk=self.pk)
+
+        record_channel_stats(original_node is None)
 
         super(Channel, self).save(*args, **kwargs)
 
@@ -289,6 +296,20 @@ class Channel(models.Model):
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
+
+
+def record_channel_stats(is_create):
+    """
+    :param is_create: Whether action is channel creation.
+    """
+    import newrelic.agent
+    newrelic.agent.record_custom_metric('Custom/ChannelStats/NumCreatedChannels', 1)
+
+    if is_create:
+        newrelic.agent.record_custom_event("ChannelStats", {"action": "Create"})
+    # else:
+        # Called three times for create, need to find out why
+        # newrelic.agent.record_custom_event("ChannelStats", {"action": "Update"})
 
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -405,8 +426,11 @@ class ContentNode(MPTTModel, models.Model):
         return presets
 
     def get_channel(self):
-        root = self.get_root()
-        return root.channel_main.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
+        try:
+            root = self.get_root()
+            return root.channel_main.first() or root.channel_chef.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
+        except ObjectDoesNotExist:
+            return None
 
     def save(self, *args, **kwargs):
         self.changed = self.changed or len(self.get_changed_fields()) > 0
@@ -624,7 +648,7 @@ class Invitation(models.Model):
     """ Invitation to edit channel """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     invited = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='sent_to')
-    share_mode = models.CharField(max_length=50, default='edit')
+    share_mode = models.CharField(max_length=50, default=EDIT_ACCESS)
     email = models.EmailField(max_length=100, null=True)
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='sent_by', null=True)
     channel = models.ForeignKey('Channel', on_delete=models.SET_NULL, null=True, related_name='pending_editors')

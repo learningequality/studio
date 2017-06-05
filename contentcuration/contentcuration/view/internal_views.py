@@ -14,14 +14,16 @@ from django.core.context_processors import csrf
 from django.core.management import call_command
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
-from contentcuration.api import write_file_to_storage
+from contentcuration.api import write_file_to_storage, activate_channel
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, Language, generate_file_on_disk_name, generate_storage_url
 from contentcuration import ricecooker_versions as rc
 from le_utils.constants import content_kinds
 from django.db.models.functions import Concat
+from contentcuration.utils.logging import trace
 from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db import transaction
+from rest_framework.exceptions import ValidationError
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -117,7 +119,7 @@ def api_create_channel_endpoint(request):
 
         return HttpResponse(json.dumps({
             "success": True,
-            "root": obj.staging_tree.pk,
+            "root": obj.chef_tree.pk,
             "channel_id": obj.pk,
         }))
     except KeyError:
@@ -134,17 +136,21 @@ def api_commit_channel(request):
 
         obj = Channel.objects.get(pk=channel_id)
 
-        old_tree = obj.previous_tree
-        obj.previous_tree = obj.main_tree
-        obj.main_tree = obj.staging_tree
-        obj.staging_tree = None
+        # rebuild MPTT tree for this channel (since we set "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
+        ContentNode.objects.partial_rebuild(obj.chef_tree.tree_id)
+        obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=obj.pk, source_channel_id=obj.pk)
+
+        old_staging = obj.staging_tree
+        obj.staging_tree = obj.chef_tree
+        obj.chef_tree = None
         obj.save()
 
-        # Delete previous tree if it already exists
-#         if old_tree:
-#             with transaction.atomic():
-#                 with ContentNode.objects.delay_mptt_updates():
-#                     old_tree.delete()
+        # Delete staging tree if it already exists
+        if old_staging and old_staging != obj.main_tree:
+            old_staging.delete()
+
+        if not data.get('no_activation'): # If user says to stage rather than submit, skip changing trees at this step
+            activate_channel(obj)
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -162,11 +168,11 @@ def api_add_nodes_to_tree(request):
     try:
         content_data = data['content_data']
         parent_id = data['root_id']
-
-        return HttpResponse(json.dumps({
-            "success": True,
-            "root_ids": convert_data_to_nodes(content_data, parent_id)
-        }))
+        with ContentNode.objects.disable_mptt_updates():
+            return HttpResponse(json.dumps({
+                "success": True,
+                "root_ids": convert_data_to_nodes(content_data, parent_id)
+            }))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
@@ -211,10 +217,10 @@ def create_channel(channel_data, user):
     channel.source_domain = channel_data.get('source_domain')
     channel.ricecooker_version = channel_data.get('ricecooker_version')
 
-    old_staging_tree = channel.staging_tree
+    old_chef_tree = channel.chef_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
     # Set up initial staging tree
-    channel.staging_tree = ContentNode.objects.create(
+    channel.chef_tree = ContentNode.objects.create(
         title = channel.name,
         kind_id = content_kinds.TOPIC,
         sort_order = 0,
@@ -224,15 +230,17 @@ def create_channel(channel_data, user):
         source_id = channel.source_id,
         source_domain = channel.source_domain,
     )
-    channel.staging_tree.save()
+    channel.chef_tree.save()
     channel.save()
 
-    # Delete staging tree if it already exists
-    if old_staging_tree and old_staging_tree != channel.main_tree:
-        old_staging_tree.delete()
+    # Delete chef tree if it already exists
+    if old_chef_tree and old_chef_tree != channel.staging_tree:
+        old_chef_tree.delete()
 
     return channel # Return new channel
 
+
+@trace
 def convert_data_to_nodes(content_data, parent_node):
     """ Parse dict and create nodes accordingly """
     try:
@@ -291,7 +299,11 @@ def create_node(node_data, parent_node, sort_order):
 
 def map_files_to_node(node, data):
     """ Generate files that reference the content node """
-    for file_data in data:
+
+    # filter for file data that's not empty;
+    valid_data = (d for d in data if d)
+
+    for file_data in valid_data:
         file_hash = file_data['filename'].split(".")
 
         # Determine a preset if none is given
@@ -301,13 +313,20 @@ def map_files_to_node(node, data):
         else:
             kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
-        language = None
-        if file_data.get('language'):
-            language = Language.objects.get(pk=file_data['language'])
-
-        file_path=generate_storage_url(file_data['filename'])
+        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
+
+        language = None
+
+        try:
+            if file_data.get('language'):
+                language = Language.objects.get(pk=file_data['language'])
+        except ObjectDoesNotExist as e:
+            invalid_lang = file_data.get('language')
+            logging.warning("file_data with language {} does not exist.".format(invalid_lang))
+            raise ValidationError("file_data given was invalid; expected string, got {}".format(invalid_lang))
+
 
         file_obj = File(
             checksum=file_hash[0],
@@ -318,7 +337,7 @@ def map_files_to_node(node, data):
             file_size = file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
-            language=language,
+            language_id=file_data.get('language'),
         )
         file_obj.save()
 
@@ -326,7 +345,7 @@ def map_files_to_assessment_item(question, data):
     """ Generate files that reference the content node's assessment items """
     for file_data in data:
         file_hash = file_data['filename'].split(".")
-        file_path = generate_storage_url(file_data['filename'])
+        file_path = generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
 
