@@ -14,7 +14,7 @@ from django.core.context_processors import csrf
 from django.core.management import call_command
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
-from contentcuration.api import write_file_to_storage, activate_channel
+from contentcuration.api import write_file_to_storage, activate_channel, get_staged_diff
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, Language, generate_file_on_disk_name, generate_storage_url
 from contentcuration import ricecooker_versions as rc
 from le_utils.constants import content_kinds
@@ -194,6 +194,22 @@ def api_publish_channel(request):
         "success": True,
         "channel": channel_id
     }))
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def get_staged_diff_internal(request):
+    return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def activate_channel_internal(request):
+    data = json.loads(request.body)
+    channel = Channel.objects.get(pk=data['channel_id'])
+    activate_channel(channel)
+
+    return HttpResponse(json.dumps({"success": True}))
 
 
 """ CHANNEL CREATE FUNCTIONS """

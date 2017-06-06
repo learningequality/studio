@@ -124,7 +124,7 @@ urlpatterns = [
     url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
     url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
-    url(r'^api/get_staged_diff$', views.get_staged_diff, name='get_staged_diff'),
+    url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
 ]
 
@@ -183,6 +183,8 @@ urlpatterns += [
     url(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
     url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
     url(r'^api/internal/publish_channel$', internal_views.api_publish_channel, name="api_publish_channel"),
+    url(r'^api/internal/get_staged_diff_internal$', internal_views.get_staged_diff_internal, name='get_staged_diff_internal'),
+    url(r'^api/internal/activate_channel_internal$', internal_views.activate_channel_internal, name='activate_channel_internal'),
 ]
 
 urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]
