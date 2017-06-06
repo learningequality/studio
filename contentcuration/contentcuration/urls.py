@@ -133,6 +133,7 @@ urlpatterns += [
     url(r'^api/get_nodes_by_ids_simplified$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
     url(r'^api/get_nodes_by_ids_complete$', node_views.get_nodes_by_ids_complete, name='get_nodes_by_ids_complete'),
     url(r'^api/create_new_node$', node_views.create_new_node, name='create_new_node'),
+    url(r'^api/get_node_diff$', node_views.get_node_diff, name='get_node_diff'),
 ]
 
 # Add file api enpoints

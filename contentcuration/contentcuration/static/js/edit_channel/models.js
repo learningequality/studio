@@ -470,6 +470,24 @@ var ChannelModel = BaseModel.extend({
             });
         });
         return promise;
+    },
+    get_node_diff: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                url: window.Urls.get_node_diff(),
+                data:  JSON.stringify({'channel_id': self.id}),
+                success: function(data) {
+                    nodes = JSON.parse(data);
+                    resolve({
+                        "original" : new ContentNodeCollection(JSON.parse(nodes.original)),
+                        "changed" : new ContentNodeCollection(JSON.parse(nodes.changed))
+                    });
+                },
+                error:reject
+            });
+        });
     }
 });
 

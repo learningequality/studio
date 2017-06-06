@@ -361,7 +361,7 @@ class ContentNode(MPTTModel, models.Model):
     # interacts with a piece of content, all substantially similar pieces of
     # content should be marked as such as well. We track these "substantially
     # similar" types of content by having them have the same content_id.
-    content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
+    content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False, db_index=True)
     node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
     # TODO: disallow nulls once existing models have been set

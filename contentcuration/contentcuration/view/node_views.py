@@ -9,12 +9,89 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum
+from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum, F
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
-from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License
+from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
+
+
+def get_node_diff(request):
+
+
+    from datetime import datetime
+    start_time = datetime.now()
+
+
+
+    if request.method == 'POST':
+        channel_id = json.loads(request.body)['channel_id']
+        original = []   # Currently imported nodes
+        changed = []    # Nodes from original node
+        fields_to_check = ['title', 'description', 'license', 'copyright_holder', 'author', 'extra_fields']
+
+        current_tree_id = Channel.objects.get(pk=channel_id).main_tree.tree_id
+        nodes = ContentNode.objects.prefetch_related('assessment_items').prefetch_related('files').prefetch_related('tags')
+
+        copied_nodes = nodes.filter(tree_id=current_tree_id).exclude(original_source_node_id=F('node_id'))
+        channel_ids = copied_nodes.values_list('original_channel_id', flat=True).exclude(original_channel_id=channel_id).distinct()
+        tree_ids = Channel.objects.filter(pk__in=channel_ids).values_list("main_tree__tree_id", flat=True)
+        original_node_ids = copied_nodes.values_list('original_source_node_id', flat=True).distinct()
+        original_nodes = nodes.filter(tree_id__in=tree_ids, node_id__in=original_node_ids)
+
+        # Use dictionary for faster lookup speed
+        content_id_mapping = {n.content_id: n for n in original_nodes}
+
+
+        mid1_time = datetime.now()
+        print "\n\n\n\nQuery Time: {time}s".format(time=(mid1_time - start_time).total_seconds())
+
+        for copied_node in copied_nodes:
+            node = content_id_mapping.get(copied_node.content_id)
+
+            if node:
+                node_changed = node.assessment_items.count() != copied_node.assessment_items.count() \
+                               or node.files.count() != copied_node.files.count() \
+                               or node.tags.count() != copied_node.tags.count()
+
+                # Check metadata
+                node_changed = node_changed or any(filter(lambda f: getattr(node, f, None) != getattr(copied_node, f, None), fields_to_check))
+
+                # Check files
+                node_changed = node_changed or node.files.exclude(checksum__in=copied_node.files.values_list('checksum', flat=True)).exists()
+
+                # Check assessment_items
+                # node_changed = node_changed or False
+
+                # Check tags
+                node_changed = node_changed or node.tags.exclude(tag_name__in=copied_node.tags.values_list('tag_name', flat=True)).exists()
+
+                if node_changed:
+                    original.append(copied_node)
+                    changed.append(node)
+
+
+
+
+        mid2_time = datetime.now()
+        print "Diff Time: {time}s".format(time=(mid2_time - mid1_time).total_seconds())
+
+
+
+        serialized_original = JSONRenderer().render(ContentNodeEditSerializer(original, many=True).data)
+        serialized_changed = JSONRenderer().render(ContentNodeEditSerializer(changed, many=True).data)
+
+
+
+        end_time = datetime.now()
+        print "Serialize Time: {time}s\n".format(time=(end_time - mid2_time).total_seconds())
+        print "TOTAL TIME: {time}s\n\n\n\n".format(time=(end_time - start_time).total_seconds())
+
+        return HttpResponse(json.dumps({
+            "original" : serialized_original,
+            "changed" : serialized_changed,
+        }))
 
 def create_new_node(request):
     if request.method == 'POST':

@@ -36,6 +36,10 @@ from pressurecooker.videos import guess_video_preset_by_resolution, extract_thum
 from pressurecooker.images import create_tiled_image
 from pressurecooker.encodings import write_base64_to_file
 
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+
 def base(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
         return redirect(reverse_lazy('unsupported_browser'))
@@ -108,6 +112,9 @@ def channel_list(request):
                                                  "channel_name" : False,
                                                  "current_user" : JSONRenderer().render(UserChannelListSerializer(request.user).data)})
 
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication, SessionAuthentication, BasicAuthentication,))
+@permission_classes((IsAuthenticated,))
 def get_user_channels(request):
     channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers').filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
                     .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))

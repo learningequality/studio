@@ -32,7 +32,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		'change input[type=checkbox]' : 'handle_checked',
 		'click .permissions_button' : 'edit_permissions',
 		'click .archive_button' : 'open_archive',
-		'click .sync_button' : 'sync_content'
+		'click .sync_button' : 'sync_content',
 		'click .move_button' : 'move_items'
 	},
 	edit_content:function(){ this.edit_selected(this.is_edit_page)},

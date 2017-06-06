@@ -1,6 +1,10 @@
 <div id="sync_preview_diff">
+{{#if node}}
 	<div id="sync_original_channel_header" class="truncate">Imported from <b>{{node.original_channel.name}}</b></div>
 	<div class="row item item_header">
+		<div class="col-xs-12 truncate" title="{{node.title}}">Previewing {{node.title}}</div>
+	</div>
+	<div class="row item item_sub_header">
 		<div class="col-xs-2">FIELD</div>
 		<div class="col-xs-10">UPDATE</div>
 	</div>
@@ -88,4 +92,7 @@
 			</div>
 		</div>
 	{{/if}}
+{{else}}
+	<div class="empty_default">Select an item to view updates</div>
+{{/if}}
 </div>

@@ -47,15 +47,19 @@
 			.item{
 				margin:0px;
 				padding-top: 5px;
-				&:hover{ background-color: cornsilk; }
+				&:hover{ background-color: @gray-100; font-weight:bold;}
 				&.item_header{
-					background-color: @gray-300;
+					background-color: @blue-100;
 					padding-bottom: 3px;
 					font-weight: bold;
+					font-size: 12pt;
+				}
+				&.item_sub_header{
+					background-color: @blue-000;
+					padding-bottom: 3px;
 				}
 				.item_field_title{
 					text-align: center;
-					font-weight: bold;
 					font-size: 11pt;
 				}
 				.item_field{
@@ -65,29 +69,37 @@
 				}
 			}
 		}
+		.sync-list{
+			.sync_list_item{
+				padding: 3px 5px;
+				cursor: pointer;
+				* { cursor: pointer; }
+				&:hover{ background-color:@gray-100; font-weight: bold; }
+				input[type='checkbox']{
+					height: 16px;
+					width: 16px;
+				}
+				label{
+					padding-left: 5px;
+					img{
+						width: 16px;
+	    				margin-top: -7px;
+					}
+					.sync_item_title {
+						display: inline-block;
+		    			font-weight: normal;
+		    			font-size: 12pt;
+		    			max-width: 180px;
+		    			margin-bottom: -4px;
+					}
+				}
 
-
-
-
-
-		.to-move-list{
-			border-left:2px solid @gray-400;
-		}
-		.target-list{
-			border-left:2px solid @blue-500;
-			margin-left: 10px;
-		}
-		.to-move-list .move_item_title, .disabled{
-			color:@gray-700;
+			}
 		}
 	}
-
-	#target_list_area > .target-list{
-		margin-left: 0px;
-	}
-
 	#sync_bottom_container{
 		min-height:30px;
+		#sync_status{ font-style: italic; margin-right: 20px; }
 		#sync_content_button{ margin-right:20px; }
 	}
 }
