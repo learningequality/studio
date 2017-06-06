@@ -29,7 +29,9 @@ def get_node_diff(request):
         channel_id = json.loads(request.body)['channel_id']
         original = []   # Currently imported nodes
         changed = []    # Nodes from original node
-        fields_to_check = ['title', 'description', 'license', 'copyright_holder', 'author', 'extra_fields']
+        fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields']
+
+
 
         current_tree_id = Channel.objects.get(pk=channel_id).main_tree.tree_id
         nodes = ContentNode.objects.prefetch_related('assessment_items').prefetch_related('files').prefetch_related('tags')

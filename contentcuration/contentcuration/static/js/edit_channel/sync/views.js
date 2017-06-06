@@ -88,8 +88,8 @@ var SyncView = BaseViews.BaseListView.extend({
             this.$("#sync_status").text("");
         }
     },
-    set_selected(model){
-        this.preview.set_selected(model);
+    set_selected(model, changed){
+        this.preview.set_selected(model, changed);
     }
 });
 
@@ -97,6 +97,7 @@ var SyncPreviewView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/sync_preview.handlebars"),
 
     initialize: function(options) {
+        _.bindAll(this, 'generate_diff_item', 'compare_field');
         this.changed = options.changed;
         this.render();
     },
@@ -104,12 +105,98 @@ var SyncPreviewView = BaseViews.BaseView.extend({
     render: function() {
         this.$el.html(this.template({
             'node': this.model && this.model.toJSON(),
-            'changed': this.changed && this.changed.toJSON()
+            'diff_items': this.get_diff()
         }));
     },
-    set_selected: function(selected_item){
+    set_selected: function(selected_item, changed){
         this.model = selected_item;
+        this.changed = changed;
+
         this.render();
+    },
+    get_diff: function(){
+        var diff = [];
+        if(this.model && this.changed){
+            diff = (this.generate_metadata_diff());            // Get diff on metadata
+            diff.push(this.generate_tag_diff());                 // Get diff on tags
+            diff.push(this.generate_file_diff());                // Get diff on files
+            diff.push(this.generate_assessment_item_diff());     // Get diff on assessment items
+        }
+        console.log(diff)
+        return _.reject(diff, function(item) { return !item; });
+    },
+    generate_metadata_diff: function(){
+        var fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields'];
+        return _.chain(fields_to_check).filter(this.compare_field).map(this.generate_diff_item).value();
+    },
+    compare_field: function(field){
+        var val1 = (this.model.get(field)==="")? null : this.model.get(field);
+        var val2 = (this.changed.get(field)==="")? null : this.changed.get(field);
+        return val1 !== val2;
+    },
+    generate_diff_item: function(field){
+        switch(field){
+            case "license":
+                return {
+                    "field" : "License",
+                    "current": window.licenses.get(this.model.get(field)).get('license_name'),
+                    "source": window.licenses.get(this.changed.get(field)).get('license_name')
+                }
+            case "extra_fields":
+                if(this.model.get('kind') === 'exercise'){
+                    return {
+                        "field" : "Mastery Criteria",
+                        "current": this.generate_mastery_model_string(this.model.get(field)),
+                        "source": this.generate_mastery_model_string(this.changed.get(field))
+                    }
+                }
+                return null;
+            default:
+                return {
+                    "field" : this.generate_readable_field_name(field),
+                    "current": this.model.get(field),
+                    "source": this.changed.get(field)
+                }
+        }
+    },
+    generate_readable_field_name: function(field){
+        return _.reduce(field.split('_'), function(s, w) { return s + w.charAt(0).toUpperCase() + w.slice(1) + " "; }, "").trim();
+    },
+    generate_mastery_model_string: function(criteria){
+        switch(criteria.mastery_model){
+            case 'm_of_n':
+                return criteria.m + " of " + criteria.n;
+            case 'do_all':
+                return '100% Correct';
+            default:
+                return criteria.mastery_model.charAt(criteria.mastery_model.length - 1) + " in a Row";
+        }
+    },
+    generate_tag_diff: function(){
+        var current_tags = _.pluck(this.model.get('tags'), 'tag_name');
+        var source_tags = _.pluck(this.changed.get('tags'), 'tag_name');
+        if(_.difference(current_tags, source_tags).length){
+            return {
+                "field": "Tags",
+                "current": current_tags.join(', '),
+                "source": source_tags.join(', ')
+            }
+        }
+    },
+    generate_file_diff: function(){
+        var current_files = _.pluck(this.model.get('files'), 'checksum');
+        var source_files = _.pluck(this.changed.get('files'), 'checksum');
+        if(_.difference(current_files, source_files).length || current_files.length !== source_files.length){
+            return {
+                "field": "Files",
+                "current": _.sortBy(this.model.get('files'), function(f) {return f.preset.order;}),
+                "source": _.sortBy(this.changed.get('files'), function(f) {return f.preset.order;}),
+                "is_file": true
+            }
+        }
+    },
+    generate_assessment_item_diff: function(){
+
     }
 });
 
@@ -122,6 +209,7 @@ var SyncList = BaseViews.BaseListView.extend({
     initialize: function(options) {
         this.container = options.container;
         this.collection = options.collection;
+        this.changed = options.changed;
         this.render();
     },
     render: function() {
@@ -132,12 +220,16 @@ var SyncList = BaseViews.BaseListView.extend({
         var new_view = new SyncItem({
             container: this.container,
             containing_list_view : this,
-            model : model
+            model : model,
+            changed : this.changed.findWhere({'content_id': model.get('content_id')})
         });
         this.views.push(new_view);
         return new_view;
     },
-
+    set_selected: function(model, changed){
+        this.views.forEach(function(v){ v.$el.removeClass('selected'); })
+        this.container.set_selected(model, changed);
+    }
 });
 
 /*********** ITEM TO MOVE OR DESTINATION ITEM ***********/
@@ -155,13 +247,14 @@ var SyncItem = BaseViews.BaseListNodeItemView.extend({
         _.bindAll(this, "render");
         this.bind_node_functions();
         this.containing_list_view = options.containing_list_view;
+        this.changed = options.changed;
         this.container = options.container;
         this.checked = false;
         this.render();
     },
     events: {
         'change .sync_checkbox' : 'handle_checked',
-        'click .sync_item' : 'set_selected'
+        'click .sync_item_wrapper' : 'set_selected'
     },
     render: function() {
         this.$el.html(this.template({
@@ -170,11 +263,13 @@ var SyncItem = BaseViews.BaseListNodeItemView.extend({
         }));
     },
     handle_checked:function(event){
+        event.stopPropagation();
         this.checked = this.$(".sync_checkbox").is(":checked");
         this.container.handle_selection();
     },
     set_selected: function(event){
-        this.container.set_selected(this.model);
+        this.containing_list_view.set_selected(this.model, this.changed);
+        this.$el.addClass('selected');
     }
 });
 
