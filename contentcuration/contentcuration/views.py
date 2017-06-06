@@ -112,6 +112,9 @@ def channel_list(request):
                                                  "channel_name" : False,
                                                  "current_user" : JSONRenderer().render(UserChannelListSerializer(request.user).data)})
 
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def get_user_channels(request):
     channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers').filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
                     .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
@@ -217,77 +220,83 @@ def accept_channel_invite(request):
 
         return HttpResponse(JSONRenderer().render(channel_serializer.data))
 
+
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def activate_channel_endpoint(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        channel = Channel.objects.get(pk=data['channel_id'])
-        activate_channel(channel)
+    data = json.loads(request.body)
+    channel = Channel.objects.get(pk=data['channel_id'])
+    activate_channel(channel)
 
-        return HttpResponse(json.dumps({"success": True}))
+    return HttpResponse(json.dumps({"success": True}))
 
+
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def get_staged_diff(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        channel = Channel.objects.get(pk=data['channel_id'])
-        main_descendants = channel.main_tree.get_descendants() if channel.main_tree else None
-        updated_descendants = channel.staging_tree.get_descendants() if channel.staging_tree else None
+    data = json.loads(request.body)
+    channel = Channel.objects.get(pk=data['channel_id'])
+    main_descendants = channel.main_tree.get_descendants() if channel.main_tree else None
+    updated_descendants = channel.staging_tree.get_descendants() if channel.staging_tree else None
 
-        original_stats = main_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if main_descendants else {}
-        updated_stats = updated_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if updated_descendants else {}
+    original_stats = main_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if main_descendants else {}
+    updated_stats = updated_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if updated_descendants else {}
 
-        original_file_sizes = main_descendants.aggregate(
-            resource_size=Sum('files__file_size'),
-            assessment_size=Sum('assessment_items__files__file_size'),
-            assessment_count=Count('assessment_items'),
-        ) if main_descendants else {}
+    original_file_sizes = main_descendants.aggregate(
+        resource_size=Sum('files__file_size'),
+        assessment_size=Sum('assessment_items__files__file_size'),
+        assessment_count=Count('assessment_items'),
+    ) if main_descendants else {}
 
-        updated_file_sizes = updated_descendants.aggregate(
-            resource_size=Sum('files__file_size'),
-            assessment_size=Sum('assessment_items__files__file_size'),
-            assessment_count=Count('assessment_items')
-        ) if updated_descendants else {}
+    updated_file_sizes = updated_descendants.aggregate(
+        resource_size=Sum('files__file_size'),
+        assessment_size=Sum('assessment_items__files__file_size'),
+        assessment_count=Count('assessment_items')
+    ) if updated_descendants else {}
 
-        original_file_size = (original_file_sizes.get('resource_size') or 0) + (original_file_sizes.get('assessment_size') or 0)
-        updated_file_size = (updated_file_sizes.get('resource_size') or 0) + (updated_file_sizes.get('assessment_size') or 0)
-        original_question_count =  original_file_sizes.get('assessment_count') or 0
-        updated_question_count =  updated_file_sizes.get('assessment_count') or 0
+    original_file_size = (original_file_sizes.get('resource_size') or 0) + (original_file_sizes.get('assessment_size') or 0)
+    updated_file_size = (updated_file_sizes.get('resource_size') or 0) + (updated_file_sizes.get('assessment_size') or 0)
+    original_question_count =  original_file_sizes.get('assessment_count') or 0
+    updated_question_count =  updated_file_sizes.get('assessment_count') or 0
 
-        stats = [
-            {
-                "field": "Date/Time Created",
-                "live": channel.main_tree.created.strftime("%x %X") if channel.main_tree else None,
-                "staged": channel.staging_tree.created.strftime("%x %X") if channel.staging_tree else None,
-            },
-            {
-                "field": "File Size",
-                "live": original_file_size,
-                "staged": updated_file_size,
-                "difference": updated_file_size - original_file_size,
-                "format_size": True,
-            },
-        ]
+    stats = [
+        {
+            "field": "Date/Time Created",
+            "live": channel.main_tree.created.strftime("%x %X") if channel.main_tree else None,
+            "staged": channel.staging_tree.created.strftime("%x %X") if channel.staging_tree else None,
+        },
+        {
+            "field": "File Size",
+            "live": original_file_size,
+            "staged": updated_file_size,
+            "difference": updated_file_size - original_file_size,
+            "format_size": True,
+        },
+    ]
 
-        for kind, name in content_kinds.choices:
-            original = original_stats.get(kind_id=kind)['count'] if original_stats.filter(kind_id=kind).exists() else 0
-            updated = updated_stats.get(kind_id=kind)['count'] if updated_stats.filter(kind_id=kind).exists() else 0
-            stats.append({ "field": "# of {}s".format(name), "live": original, "staged": updated, "difference": updated - original })
+    for kind, name in content_kinds.choices:
+        original = original_stats.get(kind_id=kind)['count'] if original_stats.filter(kind_id=kind).exists() else 0
+        updated = updated_stats.get(kind_id=kind)['count'] if updated_stats.filter(kind_id=kind).exists() else 0
+        stats.append({ "field": "# of {}s".format(name), "live": original, "staged": updated, "difference": updated - original })
 
-        # Add number of questions
-        stats.append({
-            "field": "# of Questions",
-            "live": original_question_count,
-            "staged": updated_question_count,
-            "difference": updated_question_count - original_question_count,
-        });
+    # Add number of questions
+    stats.append({
+        "field": "# of Questions",
+        "live": original_question_count,
+        "staged": updated_question_count,
+        "difference": updated_question_count - original_question_count,
+    });
 
-        # Add number of subtitles
-        original_subtitle_count = main_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if main_descendants else 0
-        updated_subtitle_count = updated_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if updated_descendants else 0
-        stats.append({
-            "field": "# of Subtitles",
-            "live": original_subtitle_count,
-            "staged": updated_subtitle_count,
-            "difference": updated_subtitle_count - original_subtitle_count,
-        });
+    # Add number of subtitles
+    original_subtitle_count = main_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if main_descendants else 0
+    updated_subtitle_count = updated_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if updated_descendants else 0
+    stats.append({
+        "field": "# of Subtitles",
+        "live": original_subtitle_count,
+        "staged": updated_subtitle_count,
+        "difference": updated_subtitle_count - original_subtitle_count,
+    });
 
-        return HttpResponse(json.dumps(stats))
+    return HttpResponse(json.dumps(stats))

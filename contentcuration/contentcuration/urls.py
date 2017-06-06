@@ -123,8 +123,8 @@ urlpatterns = [
     url(r'^get_user_channels/$', views.get_user_channels, name='get_user_channels'),
     url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
     url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
-    url(r'^activate_channel/$', views.activate_channel_endpoint, name='activate_channel'),
-    url(r'^api/get_staged_diff/$', views.get_staged_diff, name='get_staged_diff'),
+    url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
+    url(r'^api/get_staged_diff$', views.get_staged_diff, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
 ]
 
