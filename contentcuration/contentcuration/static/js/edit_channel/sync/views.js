@@ -184,13 +184,19 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         }
     },
     generate_file_diff: function(){
-        var current_files = _.pluck(this.model.get('files'), 'checksum');
-        var source_files = _.pluck(this.changed.get('files'), 'checksum');
-        if(_.difference(current_files, source_files).length || current_files.length !== source_files.length){
+        var self = this;
+        var current_files = _.reject(this.model.get('files'), function(f) {
+            return _.some(self.changed.get('files'), function(c){ return c.preset.id === f.preset.id && c.checksum === f.checksum});
+        });
+        var source_files = _.reject(this.changed.get('files'), function(f) {
+            return _.some(self.model.get('files'), function(c){ return c.preset.id === f.preset.id && c.checksum === f.checksum});
+        });
+
+        if(current_files.length || source_files.length){
             return {
                 "field": "Files",
-                "current": _.sortBy(this.model.get('files'), function(f) {return f.preset.order;}),
-                "source": _.sortBy(this.changed.get('files'), function(f) {return f.preset.order;}),
+                "current": _.sortBy(current_files, function(f) {return f.preset.order;}),
+                "source": _.sortBy(source_files, function(f) {return f.preset.order;}),
                 "is_file": true
             }
         }

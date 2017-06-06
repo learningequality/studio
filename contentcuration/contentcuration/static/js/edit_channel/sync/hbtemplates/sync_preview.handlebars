@@ -10,28 +10,22 @@
 			<div class="col-xs-2 item_field_title">{{field}}</div>
 			<div class="col-xs-10 item_field">
 				{{#if is_file}}
-					<div class="original truncate">BEFORE:
-						<ul class="list-unstyled">
-							{{#each current}}
-								<li class="list_subitem" data-url="{{storage_url}}">
-									<span class="filename">{{display_name}}</span>
-									<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
-									<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
-								</li>
-							{{/each}}
-						</ul>
-					</div>
-					<div class="updated truncate">AFTER:
-						<ul class="list-unstyled">
-							{{#each source}}
-								<li class="list_subitem" data-url="{{storage_url}}">
-									<span class="filename">{{display_name}}</span>
-									<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
-									<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
-								</li>
-							{{/each}}
-						</ul>
-					</div>
+					<ul class="list-unstyled">
+						{{#each current}}
+							<li class="list_subitem original" data-url="{{storage_url}}" title="Deleted">
+								<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{display_name}}
+								<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
+								<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
+							</li>
+						{{/each}}
+						{{#each source}}
+							<li class="list_subitem updated" data-url="{{storage_url}}" title="Added">
+								<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{display_name}}
+								<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
+								<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
+							</li>
+						{{/each}}
+					</ul>
 				{{else}}
 					<div class="original truncate" title="{{current}}">BEFORE: {{current}}</div>
 					<div class="updated truncate" title="{{source}}">AFTER: {{source}}</div>
