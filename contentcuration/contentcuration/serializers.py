@@ -411,7 +411,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata',)
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata')
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
@@ -508,7 +508,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order','author', 'copyright_holder', 'license', 'license_description','assessment_items', 'files',
-                 'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tags', 'extra_fields', 'original_channel')
+                 'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tags', 'extra_fields', 'original_channel', 'content_id')
 
 
 class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
