@@ -101,12 +101,28 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         this.changed = options.changed;
         this.render();
     },
+    events: {
+        'click .file_subitem' : 'load_preview'
+    },
     /*********** LOADING METHODS ***********/
     render: function() {
         this.$el.html(this.template({
             'node': this.model && this.model.toJSON(),
             'diff_items': this.get_diff()
         }));
+    },
+    load_preview: function(event){
+        var subtitles = [];
+        var file = $(event.target).data('model');
+        if(file.preset.subtitle){
+            subtitles.push(file);
+            var file_to_parse = $(event.target).data('current')? this.model.get('files') : this.changed.get('files');
+            file = _.find(file_to_parse, function(f){ return !f.preset.supplementary; });
+        }
+        new SyncPreviewFileView({
+            model: file,
+            subtitles: subtitles
+        });
     },
     set_selected: function(selected_item, changed){
         this.model = selected_item;
@@ -122,7 +138,7 @@ var SyncPreviewView = BaseViews.BaseView.extend({
             diff.push(this.generate_file_diff());                // Get diff on files
             diff.push(this.generate_assessment_item_diff());     // Get diff on assessment items
         }
-        console.log(diff)
+        console.log(_.reject(diff, function(item) { return !item; }))
         return _.reject(diff, function(item) { return !item; });
     },
     generate_metadata_diff: function(){
@@ -202,7 +218,55 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         }
     },
     generate_assessment_item_diff: function(){
+        var self = this;
+        var current_questions = _.reject(this.model.get('assessment_items'), function(a) {
+            return _.some(self.changed.get('assessment_items'), function(c){ return self.compare_assessment_items(a, c); });
+        });
+        var source_questions = _.reject(this.changed.get('assessment_items'), function(a) {
+            return _.some(self.model.get('assessment_items'), function(c){ return self.compare_assessment_items(a, c); });
+        });
 
+        if(current_questions.length || source_questions.length){
+            return {
+                "field": "Questions",
+                "current": "",
+                "source": "",
+                "is_exercise": true
+            }
+        }
+    },
+    compare_assessment_items: function(ai1, ai2){
+        var self = this;
+        var fields_to_check = ['assessment_id', 'question', 'answers', 'hints', 'order', 'randomize', 'raw_data', 'source_url', 'type'];
+
+        return _.reject(fields_to_check, function(f){ return ai1[f] === ai2[f]; }).length === 0;
+    }
+});
+
+var SyncPreviewModalView = BaseViews.BaseModalView.extend({
+    template: require("./hbtemplates/sync_preview_modal.handlebars"),
+    render: function() {
+        this.$el.html(this.template({file: this.model}));
+        $("body").append(this.el);
+        this.$("#sync_preview_modal").modal({show: true});
+        this.$("#sync_preview_modal").on("hidden.bs.modal", this.closed_modal);
+        _.defer(this.create_preview);
+    }
+});
+
+var SyncPreviewFileView = SyncPreviewModalView.extend({
+    initialize: function(options) {
+        _.bindAll(this, 'create_preview');
+        this.modal = true;
+        this.subtitles = options.subtitles;
+        this.render();
+    },
+    create_preview: function(){
+        var previewer = require('edit_channel/preview/views');
+        previewer.render_preview(this.$("#preview_window"), this.model, this.subtitles);
+        if(this.subtitles.length){
+            this.$("#preview_window video").get(0).textTracks[0].mode = "showing";
+        }
     }
 });
 

@@ -30,7 +30,7 @@ def get_node_diff(request):
         original = []   # Currently imported nodes
         changed = []    # Nodes from original node
         fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields']
-
+        assessment_fields_to_check = ['type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize']
 
 
         current_tree_id = Channel.objects.get(pk=channel_id).main_tree.tree_id
@@ -60,14 +60,21 @@ def get_node_diff(request):
                 # Check metadata
                 node_changed = node_changed or any(filter(lambda f: getattr(node, f, None) != getattr(copied_node, f, None), fields_to_check))
 
+                # Check tags
+                node_changed = node_changed or node.tags.exclude(tag_name__in=copied_node.tags.values_list('tag_name', flat=True)).exists()
+
                 # Check files
                 node_changed = node_changed or node.files.exclude(checksum__in=copied_node.files.values_list('checksum', flat=True)).exists()
 
                 # Check assessment_items
-                # node_changed = node_changed or False
-
-                # Check tags
-                node_changed = node_changed or node.tags.exclude(tag_name__in=copied_node.tags.values_list('tag_name', flat=True)).exists()
+                node_changed = node_changed or node.assessment_items.exclude(assessment_id__in=copied_node.assessment_items.values_list('assessment_id', flat=True)).exists()
+                if not node_changed and node.kind_id == content_kinds.EXERCISE:
+                    for ai in node.assessment_items.all():
+                        source_ai = copied_node.assessment_items.filter(assessment_id=ai.assessment_id).first()
+                        if source_ai:
+                            node_changed = node_changed or any(filter(lambda f: getattr(ai, f, None) != getattr(source_ai, f, None), assessment_fields_to_check))
+                            if node_changed:
+                                break
 
                 if node_changed:
                     original.append(copied_node)

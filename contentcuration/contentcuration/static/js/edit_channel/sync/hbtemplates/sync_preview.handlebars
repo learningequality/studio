@@ -12,14 +12,14 @@
 				{{#if is_file}}
 					<ul class="list-unstyled">
 						{{#each current}}
-							<li class="list_subitem original" data-url="{{storage_url}}" title="Deleted">
+							<li class="list_subitem file_subitem original" data-model='{{#to_json this}}{{/to_json}}' data-current=1 title="Deleted" id="file_{{id}}">
 								<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{display_name}}
 								<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
 								<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
 							</li>
 						{{/each}}
 						{{#each source}}
-							<li class="list_subitem updated" data-url="{{storage_url}}" title="Added">
+							<li class="list_subitem file_subitem updated" data-model='{{#to_json this}}{{/to_json}}' data-current=0 title="Added" id="file_{{id}}">
 								<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{display_name}}
 								<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
 								<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
@@ -27,8 +27,8 @@
 						{{/each}}
 					</ul>
 				{{else}}
-					<div class="original truncate" title="{{current}}">BEFORE: {{current}}</div>
-					<div class="updated truncate" title="{{source}}">AFTER: {{source}}</div>
+					{{#if current}}<div class="original truncate" title="{{current}}"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{current}}</div>{{/if}}
+					{{#if source}}<div class="updated truncate" title="{{source}}"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{source}}</div>{{/if}}
 				{{/if}}
 			</div>
 		</div>
