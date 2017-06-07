@@ -1,6 +1,7 @@
 """
 This module acts as the only interface point between other apps and the database backend for the content.
 """
+import json
 import logging
 import os
 import re
@@ -230,6 +231,11 @@ def get_staged_diff(channel_id):
             "field": "Date/Time Created",
             "live": channel.main_tree.created.strftime("%x %X") if channel.main_tree else None,
             "staged": channel.staging_tree.created.strftime("%x %X") if channel.staging_tree else None,
+        },
+        {
+            "field": "Ricecooker Version",
+            "live": json.loads(channel.main_tree.extra_fields).get('ricecooker_version') if channel.main_tree and channel.main_tree.extra_fields else "---",
+            "staged": json.loads(channel.staging_tree.extra_fields).get('ricecooker_version') if channel.staging_tree and channel.staging_tree.extra_fields else "---",
         },
         {
             "field": "File Size",
