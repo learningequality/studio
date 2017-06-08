@@ -160,10 +160,14 @@ var SyncPreviewView = BaseViews.BaseView.extend({
                 }
             case "extra_fields":
                 if(this.model.get('kind') === 'exercise'){
-                    return {
-                        "field" : "Mastery Criteria",
-                        "current": this.generate_mastery_model_string(this.model.get(field)),
-                        "source": this.generate_mastery_model_string(this.changed.get(field))
+                    var current_mastery = this.generate_mastery_model_string(this.model.get('extra_fields'));
+                    var source_mastery = this.generate_mastery_model_string(this.changed.get('extra_fields'));
+                    if(current_mastery !== source_mastery){
+                        return {
+                            "field" : "Mastery Criteria",
+                            "current": current_mastery,
+                            "source": source_mastery
+                        }
                     }
                 }
                 return null;
@@ -227,19 +231,61 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         });
 
         if(current_questions.length || source_questions.length){
+            var current_ids = _.pluck(current_questions, 'assessment_id');
+            var source_ids = _.pluck(source_questions, 'assessment_id');
+            var partition = _.groupBy(current_questions.concat(source_questions), function(q){
+                if(_.contains(source_ids, q.assessment_id) && _.contains(current_ids, q.assessment_id)){ return "changed"; }
+                else if (_.contains(source_ids, q.assessment_id)){ return "source"; }
+                else return "current";
+            });
+
+            var common_ids = _.pluck(partition.changed, 'assessment_id');
+            partition.changed = _.chain(current_questions).filter(function(q){return _.contains(common_ids, q.assessment_id);})
+                    .map(function(q){return {'current': q, 'source': _.findWhere(source_questions, {'assessment_id': q.assessment_id})};}).value();
+            console.log(partition)
+
             return {
                 "field": "Questions",
-                "current": "",
-                "source": "",
-                "is_exercise": true
+                "current": _.map(partition.current, function(q) { return self.generate_question_object(q); }),
+                "source": _.map(partition.source, function(q) { return self.generate_question_object(q); }),
+                "is_exercise": true,
+                "changed" :_.map(partition.changed, function(q) { return self.generate_question_comparison(q.current, q.source); })
             }
         }
     },
     compare_assessment_items: function(ai1, ai2){
         var self = this;
         var fields_to_check = ['assessment_id', 'question', 'answers', 'hints', 'order', 'randomize', 'raw_data', 'source_url', 'type'];
-
         return _.reject(fields_to_check, function(f){ return ai1[f] === ai2[f]; }).length === 0;
+    },
+    generate_question_object: function(question){
+        return {
+            "id": question.assessment_id,
+            "question": question.question || (question.raw_data && "Perseus Question"),
+            "answers": JSON.parse(question.answers) || [],
+            "hints": JSON.parse(question.hints) || []
+        }
+    },
+    generate_question_comparison: function(q1, q2){
+        var question1 = q1.question || (q1.raw_data && "Perseus Question");
+        var question2 = q2.question || (q2.raw_data && "Perseus Question");
+
+        var a1 = JSON.parse(q1.answers) || [];
+        var a2 = JSON.parse(q2.answers) || [];
+        var answers1 = _.chain(a1).reject(function(a){ return _.some(a2, function(cmp){ return _.isEqual(a, cmp); });}).sortBy("order").value();
+        var answers2 = _.chain(a2).reject(function(a){return _.some(a1, function(cmp){ return _.isEqual(a, cmp); });}).sortBy("order").value();
+
+        var h1 = JSON.parse(q1.hints) || [];
+        var h2 = JSON.parse(q2.hints) || [];
+        var hints1 = _.chain(h1).reject(function(h){return _.some(h2, function(cmp){ return _.isEqual(h, cmp);});}).sortBy("order").value();
+        var hints2 = _.chain(h2).reject(function(h){return _.some(h1, function(cmp){ return _.isEqual(h, cmp);});}).sortBy("order").value();
+
+        return {
+            "id": q1.assessment_id,
+            "question": {"current" : question1, "source": question2, "changed" : q1.question!==q2.question || q1.raw_data!==q2.raw_data},
+            "answers": {"current": answers1, "source": answers2},
+            "hints": {"current": hints1, "source": hints2},
+        }
     }
 });
 

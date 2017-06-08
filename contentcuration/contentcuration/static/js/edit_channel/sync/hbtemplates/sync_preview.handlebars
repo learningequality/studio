@@ -6,32 +6,89 @@
 		<div class="col-xs-10">UPDATE</div>
 	</div>
 	{{#each diff_items}}{{#if this}}
-		<div class="row item">
-			<div class="col-xs-2 item_field_title">{{field}}</div>
-			<div class="col-xs-10 item_field">
-				{{#if is_file}}
-					<ul class="list-unstyled">
-						{{#each current}}
-							<li class="list_subitem file_subitem original" data-model='{{#to_json this}}{{/to_json}}' data-current=1 title="Deleted" id="file_{{id}}">
-								<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{display_name}}
-								<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
-								<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
-							</li>
-						{{/each}}
-						{{#each source}}
-							<li class="list_subitem file_subitem updated" data-model='{{#to_json this}}{{/to_json}}' data-current=0 title="Added" id="file_{{id}}">
-								<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{display_name}}
-								<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
-								<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
-							</li>
-						{{/each}}
-					</ul>
-				{{else}}
-					{{#if current}}<div class="original truncate" title="{{current}}"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{current}}</div>{{/if}}
-					{{#if source}}<div class="updated truncate" title="{{source}}"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{source}}</div>{{/if}}
-				{{/if}}
+		{{#if is_exercise}}
+			{{#each current}}
+				<div class="row item">
+					<div class="col-xs-2 item_field_title">Question Deleted</div>
+					<div class="col-xs-10 item_field" data-model='{{#to_json this}}{{/to_json}}' title="Deleted" id="question_{{id}}">
+						<div class="list_subitem original">
+							<div class="preview glyphicon glyphicon-new-window pull-right grayed" aria-hidden="true"></div>
+							<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{#parse_question question}}{{/parse_question}}
+							<em class="file_size">&nbsp;({{#format_count "answer" answers.length}}{{/format_count}}, {{#format_count "hint" hints.length}}{{/format_count}})</em>
+						</div>
+					</div>
+				</div>
+			{{/each}}
+			{{#each changed}}
+				<div class="row item">
+					<div class="col-xs-2 item_field_title">Question Changed</div>
+					<div class="col-xs-10 item_field" data-model='{{#to_json question.current}}{{/to_json}}' data-source='{{#to_json question.source}}{{/to_json}}' title="Changed" id="question_{{id}}">
+						<div class="list_subitem">
+							<div class="preview glyphicon glyphicon-new-window pull-right grayed" aria-hidden="true"></div>
+							{{#if question.changed}}
+								<div class="original"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{#parse_question question.current}}{{/parse_question}}</div>
+								<div class="updated"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{#parse_question question.source}}{{/parse_question}}</div>
+							{{else}}
+								<div class="grayed">{{#parse_question question.current}}{{/parse_question}}</div>
+							{{/if}}
+							<ul class="list-unstyled assessment_sublist">
+								{{#each answers.current}}
+									<li class="assessment_sublist_item original"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> Answer: {{#parse_question answer}}{{/parse_question}}{{#if correct}} (Correct){{/if}}</li>
+								{{/each}}
+								{{#each answers.source}}
+									<li class="assessment_sublist_item updated"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Answer: {{#parse_question answer}}{{/parse_question}}{{#if correct}} (Correct){{/if}}</li>
+								{{/each}}
+								{{#each hints.current}}
+									<li class="assessment_sublist_item original"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> Hint: {{#parse_question hint}}{{/parse_question}}</li>
+								{{/each}}
+								{{#each hints.source}}
+									<li class="assessment_sublist_item updated"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Hint: {{#parse_question hint}}{{/parse_question}}</li>
+								{{/each}}
+							</ul>
+						</div>
+					</div>
+				</div>
+			{{/each}}
+			{{#each source}}
+				<div class="row item">
+					<div class="col-xs-2 item_field_title">Question Added</div>
+					<div class="col-xs-10 item_field" data-model='{{#to_json this}}{{/to_json}}' title="Added" id="question_{{id}}">
+						<div class="list_subitem updated">
+							<div class="preview glyphicon glyphicon-new-window pull-right grayed" aria-hidden="true"></div>
+							<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{#parse_question question}}{{/parse_question}}
+							<em class="file_size">&nbsp;({{#format_count "answer" answers.length}}{{/format_count}}, {{#format_count "hint" hints.length}}{{/format_count}})</em>
+						</div>
+					</div>
+				</div>
+			{{/each}}
+		{{else}}
+			<div class="row item">
+				<div class="col-xs-2 item_field_title">{{field}}</div>
+				<div class="col-xs-10 item_field">
+					{{#if is_file}}
+						<ul class="list-unstyled">
+							{{#each current}}
+								<li class="list_subitem file_subitem original" data-model='{{#to_json this}}{{/to_json}}' data-current=1 title="Deleted" id="file_{{id}}">
+									<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{display_name}}
+									<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
+									<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
+								</li>
+							{{/each}}
+							{{#each source}}
+								<li class="list_subitem file_subitem updated" data-model='{{#to_json this}}{{/to_json}}' data-current=0 title="Added" id="file_{{id}}">
+									<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{display_name}}
+									<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
+									<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
+								</li>
+							{{/each}}
+						</ul>
+					{{else}}
+						{{#if current}}<div class="original truncate" title="{{current}}"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{current}}</div>{{/if}}
+						{{#if source}}<div class="updated truncate" title="{{source}}"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{source}}</div>{{/if}}
+					{{/if}}
+				</div>
 			</div>
-		</div>
+		{{/if}}
 	{{/if}}{{/each}}
 {{else}}
 	<div class="empty_default">Select an item to view updates</div>
