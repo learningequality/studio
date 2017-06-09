@@ -6,6 +6,7 @@ from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpRespo
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import FormView
 from django.shortcuts import render, get_object_or_404, redirect, render_to_response
+from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -58,7 +59,7 @@ def send_invitation_email(request):
                             'invitation_key': invitation.id,
                             'is_new': recipient.is_active is False,
                             'channel': channel.name,
-                            'domain': request.META.get('HTTP_ORIGIN'),
+                            'domain': request.META.get('HTTP_ORIGIN') or "https://{}".format(request.get_host() or Site.objects.get_current().domain),
                         }
             subject = render_to_string('permissions/permissions_email_subject.txt', ctx_dict)
             message = render_to_string('permissions/permissions_email.txt', ctx_dict)
@@ -210,7 +211,7 @@ class UserRegistrationView(RegistrationView):
         context = self.get_email_context(activation_key)
         context.update({
             'user': user,
-            'domain': self.request.META.get('HTTP_ORIGIN'),
+            'domain': self.request.META.get('HTTP_ORIGIN') or "https://{}".format(request.get_host() or Site.objects.get_current().domain),
         })
         subject = render_to_string(self.email_subject_template, context)
         subject = ''.join(subject.splitlines())
@@ -219,5 +220,6 @@ class UserRegistrationView(RegistrationView):
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, ) #html_message=message_html,)
 
 def custom_password_reset(request, **kwargs):
-    return password_reset(request, extra_email_context={'domain': request.META.get('HTTP_ORIGIN')}, **kwargs)
+    email_context = {'domain': request.META.get('HTTP_ORIGIN') or "https://{}".format(request.get_host() or Site.objects.get_current().domain)}
+    return password_reset(request, extra_email_context=email_context, **kwargs)
 
