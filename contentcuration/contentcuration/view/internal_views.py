@@ -24,7 +24,7 @@ from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -38,7 +38,7 @@ VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, 
 VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def authenticate_user_internal(request):
     """ Verify user is valid """
@@ -46,7 +46,7 @@ def authenticate_user_internal(request):
     return HttpResponse(json.dumps({'success': True, 'username':unicode(request.user)}))
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def check_version(request):
     """ Get version of Ricecooker with which CC is compatible """
@@ -70,7 +70,7 @@ def check_version(request):
     }))
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def file_diff(request):
     """ Determine which files don't exist on server """
@@ -107,7 +107,7 @@ def api_file_upload(request):
         raise SuspiciousOperation("Invalid file upload request")
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_create_channel_endpoint(request):
     """ Create the channel node """
@@ -126,7 +126,7 @@ def api_create_channel_endpoint(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_commit_channel(request):
     """ Commit the channel staging tree to the main tree """
@@ -160,7 +160,7 @@ def api_commit_channel(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_add_nodes_to_tree(request):
     """ Add child nodes to a parent node """
@@ -177,7 +177,7 @@ def api_add_nodes_to_tree(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
@@ -196,7 +196,7 @@ def api_publish_channel(request):
     }))
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def get_staged_diff_internal(request):
     return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
@@ -210,6 +210,22 @@ def activate_channel_internal(request):
     activate_channel(channel)
 
     return HttpResponse(json.dumps({"success": True}))
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def check_user_is_editor(request):
+    """ Create the channel node """
+    data = json.loads(request.body)
+    try:
+        obj = Channel.objects.get(pk=data['channel_id'])
+        if obj.editors.filter(pk=request.user.pk).exists():
+            return HttpResponse(json.dumps({ "success": True }))
+        else:
+            return SuspiciousOperation("User is not authorized to edit this channel")
+
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
 """ CHANNEL CREATE FUNCTIONS """
