@@ -18,6 +18,7 @@ from django.db.models import Q
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse_lazy
 from django.utils.translation import ugettext as _
+from contentcuration.api import add_editor_to_channel
 from contentcuration.models import Channel, User, Invitation
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
 from registration.backends.hmac.views import RegistrationView
@@ -40,11 +41,15 @@ def send_invitation_email(request):
             channel = Channel.objects.get(id=channel_id)
             invitation = Invitation.objects.get_or_create(invited = recipient,
                                                         email = user_email,
-                                                        share_mode=share_mode,
-                                                        sender=request.user,
                                                         channel_id = channel_id,
                                                         first_name=recipient.first_name if recipient.is_active else "Guest",
                                                         last_name=recipient.last_name if recipient.is_active else " ")[0]
+
+            # Handle these values separately as different users might invite the same user again
+            invitation.share_mode = share_mode
+            invitation.sender = invitation.sender or request.user
+            invitation.save()
+
             ctx_dict = {    'sender' : request.user,
                             'site' : get_current_site(request),
                             'user' : recipient,
@@ -212,19 +217,6 @@ class UserRegistrationView(RegistrationView):
         message = render_to_string(self.email_body_template, context)
         # message_html = render_to_string(self.email_html_template, context)
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, ) #html_message=message_html,)
-
-
-def add_editor_to_channel(invitation):
-    if invitation.share_mode == "view":
-        if invitation.invited in invitation.channel.editors.all():
-            invitation.channel.editors.remove(invitation.invited)
-        invitation.channel.viewers.add(invitation.invited)
-    else:
-        if invitation.invited in invitation.channel.viewers.all():
-            invitation.channel.viewers.remove(invitation.invited)
-        invitation.channel.editors.add(invitation.invited)
-    invitation.channel.save()
-    invitation.delete()
 
 def custom_password_reset(request, **kwargs):
     return password_reset(request, extra_email_context={'domain': request.META.get('HTTP_ORIGIN')}, **kwargs)

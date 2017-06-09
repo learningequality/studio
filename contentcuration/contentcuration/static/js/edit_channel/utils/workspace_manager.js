@@ -55,7 +55,12 @@ function WorkspaceManager(){
 	this.remove = function(key){
 		var n = this.get(key);
 		if(n){
-			if(n.node){n.node.remove();}
+			if(n.node){
+				if(n.node.containing_list_view) {
+					n.node.containing_list_view.remove_view(n.node);
+				}
+				n.node.remove();
+			}
 			if(n.list){n.list.close();}
 			this.put(key, null, null);
 		}
