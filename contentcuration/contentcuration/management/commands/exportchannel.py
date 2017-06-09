@@ -123,19 +123,18 @@ def map_content_nodes(root_node):
                 logging.debug("Mapping node with id {id}".format(
                     id=node.pk))
 
-                children = (node.children.
-                            # select_related('parent', 'files__preset', 'files__file_format').
-                            all())
-                node_queue.extend(children)
+                if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists():
+                    children = (node.children.all())
+                    node_queue.extend(children)
 
-                kolibrinode = create_bare_contentnode(node)
+                    kolibrinode = create_bare_contentnode(node)
 
-                if node.kind.kind == content_kinds.EXERCISE:
-                    if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
-                        create_perseus_exercise(node, kolibrinode)
-                if node.kind.kind != content_kinds.TOPIC:
+                    if node.kind.kind == content_kinds.EXERCISE:
+                        exercise_data = process_assessment_metadata(node, kolibrinode)
+                        if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
+                            create_perseus_exercise(node, kolibrinode, exercise_data)
                     create_associated_file_objects(kolibrinode, node)
-                map_tags_to_node(kolibrinode, node)
+                    map_tags_to_node(kolibrinode, node)
 
 def create_bare_contentnode(ccnode):
     logging.debug("Creating a Kolibri node for instance id {}".format(
@@ -155,7 +154,7 @@ def create_bare_contentnode(ccnode):
             'sort_order': ccnode.sort_order,
             'license_owner': ccnode.copyright_holder or "",
             'license': kolibri_license,
-            'available': True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
+            'available': ccnode.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists(),  # Hide empty topics
             'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
         }
     )
@@ -199,12 +198,11 @@ def create_associated_file_objects(kolibrinode, ccnode):
             thumbnail=preset.thumbnail,
         )
 
-def create_perseus_exercise(ccnode, kolibrinode):
+def create_perseus_exercise(ccnode, kolibrinode, exercise_data):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
-        data = process_assessment_metadata(ccnode, kolibrinode)
-        create_perseus_zip(ccnode, data, tempf)
+        create_perseus_zip(ccnode, exercise_data, tempf)
         file_size = tempf.tell()
         tempf.flush()
 
@@ -234,6 +232,8 @@ def process_assessment_metadata(ccnode, kolibrinode):
         mastery_model.update({'m': exercise_data.get('m') or min(5, assessment_items.count()) or 1})
     elif mastery_model['type'] == exercises.DO_ALL:
         mastery_model.update({'n': assessment_items.count() or 1, 'm': assessment_items.count() or 1})
+    elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_2:
+        mastery_model.update({'n': 2, 'm': 2})
     elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_3:
         mastery_model.update({'n': 3, 'm': 3})
     elif mastery_model['type'] == exercises.NUM_CORRECT_IN_A_ROW_5:

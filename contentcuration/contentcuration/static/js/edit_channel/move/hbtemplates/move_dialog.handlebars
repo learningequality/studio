@@ -1,23 +1,23 @@
 <div class="move_section_wrapper row">
-	<div class="move_section col-sm-4 move_list_section">
+	<div class="move_section col-sm-4 move_list_section modal-content-default">
 		<div id="move_list_area"></div>
 	</div>
 	<div id="move_arrow_indicator" class="col-sm-1 move_section text-center">
 		<div class="glyphicon glyphicon-play"></div>
 	</div>
-	<div class="move_section col-sm-7 move_list_section">
+	<div class="move_section col-sm-7 move_list_section modal-content-default">
 		<div id="target_list_area">
-			<div class="empty_default">Calculating valid moves...</div>
+			<em class="default-item empty_default">Calculating valid moves...</em>
 		</div>
 	</div>
 </div>
 <br/>
-<div id="move_bottom_container">
+<div id="move_bottom_container" class="modal-bottom-content-default">
 	<a class="action-text" data-dismiss="modal">
 		<span>CANCEL</span>
 	</a>
-	<button disabled class="action-button pull-right disabled" id="move_content_button">
+	<button disabled class="action-button pull-right disabled modal-main-action-button" id="move_content_button">
 		MOVE
 	</button>
-	<span id="move_status" class="pull-right truncate"></span>
+	<span id="move_status" class="pull-right truncate modal-status-text"></span>
 </div>
