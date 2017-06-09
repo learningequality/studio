@@ -416,6 +416,21 @@ var ContentNodeCollection = BaseCollection.extend({
                 }
             });
         });
+    },
+    sync: function(models){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = { "nodes" : _.pluck(models, 'id'), "channel_id": window.current_channel.id };
+            $.ajax({
+                method:"POST",
+                url: window.Urls.sync_nodes(),
+                data:  JSON.stringify(data),
+                error:reject,
+                success: function(synced) {
+                    resolve(new ContentNodeCollection(JSON.parse(synced)));
+                }
+            });
+        });
     }
 });
 
@@ -484,6 +499,28 @@ var ChannelModel = BaseModel.extend({
                         "original" : new ContentNodeCollection(JSON.parse(nodes.original)),
                         "changed" : new ContentNodeCollection(JSON.parse(nodes.changed))
                     });
+                },
+                error:reject
+            });
+        });
+    },
+    sync: function(options){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = {
+                'channel_id': self.id,
+                'attributes': options.attributes,
+                'tags': options.tags,
+                'files': options.files,
+                'assessment_items': options.assessment_items,
+                'sort': options.sort
+            }
+            $.ajax({
+                method:"POST",
+                url: window.Urls.sync_channel(),
+                data:  JSON.stringify(data),
+                success: function(data) {
+                    resolve(new ContentNodeCollection(JSON.parse(data)));
                 },
                 error:reject
             });

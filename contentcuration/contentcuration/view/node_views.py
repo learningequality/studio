@@ -53,21 +53,16 @@ def get_node_diff(request):
             node = content_id_mapping.get(copied_node.content_id)
 
             if node:
-                node_changed = node.assessment_items.count() != copied_node.assessment_items.count() \
-                               or node.files.count() != copied_node.files.count() \
-                               or node.tags.count() != copied_node.tags.count()
+                # Check lengths, metadata, tags, files, and assessment items
+                node_changed = node.assessment_items.count() != copied_node.assessment_items.count() or \
+                               node.files.count() != copied_node.files.count() or \
+                               node.tags.count() != copied_node.tags.count() or \
+                               any(filter(lambda f: getattr(node, f, None) != getattr(copied_node, f, None), fields_to_check)) or \
+                               node.tags.exclude(tag_name__in=copied_node.tags.values_list('tag_name', flat=True)).exists() or \
+                               node.files.exclude(checksum__in=copied_node.files.values_list('checksum', flat=True)).exists() or \
+                               node.assessment_items.exclude(assessment_id__in=copied_node.assessment_items.values_list('assessment_id', flat=True)).exists()
 
-                # Check metadata
-                node_changed = node_changed or any(filter(lambda f: getattr(node, f, None) != getattr(copied_node, f, None), fields_to_check))
-
-                # Check tags
-                node_changed = node_changed or node.tags.exclude(tag_name__in=copied_node.tags.values_list('tag_name', flat=True)).exists()
-
-                # Check files
-                node_changed = node_changed or node.files.exclude(checksum__in=copied_node.files.values_list('checksum', flat=True)).exists()
-
-                # Check assessment_items
-                node_changed = node_changed or node.assessment_items.exclude(assessment_id__in=copied_node.assessment_items.values_list('assessment_id', flat=True)).exists()
+                # Check individual assessment items
                 if not node_changed and node.kind_id == content_kinds.EXERCISE:
                     for ai in node.assessment_items.all():
                         source_ai = copied_node.assessment_items.filter(assessment_id=ai.assessment_id).first()
@@ -88,8 +83,8 @@ def get_node_diff(request):
 
 
 
-        serialized_original = JSONRenderer().render(ContentNodeEditSerializer(original, many=True).data)
-        serialized_changed = JSONRenderer().render(ContentNodeEditSerializer(changed, many=True).data)
+        serialized_original = JSONRenderer().render(SimplifiedContentNodeSerializer(original, many=True).data)
+        serialized_changed = JSONRenderer().render(SimplifiedContentNodeSerializer(changed, many=True).data)
 
 
 
@@ -330,3 +325,157 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
                 n.tags.add(t)
 
     return node
+
+def sync_nodes(request):
+    logging.debug("Entering the sync_nodes endpoint")
+
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+
+        try:
+            nodes = data["nodes"]
+            channel_id = data['channel_id']
+
+        except KeyError:
+            return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+        all_nodes = []
+        with transaction.atomic():
+            with ContentNode.objects.delay_mptt_updates():
+                for n in nodes:
+                    node, _ = _sync_node(ContentNode.objects.get(pk=n), channel_id, sync_attributes=True, sync_tags=True, sync_files=True, sync_assessment_items=True)
+                    if node.changed:
+                        node.save()
+                    all_nodes.append(node)
+        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(all_nodes, many=True).data))
+
+
+def _sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_files=False, sync_assessment_items=False, sync_sort_order=False):
+    parents_to_check = []
+    original_node = node.get_original_node()
+    if original_node.node_id != node.node_id: # Only update if node is not original
+        logging.info("----- Syncing: {} from {}".format(node.title.encode('utf-8'), original_node.get_channel().name.encode('utf-8')))
+        if sync_attributes:
+            sync_node_data(node, original_node)
+        if sync_tags:
+            sync_node_tags(node, original_node, channel_id)
+        if sync_files:
+            sync_node_files(node, original_node)
+        if sync_assessment_items and node.kind_id == content_kinds.EXERCISE:
+            sync_node_assessment_items(node, original_node)
+        if sync_sort_order:
+            node.sort_order = original_node.sort_order
+            if node.parent not in parents_to_check:
+                parents_to_check.append(node.parent)
+    return node, parents_to_check
+
+def sync_channel_endpoint(request):
+    logging.debug("Entering the sync_nodes endpoint")
+
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+
+        try:
+            nodes = sync_channel(
+                Channel.objects.get(pk=data['channel_id']),
+                sync_attributes=data.get('attributes'),
+                sync_tags=data.get('tags'),
+                sync_files=data.get('files'),
+                sync_assessment_items=data.get('assessment_items'),
+                sync_sort_order=data.get('sort'),
+            )
+
+            return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
+        except KeyError:
+            return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+def sync_channel(channel, sync_attributes=False, sync_tags=False, sync_files=False, sync_assessment_items=False, sync_sort_order=False):
+    all_nodes = []
+    parents_to_check = [] # Keep track of parents to make resorting easier
+
+    with transaction.atomic():
+        with ContentNode.objects.delay_mptt_updates():
+            logging.info("Syncing nodes for channel {} (id:{})".format(channel.name, channel.pk))
+            for node in channel.main_tree.get_descendants():
+                node, parents = _sync_node(node, channel.pk,
+                    sync_attributes=sync_attributes,
+                    sync_tags=sync_tags,
+                    sync_files=sync_files,
+                    sync_assessment_items=sync_assessment_items,
+                    sync_sort_order=sync_sort_order,
+                )
+                parents_to_check += parents
+                all_nodes.append(node)
+            # Avoid cases where sort order might have overlapped
+            for parent in parents_to_check:
+                sort_order = 1
+                for child in parent.children.all().order_by('sort_order', 'title'):
+                    child.sort_order = sort_order
+                    child.save()
+                    sort_order += 1
+
+    return all_nodes
+
+
+def sync_node_data(node, original):
+    node.title = original.title
+    node.description = original.description
+    node.license = original.license
+    node.copyright_holder = original.copyright_holder
+    node.changed = True
+    node.author = original.author
+    node.extra_fields = original.extra_fields
+
+def sync_node_tags(node, original, channel_id):
+    # Remove tags that aren't in original
+    for tag in node.tags.exclude(tag_name__in=original.tags.values_list('tag_name', flat=True)):
+        node.tags.remove(tag)
+        node.changed = True
+    # Add tags that are in original
+    for tag in original.tags.exclude(tag_name__in=node.tags.values_list('tag_name', flat=True)):
+        new_tag, is_new = ContentTag.objects.get_or_create(
+            tag_name=tag.tag_name,
+            channel_id=channel_id,
+        )
+        node.tags.add(new_tag)
+        node.changed = True
+
+def sync_node_files(node, original):
+    # Delete files that aren't in original
+    node.files.exclude(checksum__in=original.files.values_list('checksum', flat=True)).delete()
+    # Add files that are in original
+    for f in original.files.all():
+        # Remove any files that are already attached to node
+        original_file = node.files.filter(preset_id=f.preset_id).first()
+        if original_file:
+            if original_file.checksum == f.checksum: # No need to copy file- nothing has changed
+                continue
+            original_file.delete()
+            node.changed = True
+        fcopy = copy.copy(f)
+        fcopy.id = None
+        fcopy.contentnode = node
+        fcopy.save()
+        node.changed = True
+
+
+def sync_node_assessment_items(node, original):
+    node.extra_fields = original.extra_fields
+    node.changed = True
+    # Clear assessment items on node
+    node.assessment_items.all().delete()
+    # Add assessment items onto node
+    for ai in original.assessment_items.all():
+        ai_copy = copy.copy(ai)
+        ai_copy.id = None
+        ai_copy.contentnode = node
+        ai_copy.save()
+        for f in ai.files.all():
+            f_copy = copy.copy(f)
+            f_copy.id = None
+            f_copy.assessment_item = ai_copy
+            f_copy.save()

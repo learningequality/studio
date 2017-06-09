@@ -4,7 +4,51 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("sync.less");
 
-/*********** MODAL CONTAINER FOR MOVE OPERATION ***********/
+/*********** MODAL CONTAINER FOR SYNC OPERATION ***********/
+var TempSyncModalView = BaseViews.BaseModalView.extend({
+    template: require("./hbtemplates/temp_sync_modal.handlebars"),
+    modal: true,
+
+    initialize: function(options) {
+        this.onsync = options.onsync;
+        this.collection = options.collection;
+        this.selected_options = {};
+        this.render(this.close, {});
+    },
+    events: {
+        'click .category_check' : 'handle_selection',
+        "click #sync_content_button" : "sync_content"
+    },
+    sync_content:function(){
+        var self = this;
+        this.display_load("Syncing Content...", function(resolve, reject){
+           window.current_channel.sync(self.selected_options).then(function(synced){
+                self.onsync(synced);
+                self.close();
+                resolve(true)
+            }).catch(reject);
+        });
+    },
+    get_selected_options: function(){
+        this.selected_options.details = this.$("#check_details").is(':checked');
+        this.selected_options.files = this.$("#check_files").is(':checked');
+        this.selected_options.tags = this.$("#check_tags").is(':checked');
+        this.selected_options.assessment_items = this.$("#check_assessment_items").is(':checked');
+    },
+    handle_selection: function(){
+        this.get_selected_options();
+        if(_.chain(this.selected_options).values().some(function(v){return v;}).value()){
+            this.$("#sync_content_button").prop("disabled", false);
+            this.$("#sync_content_button").removeClass("disabled");
+        } else {
+            this.$("#sync_content_button").prop("disabled", true);
+            this.$("#sync_content_button").addClass("disabled");
+        }
+    }
+});
+
+
+/*********** MODAL CONTAINER FOR SYNC OPERATION ***********/
 var SyncModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/sync_modal.handlebars"),
     modal: true,
@@ -21,7 +65,7 @@ var SyncModalView = BaseViews.BaseModalView.extend({
     }
 });
 
-/*********** VIEW FOR MOVE OPERATION ***********/
+/*********** VIEW FOR SYNC OPERATION ***********/
 var SyncView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/sync_dialog.handlebars"),
     onsync:null,
@@ -63,16 +107,17 @@ var SyncView = BaseViews.BaseListView.extend({
                 changed: null
             });
         });
-
     },
 
     /*********** SYNCING METHODS ***********/
     sync_content:function(){
         var self = this;
         this.display_load("Syncing Content...", function(resolve, reject){
-            self.collection.sync().then(function(synced){
+            var selected_models = _.chain(self.synclist.views).where({checked:true}).pluck('model').value();
+            self.collection.sync(selected_models).then(function(synced){
                 self.onsync(synced);
                 self.close_sync();
+                resolve(true)
             }).catch(reject);
         });
     },
@@ -97,26 +142,46 @@ var SyncPreviewView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/sync_preview.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, 'generate_diff_item', 'compare_field');
+        _.bindAll(this, 'generate_diff_item', 'compare_field', 'render_diff');
         this.changed = options.changed;
+        this.loading = false;
+        this.previewed_collection = new Models.ContentNodeCollection();
         this.render();
     },
     events: {
-        'click .file_subitem' : 'load_preview'
+        'click .file_subitem' : 'load_preview',
+        'click .exercise_subitem' : 'load_exercise'
     },
     /*********** LOADING METHODS ***********/
     render: function() {
-        this.$el.html(this.template({
-            'node': this.model && this.model.toJSON(),
-            'diff_items': this.get_diff()
-        }));
+        this.$el.html(this.template({loading: this.loading}));
+        this.render_diff();
+    },
+    render_diff: function(){
+        var self = this;
+        if(this.model && this.changed){
+            this.previewed_collection.fetch_nodes_by_ids_complete([this.model.id, this.changed.id]).then(function(fetched){
+                self.set_loading(false);
+                self.model = fetched.get(self.model.id);
+                self.changed = fetched.get(self.changed.id);
+                self.$el.html(self.template({
+                    'node': self.model.toJSON(),
+                    'diff_items': self.get_diff()
+                }));
+            });
+        }
+    },
+    set_loading: function(loading){
+        this.loading = loading;
+        $(".sync_item_wrapper").prop('disabled', loading);
+        (loading)? $(".sync_item_wrapper").addClass('disabled') : $(".sync_item_wrapper").removeClass('disabled');
     },
     load_preview: function(event){
         var subtitles = [];
-        var file = $(event.target).data('model');
+        var file = $(event.currentTarget).data('model');
         if(file.preset.subtitle){
             subtitles.push(file);
-            var file_to_parse = $(event.target).data('current')? this.model.get('files') : this.changed.get('files');
+            var file_to_parse = $(event.currentTarget).data('current')? this.model.get('files') : this.changed.get('files');
             file = _.find(file_to_parse, function(f){ return !f.preset.supplementary; });
         }
         new SyncPreviewFileView({
@@ -124,26 +189,35 @@ var SyncPreviewView = BaseViews.BaseView.extend({
             subtitles: subtitles
         });
     },
+    load_exercise: function(event){
+        var selected = $(event.currentTarget);
+        var exercises = {
+            "current": selected.data('model') ? new Models.AssessmentItemModel(selected.data('model')) : null,
+            "source": selected.data('source') ? new Models.AssessmentItemModel(selected.data('source')) : null
+        };
+        new SyncPreviewExerciseView({ 'exercises': exercises });
+    },
     set_selected: function(selected_item, changed){
         this.model = selected_item;
         this.changed = changed;
-
+        this.set_loading(true);
         this.render();
     },
     get_diff: function(){
         var diff = [];
         if(this.model && this.changed){
-            diff = (this.generate_metadata_diff());            // Get diff on metadata
+            diff = (this.generate_metadata_diff());              // Get diff on metadata
             diff.push(this.generate_tag_diff());                 // Get diff on tags
             diff.push(this.generate_file_diff());                // Get diff on files
             diff.push(this.generate_assessment_item_diff());     // Get diff on assessment items
         }
-        console.log(_.reject(diff, function(item) { return !item; }))
         return _.reject(diff, function(item) { return !item; });
     },
     generate_metadata_diff: function(){
+        var self = this;
         var fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields'];
-        return _.chain(fields_to_check).filter(this.compare_field).map(this.generate_diff_item).value();
+        return _.chain(fields_to_check).filter(function(f) { return self.compare_field(f); })
+            .reduce(function(a, f) { return a.concat(self.generate_diff_item(f)); }, []).value();
     },
     compare_field: function(field){
         var val1 = (this.model.get(field)==="")? null : this.model.get(field);
@@ -162,13 +236,22 @@ var SyncPreviewView = BaseViews.BaseView.extend({
                 if(this.model.get('kind') === 'exercise'){
                     var current_mastery = this.generate_mastery_model_string(this.model.get('extra_fields'));
                     var source_mastery = this.generate_mastery_model_string(this.changed.get('extra_fields'));
+                    var changes = [];
                     if(current_mastery !== source_mastery){
-                        return {
+                        changes.push({
                             "field" : "Mastery Criteria",
                             "current": current_mastery,
                             "source": source_mastery
-                        }
+                        });
                     }
+                    if(this.model.get('extra_fields').randomize !== this.changed.get('extra_fields').randomize){
+                        changes.push({
+                            "field" : "Question Order",
+                            "current": (this.model.get('extra_fields').randomize) ? "Randomized" : "Ordered",
+                            "source": (this.changed.get('extra_fields').randomize) ? "Randomized" : "Ordered"
+                        });
+                    }
+                    return changes;
                 }
                 return null;
             default:
@@ -206,18 +289,21 @@ var SyncPreviewView = BaseViews.BaseView.extend({
     generate_file_diff: function(){
         var self = this;
         var current_files = _.reject(this.model.get('files'), function(f) {
-            return _.some(self.changed.get('files'), function(c){ return c.preset.id === f.preset.id && c.checksum === f.checksum});
+            return _.some(self.changed.get('files'), function(c){ return c.preset.id === f.preset.id && c.checksum === f.checksum && (f.preset.display || f.preset.subtitle)});
         });
         var source_files = _.reject(this.changed.get('files'), function(f) {
-            return _.some(self.model.get('files'), function(c){ return c.preset.id === f.preset.id && c.checksum === f.checksum});
+            return _.some(self.model.get('files'), function(c){ return c.preset.id === f.preset.id && c.checksum === f.checksum && (f.preset.display || f.preset.subtitle)});
         });
-
         if(current_files.length || source_files.length){
-            return {
-                "field": "Files",
-                "current": _.sortBy(current_files, function(f) {return f.preset.order;}),
-                "source": _.sortBy(source_files, function(f) {return f.preset.order;}),
-                "is_file": true
+            var current_return = _.chain(current_files).filter(function(f){ return f.preset.display || f.preset.subtitle; }).sortBy(function(f) {return f.preset.order;}).value();
+            var source_return = _.chain(source_files).filter(function(f){ return f.preset.display || f.preset.subtitle; }).sortBy(function(f) {return f.preset.order;}).value();
+            if(current_return.length || source_return.length){
+                return {
+                    "field": "Files",
+                    "current": current_return,
+                    "source": source_return,
+                    "is_file": true
+                }
             }
         }
     },
@@ -229,7 +315,6 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         var source_questions = _.reject(this.changed.get('assessment_items'), function(a) {
             return _.some(self.model.get('assessment_items'), function(c){ return self.compare_assessment_items(a, c); });
         });
-
         if(current_questions.length || source_questions.length){
             var current_ids = _.pluck(current_questions, 'assessment_id');
             var source_ids = _.pluck(source_questions, 'assessment_id');
@@ -238,12 +323,9 @@ var SyncPreviewView = BaseViews.BaseView.extend({
                 else if (_.contains(source_ids, q.assessment_id)){ return "source"; }
                 else return "current";
             });
-
             var common_ids = _.pluck(partition.changed, 'assessment_id');
             partition.changed = _.chain(current_questions).filter(function(q){return _.contains(common_ids, q.assessment_id);})
-                    .map(function(q){return {'current': q, 'source': _.findWhere(source_questions, {'assessment_id': q.assessment_id})};}).value();
-            console.log(partition)
-
+                .map(function(q){return {'current': q, 'source': _.findWhere(source_questions, {'assessment_id': q.assessment_id})};}).value();
             return {
                 "field": "Questions",
                 "current": _.map(partition.current, function(q) { return self.generate_question_object(q); }),
@@ -254,13 +336,28 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         }
     },
     compare_assessment_items: function(ai1, ai2){
+        return this.compare_list_objects([ai1], [ai2], ['assessment_id', 'question', 'order', 'randomize', 'source_url', 'type']) &&
+            this.compare_list_objects(JSON.parse(ai1.answers), JSON.parse(ai2.answers), ['answer', 'correct', 'order']) &&
+            this.compare_list_objects(JSON.parse(ai1.hints), JSON.parse(ai2.hints), ['hint', 'order']) &&
+            this.compare_list_objects(JSON.parse(ai1.raw_data), JSON.parse(ai2.raw_data));
+    },
+    compare_list_objects:function(list1, list2, fields_to_check){
         var self = this;
-        var fields_to_check = ['assessment_id', 'question', 'answers', 'hints', 'order', 'randomize', 'raw_data', 'source_url', 'type'];
-        return _.reject(fields_to_check, function(f){ return ai1[f] === ai2[f]; }).length === 0;
+        return list1.length === list2.length && _.every(list1, function(li1){
+            return _.find(list2, function(li2){
+                return _.every(fields_to_check || _.keys(li1), function(f){
+                    if(typeof li1[f] === "object" && typeof li2[f] === "object"){
+                        return self.compare_list_objects([].concat(li1[f]), [].concat(li2[f]));
+                    }
+                    return li1[f] === li2[f];
+                });
+            });
+        });
     },
     generate_question_object: function(question){
         return {
             "id": question.assessment_id,
+            "model": question,
             "question": question.question || (question.raw_data && "Perseus Question"),
             "answers": JSON.parse(question.answers) || [],
             "hints": JSON.parse(question.hints) || []
@@ -273,45 +370,91 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         var a1 = JSON.parse(q1.answers) || [];
         var a2 = JSON.parse(q2.answers) || [];
         var answers1 = _.chain(a1).reject(function(a){ return _.some(a2, function(cmp){ return _.isEqual(a, cmp); });}).sortBy("order").value();
-        var answers2 = _.chain(a2).reject(function(a){return _.some(a1, function(cmp){ return _.isEqual(a, cmp); });}).sortBy("order").value();
+        var answers2 = _.chain(a2).reject(function(a){ return _.some(a1, function(cmp){ return _.isEqual(a, cmp); });}).sortBy("order").value();
 
         var h1 = JSON.parse(q1.hints) || [];
         var h2 = JSON.parse(q2.hints) || [];
         var hints1 = _.chain(h1).reject(function(h){return _.some(h2, function(cmp){ return _.isEqual(h, cmp);});}).sortBy("order").value();
         var hints2 = _.chain(h2).reject(function(h){return _.some(h1, function(cmp){ return _.isEqual(h, cmp);});}).sortBy("order").value();
 
+        var metadata1 = [];
+        var metadata2 = [];
+        if(q1.type !== q2.type){
+            metadata1.push(this.generate_readable_field_name(q1.type));
+            metadata2.push(this.generate_readable_field_name(q2.type));
+        }
+        if(q1.order !== q2.order){
+            metadata2.push("Answer Order Changed");
+        }
+        if(q1.randomize !== q2.randomize){
+            metadata1.push((q1.randomize)? "Randomized Answer Order" : "Ordered Answers");
+            metadata2.push((q2.randomize)? "Randomized Answer Order" : "Ordered Answers");
+        }
+        if(q1.source_url !== q2.source_url){
+            metadata1.push("Url: " + q1.source_url);
+            metadata2.push("Url: " + q2.source_url);
+        }
+        metadata1 = metadata1.join(", ");
+        metadata2 = metadata2.join(", ");
+
         return {
             "id": q1.assessment_id,
+            "model1": q1,
+            "model2": q2,
             "question": {"current" : question1, "source": question2, "changed" : q1.question!==q2.question || q1.raw_data!==q2.raw_data},
             "answers": {"current": answers1, "source": answers2},
             "hints": {"current": hints1, "source": hints2},
+            "data" : {"current": metadata1, "source": metadata2, "changed": metadata1 !== metadata2}
         }
     }
 });
 
 var SyncPreviewModalView = BaseViews.BaseModalView.extend({
+    modal: true,
+    header: null,
     template: require("./hbtemplates/sync_preview_modal.handlebars"),
     render: function() {
-        this.$el.html(this.template({file: this.model}));
+        this.$el.html(this.template({header: this.header()}));
         $("body").append(this.el);
         this.$("#sync_preview_modal").modal({show: true});
         this.$("#sync_preview_modal").on("hidden.bs.modal", this.closed_modal);
-        _.defer(this.create_preview);
     }
 });
 
 var SyncPreviewFileView = SyncPreviewModalView.extend({
+    header: function(){ return "Previewing " + this.model.display_name; },
     initialize: function(options) {
         _.bindAll(this, 'create_preview');
-        this.modal = true;
         this.subtitles = options.subtitles;
         this.render();
+        _.defer(this.create_preview);
     },
     create_preview: function(){
         var previewer = require('edit_channel/preview/views');
         previewer.render_preview(this.$("#preview_window"), this.model, this.subtitles);
         if(this.subtitles.length){
             this.$("#preview_window video").get(0).textTracks[0].mode = "showing";
+        }
+    }
+});
+
+var SyncPreviewExerciseView = SyncPreviewModalView.extend({
+    exercise_template: require("./hbtemplates/sync_exercise.handlebars"),
+    header: function(){ return "Previewing Exercise";},
+    initialize: function(options) {
+        _.bindAll(this, 'create_exercise');
+        this.exercises = options.exercises;
+        this.render();
+        _.defer(this.create_exercise);
+    },
+    create_exercise: function(){
+        this.$("#preview_window").html(this.exercise_template({exercises: this.exercises}));
+        var exerciseView = require('edit_channel/exercise_creation/views');
+        if(this.exercises.current){
+            this.$("#assessment_item_current").append(new exerciseView.AssessmentItemDisplayView({ model: this.exercises.current }).el);
+        }
+        if(this.exercises.source){
+            this.$("#assessment_item_source").append(new exerciseView.AssessmentItemDisplayView({ model: this.exercises.source }).el);
         }
     }
 });
@@ -348,17 +491,14 @@ var SyncList = BaseViews.BaseListView.extend({
     }
 });
 
-/*********** ITEM TO MOVE OR DESTINATION ITEM ***********/
+/*********** ITEM TO SYNC ***********/
 var SyncItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/sync_list_item.handlebars"),
     tagName: "li",
     className: "sync_list_item",
     selectedClass: "sync-selected",
 
-    'id': function() {
-        return "sync_item_" + this.model.get("id");
-    },
-
+    'id': function() { return "sync_item_" + this.model.get("id"); },
     initialize: function(options) {
         _.bindAll(this, "render");
         this.bind_node_functions();
@@ -374,7 +514,7 @@ var SyncItem = BaseViews.BaseListNodeItemView.extend({
     },
     render: function() {
         this.$el.html(this.template({
-            node:this.model && this.model.toJSON(),
+            node: this.model && this.model.toJSON(),
             isfolder: this.model && this.model.get("kind") === "topic"
         }));
     },
@@ -390,6 +530,7 @@ var SyncItem = BaseViews.BaseListNodeItemView.extend({
 });
 
 module.exports = {
+    TempSyncModalView: TempSyncModalView,
     SyncModalView: SyncModalView,
     SyncView:SyncView
 }

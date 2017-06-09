@@ -132,5 +132,5 @@ Handlebars.registerHelper('to_json', function(obj){
 
 Handlebars.registerHelper('parse_question', function(str){
   if(!str){ return "Question"; }
-  return str.replace(/\$\$([^\$]+)\$\$/g, " [FORMULA] ").replace(/!\[.*\]\(\${☣ CONTENTSTORAGE}\/([^)]+)\)/g, " [IMAGE] ");
+  return str.replace(/\$\$([^\$]+)\$\$/g, " [FORMULA] ").replace(/!\[.*\]\(\${☣ CONTENTSTORAGE}\/([^)]+)\)/g, " [IMAGE] ").replace(/\\/g, "");
 });

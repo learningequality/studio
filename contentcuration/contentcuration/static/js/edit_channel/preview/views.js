@@ -82,7 +82,6 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     generate_preview:function(force_load){
         if(this.current_preview){
-            console.log("Rendering")
             _.defer(render_preview, this.$("#preview_window"), this.current_preview, this.get_subtitles(), force_load && this.model.get('kind') === "video");
         }
     },

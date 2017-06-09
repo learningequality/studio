@@ -10,7 +10,7 @@
 			{{#each current}}
 				<div class="row item">
 					<div class="col-xs-2 item_field_title">Question Deleted</div>
-					<div class="col-xs-10 item_field" data-model='{{#to_json this}}{{/to_json}}' title="Deleted" id="question_{{id}}">
+					<div class="col-xs-10 item_field exercise_subitem" data-model='{{#to_json model}}{{/to_json}}' title="Deleted" id="question_{{id}}">
 						<div class="list_subitem original">
 							<div class="preview glyphicon glyphicon-new-window pull-right grayed" aria-hidden="true"></div>
 							<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{#parse_question question}}{{/parse_question}}
@@ -21,8 +21,8 @@
 			{{/each}}
 			{{#each changed}}
 				<div class="row item">
-					<div class="col-xs-2 item_field_title">Question Changed</div>
-					<div class="col-xs-10 item_field" data-model='{{#to_json question.current}}{{/to_json}}' data-source='{{#to_json question.source}}{{/to_json}}' title="Changed" id="question_{{id}}">
+					<div class="col-xs-2 item_field_title">Question Modified</div>
+					<div class="col-xs-10 item_field exercise_subitem" data-model='{{#to_json model1}}{{/to_json}}' data-source='{{#to_json model2}}{{/to_json}}' title="Changed" id="question_{{id}}">
 						<div class="list_subitem">
 							<div class="preview glyphicon glyphicon-new-window pull-right grayed" aria-hidden="true"></div>
 							{{#if question.changed}}
@@ -44,6 +44,10 @@
 								{{#each hints.source}}
 									<li class="assessment_sublist_item updated"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Hint: {{#parse_question hint}}{{/parse_question}}</li>
 								{{/each}}
+								{{#if data.changed}}
+									<li class="assessment_sublist_item original"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> Properties: {{data.current}}</li>
+									<li class="assessment_sublist_item updated"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Properties: {{data.source}}</li>
+								{{/if}}
 							</ul>
 						</div>
 					</div>
@@ -52,7 +56,7 @@
 			{{#each source}}
 				<div class="row item">
 					<div class="col-xs-2 item_field_title">Question Added</div>
-					<div class="col-xs-10 item_field" data-model='{{#to_json this}}{{/to_json}}' title="Added" id="question_{{id}}">
+					<div class="col-xs-10 item_field exercise_subitem" data-source='{{#to_json model}}{{/to_json}}' title="Added" id="question_{{id}}">
 						<div class="list_subitem updated">
 							<div class="preview glyphicon glyphicon-new-window pull-right grayed" aria-hidden="true"></div>
 							<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{#parse_question question}}{{/parse_question}}
@@ -83,14 +87,14 @@
 							{{/each}}
 						</ul>
 					{{else}}
-						{{#if current}}<div class="original truncate" title="{{current}}"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{current}}</div>{{/if}}
-						{{#if source}}<div class="updated truncate" title="{{source}}"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{source}}</div>{{/if}}
+						{{#if current}}<div class="original wordwrap" title="{{current}}"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{current}}</div>{{/if}}
+						{{#if source}}<div class="updated wordwrap" title="{{source}}"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{source}}</div>{{/if}}
 					{{/if}}
 				</div>
 			</div>
 		{{/if}}
 	{{/if}}{{/each}}
 {{else}}
-	<div class="empty_default">Select an item to view updates</div>
+	<div class="empty_default">{{#if loading}}Loading changes...{{else}}Select an item to view updates{{/if}}</div>
 {{/if}}
 </div>
