@@ -19,6 +19,7 @@ from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse_lazy
 from django.utils.translation import ugettext as _
 from contentcuration.api import add_editor_to_channel
+from contentcuration.cc_utils import record_channel_action_stats
 from contentcuration.models import Channel, User, Invitation
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
 from registration.backends.hmac.views import RegistrationView
@@ -217,6 +218,9 @@ class UserRegistrationView(RegistrationView):
         message = render_to_string(self.email_body_template, context)
         # message_html = render_to_string(self.email_html_template, context)
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, ) #html_message=message_html,)
+
+        record_channel_action_stats(dict(action="Register", action_source="Human", user_id=user.pk))
+
 
 def custom_password_reset(request, **kwargs):
     return password_reset(request, extra_email_context={'domain': request.META.get('HTTP_ORIGIN')}, **kwargs)

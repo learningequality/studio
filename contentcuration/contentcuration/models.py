@@ -4,23 +4,19 @@ import uuid
 import hashlib
 import functools
 import json
+from contentcuration.cc_utils import record_channel_action_stats
 from django.conf import settings
-from django.contrib import admin
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import FileSystemStorage
-from django.db import IntegrityError, connections, models, connection
-from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
-from django.db.utils import ConnectionDoesNotExist
+from django.db import IntegrityError, models, connection
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.contrib.auth.models import PermissionsMixin
 from django.utils import timezone
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
-from django.core.mail import send_mail, EmailMultiAlternatives
-from django.template.loader import render_to_string
-from rest_framework.authtoken.models import Token
+from django.core.mail import send_mail
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
 EDIT_ACCESS = "edit"
@@ -252,17 +248,16 @@ class Channel(models.Model):
         # return size_q['resource_size'] or 0
 
     def save(self, *args, **kwargs):
-        original_node = None
+
+        original_channel = None
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
-            original_node = Channel.objects.get(pk=self.pk)
+            original_channel = Channel.objects.get(pk=self.pk)
 
-        record_channel_stats(original_node is None)
-
-        super(Channel, self).save(*args, **kwargs)
+        record_action_stats(self, original_channel)
 
         # Check if original thumbnail is no longer referenced
-        if original_node and original_node.thumbnail and 'static' not in original_node.thumbnail:
-            filename, ext = os.path.splitext(original_node.thumbnail)
+        if original_channel and original_channel.thumbnail and 'static' not in original_channel.thumbnail:
+            filename, ext = os.path.splitext(original_channel.thumbnail)
             delete_empty_file_reference(filename, ext[1:])
 
         if not self.main_tree:
@@ -274,7 +269,6 @@ class Channel(models.Model):
                 node_id=self.id,
             )
             self.main_tree.save()
-            self.save()
         elif self.main_tree.title != self.name:
             self.main_tree.title = self.name
             self.main_tree.save()
@@ -288,28 +282,85 @@ class Channel(models.Model):
                 node_id=self.id,
             )
             self.trash_tree.save()
-            self.save()
         elif self.trash_tree.title != self.name:
             self.trash_tree.title = self.name
             self.trash_tree.save()
+
+        super(Channel, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
 
 
-def record_channel_stats(is_create):
+def record_action_stats(channel, original_channel):
     """
-    :param is_create: Whether action is channel creation.
+    :param channel: The channel the current action is being performed on.
+    :param original_channel: The `channel` before the action was performed.
     """
-    import newrelic.agent
-    newrelic.agent.record_custom_metric('Custom/ChannelStats/NumCreatedChannels', 1)
+    action_attributes = dict(channel_id=channel.id, content_type='Channel')
+    # TODO: Determine the user_id when a human creates a channel
+    if channel.editors.first() is not None:
+        action_attributes['user_id'] = channel.editors.first().id
 
-    if is_create:
-        newrelic.agent.record_custom_event("ChannelStats", {"action": "Create"})
-    # else:
-        # Called three times for create, need to find out why
-        # newrelic.agent.record_custom_event("ChannelStats", {"action": "Update"})
+    if channel.ricecooker_version is not None:
+        action_attributes['content_source'] = 'Ricecooker'
+        if channel.staging_tree is not None:
+            # Staging tree only exists on API calls (currently just Ricecooker)
+            action_attributes['action_source'] = 'Ricecooker'
+            action_attributes['channel_num_resources'] = original_channel.chef_tree.get_descendants().exclude(
+                kind=content_kinds.TOPIC).count()
+            action_attributes['channel_num_nodes'] = original_channel.chef_tree.get_descendant_count()
+            action_attributes['num_resources_added'] = action_attributes['channel_num_resources']
+            action_attributes['num_nodes_added'] = action_attributes['channel_num_nodes']
+
+            if channel.previous_tree is None:
+                action_attributes['action'] = 'Create'
+                action_attributes['action_type'] = 'First'
+            # TODO: Distinguish between ricecooker uploads to existing channels and channels that have been deleted
+            else:
+                action_attributes['action'] = 'Update'
+                action_attributes['action_type'] = 'Content'
+        else:
+            # Ricecooker channel is being edited by user
+            action_attributes['action_source'] = 'Human'
+            action_attributes['channel_num_resources'] = channel.main_tree.get_descendants().exclude(
+                kind=content_kinds.TOPIC).count()
+            action_attributes['channel_num_nodes'] = channel.main_tree.get_descendant_count()
+
+            if channel.deleted:
+                action_attributes['action'] = 'Delete'
+            # ricecooker uploads and publish actions result in multiple saves, so we filter here only for human updates
+            # chef_tree only exists on ricecooker uploads
+            # channel's main_tree differs from original_channel's on ricecooker uploads
+            # channel's version differs from original_channel's on publish calls
+            elif not channel.chef_tree and channel.main_tree == original_channel.main_tree \
+                    and channel.version == original_channel.version:
+                action_attributes['action'] = 'Update'
+                action_attributes['action_type'] = 'Metadata'
+    else:
+        action_attributes['content_source'] = 'Human'
+        action_attributes['action_source'] = 'Human'
+
+        if channel.main_tree:
+            action_attributes['channel_num_resources'] = channel.main_tree.get_descendants().exclude(
+                kind=content_kinds.TOPIC).count()
+            action_attributes['channel_num_nodes'] = channel.main_tree.get_descendant_count()
+        else:
+            action_attributes['channel_num_resources'] = 0
+            action_attributes['channel_num_nodes'] = 0
+
+        if original_channel is None:
+            if channel.name:
+                action_attributes['action'] = 'Create'
+        elif channel.deleted:
+            action_attributes['action'] = 'Delete'
+        elif channel.version == original_channel.version:
+            action_attributes['action'] = 'Update'
+            action_attributes['action_type'] = 'Metadata'
+
+    record_channel_action_stats(action_attributes)
+
 
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -429,32 +480,22 @@ class ContentNode(MPTTModel, models.Model):
                 original.parent.changed = True
                 original.parent.save()
 
-        super(ContentNode, self).save(*args, **kwargs)
-
-        post_save_changes = False
         if self.original_node is None:
             self.original_node = self
-            post_save_changes = True
         if self.cloned_source is None:
             self.cloned_source = self
-            post_save_changes = True
 
         if self.original_channel_id is None and self.get_channel():
             self.original_channel_id = self.get_channel().id
-            post_save_changes = True
         if self.source_channel_id is None and self.get_channel():
             self.source_channel_id = self.get_channel().id
-            post_save_changes = True
 
         if self.original_source_node_id is None:
             self.original_source_node_id = self.node_id
-            post_save_changes = True
         if self.source_node_id is None:
             self.source_node_id = self.node_id
-            post_save_changes = True
 
-        if post_save_changes:
-            self.save()
+        super(ContentNode, self).save(*args, **kwargs)
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
