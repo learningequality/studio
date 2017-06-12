@@ -79,7 +79,6 @@ def record_node_addition_stats(nodes_being_added, user_id):
     :param nodes_being_added: The nodes being added to the human channel.
     :param user_id: The id of the user committing the action.
     """
-
     action_attributes = dict(action_source='Human', content_source='Human', user_id=user_id)
 
     # The first node to be added in this action.
@@ -103,8 +102,9 @@ def record_node_addition_stats(nodes_being_added, user_id):
 
     root_node = parent_node.get_root()
     action_attributes['channel_num_resources'] = root_node.get_descendants().exclude(kind=content_kinds.TOPIC).count() \
-                                                 + num_resources
-    action_attributes['channel_num_nodes'] = root_node.get_descendant_count() + num_resources
+                                                 + (action_attributes.get('num_resources_added') or 0)
+    action_attributes['channel_num_nodes'] = root_node.get_descendant_count() \
+                                             + (action_attributes.get('num_nodes_added') or 0)
 
     record_channel_action_stats(action_attributes)
 
@@ -140,8 +140,6 @@ def record_node_duplication_stats(nodes_being_copied, target_parent_id, destinat
     parent = ContentNode.objects.get(pk=target_parent_id)
     if parent.user_clipboard.first() is not None:
         action_attributes['action'] = 'Copy'
-        action_attributes['num_resources_added'] = 0
-        action_attributes['num_nodes_added'] = 0
     else:
         node_to_copy = ContentNode.objects.get(pk=nodes_being_copied[0]['id'])
         source_channel = node_to_copy.get_channel()
@@ -158,9 +156,9 @@ def record_node_duplication_stats(nodes_being_copied, target_parent_id, destinat
     action_attributes['source_channel_num_nodes'] = source_channel.main_tree.get_descendant_count()
 
     action_attributes['channel_num_resources'] = destination_channel.main_tree.get_descendants().exclude(
-        kind=content_kinds.TOPIC).count() + action_attributes['num_resources_added']
+        kind=content_kinds.TOPIC).count() + (action_attributes.get('num_resources_added') or 0)
     action_attributes['channel_num_nodes'] = destination_channel.main_tree.get_descendant_count() \
-                                             + action_attributes['num_nodes_added']
+                                             + (action_attributes.get('num_nodes_added') or 0)
 
     record_channel_action_stats(action_attributes)
 
