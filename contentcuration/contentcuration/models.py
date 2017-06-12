@@ -4,7 +4,7 @@ import uuid
 import hashlib
 import functools
 import json
-from contentcuration.cc_utils import record_channel_action_stats
+from contentcuration.statistics import record_channel_stats
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -253,7 +253,7 @@ class Channel(models.Model):
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
             original_channel = Channel.objects.get(pk=self.pk)
 
-        record_action_stats(self, original_channel)
+        record_channel_stats(self, original_channel)
 
         # Check if original thumbnail is no longer referenced
         if original_channel and original_channel.thumbnail and 'static' not in original_channel.thumbnail:
@@ -291,75 +291,6 @@ class Channel(models.Model):
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
-
-
-def record_action_stats(channel, original_channel):
-    """
-    :param channel: The channel the current action is being performed on.
-    :param original_channel: The `channel` before the action was performed.
-    """
-    action_attributes = dict(channel_id=channel.id, content_type='Channel')
-    # TODO: Determine the user_id when a human creates a channel
-    if channel.editors.first() is not None:
-        action_attributes['user_id'] = channel.editors.first().id
-
-    if channel.ricecooker_version is not None:
-        action_attributes['content_source'] = 'Ricecooker'
-        if channel.staging_tree is not None:
-            # Staging tree only exists on API calls (currently just Ricecooker)
-            action_attributes['action_source'] = 'Ricecooker'
-            action_attributes['channel_num_resources'] = original_channel.chef_tree.get_descendants().exclude(
-                kind=content_kinds.TOPIC).count()
-            action_attributes['channel_num_nodes'] = original_channel.chef_tree.get_descendant_count()
-            action_attributes['num_resources_added'] = action_attributes['channel_num_resources']
-            action_attributes['num_nodes_added'] = action_attributes['channel_num_nodes']
-
-            if channel.previous_tree is None:
-                action_attributes['action'] = 'Create'
-                action_attributes['action_type'] = 'First'
-            # TODO: Distinguish between ricecooker uploads to existing channels and channels that have been deleted
-            else:
-                action_attributes['action'] = 'Update'
-                action_attributes['action_type'] = 'Content'
-        else:
-            # Ricecooker channel is being edited by user
-            action_attributes['action_source'] = 'Human'
-            action_attributes['channel_num_resources'] = channel.main_tree.get_descendants().exclude(
-                kind=content_kinds.TOPIC).count()
-            action_attributes['channel_num_nodes'] = channel.main_tree.get_descendant_count()
-
-            if channel.deleted:
-                action_attributes['action'] = 'Delete'
-            # ricecooker uploads and publish actions result in multiple saves, so we filter here only for human updates
-            # chef_tree only exists on ricecooker uploads
-            # channel's main_tree differs from original_channel's on ricecooker uploads
-            # channel's version differs from original_channel's on publish calls
-            elif not channel.chef_tree and channel.main_tree == original_channel.main_tree \
-                    and channel.version == original_channel.version:
-                action_attributes['action'] = 'Update'
-                action_attributes['action_type'] = 'Metadata'
-    else:
-        action_attributes['content_source'] = 'Human'
-        action_attributes['action_source'] = 'Human'
-
-        if channel.main_tree:
-            action_attributes['channel_num_resources'] = channel.main_tree.get_descendants().exclude(
-                kind=content_kinds.TOPIC).count()
-            action_attributes['channel_num_nodes'] = channel.main_tree.get_descendant_count()
-        else:
-            action_attributes['channel_num_resources'] = 0
-            action_attributes['channel_num_nodes'] = 0
-
-        if original_channel is None:
-            if channel.name:
-                action_attributes['action'] = 'Create'
-        elif channel.deleted:
-            action_attributes['action'] = 'Delete'
-        elif channel.version == original_channel.version:
-            action_attributes['action'] = 'Update'
-            action_attributes['action_type'] = 'Metadata'
-
-    record_channel_action_stats(action_attributes)
 
 
 class ContentTag(models.Model):
@@ -485,10 +416,16 @@ class ContentNode(MPTTModel, models.Model):
         if self.cloned_source is None:
             self.cloned_source = self
 
-        if self.original_channel_id is None and self.get_channel():
-            self.original_channel_id = self.get_channel().id
-        if self.source_channel_id is None and self.get_channel():
-            self.source_channel_id = self.get_channel().id
+        if self.original_channel_id is None:
+            if self.get_channel():
+                self.original_channel_id = self.get_channel().id
+            elif self.parent and self.parent.get_channel():
+                self.original_channel_id = self.parent.get_channel().id
+        if self.source_channel_id is None:
+            if self.get_channel():
+                self.source_channel_id = self.get_channel().id
+            elif self.parent and self.parent.get_channel():
+                self.source_channel_id = self.parent.get_channel().id
 
         if self.original_source_node_id is None:
             self.original_source_node_id = self.node_id

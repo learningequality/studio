@@ -19,7 +19,7 @@ from le_utils.constants import content_kinds,file_formats, format_presets, licen
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
 from kolibri.content.utils.search import fuzz
-from contentcuration.cc_utils import record_channel_action_stats
+from contentcuration.statistics import record_publish_stats
 from kolibri.content.content_db_router import using_content_database, THREAD_LOCAL
 from django.db import transaction, connections
 from django.db.utils import ConnectionDoesNotExist
@@ -67,28 +67,11 @@ class Command(BaseCommand):
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
-            record_action_stats(channel)
+            record_publish_stats(channel)
 
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
-
-
-def record_action_stats(channel):
-    action_attributes = dict(action='Publish', action_source='Human', channel_id=channel.id, content_type='Channel')
-    if channel.editors.first() is not None:
-        action_attributes['user_id'] = channel.editors.first().id
-
-    if channel.ricecooker_version is not None:
-        action_attributes['content_source'] = 'Ricecooker'
-    else:
-        action_attributes['content_source'] = 'Human'
-
-    action_attributes['channel_num_resources'] = channel.main_tree.get_descendants().exclude(
-        kind=content_kinds.TOPIC).count()
-    action_attributes['channel_num_nodes'] = channel.main_tree.get_descendant_count()
-
-    record_channel_action_stats(action_attributes)
 
 
 def create_kolibri_license_object(ccnode):

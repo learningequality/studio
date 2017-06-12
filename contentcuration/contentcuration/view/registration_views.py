@@ -1,27 +1,21 @@
-import copy
 import json
 import logging
-import re
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import FormView
-from django.shortcuts import render, get_object_or_404, redirect, render_to_response
+from django.shortcuts import render, redirect
 from django.contrib.sites.shortcuts import get_current_site
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import password_reset
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.context_processors import csrf
-from django.db.models import Q
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse_lazy
 from django.utils.translation import ugettext as _
 from contentcuration.api import add_editor_to_channel
-from contentcuration.cc_utils import record_channel_action_stats
 from contentcuration.models import Channel, User, Invitation
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
+from contentcuration.statistics import record_user_registration_stats
 from registration.backends.hmac.views import RegistrationView
 
 
@@ -219,7 +213,7 @@ class UserRegistrationView(RegistrationView):
         # message_html = render_to_string(self.email_html_template, context)
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, ) #html_message=message_html,)
 
-        record_channel_action_stats(dict(action="Register", action_source="Human", user_id=user.pk))
+        record_user_registration_stats(user)
 
 
 def custom_password_reset(request, **kwargs):

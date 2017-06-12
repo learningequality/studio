@@ -2,18 +2,16 @@ import copy
 import json
 import logging
 import uuid
-from contentcuration.models import Channel
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Sum
 from rest_framework.renderers import JSONRenderer
-from contentcuration.cc_utils import record_channel_action_stats
 from contentcuration.utils.files import duplicate_file
 from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer
-from le_utils.constants import content_kinds
+from contentcuration.statistics import record_node_duplication_stats
 
 def create_new_node(request):
     if request.method == 'POST':
@@ -72,7 +70,7 @@ def duplicate_nodes(request):
             channel_id = data["channel_id"]
             new_nodes = []
 
-            record_action_stats(nodes, data["target_parent"], data["channel_id"])
+            record_node_duplication_stats(nodes, data["target_parent"], data["channel_id"])
 
             with transaction.atomic():
                 with ContentNode.objects.disable_mptt_updates():
@@ -86,54 +84,6 @@ def duplicate_nodes(request):
 
         serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
         return HttpResponse(JSONRenderer().render(serialized))
-
-
-def record_action_stats(nodes_being_copied, target_parent_id, destination_channel_id):
-    """
-    :param nodes_being_copied: The nodes being duplicated.
-    :param target_parent_id: The parent where the nodes are being copied to.
-    :param destination_channel_id: The channel where the nodes are being copied to.
-    """
-    num_resources_duplicated = 0
-    num_nodes_duplicated = 0
-
-    for node_data in nodes_being_copied:
-        orig_node = ContentNode.objects.get(pk=node_data['id'])
-
-        num_resources_duplicated += orig_node.get_descendants(include_self=True).exclude(
-            kind=content_kinds.TOPIC).count()
-        num_nodes_duplicated += orig_node.get_descendant_count() + 1
-
-    destination_channel = Channel.objects.get(pk=destination_channel_id)
-    action_attributes = dict(action_source="Human", channel_id=destination_channel_id,
-                             user_id=destination_channel.editors.first().id)
-
-    source_channel = destination_channel
-    parent = ContentNode.objects.get(pk=target_parent_id)
-    if parent.user_clipboard.first() is not None:
-        action_attributes["action"] = "Copy"
-        action_attributes["num_resources_added"] = 0
-        action_attributes["num_nodes_added"] = 0
-    else:
-        node_to_copy = ContentNode.objects.get(pk=nodes_being_copied[0]['id'])
-        source_channel = node_to_copy.get_channel()
-        action_attributes["action"] = "Import"
-        action_attributes["num_resources_added"] = num_resources_duplicated
-        action_attributes["num_nodes_added"] = num_nodes_duplicated
-
-    action_attributes["content_source"] = "Human" if source_channel.ricecooker_version is None else "Ricecooker"
-
-    action_attributes["source_channel"] = source_channel.id
-    action_attributes['source_channel_num_resources'] = source_channel.main_tree.get_descendants().exclude(
-        kind=content_kinds.TOPIC).count()
-    action_attributes['source_channel_num_nodes'] = source_channel.main_tree.get_descendant_count()
-
-    action_attributes['channel_num_resources'] = destination_channel.main_tree.get_descendants().exclude(
-        kind=content_kinds.TOPIC).count() + action_attributes["num_resources_added"]
-    action_attributes['channel_num_nodes'] = destination_channel.main_tree.get_descendant_count() \
-        + action_attributes["num_nodes_added"]
-
-    record_channel_action_stats(action_attributes)
 
 
 def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
