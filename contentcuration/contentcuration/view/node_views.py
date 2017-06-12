@@ -9,7 +9,7 @@ from django.db import transaction
 from django.db.models import Sum
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
-from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License
+from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer
 from contentcuration.statistics import record_node_duplication_stats
 
@@ -70,7 +70,11 @@ def duplicate_nodes(request):
             channel_id = data["channel_id"]
             new_nodes = []
 
-            record_node_duplication_stats(nodes, data["target_parent"], data["channel_id"])
+            nodes_being_copied = []
+            for node_data in nodes:
+                nodes_being_copied.append(ContentNode.objects.get(pk=node_data['id']))
+            record_node_duplication_stats(nodes_being_copied, ContentNode.objects.get(pk=target_parent),
+                                          Channel.objects.get(pk=channel_id))
 
             with transaction.atomic():
                 with ContentNode.objects.disable_mptt_updates():

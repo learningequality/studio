@@ -203,10 +203,10 @@ class CustomListSerializer(serializers.ListSerializer):
                     bulk_adding_list.append(ThroughModel(node_id=node.pk, contenttag_id=tag.pk))
             ThroughModel.objects.bulk_create(bulk_adding_list)
 
-        record_node_addition_stats(update_nodes, self.context['request'].user.id)
-
         # Perform updates.
         if update_nodes:
+            record_node_addition_stats(update_nodes, ContentNode.objects.get(id=update_nodes.itervalues().next()['id']),
+                                       self.context['request'].user.id)
             with transaction.atomic():
                 with ContentNode.objects.delay_mptt_updates():
                     for node_id, data in update_nodes.items():

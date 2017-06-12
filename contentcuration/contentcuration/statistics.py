@@ -2,8 +2,6 @@
 import newrelic.agent
 from le_utils.constants import content_kinds
 
-from contentcuration.models import ContentNode, Channel
-
 
 def record_channel_stats(channel, original_channel):
     """
@@ -74,9 +72,10 @@ def record_channel_stats(channel, original_channel):
     record_channel_action_stats(action_attributes)
 
 
-def record_node_addition_stats(nodes_being_added, user_id):
+def record_node_addition_stats(nodes_being_added, original_first_node, user_id):
     """
     :param nodes_being_added: The nodes being added to the human channel.
+    :param original_first_node: The original state of the first node being added.
     :param user_id: The id of the user committing the action.
     """
     action_attributes = dict(action_source='Human', content_source='Human', user_id=user_id)
@@ -86,7 +85,7 @@ def record_node_addition_stats(nodes_being_added, user_id):
     action_attributes['content_type'] = first_node['kind'].kind.title()
 
     num_resources = 0
-    if 'id' in first_node and ContentNode.objects.get(id=first_node['id']).parent is not None:
+    if 'id' in first_node and original_first_node.parent is not None:
         action_attributes['action'] = 'Update'
     else:
         action_attributes['action'] = 'Create'
@@ -116,41 +115,37 @@ def record_user_registration_stats(user):
     record_channel_action_stats(dict(action="Register", action_source="Human", user_id=user.pk))
 
 
-def record_node_duplication_stats(nodes_being_copied, target_parent_id, destination_channel_id):
+def record_node_duplication_stats(original_nodes_being_copied, target_parent, destination_channel):
     """
-    :param nodes_being_copied: The nodes being duplicated.
-    :param target_parent_id: The parent where the nodes are being copied to.
-    :param destination_channel_id: The channel where the nodes are being copied to.
+    :param original_nodes_being_copied: The nodes being duplicated.
+    :param target_parent: The parent where the nodes are being copied to.
+    :param destination_channel: The channel where the nodes are being copied to.
     """
     num_resources_duplicated = 0
     num_nodes_duplicated = 0
 
-    for node_data in nodes_being_copied:
-        orig_node = ContentNode.objects.get(pk=node_data['id'])
-
+    for orig_node in original_nodes_being_copied:
         num_resources_duplicated += orig_node.get_descendants(include_self=True).exclude(
             kind=content_kinds.TOPIC).count()
         num_nodes_duplicated += orig_node.get_descendant_count() + 1
 
-    destination_channel = Channel.objects.get(pk=destination_channel_id)
-    action_attributes = dict(action_source='Human', channel_id=destination_channel_id,
+    action_attributes = dict(action_source='Human', channel_id=destination_channel.id,
                              user_id=destination_channel.editors.first().id)
 
-    source_channel = destination_channel
-    parent = ContentNode.objects.get(pk=target_parent_id)
-    if parent.user_clipboard.first() is not None:
+    if target_parent.user_clipboard.first() is not None:
         action_attributes['action'] = 'Copy'
     else:
-        node_to_copy = ContentNode.objects.get(pk=nodes_being_copied[0]['id'])
-        source_channel = node_to_copy.get_channel()
         action_attributes['action'] = 'Import'
         action_attributes['num_resources_added'] = num_resources_duplicated
         action_attributes['num_nodes_added'] = num_nodes_duplicated
-        action_attributes['original_channel'] = node_to_copy.original_channel_id
 
+    node_to_copy = original_nodes_being_copied[0]
+    action_attributes['original_channel'] = node_to_copy.original_channel_id
+
+    source_channel = node_to_copy.get_channel()
     action_attributes['content_source'] = 'Human' if source_channel.ricecooker_version is None else 'Ricecooker'
-
     action_attributes['source_channel'] = source_channel.id
+
     action_attributes['source_channel_num_resources'] = source_channel.main_tree.get_descendants().exclude(
         kind=content_kinds.TOPIC).count()
     action_attributes['source_channel_num_nodes'] = source_channel.main_tree.get_descendant_count()
