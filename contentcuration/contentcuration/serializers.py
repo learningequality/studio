@@ -236,7 +236,7 @@ class CustomListSerializer(serializers.ListSerializer):
                         for attr, value in data.items():
                             setattr(node, attr, value)
                         node.tags = taglist
-                        node.save()
+                        node.save(request=self.context['request'])
                         ret.append(node)
         return ret
 
@@ -270,8 +270,8 @@ def record_action_stats(nodes_being_added, user_id):
 
     root_node = parent_node.get_root()
     action_attributes['channel_num_resources'] = root_node.get_descendants().exclude(kind=content_kinds.TOPIC).count() \
-        + action_attributes['num_resources_added']
-    action_attributes['channel_num_nodes'] = root_node.get_descendant_count() + action_attributes['num_nodes_added']
+        + (action_attributes.get('num_resources_added') or 0)
+    action_attributes['channel_num_nodes'] = root_node.get_descendant_count() + (action_attributes.get('num_nodes_added') or 0)
 
     record_channel_action_stats(action_attributes)
 

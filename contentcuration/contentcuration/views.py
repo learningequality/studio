@@ -155,6 +155,8 @@ def channel_view_only(request, channel_id):
     return channel_page(request, channel)
 
 @csrf_exempt
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
     if request.method != 'POST':
@@ -164,6 +166,7 @@ def publish_channel(request):
 
         try:
             channel_id = data["channel_id"]
+            request.user.can_edit(channel_id)
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
