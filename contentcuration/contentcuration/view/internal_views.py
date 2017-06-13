@@ -227,6 +227,37 @@ def check_user_is_editor(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def compare_trees(request):
+    """ Create the channel node """
+    data = json.loads(request.body)
+    try:
+        obj = Channel.objects.get(pk=data['channel_id'])
+        check_staging = data.get('staging')
+
+        comparison_tree = obj.staging_tree if check_staging else obj.main_tree
+        if not comparison_tree or not obj.previous_tree:
+            raise ValueError("Comparison Failed: Tree does not exist")
+
+        node_ids = comparison_tree.get_descendants().values_list('node_id', flat=True)
+        previous_node_ids = obj.previous_tree.get_descendants().values_list('node_id', flat=True)
+
+        new_nodes = comparison_tree.get_descendants().exclude(node_id__in=previous_node_ids).values('node_id', 'title', 'files__file_size', 'kind_id')
+        deleted_nodes = obj.previous_tree.get_descendants().exclude(node_id__in=node_ids).values('node_id', 'title', 'files__file_size', 'kind_id')
+
+        import pdb; pdb.set_trace()
+
+        new_node_mapping = {n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in new_nodes.all()}
+        deleted_node_mapping = {n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in deleted_nodes.all()}
+
+
+        return HttpResponse(json.dumps({ "success": True, 'new': new_node_mapping, 'deleted': deleted_node_mapping}))
+
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
 
 """ CHANNEL CREATE FUNCTIONS """
 def create_channel(channel_data, user):
