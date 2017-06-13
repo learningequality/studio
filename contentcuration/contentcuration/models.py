@@ -7,7 +7,7 @@ import json
 from contentcuration.cc_utils import record_channel_action_stats
 from django.conf import settings
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, MultipleObjectsReturned
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, models, connection
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager
@@ -481,7 +481,7 @@ class ContentNode(MPTTModel, models.Model):
         try:
             root = self.get_root()
             return root.channel_main.first() or root.channel_chef.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
-        except ObjectDoesNotExist:
+        except ObjectDoesNotExist, MultipleObjectsReturned:
             return None
 
     def save(self, *args, **kwargs):
