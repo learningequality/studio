@@ -247,8 +247,6 @@ def compare_trees(request):
         new_nodes = comparison_tree.get_descendants().exclude(node_id__in=previous_node_ids).values('node_id', 'title', 'files__file_size', 'kind_id')
         deleted_nodes = obj.previous_tree.get_descendants().exclude(node_id__in=node_ids).values('node_id', 'title', 'files__file_size', 'kind_id')
 
-        import pdb; pdb.set_trace()
-
         new_node_mapping = {n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in new_nodes.all()}
         deleted_node_mapping = {n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in deleted_nodes.all()}
 
