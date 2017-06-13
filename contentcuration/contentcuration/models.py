@@ -5,7 +5,6 @@ import hashlib
 import functools
 import json
 from contentcuration.cc_utils import record_channel_action_stats
-from contentcuration.permissions import ContentEditPermissionMixin
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
@@ -87,7 +86,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             raise PermissionDenied("Cannot edit content")
         return True
 
-    def can_edit(self, channel_id):
+    def can_view(self, channel_id):
         channel = Channel.objects.filter(pk=channel_id).first()
         if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists() and not channel.viewers.filter(pk=self.pk).exists():
             raise PermissionDenied("Cannot view content")
