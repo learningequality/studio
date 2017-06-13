@@ -224,7 +224,7 @@ class CustomListSerializer(serializers.ListSerializer):
                         for attr, value in data.items():
                             setattr(node, attr, value)
                         node.tags = taglist
-                        node.save()
+                        node.save(request=self.context['request'])
                         ret.append(node)
         return ret
 

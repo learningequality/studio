@@ -7,7 +7,7 @@ import json
 from django.conf import settings
 from django.contrib import admin
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connections, models, connection
 from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
@@ -22,6 +22,7 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from rest_framework.authtoken.models import Token
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from rest_framework import permissions
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -82,6 +83,18 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __unicode__(self):
         return self.email
+
+    def can_edit(self, channel_id):
+        channel = Channel.objects.filter(pk=channel_id).first()
+        if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists():
+            raise PermissionDenied("Cannot edit content")
+        return True
+
+    def can_edit(self, channel_id):
+        channel = Channel.objects.filter(pk=channel_id).first()
+        if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists() and not channel.viewers.filter(pk=self.pk).exists():
+            raise PermissionDenied("Cannot view content")
+        return True
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
@@ -236,7 +249,6 @@ class Channel(models.Model):
     source_id = models.CharField(max_length=200, blank=True, null=True)
     source_domain = models.CharField(max_length=300, blank=True, null=True)
     ricecooker_version = models.CharField(max_length=100, blank=True, null=True)
-
 
     def get_resource_size(self):
         # TODO: Add this back in once query filters out duplicated checksums
@@ -422,6 +434,11 @@ class ContentNode(MPTTModel, models.Model):
             return None
 
     def save(self, *args, **kwargs):
+        if kwargs.get('request'):
+            request = kwargs.pop('request')
+            channel = self.get_channel()
+            request.user.can_edit(channel and channel.pk)
+
         # Detect if node has been moved to another tree
         if self.pk and ContentNode.objects.filter(pk=self.pk).exists():
             original = ContentNode.objects.get(pk=self.pk)

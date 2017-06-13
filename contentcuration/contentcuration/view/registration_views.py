@@ -39,6 +39,9 @@ def send_invitation_email(request):
             retrieved_user = User.objects.get_or_create(email = user_email)
             recipient = retrieved_user[0]
             channel = Channel.objects.get(id=channel_id)
+
+            request.user.can_view(channel_id)
+
             invitation = Invitation.objects.get_or_create(invited = recipient,
                                                         email = user_email,
                                                         channel_id = channel_id,
