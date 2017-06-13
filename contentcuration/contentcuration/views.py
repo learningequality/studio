@@ -178,6 +178,8 @@ def publish_channel(request):
         }))
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def accessible_channels(request):
     if request.method == 'POST':
         data = json.loads(request.body)

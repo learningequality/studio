@@ -19,6 +19,8 @@ from rest_framework.authentication import TokenAuthentication, SessionAuthentica
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def create_new_node(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -54,7 +56,7 @@ def get_nodes_by_ids_complete(request):
                 .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
 
-@authentication_classes((TokenAuthentication, SessionAuthentication, BasicAuthentication))
+@authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
@@ -197,7 +199,7 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
 
     return new_node
 
-@authentication_classes((TokenAuthentication, SessionAuthentication, BasicAuthentication))
+@authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")

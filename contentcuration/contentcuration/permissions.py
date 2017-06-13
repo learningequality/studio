@@ -12,7 +12,7 @@ class CustomPermission(permissions.BasePermission):
             if obj.channel.editors.filter(pk=request.user.pk).exists() or obj.channel.viewers.filter(pk=request.user.pk).exists():
                 return True
         elif isinstance(obj, Channel):
-            if channel.editors.filter(pk=request.user.pk).exists():
+            if obj.editors.filter(pk=request.user.pk).exists():
                 return True
         elif isinstance(obj, ContentNode):
             channel = obj.get_channel()

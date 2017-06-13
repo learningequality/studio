@@ -250,6 +250,7 @@ class Channel(models.Model):
     source_domain = models.CharField(max_length=300, blank=True, null=True)
     ricecooker_version = models.CharField(max_length=100, blank=True, null=True)
 
+
     def get_resource_size(self):
         # TODO: Add this back in once query filters out duplicated checksums
         size = ChannelResourceSize.objects.filter(id=self.main_tree.tree_id).first()
