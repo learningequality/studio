@@ -917,31 +917,26 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	add_topic: function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var self = this;
-		var new_topic = new Models.ContentNodeModel();
-        new_topic.save({
+
+		this.containing_list_view.collection.create_new_node({
             "kind":"topic",
-            "title": "Topic",
+            "title": (this.model.get('parent'))? this.model.get('title') + " Topic" : "Topic",
             "sort_order" : this.model.get("metadata").max_sort_order,
             "author": get_author(),
-        },{
-        	success:function(new_topic){
-		        var edit_collection = new Models.ContentNodeCollection([new_topic]);
-		        $("#main-content-area").append("<div id='dialog'></div>");
+        }).then(function(new_topic){
+        	var edit_collection = new Models.ContentNodeCollection([new_topic]);
+	        $("#main-content-area").append("<div id='dialog'></div>");
 
-		        var metadata_view = new UploaderViews.MetadataModalView({
-		            el : $("#dialog"),
-		            collection: edit_collection,
-		            model: self.model,
-		            new_content: true,
-		            new_topic: true,
-		            onsave: self.reload_ancestors,
-		            onnew:self.add_nodes,
-		            allow_edit: true
-		        });
-        	},
-        	error:function(obj, error){
-            	console.log("Error message:", error);
-        	}
+	        var metadata_view = new UploaderViews.MetadataModalView({
+	            el : $("#dialog"),
+	            collection: edit_collection,
+	            model: self.model,
+	            new_content: true,
+	            new_topic: true,
+	            onsave: self.reload_ancestors,
+	            onnew:self.add_nodes,
+	            allow_edit: true
+	        });
         });
 	},
 	add_nodes:function(collection){
