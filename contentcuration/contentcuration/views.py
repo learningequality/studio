@@ -108,6 +108,8 @@ def channel_list(request):
                                                  "channel_name" : False,
                                                  "current_user" : JSONRenderer().render(UserChannelListSerializer(request.user).data)})
 
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def get_user_channels(request):
     channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers').filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
                     .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
@@ -115,6 +117,8 @@ def get_user_channels(request):
 
     return HttpResponse(JSONRenderer().render(channel_serializer.data))
 
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def get_user_pending_channels(request):
     pending_list = Invitation.objects.select_related('channel').select_related('sender').filter(invited=request.user)
     invitation_serializer = InvitationSerializer(pending_list, many=True)

@@ -85,16 +85,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def can_edit(self, channel_id):
-        channel = Channel.objects.filter(pk=channel_id).first()
-        if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists():
-            raise PermissionDenied("Cannot edit content")
-        return True
+        from contentcuration.permissions import user_can_edit
+        return user_can_edit(self, channel_id)
 
     def can_view(self, channel_id):
-        channel = Channel.objects.filter(pk=channel_id).first()
-        if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists() and not channel.viewers.filter(pk=self.pk).exists():
-            raise PermissionDenied("Cannot view content")
-        return True
+        from contentcuration.permissions import user_can_view
+        return user_can_view(self, channel_id)
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
