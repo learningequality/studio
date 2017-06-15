@@ -153,7 +153,7 @@ def api_commit_channel(request):
 
         # rebuild MPTT tree for this channel (since we set "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
         ContentNode.objects.partial_rebuild(obj.chef_tree.tree_id)
-        obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=obj.pk, source_channel_id=obj.pk)
+        obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=channel_id, source_channel_id=channel_id)
 
         old_staging = obj.staging_tree
         obj.staging_tree = obj.chef_tree
@@ -260,9 +260,9 @@ def convert_data_to_nodes(content_data, parent_node):
     """ Parse dict and create nodes accordingly """
     try:
         root_mapping = {}
-        sort_order = ContentNode.objects.get(pk=parent_node).children.count() + 1
-        existing_node_ids = ContentNode.objects.filter(parent_id=parent_node).values_list('node_id', flat=True)
-
+        parent_node = ContentNode.objects.get(pk=parent_node)
+        sort_order = parent_node.children.count() + 1
+        existing_node_ids = ContentNode.objects.filter(parent_id=parent_node.pk).values_list('node_id', flat=True)
         with transaction.atomic():
             for node_data in content_data:
                 # Check if node id is already in the tree to avoid duplicates
@@ -297,6 +297,7 @@ def create_node(node_data, parent_node, sort_order):
 
     return ContentNode.objects.create(
         title = node_data['title'],
+        tree_id = parent_node.tree_id,
         kind_id = node_data['kind'],
         node_id = node_data['node_id'],
         content_id = node_data['content_id'],
@@ -305,7 +306,7 @@ def create_node(node_data, parent_node, sort_order):
         license = license,
         license_description = node_data.get('license_description'),
         copyright_holder = node_data.get('copyright_holder') or "",
-        parent_id = parent_node,
+        parent = parent_node,
         extra_fields = node_data['extra_fields'],
         sort_order = sort_order,
         source_id = node_data.get('source_id'),
