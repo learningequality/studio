@@ -115,12 +115,16 @@ urlpatterns = [
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^channels/(?P<channel_id>[^/]+)/edit', views.channel, name='channel'),
     url(r'^channels/(?P<channel_id>[^/]+)/view', views.channel_view_only, name='channel_view_only'),
+    url(r'^channels/(?P<channel_id>[^/]+)/staging', views.channel_staging, name='channel_staging'),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
+    url(r'^staging_not_found/$', views.staging_not_found, name='staging_not_found'),
     url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
     url(r'^get_user_channels/$', views.get_user_channels, name='get_user_channels'),
     url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
     url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
+    url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
+    url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
 ]
 
@@ -179,6 +183,11 @@ urlpatterns += [
     url(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
     url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
     url(r'^api/internal/publish_channel$', internal_views.api_publish_channel, name="api_publish_channel"),
+    url(r'^api/internal/get_staged_diff_internal$', internal_views.get_staged_diff_internal, name='get_staged_diff_internal'),
+    url(r'^api/internal/activate_channel_internal$', internal_views.activate_channel_internal, name='activate_channel_internal'),
+    url(r'^api/internal/check_user_is_editor$', internal_views.check_user_is_editor, name='check_user_is_editor'),
+    url(r'^api/internal/compare_trees$', internal_views.compare_trees, name='compare_trees'),
+    url(r'^api/internal/get_tree_data$', internal_views.get_tree_data, name='get_tree_data'),
 ]
 
 urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]
