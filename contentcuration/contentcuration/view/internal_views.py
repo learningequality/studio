@@ -14,7 +14,7 @@ from django.core.context_processors import csrf
 from django.core.management import call_command
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
-from contentcuration.api import write_file_to_storage, activate_channel
+from contentcuration.api import write_file_to_storage, activate_channel, get_staged_diff
 from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, Language, generate_file_on_disk_name, generate_storage_url
 from contentcuration import ricecooker_versions as rc
 from le_utils.constants import content_kinds
@@ -24,7 +24,7 @@ from django.core.files import File as DjFile
 from django.db.models import Q, Value
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -38,7 +38,7 @@ VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, 
 VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def authenticate_user_internal(request):
     """ Verify user is valid """
@@ -46,7 +46,7 @@ def authenticate_user_internal(request):
     return HttpResponse(json.dumps({'success': True, 'username':unicode(request.user)}))
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def check_version(request):
     """ Get version of Ricecooker with which CC is compatible """
@@ -70,7 +70,7 @@ def check_version(request):
     }))
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def file_diff(request):
     """ Determine which files don't exist on server """
@@ -107,7 +107,7 @@ def api_file_upload(request):
         raise SuspiciousOperation("Invalid file upload request")
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_create_channel_endpoint(request):
     """ Create the channel node """
@@ -126,7 +126,7 @@ def api_create_channel_endpoint(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_commit_channel(request):
     """ Commit the channel staging tree to the main tree """
@@ -149,7 +149,7 @@ def api_commit_channel(request):
         if old_staging and old_staging != obj.main_tree:
             old_staging.delete()
 
-        if not data.get('no_activation'): # If user says to stage rather than submit, skip changing trees at this step
+        if not data.get('stage'): # If user says to stage rather than submit, skip changing trees at this step
             activate_channel(obj)
 
         return HttpResponse(json.dumps({
@@ -160,7 +160,7 @@ def api_commit_channel(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_add_nodes_to_tree(request):
     """ Add child nodes to a parent node """
@@ -177,7 +177,7 @@ def api_add_nodes_to_tree(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
@@ -194,6 +194,84 @@ def api_publish_channel(request):
         "success": True,
         "channel": channel_id
     }))
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def get_staged_diff_internal(request):
+    return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def activate_channel_internal(request):
+    data = json.loads(request.body)
+    channel = Channel.objects.get(pk=data['channel_id'])
+    activate_channel(channel)
+
+    return HttpResponse(json.dumps({"success": True}))
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def check_user_is_editor(request):
+    """ Create the channel node """
+    data = json.loads(request.body)
+    try:
+        obj = Channel.objects.get(pk=data['channel_id'])
+        if obj.editors.filter(pk=request.user.pk).exists():
+            return HttpResponse(json.dumps({ "success": True }))
+        else:
+            return SuspiciousOperation("User is not authorized to edit this channel")
+
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def compare_trees(request):
+    """ Create the channel node """
+    data = json.loads(request.body)
+    try:
+        obj = Channel.objects.get(pk=data['channel_id'])
+        check_staging = data.get('staging')
+
+        comparison_tree = obj.staging_tree if check_staging else obj.main_tree
+        if not comparison_tree or not obj.previous_tree:
+            raise ValueError("Comparison Failed: Tree does not exist")
+
+        node_ids = comparison_tree.get_descendants().values_list('node_id', flat=True)
+        previous_node_ids = obj.previous_tree.get_descendants().values_list('node_id', flat=True)
+
+        new_nodes = comparison_tree.get_descendants().exclude(node_id__in=previous_node_ids).values('node_id', 'title', 'files__file_size', 'kind_id')
+        deleted_nodes = obj.previous_tree.get_descendants().exclude(node_id__in=node_ids).values('node_id', 'title', 'files__file_size', 'kind_id')
+
+        new_node_mapping = {n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in new_nodes.all()}
+        deleted_node_mapping = {n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in deleted_nodes.all()}
+
+
+        return HttpResponse(json.dumps({ "success": True, 'new': new_node_mapping, 'deleted': deleted_node_mapping}))
+
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def get_tree_data(request):
+    """ Create the channel node """
+    data = json.loads(request.body)
+    try:
+        obj = Channel.objects.get(pk=data['channel_id'])
+        root = getattr(obj, "{}_tree".format(data.get('tree') or "main"), None)
+
+        data = root.get_tree_data(include_self=False)
+
+        return HttpResponse(json.dumps({ "success": True, 'tree': data}))
+
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
 """ CHANNEL CREATE FUNCTIONS """
@@ -229,6 +307,7 @@ def create_channel(channel_data, user):
         node_id = channel.id,
         source_id = channel.source_id,
         source_domain = channel.source_domain,
+        extra_fields = json.dumps({'ricecooker_version' : channel.ricecooker_version}),
     )
     channel.chef_tree.save()
     channel.save()

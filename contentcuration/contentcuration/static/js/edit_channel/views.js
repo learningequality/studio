@@ -112,6 +112,30 @@ var BaseWorkspaceView = BaseView.extend({
 			});
 		}
 	},
+	activate_channel: function(){
+		var dialog = require("edit_channel/utils/dialog");
+		var original_resource_count = window.current_channel.get('main_tree').metadata.resource_count;
+		var original_topic_count = window.current_channel.get('main_tree').metadata.total_count - original_resource_count;
+		var staged_resource_count = window.current_channel.get('staging_tree').metadata.resource_count;
+		var staged_topic_count = window.current_channel.get('staging_tree').metadata.total_count - staged_resource_count;
+		dialog.dialog("Deploy Channel?", "Deploying this topic tree will replace the live topic tree (" +
+			 + original_topic_count + " topics, " + original_resource_count + " resources) with this staged topic tree (" +
+			+ staged_topic_count + " topics, " + staged_resource_count + " resources). Are you sure you want to deploy this updated topic tree?", {
+			'View Summary': function(){
+				var treeViews = require('edit_channel/tree_edit/views');
+				new treeViews.DiffModalView();
+			},
+			'Keep Reviewing': function(){},
+			'Deploy': function(){
+				window.current_channel.activate_channel().then(function(){
+					window.location.href = '/channels/' + window.current_channel.id + '/edit';
+				}).catch(function(error){
+					dialog.alert("Channel not approved", error);
+				});
+			}
+		}, null);
+
+	},
 	handle_published:function(collection){
 		this.reload_ancestors(collection);
 		$("#publish-get-id-modal").modal("show");

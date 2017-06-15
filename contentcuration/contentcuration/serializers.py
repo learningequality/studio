@@ -523,13 +523,18 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
 class ChannelSerializer(serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')
     main_tree = RootNodeSerializer(read_only=True)
+    staging_tree = RootNodeSerializer(read_only=True)
     trash_tree = RootNodeSerializer(read_only=True)
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     created = serializers.SerializerMethodField('get_date_created')
+    updated = serializers.SerializerMethodField('get_date_updated')
     tags = TagSerializer(many=True, read_only=True)
 
     def get_date_created(self, channel):
         return channel.main_tree.created.strftime("%X %x")
+
+    def get_date_updated(self, channel):
+        return channel.staging_tree.created.strftime("%X %x") if channel.staging_tree else None
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
@@ -547,7 +552,7 @@ class ChannelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree', 'source_id', 'source_domain',
+        fields = ('id', 'created', 'updated', 'name', 'description', 'has_changed','editors', 'main_tree', 'trash_tree', 'staging_tree', 'source_id', 'source_domain',
                 'ricecooker_version', 'thumbnail', 'version', 'deleted', 'public', 'thumbnail_url', 'pending_editors', 'viewers', 'tags')
 
 class AccessibleChannelListSerializer(serializers.ModelSerializer):

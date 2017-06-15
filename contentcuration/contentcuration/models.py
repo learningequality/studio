@@ -398,6 +398,28 @@ class ContentNode(MPTTModel, models.Model):
 
     objects = TreeManager()
 
+    def get_tree_data(self, include_self=True):
+        if not include_self:
+            return [c.get_tree_data() for c in self.children.all()]
+        elif self.kind_id == content_kinds.TOPIC:
+            return {
+                "title" : self.title,
+                "kind" : self.kind_id,
+                "children" : [c.get_tree_data() for c in self.children.all()]
+            }
+        elif self.kind_id == content_kinds.EXERCISE:
+            return {
+                "title" : self.title,
+                "kind" : self.kind_id,
+                "count" : self.assessment_items.count()
+            }
+        else:
+            return {
+                "title" : self.title,
+                "kind" : self.kind_id,
+                "file_size" : self.files.values('file_size').aggregate(size=Sum('file_size'))['size']
+            }
+
     def get_original_node(self):
         original_node = self.original_node or self
         if self.original_channel_id and self.original_source_node_id:
