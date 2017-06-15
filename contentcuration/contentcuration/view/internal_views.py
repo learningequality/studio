@@ -256,6 +256,23 @@ def compare_trees(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def get_tree_data(request):
+    """ Create the channel node """
+    data = json.loads(request.body)
+    try:
+        obj = Channel.objects.get(pk=data['channel_id'])
+        root = getattr(obj, "{}_tree".format(data.get('tree') or "main"), None)
+
+        data = root.get_tree_data(include_self=False)
+
+        return HttpResponse(json.dumps({ "success": True, 'tree': data}))
+
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
 
 """ CHANNEL CREATE FUNCTIONS """
 def create_channel(channel_data, user):
