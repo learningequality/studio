@@ -422,7 +422,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
             "DELETE": function(){
 				self.add_to_trash();
 				if(self.subcontent_view){
-					self.subcontent_view.remove();
+					self.subcontent_view.close_container();
 				}
             },
         }, null);
