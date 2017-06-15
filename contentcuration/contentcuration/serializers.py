@@ -1,15 +1,18 @@
+from collections import OrderedDict
+
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.files import File as DjFile
+from django.db import transaction
+from django.db.models import Q, Max
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from rest_framework.fields import set_value, SkipField
+from rest_framework.settings import api_settings
+from rest_framework.utils import model_meta
+from rest_framework_bulk import BulkSerializerMixin
+
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats
-from rest_framework import serializers
-from rest_framework_bulk import BulkSerializerMixin
-from rest_framework.utils import model_meta
-from collections import OrderedDict
-from rest_framework.fields import set_value, SkipField
-from rest_framework.exceptions import ValidationError
-from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import transaction
-from django.db.models import Q, Max, Sum
-from django.core.files import File as DjFile
 
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -549,13 +552,18 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
 class ChannelSerializer(serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')
     main_tree = RootNodeSerializer(read_only=True)
+    staging_tree = RootNodeSerializer(read_only=True)
     trash_tree = RootNodeSerializer(read_only=True)
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     created = serializers.SerializerMethodField('get_date_created')
+    updated = serializers.SerializerMethodField('get_date_updated')
     tags = TagSerializer(many=True, read_only=True)
 
     def get_date_created(self, channel):
         return channel.main_tree.created.strftime("%X %x")
+
+    def get_date_updated(self, channel):
+        return channel.staging_tree.created.strftime("%X %x") if channel.staging_tree else None
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:

@@ -30,12 +30,6 @@ def get_total_size(request):
 
         return HttpResponse(json.dumps({'success':True, 'size': (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0)}))
 
-def delete_nodes(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        nodes = ContentNode.objects.filter(pk__in=data['nodes']).delete()
-        return HttpResponse({'success':True})
-
 def get_nodes_by_ids(request):
     if request.method == 'POST':
         nodes = ContentNode.objects.prefetch_related('children').prefetch_related('files')\

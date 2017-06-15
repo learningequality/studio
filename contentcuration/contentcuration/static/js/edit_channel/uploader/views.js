@@ -88,7 +88,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'click #close_uploader_button': 'close_upload'
   },
   render: function() {
-    this.$el.html(this.template({allow_edit: this.allow_edit}));
+    this.$el.html(this.template({allow_edit: this.allow_edit, staging: window.staging }));
 
     var self = this;
     this.collection.fetch_nodes_by_ids_complete(this.collection.pluck('id'), !this.collection.has_all_data()).then(function(fetched){

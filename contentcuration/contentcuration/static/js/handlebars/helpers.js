@@ -125,3 +125,10 @@ Handlebars.registerHelper('substring', function(text, chars){
 Handlebars.registerHelper('question_default_text', function(type){
   return type === "perseus_question"? "Perseus Question" : "No text provided";
 });
+
+Handlebars.registerHelper('ispositive', function(num, options) {
+  if(num >= 0) {
+    return options.fn(this);
+  }
+  return options.inverse(this);
+});

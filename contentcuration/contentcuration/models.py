@@ -1,23 +1,26 @@
-import logging
-import os
-import uuid
-import hashlib
 import functools
+import hashlib
 import json
-from contentcuration.statistics import record_channel_stats
+import logging
+import uuid
+
+import os
 from django.conf import settings
+from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import PermissionsMixin
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import FileSystemStorage
-from django.db import IntegrityError, models, connection
-from mptt.models import MPTTModel, TreeForeignKey, TreeManager
-from django.utils.translation import ugettext as _
-from django.dispatch import receiver
-from django.contrib.auth.models import PermissionsMixin
-from django.utils import timezone
-from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.mail import send_mail
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from django.db import IntegrityError, models, connection
+from django.db.models import Sum
+from django.dispatch import receiver
+from django.utils import timezone
+from django.utils.translation import ugettext as _
+from le_utils.constants import content_kinds, file_formats, format_presets, licenses, exercises
+from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
+
+from contentcuration.statistics import record_channel_stats
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -380,6 +383,35 @@ class ContentNode(MPTTModel, models.Model):
 
     objects = TreeManager()
 
+
+    @raise_if_unsaved
+    def get_root(self):
+        if not self.parent and self.kind_id != content_kinds.TOPIC:
+            return self
+        return super(ContentNode, self).get_root()
+
+    def get_tree_data(self, include_self=True):
+        if not include_self:
+            return [c.get_tree_data() for c in self.children.all()]
+        elif self.kind_id == content_kinds.TOPIC:
+            return {
+                "title" : self.title,
+                "kind" : self.kind_id,
+                "children" : [c.get_tree_data() for c in self.children.all()]
+            }
+        elif self.kind_id == content_kinds.EXERCISE:
+            return {
+                "title" : self.title,
+                "kind" : self.kind_id,
+                "count" : self.assessment_items.count()
+            }
+        else:
+            return {
+                "title" : self.title,
+                "kind" : self.kind_id,
+                "file_size" : self.files.values('file_size').aggregate(size=Sum('file_size'))['size']
+            }
+
     def get_original_node(self):
         original_node = self.original_node or self
         if self.original_channel_id and self.original_source_node_id:
@@ -400,7 +432,7 @@ class ContentNode(MPTTModel, models.Model):
         try:
             root = self.get_root()
             return root.channel_main.first() or root.channel_chef.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
-        except ObjectDoesNotExist:
+        except ObjectDoesNotExist, MultipleObjectsReturned:
             return None
 
     def save(self, *args, **kwargs):
