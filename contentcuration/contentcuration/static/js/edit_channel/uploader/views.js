@@ -115,14 +115,17 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       case "preview":
         $("#metadata_preview_btn").addClass("btn-tab-active");
         $("#metadata_preview").css("display", "block");
+        $("#metadata_preview").find("iframe").prop("src", function(){return $(this).data("src");});
         break;
       case "questions":
         $("#metadata_questions_btn").addClass("btn-tab-active");
         $("#metadata_questions").css("display", "block");
+        $("#metadata_preview").find("iframe").prop("src", "about:blank");
         break;
       default:
         $("#metadata_details_btn").addClass("btn-tab-active");
         $("#metadata_edit_details").css("display", "block");
+        $("#metadata_preview").find("iframe").prop("src", "about:blank");
     }
   },
   load_list:function(){
