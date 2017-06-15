@@ -97,7 +97,8 @@ def record_node_addition_stats(nodes_being_added, original_first_node, user_id):
 
     # The parent the new nodes are being added to.
     parent_node = first_node['parent']
-    action_attributes['channel_id'] = parent_node.get_channel().id
+    if parent_node.get_channel() is not None:
+        action_attributes['channel_id'] = parent_node.get_channel().id
 
     root_node = parent_node.get_root()
     action_attributes['channel_num_resources'] = root_node.get_descendants().exclude(kind=content_kinds.TOPIC).count() \
