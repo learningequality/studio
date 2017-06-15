@@ -175,6 +175,8 @@ urlpatterns += [
     url(r'^api/internal/check_version$', internal_views.check_version, name="check_version"),
     url(r'^api/internal/file_diff$', internal_views.file_diff, name="file_diff"),
     url(r'^api/internal/file_upload$', internal_views.api_file_upload, name="api_file_upload"),
+    url(r'^api/internal/channel_structure_upload', internal_views.api_channel_structure_upload,
+        name="api_channel_structure_upload"),
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),
     url(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
     url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),

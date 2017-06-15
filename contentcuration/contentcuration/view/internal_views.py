@@ -1,35 +1,25 @@
 import json
 import logging
-import os
-import re
-import shutil
-import hashlib
-from distutils.version import LooseVersion
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404, redirect, render_to_response
-from django.contrib.auth.decorators import login_required
-from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
-from django.core.context_processors import csrf
-from django.core.management import call_command
-from django.views.decorators.csrf import csrf_exempt
-from django.template.loader import render_to_string
-from contentcuration.api import write_file_to_storage, activate_channel
-from contentcuration.models import Exercise, AssessmentItem, Channel, License, FileFormat, File, FormatPreset, ContentKind, ContentNode, ContentTag, Invitation, Language, generate_file_on_disk_name, generate_storage_url
-from contentcuration import ricecooker_versions as rc
-from le_utils.constants import content_kinds
-from django.db.models.functions import Concat
-from contentcuration.utils.logging import trace
-from django.core.files import File as DjFile
-from django.db.models import Q, Value
-from django.db import transaction
-from rest_framework.exceptions import ValidationError
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from collections import namedtuple
+from distutils.version import LooseVersion
+
+import os
+from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
+from django.core.files import File as DjFile
+from django.core.management import call_command
+from django.db import transaction
+from django.http import HttpResponse
+from le_utils.constants import content_kinds
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
+
+from contentcuration import ricecooker_versions as rc
+from contentcuration.api import write_file_to_storage, activate_channel
+from contentcuration.models import AssessmentItem, Channel, License, File, FormatPreset, ContentNode, Language, \
+    generate_file_on_disk_name
+from contentcuration.utils.logging import trace
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
 VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
@@ -105,6 +95,31 @@ def api_file_upload(request):
         }))
     except KeyError:
         raise SuspiciousOperation("Invalid file upload request")
+
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def api_channel_structure_upload(request):
+    """
+    Creates a channel based on the structure sent in the request.
+    :param request: POST request containing the tree structure of a channel.
+    :return: The channel_id and channel_link of the newly created channel.
+    """
+    data = json.loads(request.body)
+    try:
+        channel_structure = data['channel_structure']
+
+        print(channel_structure)
+
+        return HttpResponse(json.dumps({
+            'success': True,
+            # 'channel_id': None,
+            # 'channel_link': None,
+        }))
+    except KeyError:
+        raise ObjectDoesNotExist('Missing attribute from data: {}'.format(data))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
