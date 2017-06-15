@@ -40,19 +40,23 @@ ChannelEditRouter  = Backbone.Router.extend({
   },
 
 	edit_page : function(){
-		this.open_channel(true, false, false, window.current_channel.get_root("main_tree"));
+		var data = { "edit_mode_on" : true };
+		this.open_channel(data, window.current_channel.get_root("main_tree"));
 	},
 	staging_page: function(){
-		this.open_channel(true, false, true, window.current_channel.get_root("staging_tree"));
+		var data = { "edit_mode_on" : true, "is_staging" : true };
+		this.open_channel(data, window.current_channel.get_root("staging_tree"));
 	},
 	preview_page : function(){
-		this.open_channel(false, false, false, window.current_channel.get_root("main_tree"));
+		var data = {};
+		this.open_channel(data, window.current_channel.get_root("main_tree"));
 	},
 	clipboard_page:function(){
+		var data = { "edit_mode_on" : true, "is_clipboard" : true };
 		this.open_channel(true, true, false, window.current_user.get_clipboard());
 	},
-	open_channel: function(edit_mode_on, is_clipboard, is_staging, root){
-		window.staging = is_staging;
+	open_channel: function(data, root){
+		window.staging = data.is_staging || false;
 		window.fileformats = this.fileformats ;
 		window.channels = this.channelCollection;
 		window.formatpresets = this.formatpresets;
@@ -65,12 +69,12 @@ ChannelEditRouter  = Backbone.Router.extend({
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
 			collection: this.nodeCollection,
-			edit: edit_mode_on && !window.current_channel.get('ricecooker_version'),
+			edit: data.edit_mode_on && !window.current_channel.get('ricecooker_version'),
 			model : root,
-			is_clipboard : is_clipboard,
-			staging: is_staging
+			is_clipboard : data.is_clipboard || false,
+			staging: window.staging
 		});
-		if(!is_staging){
+		if(!window.is_staging){
 			var QueueView = require("edit_channel/queue/views");
 			var queue = new QueueView.Queue({
 		 		el: $("#queue-area"),

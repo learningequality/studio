@@ -456,7 +456,7 @@ var ChannelModel = BaseModel.extend({
     },
     get_accessible_channel_roots:function(){
         var self = this;
-        var promise = new Promise(function(resolve, reject){
+        return new Promise(function(resolve, reject){
             $.ajax({
                 method:"POST",
                 data: JSON.stringify({'channel_id': self.id}),
@@ -469,11 +469,10 @@ var ChannelModel = BaseModel.extend({
                 }
             });
         });
-        return promise;
     },
     activate_channel:function(){
         var self = this;
-        var promise = new Promise(function(resolve, reject){
+        return new Promise(function(resolve, reject){
             $.ajax({
                 method:"POST",
                 data: JSON.stringify({'channel_id': self.id}),
@@ -482,7 +481,6 @@ var ChannelModel = BaseModel.extend({
                 error:function(error){reject(error.responseText);}
             });
         });
-        return promise;
     },
     get_staged_diff: function(){
         var self = this;
