@@ -935,7 +935,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			self.containing_list_view.copy_collection(copyCollection).then(function(collection){
 				self.containing_list_view.add_to_clipboard(collection, "");
 				resolve(collection);
-			});
+			}).catch(function(error){reject(error);});
 		});
 	},
 	add_topic: function(){
