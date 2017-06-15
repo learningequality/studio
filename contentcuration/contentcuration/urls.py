@@ -57,7 +57,7 @@ class ChannelViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.is_admin:
             return Channel.objects.all()
-        return Channel.objects.filter(Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True))
+        return Channel.objects.filter(Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True)).distinct()
 
 class FileViewSet(BulkModelViewSet):
     queryset = File.objects.all()
@@ -67,7 +67,7 @@ class FileViewSet(BulkModelViewSet):
         if self.request.user.is_admin:
             return File.objects.all()
         tree_ids = get_channel_tree_ids(self.request.user)
-        return File.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids)
+        return File.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
 
 class FileFormatViewSet(viewsets.ModelViewSet):
     queryset = FileFormat.objects.all()
@@ -91,7 +91,7 @@ class ContentNodeViewSet(BulkModelViewSet):
 
         # Set up eager loading to avoid N+1 selects
         tree_ids = get_channel_tree_ids(self.request.user)
-        return ContentNode.objects.prefetch_related('children').prefetch_related('files').prefetch_related('assessment_items').filter(tree_id__in=tree_ids)
+        return ContentNode.objects.prefetch_related('children').prefetch_related('files').prefetch_related('assessment_items').filter(tree_id__in=tree_ids).distinct()
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = ContentTag.objects.all()
@@ -100,7 +100,7 @@ class TagViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.is_admin:
             return ContentTag.objects.all()
-        return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True))
+        return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True)).distinct()
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -109,7 +109,9 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.is_admin:
             return User.objects.all()
-        return User.objects.filter(pk=self.request.user.pk)
+        channel_list = list(self.request.user.editable_channels.values_list('pk', flat=True))
+        channel_list.extend(list(self.request.user.view_only_channels.values_list('pk', flat=True)))
+        return User.objects.filter(Q(pk=self.request.user.pk) | Q(editable_channels__pk__in=channel_list) | Q(view_only_channels__pk__in=channel_list)).distinct()
 
 class InvitationViewSet(viewsets.ModelViewSet):
     queryset = Invitation.objects.all()
@@ -118,7 +120,7 @@ class InvitationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.is_admin:
             return Invitation.objects.all()
-        return Invitation.objects.filter(Q(invited=self.request.user) | Q(sender=self.request.user))
+        return Invitation.objects.filter(Q(invited=self.request.user) | Q(sender=self.request.user)).distinct()
 
 class AssessmentItemViewSet(BulkModelViewSet):
     queryset = AssessmentItem.objects.all()
@@ -128,7 +130,7 @@ class AssessmentItemViewSet(BulkModelViewSet):
         if self.request.user.is_admin:
             return AssessmentItem.objects.all()
         tree_ids = get_channel_tree_ids(self.request.user)
-        return AssessmentItem.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids)
+        return AssessmentItem.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)

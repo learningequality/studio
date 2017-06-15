@@ -12,7 +12,7 @@ from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connections, models, connection
 from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
 from django.db.utils import ConnectionDoesNotExist
-from mptt.models import MPTTModel, TreeForeignKey, TreeManager
+from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.contrib.auth.models import PermissionsMixin
@@ -406,6 +406,13 @@ class ContentNode(MPTTModel, models.Model):
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"), null=True)
 
     objects = TreeManager()
+
+    @raise_if_unsaved
+    def get_root(self):
+        # Only topics can be root nodes
+        if self.kind_id != content_kinds.TOPIC:
+            return self
+        return super(ContentNode, self).get_root()
 
     def get_original_node(self):
         original_node = self.original_node or self

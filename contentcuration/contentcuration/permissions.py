@@ -24,7 +24,7 @@ class CustomPermission(permissions.BasePermission):
         elif isinstance(obj, User) and obj.pk == request.user.pk:
             return True
         elif isinstance(obj, Invitation):
-            if user_can_view(request.user, obj.channel):
+            if obj.channel.pending_editors.filter(pk=obj.pk).exists() or obj.channel.pending_editors.filter(pk=obj.pk).exists() or user_can_view(request.user, obj.channel):
                 return True
         elif isinstance(obj, Channel):
             if user_can_edit(request.user, obj):
