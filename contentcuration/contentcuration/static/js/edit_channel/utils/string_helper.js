@@ -14,8 +14,7 @@ function format_size(text){
 }
 
 function escape_str(text){
-  return text.replace(/>/g, "&gt;").replace(/</g, "&lt;")
-        replace(/\&/g, "&amp;").replace(/\"/g, "&quot;");
+  return text.replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/\&/g, "&amp;").replace(/\"/g, "&quot;");
 }
 
 module.exports = {

@@ -163,7 +163,7 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
         }, null);
 	},
 	edit_items:function(){
-		this.container.edit_selected();
+		this.container.edit_selected(true);
 	},
 	move_items:function(){
 		this.container.move_items();
