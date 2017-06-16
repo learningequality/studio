@@ -54,8 +54,8 @@ class FormatPresetSerializer(serializers.ModelSerializer):
     class Meta:
         model = FormatPreset
         fields = (
-        'id', 'name', 'readable_name', 'multi_language', 'supplementary', 'thumbnail', 'subtitle', 'order', 'kind',
-        'allowed_formats', 'associated_mimetypes', 'display')
+            'id', 'name', 'readable_name', 'multi_language', 'supplementary', 'thumbnail', 'subtitle', 'order', 'kind',
+            'allowed_formats', 'associated_mimetypes', 'display')
 
 
 class FileListSerializer(serializers.ListSerializer):
@@ -153,8 +153,8 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = File
         fields = (
-        'id', 'checksum', 'display_name', 'file_size', 'language', 'file_on_disk', 'contentnode', 'file_format',
-        'preset', 'original_filename', 'storage_url', 'mimetype', 'source_url')
+            'id', 'checksum', 'display_name', 'file_size', 'language', 'file_on_disk', 'contentnode', 'file_format',
+            'preset', 'original_filename', 'storage_url', 'mimetype', 'source_url')
         list_serializer_class = FileListSerializer
 
 
@@ -223,7 +223,7 @@ class CustomListSerializer(serializers.ListSerializer):
 
                             # this requires optimization
                             for tag_itm in all_tags:
-                                if tag_itm.tag_name == tag_data['tag_name']\
+                                if tag_itm.tag_name == tag_data['tag_name'] \
                                         and tag_itm.channel_id == tag_data['channel']:
                                     taglist.append(tag_itm)
 
@@ -541,12 +541,13 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = (
-        'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
-        'license_description', 'kind',
-        'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
-        'source_channel_id', 'source_id', 'source_domain',
-        'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'files',
-        'valid', 'metadata')
+            'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
+            'license_description', 'kind',
+            'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
+            'source_channel_id', 'source_id', 'source_domain',
+            'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
+            'files',
+            'valid', 'metadata')
 
 
 class ChannelSerializer(serializers.ModelSerializer):
@@ -582,9 +583,9 @@ class ChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = (
-        'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
-        'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
-        'public', 'thumbnail_url', 'pending_editors', 'viewers', 'tags')
+            'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
+            'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
+            'public', 'thumbnail_url', 'pending_editors', 'viewers', 'tags')
 
 
 class AccessibleChannelListSerializer(serializers.ModelSerializer):
@@ -671,4 +672,4 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Invitation
         fields = (
-        'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')
+            'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')
