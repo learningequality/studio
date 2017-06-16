@@ -277,7 +277,6 @@ def create_channel_from_structure(channel_id, channel_structure_dict, user):
     # Delete staging tree if it already exists
     if old_staging and old_staging != channel.main_tree:
         old_staging.delete()
-    channel.save()
 
     return channel  # Return new channel
 
