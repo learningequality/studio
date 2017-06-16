@@ -1,15 +1,17 @@
+from collections import OrderedDict
+
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.files import File as DjFile
+from django.db import transaction
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from rest_framework.fields import set_value, SkipField
+from rest_framework.settings import api_settings
+from rest_framework.utils import model_meta
+from rest_framework_bulk import BulkSerializerMixin
+
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats
-from rest_framework import serializers
-from rest_framework_bulk import BulkSerializerMixin
-from rest_framework.utils import model_meta
-from collections import OrderedDict
-from rest_framework.fields import set_value, SkipField
-from rest_framework.exceptions import ValidationError
-from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import transaction
-from django.db.models import Q, Max, Sum
-from django.core.files import File as DjFile
 
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -51,8 +53,8 @@ class FormatPresetSerializer(serializers.ModelSerializer):
     class Meta:
         model = FormatPreset
         fields = (
-        'id', 'name', 'readable_name', 'multi_language', 'supplementary', 'thumbnail', 'subtitle', 'order', 'kind',
-        'allowed_formats', 'associated_mimetypes', 'display')
+            'id', 'name', 'readable_name', 'multi_language', 'supplementary', 'thumbnail', 'subtitle', 'order', 'kind',
+            'allowed_formats', 'associated_mimetypes', 'display')
 
 
 class FileListSerializer(serializers.ListSerializer):
@@ -150,8 +152,8 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = File
         fields = (
-        'id', 'checksum', 'display_name', 'file_size', 'language', 'file_on_disk', 'contentnode', 'file_format',
-        'preset', 'original_filename', 'storage_url', 'mimetype', 'source_url')
+            'id', 'checksum', 'display_name', 'file_size', 'language', 'file_on_disk', 'contentnode', 'file_format',
+            'preset', 'original_filename', 'storage_url', 'mimetype', 'source_url')
         list_serializer_class = FileListSerializer
 
 
@@ -220,7 +222,7 @@ class CustomListSerializer(serializers.ListSerializer):
 
                             # this requires optimization
                             for tag_itm in all_tags:
-                                if tag_itm.tag_name == tag_data['tag_name']\
+                                if tag_itm.tag_name == tag_data['tag_name'] \
                                         and tag_itm.channel_id == tag_data['channel']:
                                     taglist.append(tag_itm)
 
@@ -538,24 +540,30 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = (
-        'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
-        'license_description', 'kind',
-        'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
-        'source_channel_id', 'source_id', 'source_domain',
-        'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'files',
-        'valid', 'metadata')
+            'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
+            'license_description', 'kind',
+            'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
+            'source_channel_id', 'source_id', 'source_domain',
+            'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
+            'files',
+            'valid', 'metadata')
 
 
 class ChannelSerializer(serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')
     main_tree = RootNodeSerializer(read_only=True)
+    staging_tree = RootNodeSerializer(read_only=True)
     trash_tree = RootNodeSerializer(read_only=True)
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     created = serializers.SerializerMethodField('get_date_created')
+    updated = serializers.SerializerMethodField('get_date_updated')
     tags = TagSerializer(many=True, read_only=True)
 
     def get_date_created(self, channel):
         return channel.main_tree.created.strftime("%X %x")
+
+    def get_date_updated(self, channel):
+        return channel.staging_tree.created.strftime("%X %x") if channel.staging_tree else None
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
@@ -574,8 +582,8 @@ class ChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = (
-        'id', 'created', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree', 'source_id',
-        'source_domain',
+        'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
+        'staging_tree', 'source_id', 'source_domain',
         'ricecooker_version', 'thumbnail', 'version', 'deleted', 'public', 'thumbnail_url', 'pending_editors',
         'viewers', 'tags')
 
@@ -664,4 +672,4 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Invitation
         fields = (
-        'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')
+            'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')

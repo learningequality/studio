@@ -22,6 +22,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
+		this.staging = options.staging;
 		this.render();
 	},
 	events: {
@@ -32,14 +33,18 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		'change input[type=checkbox]' : 'handle_checked',
 		'click .permissions_button' : 'edit_permissions',
 		'click .archive_button' : 'open_archive',
-		'click .move_button' : 'move_items'
+		'click .move_button' : 'move_items',
+		'click .approve_channel' : 'activate_channel',
+		'click .stats_button': 'open_stats'
 	},
 	edit_content:function(){ this.edit_selected(this.is_edit_page)},
 	render: function() {
 		this.$el.html(this.template({
 			edit: this.is_edit_page,
 			channel : window.current_channel.toJSON(),
-			is_clipboard : this.is_clipboard
+			is_clipboard : this.is_clipboard,
+			staging: this.staging,
+			view_only: _.contains(window.current_channel.get('viewers'), window.current_user.id)
 		}));
 		if(this.is_clipboard){
 			$("#secondary-nav").css("display","none");
@@ -164,6 +169,9 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			move_collection.add(model);
 		}
 		this.move_content(move_collection);
+	},
+	open_stats: function(){
+		new DiffModalView();
 	}
 });
 
@@ -422,7 +430,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
             "DELETE": function(){
 				self.add_to_trash();
 				if(self.subcontent_view){
-					self.subcontent_view.remove();
+					self.subcontent_view.close_container();
 				}
             },
         }, null);
@@ -433,6 +441,29 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	}
 });
 
+
+var DiffModalView = BaseViews.BaseModalView.extend({
+  modal_template: require("./hbtemplates/stats_modal.handlebars"),
+  template: require("./hbtemplates/stats_table.handlebars"),
+  initialize: function(options) {
+      this.modal = true;
+      this.render();
+  },
+
+  render: function() {
+      this.$el.html(this.modal_template());
+      $("body").append(this.el);
+      this.$("#stats_modal").modal({show: true});
+      this.$("#stats_modal").on("hidden.bs.modal", this.closed_modal);
+
+      var self = this;
+      window.current_channel.get_staged_diff().then(function(stats){
+      	self.$("#stats_table_wrapper").html(self.template({stats: stats, channel: window.current_channel.toJSON()}));
+      });
+  }
+});
+
 module.exports = {
-	TreeEditView: TreeEditView
+	TreeEditView: TreeEditView,
+	DiffModalView: DiffModalView
 }

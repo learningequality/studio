@@ -1,6 +1,7 @@
 """
 This module acts as the only interface point between other apps and the database backend for the content.
 """
+import json
 import logging
 import os
 import re
@@ -9,7 +10,7 @@ import shutil
 import tempfile
 import subprocess
 from functools import wraps
-from django.db.models import Q, Value
+from django.db.models import Q, Value, Count, Sum
 from django.db.models.functions import Concat
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
@@ -198,3 +199,74 @@ def activate_channel(channel):
     #     with transaction.atomic():
     #         with ContentNode.objects.delay_mptt_updates():
     #             old_tree.delete()
+
+def get_staged_diff(channel_id):
+    channel = models.Channel.objects.get(pk=channel_id)
+
+    main_descendants = channel.main_tree.get_descendants() if channel.main_tree else None
+    updated_descendants = channel.staging_tree.get_descendants() if channel.staging_tree else None
+
+    original_stats = main_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if main_descendants else {}
+    updated_stats = updated_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if updated_descendants else {}
+
+    original_file_sizes = main_descendants.aggregate(
+        resource_size=Sum('files__file_size'),
+        assessment_size=Sum('assessment_items__files__file_size'),
+        assessment_count=Count('assessment_items'),
+    ) if main_descendants else {}
+
+    updated_file_sizes = updated_descendants.aggregate(
+        resource_size=Sum('files__file_size'),
+        assessment_size=Sum('assessment_items__files__file_size'),
+        assessment_count=Count('assessment_items')
+    ) if updated_descendants else {}
+
+    original_file_size = (original_file_sizes.get('resource_size') or 0) + (original_file_sizes.get('assessment_size') or 0)
+    updated_file_size = (updated_file_sizes.get('resource_size') or 0) + (updated_file_sizes.get('assessment_size') or 0)
+    original_question_count =  original_file_sizes.get('assessment_count') or 0
+    updated_question_count =  updated_file_sizes.get('assessment_count') or 0
+
+    stats = [
+        {
+            "field": "Date/Time Created",
+            "live": channel.main_tree.created.strftime("%x %X") if channel.main_tree else None,
+            "staged": channel.staging_tree.created.strftime("%x %X") if channel.staging_tree else None,
+        },
+        {
+            "field": "Ricecooker Version",
+            "live": json.loads(channel.main_tree.extra_fields).get('ricecooker_version') if channel.main_tree and channel.main_tree.extra_fields else "---",
+            "staged": json.loads(channel.staging_tree.extra_fields).get('ricecooker_version') if channel.staging_tree and channel.staging_tree.extra_fields else "---",
+        },
+        {
+            "field": "File Size",
+            "live": original_file_size,
+            "staged": updated_file_size,
+            "difference": updated_file_size - original_file_size,
+            "format_size": True,
+        },
+    ]
+
+    for kind, name in content_kinds.choices:
+        original = original_stats.get(kind_id=kind)['count'] if original_stats.filter(kind_id=kind).exists() else 0
+        updated = updated_stats.get(kind_id=kind)['count'] if updated_stats.filter(kind_id=kind).exists() else 0
+        stats.append({ "field": "# of {}s".format(name), "live": original, "staged": updated, "difference": updated - original })
+
+    # Add number of questions
+    stats.append({
+        "field": "# of Questions",
+        "live": original_question_count,
+        "staged": updated_question_count,
+        "difference": updated_question_count - original_question_count,
+    });
+
+    # Add number of subtitles
+    original_subtitle_count = main_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if main_descendants else 0
+    updated_subtitle_count = updated_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if updated_descendants else 0
+    stats.append({
+        "field": "# of Subtitles",
+        "live": original_subtitle_count,
+        "staged": updated_subtitle_count,
+        "difference": updated_subtitle_count - original_subtitle_count,
+    });
+
+    return stats
