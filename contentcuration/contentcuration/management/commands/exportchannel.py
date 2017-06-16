@@ -21,6 +21,7 @@ from django.template.loader import render_to_string
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
 from contentcuration import models as ccmodels
+from contentcuration.utils.parser import extract_value
 from kolibri.content import models as kolibrimodels
 from kolibri.content.utils.search import fuzz
 from kolibri.content.content_db_router import using_content_database, THREAD_LOCAL
@@ -319,10 +320,13 @@ def write_assessment_item(assessment_item, zf):
 
     answer_data = json.loads(assessment_item.answers)
     for answer in answer_data:
-        answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
-        # In case perseus doesn't support =wxh syntax, use below code
-        # answer['answer'], answer_images = process_image_strings(answer['answer'])
-        # answer.update({'images': answer_images})
+        if assessment_item.type == exercises.INPUT_QUESTION:
+            answer['answer'] = extract_value(answer['answer'])
+        else:
+            answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
+            # In case perseus doesn't support =wxh syntax, use below code
+            # answer['answer'], answer_images = process_image_strings(answer['answer'])
+            # answer.update({'images': answer_images})
 
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:

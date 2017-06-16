@@ -13,11 +13,9 @@ UNFORMATTED_INT: [DIGIT]*
 DIGIT: [0-9]
 NON_ZERO_DIGIT: [1-9]
 SIGN: -{0,1}
-EXPONENT: [DECIMAL | INTEGER]e+[INTEGER]
+EXPONENT: [DECIMAL | INTEGER]e+{0,1}[INTEGER]
 
-
-
-log, e, pi
+TODO: Add log and pi?
 
 ****************/
 
@@ -32,7 +30,7 @@ const NON_ZERO_INT = new RegExp("(" + SIGN.source + NON_ZERO_DIGIT.source + "(?:
 const FRACTION = new RegExp(INTEGER.source + "/" + NON_ZERO_INT.source);
 const MIXED_NUMBER = new RegExp("(" + INTEGER.source + ") +(" + FRACTION.source + ")");
 const DECIMAL = new RegExp(INTEGER.source + "\\." + UNFORMATTED_INT.source);
-const PERCENTAGE = new RegExp("(" + DECIMAL.source + "|" + MIXED_NUMBER.source + "|" + FRACTION.source + ")%");
+const PERCENTAGE = new RegExp("(" + DECIMAL.source + "|" + MIXED_NUMBER.source + "|" + FRACTION.source + "|" + INTEGER.source + ")%");
 const EXPONENT = new RegExp("((?:" + DECIMAL.source + "|" + INTEGER.source + ")e\\+?" + INTEGER.source + ")");
 
 
@@ -79,6 +77,35 @@ function parse_exponent(text){
   return match && eval(match[1]);
 }
 
+function test_valid_number(text){
+  return test_exponent(text) || test_mixed_number(text) || test_fraction(text) || test_percentage(text) || test_decimal(text) || test_integer(text);
+}
+
+function test_mixed_number(text){
+  return MIXED_NUMBER.test(text);
+}
+
+function test_fraction(text){
+  return FRACTION.test(text);
+}
+
+function test_integer(text){
+  return INTEGER.test(text);
+}
+
+function test_decimal(text){
+  return DECIMAL.test(text);
+}
+
+function test_percentage(text){
+  return PERCENTAGE.test(text);
+}
+
+function test_exponent(text){
+  return EXPONENT.test(text);
+}
+
 module.exports = {
   extract_value : extract_value,
+  test_valid_number : test_valid_number
 }
