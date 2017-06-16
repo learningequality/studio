@@ -352,7 +352,7 @@ def create_node_from_file(file_name, parent_node, sort_order):
 
     return cur_node
 
-
+# TODO: Use one file to upload a map from node filename to node metadata, instead of a file for each Node
 def get_node_data_from_file(file_name):
     file_path = generate_file_on_disk_name(file_name.split('.')[0], file_name)
     if not os.path.isfile(file_path):
