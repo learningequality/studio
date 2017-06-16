@@ -3,7 +3,7 @@ const CHARACTERS = require("./symbols.json");
 const MATHJAX_REGEX = /\$\$([^\$]+)\$\$/g;
 const IMG_PLACEHOLDER = "${☣ CONTENTSTORAGE}/"
 const IMG_REGEX = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
-const NUM_REGEX = /[0-9\,\.\-\/\+e]+/g;
+const NUM_REGEX = /[0-9\,\.\-\/\+e\s]+/g;
 
 /* MODULES */
 var Backbone = require("backbone");
@@ -155,6 +155,7 @@ function Summernote(element, context, options) {
     this.getContents = function(){ return element.summernote('code'); };
     this.enable = function(){ element.summernote('enable'); };
     this.disable = function(){ element.summernote('disable'); };
+    this.togglePlaceholder = function(show){ context.$('.note-placeholder').css('display', (show) ? 'inline' : 'none'); }
 }
 
 /*********** TEXT EDITOR FOR QUESTIONS, ANSWERS, AND HINTS ***********/
@@ -277,6 +278,7 @@ var EditorView = Backbone.View.extend({
         return this.markdown;
     },
     process_key: function(event){
+        this.editor.togglePlaceholder(false);
         if(this.numbersOnly){
             var key = event.keyCode || event.which;
             var allowedKeys = [46, 8, 9, 27, 110, 37, 38, 39, 40, 10];
@@ -307,6 +309,7 @@ var EditorView = Backbone.View.extend({
         setTimeout(function () { // Firefox fix
             if(!self.numbersOnly || self.check_key(bufferText)){
                 document.execCommand('insertText', false, bufferText);
+                self.editor.togglePlaceholder(false);
                 if(clipboardHtml){
                     self.save(self.editor.getContents());
                     self.editor.setHTML("");
@@ -465,11 +468,9 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
         this.propagate_changes();
     },
     switch_view_order:function(view, new_order){
-        console.log("GOT HERE", this.views, view, new_order)
         var matches = _.filter(this.views, function(view){ return view.model.get('order') === new_order; });
         var old_order = view.model.get('order');
         if(matches.length > 0){
-            console.log("GOT HERE2", matches)
             var previous_view = matches[0];
             previous_view.model.set('order', old_order);
             previous_view.$el.detach();
@@ -573,10 +574,12 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
         this.remove();
     },
     move_up:function(event){
+        event.stopImmediatePropagation();
         event.stopPropagation();
         this.containing_list_view.switch_view_order(this, this.model.get('order') - 1);
     },
     move_down:function(event){
+        event.stopImmediatePropagation();
         event.stopPropagation();
         this.containing_list_view.switch_view_order(this, this.model.get('order') + 1);
     },
@@ -801,14 +804,14 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         }
 
         // Input questions will set all answers as being correct and remove non-numeric answers
-        else if(new_type === "input_question" && this.model.get("answers").some(function(a){ return a.get('correct') || isNaN(a.get('answer')); })){
+        else if(new_type === "input_question" && this.model.get("answers").some(function(a){ return a.get('correct') || numParser.test_valid_number(a.get('answer')); })){
             dialog.dialog("Changing Question Type", "Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?", {
                 "CANCEL":function(){},
                 "CHANGE": function(){
                     var newCollection = self.model.get('answers');
                     newCollection.reset(self.model.get('answers').chain()
-                        .reject( function(a){return isNaN(a.get('answer'));} )
-                        .each( function(a){ a.set('correct', true);} ).value());
+                        .reject( function(a){return !numParser.test_valid_number(a.get('answer'));} )
+                        .each( function(a){ a.set({'correct': true, 'answer': numParser.extract_value(a.get('answer')).toString()});} ).value());
                     self.model.set('answers', newCollection);
                     self.commit_type_change(new_type);
                 },
