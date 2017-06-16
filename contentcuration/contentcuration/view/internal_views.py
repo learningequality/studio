@@ -28,13 +28,15 @@ VERSION_SOFT_WARNING = VersionStatus(version=rc.VERSION_SOFT_WARNING, status=1, 
 VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
 VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
 
+
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def authenticate_user_internal(request):
     """ Verify user is valid """
     logging.debug("Logging in user")
-    return HttpResponse(json.dumps({'success': True, 'username':unicode(request.user)}))
+    return HttpResponse(json.dumps({'success': True, 'username': unicode(request.user)}))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -56,9 +58,10 @@ def check_version(request):
 
     return HttpResponse(json.dumps({
         'success': True,
-        'status':status[1],
-        'message':status[2].format(version, VERSION_OK[0]),
+        'status': status[1],
+        'message': status[2].format(version, VERSION_OK[0]),
     }))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -75,12 +78,13 @@ def file_diff(request):
 
     # Add files that don't exist in storage
     for f in data:
-        file_path = generate_file_on_disk_name(os.path.splitext(f)[0],f)
+        file_path = generate_file_on_disk_name(os.path.splitext(f)[0], f)
         # Add file if it doesn't already exist
         if not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
             to_return.append(f)
 
     return HttpResponse(json.dumps(to_return))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
@@ -141,6 +145,7 @@ def api_create_channel_endpoint(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
+
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
@@ -154,7 +159,8 @@ def api_commit_channel(request):
 
         # rebuild MPTT tree for this channel (since we set "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
         ContentNode.objects.partial_rebuild(obj.chef_tree.tree_id)
-        obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=channel_id, source_channel_id=channel_id)
+        obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=channel_id,
+                                                                source_channel_id=channel_id)
 
         old_staging = obj.staging_tree
         obj.staging_tree = obj.chef_tree
@@ -165,7 +171,7 @@ def api_commit_channel(request):
         if old_staging and old_staging != obj.main_tree:
             old_staging.delete()
 
-        if not data.get('stage'): # If user says to stage rather than submit, skip changing trees at this step
+        if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
             activate_channel(obj)
 
         return HttpResponse(json.dumps({
@@ -174,6 +180,7 @@ def api_commit_channel(request):
         }))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -191,6 +198,7 @@ def api_add_nodes_to_tree(request):
             }))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -211,11 +219,13 @@ def api_publish_channel(request):
         "channel": channel_id
     }))
 
+
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def get_staged_diff_internal(request):
     return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
@@ -227,6 +237,7 @@ def activate_channel_internal(request):
 
     return HttpResponse(json.dumps({"success": True}))
 
+
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
@@ -236,12 +247,13 @@ def check_user_is_editor(request):
     try:
         obj = Channel.objects.get(pk=data['channel_id'])
         if obj.editors.filter(pk=request.user.pk).exists():
-            return HttpResponse(json.dumps({ "success": True }))
+            return HttpResponse(json.dumps({"success": True}))
         else:
             return SuspiciousOperation("User is not authorized to edit this channel")
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -260,17 +272,25 @@ def compare_trees(request):
         node_ids = comparison_tree.get_descendants().values_list('node_id', flat=True)
         previous_node_ids = obj.previous_tree.get_descendants().values_list('node_id', flat=True)
 
-        new_nodes = comparison_tree.get_descendants().exclude(node_id__in=previous_node_ids).values('node_id', 'title', 'files__file_size', 'kind_id')
-        deleted_nodes = obj.previous_tree.get_descendants().exclude(node_id__in=node_ids).values('node_id', 'title', 'files__file_size', 'kind_id')
+        new_nodes = comparison_tree.get_descendants().exclude(node_id__in=previous_node_ids).values('node_id', 'title',
+                                                                                                    'files__file_size',
+                                                                                                    'kind_id')
+        deleted_nodes = obj.previous_tree.get_descendants().exclude(node_id__in=node_ids).values('node_id', 'title',
+                                                                                                 'files__file_size',
+                                                                                                 'kind_id')
 
-        new_node_mapping = {n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in new_nodes.all()}
-        deleted_node_mapping = {n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in deleted_nodes.all()}
+        new_node_mapping = {
+        n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in
+        new_nodes.all()}
+        deleted_node_mapping = {
+        n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in
+        deleted_nodes.all()}
 
-
-        return HttpResponse(json.dumps({ "success": True, 'new': new_node_mapping, 'deleted': deleted_node_mapping}))
+        return HttpResponse(json.dumps({"success": True, 'new': new_node_mapping, 'deleted': deleted_node_mapping}))
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -284,13 +304,15 @@ def get_tree_data(request):
 
         data = root.get_tree_data(include_self=False)
 
-        return HttpResponse(json.dumps({ "success": True, 'tree': data}))
+        return HttpResponse(json.dumps({"success": True, 'tree': data}))
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
 """ CHANNEL CREATE FUNCTIONS """
+
+
 def create_channel(channel_data, user):
     """ Set up channel """
     # Set up initial channel
@@ -315,15 +337,15 @@ def create_channel(channel_data, user):
     is_published = channel.main_tree is not None and channel.main_tree.published
     # Set up initial staging tree
     channel.chef_tree = ContentNode.objects.create(
-        title = channel.name,
-        kind_id = content_kinds.TOPIC,
-        sort_order = 0,
-        published = is_published,
-        content_id = channel.id,
-        node_id = channel.id,
-        source_id = channel.source_id,
-        source_domain = channel.source_domain,
-        extra_fields = json.dumps({'ricecooker_version' : channel.ricecooker_version}),
+        title=channel.name,
+        kind_id=content_kinds.TOPIC,
+        sort_order=0,
+        published=is_published,
+        content_id=channel.id,
+        node_id=channel.id,
+        source_id=channel.source_id,
+        source_domain=channel.source_domain,
+        extra_fields=json.dumps({'ricecooker_version': channel.ricecooker_version}),
     )
     channel.chef_tree.save()
     channel.save()
@@ -332,7 +354,7 @@ def create_channel(channel_data, user):
     if old_chef_tree and old_chef_tree != channel.staging_tree:
         old_chef_tree.delete()
 
-    return channel # Return new channel
+    return channel  # Return new channel
 
 
 @trace
@@ -358,11 +380,12 @@ def convert_data_to_nodes(content_data, parent_node):
                     sort_order += 1
 
                     # Track mapping between newly created node and node id
-                    root_mapping.update({node_data['node_id'] : new_node.pk})
+                    root_mapping.update({node_data['node_id']: new_node.pk})
             return root_mapping
 
     except KeyError as e:
         raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
+
 
 def create_node(node_data, parent_node, sort_order):
     """ Generate node based on node dict """
@@ -376,22 +399,23 @@ def create_node(node_data, parent_node, sort_order):
             raise ObjectDoesNotExist("Invalid license found")
 
     return ContentNode.objects.create(
-        title = node_data['title'],
-        tree_id = parent_node.tree_id,
-        kind_id = node_data['kind'],
-        node_id = node_data['node_id'],
-        content_id = node_data['content_id'],
-        description = node_data['description'],
-        author = node_data['author'],
-        license = license,
-        license_description = node_data.get('license_description'),
-        copyright_holder = node_data.get('copyright_holder') or "",
-        parent = parent_node,
-        extra_fields = node_data['extra_fields'],
-        sort_order = sort_order,
-        source_id = node_data.get('source_id'),
-        source_domain = node_data.get('source_domain'),
+        title=node_data['title'],
+        tree_id=parent_node.tree_id,
+        kind_id=node_data['kind'],
+        node_id=node_data['node_id'],
+        content_id=node_data['content_id'],
+        description=node_data['description'],
+        author=node_data['author'],
+        license=license,
+        license_description=node_data.get('license_description'),
+        copyright_holder=node_data.get('copyright_holder') or "",
+        parent=parent_node,
+        extra_fields=node_data['extra_fields'],
+        sort_order=sort_order,
+        source_id=node_data.get('source_id'),
+        source_domain=node_data.get('source_domain'),
     )
+
 
 def map_files_to_node(node, data):
     """ Generate files that reference the content node """
@@ -405,11 +429,12 @@ def map_files_to_node(node, data):
         # Determine a preset if none is given
         kind_preset = None
         if file_data['preset'] is None:
-            kind_preset = FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1], display=True).first()
+            kind_preset = FormatPreset.objects.filter(kind=node.kind, allowed_formats__extension__contains=file_hash[1],
+                                                      display=True).first()
         else:
             kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
-        file_path=generate_file_on_disk_name(file_hash[0], file_data['filename'])
+        file_path = generate_file_on_disk_name(file_hash[0], file_data['filename'])
         if not os.path.isfile(file_path):
             raise IOError('{} not found'.format(file_path))
 
@@ -423,19 +448,19 @@ def map_files_to_node(node, data):
             logging.warning("file_data with language {} does not exist.".format(invalid_lang))
             raise ValidationError("file_data given was invalid; expected string, got {}".format(invalid_lang))
 
-
         file_obj = File(
             checksum=file_hash[0],
             contentnode=node,
             file_format_id=file_hash[1],
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
-            file_size = file_data['size'],
+            file_size=file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
             language_id=file_data.get('language'),
         )
         file_obj.save()
+
 
 def map_files_to_assessment_item(question, data):
     """ Generate files that reference the content node's assessment items """
@@ -451,11 +476,12 @@ def map_files_to_assessment_item(question, data):
             file_format_id=file_hash[1],
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
-            file_size = file_data['size'],
+            file_size=file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
             preset_id=file_data['preset'],
         )
         file_obj.save()
+
 
 def create_exercises(node, data):
     """ Generate exercise from data """
@@ -464,14 +490,14 @@ def create_exercises(node, data):
 
         for question in data:
             question_obj = AssessmentItem(
-                type = question.get('type'),
-                question = question.get('question'),
-                hints = question.get('hints'),
-                answers = question.get('answers'),
-                order = order,
-                contentnode = node,
-                assessment_id = question.get('assessment_id'),
-                raw_data = question.get('raw_data'),
+                type=question.get('type'),
+                question=question.get('question'),
+                hints=question.get('hints'),
+                answers=question.get('answers'),
+                order=order,
+                contentnode=node,
+                assessment_id=question.get('assessment_id'),
+                raw_data=question.get('raw_data'),
                 source_url=question.get('source_url'),
                 randomize=question.get('randomize') or False,
             )
