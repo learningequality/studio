@@ -8,14 +8,10 @@ import re
 import sys
 import uuid
 import base64
-import sqlite3
 from django.conf import settings
-from django.http import HttpResponse
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files import File
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.template.loader import render_to_string
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
@@ -23,6 +19,7 @@ from le_utils.constants import content_kinds,file_formats, format_presets, licen
 from contentcuration import models as ccmodels
 from kolibri.content import models as kolibrimodels
 from kolibri.content.utils.search import fuzz
+from contentcuration.statistics import record_publish_stats
 from kolibri.content.content_db_router import using_content_database, THREAD_LOCAL
 from django.db import transaction, connections
 from django.db.utils import ConnectionDoesNotExist
@@ -70,9 +67,12 @@ class Command(BaseCommand):
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
+            record_publish_stats(channel)
+
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
+
 
 def create_kolibri_license_object(ccnode):
     use_license_description = ccnode.license.license_name != licenses.SPECIAL_PERMISSIONS

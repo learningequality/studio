@@ -1,27 +1,26 @@
-import logging
-import os
-import uuid
-import hashlib
 import functools
+import hashlib
 import json
+import logging
+import uuid
+
+import os
 from django.conf import settings
-from django.contrib import admin
-from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from django.core.files.storage import FileSystemStorage
-from django.db import IntegrityError, connections, models, connection
-from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
-from django.db.utils import ConnectionDoesNotExist
-from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
-from django.utils.translation import ugettext as _
-from django.dispatch import receiver
-from django.contrib.auth.models import PermissionsMixin
-from django.utils import timezone
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
-from django.core.mail import send_mail, EmailMultiAlternatives
-from django.template.loader import render_to_string
-from rest_framework.authtoken.models import Token
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from django.contrib.auth.models import PermissionsMixin
+from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.storage import FileSystemStorage
+from django.core.mail import send_mail
+from django.db import IntegrityError, models, connection
+from django.db.models import Sum
+from django.dispatch import receiver
+from django.utils import timezone
+from django.utils.translation import ugettext as _
+from le_utils.constants import content_kinds, file_formats, format_presets, licenses, exercises
+from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
+
+from contentcuration.statistics import record_channel_stats
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -65,15 +64,18 @@ class UserManager(BaseUserManager):
         new_user.save(using=self._db)
         return new_user
 
+
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=100, unique=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     is_admin = models.BooleanField(default=False)
-    is_active = models.BooleanField(_('active'), default=False, help_text=_('Designates whether this user should be treated as active.'))
-    is_staff = models.BooleanField(_('staff status'), default=False, help_text=_('Designates whether the user can log into this admin site.'))
+    is_active = models.BooleanField(_('active'), default=False,
+                                    help_text=_('Designates whether this user should be treated as active.'))
+    is_staff = models.BooleanField(_('staff status'), default=False,
+                                   help_text=_('Designates whether the user can log into this admin site.'))
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
-    clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
+    clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
 
     objects = UserManager()
@@ -107,7 +109,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)
         if not self.clipboard_tree:
-            self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id="topic", sort_order=0)
+            self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id="topic",
+                                                             sort_order=0)
             self.clipboard_tree.save()
             self.save()
 
@@ -115,8 +118,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name = _("User")
         verbose_name_plural = _("Users")
 
-class UUIDField(models.CharField):
 
+class UUIDField(models.CharField):
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = 32
         super(UUIDField, self).__init__(*args, **kwargs)
@@ -126,6 +129,7 @@ class UUIDField(models.CharField):
         if isinstance(result, uuid.UUID):
             result = result.hex
         return result
+
 
 def file_on_disk_name(instance, filename):
     """
@@ -138,6 +142,7 @@ def file_on_disk_name(instance, filename):
     """
     return generate_file_on_disk_name(instance.checksum, filename)
 
+
 def generate_file_on_disk_name(checksum, filename):
     """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
     h = checksum
@@ -147,15 +152,18 @@ def generate_file_on_disk_name(checksum, filename):
         os.makedirs(directory)
     return os.path.join(directory, h + ext.lower())
 
+
 def generate_storage_url(filename):
     """ Returns place where file is stored """
     h, ext = os.path.splitext(filename)
     return "{}/{}/{}/{}".format(settings.STORAGE_URL.rstrip('/'), h[0], h[1], h + ext.lower())
 
+
 class FileOnDiskStorage(FileSystemStorage):
     """
     Overrider FileSystemStorage's default save method to ignore duplicated file.
     """
+
     def get_available_name(self, name):
         return name
 
@@ -177,11 +185,11 @@ class ChannelResourceSize(models.Model):
 
     @classmethod
     def initialize_view(cls):
-        sql = 'CREATE MATERIALIZED VIEW {view} AS '\
-                'SELECT tree_id as id, tree_id, SUM("{file_table}"."file_size") AS '\
-                '"resource_size" FROM "{node}" LEFT OUTER JOIN "{file_table}" ON '\
-                '("{node}"."id" = "{file_table}"."contentnode_id") GROUP BY {node}.tree_id'\
-                ' WITH DATA;'.format(view=cls.pg_view_name, file_table=cls.file_table, node=cls.node_table)
+        sql = 'CREATE MATERIALIZED VIEW {view} AS ' \
+              'SELECT tree_id as id, tree_id, SUM("{file_table}"."file_size") AS ' \
+              '"resource_size" FROM "{node}" LEFT OUTER JOIN "{file_table}" ON ' \
+              '("{node}"."id" = "{file_table}"."contentnode_id") GROUP BY {node}.tree_id' \
+              ' WITH DATA;'.format(view=cls.pg_view_name, file_table=cls.file_table, node=cls.node_table)
         with connection.cursor() as cursor:
             cursor.execute(sql)
 
@@ -191,10 +199,10 @@ class ChannelResourceSize(models.Model):
         with connection.cursor() as cursor:
             cursor.execute(sql)
 
-
     class Meta:
         managed = False
         db_table = "contentcuration_channel_resource_sizes"
+
 
 class Channel(models.Model):
     """ Permissions come from association with organizations """
@@ -217,13 +225,13 @@ class Channel(models.Model):
         help_text=_("Users with view only rights"),
         blank=True,
     )
-    language =  models.ForeignKey('Language', null=True, blank=True, related_name='channel_language')
-    trash_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_trash')
-    clipboard_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
-    main_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
-    staging_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_staging')
-    chef_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_chef')
-    previous_tree =  models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_previous')
+    language = models.ForeignKey('Language', null=True, blank=True, related_name='channel_language')
+    trash_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_trash')
+    clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
+    main_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
+    staging_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_staging')
+    chef_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_chef')
+    previous_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_previous')
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='bookmarked_channels',
@@ -236,7 +244,6 @@ class Channel(models.Model):
     source_id = models.CharField(max_length=200, blank=True, null=True)
     source_domain = models.CharField(max_length=300, blank=True, null=True)
     ricecooker_version = models.CharField(max_length=100, blank=True, null=True)
-
 
     def get_resource_size(self):
         # TODO: Add this back in once query filters out duplicated checksums
@@ -252,17 +259,16 @@ class Channel(models.Model):
         # return size_q['resource_size'] or 0
 
     def save(self, *args, **kwargs):
-        original_node = None
+
+        original_channel = None
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
-            original_node = Channel.objects.get(pk=self.pk)
+            original_channel = Channel.objects.get(pk=self.pk)
 
-        record_channel_stats(original_node is None)
-
-        super(Channel, self).save(*args, **kwargs)
+        record_channel_stats(self, original_channel)
 
         # Check if original thumbnail is no longer referenced
-        if original_node and original_node.thumbnail and 'static' not in original_node.thumbnail:
-            filename, ext = os.path.splitext(original_node.thumbnail)
+        if original_channel and original_channel.thumbnail and 'static' not in original_channel.thumbnail:
+            filename, ext = os.path.splitext(original_channel.thumbnail)
             delete_empty_file_reference(filename, ext[1:])
 
         if not self.main_tree:
@@ -274,7 +280,6 @@ class Channel(models.Model):
                 node_id=self.id,
             )
             self.main_tree.save()
-            self.save()
         elif self.main_tree.title != self.name:
             self.main_tree.title = self.name
             self.main_tree.save()
@@ -288,28 +293,16 @@ class Channel(models.Model):
                 node_id=self.id,
             )
             self.trash_tree.save()
-            self.save()
         elif self.trash_tree.title != self.name:
             self.trash_tree.title = self.name
             self.trash_tree.save()
+
+        super(Channel, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
 
-
-def record_channel_stats(is_create):
-    """
-    :param is_create: Whether action is channel creation.
-    """
-    import newrelic.agent
-    newrelic.agent.record_custom_metric('Custom/ChannelStats/NumCreatedChannels', 1)
-
-    if is_create:
-        newrelic.agent.record_custom_event("ChannelStats", {"action": "Create"})
-    # else:
-        # Called three times for create, need to find out why
-        # newrelic.agent.record_custom_event("ChannelStats", {"action": "Update"})
 
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -322,16 +315,20 @@ class ContentTag(models.Model):
     class Meta:
         unique_together = ['tag_name', 'channel']
 
+
 def delegate_manager(method):
     """
     Delegate method calls to base manager, if exists.
     """
+
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
         if self._base_manager:
             return getattr(self._base_manager, method.__name__)(*args, **kwargs)
         return method(self, *args, **kwargs)
+
     return wrapped
+
 
 class License(models.Model):
     """
@@ -349,6 +346,7 @@ class License(models.Model):
     def __str__(self):
         return self.license_name
 
+
 class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
@@ -365,10 +363,12 @@ class ContentNode(MPTTModel, models.Model):
     node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
     # TODO: disallow nulls once existing models have been set
-    original_channel_id = UUIDField(primary_key=False, editable=False, null=True, db_index=True) # Original channel copied from
-    source_channel_id = UUIDField(primary_key=False, editable=False, null=True) # Immediate channel copied from
-    original_source_node_id = UUIDField(primary_key=False, editable=False, null=True, db_index=True) # Original node_id of node copied from (TODO: original_node_id clashes with original_node field - temporary)
-    source_node_id = UUIDField(primary_key=False, editable=False, null=True) # Immediate node_id of node copied from
+    original_channel_id = UUIDField(primary_key=False, editable=False, null=True,
+                                    db_index=True)  # Original channel copied from
+    source_channel_id = UUIDField(primary_key=False, editable=False, null=True)  # Immediate channel copied from
+    original_source_node_id = UUIDField(primary_key=False, editable=False, null=True,
+                                        db_index=True)  # Original node_id of node copied from (TODO: original_node_id clashes with original_node field - temporary)
+    source_node_id = UUIDField(primary_key=False, editable=False, null=True)  # Immediate node_id of node copied from
 
     # Fields specific to content generated by Ricecooker
     source_id = models.CharField(max_length=200, blank=True, null=True)
@@ -379,12 +379,16 @@ class ContentNode(MPTTModel, models.Model):
     kind = models.ForeignKey('ContentKind', related_name='contentnodes', db_index=True)
     license = models.ForeignKey('License', null=True, default=settings.DEFAULT_LICENSE)
     license_description = models.CharField(max_length=400, null=True, blank=True)
-    prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of', through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
-    is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship', symmetrical=False, blank=True)
+    prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of',
+                                          through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
+    is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship',
+                                        symmetrical=False, blank=True)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
-    sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"), help_text=_("Ascending, lowest number shown first"))
-    copyright_holder = models.CharField(max_length=200, null=True, blank=True, default="", help_text=_("Organization of person who holds the essential rights"))
+    sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"),
+                                   help_text=_("Ascending, lowest number shown first"))
+    copyright_holder = models.CharField(max_length=200, null=True, blank=True, default="",
+                                        help_text=_("Organization of person who holds the essential rights"))
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
 
@@ -394,10 +398,10 @@ class ContentNode(MPTTModel, models.Model):
 
     changed = models.BooleanField(default=True, db_index=True)
     extra_fields = models.TextField(blank=True, null=True)
-    author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"), null=True)
+    author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"),
+                              null=True)
 
     objects = TreeManager()
-
 
     @raise_if_unsaved
     def get_root(self):
@@ -410,28 +414,29 @@ class ContentNode(MPTTModel, models.Model):
             return [c.get_tree_data() for c in self.children.all()]
         elif self.kind_id == content_kinds.TOPIC:
             return {
-                "title" : self.title,
-                "kind" : self.kind_id,
-                "children" : [c.get_tree_data() for c in self.children.all()]
+                "title": self.title,
+                "kind": self.kind_id,
+                "children": [c.get_tree_data() for c in self.children.all()]
             }
         elif self.kind_id == content_kinds.EXERCISE:
             return {
-                "title" : self.title,
-                "kind" : self.kind_id,
-                "count" : self.assessment_items.count()
+                "title": self.title,
+                "kind": self.kind_id,
+                "count": self.assessment_items.count()
             }
         else:
             return {
-                "title" : self.title,
-                "kind" : self.kind_id,
-                "file_size" : self.files.values('file_size').aggregate(size=Sum('file_size'))['size']
+                "title": self.title,
+                "kind": self.kind_id,
+                "file_size": self.files.values('file_size').aggregate(size=Sum('file_size'))['size']
             }
 
     def get_original_node(self):
         original_node = self.original_node or self
         if self.original_channel_id and self.original_source_node_id:
             original_channel = Channel.objects.select_related("main_tree").get(pk=self.original_channel_id)
-            original_node = ContentNode.objects.filter(tree_id=original_channel.main_tree.tree_id, node_id=self.original_source_node_id).first() or self
+            original_node = ContentNode.objects.filter(tree_id=original_channel.main_tree.tree_id,
+                                                       node_id=self.original_source_node_id).first() or self
         return original_node
 
     def get_associated_presets(self):
@@ -458,32 +463,28 @@ class ContentNode(MPTTModel, models.Model):
                 original.parent.changed = True
                 original.parent.save()
 
-        super(ContentNode, self).save(*args, **kwargs)
-
-        post_save_changes = False
         if self.original_node is None:
             self.original_node = self
-            post_save_changes = True
         if self.cloned_source is None:
             self.cloned_source = self
-            post_save_changes = True
 
-        if self.original_channel_id is None and self.get_channel():
-            self.original_channel_id = self.get_channel().id
-            post_save_changes = True
-        if self.source_channel_id is None and self.get_channel():
-            self.source_channel_id = self.get_channel().id
-            post_save_changes = True
+        if self.original_channel_id is None:
+            if self.get_channel():
+                self.original_channel_id = self.get_channel().id
+            elif self.parent and self.parent.get_channel():
+                self.original_channel_id = self.parent.get_channel().id
+        if self.source_channel_id is None:
+            if self.get_channel():
+                self.source_channel_id = self.get_channel().id
+            elif self.parent and self.parent.get_channel():
+                self.source_channel_id = self.parent.get_channel().id
 
         if self.original_source_node_id is None:
             self.original_source_node_id = self.node_id
-            post_save_changes = True
         if self.source_node_id is None:
             self.source_node_id = self.node_id
-            post_save_changes = True
 
-        if post_save_changes:
-            self.save()
+        super(ContentNode, self).save(*args, **kwargs)
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
@@ -492,13 +493,15 @@ class ContentNode(MPTTModel, models.Model):
         verbose_name = _("Topic")
         verbose_name_plural = _("Topics")
         # Do not allow two nodes with the same name on the same level
-        #unique_together = ('parent', 'title')
+        # unique_together = ('parent', 'title')
+
 
 class ContentKind(models.Model):
     kind = models.CharField(primary_key=True, max_length=200, choices=content_kinds.choices)
 
     def __str__(self):
         return self.kind
+
 
 class FileFormat(models.Model):
     extension = models.CharField(primary_key=True, max_length=40, choices=file_formats.choices)
@@ -507,6 +510,7 @@ class FileFormat(models.Model):
     def __str__(self):
         return self.extension
 
+
 class FormatPreset(models.Model):
     id = models.CharField(primary_key=True, max_length=150, choices=format_presets.choices)
     readable_name = models.CharField(max_length=400)
@@ -514,13 +518,14 @@ class FormatPreset(models.Model):
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
     subtitle = models.BooleanField(default=False)
-    display = models.BooleanField(default=True) # Render on client side
+    display = models.BooleanField(default=True)  # Render on client side
     order = models.IntegerField(default=0)
     kind = models.ForeignKey(ContentKind, related_name='format_presets', null=True)
     allowed_formats = models.ManyToManyField(FileFormat, blank=True)
 
     def __str__(self):
         return self.id
+
 
 class Language(models.Model):
     id = models.CharField(max_length=7, primary_key=True)
@@ -530,10 +535,12 @@ class Language(models.Model):
     native_name = models.CharField(max_length=100, blank=True)
 
     def ietf_name(self):
-        return "{code}-{subcode}".format(code=self.lang_code, subcode=self.lang_subcode) if self.lang_subcode else self.lang_code
+        return "{code}-{subcode}".format(code=self.lang_code,
+                                         subcode=self.lang_subcode) if self.lang_subcode else self.lang_code
 
     def __str__(self):
         return self.ietf_name()
+
 
 class AssessmentItem(models.Model):
     type = models.CharField(max_length=50, default="multiplechoice")
@@ -541,12 +548,14 @@ class AssessmentItem(models.Model):
     hints = models.TextField(default="[]")
     answers = models.TextField(default="[]")
     order = models.IntegerField(default=1)
-    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True, db_index=True)
+    contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True,
+                                    db_index=True)
     assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     raw_data = models.TextField(blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
     randomize = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+
 
 class File(models.Model):
     """
@@ -556,7 +565,8 @@ class File(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     checksum = models.CharField(max_length=400, blank=True, db_index=True)
     file_size = models.IntegerField(blank=True, null=True)
-    file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500, blank=True)
+    file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500,
+                                    blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True, db_index=True)
     assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True, db_index=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True, db_index=True)
@@ -589,6 +599,7 @@ class File(models.Model):
                 self.extension = os.path.splitext(self.file_on_disk.name)[1]
         super(File, self).save(*args, **kwargs)
 
+
 @receiver(models.signals.post_delete, sender=File)
 def auto_delete_file_on_delete(sender, instance, **kwargs):
     """
@@ -598,12 +609,14 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     """
     delete_empty_file_reference(instance.checksum, instance.file_format.extension)
 
+
 def delete_empty_file_reference(checksum, extension):
     filename = checksum + '.' + extension
     if not File.objects.filter(checksum=checksum).exists() and not Channel.objects.filter(thumbnail=filename).exists():
         file_on_disk_path = generate_file_on_disk_name(checksum, filename)
         if os.path.isfile(file_on_disk_path):
             os.remove(file_on_disk_path)
+
 
 class PrerequisiteContentRelationship(models.Model):
     """
@@ -620,7 +633,7 @@ class PrerequisiteContentRelationship(models.Model):
         if self.target_node == self.prerequisite:
             raise IntegrityError('Cannot self reference as prerequisite.')
         # immediate cyclic exception
-        elif PrerequisiteContentRelationship.objects.using(self._state.db)\
+        elif PrerequisiteContentRelationship.objects.using(self._state.db) \
                 .filter(target_node=self.prerequisite, prerequisite=self.target_node):
             raise IntegrityError(
                 'Note: Prerequisite relationship is directional! %s and %s cannot be prerequisite of each other!'
@@ -633,7 +646,6 @@ class PrerequisiteContentRelationship(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super(PrerequisiteContentRelationship, self).save(*args, **kwargs)
-
 
 
 class RelatedContentRelationship(models.Model):
@@ -651,14 +663,16 @@ class RelatedContentRelationship(models.Model):
         if self.contentnode_1 == self.contentnode_2:
             raise IntegrityError('Cannot self reference as related.')
         # handle immediate cyclic
-        elif RelatedContentRelationship.objects.using(self._state.db)\
+        elif RelatedContentRelationship.objects.using(self._state.db) \
                 .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
             return  # silently cancel the save
         super(RelatedContentRelationship, self).save(*args, **kwargs)
 
+
 class Exercise(models.Model):
     contentnode = models.ForeignKey('ContentNode', related_name="exercise", null=True)
     mastery_model = models.CharField(max_length=200, default=exercises.DO_ALL, choices=exercises.MASTERY_MODELS)
+
 
 class Invitation(models.Model):
     """ Invitation to edit channel """
