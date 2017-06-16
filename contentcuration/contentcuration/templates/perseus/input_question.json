@@ -22,7 +22,14 @@
                             "message": "",
                             "strict": false,
                             "simplify":true,
-                            "maxError": 0
+                            "maxError": 0,
+                            "answerForms": [
+                                "proper",
+                                "mixed",
+                                "integer",
+                                "decimal",
+                                "improper"
+                            ]
                         }{% if forloop.last %}{% else %},{% endif %}
                     {% endfor %}],
                     "size":"normal",
