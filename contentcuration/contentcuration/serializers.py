@@ -582,10 +582,9 @@ class ChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = (
-        'id', 'created', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree', 'source_id',
-        'source_domain',
-        'ricecooker_version', 'thumbnail', 'version', 'deleted', 'public', 'thumbnail_url', 'pending_editors',
-        'viewers', 'tags')
+        'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
+        'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
+        'public', 'thumbnail_url', 'pending_editors', 'viewers', 'tags')
 
 
 class AccessibleChannelListSerializer(serializers.ModelSerializer):
