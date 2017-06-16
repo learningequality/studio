@@ -456,6 +456,10 @@ class ContentNode(MPTTModel, models.Model):
             return None
 
     def save(self, *args, **kwargs):
+        # TODO: This SIGNIFICANTLY slows down the creation flow
+        #   Avoid calling get_channel() (db read)
+        #   Avoid ContentNode.objects.{function} (db query and read)
+
         # Detect if node has been moved to another tree
         if self.pk and ContentNode.objects.filter(pk=self.pk).exists():
             original = ContentNode.objects.get(pk=self.pk)
