@@ -128,6 +128,79 @@ def api_channel_structure_upload(request):
     except KeyError:
         raise ObjectDoesNotExist('Missing attribute from data: {}'.format(data))
 
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def api_create_channel_endpoint(request):
+    """ Create the channel node """
+    data = json.loads(request.body)
+    try:
+        channel_data = data['channel_data']
+
+        obj = create_channel(channel_data, request.user)
+
+        return HttpResponse(json.dumps({
+            "success": True,
+            "root": obj.chef_tree.pk,
+            "channel_id": obj.pk,
+        }))
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def api_commit_channel(request):
+    """ Commit the channel staging tree to the main tree """
+    data = json.loads(request.body)
+    try:
+        channel_id = data['channel_id']
+
+        obj = Channel.objects.get(pk=channel_id)
+
+        # rebuild MPTT tree for this channel (since we set "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
+        ContentNode.objects.partial_rebuild(obj.chef_tree.tree_id)
+        obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=channel_id,
+                                                                source_channel_id=channel_id)
+
+        old_staging = obj.staging_tree
+        obj.staging_tree = obj.chef_tree
+        obj.chef_tree = None
+        obj.save()
+
+        # Delete staging tree if it already exists
+        if old_staging and old_staging != obj.main_tree:
+            old_staging.delete()
+
+        if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
+            activate_channel(obj)
+
+        return HttpResponse(json.dumps({
+            "success": True,
+            "new_channel": obj.pk,
+        }))
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def api_add_nodes_to_tree(request):
+    """ Add child nodes to a parent node """
+    data = json.loads(request.body)
+    try:
+        content_data = data['content_data']
+        parent_id = data['root_id']
+        with ContentNode.objects.disable_mptt_updates():
+            return HttpResponse(json.dumps({
+                "success": True,
+                "root_ids": convert_data_to_nodes(content_data, parent_id)
+            }))
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -240,6 +313,80 @@ def get_tree_data(request):
 
 
 """ CHANNEL CREATE FUNCTIONS """
+
+
+def create_channel(channel_data, user):
+    """ Set up channel """
+    # Set up initial channel
+    channel, isNew = Channel.objects.get_or_create(id=channel_data['id'])
+
+    # Add user as editor if channel is new or channel has no editors
+    # Otherwise, check if user is an editor
+    if isNew or channel.editors.count() == 0:
+        channel.editors.add(user)
+    elif user not in channel.editors.all():
+        raise SuspiciousOperation("User is not authorized to edit this channel")
+
+    channel.name = channel_data['name']
+    channel.description = channel_data['description']
+    channel.thumbnail = channel_data['thumbnail']
+    channel.deleted = False
+    channel.source_id = channel_data.get('source_id')
+    channel.source_domain = channel_data.get('source_domain')
+    channel.ricecooker_version = channel_data.get('ricecooker_version')
+
+    old_chef_tree = channel.chef_tree
+    is_published = channel.main_tree is not None and channel.main_tree.published
+    # Set up initial staging tree
+    channel.chef_tree = ContentNode.objects.create(
+        title=channel.name,
+        kind_id=content_kinds.TOPIC,
+        sort_order=0,
+        published=is_published,
+        content_id=channel.id,
+        node_id=channel.id,
+        source_id=channel.source_id,
+        source_domain=channel.source_domain,
+        extra_fields=json.dumps({'ricecooker_version': channel.ricecooker_version}),
+    )
+    channel.chef_tree.save()
+    channel.save()
+
+    # Delete chef tree if it already exists
+    if old_chef_tree and old_chef_tree != channel.staging_tree:
+        old_chef_tree.delete()
+
+    return channel  # Return new channel
+
+
+@trace
+def convert_data_to_nodes(content_data, parent_node):
+    """ Parse dict and create nodes accordingly """
+    try:
+        root_mapping = {}
+        parent_node = ContentNode.objects.get(pk=parent_node)
+        sort_order = parent_node.children.count() + 1
+        existing_node_ids = ContentNode.objects.filter(parent_id=parent_node.pk).values_list('node_id', flat=True)
+        with transaction.atomic():
+            for node_data in content_data:
+                # Check if node id is already in the tree to avoid duplicates
+                if node_data['node_id'] not in existing_node_ids:
+                    # Create the node
+                    new_node = create_node(node_data, parent_node, sort_order)
+
+                    # Create files associated with node
+                    map_files_to_node(new_node, node_data['files'])
+
+                    # Create questions associated with node
+                    create_exercises(new_node, node_data['questions'])
+                    sort_order += 1
+
+                    # Track mapping between newly created node and node id
+                    root_mapping.update({node_data['node_id']: new_node.pk})
+            return root_mapping
+
+    except KeyError as e:
+        raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
 
 
 def create_channel_from_structure(channel_id, channel_structure_dict, user):
@@ -446,6 +593,7 @@ def map_files_to_node(node, data):
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size=file_data['size'],
+            file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
             language_id=file_data.get('language'),
         )
@@ -468,6 +616,7 @@ def map_files_to_assessment_item(question, data):
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size=file_data['size'],
+            file_on_disk=DjFile(open(file_path, 'rb')),
             preset_id=file_data['preset'],
         )
         resource_obj.file_on_disk.name = file_path
