@@ -468,6 +468,38 @@ var BaseEditableListView = BaseListView.extend({
       	this.handle_if_empty();
       	// this.update_views();
 	},
+	delete_items_permanently:function(message){
+		message = (message!=null)? message: "Deleting...";
+		var self = this;
+		this.display_load(message, function(resolve_load, reject_load){
+			var list = self.get_selected();
+			var promise_list = [];
+			for(var i = 0; i < list.length; i++){
+				var view = list[i];
+				if(view){
+					promise_list.push(new Promise(function(resolve, reject){
+						view.model.destroy({
+							success:function(data){
+								resolve(data);
+							},
+							error:function(obj, error){
+								reject(error);
+							}
+						});
+						self.collection.remove(view.model);
+						self.views.splice(view,1);
+						view.remove();
+					}));
+				}
+			}
+			Promise.all(promise_list).then(function(){
+				self.handle_if_empty();
+				resolve_load("Success!");
+			}).catch(function(error){
+				reject_load(error);
+			});
+		});
+	},
 	remove_view:function(view){
 		this.views = _.reject(this.views, function(v){ return v.cid === view.cid; })
 	}
