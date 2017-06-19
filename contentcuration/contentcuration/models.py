@@ -468,6 +468,8 @@ class ContentNode(MPTTModel, models.Model):
         if self.cloned_source is None:
             self.cloned_source = self
 
+        # TODO: This SIGNIFICANTLY slows down the creation flow
+        #   Avoid calling get_channel() (db read)
         if self.original_channel_id is None:
             if self.get_channel():
                 self.original_channel_id = self.get_channel().id

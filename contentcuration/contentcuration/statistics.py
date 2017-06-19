@@ -18,9 +18,11 @@ def record_channel_stats(channel, original_channel):
         if channel.staging_tree is not None:
             # Staging tree only exists on API calls (currently just Ricecooker)
             action_attributes['action_source'] = 'Ricecooker'
-            action_attributes['channel_num_resources'] = original_channel.chef_tree.get_descendants().exclude(
+
+            # TODO: Update to reflect new channel creation flow
+            action_attributes['channel_num_resources'] = channel.staging_tree.get_descendants().exclude(
                 kind=content_kinds.TOPIC).count()
-            action_attributes['channel_num_nodes'] = original_channel.chef_tree.get_descendant_count()
+            action_attributes['channel_num_nodes'] = channel.staging_tree.get_descendant_count()
             action_attributes['num_resources_added'] = action_attributes['channel_num_resources']
             action_attributes['num_nodes_added'] = action_attributes['channel_num_nodes']
 
