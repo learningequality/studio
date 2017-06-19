@@ -123,6 +123,7 @@ def api_channel_structure_upload(request):
 
         return HttpResponse(json.dumps({
             'success': True,
+            'channel_id': new_channel.pk,
         }))
     except KeyError:
         raise ObjectDoesNotExist('Missing attribute from data: {}'.format(data))
