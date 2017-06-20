@@ -811,7 +811,10 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
                     var newCollection = self.model.get('answers');
                     newCollection.reset(self.model.get('answers').chain()
                         .reject( function(a){return !numParser.test_valid_number(a.get('answer'));} )
-                        .each( function(a){ a.set({'correct': true, 'answer': numParser.extract_value(a.get('answer')).toString()});} ).value());
+                        .each( function(a){
+                            var value = numParser.extract_value(a.get('answer'));
+                            a.set({'correct': true, 'answer': value && value.toString()});
+                        } ).value());
                     self.model.set('answers', newCollection);
                     self.commit_type_change(new_type);
                 },
