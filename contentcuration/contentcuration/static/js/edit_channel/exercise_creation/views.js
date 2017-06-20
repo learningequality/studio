@@ -810,7 +810,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
                 "CHANGE": function(){
                     var newCollection = self.model.get('answers');
                     newCollection.reset(self.model.get('answers').chain()
-                        .reject( function(a){return !numParser.test_valid_number(a.get('answer'));} )
+                        .reject( function(a){return !numParser.extract_value(a.get('answer'));} )
                         .each( function(a){
                             var value = numParser.extract_value(a.get('answer'));
                             a.set({'correct': true, 'answer': value && value.toString()});
