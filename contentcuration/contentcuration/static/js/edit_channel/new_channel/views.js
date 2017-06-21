@@ -118,7 +118,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.thumbnail = this.original_thumbnail;
 		this.originalData = (this.model)? this.model.toJSON() : null;
 		this.isViewOnly = this.model.get("viewers").indexOf(window.current_user.id) >= 0;
-		this.size = this.model.get('size');
 		this.render();
 		this.dropzone = null;
 		this.isNew = false;
@@ -141,7 +140,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			resource_count: this.model.get("count"),
 			channel_link : this.model.get("id"),
 			picture : this.thumbnail_url,
-			size: this.size,
 		}));
 		if(this.edit){
 			this.image_upload = new FileViews.ThumbnailUploadView({
