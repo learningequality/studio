@@ -66,6 +66,21 @@ def get_or_set_cached_constants(constant, serializer):
     cache.set(constant.__name__, constant_data, None)
     return constant_data
 
+def redirect_to_channel(request, channel_id):
+    channel = Channel.objects.get(pk=channel_id)
+    if channel.editors.filter(pk=request.user.pk).exists():
+        return redirect(reverse_lazy('channel', kwargs={'channel_id' : channel_id}))
+    elif channel.viewers.filter(pk=request.user.pk).exists():
+        return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id' : channel_id}))
+    return redirect(reverse_lazy('unauthorized'))
+
+def redirect_to_channel_edit(request, channel_id):
+    return redirect(reverse_lazy('channel', kwargs={'channel_id' : channel_id}))
+
+def redirect_to_channel_view(request, channel_id):
+    return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id' : channel_id}))
+
+
 def channel_page(request, channel, allow_edit=False, staging=False):
     channel_serializer =  ChannelSerializer(channel)
     channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors').prefetch_related('viewers')\
@@ -141,7 +156,7 @@ def channel(request, channel_id):
 
     # Check user has permission to view channel
     if not channel.editors.filter(id=request.user.id).exists() and not request.user.is_admin:
-        return redirect(reverse_lazy('unauthorized'))
+        return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
 
     return channel_page(request, channel, allow_edit=True)
 
