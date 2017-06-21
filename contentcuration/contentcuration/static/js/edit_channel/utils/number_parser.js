@@ -1,4 +1,5 @@
 /****************
+NOTE: Need to update contentcuration/utils/parser.py too
 
 --- NUMBER REGULAR EXPRESSIONS ---
 VALID_NUMBER: [MIXED_NUMBER | FRACTION | DECIMAL | PERCENTAGE | INTEGER]
