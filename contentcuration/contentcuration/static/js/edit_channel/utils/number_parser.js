@@ -31,7 +31,7 @@ const FRACTION = new RegExp(INTEGER.source + "/" + NON_ZERO_INT.source);
 const MIXED_NUMBER = new RegExp("(" + INTEGER.source + ") +(" + FRACTION.source + ")");
 const DECIMAL = new RegExp(INTEGER.source + "\\." + UNFORMATTED_INT.source);
 const PERCENTAGE = new RegExp("(" + DECIMAL.source + "|" + MIXED_NUMBER.source + "|" + FRACTION.source + "|" + INTEGER.source + ")%");
-const EXPONENT = new RegExp("((?:" + DECIMAL.source + "|" + INTEGER.source + ")e\\+?" + INTEGER.source + ")");
+const EXPONENT = new RegExp("(" + DECIMAL.source + "|" + INTEGER.source + ")e\\+?(" + INTEGER.source + ")");
 
 
 function extract_value(text){
@@ -39,7 +39,7 @@ function extract_value(text){
 }
 
 function parse_valid_number(text){
-  return parse_exponent(text) || parse_mixed_number(text) || parse_fraction(text) || parse_percentage(text) || parse_decimal(text) || parse_integer(text);
+  return parse_exponent(text) || parse_percentage(text) || parse_mixed_number(text) || parse_fraction(text) || parse_decimal(text) || parse_integer(text);
 }
 
 function parse_mixed_number(text){
@@ -74,7 +74,7 @@ function parse_percentage(text){
 
 function parse_exponent(text){
   var match = EXPONENT.exec(text);
-  return match && eval(match[1]);
+  return match && eval(extract_value(match[1]) + "e" + extract_value(match[4]));
 }
 
 function test_valid_number(text){
