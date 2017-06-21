@@ -36,7 +36,7 @@ def extract_value(text):
 
 def parse_valid_number(text):
     try:
-        return parse_exponent(text) or parse_mixed_number(text) or parse_fraction(text) or parse_percentage(text) or parse_decimal(text) or parse_integer(text)
+        return parse_exponent(text) or parse_percentage(text) or parse_mixed_number(text) or parse_fraction(text) or parse_decimal(text) or parse_integer(text)
     except Exception:
         return None
 
@@ -56,7 +56,7 @@ def parse_mixed_number(text):
     match = MIXED_NUMBER.search(text)
     if(match):
         number = parse_integer(match.group(1))
-        return abs(number) + parse_fraction(match.group(3)) * (-1 if number < 0 else 1)
+        return (abs(number) + parse_fraction(match.group(3))) * (number/abs(number))
     return None
 
 def parse_percentage(text):
@@ -65,4 +65,4 @@ def parse_percentage(text):
 
 def parse_exponent(text):
     match = EXPONENT.search(text)
-    return match and eval(match.group(1))
+    return match and eval("{int}e{exp}".format(int=extract_value(match.group(2) or match.group(4)), exp=match.group(5)))
