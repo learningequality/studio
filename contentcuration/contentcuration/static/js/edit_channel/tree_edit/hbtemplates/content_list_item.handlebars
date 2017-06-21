@@ -40,8 +40,8 @@
 			</span>
 		</h6>
 		<div class="{{#unless isfolder}}open_file{{/unless}} title_wrapper">
-			<h3 class = "title truncate">
-				<div class="content-item-icon pull-left">
+			<div class = "title truncate">
+				<div class="content-item-icon">
 					{{#if isfolder}}
 						<img src="/static/img/topic.png"/>
 					{{else}}
@@ -49,7 +49,7 @@
 					{{/if}}
 				</div>
 				{{#if node}}{{node.title}}{{else}}<em>[Untitled]</em>{{/if}}
-			</h3>
+			</div>
 			<div class="description_wrapper">
 				<div class="description" title="{{node.description}}">
 					<div class="description_main wordwrap">{{description_first}}</div>

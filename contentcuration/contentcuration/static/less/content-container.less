@@ -305,12 +305,13 @@
 					padding:5px;
 					vertical-align: middle;
 					cursor:pointer;
-					h3, p, h6{
+					.title, p, h6{
 						color : @item-font-color;
 						margin:0;
 						padding:0;
+						font-weight: normal;
 					}
-					h3{
+					.title{
 						font-size: @item-title-font-size;
 					}
 					.options{
@@ -334,15 +335,14 @@
 
 				.folder, .file{
 					width: @container-width - 65px;
-					h3{
+					.title{
 						width:73%;
 					}
 				}
 				.folder{
-					h3{
+					.title{
 						font-weight:bold;
 						margin-top: 15px;
-						height: 21px;
 					}
 				}
 			}
@@ -398,17 +398,17 @@
 						}
 					}
 
-					h3, p, h6{
+					.title, p, h6{
 						color : @item-last-font-color;
 					}
 				}
 			}
-			.folder h3{
+			.folder .title{
 				margin-top: 5px;
 			}
 			.folder, .file{
-				width: @container-last-width - 60px;
-				h3{
+				width: @container-last-width - 65px;
+				.title{
 					width:73%;
 				}
 				.folder_open_icon{
@@ -483,6 +483,7 @@
 
 				.current_topic{
 					border-left:4px solid @edit-current-folder-color;
+					width: @container-last-width - 70px;
 				}
 			}
 
