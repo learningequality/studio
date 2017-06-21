@@ -3,7 +3,7 @@ const CHARACTERS = require("./symbols.json");
 const MATHJAX_REGEX = /\$\$([^\$]+)\$\$/g;
 const IMG_PLACEHOLDER = "${☣ CONTENTSTORAGE}/"
 const IMG_REGEX = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
-const NUM_REGEX = /[0-9\,\.\-\/]+/g;
+const NUM_REGEX = /[0-9\,\.\-\/\+e\s]+/g;
 
 /* MODULES */
 var Backbone = require("backbone");
@@ -20,6 +20,7 @@ var dialog = require("edit_channel/utils/dialog");
 var Katex = require("katex");
 var toMarkdown = require('to-markdown');
 var stringHelper = require("edit_channel/utils/string_helper");
+var numParser = require("edit_channel/utils/number_parser");
 var jax2svg = require('edit_channel/utils/mathjaxtosvg')
 jax2svg.init();
 
@@ -154,6 +155,7 @@ function Summernote(element, context, options) {
     this.getContents = function(){ return element.summernote('code'); };
     this.enable = function(){ element.summernote('enable'); };
     this.disable = function(){ element.summernote('disable'); };
+    this.togglePlaceholder = function(show){ context.$('.note-placeholder').css('display', (show) ? 'inline' : 'none'); }
 }
 
 /*********** TEXT EDITOR FOR QUESTIONS, ANSWERS, AND HINTS ***********/
@@ -276,17 +278,21 @@ var EditorView = Backbone.View.extend({
         return this.markdown;
     },
     process_key: function(event){
+        this.editor.togglePlaceholder(false);
         if(this.numbersOnly){
             var key = event.keyCode || event.which;
-            var allowedKeys = [46, 8, 9, 27, 110, 37, 38, 39, 40, 109];
-            if((event.shiftKey || !this.check_key(String.fromCharCode(key), key)) &&  // Key is a digit or allowed special characters
+            var allowedKeys = [46, 8, 9, 27, 110, 37, 38, 39, 40, 10];
+            if((!this.check_key(String.fromCharCode(key), key, event.shiftKey)) &&  // Key is a digit or allowed special characters
                !_.contains(allowedKeys, key) && !(event.ctrlKey || event.metaKey)){   // Key is not a CMD key
                 event.preventDefault();
             }
         }
     },
-    check_key: function(content, key){
-        var specialCharacterKeys = [32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 188, 189, 190, 191, 220];
+    check_key: function(content, key, shiftkey){
+        var allowedShiftKeys = [53, 61, 187];
+        var specialCharacterKeys = [32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 69, 173, 188, 189, 190, 191, 220];
+
+        if(shiftkey){ return _.contains(allowedShiftKeys, key)}
         return !this.numbersOnly || NUM_REGEX.test(content) || _.contains(specialCharacterKeys, key);
     },
     paste_content: function(event){
@@ -303,6 +309,7 @@ var EditorView = Backbone.View.extend({
         setTimeout(function () { // Firefox fix
             if(!self.numbersOnly || self.check_key(bufferText)){
                 document.execCommand('insertText', false, bufferText);
+                self.editor.togglePlaceholder(false);
                 if(clipboardHtml){
                     self.save(self.editor.getContents());
                     self.editor.setHTML("");
@@ -441,7 +448,7 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     get_next_order: function(){
         if(this.collection.length > 0){
             var max = this.collection.max(function(i){ return i.get('order');});
-            return (max >= 0)? max.get('order') + 1 : 1;
+            return (max && max.get('order') >= 0)? max.get('order') + 1 : 1;
         }
         return 1;
     },
@@ -567,10 +574,12 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
         this.remove();
     },
     move_up:function(event){
+        event.stopImmediatePropagation();
         event.stopPropagation();
         this.containing_list_view.switch_view_order(this, this.model.get('order') - 1);
     },
     move_down:function(event){
+        event.stopImmediatePropagation();
         event.stopPropagation();
         this.containing_list_view.switch_view_order(this, this.model.get('order') + 1);
     },
@@ -795,14 +804,17 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         }
 
         // Input questions will set all answers as being correct and remove non-numeric answers
-        else if(new_type === "input_question" && this.model.get("answers").some(function(a){ return a.get('correct') || isNaN(a.get('answer')); })){
+        else if(new_type === "input_question" && this.model.get("answers").some(function(a){ return a.get('correct') || numParser.test_valid_number(a.get('answer')); })){
             dialog.dialog("Changing Question Type", "Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?", {
                 "CANCEL":function(){},
                 "CHANGE": function(){
                     var newCollection = self.model.get('answers');
                     newCollection.reset(self.model.get('answers').chain()
-                        .reject( function(a){return isNaN(a.get('answer'));} )
-                        .each( function(a){ a.set('correct', true);} ).value());
+                        .reject( function(a){return !numParser.extract_value(a.get('answer'));} )
+                        .each( function(a){
+                            var value = numParser.extract_value(a.get('answer'));
+                            a.set({'correct': true, 'answer': value && value.toString()});
+                        } ).value());
                     self.model.set('answers', newCollection);
                     self.commit_type_change(new_type);
                 },
@@ -890,6 +902,8 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         return this.errors.length === 0;
     },
     set_random_order:function(event){
+        event.stopPropagation();
+        event.stopImmediatePropagation();
         this.model.set("randomize", event.target.checked);
         this.propagate_changes();
     },
@@ -947,6 +961,11 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     },
     set_closed:function(){
         this.set_toolbar_closed();
+        if(this.model.get("type") === "input_question"){
+            this.model.get('answers').each( function(answer){
+                answer.set('answer', numParser.extract_value(answer.get('answer')).toString());
+            });
+        }
         this.editor_view.deactivate_editor();
         this.$(".assessment_item").removeClass("active");
         this.$(".question").removeClass("unfocused");
@@ -973,7 +992,7 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     get_default_attributes: function() {
         return {
             order: this.get_next_order(),
-            answer: this.assessment_item.get('type') === "input_question"? "0" : "",
+            answer: "",
             correct: this.assessment_item.get('type') === "input_question"
         };
     },

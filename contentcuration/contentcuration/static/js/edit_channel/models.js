@@ -274,6 +274,7 @@ var ContentNodeCollection = BaseCollection.extend({
     save: function() {
         var self = this;
         return new Promise(function(saveResolve, saveReject){
+            var numParser = require("edit_channel/utils/number_parser");
             var fileCollection = new FileCollection();
             var assessmentCollection = new AssessmentItemCollection();
             self.forEach(function(node){
@@ -288,6 +289,11 @@ var ContentNodeCollection = BaseCollection.extend({
                 assessmentCollection.add(node.get('assessment_items'));
                 assessmentCollection.forEach(function(item){
                     item.set('contentnode', node.id);
+                    if(item.get('type') === 'input_question'){
+                        item.get('answers').each( function(a){
+                            a.set('answer', numParser.extract_value(a.get('answer')).toString());
+                        });
+                    }
                 })
             });
             Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function() {
