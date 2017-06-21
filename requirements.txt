@@ -28,3 +28,4 @@ django-postmark==0.1.6
 ddtrace==0.8.0
 jsonfield==2.0.1
 newrelic==2.86.3.70
+python-memcached==1.58
