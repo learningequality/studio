@@ -117,7 +117,7 @@ def get_user_channels(request):
     return HttpResponse(JSONRenderer().render(channel_serializer.data))
 
 def get_user_pending_channels(request):
-    pending_list = Invitation.objects.select_related('channel').select_related('sender').filter(invited=request.user)
+    pending_list = Invitation.objects.select_related('channel', 'sender').filter(invited=request.user)
     invitation_serializer = InvitationSerializer(pending_list, many=True)
 
     return HttpResponse(JSONRenderer().render(invitation_serializer.data))
