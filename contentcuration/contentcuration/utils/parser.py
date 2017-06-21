@@ -1,4 +1,6 @@
 """
+NOTE: Need to update contentcuration/static/js/edit_channel/utils/number_parser.js too
+
 --- NUMBER REGULAR EXPRESSIONS ---
 VALID_NUMBER: [MIXED_NUMBER | FRACTION | DECIMAL | PERCENTAGE | INTEGER]
 DECIMAL: INTEGER.UNFORMATTED_INT
