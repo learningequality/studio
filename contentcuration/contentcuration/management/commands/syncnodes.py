@@ -1,8 +1,7 @@
 import copy
-from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from contentcuration.models import Channel, ContentNode, AssessmentItem, File, ContentTag
+from contentcuration.models import Channel, ContentNode, ContentTag
 from le_utils.constants import content_kinds
 
 import logging as logmodule
