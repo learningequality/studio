@@ -66,5 +66,10 @@ def parse_percentage(text):
     return match and extract_value(match.group(1)) / 100
 
 def parse_exponent(text):
+    eval_str = None
     match = EXPONENT.search(text)
-    return match and eval("{int}e{exp}".format(int=extract_value(match.group(2) or match.group(4)), exp=match.group(5)))
+    if match:
+        val1 = extract_value(match.group(2) or match.group(4))
+        val2 = extract_value(match.group(5))
+        eval_str = val1 and val2 and "{int}e{exp}".format(int=val1, exp=int(val2))
+    return eval_str and eval(eval_str)

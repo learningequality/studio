@@ -75,7 +75,9 @@ function parse_percentage(text){
 
 function parse_exponent(text){
   var match = EXPONENT.exec(text);
-  return match && eval(extract_value(match[1]) + "e" + extract_value(match[4]));
+  var val1 = match && extract_value(match[1])
+  var val2 = match && extract_value(match[4])
+  return val1 && val2 && eval(val1 + "e" + val2);
 }
 
 function test_valid_number(text){
