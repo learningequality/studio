@@ -120,7 +120,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	id: function(){
 		return (this.model)? this.model.get("id") : "new";
 	},
-	className:"channel_container container",
+	className:"channel_container",
 	template: require("./hbtemplates/channel_item_current.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();

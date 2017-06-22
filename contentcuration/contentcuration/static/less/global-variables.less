@@ -182,19 +182,22 @@ ul li.placeholder:before {
   margin-left:20px;
 }
 
-#loading_modal{
+#loading_modal, #offline_overlay{
   position: fixed;
     left: 0;
     top: 0;
     bottom: 0;
     right: 0;
     background: #000;
-    opacity: 0.8;
+    opacity: 0.5;
     filter: alpha(opacity=80);
     z-index:99999999999;
 }
+
+.offline-ui{z-index: 999999999999;}
 
 .disabled{
   opacity:0.5;
   cursor:not-allowed !important;
 }
+
