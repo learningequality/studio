@@ -274,6 +274,7 @@ var ContentNodeCollection = BaseCollection.extend({
     save: function() {
         var self = this;
         return new Promise(function(saveResolve, saveReject){
+            var numParser = require("edit_channel/utils/number_parser");
             var fileCollection = new FileCollection();
             var assessmentCollection = new AssessmentItemCollection();
             self.forEach(function(node){
@@ -288,6 +289,12 @@ var ContentNodeCollection = BaseCollection.extend({
                 assessmentCollection.add(node.get('assessment_items'));
                 assessmentCollection.forEach(function(item){
                     item.set('contentnode', node.id);
+                    if(item.get('type') === 'input_question'){
+                        item.get('answers').each( function(a){
+                            var value = numParser.extract_value(a.get('answer'))
+                            a.set('answer', (value)? value.toString() : "");
+                        });
+                    }
                 })
             });
             Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function() {
@@ -456,7 +463,7 @@ var ChannelModel = BaseModel.extend({
     },
     get_accessible_channel_roots:function(){
         var self = this;
-        var promise = new Promise(function(resolve, reject){
+        return new Promise(function(resolve, reject){
             $.ajax({
                 method:"POST",
                 data: JSON.stringify({'channel_id': self.id}),
@@ -469,7 +476,32 @@ var ChannelModel = BaseModel.extend({
                 }
             });
         });
-        return promise;
+    },
+    activate_channel:function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({'channel_id': self.id}),
+                url: window.Urls.activate_channel(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
+    get_staged_diff: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({'channel_id': self.id}),
+                url: window.Urls.get_staged_diff(),
+                success: function(data){
+                    resolve(JSON.parse(data))
+                },
+                error:function(error){reject(error.responseText);}
+            });
+        });
     }
 });
 

@@ -12,8 +12,8 @@
 	.section{ height:100%; }
 	.edit_details_section{ width:95%; }
 	.tree_section{
-		width: @metadata-width * 0.28;
 		margin-right:10px;
+		margin-bottom: 30px;
 	}
 	.tab_button{ display:none; }
 	#uploader_select_all{
@@ -149,7 +149,9 @@
 
 	#preview_window{ width:100%; }
 	#uploaded_list_wrapper{
+		width: @metadata-width * 0.28;
 		min-height:@uploader-height - 150px;
+		margin-bottom: 20px;
 		background-color:white;
 		overflow-y:auto;
 		overflow-x:none;
@@ -182,9 +184,10 @@
 			height: 15px;
 		}
 		.uploaded_list_item{
-			width: 90%;
+			width: 85%;
 			height: 100%;
 			cursor:pointer;
+			margin-bottom: -5px;
 			.glyphicon{ color:@gray-700; }
 			h5 {
 				font-size: 14px;
