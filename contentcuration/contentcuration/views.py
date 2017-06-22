@@ -118,13 +118,7 @@ def channel_list(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
         return redirect(reverse_lazy('unsupported_browser'))
 
-    channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers').filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
-                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
-
-    channel_serializer = ChannelListSerializer(channel_list, many=True)
-
-    return render(request, 'channel_list.html', {"channels" : JSONRenderer().render(channel_serializer.data),
-                                                 "channel_name" : False,
+    return render(request, 'channel_list.html', {"channel_name" : False,
                                                  "current_user" : JSONRenderer().render(UserChannelListSerializer(request.user).data)})
 
 @api_view(['GET'])
@@ -138,7 +132,7 @@ def get_user_channels(request):
     return HttpResponse(JSONRenderer().render(channel_serializer.data))
 
 def get_user_pending_channels(request):
-    pending_list = Invitation.objects.select_related('channel').select_related('sender').filter(invited=request.user)
+    pending_list = Invitation.objects.select_related('channel', 'sender').filter(invited=request.user)
     invitation_serializer = InvitationSerializer(pending_list, many=True)
 
     return HttpResponse(JSONRenderer().render(invitation_serializer.data))
@@ -215,7 +209,6 @@ def publish_channel(request):
             "channel": channel_id
         }))
 
-
 def accessible_channels(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -234,7 +227,6 @@ def accept_channel_invite(request):
         add_editor_to_channel(invitation)
 
         return HttpResponse(JSONRenderer().render(channel_serializer.data))
-
 
 def activate_channel_endpoint(request):
     if request.method == 'POST':

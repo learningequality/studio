@@ -7,7 +7,6 @@
 	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
 
 	<script>
-		var channels = JSON.parse("{{ channels |escapejs }}");
 		var user = JSON.parse("{{ current_user|escapejs }}");
 	</script>
 	<script type="text/javascript">

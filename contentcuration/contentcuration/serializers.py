@@ -1,5 +1,5 @@
 from collections import OrderedDict
-
+from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files import File as DjFile
 from django.db import transaction
@@ -488,13 +488,10 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
                 "has_changed_descendant": descendants.filter(changed=True).exists(),
             }
         else:
-            # TODO: Account for files duplicated on node
-            # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
-            #         .filter(Q(contentnode=node) | Q(assessment_item_id__in=node.assessment_items.values_list('id', flat=True)))\
-            #         .only('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
-            assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))[
-                                  'resource_size'] or 0
-            resource_size = node.files.aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
+            assessment_size = node.assessment_items.values('files__checksum', 'files__file_size').distinct()\
+                            .aggregate(resource_size=Sum('files__file_size')).get('resource_size') or 0
+            resource_size = node.files.values('file_size','checksum').distinct()\
+                            .aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
             resource_count = 1
             if node.kind_id == content_kinds.EXERCISE:
                 resource_count = node.assessment_items.filter(deleted=False).count()
@@ -612,15 +609,11 @@ class ChannelListSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     view_only = serializers.SerializerMethodField('check_view_only')
     published = serializers.SerializerMethodField('check_published')
-    size = serializers.SerializerMethodField("get_resource_size")
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
 
     def get_date_created(self, channel):
         return channel.main_tree.created
-
-    def get_resource_size(self, channel):
-        return channel.get_resource_size()
 
     def get_resource_count(self, channel):
         return channel.main_tree.get_descendant_count()
@@ -639,7 +632,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'view_only', 'published', 'pending_editors', 'editors', 'viewers',
-                  'description', 'size', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'deleted')
+                  'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'deleted')
 
 
 class UserSerializer(serializers.ModelSerializer):

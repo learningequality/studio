@@ -13,7 +13,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
 from django.db import IntegrityError, models, connection
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -245,18 +245,23 @@ class Channel(models.Model):
     source_domain = models.CharField(max_length=300, blank=True, null=True)
     ricecooker_version = models.CharField(max_length=100, blank=True, null=True)
 
-    def get_resource_size(self):
-        # TODO: Add this back in once query filters out duplicated checksums
-        size = ChannelResourceSize.objects.filter(id=self.main_tree.tree_id).first()
-        if size:
-            return size.resource_size
-        return 0
+    def resource_size_key(self):
+        return "{}_resource_size".format(self.pk)
 
-        # descendants = self.main_tree.get_descendants().prefetch_related('assessment_items')
-        # size_q = File.objects.select_related('contentnode').select_related('assessment_item')\
-        #         .filter(Q(contentnode_id__in=descendants.values_list('id', flat=True)) | Q(assessment_item_id__in=descendants.values_list('assessment_items__id', flat=True)))\
-        #         .values('checksum', 'file_size').distinct().aggregate(resource_size=Sum('file_size'))
-        # return size_q['resource_size'] or 0
+    # Might be good to display resource size, but need to improve query time first
+    def get_resource_size(self):
+        cached_data = cache.get(self.resource_size_key())
+        if cached_data:
+            return cached_data
+        tree_id = self.main_tree.tree_id
+        files = File.objects.select_related('contentnode', 'assessment_item')\
+            .filter(Q(contentnode__tree_id=tree_id) | Q(assessment_item__contentnode__tree_id=tree_id))\
+            .values('checksum', 'file_size')\
+            .distinct()\
+            .aggregate(resource_size=Sum('file_size'))
+        cache.set(self.resource_size_key(), files['resource_size'] or 0, None)
+        return files['resource_size'] or 0
+
 
     def save(self, *args, **kwargs):
 
@@ -470,17 +475,11 @@ class ContentNode(MPTTModel, models.Model):
 
         # TODO: This SIGNIFICANTLY slows down the creation flow
         #   Avoid calling get_channel() (db read)
+        channel = self.get_channel() or (self.parent and self.parent.get_channel())
         if self.original_channel_id is None:
-            if self.get_channel():
-                self.original_channel_id = self.get_channel().id
-            elif self.parent and self.parent.get_channel():
-                self.original_channel_id = self.parent.get_channel().id
+            self.original_channel_id = channel.id if channel else None
         if self.source_channel_id is None:
-            if self.get_channel():
-                self.source_channel_id = self.get_channel().id
-            elif self.parent and self.parent.get_channel():
-                self.source_channel_id = self.parent.get_channel().id
-
+            self.source_channel_id = channel.id if channel else None
         if self.original_source_node_id is None:
             self.original_source_node_id = self.node_id
         if self.source_node_id is None:

@@ -15,7 +15,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.current_user = new Models.UserModel(window.user);
 		window.workspace_manager = new WorkspaceManager();
 		//this.listenTo(saveDispatcher, "save", this.save);
-		this.channelCollection = new Models.ChannelCollection(window.channels);
+		this.channelCollection = new Models.ChannelCollection();
 
 		this.fileformats = new Models.FileFormatCollection(window.fformats);
 		this.formatpresets = new Models.FormatPresetCollection(window.presets);
