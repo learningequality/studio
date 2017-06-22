@@ -189,15 +189,17 @@ var EditorView = Backbone.View.extend({
         this.setting_model = false;
     },
     render_content: function() {
-        if(this.model.get(this.edit_key)){
-            var self = this;
+        var self = this;
+        if(this.model.get(this.edit_key) && this.model.get(this.edit_key).trim() !==""){
             this.toggle_loading(true);
             this.parse_content(this.model.get(this.edit_key)).then(function(result){
                 self.$el.html(self.view_template({content: result}));
                 self.toggle_loading(false);
             });
         }else{
-            this.$el.html(this.default_template({ source_url: this.model.get('source_url') }));
+            _.defer(function(){
+                self.$el.html(self.default_template({ source_url: self.model.get('source_url') }));
+            })
         }
     },
     render_editor: function() {
@@ -963,7 +965,8 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         this.set_toolbar_closed();
         if(this.model.get("type") === "input_question"){
             this.model.get('answers').each( function(answer){
-                answer.set('answer', numParser.extract_value(answer.get('answer')).toString());
+                var value = numParser.extract_value(answer.get('answer'));
+                answer.set('answer', (value)? value.toString() : "");
             });
         }
         this.editor_view.deactivate_editor();
