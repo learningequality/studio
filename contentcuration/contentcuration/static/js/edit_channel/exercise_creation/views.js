@@ -197,9 +197,7 @@ var EditorView = Backbone.View.extend({
                 self.toggle_loading(false);
             });
         }else{
-            _.defer(function(){
-                self.$el.html(self.default_template({ source_url: self.model.get('source_url') }));
-            })
+            this.$el.html(this.default_template({ source_url: this.model.get('source_url') }));
         }
     },
     render_editor: function() {
@@ -1144,7 +1142,8 @@ var HintModalView = BaseViews.BaseModalView.extend({
             assessment_item: this.model,
             model: this.model,
             onupdate: this.onupdate,
-            isdisplay: this.isdisplay
+            isdisplay: this.isdisplay,
+            modal_view: this
         });
         this.$(".hints").append(this.hint_editor.el);
         this.$(".hint_modal").on("hide.bs.modal", this.closing_hints);
@@ -1178,6 +1177,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
         this.bind_edit_functions();
         this.assessment_item = options.assessment_item;
         this.isdisplay = options.isdisplay;
+        this.modal_view = options.modal_view;
         this.render();
         this.container = options.container;
         this.listenTo(this.collection, "add", this.add_item_view);
@@ -1191,6 +1191,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
         this.views = [];
         this.$el.html(this.template({isdisplay: this.isdisplay}));
         this.load_content(this.collection, "No hints provided.");
+        this.validate();
     },
     create_new_view: function(model) {
         var view = new AssessmentItemHintView({
@@ -1203,6 +1204,8 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
         return view;
     },
     validate:function(){
+        var invalid = this.collection.findWhere({hint: ""});
+        this.modal_view.$(".hint_prompt, .error-list").css("display", (invalid)? "block" : "none");
         this.set_invalid(this.collection.findWhere({hint: ""}));
     }
 });
