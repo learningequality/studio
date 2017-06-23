@@ -3,7 +3,7 @@ var _ = require("underscore");
 var Models = require("./models");
 //var UndoManager = require("backbone-undo");
 function get_author(){
-	return (window.preferences.author === null)? window.current_user.get_full_name() : window.preferences.author;
+	return window.preferences.author || "";
 }
 
 var BaseView = Backbone.View.extend({
