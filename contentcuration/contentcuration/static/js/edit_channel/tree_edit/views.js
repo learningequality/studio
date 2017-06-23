@@ -106,26 +106,14 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
         dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
             "CANCEL":function(){},
             "DELETE ITEMS": function(){
-				var deleteCollection = new Models.ContentNodeCollection();
-				for(var i = 0; i < self.lists.length; i++){
-					var list = self.lists[i].get_selected();
-					var open_folder = null;
-					for(var j = 0; j < list.length; j++){
-						var view = list[j];
-						if(view){
-							deleteCollection.add(view.model);
-							view.remove();
-						}
-						if(view.subcontent_view){
-							open_folder = view.subcontent_view;
-							break;
-		    			}
-					}
-					if(open_folder){
-						self.remove_containers_from(open_folder.index-1);
-						break;
-	    			}
+            	var list = self.get_selected(true);
+				/* Create list of nodes to delete */
+				var deleteCollection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
+				var opened = _.find(list, function(list){return list.$el.hasClass(list.openedFolderClass);});
+				if(opened){
+					opened.subcontent_view.close_container()
 				}
+				_.each(list, function(list){ list.remove(); })
 				self.add_to_trash(deleteCollection, "Deleting Content...");
             },
         }, null);
