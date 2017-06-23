@@ -9,12 +9,17 @@ $(function() {
 	$("#publish-id-help").on("click", show_publish_help);
 	$("#publish-id-copy").on("click", function(){ copy_publish_id($("#publish_id_text")[0]); });
 	$("#modal-copy-btn").on("click", function(){ copy_publish_id($("#modal-copy-text")[0]); });
+	$(".channel_settings").on("click", open_channel_settings)
 	if(window.channel){
 		window.current_channel = new Models.ChannelModel(window.channel);
 		window.current_channel.fetch({async:false});
 	}
 	$("#channel-edit-content-wrapper").on("click", close_popups);
 });
+
+function open_channel_settings(){
+	window.workspace_manager.get_main_view().open_channel_settings();
+}
 
 function close_popups(){
 	window.workspace_manager.get_main_view().close_all_popups();

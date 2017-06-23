@@ -302,6 +302,9 @@ var BaseWorkspaceView = BaseView.extend({
 				reject_load(error);
 			});
 		});
+	},
+	open_channel_settings: function(){
+		console.log("OPENING SETTINGS")
 	}
 });
 
