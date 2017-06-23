@@ -651,9 +651,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.selected_items.forEach(function(view){
       view.remove_tag(tagname);
     });
-    this.load_tags();
-    event.target.parentNode.remove();
     window.contenttags.remove(window.contenttags.findWhere({'tag_name':tagname}));
+    this.shared_data.shared_tags = _.reject(this.shared_data.shared_tags, function(tag) {return tag === tagname});
+    this.load_tags();
   },
   select_license:function(){
     this.$("#license_about").css("display", "inline");
