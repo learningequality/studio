@@ -108,7 +108,7 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                 "ckinds_list" : contentkinds,
                                                 "langs_list" : languages,
                                                 "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data),
-                                                "preferences" : request.user.preferences,
+                                                "preferences" : channel.preferences,
                                             })
 
 @login_required
@@ -119,7 +119,8 @@ def channel_list(request):
         return redirect(reverse_lazy('unsupported_browser'))
 
     return render(request, 'channel_list.html', {"channel_name" : False,
-                                                 "current_user" : JSONRenderer().render(UserChannelListSerializer(request.user).data)})
+                                                 "current_user" : JSONRenderer().render(UserChannelListSerializer(request.user).data),
+                                                 "user_preferences" : request.user.preferences})
 
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))

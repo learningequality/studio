@@ -184,7 +184,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
             previewTemplate:this.file_upload_template(),
             parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads()),
             previewsContainer: this.list_selector, // Define the container to display the previews
-            headers: {"X-CSRFToken": get_cookie("csrftoken")},
+            headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preferences": JSON.stringify(window.current_channel.get('preferences')),},
             dictInvalidFileType: "This file type is not supported.",
             dictFileTooBig: "Max file size exceeded.",
             dictResponseError: "Error processing request."
