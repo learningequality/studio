@@ -88,7 +88,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'click #close_uploader_button': 'close_upload'
   },
   render: function() {
-    this.$el.html(this.template({allow_edit: this.allow_edit}));
+    this.$el.html(this.template({allow_edit: this.allow_edit, staging: window.staging }));
 
     var self = this;
     this.collection.fetch_nodes_by_ids_complete(this.collection.pluck('id'), !this.collection.has_all_data()).then(function(fetched){
@@ -115,14 +115,17 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       case "preview":
         $("#metadata_preview_btn").addClass("btn-tab-active");
         $("#metadata_preview").css("display", "block");
+        $("#metadata_preview").find("iframe").prop("src", function(){return $(this).data("src");});
         break;
       case "questions":
         $("#metadata_questions_btn").addClass("btn-tab-active");
         $("#metadata_questions").css("display", "block");
+        $("#metadata_preview").find("iframe").prop("src", "about:blank");
         break;
       default:
         $("#metadata_details_btn").addClass("btn-tab-active");
         $("#metadata_edit_details").css("display", "block");
+        $("#metadata_preview").find("iframe").prop("src", "about:blank");
     }
   },
   load_list:function(){
@@ -647,9 +650,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.selected_items.forEach(function(view){
       view.remove_tag(tagname);
     });
-    this.load_tags();
-    event.target.parentNode.remove();
     window.contenttags.remove(window.contenttags.findWhere({'tag_name':tagname}));
+    this.shared_data.shared_tags = _.reject(this.shared_data.shared_tags, function(tag) {return tag === tagname});
+    this.load_tags();
   },
   select_license:function(){
     this.$("#license_about").css("display", "inline");

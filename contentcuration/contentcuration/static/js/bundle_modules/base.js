@@ -10,6 +10,8 @@ require('../../less/styles.less');
 require('bootstrap/dist/js/npm.js');
 require('../../js/utils/jquery-ui');
 
+require("utils/offline_helper");
+
 // Promise polyfill
 if(!global.Promise) {
   global.Promise = require('promise-polyfill');
