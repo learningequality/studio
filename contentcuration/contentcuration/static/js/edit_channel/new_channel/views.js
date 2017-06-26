@@ -57,22 +57,6 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
 		(edit_mode_on)? $(".new_channel_button").addClass("disabled") : $(".new_channel_button").removeClass("disabled");
 		$(".new_channel_button").prop('title', (edit_mode_on)? 'Cannot create a new channel while another channel is being edited.' : "Create a new channel");
-	},
-	handle_channel_change:function(channel, deleted){
-		this.update_channel_collection(channel, deleted);
-	},
-	update_channel_collection:function(channel, deleted){
-		if(deleted){
-			window.channels = _.reject(window.channels, function(c){return c.id == channel.id});
-		}else{
-			var match = _.findWhere(window.channels, {id:channel.id});
-			if(match){
-				var index = window.channels.indexOf(match);
-				window.channels[index] = channel.toJSON();
-			}else{
-				window.channels.push(channel.toJSON());
-			}
-		}
 	}
 });
 
@@ -108,7 +92,6 @@ var CurrentChannelList  = ChannelList.extend({
 		newView.$el.fadeIn(300);
 		this.$(this.list_selector).prepend(newView.el);
 		this.$(".default-item").css('display', 'none');
-
 	}
 });
 
@@ -120,7 +103,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	id: function(){
 		return (this.model)? this.model.get("id") : "new";
 	},
-	className:"channel_container container",
+	className:"channel_container",
 	template: require("./hbtemplates/channel_item_current.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
@@ -156,7 +139,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			total_file_size: this.model.get("size"),
 			resource_count: this.model.get("count"),
 			channel_link : this.model.get("id"),
-			picture : this.thumbnail_url
+			picture : this.thumbnail_url,
 		}));
 		if(this.edit){
 			this.image_upload = new FileViews.ThumbnailUploadView({
@@ -255,7 +238,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 						self.containing_list_view.set_editing(false);
 						self.containing_list_view.collection.remove(self.model);
 						self.containing_list_view.render();
-						self.containing_list_view.handle_channel_change(self.model, true);
 					});
                 },
             }, null);
@@ -298,7 +280,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.save(data, "Saving Channel...").then(function(channel){
 				self.model = channel;
 				self.render();
-				self.containing_list_view.handle_channel_change(channel, false);
 			});
 		}
 	},

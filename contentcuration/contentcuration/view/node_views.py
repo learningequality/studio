@@ -1,20 +1,18 @@
 import copy
 import json
 import logging
-import os
 import uuid
 from django.http import HttpResponse, HttpResponseBadRequest
-from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum
+from django.db.models import Sum
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
 from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
+from contentcuration.statistics import record_node_duplication_stats
 
 def create_new_node(request):
     if request.method == 'POST':
@@ -57,15 +55,10 @@ def get_total_size(request):
         data = json.loads(request.body)
         sizes = ContentNode.objects.prefetch_related('assessment_items').prefetch_related('files').prefetch_related('children')\
                     .filter(id__in=data).get_descendants(include_self=True)\
-                    .aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
+                    .values('files__checksum', 'assessment_items__files__checksum', 'files__file_size', 'assessment_items__files__file_size')\
+                    .distinct().aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
 
         return HttpResponse(json.dumps({'success':True, 'size': (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0)}))
-
-def delete_nodes(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        nodes = ContentNode.objects.filter(pk__in=data['nodes']).delete()
-        return HttpResponse({'success':True})
 
 def get_nodes_by_ids(request):
     if request.method == 'POST':
@@ -85,6 +78,7 @@ def get_nodes_by_ids_complete(request):
                 .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
 
+
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
 
@@ -100,18 +94,25 @@ def duplicate_nodes(request):
             channel_id = data["channel_id"]
             new_nodes = []
 
+            nodes_being_copied = []
+            for node_data in nodes:
+                nodes_being_copied.append(ContentNode.objects.get(pk=node_data['id']))
+            record_node_duplication_stats(nodes_being_copied, ContentNode.objects.get(pk=target_parent),
+                                          Channel.objects.get(pk=channel_id))
+
             with transaction.atomic():
                 with ContentNode.objects.disable_mptt_updates():
                     for node_data in nodes:
                         new_node = _duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
                         new_nodes.append(new_node.pk)
-                        sort_order+=1
+                        sort_order += 1
 
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
         serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
         return HttpResponse(JSONRenderer().render(serialized))
+
 
 def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
     if isinstance(node, int) or isinstance(node, basestring):

@@ -82,3 +82,6 @@ TAGS
 
 # Ignore Vagrant-created files
 /.vagrant/
+
+# Ignore test files
+/contentcuration/contentcuration/test_settings.py

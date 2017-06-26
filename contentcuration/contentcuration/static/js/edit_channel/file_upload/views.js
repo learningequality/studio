@@ -316,13 +316,16 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     },
     get_metadata:function(){
         return _.reduce(this.model.get("files"), function(dict, file){
-            return !file.preset.display ? dict :
-                {
+            if(!file.preset.display || _.contains(dict.checksums, file.checksum)){
+                return dict;
+            }
+            return {
                     'count': dict.count + 1,
                     'size': dict.size + file.file_size,
-                    'main_file_count': dict.main_file_count + !file.preset.supplementary
+                    'main_file_count': dict.main_file_count + !file.preset.supplementary,
+                    'checksums': dict.checksums.concat(file.checksum)
                 };
-        }, {'count': 0, 'size': 0, 'main_file_count': 0});
+        }, {'count': 0, 'size': 0, 'main_file_count': 0, 'checksums': []});
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);

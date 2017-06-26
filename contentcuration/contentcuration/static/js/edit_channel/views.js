@@ -3,7 +3,7 @@ var _ = require("underscore");
 var Models = require("./models");
 //var UndoManager = require("backbone-undo");
 function get_author(){
-	return (window.preferences.author === null)? window.current_user.get_full_name() : window.preferences.author;
+	return window.preferences.author || "";
 }
 
 var BaseView = Backbone.View.extend({
@@ -111,6 +111,30 @@ var BaseWorkspaceView = BaseView.extend({
 				onpublish: this.handle_published
 			});
 		}
+	},
+	activate_channel: function(){
+		var dialog = require("edit_channel/utils/dialog");
+		var original_resource_count = window.current_channel.get('main_tree').metadata.resource_count;
+		var original_topic_count = window.current_channel.get('main_tree').metadata.total_count - original_resource_count;
+		var staged_resource_count = window.current_channel.get('staging_tree').metadata.resource_count;
+		var staged_topic_count = window.current_channel.get('staging_tree').metadata.total_count - staged_resource_count;
+		dialog.dialog("Deploy Channel?", "Deploying this topic tree will replace the live topic tree (" +
+			 + original_topic_count + " topics, " + original_resource_count + " resources) with this staged topic tree (" +
+			+ staged_topic_count + " topics, " + staged_resource_count + " resources). Are you sure you want to deploy this updated topic tree?", {
+			'View Summary': function(){
+				var treeViews = require('edit_channel/tree_edit/views');
+				new treeViews.DiffModalView();
+			},
+			'Keep Reviewing': function(){},
+			'Deploy': function(){
+				window.current_channel.activate_channel().then(function(){
+					window.location.href = '/channels/' + window.current_channel.id + '/edit';
+				}).catch(function(error){
+					dialog.alert("Channel not approved", error);
+				});
+			}
+		}, null);
+
 	},
 	handle_published:function(collection){
 		this.reload_ancestors(collection);
@@ -438,11 +462,75 @@ var BaseEditableListView = BaseListView.extend({
 	    })
 	  	return promise;
 	},
+	delete_items_permanently:function(message){
+		message = (message!=null)? message: "Deleting...";
+		var self = this;
+		this.display_load(message, function(resolve_load, reject_load){
+			var list = self.get_selected();
+			var promise_list = [];
+			for(var i = 0; i < list.length; i++){
+				var view = list[i];
+				if(view){
+					promise_list.push(new Promise(function(resolve, reject){
+						view.model.destroy({
+							success:function(data){
+								resolve(data);
+							},
+							error:function(obj, error){
+								reject(error);
+							}
+						});
+						self.collection.remove(view.model);
+						self.views.splice(view,1);
+						view.remove();
+					}));
+				}
+			}
+			Promise.all(promise_list).then(function(){
+				self.handle_if_empty();
+				resolve_load("Success!");
+			}).catch(function(error){
+				reject_load(error);
+			});
+		});
+	},
 	delete:function(view){
       	this.collection.remove(view.model);
       	this.views = _.reject(this.views, function(el) { return el.model.id === view.model.id; });
       	this.handle_if_empty();
       	// this.update_views();
+	},
+	delete_items_permanently:function(message){
+		message = (message!=null)? message: "Deleting...";
+		var self = this;
+		this.display_load(message, function(resolve_load, reject_load){
+			var list = self.get_selected();
+			var promise_list = [];
+			for(var i = 0; i < list.length; i++){
+				var view = list[i];
+				if(view){
+					promise_list.push(new Promise(function(resolve, reject){
+						view.model.destroy({
+							success:function(data){
+								resolve(data);
+							},
+							error:function(obj, error){
+								reject(error);
+							}
+						});
+						self.collection.remove(view.model);
+						self.views.splice(view,1);
+						view.remove();
+					}));
+				}
+			}
+			Promise.all(promise_list).then(function(){
+				self.handle_if_empty();
+				resolve_load("Success!");
+			}).catch(function(error){
+				reject_load(error);
+			});
+		});
 	},
 	remove_view:function(view){
 		this.views = _.reject(this.views, function(v){ return v.cid === view.cid; })
@@ -911,37 +999,32 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			self.containing_list_view.copy_collection(copyCollection).then(function(collection){
 				self.containing_list_view.add_to_clipboard(collection, "");
 				resolve(collection);
-			});
+			}).catch(function(error){reject(error);});
 		});
 	},
 	add_topic: function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var self = this;
-		var new_topic = new Models.ContentNodeModel();
-        new_topic.save({
+
+		this.containing_list_view.collection.create_new_node({
             "kind":"topic",
-            "title": "Topic",
+            "title": (this.model.get('parent'))? this.model.get('title') + " Topic" : "Topic",
             "sort_order" : this.model.get("metadata").max_sort_order,
             "author": get_author(),
-        },{
-        	success:function(new_topic){
-		        var edit_collection = new Models.ContentNodeCollection([new_topic]);
-		        $("#main-content-area").append("<div id='dialog'></div>");
+        }).then(function(new_topic){
+        	var edit_collection = new Models.ContentNodeCollection([new_topic]);
+	        $("#main-content-area").append("<div id='dialog'></div>");
 
-		        var metadata_view = new UploaderViews.MetadataModalView({
-		            el : $("#dialog"),
-		            collection: edit_collection,
-		            model: self.model,
-		            new_content: true,
-		            new_topic: true,
-		            onsave: self.reload_ancestors,
-		            onnew:self.add_nodes,
-		            allow_edit: true
-		        });
-        	},
-        	error:function(obj, error){
-            	console.log("Error message:", error);
-        	}
+	        var metadata_view = new UploaderViews.MetadataModalView({
+	            el : $("#dialog"),
+	            collection: edit_collection,
+	            model: self.model,
+	            new_content: true,
+	            new_topic: true,
+	            onsave: self.reload_ancestors,
+	            onnew:self.add_nodes,
+	            allow_edit: true
+	        });
         });
 	},
 	add_nodes:function(collection){

@@ -41,7 +41,7 @@ def file_create(request):
         presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
         kind = presets.first().kind
         preferences = json.loads(request.user.preferences)
-        author = preferences.get('author') if isinstance(preferences.get('author'), basestring) else request.user.get_full_name()
+        author = preferences.get('author') or ""
         license = License.objects.filter(license_name=preferences.get('license')).first() # Use filter/first in case preference hasn't been set
         license_id = license.pk if license else settings.DEFAULT_LICENSE
         new_node = ContentNode(title=original_filename, kind=kind, license_id=license_id, author=author, copyright_holder=preferences.get('copyright_holder'))
