@@ -1,8 +1,6 @@
 import json
 from contentcuration.models import User
 from django import forms
-from django.utils.translation import ugettext as _
-from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm
 from le_utils.constants import exercises, licenses
 

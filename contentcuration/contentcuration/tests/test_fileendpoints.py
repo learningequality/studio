@@ -1,9 +1,6 @@
-import os
 import pytest
-import zipfile
 import tempfile
 from mixer.backend.django import mixer
-from contentcuration import models as cc
 from django.conf import settings
 from contentcuration.api import get_file_diff
 

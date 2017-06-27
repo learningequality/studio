@@ -1,18 +1,13 @@
-import os
 import pytest
-import zipfile
 import requests
 import tempfile
 import base64
-import sys
-from django.db.models import Q
 import json
 from django.test import Client
 from mixer.backend.django import mixer
 from contentcuration import models
-from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
-from contentcuration.api import get_file_diff, api_file_create
+from contentcuration.api import get_file_diff
 from django.core.urlresolvers import reverse_lazy
 
 pytestmark = pytest.mark.django_db

@@ -4,9 +4,6 @@ import mimetypes
 import os
 import re
 import zipfile
-
-from django.conf import settings
-from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponse
 from django.http.response import FileResponse, HttpResponseNotModified
 from django.utils.http import http_date

@@ -1,2 +1,3 @@
 django-debug_toolbar
 pympler
+flake8
