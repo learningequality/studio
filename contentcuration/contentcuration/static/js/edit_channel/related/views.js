@@ -4,7 +4,6 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("prerequisite.less");
 var stringHelper = require("edit_channel/utils/string_helper");
-var treeBuilder = require("edit_channel/utils/tree_builder");
 var staticModals = require("edit_channel/information/views");
 
 const PREREQ_LIMIT = 5;
