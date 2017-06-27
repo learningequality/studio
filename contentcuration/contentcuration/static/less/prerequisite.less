@@ -1,0 +1,79 @@
+@import "global-variables.less";
+@import "modal-styles.less";
+@import "selected.less";
+
+#related_content_wrapper{
+	min-height: 350px;
+	.select_main_box >.topic_list{ margin-left: 0px; }
+	.select_checkbox[disabled="disabled"]{cursor: not-allowed !important;}
+	.select_item.disabled{ cursor: pointer !important; }
+	.prerequisites_header{ margin-bottom: 10px; font-weight:bold;}
+	.prerequisite_label{ outline:none; }
+	.view_tree{
+   		margin-top: -10px;
+   		cursor: pointer;
+   		font-size: 12pt;
+   		&:not(:hover){ font-weight: normal; }
+	}
+	.select_topic_img{
+		height: 15px;
+	    margin-top: -10px;
+	    margin-left: 20px;
+	    margin-right: 5px;
+	}
+	#prerequisite_current_item{
+		font-size: 14pt;
+    	font-weight: bold;
+    	.glyphicon { font-size: 12pt; }
+	}
+	.prerequisite_help_text{
+		font-weight: normal;
+		margin: 5px 0px;
+		#prereq_about{
+			color: @blue-500;
+			cursor: pointer;
+		}
+	}
+	.select_main_box {
+		.prereq_header_row {
+			font-size: 10pt;
+			color: @gray-700;
+		}
+		.prereq_row{
+			font-size: 12pt;
+    		border-bottom: 1px solid @gray-300;
+    		&:hover{ background-color: @gray-200; }
+			.prereq_title{
+				font-weight: bold;
+				padding: 15px 0px;
+			}
+			.prereq_cell, .remove_prereq, .add_prereq{ padding: 15px; }
+			.remove_prereq { cursor: pointer; }
+		}
+		.selector-container{
+			margin-top: 10px;
+			background-color: @gray-200;
+			padding: 10px;
+			.title-bar {
+				margin: 0px;
+			    font-size: 16pt;
+			    font-weight: bold;
+			    margin-bottom: 10px;
+			    .glyphicon {
+			    	font-size: 13pt;
+			    	margin-right: 20px;
+			    	cursor: pointer;
+			   	}
+			}
+			.select-list {
+				background-color: white;
+				min-height: 350px;
+				border: 1px solid @gray-400;
+				.topic_item{
+					font-weight: bold;
+					cursor: pointer;
+				}
+			}
+		}
+	}
+}

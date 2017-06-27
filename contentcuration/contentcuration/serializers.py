@@ -313,6 +313,10 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
     prerequisite = serializers.PrimaryKeyRelatedField(many=True, queryset=ContentNode.objects.all())
     is_prerequisite_of = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     metadata = serializers.SerializerMethodField('retrieve_metadata')
+    parent_title = serializers.SerializerMethodField('retrive_parent_title')
+
+    def retrive_parent_title(self, node):
+        return node.parent and node.parent.title
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
@@ -439,7 +443,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'prerequisite', 'is_prerequisite_of')
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'prerequisite', 'is_prerequisite_of', 'parent_title')
 
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
@@ -461,7 +465,7 @@ class RootNodeSerializer(SimplifiedContentNodeSerializer):
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'channel_name', 'prerequisite', 'is_prerequisite_of')
+        fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'channel_name', 'prerequisite', 'is_prerequisite_of', 'parent_title')
 
 
 class ContentNodeSerializer(SimplifiedContentNodeSerializer):
@@ -519,7 +523,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license',
-                  'license_description', 'assessment_items', 'files',
+                  'license_description', 'assessment_items', 'files', 'parent_title',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of')
 
@@ -529,6 +533,10 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
     files = FileSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
     assessment_items = AssessmentItemSerializer(many=True, read_only=True)
+    siblings = serializers.SerializerMethodField('retrieve_siblings')
+
+    def retrieve_siblings(self, node):
+        return node.get_siblings().values_list('pk', flat=True)
 
     def retrieve_original_channel(self, node):
         original = node.get_original_node()
@@ -539,7 +547,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license',
-                  'license_description', 'assessment_items', 'files',
+                  'license_description', 'assessment_items', 'files', 'parent_title', 'siblings',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of')
 
@@ -549,9 +557,9 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
         model = ContentNode
         fields = (
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
-            'license_description', 'kind', 'prerequisite', 'is_prerequisite_of',
+            'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
-            'source_channel_id', 'source_id', 'source_domain',
+            'source_channel_id', 'source_id', 'source_domain', 'siblings',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata')
 

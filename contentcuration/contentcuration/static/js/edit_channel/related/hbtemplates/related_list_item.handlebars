@@ -1,29 +1,20 @@
-<div class="select_item_wrapper">
-	{{#if isfolder}}
-		<img src="/static/img/topic.png" class="select_topic_img">
-	{{else}}
-		<input type="checkbox" id="select_item_{{node.id}}_check" class="select_checkbox" {{#if checked}}checked{{/if}} {{#if isinvalid}}disabled title="Cannot select this item"{{/if}}></input>
-	{{/if}}
-	<label for="select_item_{{node.id}}_check" class="select_item {{#if node.children}}tog_folder{{/if}} {{#if isinvalid}}disabled{{/if}}" {{#if isinvalid}}disabled{{/if}}  title="{{node.title}}">
-		{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
-		<div class="select_item_title truncate">{{node.title}}</div>
+<div class="prereq_select_item_wrapper {{#if isfolder}}topic_item{{/if}} {{#if is_prerequisite}}disabled{{/if}}" {{#if is_prerequisite}}disabled{{/if}}>
+	<div class="col-xs-9 truncate prereq_cell" title="{{node.title}}">
 		{{#if isfolder}}
-			{{#if node.children}}
-				{{#if isfolder}}
-					{{#unless is_channel}}<em class="select_metadata">{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}</em>{{/unless}}
-				{{else}}
-					<em class="select_metadata">{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}</em>
-				{{/if}}
-				<div id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-triangle-top"></div>
-			{{else}}
-				<em class="select_metadata">(empty)</em>
-			{{/if}}
+			<img src="/static/img/topic.png" class="topic_icon"/>
+		{{else}}
+			<span class="{{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
 		{{/if}}
-		{{#if is_selected}}[SELECTED]{{/if}}
-		{{#unless checked}}{{#if is_dependent}}[IN POSTREQUISITES]{{/if}}{{/unless}}
-		{{#if is_prerequisite}}
-			<a class="prerequisite_label action-text">✔ IN PREREQUISITE TREE</a>
+		&nbsp;{{node.title}}
+	</div>
+	<div class="col-xs-3 text-center prereq_cell">
+	{{#if is_prerequisite}}Already selected
+	{{else}}
+		{{#if isfolder}}
+			<span class="glyphicon glyphicon-menu-right pull-right" aria-hidden="true"></span>
+		{{else}}
+			<a class="action-text select_prereq">SELECT</a>
 		{{/if}}
-	</label>
+	{{/if}}
+	</div>
 </div>
-{{#if isfolder}}<div id="select_item_{{node.id}}_sub" class="subdirectory"><em class="default-item">Loading...</em></div>{{/if}}

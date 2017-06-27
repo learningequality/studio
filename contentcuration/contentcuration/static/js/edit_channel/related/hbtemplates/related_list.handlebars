@@ -1,1 +1,10 @@
-<ul class="list-unstyled select-list topic_list" id="select_list_{{node.id}}"></ul>
+<div class="selector-container">
+	<h2 class="title-bar truncate">
+		{{#if node.parent}}<span class="glyphicon glyphicon-menu-left back_button" aria-hidden="true"></span>{{/if}}
+		<span class="container-title">{{node.title}}</span>
+		<span class="glyphicon glyphicon-remove cancel_selection pull-right" aria-hidden="true"></span>
+	</h2>
+	<ul class="list-unstyled select-list" id="select_list_{{node.id}}">
+		<li id="default_item_{{node.id}}" class="default-item">Loading Content...</li>
+	</ul>
+</div>

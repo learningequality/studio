@@ -39,7 +39,24 @@ var MasteryModalView = BaseViews.BaseModalView.extend({
   }
 });
 
+var PrerequisiteModalView = BaseViews.BaseModalView.extend({
+  template: require("./hbtemplates/prereq_modal.handlebars"),
+
+  initialize: function(options) {
+      this.modal = true;
+      this.render();
+  },
+
+  render: function() {
+      this.$el.html(this.template());
+      $("body").append(this.el);
+      this.$("#prereq_modal").modal({show: true});
+      this.$("#prereq_modal").on("hidden.bs.modal", this.closed_modal);
+  }
+});
+
 module.exports = {
     LicenseModalView: LicenseModalView,
-    MasteryModalView:MasteryModalView
+    MasteryModalView:MasteryModalView,
+    PrerequisiteModalView: PrerequisiteModalView
 }

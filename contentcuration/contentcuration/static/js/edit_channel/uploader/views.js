@@ -65,7 +65,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
 
   initialize: function(options) {
-    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit',
+    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit', 'update_prereq_count',
       'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items', 'set_prerequisites');
     this.bind_edit_functions();
     this.new_content = options.new_content;
@@ -157,18 +157,24 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     view.load_question_display(this.$("#metadata_questions"));
   },
   load_prerequisites:function(selected_items){
-    if(this.prerequisite_view){
-      this.prerequisite_view.stopListening();
-      this.prerequisite_view.undelegateEvents();
+    if(selected_items.length){
+      if(this.prerequisite_view){
+        this.prerequisite_view.stopListening();
+        this.prerequisite_view.undelegateEvents();
+      }
+      this.prerequisite_view = new Related.PrerequisiteView({
+        modal: false,
+        model: selected_items[0].model,
+        oncount: this.update_prereq_count,
+        onselect: this.set_prerequisites,
+        views_to_update: selected_items,
+        el: this.$("#metadata_prerequisites"),
+        allow_edit: this.allow_edit
+      });
     }
-    this.prerequisite_view = new Related.RelatedView({
-      modal: false,
-      model: this.model,
-      onselect: this.set_prerequisites,
-      views_to_update: selected_items,
-      collection: new Models.ContentNodeCollection(_.uniq(_.pluck(selected_items, "model"))),
-      el: this.$("#metadata_prerequisites")
-    });
+  },
+  update_prereq_count: function(count){
+    this.$(".prereq_badge").text(count)
   },
   set_prerequisites:function(prerequisite_list, selected_items){
       var self = this;
@@ -266,7 +272,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
           sort_order:++sort_order
         });
       }
-      console.log(entry.model.toJSON())
     });
   },
   process_updated_collection:function(collection){

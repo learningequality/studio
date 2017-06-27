@@ -1,7 +1,19 @@
 <div id="related_content_wrapper">
 	<div class="container-fluid prerequisites_header">
-		<span id="select_file_count" class="select_file_metadata"></span>
-		<div class="pull-right action-button view_tree">VIEW TREE</div>
+		<div id="prerequisite_current_item">
+			<span class="{{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
+			{{node.title}}
+		</div>
+		<div class="prerequisite_help_text">
+			<span class="closed_selector_text">Prerequisite exercises cover concepts that a learner should already have an understanding of before engaging with this exercise.</span>
+			<span class="open_selector_text">Select an exercise that should be a prerequisite to this one</span>
+			<span class="glyphicon glyphicon-info-sign" aria-hidden="true" id="prereq_about" ></span>
+		</div>
 	</div>
-	<div class="select_main_box"><div class="empty_default">Getting prerequisites...</div></div>
+	<div id="selected_prerequisite_box" class="select_main_box">
+		<div class="empty_default">Getting prerequisites...</div>
+	</div>
+	<div id="selector_box" class="select_main_box">
+		<div class="empty_default">Getting available content items...</div>
+	</div>
 </div>
