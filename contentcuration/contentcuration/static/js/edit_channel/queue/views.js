@@ -63,6 +63,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 
 
 var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
+	isclipboard: true,
 	template: require("./hbtemplates/queue_list.handlebars"),
 	selectedClass: "queue-selected",
 	default_item: ".queue-list-wrapper >.content-list >.default-item, >.content-list >.default-item",
@@ -177,6 +178,7 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 });
 
 var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
+	isclipboard: true,
 	list_selector: "#clipboard_list",
 	template: require("./hbtemplates/queue_item.handlebars"),
 	selectedClass: "queue-selected",

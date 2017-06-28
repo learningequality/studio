@@ -31,7 +31,6 @@ def get_prerequisites(request):
         postrequisite_mapping = {}
         prerequisite_tree_nodes = []
 
-        print "\n\n\n"
         for n in nodes:
             prereqs, prereqmapping = n.get_prerequisites()
             if data.get('get_postrequisites'):
@@ -42,7 +41,6 @@ def get_prerequisites(request):
             else:
                 prerequisite_mapping.update({n.pk: prereqmapping})
                 prerequisite_tree_nodes += prereqs + [n]
-        print "\n\n\n"
 
         return HttpResponse(json.dumps({
             "prerequisite_mapping": prerequisite_mapping,

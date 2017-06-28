@@ -99,6 +99,7 @@ var BaseView = Backbone.View.extend({
 
 var BaseWorkspaceView = BaseView.extend({
 	lists: [],
+	isclipboard: false,
 	bind_workspace_functions:function(){
 		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move',
 			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently');
@@ -147,7 +148,7 @@ var BaseWorkspaceView = BaseView.extend({
 			current_user: window.current_user
 		});
 	},
-	edit_selected:function(allow_edit){
+	edit_selected:function(allow_edit, isclipboard){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var list = this.get_selected();
 		var edit_collection = new Models.ContentNodeCollection();
@@ -169,7 +170,8 @@ var BaseWorkspaceView = BaseView.extend({
 			model: content,
 			new_content: false,
 		    onsave: this.reload_ancestors,
-		    allow_edit: allow_edit
+		    allow_edit: allow_edit,
+		    isclipboard: this.isclipboard
 		});
 	},
 	add_to_trash:function(collection, message){
@@ -896,6 +898,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	model: null,
 	tagName: "li",
 	selectedClass: "content-selected",
+	isclipboard: false,
 
 	bind_workspace_functions:function(){
 		this.bind_node_functions();
@@ -944,7 +947,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			content.list.add_nodes(moved);
 		}
 	},
-	open_edit:function(allow_edit){
+	open_edit:function(allow_edit, isclipboard){
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var editCollection =  new Models.ContentNodeCollection([this.model]);
@@ -955,6 +958,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			model: this.containing_list_view.model,
 		  	onsave: this.reload_ancestors,
 		  	allow_edit: allow_edit,
+		  	isclipboard: this.isclipboard,
 		  	onnew: (!this.allow_edit)? this.containing_list_view.add_to_clipboard : null
 		});
 	},

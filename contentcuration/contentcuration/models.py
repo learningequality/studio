@@ -1,4 +1,3 @@
-import copy
 import functools
 import hashlib
 import json
@@ -455,7 +454,6 @@ class ContentNode(MPTTModel, models.Model):
         for prereq in prerequisites:
             prlist, prereqmapping = prereq.get_prerequisites()
             prerequisite_mapping.update({prereq.pk: prereqmapping})
-            print prerequisite_mapping
             prereqlist.extend(prlist)
         return prereqlist, prerequisite_mapping
 

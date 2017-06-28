@@ -1,10 +1,9 @@
 from collections import OrderedDict
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.conf import settings
 from django.core.files import File as DjFile
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField, Count, Max, CharField
+from django.db.models import Q, Max
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -307,6 +306,7 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
                   'hints', 'raw_data', 'order', 'source_url', 'randomize', 'deleted')
         list_serializer_class = AssessmentListSerializer
 
+
 class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     id = serializers.CharField(required=False)
     children = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -532,10 +532,6 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
     files = FileSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
     assessment_items = AssessmentItemSerializer(many=True, read_only=True)
-    siblings = serializers.SerializerMethodField('retrieve_siblings')
-
-    def retrieve_siblings(self, node):
-        return node.get_siblings().values_list('pk', flat=True)
 
     def retrieve_original_channel(self, node):
         original = node.get_original_node()
@@ -546,7 +542,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license',
-                  'license_description', 'assessment_items', 'files', 'parent_title', 'siblings',
+                  'license_description', 'assessment_items', 'files', 'parent_title',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of')
 

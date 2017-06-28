@@ -16,6 +16,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
   initialize: function(options) {
     _.bindAll(this, "close_uploader");
     this.allow_edit = options.allow_edit;
+    this.isclipboard = options.isclipboard;
     this.render(this.close_uploader, {
       new_content: options.new_content,
       new_topic: options.new_topic,
@@ -33,7 +34,8 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       new_topic: options.new_topic,
       container:this,
       model:this.model,
-      allow_edit: this.allow_edit
+      allow_edit: this.allow_edit,
+      isclipboard: this.isclipboard
     });
   },
   close_uploader:function(event){
@@ -75,6 +77,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.new_topic = options.new_topic;
     this.onclose = options.onclose;
     this.allow_edit = options.allow_edit;
+    this.isclipboard = options.isclipboard;
     this.render();
     this.render_details();
     this.adjust_list_height();
@@ -90,7 +93,11 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'click #close_uploader_button': 'close_upload'
   },
   render: function() {
-    this.$el.html(this.template({allow_edit: this.allow_edit, staging: window.staging }));
+    this.$el.html(this.template({
+      allow_edit: this.allow_edit,
+      staging: window.staging,
+      isclipboard: this.isclipboard
+    }));
 
     var self = this;
     this.collection.fetch_nodes_by_ids_complete(this.collection.pluck('id'), !this.collection.has_all_data()).then(function(fetched){
@@ -822,7 +829,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.check_item();
   },
   set_edited:function(is_edited){
-      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields");
+      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields", "prerequisite");
       // Handle unsetting node
       if(!is_edited){
           this.originalData = $.extend(true, {}, edited_data);
