@@ -1,0 +1,9 @@
+extends:
+  - "eslint:recommended"
+  - "plugin:vue/base"
+env:
+  browser: true
+  commonjs: true
+  jquery: true
+globals:
+  Promise: true
