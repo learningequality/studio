@@ -54,6 +54,7 @@ INSTALLED_APPS = (
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
+    'search'
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"

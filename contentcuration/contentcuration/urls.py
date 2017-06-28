@@ -32,6 +32,7 @@ import contentcuration.view.node_views as node_views
 from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
 
+# TODO move these to views.py
 class LicenseViewSet(viewsets.ModelViewSet):
     queryset = License.objects.all()
     serializer_class = serializers.LicenseSerializer
@@ -86,6 +87,7 @@ class AssessmentItemViewSet(BulkModelViewSet):
     queryset = AssessmentItem.objects.all()
     serializer_class = serializers.AssessmentItemSerializer
 
+
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
@@ -126,6 +128,7 @@ urlpatterns = [
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
+    url(r'^api/search/', include('search.urls'), name='search')
 ]
 
 # Add node api enpoints
