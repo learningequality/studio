@@ -1,8 +1,7 @@
 <div class="selector-container">
-	<h2 class="title-bar truncate">
+	<h2 class="title-bar">
 		{{#if node.parent}}<span class="glyphicon glyphicon-menu-left back_button" aria-hidden="true"></span>{{/if}}
-		<span class="container-title">{{node.title}}</span>
-		<span class="glyphicon glyphicon-remove cancel_selection pull-right" aria-hidden="true"></span>
+		<div class="container-title truncate">{{node.title}}</div>
 	</h2>
 	<ul class="list-unstyled select-list" id="select_list_{{node.id}}">
 		<li id="default_item_{{node.id}}" class="default-item">Loading Content...</li>

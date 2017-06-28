@@ -3,7 +3,6 @@ var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("prerequisite.less");
-var stringHelper = require("edit_channel/utils/string_helper");
 var staticModals = require("edit_channel/information/views");
 
 const PREREQ_LIMIT = 5;
@@ -22,6 +21,7 @@ function PrerequisiteTree() {
     this.is_prerequisite = function(id){ return _.contains(this.prerequisite_list, id); };
     this.is_postrequisite = function(id){ return _.contains(this.postrequisite_list, id); };
     this.prerequisite_count = function(){ return this.prerequisite_list.length; };
+    this.get_sub_prerequisite_count = function(id){ return _.filter(this.ancestors, function(id2){return id2===id}).length; }
     this.is_immediate_prerequisite = function(id){ return _.contains(_.keys(this.prerequisites), id); };
     this.is_valid_prerequisite = function(id){ return !this.is_postrequisite(id) && !this.is_selected(id); };
     this.set = function(model){
@@ -32,7 +32,7 @@ function PrerequisiteTree() {
         return new Promise(function(resolve, reject){
             self.tree_collection.get_prerequisites([self.selected], true).then(function(nodes){
                 self.tree_collection = nodes.prerequisite_tree_nodes;
-                self.ancestors = _.uniq(_.flatten(self.tree_collection.pluck('ancestors')));
+                self.ancestors = _.flatten(nodes.prerequisite_tree_nodes.pluck('ancestors'));
                 self.update_tree(nodes.prerequisite_mapping, nodes.postrequisite_mapping);
                 resolve(true);
             });
@@ -109,7 +109,7 @@ function PrerequisiteTree() {
             if (self.prerequisite_fetch_list.length === 0){resolve(true);}
             self.tree_collection.get_prerequisites(self.prerequisite_fetch_list, false).then(function(nodes){
                 self.tree_collection.add(nodes.prerequisite_tree_nodes.toJSON());
-                self.ancestors = _.flatten(self.tree_collection.pluck('ancestors'));
+                self.ancestors = _.flatten(nodes.prerequisite_tree_nodes.pluck('ancestors'));
                 self.update_tree(nodes.prerequisite_mapping, nodes.postrequisite_mapping);
                 resolve(true);
             });
@@ -160,6 +160,7 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
         this.oncount = options.oncount;
         this.allow_edit = options.allow_edit;
         this.views_to_update = options.views_to_update;
+        this.oncount("Loading...");
         this.render();
     },
     render: function() {
@@ -180,9 +181,6 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
         var prereqlist = PrereqTree.get_immediate_prerequisites();
         this.oncount(prereqlist.length);
     },
-    show_tree: function(){
-        var tree_modal = new PrerequisiteModalView({ collection: new Models.ContentNodeCollection(this.model) });
-    },
     update_prerequisites: function(skip_rendering){
         var self = this;
         PrereqTree.fetch_prerequisites().then(function(){
@@ -190,7 +188,9 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
             self.oncount(immediate_prereqs.length)
             self.onselect(immediate_prereqs, self.views_to_update);
             if(skip_rendering){
-                $(".prereq_add_row").css('display', (immediate_prereqs.length < PREREQ_LIMIT)? "block" : "none");
+                if(self.selectedView){
+                    self.selectedView.toggle_warning();
+                }
             } else{
                 if(self.selectedView){
                     self.selectedView.remove();
@@ -215,7 +215,6 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
             this.relatedView.remove();
             delete this.relatedView
         }
-
     }
 });
 
@@ -242,7 +241,6 @@ var SelectedView = BasePrerequisiteView.extend({
     render: function() {
         this.$el.html(this.template({allow_edit: this.allow_edit}));
         var self = this;
-        // PrereqTree.set(this.model).then(function(){
         self.collection.get_all_fetch_simplified(PrereqTree.get_immediate_prerequisites()).then(function(collection){
             self.selectedList = new SelectedList({
                 model: self.model,
@@ -251,7 +249,11 @@ var SelectedView = BasePrerequisiteView.extend({
                 container: self.container,
                 allow_edit: self.allow_edit
             });
+            self.selectedList.toggle_warning();
         });
+    },
+    toggle_warning: function(){
+        this.selectedList.toggle_warning();
     }
 });
 
@@ -264,18 +266,43 @@ var RelatedView = BasePrerequisiteView.extend({
             self.navigate_to_node(collection.at(0));
         });
     },
-    navigate_to_node: function(model){
+    events: {
+        'click .cancel_selection' : 'open_selected',
+    },
+    open_selected: function(){
+        this.container.open_selected();
+    },
+    navigate_to_node: function(model, slideFromRight){
+
         if(this.relatedList){
-            this.relatedList.remove();
-            delete this.relatedList;
+            var placeholder = document.createElement("DIV");
+            placeholder.className = "selector_placeholder";
+            var new_list = new RelatedList({
+                model: model,
+                collection: this.collection,
+                container: this.container,
+                related_view: this
+            });
+            this.$("#selector_box").append((slideFromRight)? new_list.el : placeholder);
+            this.$("#selector_box").prepend((slideFromRight)? placeholder : new_list.el);
+
+            var self = this;
+            $(placeholder).animate({width: 'toggle'}, 150);
+            this.relatedList.$el.animate({width: 'toggle'}, 150, function(){
+                self.$el.find(".selector_placeholder").remove();
+                self.relatedList.remove();
+                delete self.relatedList;
+                self.relatedList = new_list;
+            });
+        } else{
+            this.relatedList = new RelatedList({
+                model: model,
+                collection: this.collection,
+                container: this.container,
+                related_view: this
+            });
+            this.$("#selector_box").html(this.relatedList.el)
         }
-        this.relatedList = new RelatedList({
-            model: model,
-            collection: this.collection,
-            container: this.container,
-            related_view: this
-        });
-        this.$("#selector_box").html(this.relatedList.el)
     }
 });
 
@@ -295,7 +322,8 @@ var SelectedList = BaseViews.BaseListView.extend({
     },
     render: function() {
         this.$el.html(this.template({
-            can_select: PrereqTree.get_immediate_prerequisites().length < PREREQ_LIMIT
+            show_warning: PrereqTree.get_immediate_prerequisites().length < PREREQ_LIMIT,
+            allow_edit: this.allow_edit
         }));
         this.container.update_count()
         this.load_content();
@@ -314,6 +342,10 @@ var SelectedList = BaseViews.BaseListView.extend({
     },
     open_related: function(){
         this.container.open_related();
+    },
+    toggle_warning: function(){
+        var show_warning = PrereqTree.get_immediate_prerequisites().length >= PREREQ_LIMIT;
+        this.$(".add_warning").css('display', (show_warning)? "inline" : "none");
     }
 });
 
@@ -321,6 +353,7 @@ var RelatedList = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/related_list.handlebars"),
     default_item:".default-item",
     list_selector: ".select-list",
+    className: "related_list_wrapper",
     initialize: function(options) {
         _.bindAll(this, 'navigate_to_node');
         this.collection = options.collection;
@@ -329,7 +362,6 @@ var RelatedList = BaseViews.BaseListView.extend({
         this.render();
     },
     events: {
-        'click .cancel_selection' : 'open_selected',
         'click .back_button' : 'go_back_in_tree'
     },
     render: function() {
@@ -353,17 +385,14 @@ var RelatedList = BaseViews.BaseListView.extend({
         this.views.push(new_view);
         return new_view;
     },
-    open_selected: function(){
-        this.container.open_selected();
-    },
     go_back_in_tree: function(){
         var self = this;
         this.collection.get_all_fetch_simplified([this.model.get('parent')]).then(function(collection){
-            self.related_view.navigate_to_node(collection.at(0));
+            self.related_view.navigate_to_node(collection.at(0), false);
         });
     },
     navigate_to_node: function(model){
-        this.related_view.navigate_to_node(model);
+        this.related_view.navigate_to_node(model, true);
     }
 });
 
@@ -409,6 +438,7 @@ var RelatedItem = BasePrerequisiteItem.extend({
         this.$el.html(this.template({
             node:this.model.toJSON(),
             isfolder: this.model.get("kind") === "topic",
+            count: PrereqTree.get_sub_prerequisite_count(this.model.id),
             is_prerequisite: PrereqTree.is_prerequisite(this.model.id)
         }));
     },
@@ -417,7 +447,6 @@ var RelatedItem = BasePrerequisiteItem.extend({
         this.container.update_prerequisites();
     },
     open_topic:function(){
-        console.log(this.model)
         this.containing_list_view.navigate_to_node(this.model);
     }
 });

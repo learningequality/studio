@@ -174,6 +174,9 @@ var InvitationCollection = BaseCollection.extend({
 /**** CHANNEL AND CONTENT MODELS ****/
 function fetch_nodes(ids, url){
     return new Promise(function(resolve, reject){
+        if(ids.length === 0) {
+            resolve(new ContentNodeCollection()); // No need to make a call to the server
+        }
         $.ajax({
             method:"POST",
             url: url,
@@ -322,7 +325,7 @@ var ContentNodeCollection = BaseCollection.extend({
                     resolve({
                         "prerequisite_mapping": nodes.prerequisite_mapping,
                         "postrequisite_mapping": nodes.postrequisite_mapping,
-                        "prerequisite_tree_nodes": new ContentNodeCollection(JSON.parse(nodes.prerequisite_tree_nodes))
+                        "prerequisite_tree_nodes": new ContentNodeCollection(JSON.parse(nodes.prerequisite_tree_nodes)),
                     });
                 },
                 error:reject

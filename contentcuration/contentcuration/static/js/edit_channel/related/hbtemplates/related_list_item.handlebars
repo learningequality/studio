@@ -12,6 +12,7 @@
 	{{else}}
 		{{#if isfolder}}
 			<span class="glyphicon glyphicon-menu-right pull-right" aria-hidden="true"></span>
+			{{#if count}}<span class="badge pull-right">{{count}}</span>{{/if}}
 		{{else}}
 			<a class="action-text select_prereq">SELECT</a>
 		{{/if}}

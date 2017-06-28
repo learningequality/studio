@@ -47,7 +47,7 @@ def get_prerequisites(request):
         return HttpResponse(json.dumps({
             "prerequisite_mapping": prerequisite_mapping,
             "postrequisite_mapping": postrequisite_mapping,
-            "prerequisite_tree_nodes" : JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data)
+            "prerequisite_tree_nodes" : JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data),
         }))
 
 def get_total_size(request):
