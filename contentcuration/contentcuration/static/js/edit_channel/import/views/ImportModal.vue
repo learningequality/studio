@@ -9,7 +9,10 @@
           </button>
           <h4 class="modal-title">Import from Another Channel</h4>
           <div>
-            <input type="text" placeholder="search"></input>
+            <form @submit="noop">
+              <input type="text" placeholder="What are you looking for?"></input>
+              <button type="submit" @click.prevent="noop">Search</button>
+            </form>
           </div>
         </div>
         <div class="modal-body">
@@ -38,6 +41,9 @@
       this.openModal();
     },
     methods: {
+      noop() {
+
+      },
       openModal() {
         $(this.$refs.topmodal).modal({ show: true })
       },
