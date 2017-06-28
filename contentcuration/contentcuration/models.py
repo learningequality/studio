@@ -503,8 +503,9 @@ class ContentNode(MPTTModel, models.Model):
 
         super(ContentNode, self).save(*args, **kwargs)
 
-        if self.is_prerequisite_of.exists() and self.get_root().channel_trash.exists():
-            PrerequisiteContentRelationship.objects.filter(prerequisite_id=self.id).delete()
+        root = self.get_root()
+        if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
+            PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']

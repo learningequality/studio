@@ -23,7 +23,10 @@ function PrerequisiteTree() {
     this.prerequisite_count = function(){ return this.prerequisite_list.length; };
     this.get_sub_prerequisite_count = function(id){ return _.filter(this.ancestors, function(id2){return id2===id}).length; }
     this.is_immediate_prerequisite = function(id){ return _.contains(_.keys(this.prerequisites), id); };
-    this.is_valid_prerequisite = function(id){ return !this.is_postrequisite(id) && !this.is_selected(id); };
+    this.is_valid_prerequisite = function(id){
+        return !(this.is_prerequisite(id) && !this.is_immediate_prerequisite(id)) &&
+            !this.is_postrequisite(id) && !this.is_selected(id);
+    };
     this.set = function(model){
         this.selected = model.id;
         this.prerequisite_fetch_list = [];
@@ -273,7 +276,6 @@ var RelatedView = BasePrerequisiteView.extend({
         this.container.open_selected();
     },
     navigate_to_node: function(model, slideFromRight){
-
         if(this.relatedList){
             var placeholder = document.createElement("DIV");
             placeholder.className = "selector_placeholder";
