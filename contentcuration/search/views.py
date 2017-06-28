@@ -5,17 +5,11 @@ from rest_framework.response import Response
 from . import serializers
 
 
-# def get_editable_tree_ids(user_id):
-#     """
-#     Returns a list of i
-#     """
-#     return cc_models.Channel.objects.select_related('main_tree') \
-#         .filter(Q(deleted=False) & (Q(public=True) | Q(editors=user_id) | Q(viewers=user_id))) \
-#         .values_list('main_tree__tree_id', flat=True)
-
-
 @api_view(['GET'])
-def search_documents(request):
+def search_items(request):
+    """
+    Keyword search of items (i.e. non-topics)
+    """
     exclude_channel = request.query_params.get('exclude_channel', '')
 
     # Get tree_ids for channels accessible to the user
@@ -40,6 +34,9 @@ def search_documents(request):
 
 @api_view(['GET'])
 def search_topics(request):
+    """
+    Keyword search of topics
+    """
     queryset = cc_models.ContentNode.objects.filter(kind='topic')
     search_query = request.query_params.get('q', None)
     if search_query is not None:
