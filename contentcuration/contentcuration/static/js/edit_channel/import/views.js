@@ -2,7 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-require("selected.less");
+require("import.less");
 var stringHelper = require("edit_channel/utils/string_helper");
 
 var ImportModalView = BaseViews.BaseModalView.extend({
@@ -84,10 +84,10 @@ var ImportView = BaseViews.BaseListView.extend({
                 totalCount += entry.get("metadata").total_count;
             }
         });
-        var count = this.importList.get_metadata();
-        totalCount = totalCount - count;
+        var data = this.importList.get_metadata();
+        totalCount = totalCount - data.count;
 
-        this.$("#import_file_count").html(totalCount + " Topic" + ((totalCount == 1)? ", " : "s, ") + count + " Resource" + ((count == 1)? "" : "s"));
+        this.$("#import_file_count").html(totalCount + " Topic" + ((totalCount == 1)? ", " : "s, ") + data.count + " Resource" + ((data.count == 1)? "" : "s"));
         var self = this;
         this.$("#import_file_size").html("Calculating...")
         collection.calculate_size().then(function(size){
@@ -132,7 +132,7 @@ var ImportList = BaseViews.BaseListView.extend({
         this.is_channel = options.is_channel;
         this.collection = options.collection;
         this.container = options.container;
-        this.count = 0;
+        this.metadata = {"count": 0, "size": 0};
         this.parent_node_view = options.parent_node_view;
         this.render();
         this.container.lists.push(this);
@@ -172,8 +172,12 @@ var ImportList = BaseViews.BaseListView.extend({
         }
     },
     get_metadata:function(){
-        this.count = _.reduce(this.views, function(sum, item){ return sum + item.count}, 0);
-        return this.count;
+        var self = this;
+        this.metadata = {"count" : 0, "size":0};
+        this.views.forEach(function(entry){
+            self.metadata.count += entry.metadata.count;
+        });
+        return this.metadata;
     }
 });
 
@@ -202,11 +206,11 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.container = options.container;
         this.checked = options.checked;
 
-        this.count = 0;
+        this.metadata = {"count": 0, "size": 0};
         this.render();
     },
     events: {
-        'click .select_header_item' : 'toggle',
+        'click .import_channel_item' : 'toggle',
         'click .tog_folder' : 'toggle',
         'click >.import_checkbox' : 'handle_checked'
     },
@@ -223,10 +227,10 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
         this.checked =  this.$("#" + this.id() + "_check").is(":checked");
         if(this.checked){
             this.item_to_import = true;
-            this.count = this.model.get("metadata").resource_count;
+            this.metadata = {"count" : this.model.get("metadata").resource_count, "size": this.model.get("metadata").resource_size};
         }else{
             this.item_to_import = false;
-            this.count = 0;
+            this.metadata = {"count" : 0, "size": 0};
         }
         if(this.subcontent_view){
             this.subcontent_view.check_all(this.checked);
@@ -235,7 +239,9 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
     },
     check_item:function(checked){
         this.item_to_import = false;
-        this.count = (checked)? this.model.get("metadata").resource_count : 0;
+        this.metadata = (checked)?
+                        {"count": this.model.get("metadata").resource_count, "size": this.model.get("metadata").resource_size}
+                        : {"count": 0, "size": 0}
         this.$("#" + this.id() + "_check").prop("checked", checked);
         this.$("#" + this.id() + "_count").text(this.model.get("metadata").resource_count);
         this.$("#" + this.id() + "_count").css("visibility", (checked)?"visible" : "hidden" );
@@ -266,10 +272,10 @@ var ImportItem = BaseViews.BaseListNodeItemView.extend({
     },
     update_count:function(){
         if(this.subcontent_view){
-            this.count = this.subcontent_view.get_metadata();
+            this.metadata = this.subcontent_view.get_metadata();
         }
-        this.$("#" + this.id() + "_count").css("visibility", (this.count === 0)? "hidden" : "visible");
-        this.$("#" + this.id() + "_count").text(this.count);
+        this.$("#" + this.id() + "_count").css("visibility", (this.metadata.count === 0)? "hidden" : "visible");
+        this.$("#" + this.id() + "_count").text(this.metadata.count);
         this.containing_list_view.update_count();
     }
 });
