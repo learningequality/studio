@@ -93,6 +93,28 @@ var ImportListStore = Vue.extend({
                 data: {},
             };
         },
+        goToPreviousPage() {
+            if(this.pageState.type === 'search_results') {
+                return this.goToTreeViewPage();
+            }
+        },
+        getCurrentChannelId() {
+            return window.current_channel.get('id');
+        },
+        fetchItemSearchResults(searchTerm) {
+            return new Promise(function(resolve, reject) {
+                $.ajax({
+                    method:"GET",
+                    url: '/api/search/items',
+                    success: resolve,
+                    error: reject,
+                    data: {
+                        q: searchTerm,
+                        exclude_channel: this.getCurrentChannelId() || '',
+                    },
+                });
+            }.bind(this));
+        },
         fetchContentNodesById: fetchContentNodesById,
         createContentNodeCollection: createContentNodeCollection,
         fetchChannelRoots: fetchChannelRoots,

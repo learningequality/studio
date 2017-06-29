@@ -10,7 +10,7 @@
           <h4 class="modal-title">Import from Another Channel</h4>
           <div>
             <form @submit="noop">
-              <input type="text" placeholder="What are you looking for?"></input>
+              <input v-model="searchTerm" type="text" placeholder="What are you looking for?"></input>
               <button type="submit" @click.prevent="noop">Search</button>
             </form>
           </div>
