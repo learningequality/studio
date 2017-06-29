@@ -16,7 +16,7 @@
           </div>
         </div>
         <div class="modal-body">
-          <component is="ImportDialogue" :store="store" />
+          <component :is="pageType" :store="store" />
         </div>
       </div>
     </div>
@@ -36,13 +36,28 @@
     },
     components: {
       ImportDialogue: require('./ImportDialogue.vue'),
+      SearchResults: require('./SearchResults.vue'),
+    },
+    data: function() {
+      return {
+        searchTerm: '',
+      };
     },
     mounted() {
       this.openModal();
     },
+    computed: {
+      pageType: function() {
+        if (this.store.pageState.type === 'tree_view') {
+          return 'ImportDialogue';
+        } else if (this.store.pageState.type === 'search_results') {
+          return 'SearchResults'
+        }
+      }
+    },
     methods: {
       noop() {
-
+        this.store.goToSearchResults(this.searchTerm);
       },
       openModal() {
         $(this.$refs.topmodal).modal({ show: true })

@@ -48,6 +48,10 @@ var ImportListStore = Vue.extend({
         return {
             itemsToImport: [],
             totalImportSize: 0,
+            pageState: {
+                type: 'tree_view',
+                data: {},
+            },
         };
     },
     computed: {
@@ -73,6 +77,22 @@ var ImportListStore = Vue.extend({
         },
     },
     methods: {
+        goToSearchResults: function(searchTerm) {
+            this.itemsToImport = [],
+            this.pageState = {
+                type: 'search_results',
+                data: {
+                    searchTerm: searchTerm,
+                },
+            };
+        },
+        goToTreeViewPage: function() {
+            this.itemsToImport = [],
+            this.pageState = {
+                type: 'tree_view',
+                data: {},
+            };
+        },
         fetchContentNodesById: fetchContentNodesById,
         createContentNodeCollection: createContentNodeCollection,
         fetchChannelRoots: fetchChannelRoots,
