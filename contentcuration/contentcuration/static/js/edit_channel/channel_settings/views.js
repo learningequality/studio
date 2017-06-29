@@ -25,6 +25,7 @@ var SettingsModalView = BaseViews.BaseModalView.extend({
 var SettingsView = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/settings_dialog.handlebars"),
     initialize: function(options) {
+        _.bindAll(this, 'set_thumbnail', 'reset_thumbnail', 'remove_thumbnail');
         this.modal = options.modal;
         this.onsave = options.onsave;
         this.thumbnail_url = this.model.get("thumbnail_url");
@@ -116,24 +117,18 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
     },
     reset_thumbnail:function(){
         this.render();
-        this.enable_submit();
+        this.register_changes();
     },
     remove_thumbnail:function(){
-        this.thumbnail = null;
-        this.thumbnail_url = "/static/img/kolibri_placeholder.png";
-        this.enable_submit();
+        this.model.set('thumbnail', "/static/img/kolibri_placeholder.png");
+        this.register_changes();
     },
     set_thumbnail:function(thumbnail, formatted_name, path){
-        this.thumbnail = formatted_name;
-        this.thumbnail_url = path;
-        this.enable_submit();
+        this.model.set('thumbnail', formatted_name);
+        this.register_changes();
     },
     set_editing: function(edit_mode_on){
         this.containing_list_view.set_editing(edit_mode_on);
-    },
-    enable_submit:function(){
-        this.$("#settings_submit").removeAttr("disabled");
-        this.$("#settings_submit").removeClass("disabled");
     },
     disable_submit:function(){
         this.$("#settings_submit").attr("disabled", "disabled");
