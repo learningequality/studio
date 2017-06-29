@@ -62,10 +62,10 @@ class Command(BaseCommand):
                 map_content_tags(channel)
                 map_channel_to_kolibri_channel(channel)
                 map_content_nodes(channel.main_tree,)
+                map_prerequisites(channel.main_tree)
                 save_export_database(channel_id)
                 increment_channel_version(channel)
-                map_prerequisites(channel.main_tree)
-                # mark_all_nodes_as_changed(channel)
+                mark_all_nodes_as_changed(channel)
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -363,15 +363,10 @@ def process_image_strings(content):
     return content, image_list
 
 def map_prerequisites(root_node):
-    print "\n\n\n\n\n"
-    for n in ccmodels.PrerequisiteContentRelationship.objects.filter(prerequisite__tree_id=root_node.tree_id):
-        prerequisite_node = kolibrimodels.ContentNode.objects.get(pk=n.prerequisite.node_id)
-        target_node = kolibrimodels.ContentNode.objects.get(pk=n.target_node.node_id)
-
-        print "PREREQUISITE", prerequisite_node.title
-        print "TARGET", target_node.title
-        print "\n\n"
-    print "\n\n\n\n\n"
+    for n in ccmodels.PrerequisiteContentRelationship.objects.filter(prerequisite__tree_id=root_node.tree_id)\
+                                                            .values('prerequisite__node_id', 'target_node__node_id'):
+        target_node = kolibrimodels.ContentNode.objects.get(pk=n['target_node__node_id'])
+        target_node.has_prerequisite.add(n['prerequisite__node_id'])
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")
