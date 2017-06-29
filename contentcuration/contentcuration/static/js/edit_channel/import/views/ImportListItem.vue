@@ -112,6 +112,10 @@ module.exports = {
     },
     isChannel: RequiredBoolean,
     isFolder: RequiredBoolean,
+    isRoot: {
+      type: Boolean,
+      default: false,
+    },
     parentIsChecked: {
       type: Boolean,
       default: false,
@@ -165,6 +169,7 @@ module.exports = {
     },
     importListItemClass() {
       return {
+        'child-offset': !this.isRoot,
         'modal-list-item-default': true,
         disabled: this.isDisabled || this.parentIsChecked,
       }
@@ -214,6 +219,10 @@ module.exports = {
 
   .list-border {
     border-left: 2px solid #2196F3;
+  }
+
+  .child-offset {
+    margin-left: 30px;
   }
 
 </style>

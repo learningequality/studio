@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div class="search-results">
     <div>
       Search Results for {{ store.pageState.data.searchTerm }}
       <button @click="goBack">Go Back</button>
@@ -16,6 +16,7 @@
         :node="item"
         :isFolder="false"
         :isChannel="false"
+        :isRoot="true"
         :childDataFetcher="store.fetchContentNodesById"
         :parentIsChecked="false"
         :store="store"
@@ -32,6 +33,7 @@
         :node="topic"
         :isFolder="true"
         :isChannel="false"
+        :isRoot="true"
         :childDataFetcher="store.fetchContentNodesById"
         :parentIsChecked="false"
         :store="store"
@@ -98,5 +100,9 @@
 
 
 <style lang="less" scoped>
+
+  .search-results {
+    background-color: white;
+  }
 
 </style>
