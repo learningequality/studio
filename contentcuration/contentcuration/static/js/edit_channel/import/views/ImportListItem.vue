@@ -13,12 +13,12 @@
 
     <!-- TODO reinstate 'for' attribute and restrict toggling to the toggle element -->
     <label
-      :class="labelClass"
+      class="list-item-label"
       :title="node.title"
       @click="handleClickLabel"
     >
       <div v-if="!isFolder" :class="iconClass"></div>
-      <div class="import_item_title truncate modal-item-title-default">
+      <div class="truncate">
         {{ node.title }}
       </div>
 
@@ -154,13 +154,6 @@ module.exports = {
         'glyphicon-triangle-bottom': this.isExpanded,
       };
     },
-    labelClass() {
-      return {
-        import_channel_item: this.isChannel,
-        import_item: !this.isChannel,
-        tog_folder: !this.isChannel && this.hasChildren,
-      }
-    },
     iconClass() {
       return {
         glyphicon: true,
@@ -223,6 +216,11 @@ module.exports = {
 
   .child-offset {
     margin-left: 30px;
+  }
+
+  .list-item-label {
+    padding: 0px 10px;
+    font-size: 16px;
   }
 
 </style>
