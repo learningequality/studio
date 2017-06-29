@@ -1,10 +1,10 @@
 <template>
 
-  <li :class="importListItemClass">
+  <li class="ListItem" :class="importListItemClass">
     <template v-if="!isChannel">
       <input
         type="checkbox"
-        class="list-item-checkbox"
+        class="ListItem__Checkbox"
         @change="handleCheckboxChange"
         :checked="isChecked || parentIsChecked"
         :disabled="isDisabled || parentIsChecked"
@@ -14,7 +14,7 @@
 
     <!-- TODO reinstate 'for' attribute and restrict toggling to the toggle element -->
     <label
-      class="list-item-label"
+      class="ListItem__Label"
       :class="{ selected: isChecked }"
       :title="node.title"
       @click="handleClickLabel"
@@ -39,37 +39,34 @@
           </template>
           <div :class="togglerClass"></div>
         </template>
-        <template v-else>
-          <em class="modal-item-metadata-default">(empty)</em>
-        </template>
+
+        <em v-else class="ListItem__Empty">
+          (empty)
+        </em>
       </template>
 
-      <i v-show="(isFolder || isChannel) & isChecked" class="badge selected_counter">
+      <i v-show="(isFolder || isChannel) & isChecked" class="ListItem__Counter badge">
         {{ node.metadata.resource_count }}
       </i>
     </label>
 
-    <em v-show="isFolder && isLoading" class="default-item">
+    <em v-show="isFolder && isLoading">
       Loading...
     </em>
 
     <!-- TODO re-insert smooth transition -->
-    <!-- class="list-border import-list modal-list-default child-offset" -->
-    <ul
-      v-show="isExpanded"
-      class="sub-list list-border child-offset"
-    >
-        <ImportListItem
-          ref="children"
-          v-for="file in subFiles"
-          :key="file.id"
-          :node="file"
-          :isRoot="false"
-          :isFolder="file.kind ==='topic'"
-          :isChannel="false"
-          :parentIsChecked="isChecked"
-          :store="store"
-        />
+    <ul v-show="isExpanded" class="ListItem__SubList">
+      <ImportListItem
+        ref="children"
+        v-for="file in subFiles"
+        :key="file.id"
+        :node="file"
+        :isRoot="false"
+        :isFolder="file.kind ==='topic'"
+        :isChannel="false"
+        :parentIsChecked="isChecked"
+        :store="store"
+      />
     </ul>
   </li>
 
@@ -167,7 +164,6 @@ module.exports = {
     },
     importListItemClass() {
       return {
-        'modal-list-item-default': true,
         disabled: this.isDisabled || this.parentIsChecked,
       }
     },
@@ -216,7 +212,7 @@ module.exports = {
 
   @import '../../../../less/global-variables.less';
 
-  .sub-list {
+  .ListItem__SubList {
     border-left: 2px solid #2196F3;
     margin-left: 30px !important;
     height: auto;
@@ -229,7 +225,7 @@ module.exports = {
     width: max-content;
   }
 
-  .list-item-label {
+  .ListItem__Label {
     padding: 0px 10px;
     font-size: 16px;
     & > * {
@@ -238,7 +234,7 @@ module.exports = {
     }
   }
 
-  .list-item-checkbox {
+  .ListItem__Checkbox {
     display: inline-block;
     width: 16px;
     height: 16px;
@@ -248,9 +244,17 @@ module.exports = {
     margin-left: 10px;
   }
 
-  .selected_counter {
+  .ListItem__Counter {
     margin-left: 10px;
     background-color: @blue-500;
+    .disabled {
+      background-color: @gray-400 !important;
+    }
+  }
+
+  .ListItem__Empty {
+    font-size: 10pt;
+    color: gray;
   }
 
   .disabled {
@@ -258,9 +262,6 @@ module.exports = {
     opacity: 1 !important;
     input[type=checkbox] {
       cursor: not-allowed !important;
-    }
-    .selected_counter {
-      background-color: @gray-400 !important;
     }
   }
 

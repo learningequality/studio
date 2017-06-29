@@ -1,6 +1,6 @@
 <template>
 
-  <div class="search-results">
+  <div class="SearchResults">
     <div>
       Search Results for {{ store.pageState.data.searchTerm }}
       <button @click="goBack">Go Back</button>
@@ -103,7 +103,7 @@
 
 <style lang="less" scoped>
 
-  .search-results {
+  .SearchResults {
     background-color: white;
   }
 
