@@ -10,34 +10,36 @@
       <div v-show="items.length === 0">
         No documents, exercises, or other files matching "{{ this.searchTerm }}"
       </div>
-      <ImportListItem
-        v-for="item in items"
-        :key="item.id"
-        :node="item"
-        :isFolder="false"
-        :isChannel="false"
-        :isRoot="true"
-        :childDataFetcher="store.fetchContentNodesById"
-        :parentIsChecked="false"
-        :store="store"
-      />
+      <ul class="list-unstyled">
+        <ImportListItem
+          v-for="item in items"
+          :key="item.id"
+          :node="item"
+          :isFolder="false"
+          :isChannel="false"
+          :isRoot="true"
+          :parentIsChecked="false"
+          :store="store"
+        />
+      </ul>
     </div>
     <div>
       <h1>Topics</h1>
       <div v-show="topics.length === 0">
         No topics matching "{{ this.searchTerm }}"
       </div>
-      <ImportListItem
-        v-for="topic in topics"
-        :key="topic.id"
-        :node="topic"
-        :isFolder="true"
-        :isChannel="false"
-        :isRoot="true"
-        :childDataFetcher="store.fetchContentNodesById"
-        :parentIsChecked="false"
-        :store="store"
-      />
+      <ul class="list-unstyled">
+        <ImportListItem
+          v-for="topic in topics"
+          :key="topic.id"
+          :node="topic"
+          :isFolder="true"
+          :isChannel="false"
+          :isRoot="true"
+          :parentIsChecked="false"
+          :store="store"
+        />
+      </ul>
     </div>
   </div>
 

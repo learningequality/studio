@@ -49,9 +49,15 @@ var ImportListStore = Vue.extend({
             itemsToImport: [],
             totalImportSize: 0,
             pageState: {
-                type: 'tree_view',
-                data: {},
-            },
+                type: 'search_results',
+                data: {
+                    searchTerm: 'top',
+                }
+            }
+            // pageState: {
+            //     type: 'tree_view',
+            //     data: {},
+            // },
         };
     },
     computed: {

@@ -1,13 +1,13 @@
 <template>
 
-  <ul class="list-unstyled import-list modal-list-default">
+  <ul class="modal-list-default">
     <ImportListItem
       v-for="channel in channels"
       :key="channel.id"
       :node="channel"
+      :isRoot="true"
       :isFolder="true"
       :isChannel="true"
-      :childDataFetcher="store.fetchContentNodesById"
       :parentIsChecked="false"
       :store="store"
     />
@@ -38,5 +38,19 @@
 
 
 <style lang="less" scoped>
+
+  @import '../../../../less/global-variables.less';
+
+  .import-channel-list {
+    padding-left: 0;
+    list-style: none;
+    height: auto;
+    margin: 0px;
+    padding: 0px;
+    border-left: 2px solid @blue-500;
+    width: -moz-max-content;
+    width: -webkit-max-content;
+    width: max-content;
+  }
 
 </style>

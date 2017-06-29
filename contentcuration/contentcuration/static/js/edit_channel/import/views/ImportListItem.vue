@@ -4,6 +4,7 @@
     <template v-if="!isChannel">
       <input
         type="checkbox"
+        class="list-item-checkbox"
         @change="handleCheckboxChange"
         :checked="isChecked || parentIsChecked"
         :disabled="isDisabled || parentIsChecked"
@@ -14,6 +15,7 @@
     <!-- TODO reinstate 'for' attribute and restrict toggling to the toggle element -->
     <label
       class="list-item-label"
+      :class="{ selected: isChecked }"
       :title="node.title"
       @click="handleClickLabel"
     >
@@ -42,10 +44,8 @@
         </template>
       </template>
 
-      <i v-if="isFolder || isChannel" class="badge selected_counter">
-        <span v-show="isChecked">
-          {{ node.metadata.resource_count }}
-        </span>
+      <i v-show="(isFolder || isChannel) & isChecked" class="badge selected_counter">
+        {{ node.metadata.resource_count }}
       </i>
     </label>
 
@@ -54,12 +54,17 @@
     </em>
 
     <!-- TODO re-insert smooth transition -->
-    <ul v-show="isExpanded" class="topic_list list-border import-list modal-list-default">
+    <!-- class="list-border import-list modal-list-default child-offset" -->
+    <ul
+      v-show="isExpanded"
+      class="sub-list list-border child-offset"
+    >
         <ImportListItem
           ref="children"
           v-for="file in subFiles"
           :key="file.id"
           :node="file"
+          :isRoot="false"
           :isFolder="file.kind ==='topic'"
           :isChannel="false"
           :parentIsChecked="isChecked"
@@ -162,7 +167,6 @@ module.exports = {
     },
     importListItemClass() {
       return {
-        'child-offset': !this.isRoot,
         'modal-list-item-default': true,
         disabled: this.isDisabled || this.parentIsChecked,
       }
@@ -210,17 +214,54 @@ module.exports = {
 
 <style lang="less" scoped>
 
-  .list-border {
-    border-left: 2px solid #2196F3;
-  }
+  @import '../../../../less/global-variables.less';
 
-  .child-offset {
-    margin-left: 30px;
+  .sub-list {
+    border-left: 2px solid #2196F3;
+    margin-left: 30px !important;
+    height: auto;
+    margin: 0px;
+    padding: 0px;
+    list-style: none;
+    border-left: 2px solid @blue-500;
+    width: -moz-max-content;
+    width: -webkit-max-content;
+    width: max-content;
   }
 
   .list-item-label {
     padding: 0px 10px;
     font-size: 16px;
+    & > * {
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+
+  .list-item-checkbox {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin: 0px 4px;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+
+  .selected_counter {
+    margin-left: 10px;
+    background-color: @blue-500;
+  }
+
+  .disabled {
+    color: @gray-700;
+    opacity: 1 !important;
+    input[type=checkbox] {
+      cursor: not-allowed !important;
+    }
+    .selected_counter {
+      background-color: @gray-400 !important;
+    }
   }
 
 </style>
