@@ -2,9 +2,9 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var FileUploader = require("edit_channel/file_upload/views");
 var Previewer = require("edit_channel/preview/views");
 var FileUploader = require("edit_channel/file_upload/views");
+var Info = require("edit_channel/information/views");
 var Exercise = require("edit_channel/exercise_creation/views");
 var stringHelper = require("edit_channel/utils/string_helper");
 var autoCompleteHelper = require("edit_channel/utils/autocomplete");
@@ -593,12 +593,12 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   load_license:function(){
     var iscopied = this.selected_individual() && !this.selected_items[0].isoriginal
-    var license_modal = new LicenseModalView({
+    var license_modal = new Info.LicenseModalView({
       select_license : window.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()})
     });
   },
   load_mastery:function(){
-    new MasteryModalView();
+    new Info.MasteryModalView();
   },
   update_count:function(){
     if(this.selected_individual()){
@@ -901,41 +901,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
         (uploading)? this.uploads_in_progress++ : this.uploads_in_progress--;
         (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
     }
-});
-
-var LicenseModalView = BaseViews.BaseModalView.extend({
-  template: require("./hbtemplates/license_modal.handlebars"),
-
-  initialize: function(options) {
-      this.modal = true;
-      this.select_license = options.select_license;
-      this.render();
-  },
-
-  render: function() {
-      this.$el.html(this.template({
-          license: this.select_license.toJSON()
-      }));
-      $("body").append(this.el);
-      this.$("#license_modal").modal({show: true});
-      this.$("#license_modal").on("hidden.bs.modal", this.closed_modal);
-  }
-});
-
-var MasteryModalView = BaseViews.BaseModalView.extend({
-  template: require("./hbtemplates/mastery_modal.handlebars"),
-
-  initialize: function(options) {
-      this.modal = true;
-      this.render();
-  },
-
-  render: function() {
-      this.$el.html(this.template());
-      $("body").append(this.el);
-      this.$("#mastery_modal").modal({show: true});
-      this.$("#mastery_modal").on("hidden.bs.modal", this.closed_modal);
-  }
 });
 
 module.exports = {
