@@ -2,7 +2,7 @@ from django.db.models import Q
 from contentcuration import models as cc_models
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from . import serializers
+from contentcuration import serializers
 
 
 def get_accessible_contentnodes(request):
@@ -31,7 +31,8 @@ def search_items(request):
     search_query = request.query_params.get('q', None)
     if search_query is not None:
         queryset = queryset.filter(title__icontains=search_query)
-    serializer = serializers.ContentSearchResultSerializer(queryset, many=True)
+    # Using same serializer as Tree View UI to match props of ImportListItem
+    serializer = serializers.SimplifiedContentNodeSerializer(queryset, many=True)
     return Response(serializer.data)
 
 
@@ -44,5 +45,5 @@ def search_topics(request):
     search_query = request.query_params.get('q', None)
     if search_query is not None:
         queryset = queryset.filter(title__icontains=search_query)
-    serializer = serializers.ContentSearchResultSerializer(queryset, many=True)
+    serializer = serializers.SimplifiedContentNodeSerializer(queryset, many=True)
     return Response(serializer.data)

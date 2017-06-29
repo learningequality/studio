@@ -5,9 +5,38 @@
       Search Results for {{ store.pageState.data.searchTerm }}
       <button @click="goBack">Go Back</button>
     </div>
-    <pre>
-      {{ JSON.stringify(items, null, 2) }}
-    </pre>
+    <div>
+      <h1>Items</h1>
+      <div v-show="items.length === 0">
+        No documents, exercises, or other files matching "{{ this.searchTerm }}"
+      </div>
+      <ImportListItem
+        v-for="item in items"
+        :key="item.id"
+        :node="item"
+        :isFolder="false"
+        :isChannel="false"
+        :childDataFetcher="store.fetchContentNodesById"
+        :parentIsChecked="false"
+        :store="store"
+      />
+    </div>
+    <div>
+      <h1>Topics</h1>
+      <div v-show="topics.length === 0">
+        No topics matching "{{ this.searchTerm }}"
+      </div>
+      <ImportListItem
+        v-for="topic in topics"
+        :key="topic.id"
+        :node="topic"
+        :isFolder="true"
+        :isChannel="false"
+        :childDataFetcher="store.fetchContentNodesById"
+        :parentIsChecked="false"
+        :store="store"
+      />
+    </div>
   </div>
 
 </template>
@@ -18,6 +47,7 @@
   module.exports = {
     props: ['store'],
     components: {
+      ImportListItem: require('./ImportListItem.vue'),
 
     },
     data: function() {
@@ -47,6 +77,10 @@
         this.store.fetchItemSearchResults(this.searchTerm)
         .then((results) =>{
           this.items = results;
+        });
+        this.store.fetchTopicSearchResults(this.searchTerm)
+        .then((results) =>{
+          this.topics = results;
         });
       },
     },

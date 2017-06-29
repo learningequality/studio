@@ -105,7 +105,22 @@ var ImportListStore = Vue.extend({
             return new Promise(function(resolve, reject) {
                 $.ajax({
                     method:"GET",
-                    url: '/api/search/items',
+                    // omitting slash results in 301
+                    url: '/api/search/items/',
+                    success: resolve,
+                    error: reject,
+                    data: {
+                        q: searchTerm,
+                        exclude_channel: this.getCurrentChannelId() || '',
+                    },
+                });
+            }.bind(this));
+        },
+        fetchTopicSearchResults(searchTerm) {
+            return new Promise(function(resolve, reject) {
+                $.ajax({
+                    method:"GET",
+                    url: '/api/search/topics/',
                     success: resolve,
                     error: reject,
                     data: {
