@@ -29,6 +29,7 @@ class EarlyExit(BaseException):
         self.message = message
         self.db_path = db_path
 
+
 class Command(BaseCommand):
 
     help = 'Restores a channel based on its exported database (Usage: restore_channel [source-channel-id] [target-channel-id]'
@@ -43,45 +44,45 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-          # Set up variables for restoration process
-          logging.info("\n\n********** STARTING CHANNEL RESTORATION **********")
-          start = datetime.datetime.now()
-          source_id = options['source_id']
-          target_id = options.get('target_id') or source_id
+            # Set up variables for restoration process
+            logging.info("\n\n********** STARTING CHANNEL RESTORATION **********")
+            start = datetime.datetime.now()
+            source_id = options['source_id']
+            target_id = options.get('target_id') or source_id
 
-          # Test connection to database
-          logging.info("Connecting to database for channel {}...".format(source_id))
-          conn = sqlite3.connect(os.path.join(settings.DB_ROOT,'{}.sqlite3'.format(source_id)))
-          cursor=conn.cursor()
+            # Test connection to database
+            logging.info("Connecting to database for channel {}...".format(source_id))
+            conn = sqlite3.connect(os.path.join(settings.DB_ROOT, '{}.sqlite3'.format(source_id)))
+            cursor = conn.cursor()
 
-          # Start by creating channel
-          logging.info("Creating channel...")
-          channel, root_pk = create_channel(conn, target_id)
+            # Start by creating channel
+            logging.info("Creating channel...")
+            channel, root_pk = create_channel(conn, target_id)
 
-          # Create nodes mapping to channel
-          logging.info("   Creating nodes...")
-          root = None
-          with transaction.atomic():
-            root = create_nodes(cursor, target_id)
+            # Create nodes mapping to channel
+            logging.info("   Creating nodes...")
+            root = None
+            with transaction.atomic():
+                root = create_nodes(cursor, target_id)
 
-          # Save tree to target tree
-          channel.main_tree = root
-          channel.save()
+                # Save tree to target tree
+                channel.main_tree = root
+                channel.save()
 
-          # Print stats
-          logging.info("\n\nChannel has been restored (time: {ms}, {node_count} nodes, {file_count} files, {tag_count} tags)\n".format(
-            ms = datetime.datetime.now() - start,
-            node_count = NODE_COUNT,
-            file_count = FILE_COUNT,
-            tag_count = TAG_COUNT)
-          )
-          logging.info("\n\n********** RESTORATION COMPLETE **********\n\n")
+                # Print stats
+                logging.info("\n\nChannel has been restored (time: {ms}, {node_count} nodes, {file_count} files, {tag_count} tags)\n".format(
+                    ms=datetime.datetime.now() - start,
+                    node_count=NODE_COUNT,
+                    file_count=FILE_COUNT,
+                    tag_count=TAG_COUNT)
+                )
+                logging.info("\n\n********** RESTORATION COMPLETE **********\n\n")
 
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(
-                message=e.message))
+            message=e.message))
             self.stdout.write("You can find your database in {path}".format(
-                path=e.db_path))
+            path=e.db_path))
 
 
 def create_channel(cursor, target_id):
