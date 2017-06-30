@@ -101,7 +101,7 @@ var BaseWorkspaceView = BaseView.extend({
 	lists: [],
 	isclipboard: false,
 	bind_workspace_functions:function(){
-		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move',
+		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move', 'handle_changed_settings',
 			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently');
 	},
 	publish:function(){
@@ -306,6 +306,18 @@ var BaseWorkspaceView = BaseView.extend({
 				reject_load(error);
 			});
 		});
+	},
+	open_channel_settings: function(){
+		var settings = require('edit_channel/channel_settings/views');
+		new settings.SettingsModalView({
+			model: window.current_channel,
+			onsave: this.handle_changed_settings
+		});
+	},
+	handle_changed_settings: function(data){
+		$("#channel_selection_dropdown").text(data.get('name'));
+		window.workspace_manager.get_main_view().model.set('title', data.get('name'));
+		window.preferences = data.get('preferences');
 	}
 });
 

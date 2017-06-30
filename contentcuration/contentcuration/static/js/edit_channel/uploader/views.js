@@ -407,9 +407,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     var self = this;
     this.collection.create_new_node({
       "kind":"topic",
-      "title": "Topic",
+      "title": (this.model.get('parent'))? this.model.get('title') + " Topic" : "Topic",
       "sort_order" : this.collection.length,
-      "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+      "author": window.preferences.author || ""
     }).then(function(new_topic){
       var new_view = self.create_new_view(new_topic);
       self.$(self.list_selector).append(new_view.el);

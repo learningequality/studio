@@ -38,7 +38,7 @@ def file_create(request):
         size = request.FILES.values()[0]._size
         presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
         kind = presets.first().kind
-        preferences = json.loads(request.user.preferences)
+        preferences = json.loads(request.META.get('HTTP_PREFERENCES'))
         author = preferences.get('author') or ""
         license = License.objects.filter(license_name=preferences.get('license')).first() # Use filter/first in case preference hasn't been set
         license_id = license.pk if license else settings.DEFAULT_LICENSE
