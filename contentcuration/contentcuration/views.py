@@ -17,6 +17,7 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
+
 def base(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
         return redirect(reverse_lazy('unsupported_browser'))
@@ -25,17 +26,22 @@ def base(request):
     else:
         return redirect('accounts/login')
 
+
 def health(request):
     return HttpResponse("500")
+
 
 def unsupported_browser(request):
     return render(request, 'unsupported_browser.html')
 
+
 def unauthorized(request):
     return render(request, 'unauthorized.html')
 
+
 def staging_not_found(request):
     return render(request, 'staging_not_found.html')
+
 
 def get_or_set_cached_constants(constant, serializer):
     cached_data = cache.get(constant.__name__)
@@ -47,6 +53,7 @@ def get_or_set_cached_constants(constant, serializer):
     cache.set(constant.__name__, constant_data, None)
     return constant_data
 
+
 def redirect_to_channel(request, channel_id):
     channel = Channel.objects.get(pk=channel_id)
     if channel.editors.filter(pk=request.user.pk).exists():
@@ -55,8 +62,10 @@ def redirect_to_channel(request, channel_id):
         return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
     return redirect(reverse_lazy('unauthorized'))
 
+
 def redirect_to_channel_edit(request, channel_id):
     return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
+
 
 def redirect_to_channel_view(request, channel_id):
     return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
@@ -65,9 +74,9 @@ def redirect_to_channel_view(request, channel_id):
 def channel_page(request, channel, allow_edit=False, staging=False):
     channel_serializer = ChannelSerializer(channel)
     channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors').prefetch_related('viewers')\
-                            .exclude(id=channel.pk).filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
-                            .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))\
-                            .distinct().values("id", "name", "is_view_only").order_by('name')
+                          .exclude(id=channel.pk).filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
+                          .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)), default=Value(1), output_field=IntegerField()))\
+                          .distinct().values("id", "name", "is_view_only").order_by('name')
 
     fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
@@ -92,6 +101,7 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "preferences": channel.preferences,
                                                 })
 
+
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -108,11 +118,13 @@ def channel_list(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_channels(request):
-    channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers').filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
-                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
+    channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers') \
+                          .filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk))) \
+                          .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)), default=Value(1), output_field=IntegerField()))
     channel_serializer = ChannelListSerializer(channel_list, many=True)
 
     return HttpResponse(JSONRenderer().render(channel_serializer.data))
+
 
 def get_user_pending_channels(request):
     pending_list = Invitation.objects.select_related('channel', 'sender').filter(invited=request.user)
@@ -137,6 +149,7 @@ def channel(request, channel_id):
 
     return channel_page(request, channel, allow_edit=True)
 
+
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -152,6 +165,7 @@ def channel_view_only(request, channel_id):
         return redirect(reverse_lazy('unauthorized'))
 
     return channel_page(request, channel)
+
 
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -171,6 +185,7 @@ def channel_staging(request, channel_id):
         return redirect(reverse_lazy('staging_not_found'))
 
     return channel_page(request, channel, allow_edit=True, staging=True)
+
 
 @csrf_exempt
 def publish_channel(request):
