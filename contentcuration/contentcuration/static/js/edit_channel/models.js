@@ -220,6 +220,9 @@ var ContentNodeModel = BaseModel.extend({
             });
         });
     },
+    has_related_content: function(){
+        return this.get('prerequisite').length || this.get('is_prerequisite_of').length;
+    },
     initialize: function () {
         if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
             this.set("extra_fields", JSON.parse(this.get("extra_fields")))
@@ -312,6 +315,15 @@ var ContentNodeCollection = BaseCollection.extend({
                 });
             });
         });
+    },
+    has_prerequisites: function(){
+        return this.some(function(model) { return model.get('prerequisite').length; })
+    },
+    has_postrequisites: function(){
+        return this.some(function(model) { return model.get('is_prerequisite_of').length; })
+    },
+    has_related_content: function(){
+        return this.has_prerequisites() || this.has_postrequisites();
     },
     get_prerequisites: function(ids, get_postrequisites){
         var self = this;

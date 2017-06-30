@@ -4,7 +4,7 @@
 {{else}}
 	<label class="list_item_wrapper file" for="item_{{node.id}}" title="{{node.title}}">
 {{/if}}
-		<div class="options pull-right">
+		<div class="options pull-right hide_on_drag">
 			{{#if edit_mode}}
 				<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
 					<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
@@ -16,7 +16,7 @@
 				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true" title="Copy"></span>
 			{{/if}}
 		</div>
-		<h6 class="content_metadata_summary {{#unless isfolder}}open_file{{/unless}}">
+		<h6 class="content_metadata_summary hide_on_drag {{#unless isfolder}}open_file{{/unless}}">
 			<span class="metadata_to_hide">
 				{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
 				{{#if isfolder}}&nbsp;{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}{{/if}}
@@ -70,7 +70,7 @@
 	</div>
 </div>
 
-<nav class="context-menu" tabindex="0">
+<nav class="context-menu hide_on_drag" tabindex="0">
   	{{#if isfolder}}<div class="add_subtopic_item_button context-option">Add Subtopic</div>{{/if}}
 	<div class="edit_item_button context-option">Edit</div>
 	<div class="copy_item_button context-option">Copy</div>

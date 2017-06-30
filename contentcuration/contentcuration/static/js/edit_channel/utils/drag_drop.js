@@ -92,6 +92,10 @@ function addSortable(element, selected_class, callback){
 		        	callback(current_node, selected_items, order).then(function(){
 						$(".content-list").sortable( "enable" );
 						$(".content-list").sortable( "refresh" );
+		        	}).catch(function(){
+		        		$(".content-list").sortable( "cancel" );
+		        		$(".content-list").sortable( "enable" );
+						$(".content-list").sortable( "refresh" );
 		        	});
 				}
 

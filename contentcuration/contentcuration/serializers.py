@@ -314,6 +314,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
     is_prerequisite_of = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     metadata = serializers.SerializerMethodField('retrieve_metadata')
     parent_title = serializers.SerializerMethodField('retrive_parent_title')
+    ancestors = serializers.SerializerMethodField('get_node_ancestors')
 
     def retrive_parent_title(self, node):
         return node.parent and node.parent.title
@@ -443,7 +444,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'prerequisite', 'is_prerequisite_of', 'parent_title')
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors')
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
@@ -464,7 +465,7 @@ class RootNodeSerializer(SimplifiedContentNodeSerializer):
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'channel_name', 'prerequisite', 'is_prerequisite_of', 'parent_title')
+        fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'channel_name', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors')
 
 
 class ContentNodeSerializer(SimplifiedContentNodeSerializer):
@@ -522,7 +523,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license',
-                  'license_description', 'assessment_items', 'files', 'parent_title',
+                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of')
 
@@ -542,7 +543,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license',
-                  'license_description', 'assessment_items', 'files', 'parent_title',
+                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of')
 
@@ -552,7 +553,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
         model = ContentNode
         fields = (
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
-            'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title',
+            'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
             'source_channel_id', 'source_id', 'source_domain',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',

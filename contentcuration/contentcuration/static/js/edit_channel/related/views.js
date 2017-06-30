@@ -324,7 +324,7 @@ var SelectedList = BaseViews.BaseListView.extend({
     },
     render: function() {
         this.$el.html(this.template({
-            show_warning: PrereqTree.get_immediate_prerequisites().length < PREREQ_LIMIT,
+            prereq_limit: PREREQ_LIMIT,
             allow_edit: this.allow_edit
         }));
         this.container.update_count()

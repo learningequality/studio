@@ -9,6 +9,7 @@ var Exercise = require("edit_channel/exercise_creation/views");
 var Info = require("edit_channel/information/views");
 var stringHelper = require("edit_channel/utils/string_helper");
 var autoCompleteHelper = require("edit_channel/utils/autocomplete");
+var dialog = require("edit_channel/utils/dialog");
 require("uploader.less");
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -45,7 +46,6 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     }else{
       var t = event.target;
       var self = this;
-      var dialog = require("edit_channel/utils/dialog");
       dialog.dialog("Unsaved Changes!", "Exiting now will"
       + " undo any new changes. Are you sure you want to exit?", {
           "DON'T SAVE": function(){
@@ -68,7 +68,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
 
   initialize: function(options) {
     _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit', 'update_prereq_count',
-      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items', 'set_prerequisites');
+      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items', 'set_prerequisites', 'call_duplicate');
     this.bind_edit_functions();
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
@@ -249,6 +249,13 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
   },
   copy_items: function(){
+    if(this.collection.has_related_content()){
+      dialog.alert("WARNING", "Related content will not be included in the copy of this content.", this.call_duplicate);
+    } else {
+      this.call_duplicate();
+    }
+  },
+  call_duplicate: function(){
     var self = this;
     var clipboard = window.workspace_manager.get_queue_view();
     clipboard.open_queue();

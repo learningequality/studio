@@ -168,13 +168,28 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	move_items:function(){
 		this.container.move_items();
-	}
-	/* Implementation for creating copies of nodes when dropped onto clipboard */
-	// handle_drop:function(collection){
-	// 	this.$(this.default_item).css("display", "none");
-	// 	console.log(this.model)
-	// 	return collection.duplicate(this.model);
- // 	},
+	},
+	handle_drop:function(collection){
+		var self = this;
+		this.$(this.default_item).css("display", "none");
+		return new Promise(function(resolve, reject){
+			if(collection.has_related_content()){
+				var message = "Any content associated with " + ((collection.length === 1)? "this item" : "these items") +
+							" will no longer reference " + ((collection.length === 1)? "it" : "them") + " as related content." +
+							" Are you sure you want to continue?";
+				dialog.dialog("RELATED CONTENT DETECTED", message, {
+		            "CANCEL":function(){},
+		            "CONTINUE": function(){
+	            		resolve(collection);
+		            },
+		        }, reject);
+			}else{
+				resolve(collection)
+				/* Implementation for creating copies of nodes when dropped onto clipboard */
+				// collection.duplicate(self.model).then(reject);
+			}
+		});
+  	},
 });
 
 var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({

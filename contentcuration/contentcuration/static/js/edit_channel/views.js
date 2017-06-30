@@ -171,7 +171,8 @@ var BaseWorkspaceView = BaseView.extend({
 			new_content: false,
 		    onsave: this.reload_ancestors,
 		    allow_edit: allow_edit,
-		    isclipboard: this.isclipboard
+		    isclipboard: this.isclipboard,
+		    onnew: this.add_to_clipboard
 		});
 	},
 	add_to_trash:function(collection, message){
@@ -644,7 +645,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 							});
 				        });
 		        	});
-				});
+				}).catch(reject);
 			}
 		});
 	},
