@@ -16,7 +16,9 @@
           </div>
         </div>
         <div class="modal-body">
-          <component :is="pageType" :store="store" />
+          <ImportDialogue :store="store">
+            <component :is="pageType" :store="store" :channels="channels" />
+          </ImportDialogue>
         </div>
       </div>
     </div>
@@ -36,20 +38,23 @@
     },
     components: {
       ImportDialogue: require('./ImportDialogue.vue'),
+      ImportChannelList: require('./ImportChannelList.vue'),
       SearchResults: require('./SearchResults.vue'),
     },
     data: function() {
       return {
         searchTerm: '',
+        channels: [],
       };
     },
     mounted() {
       this.openModal();
+      this.loadChannels();
     },
     computed: {
       pageType: function() {
         if (this.store.pageState.type === 'tree_view') {
-          return 'ImportDialogue';
+          return 'ImportChannelList';
         } else if (this.store.pageState.type === 'search_results') {
           return 'SearchResults'
         }
@@ -64,7 +69,20 @@
       },
       closeModal() {
         $(this.$refs.topmodal).modal('hide');
-      }
+      },
+      loadChannels() {
+        return this.store.fetchChannelRoots()
+        .then((channelRoots) => {
+          const collection = channelRoots;
+          collection.forEach((node) => {
+            node.set('title', node.get('channel_name'));
+          });
+          this.channels = collection.toJSON();
+        })
+        .catch((err) => {
+          console.error(err); // eslint-disable-line
+        })
+      },
     },
   }
 

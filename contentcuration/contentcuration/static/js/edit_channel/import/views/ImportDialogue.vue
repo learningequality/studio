@@ -5,7 +5,8 @@
       <div v-show="isLoading" id="import_empty_text">
         Loading...
       </div>
-      <ImportChannelList :channels="channels" :store="store" />
+      <!-- <ImportChannelList :channels="channels" :store="store" /> -->
+      <slot></slot>
     </div>
 
     <br/>

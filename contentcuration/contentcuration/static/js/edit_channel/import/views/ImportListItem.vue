@@ -247,9 +247,6 @@ module.exports = {
   .ListItem__Counter {
     margin-left: 10px;
     background-color: @blue-500;
-    .disabled {
-      background-color: @gray-400 !important;
-    }
   }
 
   .ListItem__Empty {
@@ -262,6 +259,9 @@ module.exports = {
     opacity: 1 !important;
     input[type=checkbox] {
       cursor: not-allowed !important;
+    }
+    .ListItem__Counter {
+      background-color: @gray-400 !important;
     }
   }
 

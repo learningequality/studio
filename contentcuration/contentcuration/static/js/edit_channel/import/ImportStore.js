@@ -29,7 +29,7 @@ function fetchContentNodesById(nodeIds) {
 function updateCounts(totals, node) {
     var counts = node.metadata;
     // if a leaf node
-    if (counts.resource_count === 1) {
+    if (node.kind !== 'topic') {
         return {
             resourceCount: totals.resourceCount + 1,
             topicCount: totals.topicCount,
