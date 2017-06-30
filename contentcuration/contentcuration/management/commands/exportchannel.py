@@ -63,6 +63,7 @@ class Command(BaseCommand):
                 map_content_tags(channel)
                 map_channel_to_kolibri_channel(channel)
                 map_content_nodes(channel.main_tree,)
+                map_prerequisites(channel.main_tree)
                 save_export_database(channel_id)
                 increment_channel_version(channel)
                 mark_all_nodes_as_changed(channel)
@@ -369,6 +370,11 @@ def process_image_strings(content):
             content = content.replace(match.group(1), img_match.group(1))
     return content, image_list
 
+def map_prerequisites(root_node):
+    for n in ccmodels.PrerequisiteContentRelationship.objects.filter(prerequisite__tree_id=root_node.tree_id)\
+                                                            .values('prerequisite__node_id', 'target_node__node_id'):
+        target_node = kolibrimodels.ContentNode.objects.get(pk=n['target_node__node_id'])
+        target_node.has_prerequisite.add(n['prerequisite__node_id'])
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")

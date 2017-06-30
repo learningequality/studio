@@ -10,7 +10,8 @@ from django.db.models import Sum
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
 from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel
-from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer
+from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
+from le_utils.constants import format_presets, content_kinds, file_formats, licenses
 from contentcuration.statistics import record_node_duplication_stats
 
 
@@ -22,6 +23,31 @@ def create_new_node(request):
         new_node = ContentNode.objects.create(kind_id=data.get('kind'), title=data.get('title'), author=data.get('author'), copyright_holder=data.get('copyright_holder'), license_id=license_id, license_description=data.get('license_description'))
         return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
 
+def get_prerequisites(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=data['nodes'])
+
+        prerequisite_mapping = {}
+        postrequisite_mapping = {}
+        prerequisite_tree_nodes = []
+
+        for n in nodes:
+            prereqs, prereqmapping = n.get_prerequisites()
+            if data.get('get_postrequisites'):
+                postreqs, postreqmapping = n.get_postrequisites()
+                postrequisite_mapping.update(postreqmapping)
+                prerequisite_mapping.update(prereqmapping)
+                prerequisite_tree_nodes += prereqs + postreqs + [n]
+            else:
+                prerequisite_mapping.update({n.pk: prereqmapping})
+                prerequisite_tree_nodes += prereqs + [n]
+
+        return HttpResponse(json.dumps({
+            "prerequisite_mapping": prerequisite_mapping,
+            "postrequisite_mapping": postrequisite_mapping,
+            "prerequisite_tree_nodes" : JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data),
+        }))
 
 def get_total_size(request):
     if request.method == 'POST':
