@@ -2,8 +2,8 @@ var Vue = require('vue');
 var Backbone = require('backbone');
 var BaseViews = require("edit_channel/views");
 require("import.less");
-var ImportModalComponent = require('./views/ImportModal.vue');
-
+var dialog = require("edit_channel/utils/dialog");
+var ImportModalComponent = require('./views/ImportModal.vue')
 var ImportModal = Vue.extend(ImportModalComponent);
 var ImportStore = require('./ImportStore');
 
@@ -17,6 +17,10 @@ var ImportModalView = Backbone.View.extend({
         this.store.$on(
             this.store.eventTypes.START_IMPORT,
             this._importContent.bind(this)
+        );
+        this.store.$on(
+            this.store.eventTypes.SHOW_RELATED_CONTENT_WARNING,
+            this._showWarning.bind(this)
         );
         this.listView = new BaseViews.BaseListView();
         this.render();
@@ -33,6 +37,14 @@ var ImportModalView = Backbone.View.extend({
             }
         });
         this.ImportModal.$mount();
+    },
+
+    _showWarning: function(cb) {
+        dialog.alert(
+            "WARNING",
+            "Any associated content will not be imported or referenced as related content.",
+            cb
+        );
     },
 
     _importContent: function() {

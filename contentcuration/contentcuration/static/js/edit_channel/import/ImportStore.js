@@ -71,6 +71,7 @@ var ImportListStore = Vue.extend({
             return {
                 START_IMPORT: 'start_import',
                 FINISH_IMPORT: 'finish_import',
+                SHOW_RELATED_CONTENT_WARNING: 'show_related_content_warning',
             };
         },
     },
@@ -156,6 +157,17 @@ var ImportListStore = Vue.extend({
             return collection.calculate_size()
         },
         commitImport: function() {
+            var importCollection = this.getImportCollection();
+            if (importCollection.has_related_content()) {
+                this.$emit(
+                    this.eventTypes.SHOW_RELATED_CONTENT_WARNING,
+                    this._commitImport.bind(this)
+                );
+            } else {
+                this._commitImport();
+            }
+        },
+        _commitImport: function() {
             // event for ImportModalView
             this.$emit(this.eventTypes.START_IMPORT);
             this.getImportCollection()

@@ -57,7 +57,7 @@
         <em v-show="isLoading" class="default-item">
           Loading...
         </em>
-        <ul class="topic_list list-border import-list modal-list-default">
+        <ul class="ListItem__SubList">
           <ImportListItem
             ref="children"
             v-for="file in subFiles"

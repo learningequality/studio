@@ -1,3 +1,4 @@
+/* eslint-env node */
 var browserify = require('browserify');
 var lessify = require('node-lessify');
 var hbsfy = require('hbsfy');
@@ -40,7 +41,7 @@ var createBundles = function (b, bundles) {
   }
 };
 
-var staticContentDir = __dirname + '/contentcuration/contentcuration/static/';
+var staticContentDir = process.__dirname + '/contentcuration/contentcuration/static/';
 
 var bundles = [];
 
