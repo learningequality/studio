@@ -17,7 +17,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	lists: [],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'move_items' ,'add_container','toggle_details', 'handle_checked', 'open_archive');
+		_.bindAll(this, 'copy_content', 'call_duplicate', 'delete_content' , 'move_items' ,'add_container','toggle_details', 'handle_checked', 'open_archive');
 		this.bind_workspace_functions();
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
@@ -103,12 +103,19 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	delete_content: function (event){
 		var self = this;
-        dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
+		var title = "WARNING";
+		var message = "Are you sure you want to delete these selected items?";
+		var list = self.get_selected(true);
+		var deleteCollection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
+		if(deleteCollection.has_related_content()){
+			title = "RELATED CONTENT DETECTED";
+			message = "Any content associated with these items will no longer reference them as related content. " + message;
+		}
+        dialog.dialog(title, message, {
             "CANCEL":function(){},
             "DELETE ITEMS": function(){
-            	var list = self.get_selected(true);
+
 				/* Create list of nodes to delete */
-				var deleteCollection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
 				var opened = _.find(list, function(list){return list.$el.hasClass(list.openedFolderClass);});
 				if(opened){
 					opened.subcontent_view.close_container()
@@ -119,6 +126,14 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
         }, null);
 	},
 	copy_content: function(event){
+		var copyCollection = new Models.ContentNodeCollection(_.pluck(this.get_selected(true), 'model'))
+		if(copyCollection.has_related_content()){
+			dialog.alert("WARNING", "Related content will not be included in the copy of this content.", this.call_duplicate);
+		} else {
+			this.call_duplicate();
+		}
+	},
+	call_duplicate: function(){
 		var self = this;
 		this.display_load("Copying Content...", function(load_resolve, load_reject){
 			var promises = [];
@@ -404,7 +419,11 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	copy_node:function(event){
 		this.cancel_actions(event);
-		this.copy_item();
+		if(this.model.has_related_content()){
+			dialog.alert("WARNING", "Related content will not be included in the copy of this content.", this.copy_item);
+		} else {
+			this.copy_item();
+		}
 	},
 	move_node:function(event){
 		this.cancel_actions(event);
@@ -413,7 +432,13 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	delete_node:function(event){
 		this.cancel_actions(event);
 		var self = this;
-        dialog.dialog("WARNING", "Are you sure you want to delete " + this.model.get("title") + "?", {
+		var title = "WARNING";
+		var message = "Are you sure you want to delete " + this.model.get("title") + "?";
+		if(this.model.has_related_content()){
+			title = "RELATED CONTENT DETECTED";
+			message = "Any content associated with this item will no longer reference it as related content. " + message;
+		}
+        dialog.dialog(title, message, {
             "CANCEL":function(){},
             "DELETE": function(){
 				self.add_to_trash();

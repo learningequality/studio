@@ -448,6 +448,26 @@ class ContentNode(MPTTModel, models.Model):
         cache.set(key, presets, None)
         return presets
 
+    def get_prerequisites(self):
+        prerequisite_mapping = {}
+        prerequisites = self.prerequisite.all()
+        prereqlist = list(prerequisites)
+        for prereq in prerequisites:
+            prlist, prereqmapping = prereq.get_prerequisites()
+            prerequisite_mapping.update({prereq.pk: prereqmapping})
+            prereqlist.extend(prlist)
+        return prereqlist, prerequisite_mapping
+
+    def get_postrequisites(self):
+        postrequisite_mapping = {}
+        postrequisites = self.is_prerequisite_of.all()
+        postreqlist = list(postrequisites)
+        for postreq in postrequisites:
+            prlist, postreqmapping = postreq.get_postrequisites()
+            postrequisite_mapping.update({postreq.pk: postreqmapping})
+            postreqlist.extend(prlist)
+        return postreqlist, postrequisite_mapping
+
     def get_channel(self):
         try:
             root = self.get_root()
@@ -481,6 +501,10 @@ class ContentNode(MPTTModel, models.Model):
             self.source_node_id = self.node_id
 
         super(ContentNode, self).save(*args, **kwargs)
+
+        root = self.get_root()
+        if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
+            PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
@@ -643,6 +667,8 @@ class PrerequisiteContentRelationship(models.Model):
         self.full_clean()
         super(PrerequisiteContentRelationship, self).save(*args, **kwargs)
 
+    def __unicode__(self):
+        return u'%s' % (self.pk)
 
 class RelatedContentRelationship(models.Model):
     """
