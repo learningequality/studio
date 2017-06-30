@@ -28,6 +28,8 @@ import contentcuration.view.internal_views as internal_views
 import contentcuration.view.zip_views as zip_views
 import contentcuration.view.file_views as file_views
 import contentcuration.view.node_views as node_views
+import django_js_reverse.views as django_js_reverse_views
+import django.views as django_views
 
 from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
@@ -192,13 +194,13 @@ urlpatterns += [
     url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
 ]
 
-urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]
+urlpatterns += [url(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]
 
 if settings.DEBUG:
     # static files (images, css, javascript, etc.)
     urlpatterns += [
-        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STORAGE_ROOT}),
-        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.DB_ROOT})
+        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.STORAGE_ROOT}),
+        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.DB_ROOT})
     ]
 
     import debug_toolbar
