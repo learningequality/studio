@@ -50,24 +50,27 @@
       </i>
     </label>
 
-    <em v-show="isFolder && isLoading">
-      Loading...
-    </em>
 
     <!-- TODO re-insert smooth transition -->
-    <ul v-show="isExpanded" class="ListItem__SubList">
-      <ImportListItem
-        ref="children"
-        v-for="file in subFiles"
-        :key="file.id"
-        :node="file"
-        :isRoot="false"
-        :isFolder="file.kind ==='topic'"
-        :isChannel="false"
-        :parentIsChecked="isChecked"
-        :store="store"
-      />
-    </ul>
+    <transition name="fade">
+      <div v-if="isExpanded ">
+        <em v-show="isLoading" class="default-item">
+          Loading...
+        </em>
+        <ul class="topic_list list-border import-list modal-list-default">
+          <ImportListItem
+            ref="children"
+            v-for="file in subFiles"
+            :key="file.id"
+            :node="file"
+            :isFolder="file.kind ==='topic'"
+            :isChannel="false"
+            :parentIsChecked="isChecked"
+            :store="store"
+          />
+        </ul>
+      </div>
+    </transition>
   </li>
 
 </template>
@@ -265,4 +268,14 @@ module.exports = {
     }
   }
 
+  .fade-enter-active {
+    transition: opacity .5s
+  }
+  .fade-leave-active {
+    transition: opacity .25s
+  }
+
+  .fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
+    opacity: 0
+  }
 </style>
