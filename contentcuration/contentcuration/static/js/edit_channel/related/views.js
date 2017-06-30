@@ -267,7 +267,6 @@ var RelatedView = BasePrerequisiteView.extend({
         var self = this;
         this.$el.html(this.template());
         this.collection.get_all_fetch_simplified([this.model.get('parent')]).then(function(collection){
-            console.log(window.current_channel.get_root("main_tree"))
             self.navigate_to_node(collection.at(0) || window.current_channel.get_root("main_tree"));
         });
     },
