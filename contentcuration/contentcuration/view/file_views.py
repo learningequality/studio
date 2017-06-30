@@ -12,6 +12,7 @@ from contentcuration.serializers import FileSerializer, ContentNodeEditSerialize
 from le_utils.constants import format_presets, content_kinds, exercises, licenses
 from pressurecooker.videos import guess_video_preset_by_resolution
 
+
 def file_upload(request):
     if request.method == 'POST':
         # Implement logic for switching out files without saving it yet
@@ -32,6 +33,7 @@ def file_upload(request):
             "file": JSONRenderer().render(FileSerializer(file_object).data)
         }))
 
+
 def file_create(request):
     if request.method == 'POST':
         original_filename, ext = os.path.splitext(request.FILES.values()[0]._name)
@@ -40,7 +42,7 @@ def file_create(request):
         kind = presets.first().kind
         preferences = json.loads(request.META.get('HTTP_PREFERENCES'))
         author = preferences.get('author') or ""
-        license = License.objects.filter(license_name=preferences.get('license')).first() # Use filter/first in case preference hasn't been set
+        license = License.objects.filter(license_name=preferences.get('license')).first()  # Use filter/first in case preference hasn't been set
         license_id = license.pk if license else settings.DEFAULT_LICENSE
         new_node = ContentNode(title=original_filename, kind=kind, license_id=license_id, author=author, copyright_holder=preferences.get('copyright_holder'))
         if license.license_name == licenses.SPECIAL_PERMISSIONS:
@@ -57,9 +59,9 @@ def file_create(request):
 
         try:
             if preferences.get('auto_derive_video_thumbnail') and new_node.kind_id == content_kinds.VIDEO \
-                or preferences.get('auto_derive_audio_thumbnail') and new_node.kind_id == content_kinds.AUDIO \
-                or preferences.get('auto_derive_html5_thumbnail') and new_node.kind_id == content_kinds.HTML5 \
-                or preferences.get('auto_derive_document_thumbnail') and new_node.kind_id == content_kinds.DOCUMENT:
+                    or preferences.get('auto_derive_audio_thumbnail') and new_node.kind_id == content_kinds.AUDIO \
+                    or preferences.get('auto_derive_html5_thumbnail') and new_node.kind_id == content_kinds.HTML5 \
+                    or preferences.get('auto_derive_document_thumbnail') and new_node.kind_id == content_kinds.DOCUMENT:
                 generate_thumbnail_from_node(new_node, set_node=True)
         except Exception:
             pass
@@ -68,6 +70,7 @@ def file_create(request):
             "success": True,
             "node": JSONRenderer().render(ContentNodeEditSerializer(new_node).data)
         }))
+
 
 def generate_thumbnail(request):
     logging.debug("Entering the generate_thumbnail endpoint")
@@ -86,6 +89,7 @@ def generate_thumbnail(request):
             "path": generate_storage_url(str(thumbnail_object)),
         }))
 
+
 def thumbnail_upload(request):
     if request.method == 'POST':
         fobj = request.FILES.values()[0]
@@ -94,14 +98,21 @@ def thumbnail_upload(request):
         return HttpResponse(json.dumps({
             "success": True,
             "formatted_filename": formatted_filename,
-            "file":  None,
+            "file": None,
             "path": generate_storage_url(formatted_filename),
         }))
 
+
 def image_upload(request):
     if request.method == 'POST':
-        name, ext = os.path.splitext(request.FILES.values()[0]._name) # gets file extension without leading period
-        file_object = File(contentnode_id=request.META.get('HTTP_NODE'),original_filename=name, preset_id=request.META.get('HTTP_PRESET'), file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:])
+        name, ext = os.path.splitext(request.FILES.values()[0]._name)  # gets file extension without leading period
+        file_object = File(
+            contentnode_id=request.META.get('HTTP_NODE'),
+            original_filename=name,
+            preset_id=request.META.get('HTTP_PRESET'),
+            file_on_disk=DjFile(request.FILES.values()[0]),
+            file_format_id=ext[1:]
+        )
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
@@ -109,9 +120,10 @@ def image_upload(request):
             "path": generate_storage_url(str(file_object)),
         }))
 
+
 def exercise_image_upload(request):
     if request.method == 'POST':
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:] # gets file extension without leading period
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:]  # gets file extension without leading period
         file_object = File(preset_id=format_presets.EXERCISE_IMAGE, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext)
         file_object.save()
         return HttpResponse(json.dumps({
