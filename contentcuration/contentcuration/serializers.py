@@ -490,7 +490,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         else:
             assessment_size = node.assessment_items.values('files__checksum', 'files__file_size').distinct()\
                             .aggregate(resource_size=Sum('files__file_size')).get('resource_size') or 0
-            resource_size = node.files.values('file_size','checksum').distinct()\
+            resource_size = node.files.values('file_size', 'checksum').distinct()\
                             .aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
             resource_count = 1
             if node.kind_id == content_kinds.EXERCISE:
