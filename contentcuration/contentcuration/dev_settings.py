@@ -11,9 +11,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID =2
 logging.basicConfig(level='DEBUG')
 
-INSTALLED_APPS += ('debug_toolbar', 'pympler')
+INSTALLED_APPS += ('debug_panel', 'debug_toolbar', 'pympler')
 
-MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
+MIDDLEWARE_CLASSES += ('debug_panel.middleware.DebugPanelMiddleware',)
 
 DEBUG_TOOLBAR_CONFIG = {
 	"SHOW_TOOLBAR_CALLBACK": lambda x: True,

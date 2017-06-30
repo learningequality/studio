@@ -1,26 +1,17 @@
 import copy
-import json
-import logging
 import os
 import random
 import tempfile
 import zipfile
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File as DjFile
-from django.core.files.base import ContentFile
-from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField, Max
-from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, write_raw_content_to_storage
-from contentcuration.models import File, ContentNode, generate_file_on_disk_name, generate_storage_url
-from le_utils.constants import format_presets, content_kinds, file_formats, exercises
+from contentcuration.models import File, generate_file_on_disk_name
+from le_utils.constants import format_presets, content_kinds, file_formats
 from pressurecooker.videos import extract_thumbnail_from_video, compress_video
 from pressurecooker.images import create_tiled_image, create_image_from_pdf_page, create_waveform_image
-from pressurecooker.encodings import write_base64_to_file
 
 
 def create_file_from_contents(contents, ext=None, node=None, preset_id=None):
-    file_object = None
     checksum, filename, path = write_raw_content_to_storage(contents, ext=ext)
     with open(path, 'rb') as new_file:
         return File.objects.create(

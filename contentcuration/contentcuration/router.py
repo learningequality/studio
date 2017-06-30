@@ -1,4 +1,3 @@
-import logging
 from kolibri.content.models import ContentDatabaseModel
 
 
@@ -13,8 +12,6 @@ class Router(object):
         else:
             db = None
 
-        model_label = model._meta.label
-        # logging.debug("Reading {0} from {1}".format(model_label, db))
         return db
 
     def db_for_write(self, model, **hints):
@@ -26,8 +23,6 @@ class Router(object):
         else:
             db = None
 
-        model_label = model._meta.label
-        # logging.debug("Writing {0} into {1}".format(model_label, db))
         return db
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
@@ -35,5 +30,3 @@ class Router(object):
             return False        # don't run on main DB
         else:
             return None         # we have no opinion here. Best practice!
-
-

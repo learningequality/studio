@@ -409,12 +409,6 @@ class ContentNode(MPTTModel, models.Model):
 
     objects = TreeManager()
 
-    @raise_if_unsaved
-    def get_root(self):
-        if not self.parent and self.kind_id != content_kinds.TOPIC:
-            return self
-        return super(ContentNode, self).get_root()
-
     def get_tree_data(self, include_self=True):
         if not include_self:
             return [c.get_tree_data() for c in self.children.all()]
@@ -476,7 +470,7 @@ class ContentNode(MPTTModel, models.Model):
 
         # TODO: This SIGNIFICANTLY slows down the creation flow
         #   Avoid calling get_channel() (db read)
-        channel = self.get_channel() or (self.parent and self.parent.get_channel())
+        channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
         if self.original_channel_id is None:
             self.original_channel_id = channel.id if channel else None
         if self.source_channel_id is None:

@@ -2,21 +2,19 @@ import json
 import logging
 import os
 from django.http import HttpResponse, HttpResponseBadRequest
-from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage
 from contentcuration.utils.files import generate_thumbnail_from_node
-from contentcuration.models import File, FormatPreset, ContentNode, License, generate_file_on_disk_name, generate_storage_url
+from contentcuration.models import File, FormatPreset, ContentNode, License, generate_storage_url
 from contentcuration.serializers import FileSerializer, ContentNodeEditSerializer
-from le_utils.constants import format_presets, content_kinds, file_formats, exercises, licenses
+from le_utils.constants import format_presets, content_kinds, exercises, licenses
 from pressurecooker.videos import guess_video_preset_by_resolution
 
 def file_upload(request):
     if request.method == 'POST':
-        #Implement logic for switching out files without saving it yet
+        # Implement logic for switching out files without saving it yet
         filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
         file_object = File(
