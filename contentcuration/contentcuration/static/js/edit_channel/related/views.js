@@ -232,7 +232,8 @@ var BasePrerequisiteView = BaseViews.BaseView.extend({
         this.render();
     },
     events:{
-        'click #prereq_about': 'open_help'
+        'click #prereq_about': 'open_help',
+        'click .cancel_selection' : 'open_selected',
     },
     open_help: function(){
         new staticModals.PrerequisiteModalView();
@@ -268,9 +269,6 @@ var RelatedView = BasePrerequisiteView.extend({
         this.collection.get_all_fetch_simplified([this.model.get('parent')]).then(function(collection){
             self.navigate_to_node(collection.at(0));
         });
-    },
-    events: {
-        'click .cancel_selection' : 'open_selected',
     },
     open_selected: function(){
         this.container.open_selected();
