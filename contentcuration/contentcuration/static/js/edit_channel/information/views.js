@@ -55,8 +55,42 @@ var PrerequisiteModalView = BaseViews.BaseModalView.extend({
   }
 });
 
+var PublishedModalView = BaseViews.BaseModalView.extend({
+  template: require("./hbtemplates/published_modal.handlebars"),
+
+  initialize: function(options) {
+      this.channel_id = options.channel_id
+      this.modal = true;
+      this.render();
+  },
+  events: {
+    'click #modal-copy-btn' : 'copy_publish_id'
+  },
+  render: function() {
+      this.$el.html(this.template({channel_id: this.channel_id}));
+      $("body").append(this.el);
+      this.$("#published_modal").modal({show: true});
+      this.$("#published_modal").on("hidden.bs.modal", this.closed_modal);
+  },
+  copy_publish_id: function(){
+    this.$("#modal-copy-text").focus();
+    this.$("#modal-copy-text").select();
+    try {
+        document.execCommand("copy");
+        this.$("#modal-copy-btn").text("Copied!");
+      } catch(e) {
+          $("#modal-copy-btn").text("Copy Failed");
+      }
+      setTimeout(function(){
+        $("#modal-copy-btn").text("COPY");
+      }, 2500);
+  }
+});
+
+
 module.exports = {
     LicenseModalView: LicenseModalView,
     MasteryModalView:MasteryModalView,
-    PrerequisiteModalView: PrerequisiteModalView
+    PrerequisiteModalView: PrerequisiteModalView,
+    PublishedModalView: PublishedModalView
 }

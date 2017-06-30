@@ -139,7 +139,8 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	handle_published:function(collection){
 		this.reload_ancestors(collection);
-		$("#publish-get-id-modal").modal("show");
+		var staticModal = require('edit_channel/information/views');
+		new staticModal.PublishedModalView({channel_id: window.current_channel.id});
 	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");

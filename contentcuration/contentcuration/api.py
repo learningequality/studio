@@ -4,20 +4,13 @@ This module acts as the only interface point between other apps and the database
 import json
 import logging
 import os
-import re
 import hashlib
 import shutil
-import tempfile
-import subprocess
-from functools import wraps
-from django.db.models import Q, Value, Count, Sum
-from django.db.models.functions import Concat
+from django.db.models import Q, Count, Sum
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
-from django.core.files import File as DjFile
+from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponse
-from kolibri.content import models as KolibriContent
-from le_utils.constants import format_presets, content_kinds, file_formats
+from le_utils.constants import format_presets, content_kinds
 import contentcuration.models as models
 
 def check_supported_browsers(user_agent_string):
@@ -257,7 +250,7 @@ def get_staged_diff(channel_id):
         "live": original_question_count,
         "staged": updated_question_count,
         "difference": updated_question_count - original_question_count,
-    });
+    })
 
     # Add number of subtitles
     original_subtitle_count = main_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if main_descendants else 0
@@ -267,6 +260,6 @@ def get_staged_diff(channel_id):
         "live": original_subtitle_count,
         "staged": updated_subtitle_count,
         "difference": updated_subtitle_count - original_subtitle_count,
-    });
+    })
 
     return stats

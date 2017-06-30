@@ -1,25 +1,12 @@
 import json
-import requests
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, get_object_or_404, redirect, render_to_response
-from django.contrib.sites.shortcuts import get_current_site
+from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views
-from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic.edit import FormView
-from django.core.context_processors import csrf
-from django.db.models import Q
-from django.template.loader import render_to_string
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.renderers import JSONRenderer
-from contentcuration.models import User, Channel
 from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, PreferencesSettingsForm
 from rest_framework.authtoken.models import Token
 from django.core.urlresolvers import reverse_lazy
-import contentcuration.urls
 from contentcuration.api import check_supported_browsers
 
 
@@ -48,7 +35,6 @@ class ProfileView(FormView):
         return initial
 
     def form_valid(self, form):
-        user = form.save(self.user())
         context = self.get_context_data(form=form)
         context.update({'success': True})
         return self.render_to_response(context)
@@ -84,7 +70,6 @@ class PreferencesView(FormView):
         return initial
 
     def form_valid(self, form):
-        user = form.save(self.user())
         context = self.get_context_data(form=form)
         context.update({'success': True})
         return self.render_to_response(context)

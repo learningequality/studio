@@ -3,12 +3,11 @@ import sys
 import os
 import datetime
 from django.conf import settings
-from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import transaction
 from django.core.files import File as DJFile
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from le_utils.constants import content_kinds
 from contentcuration import models
 from contentcuration.api import write_file_to_storage
 import logging as logmodule

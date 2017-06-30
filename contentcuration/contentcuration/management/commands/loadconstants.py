@@ -1,8 +1,6 @@
-from django.conf import settings
 from django.contrib.sites.models import Site
-from django.core.management import call_command
 from django.core.management.base import BaseCommand
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages
+from le_utils.constants import content_kinds, file_formats, format_presets, licenses, languages
 from contentcuration import models
 import logging as logmodule
 from django.core.cache import cache
