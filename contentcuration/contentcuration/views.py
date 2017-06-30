@@ -50,16 +50,16 @@ def get_or_set_cached_constants(constant, serializer):
 def redirect_to_channel(request, channel_id):
     channel = Channel.objects.get(pk=channel_id)
     if channel.editors.filter(pk=request.user.pk).exists():
-        return redirect(reverse_lazy('channel', kwargs={'channel_id' : channel_id}))
+        return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
     elif channel.viewers.filter(pk=request.user.pk).exists():
-        return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id' : channel_id}))
+        return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
     return redirect(reverse_lazy('unauthorized'))
 
 def redirect_to_channel_edit(request, channel_id):
-    return redirect(reverse_lazy('channel', kwargs={'channel_id' : channel_id}))
+    return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
 
 def redirect_to_channel_view(request, channel_id):
-    return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id' : channel_id}))
+    return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
 
 
 def channel_page(request, channel, allow_edit=False, staging=False):
@@ -77,20 +77,20 @@ def channel_page(request, channel, allow_edit=False, staging=False):
 
     json_renderer = JSONRenderer()
 
-    return render(request, 'channel_edit.html', {"allow_edit":allow_edit,
-                                                "staging": staging,
-                                                "channel" : json_renderer.render(channel_serializer.data),
-                                                "channel_id" : channel.pk,
-                                                "channel_name": channel.name,
-                                                "channel_list" : channel_list,
-                                                "fileformat_list" : fileformats,
-                                                "license_list" : licenses,
-                                                "fpreset_list" : formatpresets,
-                                                "ckinds_list" : contentkinds,
-                                                "langs_list" : languages,
-                                                "current_user" : json_renderer.render(CurrentUserSerializer(request.user).data),
-                                                "preferences" : channel.preferences,
-                                            })
+    return render(request, 'channel_edit.html', {"allow_edit": allow_edit,
+                                                 "staging": staging,
+                                                 "channel": json_renderer.render(channel_serializer.data),
+                                                 "channel_id": channel.pk,
+                                                 "channel_name": channel.name,
+                                                 "channel_list": channel_list,
+                                                 "fileformat_list": fileformats,
+                                                 "license_list": licenses,
+                                                 "fpreset_list": formatpresets,
+                                                 "ckinds_list": contentkinds,
+                                                 "langs_list": languages,
+                                                 "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
+                                                 "preferences": channel.preferences,
+                                                })
 
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -99,9 +99,10 @@ def channel_list(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
         return redirect(reverse_lazy('unsupported_browser'))
 
-    return render(request, 'channel_list.html', {"channel_name" : False,
-                                                 "current_user" : JSONRenderer().render(UserChannelListSerializer(request.user).data),
-                                                 "user_preferences" : request.user.preferences})
+    return render(request, 'channel_list.html', {"channel_name": False,
+                                                 "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
+                                                 "user_preferences": request.user.preferences})
+
 
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -191,13 +192,17 @@ def publish_channel(request):
             "channel": channel_id
         }))
 
+
 def accessible_channels(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        accessible_list = ContentNode.objects.filter(pk__in=Channel.objects.select_related('main_tree')\
-                        .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))\
-                        .exclude(pk=data["channel_id"]).values_list('main_tree_id', flat=True))
+        accessible_list = ContentNode.objects.filter(
+            pk__in=Channel.objects.select_related('main_tree')
+            .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))
+            .exclude(pk=data["channel_id"]).values_list('main_tree_id', flat=True)
+        )
         return HttpResponse(JSONRenderer().render(RootNodeSerializer(accessible_list, many=True).data))
+
 
 def accept_channel_invite(request):
     if request.method == 'POST':
@@ -209,6 +214,7 @@ def accept_channel_invite(request):
         add_editor_to_channel(invitation)
 
         return HttpResponse(JSONRenderer().render(channel_serializer.data))
+
 
 def activate_channel_endpoint(request):
     if request.method == 'POST':
