@@ -32,33 +32,43 @@ import contentcuration.view.node_views as node_views
 from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
 
+
 class LicenseViewSet(viewsets.ModelViewSet):
     queryset = License.objects.all()
+
     serializer_class = serializers.LicenseSerializer
+
 
 class LanguageViewSet(viewsets.ModelViewSet):
     queryset = Language.objects.all()
+
     serializer_class = serializers.LanguageSerializer
+
 
 class ChannelViewSet(viewsets.ModelViewSet):
     queryset = Channel.objects.all()
     serializer_class = serializers.ChannelSerializer
 
+
 class FileViewSet(BulkModelViewSet):
     queryset = File.objects.all()
     serializer_class = serializers.FileSerializer
+
 
 class FileFormatViewSet(viewsets.ModelViewSet):
     queryset = FileFormat.objects.all()
     serializer_class = serializers.FileFormatSerializer
 
+
 class FormatPresetViewSet(viewsets.ModelViewSet):
     queryset = FormatPreset.objects.all()
     serializer_class = serializers.FormatPresetSerializer
 
+
 class ContentKindViewSet(viewsets.ModelViewSet):
     queryset = ContentKind.objects.all()
     serializer_class = serializers.ContentKindSerializer
+
 
 class ContentNodeViewSet(BulkModelViewSet):
     queryset = ContentNode.objects.all()
@@ -70,21 +80,30 @@ class ContentNodeViewSet(BulkModelViewSet):
         queryset = self.get_serializer_class().setup_eager_loading(queryset)
         return queryset
 
+
 class TagViewSet(viewsets.ModelViewSet):
     queryset = ContentTag.objects.all()
+
     serializer_class = serializers.TagSerializer
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
+
     serializer_class = serializers.UserSerializer
+
 
 class InvitationViewSet(viewsets.ModelViewSet):
     queryset = Invitation.objects.all()
+
     serializer_class = serializers.InvitationSerializer
+
 
 class AssessmentItemViewSet(BulkModelViewSet):
     queryset = AssessmentItem.objects.all()
+
     serializer_class = serializers.AssessmentItemSerializer
+
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
@@ -153,7 +172,12 @@ urlpatterns += [
 # Add account/registration endpoints
 urlpatterns += [
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
-    url(r'^accounts/password/reset/$',registration_views.custom_password_reset,{'post_reset_redirect': reverse_lazy('auth_password_reset_done'),'email_template_name':'registration/password_reset_email.txt'}, name='auth_password_reset'), # Add 'html_email_template_name': 'registration/password_reset_email.html' to dict for html
+    url(
+        r'^accounts/password/reset/$',
+        registration_views.custom_password_reset,
+        {'post_reset_redirect': reverse_lazy('auth_password_reset_done'), 'email_template_name': 'registration/password_reset_email.txt'},
+        name='auth_password_reset'
+    ),  # Add 'html_email_template_name': 'registration/password_reset_email.html' to dict for html
     url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
