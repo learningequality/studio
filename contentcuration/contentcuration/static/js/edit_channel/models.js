@@ -443,7 +443,25 @@ var ChannelModel = BaseModel.extend({
     get_root:function(tree_name){
         return new ContentNodeModel(this.get(tree_name));
     },
+    initialize: function () {
+        if (this.get("preferences") && typeof this.get("preferences") !== "object"){
+            this.set("preferences", JSON.parse(this.get("preferences")))
+        }
+    },
+    parse: function(response) {
+        if (response !== undefined && response.preferences) {
+            response.preferences = JSON.parse(response.preferences);
 
+        }
+        return response;
+    },
+    toJSON: function() {
+        var attributes = _.clone(this.attributes);
+        if (typeof attributes.preferences !== "string") {
+            attributes.preferences = JSON.stringify(attributes.preferences);
+        }
+        return attributes;
+    },
     publish:function(callback){
         var self = this;
         return new Promise(function(resolve, reject){

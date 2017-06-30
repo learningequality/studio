@@ -1,0 +1,59 @@
+<div id="channel_settings_dialog" class="modal-content-default">
+    <div class="profile text-center pull-left"><div class="new_channel_pic" id="channel_thumbnail"></div></div>
+    <div class="channel_section">
+        <h4>Channel Name <label class="required">*<span id="channel_error">Channel name cannot be blank.</span></label></h4>
+        <input type="text" id="input_title" class="upload_input input_listener" placeholder="Enter channel name" maxlength="200" value="{{channel.name}}" required/>
+        <h4>Channel Description</h4>
+        <textarea type="text" id="input_description" class="upload_input input_listener" placeholder="Enter channel description" maxlength="400" value="{{channel.description}}">{{channel.description}}</textarea>
+    </div>
+    <hr/>
+    <h3>Content Defaults</h3>
+    <p><em>Set defaults for new content items</em></p>
+    <div class="section">
+        <h4>Author</h4>
+        <input type="text" id="author_field" class="upload_input input_listener" value="{{preferences.author}}" placeholder="Enter author name"/>
+        <div class="row">
+            <div class="content_nodes_only col-sm-6">
+                <h4>License</h4>
+                <select id="license_select" class="input_listener">
+                    {{#each licenses}}
+                        <option value={{id}}>{{license_name}}</option>
+                    {{/each}}
+                </select>
+                <textarea id="custom_license_description" class="input_listener" placeholder="Enter license description" value={{preferences.license_description}}>{{preferences.license_description}}</textarea>
+            </div>
+            <div class="content_nodes_only col-sm-6">
+                <h4>Copyright Holder</h4>
+                <input type="text" id="input_copyright_holder" class="copyright_input input_listener" placeholder="Enter copyright holder name" maxlength="200" value="{{preferences.copyright_holder}}"/>
+            </div>
+        </div>
+        <h4>Exercise Mastery Criteria</h4>
+        <div>
+            <select id="mastery_model_select" class="input_listener">
+                <option value="num_correct_in_a_row_2" selected>2 in a Row</option>
+                <option value="num_correct_in_a_row_3" selected>3 in a Row</option>
+                <option value="num_correct_in_a_row_5">5 in a Row</option>
+                <option value="num_correct_in_a_row_10">10 in a Row</option>
+                <option value="do_all">100% Correct</option>
+                <option value="m_of_n">M out of N...</option>
+            </select>
+            <span id="mastery_custom_criterion">
+                <input type="number" class="input_listener" id="m_value" min="1" max="20" value="{{preferences.m_value}}" maxlength="2" size="2"/>
+                &nbsp;of&nbsp;
+                <input type="number" class="input_listener" id="n_value" min="1" max="20" value="{{preferences.n_value}}" maxlength="2" size="2"/>
+            </span>
+        </div>
+        <br/>
+        <h4>Automatically generate thumbnails for...</h4>
+        <input type="checkbox" class="input_listener" id="auto_video_thumbnail" {{#if preferences.auto_derive_video_thumbnail}}checked{{/if}}><label for="auto_video_thumbnail">Videos</label>
+        <input type="checkbox" class="input_listener" id="auto_audio_thumbnail" {{#if preferences.auto_derive_audio_thumbnail}}checked{{/if}}><label for="auto_audio_thumbnail">Audio</label>
+        <input type="checkbox" class="input_listener" id="auto_html5_thumbnail" {{#if preferences.auto_derive_html5_thumbnail}}checked{{/if}}><label for="auto_html5_thumbnail">HTML Apps</label>
+        <input type="checkbox" class="input_listener" id="auto_document_thumbnail" {{#if preferences.auto_derive_document_thumbnail}}checked{{/if}}><label for="auto_document_thumbnail">Documents</label>
+    </div>
+</div>
+<div class="modal-bottom-content-default">
+    <a class="action-text" data-dismiss="modal">CLOSE</a>
+    <button disabled class="disabled action-button pull-right modal-main-action-button" id="settings_submit">
+        No Changes Found
+    </button>
+</div>
