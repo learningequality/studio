@@ -475,7 +475,9 @@ var ChannelModel = BaseModel.extend({
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
-        return new ContentNodeModel(this.get(tree_name));
+        var root_node = new ContentNodeModel(this.get(tree_name));
+        root_node.set({'title': this.get('name')});
+        return root_node;
     },
     initialize: function () {
         if (this.get("preferences") && typeof this.get("preferences") !== "object"){
@@ -485,7 +487,6 @@ var ChannelModel = BaseModel.extend({
     parse: function(response) {
         if (response !== undefined && response.preferences) {
             response.preferences = JSON.parse(response.preferences);
-
         }
         return response;
     },
