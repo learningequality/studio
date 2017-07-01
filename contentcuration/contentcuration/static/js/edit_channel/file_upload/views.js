@@ -19,7 +19,8 @@ var FileModalView = BaseViews.BaseModalView.extend({
             container: this,
             model:this.model,
             onsave: options.onsave,
-            onnew: options.onnew
+            onnew: options.onnew,
+            isclipboard: options.isclipboard
         });
         this.$(".modal-body").append(this.file_upload_view.el)
     },
@@ -63,6 +64,7 @@ var FileUploadView = BaseViews.BaseView.extend({
         this.collection = new Models.ContentNodeCollection();
         this.onsave = options.onsave;
         this.onnew = options.onnew;
+        this.isclipboard = options.isclipboard;
         this.switch_view(1);
     },
     events:{
@@ -93,7 +95,8 @@ var FileUploadView = BaseViews.BaseView.extend({
             new_content: true,
             new_topic: false,
             collection: this.collection,
-            allow_edit: true
+            allow_edit: true,
+            isclipboard: this.isclipboard
         }
         switch(stepNumber){
             case 1:
@@ -184,7 +187,10 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
             previewTemplate:this.file_upload_template(),
             parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads()),
             previewsContainer: this.list_selector, // Define the container to display the previews
-            headers: {"X-CSRFToken": get_cookie("csrftoken")},
+            headers: {
+                "X-CSRFToken": get_cookie("csrftoken"),
+                "Preferences": JSON.stringify(window.current_channel.get('preferences'))
+            },
             dictInvalidFileType: "This file type is not supported.",
             dictFileTooBig: "Max file size exceeded.",
             dictResponseError: "Error processing request."

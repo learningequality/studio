@@ -99,8 +99,9 @@ var BaseView = Backbone.View.extend({
 
 var BaseWorkspaceView = BaseView.extend({
 	lists: [],
+	isclipboard: false,
 	bind_workspace_functions:function(){
-		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move',
+		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move', 'handle_changed_settings',
 			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently');
 	},
 	publish:function(){
@@ -148,7 +149,7 @@ var BaseWorkspaceView = BaseView.extend({
 			current_user: window.current_user
 		});
 	},
-	edit_selected:function(allow_edit){
+	edit_selected:function(allow_edit, isclipboard){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var list = this.get_selected();
 		var edit_collection = new Models.ContentNodeCollection();
@@ -170,7 +171,9 @@ var BaseWorkspaceView = BaseView.extend({
 			model: content,
 			new_content: false,
 		    onsave: this.reload_ancestors,
-		    allow_edit: allow_edit
+		    allow_edit: allow_edit,
+		    isclipboard: this.isclipboard,
+		    onnew: this.add_to_clipboard
 		});
 	},
 	add_to_trash:function(collection, message){
@@ -303,6 +306,18 @@ var BaseWorkspaceView = BaseView.extend({
 				reject_load(error);
 			});
 		});
+	},
+	open_channel_settings: function(){
+		var settings = require('edit_channel/channel_settings/views');
+		new settings.SettingsModalView({
+			model: window.current_channel,
+			onsave: this.handle_changed_settings
+		});
+	},
+	handle_changed_settings: function(data){
+		$("#channel_selection_dropdown").text(data.get('name'));
+		window.workspace_manager.get_main_view().model.set('title', data.get('name'));
+		window.preferences = data.get('preferences');
 	}
 });
 
@@ -546,6 +561,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	list_selector:null,
 	default_item:null,
 	content_node_view:null,
+	isclipboard: false,
 
 	/* Functions to overwrite */
 	create_new_view:null,
@@ -643,7 +659,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 							});
 				        });
 		        	});
-				});
+				}).catch(reject);
 			}
 		});
 	},
@@ -683,7 +699,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	            new_topic: true,
 	            onsave: self.reload_ancestors,
 	            onnew:self.add_nodes,
-	            allow_edit: true
+	            allow_edit: true,
+	            isclipboard: self.isclipboard
 	        });
         });
 	},
@@ -701,7 +718,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
       parent_view: this,
       model:this.model,
       onsave: this.reload_ancestors,
-	  onnew:this.add_nodes
+	  onnew:this.add_nodes,
+	  isclipboard: this.isclipboard
   	});
   },
   add_to_clipboard:function(collection, message){
@@ -740,7 +758,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	            new_exercise: true,
 	            onsave: self.reload_ancestors,
 	            onnew:self.add_nodes,
-	            allow_edit: true
+	            allow_edit: true,
+	            isclipboard: self.isclipboard
 	        });
         });
 	}
@@ -897,6 +916,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	model: null,
 	tagName: "li",
 	selectedClass: "content-selected",
+	isclipboard: false,
 
 	bind_workspace_functions:function(){
 		this.bind_node_functions();
@@ -945,7 +965,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			content.list.add_nodes(moved);
 		}
 	},
-	open_edit:function(allow_edit){
+	open_edit:function(allow_edit, isclipboard){
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var editCollection =  new Models.ContentNodeCollection([this.model]);
@@ -956,6 +976,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			model: this.containing_list_view.model,
 		  	onsave: this.reload_ancestors,
 		  	allow_edit: allow_edit,
+		  	isclipboard: this.isclipboard,
 		  	onnew: (!this.allow_edit)? this.containing_list_view.add_to_clipboard : null
 		});
 	},
