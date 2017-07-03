@@ -1,0 +1,18 @@
+plugins:
+  - prettier
+extends:
+  - eslint:recommended
+  - prettier
+rules:
+  prettier/prettier:
+    - error
+    -
+      printWidth: 100
+      trailingComma: es5
+      singleQuote: true
+env:
+  browser: true
+  commonjs: true
+  jquery: true
+globals:
+  Promise: true

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint:py": "flake8 --exit-zero"
+    "lint:py": "flake8 --exit-zero",
+    "precommit": "lint-staged"
   },
   "repository": {
     "type": "git",
@@ -51,5 +52,19 @@
     "to-markdown": "^3.0.3",
     "underscore": "^1.8.3",
     "watchify": "^3.2.3"
+  },
+  "devDependencies": {
+    "eslint": "^4.1.1",
+    "eslint-config-prettier": "^2.3.0",
+    "eslint-plugin-prettier": "^2.1.2",
+    "husky": "^0.14.2",
+    "lint-staged": "^4.0.0",
+    "prettier": "^1.5.2"
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write --print-width 100 --trailing-comma es5 --single-quote",
+      "git add"
+    ]
   }
 }
