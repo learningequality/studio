@@ -1,14 +1,7 @@
 var Models = require('../models');
+var createContentNodeCollection = require('./vuex/importUtils').createContentNodeCollection;
 
-/** Given an Array of ContentNode Objects, create a ContentNodeCollection
- * @param {Array<ContentNode>} contentNodes
- * @returns {ContentNodeCollection}
- */
-function createContentNodeCollection(contentNodes) {
-  return new Models.ContentNodeCollection(contentNodes);
-}
-
-function hasRelatedContent(contentNodes) {
+exports.hasRelatedContent = function(contentNodes) {
   var collection = createContentNodeCollection(contentNodes);
   return collection.has_related_content();
 }
@@ -18,7 +11,7 @@ function hasRelatedContent(contentNodes) {
  * @param {Array<string>} nodeIds
  * @returns {Promise<Array<ContentNode>>}
  */
-function fetchContentNodesById(nodeIds) {
+exports.fetchContentNodesById = function(nodeIds) {
     var collection = new Models.ContentNodeCollection();
     return collection.get_all_fetch_simplified(nodeIds)
     .then(function(nodeCollection) {
@@ -42,7 +35,6 @@ function fetchItemSearchResults(searchTerm, currentChannelId) {
   });
 }
 
-// move to util
 function fetchTopicSearchResults(searchTerm, currentChannelId) {
   return new Promise(function(resolve, reject) {
     $.ajax({
@@ -58,7 +50,7 @@ function fetchTopicSearchResults(searchTerm, currentChannelId) {
   });
 }
 
-function fetchSearchResults(searchTerm, currentChannelId) {
+exports.fetchSearchResults = function(searchTerm, currentChannelId) {
   return Promise.all([
     fetchItemSearchResults(searchTerm, currentChannelId),
     fetchTopicSearchResults(searchTerm, currentChannelId),
@@ -72,7 +64,7 @@ function fetchSearchResults(searchTerm, currentChannelId) {
   })
 }
 
-function getIconClassForKind(kind) {
+exports.getIconClassForKind = function(kind) {
   switch (kind){
     case "topic":
       return "glyphicon-folder-close";
@@ -92,13 +84,3 @@ function getIconClassForKind(kind) {
       return "glyphicon-exclamation-sign";
   }
 }
-
-module.exports = {
-  createContentNodeCollection: createContentNodeCollection,
-  fetchContentNodesById: fetchContentNodesById,
-  fetchItemSearchResults: fetchItemSearchResults,
-  fetchTopicSearchResults: fetchTopicSearchResults,
-  fetchSearchResults: fetchSearchResults,
-  getIconClassForKind: getIconClassForKind,
-  hasRelatedContent: hasRelatedContent,
-};
