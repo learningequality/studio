@@ -69,6 +69,7 @@
 
 
 <script>
+
 const _ = require('underscore');
 const RequiredBoolean = { type: Boolean, required: true };
 const stringHelper = require('../../utils/string_helper');
@@ -183,6 +184,7 @@ module.exports = {
     pluralize,
   }
 };
+
 </script>
 
 

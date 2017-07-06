@@ -1,8 +1,8 @@
 var Vue = require('vue');
 var Backbone = require('backbone');
-var BaseViews = require("edit_channel/views");
-require("import.less");
-var dialog = require("edit_channel/utils/dialog");
+var BaseViews = require("../views");
+require("import.less"); // eslint-disable-line
+var dialog = require("../utils/dialog");
 var ImportModalComponent = require('./views/ImportModal.vue')
 var ImportModal = Vue.extend(ImportModalComponent);
 var store = require('./vuex/store');
