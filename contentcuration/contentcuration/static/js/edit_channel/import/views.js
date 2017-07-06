@@ -27,14 +27,17 @@ var ImportModalView = Backbone.View.extend({
     },
 
     _handleImportStatusChange: function(status) {
-      if (status === 'import_confirmed') {
-        this._dispatchCopyImportListToChannel();
-      } else if (status === 'start'){
-        this._startImport();
-      } else if (status === 'show_warning') {
-        this._showWarning();
-      } else if (status === 'success') {
-        this._finishImport();
+      switch (status) {
+        case 'import_confirmed':
+          return this._dispatchCopyImportListToChannel();
+        case 'start':
+          return this._startImport();
+        case 'show_warning':
+          return this._showWarning();
+        case 'success':
+          return this._finishImport();
+        default:
+          return;
       }
     },
 
@@ -50,9 +53,7 @@ var ImportModalView = Backbone.View.extend({
 
     _mountVueComponent: function() {
         this._resetPageState();
-        this.ImportModal = new ImportModal({
-          store: store,
-        });
+        this.ImportModal = new ImportModal({ store: store });
         this.ImportModal.$on('modalclosed', this._destroy.bind(this))
         this.ImportModal.$mount();
     },
