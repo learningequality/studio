@@ -5,22 +5,18 @@ require("import.less");
 var dialog = require("edit_channel/utils/dialog");
 var ImportModalComponent = require('./views/ImportModal.vue')
 var ImportModal = Vue.extend(ImportModalComponent);
-var ImportStore = require('./ImportStore');
+var store = require('./vuex/store');
+
+function getImportStatus(state) {
+  return state.import.importStatus;
+}
 
 var ImportModalView = Backbone.View.extend({
     initialize: function(options) {
-        // inject stuff from BaseWorkspaceListView into store
-        this.store = new ImportStore({
-            onConfirmImport: options.onimport,
-            baseViewModel: this.model,
-        });
-        this.store.$on(
-            this.store.eventTypes.START_IMPORT,
-            this._importContent.bind(this)
-        );
-        this.store.$on(
-            this.store.eventTypes.SHOW_RELATED_CONTENT_WARNING,
-            this._showWarning.bind(this)
+        this.options = options;
+        this.statusWatcher = store.watch(
+          getImportStatus,
+          this._handleImportStatusChange.bind(this)
         );
         this.listView = new BaseViews.BaseListView();
         this.render();
@@ -30,33 +26,72 @@ var ImportModalView = Backbone.View.extend({
         Vue.nextTick().then(this._mountVueComponent.bind(this));
     },
 
+    _handleImportStatusChange: function(status) {
+      if (status === 'import_confirmed') {
+        this._dispatchCopyImportListToChannel();
+      } else if (status === 'start'){
+        this._startImport();
+      } else if (status === 'show_warning') {
+        this._showWarning();
+      } else if (status === 'success') {
+        this._finishImport();
+      }
+    },
+
+    // This is the only call-site for this action, to avoid having to pass BB
+    // variables through component tree. ImportDialogue triggers it by setting
+    // status to 'import_confirmed'
+    _dispatchCopyImportListToChannel: function() {
+      store.dispatch('import/copyImportListToChannel', {
+        onConfirmImport: this.options.onimport,
+        baseViewModel: this.model,
+      });
+    },
+
     _mountVueComponent: function() {
+        this._resetPageState();
         this.ImportModal = new ImportModal({
-            propsData: {
-                store: this.store,
-            }
+          store: store,
         });
+        this.ImportModal.$on('modalclosed', this._destroy.bind(this))
         this.ImportModal.$mount();
     },
 
-    _showWarning: function(cb) {
+    _destroy: function() {
+      this._resetPageState();
+      this.statusWatcher();
+      // destroy the Vue VM, and remove it from the DOM
+      this.ImportModal.$destroy();
+      $(this.ImportModal.$el).remove();
+    },
+
+    _resetPageState: function() {
+        store.commit('import/UPDATE_PAGE_STATE', { pageType: 'tree_view' });
+        store.commit('import/RESET_IMPORT_STATE');
+    },
+
+    _showWarning: function() {
         dialog.alert(
             "WARNING",
             "Any associated content will not be imported or referenced as related content.",
-            cb
+            this._dispatchCopyImportListToChannel.bind(this)
         );
     },
 
-    _importContent: function() {
+    _startImport: function() {
         var self = this;
         function onFinishImport(resolve) {
-            self.store.$once(self.store.eventTypes.FINISH_IMPORT, function() {
+            self.once('finish_import', function() {
                 self.ImportModal.closeModal();
                 resolve(true);
             });
         }
         this.listView.display_load("Importing Content...", onFinishImport);
     },
+
+    _finishImport: function() {
+      this.trigger('finish_import');
+    }
 });
 
 module.exports = {
