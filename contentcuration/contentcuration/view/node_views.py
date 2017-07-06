@@ -14,10 +14,11 @@ from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSe
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
 from contentcuration.statistics import record_node_duplication_stats
 
+
 def create_new_node(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        license = License.objects.filter(license_name=data.get('license_name')).first() # Use filter/first in case preference hasn't been set
+        license = License.objects.filter(license_name=data.get('license_name')).first()  # Use filter/first in case preference hasn't been set
         license_id = license.pk if license else settings.DEFAULT_LICENSE
         new_node = ContentNode.objects.create(kind_id=data.get('kind'), title=data.get('title'), author=data.get('author'), copyright_holder=data.get('copyright_holder'), license_id=license_id, license_description=data.get('license_description'))
         return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
@@ -52,28 +53,31 @@ def get_total_size(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         sizes = ContentNode.objects.prefetch_related('assessment_items').prefetch_related('files').prefetch_related('children')\
-                    .filter(id__in=data).get_descendants(include_self=True)\
-                    .values('files__checksum', 'assessment_items__files__checksum', 'files__file_size', 'assessment_items__files__file_size')\
-                    .distinct().aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
+                           .filter(id__in=data).get_descendants(include_self=True)\
+                           .values('files__checksum', 'assessment_items__files__checksum', 'files__file_size', 'assessment_items__files__file_size')\
+                           .distinct().aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
 
-        return HttpResponse(json.dumps({'success':True, 'size': (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0)}))
+        return HttpResponse(json.dumps({'success': True, 'size': (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0)}))
+
 
 def get_nodes_by_ids(request):
     if request.method == 'POST':
         nodes = ContentNode.objects.prefetch_related('children').prefetch_related('files')\
-                .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))\
-                .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
+                           .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))\
+                           .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
         return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
+
 
 def get_nodes_by_ids_simplified(request):
     if request.method == 'POST':
         nodes = ContentNode.objects.prefetch_related('children').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(SimplifiedContentNodeSerializer(nodes, many=True).data))
 
+
 def get_nodes_by_ids_complete(request):
     if request.method == 'POST':
         nodes = ContentNode.objects.prefetch_related('children').prefetch_related('files')\
-                .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
+                           .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
 
 
@@ -161,6 +165,7 @@ def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
 
     return new_node
 
+
 def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0):
 
     if isinstance(node, int) or isinstance(node, basestring):
@@ -219,9 +224,10 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
 
     # recurse down the tree and clone the children
     for child in node.children.all():
-        _duplicate_node_bulk_recursive(node=child, sort_order=None, parent=new_node, channel_id=channel_id, to_create=to_create, level=level+1)
+        _duplicate_node_bulk_recursive(node=child, sort_order=None, parent=new_node, channel_id=channel_id, to_create=to_create, level=level + 1)
 
     return new_node
+
 
 def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
@@ -252,6 +258,7 @@ def move_nodes(request):
 
         serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=all_ids), many=True).data
         return HttpResponse(JSONRenderer().render(serialized))
+
 
 def _move_node(node, parent=None, sort_order=None, channel_id=None):
     node.parent = parent or node.parent

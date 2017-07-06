@@ -16,6 +16,7 @@ def settings(request):
         return redirect(reverse_lazy('unsupported_browser'))
     return redirect('settings/profile')
 
+
 class ProfileView(FormView):
     """
     Base class for user settings views.
@@ -26,7 +27,7 @@ class ProfileView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super(ProfileView, self).get_context_data(**kwargs)
-        context.update({"page": "profile", 'channel_name': False, "success":False})
+        context.update({"page": "profile", 'channel_name': False, "success": False})
         return context
 
     def get_initial(self):
@@ -56,7 +57,7 @@ class PreferencesView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super(PreferencesView, self).get_context_data(**kwargs)
-        context.update({"page": "preferences", "success":False})
+        context.update({"page": "preferences", "success": False})
         return context
 
     def get_initial(self):
@@ -83,25 +84,29 @@ class PreferencesView(FormView):
 
 @login_required
 def account_settings(request):
-    return views.password_change(request,
+    return views.password_change(
+        request,
         template_name='settings/account.html',
         post_change_redirect=reverse_lazy('account_settings_success'),
         password_change_form=AccountSettingsForm,
-        extra_context={"current_user" : request.user, "page": "account"}
+        extra_context={"current_user": request.user, "page": "account"}
     )
+
 
 @login_required
 def account_settings_success(request):
-    return views.password_change(request,
+    return views.password_change(
+        request,
         template_name='settings/account_success.html',
         post_change_redirect=reverse_lazy('account_settings_success'),
         password_change_form=AccountSettingsForm,
-        extra_context={"current_user" : request.user, "page": "account"}
+        extra_context={"current_user": request.user, "page": "account"}
     )
+
 
 @login_required
 def tokens_settings(request):
     user_token, isNew = Token.objects.get_or_create(user=request.user)
-    return render(request, 'settings/tokens.html', {"current_user" : request.user,
+    return render(request, 'settings/tokens.html', {"current_user": request.user,
                                                     "page": "tokens",
-                                                    "tokens":[str(user_token)]})
+                                                    "tokens": [str(user_token)]})
