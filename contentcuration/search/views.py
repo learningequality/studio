@@ -11,7 +11,7 @@ def get_accessible_contentnodes(request):
     # Get tree_ids for channels accessible to the user
     tree_ids = cc_models.Channel.objects \
         .select_related('main_tree') \
-        .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))) \
+        .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user))) \
 
     if exclude_channel is not None:
         tree_ids = tree_ids.exclude(pk=exclude_channel)
@@ -27,12 +27,16 @@ def search_items(request):
     """
     Keyword search of items (i.e. non-topics)
     """
+    search_query = request.query_params.get('q', '').strip()
+
+    if search_query == '':
+        # TODO maybe return a proper error code
+        return Response([])
+
     queryset = get_accessible_contentnodes(request).exclude(kind='topic')
-    search_query = request.query_params.get('q', None)
-    if search_query is not None:
-        queryset = queryset.filter(title__icontains=search_query)
+    queryset = queryset.filter(title__icontains=search_query)
     # Using same serializer as Tree View UI to match props of ImportListItem
-    serializer = serializers.SimplifiedContentNodeSerializer(queryset, many=True)
+    serializer = serializers.SimplifiedContentNodeSerializer(queryset[:50], many=True)
     return Response(serializer.data)
 
 
@@ -41,9 +45,12 @@ def search_topics(request):
     """
     Keyword search of topics
     """
+    search_query = request.query_params.get('q', '').strip()
+
+    if search_query == '':
+        return Response([])
+
     queryset = get_accessible_contentnodes(request).filter(kind='topic')
-    search_query = request.query_params.get('q', None)
-    if search_query is not None:
-        queryset = queryset.filter(title__icontains=search_query)
-    serializer = serializers.SimplifiedContentNodeSerializer(queryset, many=True)
+    queryset = queryset.filter(title__icontains=search_query)
+    serializer = serializers.SimplifiedContentNodeSerializer(queryset[:50], many=True)
     return Response(serializer.data)
