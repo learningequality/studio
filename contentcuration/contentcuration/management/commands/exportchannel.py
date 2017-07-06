@@ -335,7 +335,8 @@ def write_assessment_item(assessment_item, zf):
             # In case perseus doesn't support =wxh syntax, use below code
             # answer['answer'], answer_images = process_image_strings(answer['answer'])
             # answer.update({'images': answer_images})
-    answer_data = list(filter(lambda a: a['answer'], answer_data))  # Filter out empty answers
+
+    answer_data = list(filter(lambda a: a['answer'] or a['answer'] == 0, answer_data)) # Filter out empty answers, but not 0
 
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:

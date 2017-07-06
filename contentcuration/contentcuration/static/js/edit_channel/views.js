@@ -561,6 +561,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	list_selector:null,
 	default_item:null,
 	content_node_view:null,
+	isclipboard: false,
 
 	/* Functions to overwrite */
 	create_new_view:null,
@@ -698,7 +699,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	            new_topic: true,
 	            onsave: self.reload_ancestors,
 	            onnew:self.add_nodes,
-	            allow_edit: true
+	            allow_edit: true,
+	            isclipboard: self.isclipboard
 	        });
         });
 	},
@@ -716,7 +718,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
       parent_view: this,
       model:this.model,
       onsave: this.reload_ancestors,
-	  onnew:this.add_nodes
+	  onnew:this.add_nodes,
+	  isclipboard: this.isclipboard
   	});
   },
   add_to_clipboard:function(collection, message){
@@ -755,7 +758,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	            new_exercise: true,
 	            onsave: self.reload_ancestors,
 	            onnew:self.add_nodes,
-	            allow_edit: true
+	            allow_edit: true,
+	            isclipboard: self.isclipboard
 	        });
         });
 	}
