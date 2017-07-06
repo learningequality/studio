@@ -1,4 +1,4 @@
-from .settings import INSTALLED_APPS, MIDDLEWARE_CLASSES
+from .settings import *
 
 import logging
 
@@ -17,7 +17,6 @@ MIDDLEWARE_CLASSES += ('debug_panel.middleware.DebugPanelMiddleware',)
 DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK': lambda x: True,
 }
-
 
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
