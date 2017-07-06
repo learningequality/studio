@@ -41,7 +41,7 @@ var createBundles = function (b, bundles) {
   }
 };
 
-var staticContentDir = process.__dirname + '/contentcuration/contentcuration/static/';
+var staticContentDir = __dirname + '/contentcuration/contentcuration/static/';
 
 var bundles = [];
 
