@@ -2,44 +2,62 @@
 
   <div class="SearchResults">
     <div>
-      Search Results for {{ store.pageState.data.searchTerm }}
-      <button @click="goBack">Go Back</button>
+      <p v-show="!resultsLoading" class="TopResults">
+        Showing top results for "{{ currentSearchTerm }}"
+      </p>
+      <button @click="goToPreviousPage()" class="button-reset BackButton">
+        Go Back To Browse
+      </button>
     </div>
-    <div>
-      <h1>Items</h1>
-      <div v-show="items.length === 0">
-        No documents, exercises, or other files matching "{{ this.searchTerm }}"
-      </div>
-      <ul class="list-unstyled">
-        <ImportListItem
-          v-for="item in items"
-          :key="item.id"
-          :node="item"
-          :isFolder="false"
-          :isChannel="false"
-          :isRoot="true"
-          :parentIsChecked="false"
-          :store="store"
-        />
-      </ul>
+
+    <!-- ITEM RESULTS -->
+    <div class="Results">
+      <h1 class="Results__Header">Items</h1>
+      <span v-if="resultsLoading" class="LoadingMsg">
+        Loading results for "{{ currentSearchTerm }}"...
+      </span>
+      <template v-else>
+        <div v-show="itemResults.length === 0">
+          No documents, exercises, or other files matching "{{ currentSearchTerm }}"
+        </div>
+        <ul class="list-unstyled Results__List">
+          <ImportListItem
+            v-for="item in itemResults"
+            :key="item.id"
+            :node="item"
+            :isFolder="false"
+            :isChannel="false"
+            :isRoot="true"
+            :parentIsChecked="false"
+            :store="store"
+          />
+        </ul>
+      </template>
     </div>
-    <div>
-      <h1>Topics</h1>
-      <div v-show="topics.length === 0">
-        No topics matching "{{ this.searchTerm }}"
-      </div>
-      <ul class="list-unstyled">
-        <ImportListItem
-          v-for="topic in topics"
-          :key="topic.id"
-          :node="topic"
-          :isFolder="true"
-          :isChannel="false"
-          :isRoot="true"
-          :parentIsChecked="false"
-          :store="store"
-        />
-      </ul>
+
+    <!-- TOPIC RESULTS -->
+    <div class="Results">
+      <h1 class="Results__Header">Topics</h1>
+      <span v-if="resultsLoading" class="LoadingMsg">
+        Loading results for "{{ currentSearchTerm }}"...
+      </span>
+      <template v-else>
+        <div v-show="topicResults.length === 0">
+          No topics matching "{{ currentSearchTerm }}"
+        </div>
+        <ul class="list-unstyled Results__List">
+          <ImportListItem
+            v-for="topic in topicResults"
+            :key="topic.id"
+            :node="topic"
+            :isFolder="true"
+            :isChannel="false"
+            :isRoot="true"
+            :parentIsChecked="false"
+            :store="store"
+          />
+        </ul>
+      </template>
     </div>
   </div>
 
@@ -48,63 +66,91 @@
 
 <script>
 
-  module.exports = {
-    props: ['store'],
-    components: {
-      ImportListItem: require('./ImportListItem.vue'),
+const { mapGetters, mapActions } = require('vuex');
+const { fetchSearchResults } = require('../util');
 
+module.exports = {
+  components: {
+    ImportListItem: require('./ImportListItem.vue'),
+  },
+  data() {
+    return {
+      itemResults: [],
+      topicResults: [],
+      resultsLoading: false,
+    };
+  },
+  computed: {
+    ...mapGetters('import', [
+      'currentSearchTerm',
+      'currentChannelId',
+    ]),
+  },
+  watch: {
+    currentSearchTerm() {
+      this.updateResults();
+    }
+  },
+  mounted() {
+    this.updateResults();
+  },
+  methods: {
+    ...mapActions('import', ['goToPreviousPage']),
+    updateResults() {
+      if (this.currentSearchTerm.length < 3) return;
+      this.resultsLoading = true;
+      return fetchSearchResults(this.currentSearchTerm, this.currentChannelId)
+      .then(({ itemResults, topicResults, searchTerm }) => {
+        if (searchTerm === this.currentSearchTerm) {
+          this.resultsLoading = false;
+          this.itemResults = itemResults;
+          this.topicResults = topicResults;
+        }
+      });
     },
-    data: function() {
-      return {
-        items: [],
-        topics: [],
-      }
-    },
-    computed: {
-      searchTerm() {
-        return this.store.pageState.data.searchTerm;
-      }
-    },
-    watch: {
-      searchTerm() {
-          this.fetchSearchResults();
-      }
-    },
-    mounted() {
-      this.fetchSearchResults();
-    },
-    methods: {
-      goBack() {
-        this.store.goToPreviousPage();
-      },
-      fetchSearchResults() {
-        this.store.fetchItemSearchResults(this.searchTerm)
-        .then((results) =>{
-          this.items = results;
-        });
-        this.store.fetchTopicSearchResults(this.searchTerm)
-        .then((results) =>{
-          this.topics = results;
-        });
-      },
-    },
-    vuex: {
-      getters: {
-
-      },
-      actions: {
-
-      },
-    },
-  }
+  },
+}
 
 </script>
 
 
 <style lang="less" scoped>
 
-  .SearchResults {
-    background-color: white;
-  }
+.SearchResults {
+  padding: .5rem;
+}
+
+.LoadingMsg {
+  font-style: italic;
+}
+
+.Results__List {
+  background-color: white;
+  max-height: 200px;
+  overflow-y: scroll;
+}
+
+.Results__Header {
+  font-size: 2rem;
+  color: white;
+  background-color: #54ACF2;
+  padding: .5rem;
+  text-transform: uppercase;
+}
+
+.TopResults {
+  font-weight: bold;
+}
+
+.BackButton {
+  color: #2196F3;
+  text-decoration: underline;
+}
+
+.button-reset {
+  -webkit-appearance: none;
+  border: none;
+  background: none;
+}
 
 </style>
