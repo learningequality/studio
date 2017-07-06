@@ -4,6 +4,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm
 from le_utils.constants import exercises, licenses
 
+
 class RegistrationForm(UserCreationForm):
     password1 = forms.CharField(widget=forms.PasswordInput, label='Password', required=True)
     password2 = forms.CharField(widget=forms.PasswordInput, label='Password (again)', required=True)
@@ -81,13 +82,13 @@ class InvitationForm(UserCreationForm):
         user.set_password(self.cleaned_data["password1"])
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
-        user.is_active=True
+        user.is_active = True
         user.save()
         return user
 
 
 class InvitationAcceptForm(AuthenticationForm):
-    user=None
+    user = None
     password = forms.CharField(widget=forms.PasswordInput, label='Password', required=True)
 
     class Meta:
@@ -95,7 +96,7 @@ class InvitationAcceptForm(AuthenticationForm):
         fields = ('password',)
 
     def __init__(self, *args, **kwargs):
-        self.user =kwargs.pop('user')
+        self.user = kwargs.pop('user')
         super(InvitationAcceptForm, self).__init__(*args, **kwargs)
 
     def clean(self):
@@ -109,6 +110,7 @@ class InvitationAcceptForm(AuthenticationForm):
             self.confirm_login_allowed(self.user)
         return self.cleaned_data
 
+
 class ProfileSettingsForm(UserChangeForm):
     first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
@@ -116,7 +118,7 @@ class ProfileSettingsForm(UserChangeForm):
     class Meta:
         model = User
         fields = ('first_name', 'last_name')
-        exclude =  ('password', 'email')
+        exclude = ('password', 'email')
 
     def clean_password(self):
         pass
@@ -139,6 +141,7 @@ class ProfileSettingsForm(UserChangeForm):
         user.last_name = self.cleaned_data["last_name"]
         user.save()
         return user
+
 
 class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented

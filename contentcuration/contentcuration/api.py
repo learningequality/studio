@@ -13,6 +13,7 @@ from django.http import HttpResponse
 from le_utils.constants import format_presets, content_kinds
 import contentcuration.models as models
 
+
 def check_supported_browsers(user_agent_string):
     if not user_agent_string:
         return False
@@ -21,7 +22,8 @@ def check_supported_browsers(user_agent_string):
             return True
     return False
 
-def write_file_to_storage(fobj, check_valid = False, name=None):
+
+def write_file_to_storage(fobj, check_valid=False, name=None):
     # Check that hash is valid
     checksum = hashlib.md5()
     for chunk in iter(lambda: fobj.read(4096), b""):
@@ -43,6 +45,7 @@ def write_file_to_storage(fobj, check_valid = False, name=None):
         shutil.copyfileobj(fobj, destf)
     return full_filename
 
+
 def write_raw_content_to_storage(contents, ext=None):
     # Check that hash is valid
     checksum = hashlib.md5()
@@ -59,14 +62,16 @@ def write_raw_content_to_storage(contents, ext=None):
 
     return filename, full_filename, file_path
 
+
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
-    for child in ContentNode.objects.filter(parent=node).order_by('sort_order'):
+    for child in models.ContentNode.objects.filter(parent=node).order_by('sort_order'):
         recurse(child, level + 1)
+
 
 def clean_db():
     logging.debug("*********** CLEANING DATABASE ***********")
-    for file_obj in models.File.objects.filter(Q(preset = None) & Q(contentnode=None)):
+    for file_obj in models.File.objects.filter(Q(preset=None) & Q(contentnode=None)):
         logging.debug("Deletng unreferenced file {0}".format(file_obj.__dict__))
         file_obj.delete()
     for node_obj in models.ContentNode.objects.filter(Q(parent=None) & Q(channel_main=None) & Q(channel_trash=None) & Q(user_clipboard=None)):
@@ -77,13 +82,14 @@ def clean_db():
         tag_obj.delete()
     logging.debug("*********** DONE ***********")
 
+
 def calculate_node_metadata(node):
     metadata = {
-        "total_count" : node.children.count(),
-        "resource_count" : 0,
-        "max_sort_order" : 1,
-        "resource_size" : 0,
-        "has_changed_descendant" : node.changed
+        "total_count": node.children.count(),
+        "resource_count": 0,
+        "max_sort_order": 1,
+        "resource_size": 0,
+        "has_changed_descendant": node.changed
     }
 
     if node.kind_id == "topic":
@@ -103,6 +109,7 @@ def calculate_node_metadata(node):
 
     return metadata
 
+
 def count_files(node):
     if node.kind_id == "topic":
         count = 0
@@ -111,11 +118,13 @@ def count_files(node):
         return count
     return 1
 
+
 def count_all_children(node):
     count = node.children.count()
     for n in node.children.all():
         count += count_all_children(n)
     return count
+
 
 def get_total_size(node):
     total_size = 0
@@ -127,11 +136,13 @@ def get_total_size(node):
             total_size += f.file_size
     return total_size
 
+
 def get_node_siblings(node):
     siblings = []
     for n in node.get_siblings(include_self=False):
         siblings.append(n.title)
     return siblings
+
 
 def get_node_ancestors(node):
     ancestors = []
@@ -139,11 +150,13 @@ def get_node_ancestors(node):
         ancestors.append(n.id)
     return ancestors
 
+
 def get_child_names(node):
     names = []
     for n in node.get_children():
-        names.append({"title": n.title, "id" : n.id})
+        names.append({"title": n.title, "id": n.id})
     return names
+
 
 def batch_add_tags(request):
     # check existing tag and subtract them from bulk_create
@@ -181,17 +194,13 @@ def add_editor_to_channel(invitation):
     invitation.channel.save()
     invitation.delete()
 
+
 def activate_channel(channel):
-    old_tree = channel.previous_tree
     channel.previous_tree = channel.main_tree
     channel.main_tree = channel.staging_tree
     channel.staging_tree = None
     channel.save()
-    # Delete previous tree if it already exists
-    # if old_tree:
-    #     with transaction.atomic():
-    #         with ContentNode.objects.delay_mptt_updates():
-    #             old_tree.delete()
+
 
 def get_staged_diff(channel_id):
     channel = models.Channel.objects.get(pk=channel_id)
@@ -219,8 +228,8 @@ def get_staged_diff(channel_id):
 
     original_file_size = (original_file_sizes.get('resource_size') or 0) + (original_file_sizes.get('assessment_size') or 0)
     updated_file_size = (updated_file_sizes.get('resource_size') or 0) + (updated_file_sizes.get('assessment_size') or 0)
-    original_question_count =  original_file_sizes.get('assessment_count') or 0
-    updated_question_count =  updated_file_sizes.get('assessment_count') or 0
+    original_question_count = original_file_sizes.get('assessment_count') or 0
+    updated_question_count = updated_file_sizes.get('assessment_count') or 0
 
     stats = [
         {
