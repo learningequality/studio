@@ -126,7 +126,6 @@ module.exports = {
 
 .Results__List {
   background-color: white;
-  max-height: 200px;
   overflow-y: scroll;
 }
 
