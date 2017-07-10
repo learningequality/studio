@@ -30,7 +30,7 @@
 
       <template v-if="isFolder">
         <template v-if="node.children.length > 0">
-          <i :class="togglerClass"></i>
+          <i :class="togglerClass" :style="{ cursor: 'pointer' }"></i>
         </template>
 
         <em v-else class="ListItem__Empty">
@@ -45,7 +45,7 @@
 
 
     <!-- TODO re-insert smooth transition -->
-      <div v-if="isExpanded ">
+      <div v-show="isExpanded ">
         <em v-show="isLoading" class="default-item">
           Loading...
         </em>
