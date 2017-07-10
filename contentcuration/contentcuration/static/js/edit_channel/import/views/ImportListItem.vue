@@ -23,7 +23,7 @@
 
       <span class="ListItem__Label__Title">
         {{ node.title }}
-        <em v-if="isFolder && !isChannel">
+        <em v-if="isFolder && !isChannel && (resourceCount > 0)">
           {{ resourceCount | pluralize('Resource') }}
         </em>
       </span>
