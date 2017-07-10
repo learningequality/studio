@@ -28,9 +28,9 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         var self = this;
         this.model.calculate_size().then(function(size){
             self.$("#export_size").text("(" + stringHelper.format_size(size) + ")");
-            _.defer(function(){$("#publish_btn").focus();});
+            _.defer(self.set_initial_focus);
         });
-        this.$(".modal").on("shown.bs.modal", function(){$("#publish_btn").focus();});
+        this.$(".modal").on("shown.bs.modal", this.set_initial_focus);
     },
     events:{
       "click #publish_btn" : "publish",

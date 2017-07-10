@@ -1,3 +1,4 @@
+<div class="input-tab-control tab_item" data-next="#move_content_button"></div>
 <div class="move_section_wrapper row">
 	<div class="move_section col-sm-4 move_list_section modal-content-default">
 		<div id="move_list_area"></div>
@@ -13,11 +14,10 @@
 </div>
 <br/>
 <div id="move_bottom_container" class="modal-bottom-content-default">
-	<a class="action-text" data-dismiss="modal">
-		<span>CANCEL</span>
-	</a>
-	<button disabled class="action-button pull-right disabled modal-main-action-button" id="move_content_button">
+	<button class="action-text tab_item" id="cancel_button" data-dismiss="modal">CANCEL</button>
+	<button disabled class="action-button pull-right disabled modal-main-action-button tab_item first_focus_item" id="move_content_button">
 		MOVE
 	</button>
 	<span id="move_status" class="pull-right truncate modal-status-text"></span>
 </div>
+<div class="input-tab-control tab_item" data-next="#cancel_button"></div>

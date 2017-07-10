@@ -11,7 +11,7 @@
 	</div>
 	{{#if edit}}
 		<p id="channel_name_error">Channel must have a name</p>
-		<input type="text" id="new_channel_name" placeholder="Channel Name" value="{{channel.name}}" maxlength="200" class="tab_item"></input>
+		<input type="text" id="new_channel_name" placeholder="Channel Name" value="{{channel.name}}" maxlength="200" class="tab_item first_focus_item"></input>
 		<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}"  maxlength="400" class="tab_item">{{channel.description}}</textarea>
 		<a class="delete_channel">DELETE CHANNEL</a>
 		<div class="channel_options">

@@ -160,8 +160,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			});
 		}
 		this.set_indices();
-		this.$("#new_channel_name").focus();
-		this.$("#new_channel_name").select();
+		this.set_initial_focus();
 	},
 	events: {
 		'click .edit_channel':'edit_channel',

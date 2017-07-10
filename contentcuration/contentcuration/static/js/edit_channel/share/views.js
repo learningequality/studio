@@ -95,12 +95,9 @@ var ShareView = BaseViews.BaseView.extend({
                 el: self.$("#pending_list_wrapper"),
                 model: self.model
             });
-            _.defer(self.set_initial_focus);
+            _.defer(self.set_indices);
+            _.defer(self.set_initial_focus, 100);
         });
-    },
-    set_initial_focus: function(){
-        this.set_indices();
-        $("#share_email_address").focus();
     },
     send_invite:function(event){
         var code = (!event)? 1 : event.keyCode ? event.keyCode : event.which;

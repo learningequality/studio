@@ -9,8 +9,10 @@
         <div class="modal-body-content published_wrapper">
             <p>Here is your published ID (for importing channel into Kolibri):</p>
             <h4 class="text-center publish_id_wrapper">
+            <div class="input-tab-control tab_item" data-next="#modal-copy-btn"></div>
                 ID: <input type="text" id="modal-copy-text" class="publish-id-text" value="{{ channel_id }}" readonly/>
-                <a class="btn action-button copy-id-btn" id="modal-copy-btn">COPY</a>
+                <button class="btn action-button copy-id-btn first_focus_item" id="modal-copy-btn">COPY</button>
+                <div class="input-tab-control tab_item" data-next="#modal-copy-btn"></div>
             </h4>
         </div>
       </div>

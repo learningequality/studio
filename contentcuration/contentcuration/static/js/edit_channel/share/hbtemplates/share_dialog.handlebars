@@ -5,7 +5,7 @@
 		<div id="share_email">
 			<p id="share_error"></p>
 			<p id="share_success"></p>
-			<input type="text" placeholder="Enter email address..." id="share_email_address" class="tab_item">
+			<input type="text" placeholder="Enter email address..." id="share_email_address" class="tab_item first_focus_item">
 			<select id="share_mode" {{#if single_share_option}}title="You can only grant {{share_modes.0.share_mode}} access" class="disabled" disabled{{else}}class="tab_item"{{/if}}>
 				{{#each share_modes}}<option value="{{share_mode}}">{{text}}</option>{{/each}}
 			</select>

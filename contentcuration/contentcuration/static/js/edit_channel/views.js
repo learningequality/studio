@@ -8,11 +8,16 @@ function get_author(){
 
 var BaseView = Backbone.View.extend({
 	loop_focus:function(event){
+		console.log("LOOP!", event.target)
 		var element = $(event.target);
 		if (element.data('next')){
 			this.$(element.data('next')).focus();
 			this.$(element.data('next')).select();
 		}
+	},
+	set_initial_focus: function(){
+		$(".first_focus_item").focus();
+		$(".first_focus_item").select();
 	},
 	set_indices: function(){
         var n = 1;
