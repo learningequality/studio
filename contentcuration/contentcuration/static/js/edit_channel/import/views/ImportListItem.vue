@@ -23,7 +23,7 @@
 
       <span class="ListItem__Label__Title">
         {{ node.title }}
-        <em v-if="isFolder && !isChannel && (resourceCount > 0)">
+        <em v-if="isFolder && !isChannel && (resourceCount > 0)" class="ListItem__ChildCount">
           {{ resourceCount | pluralize('Resource') }}
         </em>
       </span>
@@ -33,7 +33,7 @@
           <i :class="togglerClass" :style="{ cursor: 'pointer' }"></i>
         </template>
 
-        <em v-else class="ListItem__Empty">
+        <em v-else class="ListItem__ChildCount">
           (empty)
         </em>
       </template>
@@ -234,9 +234,10 @@ module.exports = {
     background-color: @blue-500;
   }
 
-  .ListItem__Empty {
+  .ListItem__ChildCount {
     font-size: 10pt;
     color: gray;
+    display: inline-block;
   }
 
   .disabled {
