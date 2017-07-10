@@ -12,7 +12,7 @@
 
     <!-- ITEM RESULTS -->
     <div class="Results">
-      <h1 class="Results__Header">Items</h1>
+      <h1 class="Results__Header">Resources</h1>
       <span v-if="resultsLoading" class="LoadingMsg wordwrap">
         Loading results for "{{ currentSearchTerm }}"...
       </span>
