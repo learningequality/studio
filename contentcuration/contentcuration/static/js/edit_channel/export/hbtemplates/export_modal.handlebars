@@ -1,21 +1,20 @@
 <div class="modal fade" id="export_modal" tabindex="-1">
     <div class="input-tab-control tab_item" data-next="#export_cancel"></div>
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content modal-dialog-default" id="export_modal_content">
             <div class="modal-header">
                 <button type="button" class="close tab_item" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Publishing {{channel.name}}</h4>
+                <h4 class="modal-title truncate">Publishing {{channel.name}}</h4>
             </div>
             <div class="modal-body">
                 <div id="export_area">
-
                     <em >PUBLISH ID: {{channel.id}}</em>
                     <em class="pull-right" id="version_number">Current Version: {{version}}</em>
                     <h4>The following content will be published:</h4>
-                    <div id="export_preview"></div>
-                    <div id="export_buttons">
-                        <button class="action-button pull-right tab_item" id="publish_btn">PUBLISH</button>
-                        <span id="export_totals" class="pull-right">
+                    <div id="export_preview" class="modal-content-default"></div>
+                    <div id="export_buttons" class="modal-bottom-content-default">
+                        <button class="action-button pull-right tab_item modal-main-action-button" id="publish_btn">PUBLISH</button>
+                        <span id="export_totals" class="pull-right modal-status-text">
                             {{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}
                             <em class="annotation" id="export_size">(Calculating...)</em>
                         </span>

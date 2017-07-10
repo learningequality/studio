@@ -17,11 +17,12 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	lists: [],
 	template: require("./hbtemplates/container_area.handlebars"),
 	initialize: function(options) {
-		_.bindAll(this, 'copy_content','delete_content' , 'add_container','toggle_details', 'handle_checked', 'open_archive', 'move_content');
+		_.bindAll(this, 'copy_content', 'call_duplicate', 'delete_content' , 'move_items' ,'add_container','toggle_details', 'handle_checked', 'open_archive');
 		this.bind_workspace_functions();
 		this.is_edit_page = options.edit;
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
+		this.staging = options.staging;
 		this.render();
 	},
 	events: {
@@ -32,14 +33,18 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		'change input[type=checkbox]' : 'handle_checked',
 		'click .permissions_button' : 'edit_permissions',
 		'click .archive_button' : 'open_archive',
-		'click .move_button' : 'move_content'
+		'click .move_button' : 'move_items',
+		'click .approve_channel' : 'activate_channel',
+		'click .stats_button': 'open_stats'
 	},
 	edit_content:function(){ this.edit_selected(this.is_edit_page)},
 	render: function() {
 		this.$el.html(this.template({
 			edit: this.is_edit_page,
 			channel : window.current_channel.toJSON(),
-			is_clipboard : this.is_clipboard
+			is_clipboard : this.is_clipboard,
+			staging: this.staging,
+			view_only: _.contains(window.current_channel.get('viewers'), window.current_user.id)
 		}));
 		if(this.is_clipboard){
 			$("#secondary-nav").css("display","none");
@@ -98,34 +103,37 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	delete_content: function (event){
 		var self = this;
-        dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
+		var title = "WARNING";
+		var message = "Are you sure you want to delete these selected items?";
+		var list = self.get_selected(true);
+		var deleteCollection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
+		if(deleteCollection.has_related_content()){
+			title = "RELATED CONTENT DETECTED";
+			message = "Any content associated with these items will no longer reference them as related content. " + message;
+		}
+        dialog.dialog(title, message, {
             "CANCEL":function(){},
             "DELETE ITEMS": function(){
-				var deleteCollection = new Models.ContentNodeCollection();
-				for(var i = 0; i < self.lists.length; i++){
-					var list = self.lists[i].get_selected();
-					var open_folder = null;
-					for(var j = 0; j < list.length; j++){
-						var view = list[j];
-						if(view){
-							deleteCollection.add(view.model);
-							view.remove();
-						}
-						if(view.subcontent_view){
-							open_folder = view.subcontent_view;
-							break;
-		    			}
-					}
-					if(open_folder){
-						self.remove_containers_from(open_folder.index-1);
-						break;
-	    			}
+
+				/* Create list of nodes to delete */
+				var opened = _.find(list, function(list){return list.$el.hasClass(list.openedFolderClass);});
+				if(opened){
+					opened.subcontent_view.close_container()
 				}
+				_.each(list, function(list){ list.remove(); })
 				self.add_to_trash(deleteCollection, "Deleting Content...");
             },
         }, null);
 	},
 	copy_content: function(event){
+		var copyCollection = new Models.ContentNodeCollection(_.pluck(this.get_selected(true), 'model'))
+		if(copyCollection.has_related_content()){
+			dialog.alert("WARNING", "Related content will not be included in the copy of this content.", this.call_duplicate);
+		} else {
+			this.call_duplicate();
+		}
+	},
+	call_duplicate: function(){
 		var self = this;
 		this.display_load("Copying Content...", function(load_resolve, load_reject){
 			var promises = [];
@@ -153,6 +161,20 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
             $(this).popover('hide');
             $(this).removeClass("active-popover");
         });
+	},
+	move_items:function(){
+		var list = this.get_selected(true);
+		var move_collection = new Models.ContentNodeCollection();
+		/* Create list of nodes to move */
+		for(var i = 0; i < list.length; i++){
+			var model = list[i].model;
+			model.view = list[i];
+			move_collection.add(model);
+		}
+		this.move_content(move_collection);
+	},
+	open_stats: function(){
+		new DiffModalView();
 	}
 });
 
@@ -234,6 +256,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	close: function(){
 		this.close_container();
+		this.remove()
 	},
   /* Resets folders to initial state */
 	close_folders:function(){
@@ -396,7 +419,11 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	copy_node:function(event){
 		this.cancel_actions(event);
-		this.copy_item();
+		if(this.model.has_related_content()){
+			dialog.alert("WARNING", "Related content will not be included in the copy of this content.", this.copy_item);
+		} else {
+			this.copy_item();
+		}
 	},
 	move_node:function(event){
 		this.cancel_actions(event);
@@ -405,12 +432,18 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	delete_node:function(event){
 		this.cancel_actions(event);
 		var self = this;
-        dialog.dialog("WARNING", "Are you sure you want to delete " + this.model.get("title") + "?", {
+		var title = "WARNING";
+		var message = "Are you sure you want to delete " + this.model.get("title") + "?";
+		if(this.model.has_related_content()){
+			title = "RELATED CONTENT DETECTED";
+			message = "Any content associated with this item will no longer reference it as related content. " + message;
+		}
+        dialog.dialog(title, message, {
             "CANCEL":function(){},
             "DELETE": function(){
 				self.add_to_trash();
 				if(self.subcontent_view){
-					self.subcontent_view.remove();
+					self.subcontent_view.close_container();
 				}
             },
         }, null);
@@ -421,6 +454,29 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	}
 });
 
+
+var DiffModalView = BaseViews.BaseModalView.extend({
+  modal_template: require("./hbtemplates/stats_modal.handlebars"),
+  template: require("./hbtemplates/stats_table.handlebars"),
+  initialize: function(options) {
+      this.modal = true;
+      this.render();
+  },
+
+  render: function() {
+      this.$el.html(this.modal_template());
+      $("body").append(this.el);
+      this.$("#stats_modal").modal({show: true});
+      this.$("#stats_modal").on("hidden.bs.modal", this.closed_modal);
+
+      var self = this;
+      window.current_channel.get_staged_diff().then(function(stats){
+      	self.$("#stats_table_wrapper").html(self.template({stats: stats, channel: window.current_channel.toJSON()}));
+      });
+  }
+});
+
 module.exports = {
-	TreeEditView: TreeEditView
+	TreeEditView: TreeEditView,
+	DiffModalView: DiffModalView
 }

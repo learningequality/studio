@@ -126,9 +126,15 @@ Handlebars.registerHelper('question_default_text', function(type){
   return type === "perseus_question"? "Perseus Question" : "No text provided";
 });
 
-
 var COUNTER = 0;
 Handlebars.registerHelper('counter', function(increment){
   COUNTER += (isNaN(increment))? 1 : Number(increment);
   return COUNTER;
+});
+
+Handlebars.registerHelper('ispositive', function(num, options) {
+  if(num >= 0) {
+    return options.fn(this);
+  }
+  return options.inverse(this);
 });

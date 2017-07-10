@@ -3,22 +3,20 @@ from .settings import *
 import logging
 
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["192.168.31.9", "127.0.0.1"]
 
-ACCOUNT_ACTIVATION_DAYS=7
-# EMAIL_BACKEND = 'email_extras.backends.BrowsableEmailBackend'
+ACCOUNT_ACTIVATION_DAYS = 7
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-SITE_ID =2
+SITE_ID = 2
 logging.basicConfig(level='DEBUG')
 
-INSTALLED_APPS += ('debug_toolbar', 'pympler')
+INSTALLED_APPS += ('debug_panel', 'debug_toolbar', 'pympler')
 
-MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
+MIDDLEWARE_CLASSES += ('debug_panel.middleware.DebugPanelMiddleware',)
 
 DEBUG_TOOLBAR_CONFIG = {
-	"SHOW_TOOLBAR_CALLBACK": lambda x: True,
+    'SHOW_TOOLBAR_CALLBACK': lambda x: True,
 }
-
 
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
@@ -33,16 +31,4 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.signals.SignalsPanel',
     'debug_toolbar.panels.logging.LoggingPanel',
     'debug_toolbar.panels.redirects.RedirectsPanel',
-    # 'pympler.panels.MemoryPanel',
-    # 'debug_toolbar.panels.profiling.ProfilingPanel',
 ]
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": "data.sqlite",
-#         "OPTIONS": {
-#             "timeout": 60,
-#         },
-#     }
-# }

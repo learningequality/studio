@@ -4,7 +4,8 @@
   "description": "Application for curating topic trees of arbitrary content for use in the Kolibri Learning Management System",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:py": "flake8 --exit-zero"
   },
   "repository": {
     "type": "git",
@@ -43,7 +44,9 @@
     "mathjax": "^2.7.0",
     "mathquill": "^0.10.1-a",
     "minifyify": "^7.0.3",
-    "node-lessify": "https://github.com/DXCanas/node-lessify.git",
+    "node-lessify": "^0.1.5",
+    "offline-js": "^0.7.19",
+    "promise-polyfill": "^6.0.2",
     "summernote": "^0.8.2",
     "to-markdown": "^3.0.3",
     "underscore": "^1.8.3",

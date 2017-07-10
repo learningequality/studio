@@ -1,0 +1,93 @@
+@import "global-variables.less";
+@import "modal-styles.less";
+
+#channel_settings_modal{
+	.modal-dialog{ width:650px; }
+	.modal-content{ background-color: white; }
+	.modal-header{ background-color: @blue-200; }
+}
+
+#channel_settings_dialog{
+	display:block;
+	padding: 5px 10px;
+	#channel_error{ display:none; }
+	.channel_section{
+		display: inline-block;
+		width: 75%;
+		margin-left: 20px;
+	}
+	img{
+	    width:120px;
+	    height:120px;
+	    object-fit: cover;
+	}
+	hr{ margin-top: 0px; }
+	h3 {
+		font-size: 12pt;
+	    font-weight: bold;
+	    margin: 0px;
+	    margin-bottom: 5px;
+	}
+	.section{ padding: 0px 15px; }
+	h4 {
+		font-size: 10pt;
+		color: @gray-800;
+		margin: 2px 0px;
+		font-weight: bold;
+	}
+	input[type="text"], textarea {
+		padding: 2px 0;
+		margin-bottom: 20px;
+		font-size: @larger-body-text;
+		width:100%;
+		.input-form;
+	}
+	textarea{
+		resize:none;
+		min-height:@larger-body-text * 5;
+		height:auto;
+	}
+	input[type="checkbox"]{
+		height: 15px;
+		width: 15px;
+		margin-left: 20px;
+	}
+	input[type="checkbox"] + label{
+		font-weight: normal;
+		margin-top: -2px;
+		margin-left: 5px;
+	}
+	#mastery_custom_criterion{
+		margin-left:15px;
+		visibility: hidden;
+		input{
+			padding-left:3px;
+			max-width: 40px;
+		}
+	}
+	#license_select, #mastery_model_select{
+		margin-top:5px;
+		padding: 0px 2px;
+	}
+	#custom_license_description{
+		&.input_listener{
+			margin-top: 5px;
+			border: 1px solid @gray-400;
+			padding: 5px;
+			display: none;
+		}
+		&.license_description_text{
+			color: @gray-700;
+			font-style:italic;
+		}
+	}
+	.required{
+		margin-left:5px;
+		color:@red-error-color;
+		span{
+			font-style:italic;
+			font-size: 8pt;
+		}
+	}
+	.upload_input{ width:100%; }
+}

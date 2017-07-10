@@ -70,6 +70,7 @@
 @gray-200: #EEEEEE;
 @gray-300: #D0D0D0;
 @gray-400: #BDBDBD;
+@gray-500: #AAAAAA;
 @gray-700: #616161;
 @gray-800: #424242;
 @error-input-color : #F6CECE;
@@ -93,6 +94,7 @@
 }
 
 /* COLOR PALETTE */
+@blue-000: #DBECFB;
 @blue-100: #BBDEFB;
 @blue-200: #81D4FA;
 @blue-500: #2196F3;
@@ -130,8 +132,8 @@ ul li.placeholder:before {
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 15px;
+  height: 15px;
   margin-left:-100px;
   position: relative;
 }
@@ -184,19 +186,22 @@ ul li.placeholder:before {
   margin-left:20px;
 }
 
-#loading_modal{
+#loading_modal, #offline_overlay{
   position: fixed;
     left: 0;
     top: 0;
     bottom: 0;
     right: 0;
     background: #000;
-    opacity: 0.8;
+    opacity: 0.5;
     filter: alpha(opacity=80);
     z-index:99999999999;
 }
+
+.offline-ui{z-index: 999999999999;}
 
 .disabled{
   opacity:0.5;
   cursor:not-allowed !important;
 }
+

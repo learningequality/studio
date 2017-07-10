@@ -4,6 +4,7 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("import.less");
 var stringHelper = require("edit_channel/utils/string_helper");
+var dialog = require("edit_channel/utils/dialog");
 
 var ImportModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/import_modal.handlebars"),
@@ -34,7 +35,7 @@ var ImportView = BaseViews.BaseListView.extend({
     lists: [],
 
     initialize: function(options) {
-        // _.bindAll(this, 'import_content');
+        _.bindAll(this, 'call_duplicate');
         this.modal = options.modal;
         this.collection = new Models.ContentNodeCollection();
         this.onimport = options.onimport;
@@ -97,6 +98,14 @@ var ImportView = BaseViews.BaseListView.extend({
         });
     },
     import_content:function(){
+        if(this.get_import_collection().has_related_content()){
+            dialog.alert("WARNING", "Any associated content will not be imported or referenced as related content.", this.call_duplicate);
+        } else {
+            this.call_duplicate();
+        }
+
+    },
+    call_duplicate: function(to_import){
         var self = this;
         this.display_load("Importing Content...", function(resolve, reject){
             self.get_import_collection().duplicate(self.model).then(function(copied){
@@ -187,7 +196,7 @@ var ImportList = BaseViews.BaseListView.extend({
 var ImportItem = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/import_list_item.handlebars"),
     tagName: "li",
-    className: "import_list_item",
+    className: "import_list_item modal-list-item-default",
     selectedClass: "import-selected",
     collapsedClass: "glyphicon-triangle-top",
     expandedClass: "glyphicon-triangle-bottom",

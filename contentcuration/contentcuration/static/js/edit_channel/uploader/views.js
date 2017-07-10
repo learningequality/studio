@@ -2,12 +2,14 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var FileUploader = require("edit_channel/file_upload/views");
+var Related = require("edit_channel/related/views");
 var Previewer = require("edit_channel/preview/views");
 var FileUploader = require("edit_channel/file_upload/views");
 var Exercise = require("edit_channel/exercise_creation/views");
+var Info = require("edit_channel/information/views");
 var stringHelper = require("edit_channel/utils/string_helper");
 var autoCompleteHelper = require("edit_channel/utils/autocomplete");
+var dialog = require("edit_channel/utils/dialog");
 require("uploader.less");
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -15,6 +17,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
   initialize: function(options) {
     _.bindAll(this, "close_uploader");
     this.allow_edit = options.allow_edit;
+    this.isclipboard = options.isclipboard;
     this.render(this.close_uploader, {
       new_content: options.new_content,
       new_topic: options.new_topic,
@@ -32,7 +35,8 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       new_topic: options.new_topic,
       container:this,
       model:this.model,
-      allow_edit: this.allow_edit
+      allow_edit: this.allow_edit,
+      isclipboard: this.isclipboard
     });
     this.$(".modal").on('shown.bs.modal', this.metadata_view.set_editor_focus);
   },
@@ -51,7 +55,6 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     }else{
       var t = event.target;
       var self = this;
-      var dialog = require("edit_channel/utils/dialog");
       dialog.dialog("Unsaved Changes!", "Exiting now will"
       + " undo any new changes. Are you sure you want to exit?", {
           "DON'T SAVE": function(){
@@ -73,8 +76,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
 
   initialize: function(options) {
-    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'enable_submit', 'disable_submit', 'loop_focus', 'set_indices',
-      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items', 'set_editor_focus');
+    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit',
+      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items',
+      'set_prerequisites', 'call_duplicate', 'update_prereq_count','loop_focus', 'set_indices');
     this.bind_edit_functions();
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
@@ -83,6 +87,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.new_topic = options.new_topic;
     this.onclose = options.onclose;
     this.allow_edit = options.allow_edit;
+    this.isclipboard = options.isclipboard;
     this.render();
     this.render_details();
     this.adjust_list_height();
@@ -91,6 +96,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'click #metadata_details_btn' : 'render_details',
     'click #metadata_preview_btn' : 'render_preview',
     'click #metadata_questions_btn': 'render_questions',
+    'click #metadata_prerequisites_btn': 'render_prerequisites',
     'click #upload_save_button' : 'save_and_keep_open',
     'click #upload_save_finish_button' : 'save_and_finish',
     'keypress #upload_save_finish_button': 'handle_save_and_finish_key',
@@ -99,7 +105,11 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'focus .input-tab-control': 'loop_focus',
   },
   render: function() {
-    this.$el.html(this.template({allow_edit: this.allow_edit}));
+    this.$el.html(this.template({
+      allow_edit: this.allow_edit,
+      staging: window.staging,
+      isclipboard: this.isclipboard
+    }));
 
     var self = this;
     this.collection.fetch_nodes_by_ids_complete(this.collection.pluck('id'), !this.collection.has_all_data()).then(function(fetched){
@@ -117,7 +127,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.switchPanel("preview");
   },
   render_questions:function(){
-    this.switchPanel("questions")
+    this.switchPanel("questions");
+  },
+  render_prerequisites: function(){
+    this.switchPanel("prerequisites")
   },
   switchPanel:function(panel_to_show){
     this.$(".tab_button").removeClass("btn-tab-active");
@@ -126,14 +139,21 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       case "preview":
         $("#metadata_preview_btn").addClass("btn-tab-active");
         $("#metadata_preview").css("display", "block");
+        $("#metadata_preview").find("iframe").prop("src", function(){return $(this).data("src");});
         break;
       case "questions":
         $("#metadata_questions_btn").addClass("btn-tab-active");
         $("#metadata_questions").css("display", "block");
+        $("#metadata_preview").find("iframe").prop("src", "about:blank");
+        break;
+      case "prerequisites":
+        $("#metadata_prerequisites_btn").addClass("btn-tab-active");
+        $("#metadata_prerequisites").css("display", "block");
         break;
       default:
         $("#metadata_details_btn").addClass("btn-tab-active");
         $("#metadata_edit_details").css("display", "block");
+        $("#metadata_preview").find("iframe").prop("src", "about:blank");
     }
   },
   load_list:function(){
@@ -155,14 +175,43 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   load_questions:function(view){
     view.load_question_display(this.$("#metadata_questions"));
   },
+  load_prerequisites:function(selected_items){
+    if(selected_items.length){
+      if(this.prerequisite_view){
+        this.prerequisite_view.stopListening();
+        this.prerequisite_view.undelegateEvents();
+      }
+      this.prerequisite_view = new Related.PrerequisiteView({
+        modal: false,
+        model: selected_items[0].model,
+        oncount: this.update_prereq_count,
+        onselect: this.set_prerequisites,
+        views_to_update: selected_items,
+        el: this.$("#metadata_prerequisites"),
+        allow_edit: this.allow_edit
+      });
+    }
+  },
+  update_prereq_count: function(count){
+    this.$(".prereq_badge").text(count)
+  },
+  set_prerequisites:function(prerequisite_list, selected_items){
+      var self = this;
+      selected_items.forEach(function(view){
+        // TODO: Handle prerequisites that were previously set on the node if multiple selected
+        view.set_node({'prerequisite': prerequisite_list});
+        view.set_edited(true);
+      });
+  },
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1;
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
     var has_files = is_individual && selected_items[0].model.get("files").some(function(f){
-                      return window.formatpresets.get({id: f.preset.id || f.preset}).get("display");
+                      return window.formatpresets.get({id: f.preset.name || f.preset.id || f.preset}).get("display");
                     });
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
+    this.$("#metadata_prerequisites_btn").css("display", (is_individual && (has_files || is_exercise)) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
     if(!is_individual){
       this.render_details();
@@ -224,9 +273,15 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
   },
   copy_items: function(){
+    if(this.collection.has_related_content()){
+      dialog.alert("WARNING", "Related content will not be included in the copy of this content.", this.call_duplicate);
+    } else {
+      this.call_duplicate();
+    }
+  },
+  call_duplicate: function(){
     var self = this;
     var clipboard = window.workspace_manager.get_queue_view();
-    clipboard.switch_to_queue();
     clipboard.open_queue();
     this.display_load("Copying Content...", function(load_resolve, load_reject){
       self.collection.duplicate(clipboard.clipboard_queue.model).then(function(collection){
@@ -242,12 +297,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var sort_order = (this.model && this.new_content) ? Math.ceil(this.model.get("metadata").max_sort_order) : 0;
     var self = this;
     this.edit_list.views.forEach(function(entry){
-      var tags = [];
-      entry.tags.forEach(function(tag){
-        tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
-      });
+      var tags = entry.tags.reduce(function(list, tag){
+        return list.concat(JSON.stringify({tag_name: tag, channel: window.current_channel.get("id")}));
+      }, []);
       entry.set({
-        tags: tags
+        tags: tags,
+        prerequisite: entry.model.get('prerequisite')
       });
       if(self.new_content){
         entry.set({
@@ -362,19 +417,23 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         this.selected_items.push(this.views[0]);
         this.update_shared_values(true, this.views[0]);
         this.container.load_editor(this.selected_items);
+        this.container.load_prerequisites(this.selected_items);
         this.container.load_preview(this.views[0]);
       }else{
         this.views[0].select_item();
       }
     }
   },
+  get_selected_items: function(){
+    return this.selected_items;
+  },
   add_topic:function(){
     var self = this;
     this.collection.create_new_node({
       "kind":"topic",
-      "title": "Topic",
+      "title": (this.model.get('parent'))? this.model.get('title') + " Topic" : "Topic",
       "sort_order" : this.collection.length,
-      "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+      "author": window.preferences.author || ""
     }).then(function(new_topic){
       var new_view = self.create_new_view(new_topic);
       self.$(self.list_selector).append(new_view.el);
@@ -392,6 +451,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         }
     });
     this.container.load_editor(this.selected_items);
+    this.container.load_prerequisites(this.selected_items);
     if(this.selected_individual()){
       this.container.load_preview(this.selected_items[0]);
       if(this.selected_items[0].model.get("kind")==="exercise"){
@@ -458,13 +518,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.render();
   },
   render: function() {
-    var has_files = false;
-    if(this.selected_individual()){
-      this.selected_items[0].model.get("files").forEach(function(file){
-        var preset = (file.preset.id)? file.preset.id:file.preset;
-        has_files = has_files || (window.formatpresets.get({id:preset}).get("display") && !window.formatpresets.get({id:preset}).get("thumbnail"));
-      });
-    }
+    var has_files = this.selected_individual() && _.some(this.selected_items[0].model.get("files"), function(f){return f.preset.display && !f.preset.thumbnail;});
 
     // Set license, author, copyright values based on whether selected items have been copied from another source
     var alloriginal = this.all_original();
@@ -544,6 +598,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   get_mastery_string: function(){
     switch(this.shared_data.shared_exercise_data.mastery_model){
+      case "num_correct_in_a_row_2":
+        return "2 in a Row";
       case "num_correct_in_a_row_3":
         return "3 in a Row";
       case "num_correct_in_a_row_5":
@@ -604,6 +660,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     if(this.selected_individual()){
       var view = this.selected_items[0];
       view.load_file_displays(this.$("#editmetadata_format_section"));
+      this.container.load_prerequisites([view]);
       if(view.model.get("kind")==="exercise"){
         this.container.load_questions(view);
       }
@@ -637,13 +694,12 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   load_license:function(){
     var iscopied = this.selected_individual() && !this.selected_items[0].isoriginal
-    var license_modal = new LicenseModalView({
-      select_license : window.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()}),
-      return_focus: this.set_initial_focus
+    var license_modal = new Info.LicenseModalView({
+      select_license : window.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()})
     });
   },
   load_mastery:function(){
-    new MasteryModalView({return_focus: this.set_initial_focus});
+    new Info.MasteryModalView();
   },
   update_count:function(){
     if(this.selected_individual()){
@@ -695,9 +751,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.selected_items.forEach(function(view){
       view.remove_tag(tagname);
     });
-    this.load_tags();
-    event.target.parentNode.remove();
     window.contenttags.remove(window.contenttags.findWhere({'tag_name':tagname}));
+    this.shared_data.shared_tags = _.reject(this.shared_data.shared_tags, function(tag) {return tag === tagname});
+    this.load_tags();
   },
   select_license:function(){
     this.$("#license_about").css("display", "inline");
@@ -823,7 +879,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.check_item();
   },
   set_edited:function(is_edited){
-      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields");
+      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields", "prerequisite");
       // Handle unsetting node
       if(!is_edited){
           this.originalData = $.extend(true, {}, edited_data);
@@ -842,6 +898,9 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     switch(mastery_model){
       case "skill_check":
         m_value = n_value = 1;
+        break;
+      case "num_correct_in_a_row_2":
+        m_value = n_value = 2;
         break;
       case "num_correct_in_a_row_3":
         m_value = n_value = 3;
@@ -943,61 +1002,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
         (uploading)? this.uploads_in_progress++ : this.uploads_in_progress--;
         (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
     }
-});
-
-var LicenseModalView = BaseViews.BaseModalView.extend({
-  template: require("./hbtemplates/license_modal.handlebars"),
-  default_focus_button_selector: "#license_close_button",
-
-  initialize: function(options) {
-      _.bindAll(this,'focus', 'loop_focus', 'handle_closed');
-      this.modal = true;
-      this.return_focus = options.return_focus;
-      this.select_license = options.select_license;
-      this.render();
-  },
-  events: {
-    'focus .input-tab-control': 'loop_focus'
-  },
-  render: function() {
-      this.$el.html(this.template({
-          license: this.select_license.toJSON()
-      }));
-      $("body").append(this.el);
-      this.$("#license_modal").modal({show: true});
-      this.$("#license_modal").on("hidden.bs.modal", this.handle_closed);
-      this.$("#license_modal").on("shown.bs.modal", this.focus);
-  },
-  handle_closed: function(){
-    this.closed_modal();
-    this.return_focus();
-  }
-});
-
-var MasteryModalView = BaseViews.BaseModalView.extend({
-  template: require("./hbtemplates/mastery_modal.handlebars"),
-  default_focus_button_selector: "#mastery_modal_close_button",
-
-  initialize: function(options) {
-      _.bindAll(this,'focus', 'loop_focus', 'handle_closed');
-      this.modal = true;
-      this.return_focus = options.return_focus;
-      this.render();
-  },
-  events: {
-    'focus .input-tab-control': 'loop_focus'
-  },
-  render: function() {
-      this.$el.html(this.template());
-      $("body").append(this.el);
-      this.$("#mastery_modal").modal({show: true});
-      this.$("#mastery_modal").on("hidden.bs.modal", this.handle_closed);
-      this.$("#mastery_modal").on("shown.bs.modal", this.focus);
-  },
-  handle_closed: function(){
-    this.closed_modal();
-    this.return_focus();
-  }
 });
 
 module.exports = {

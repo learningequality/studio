@@ -12,8 +12,8 @@
 }
 
 #channel_area_wrapper{
-	padding:30px;
-	padding-bottom:200px;
+	padding:10px;
+	padding-bottom:100px;
 	overflow-y:auto;
 	height:90vh;
 	margin-top:20px;
@@ -85,8 +85,29 @@
 		    left: 13px;
 		    top: 6px;
 		}
+		#pending_list{
+			margin-bottom: 30px;
+			.pending_container{
+		        font-size: 12pt;
+		        .pending_text{ padding: 5px;}
+		        .btn-pending {
+		        	background-color: white;
+		        	font-weight:bold;
+		        	width: 100%;
+		        	border: 2px solid white;
+		        	&.accept_invite { color: @blue-500; &:hover{ border-color: @blue-500; }}
+		        	&.decline_invite { color: #D14C4C;  &:hover{ border-color: #D14C4C; }}
+		        }
+		        .alert{
+		        	margin-bottom: 15px;
+		        	padding: 5px 15px;
+		        	button{ right: 0px; top: 5px; }
+		        }
+		        &:last-child{ margin-bottom: 50px; }
+			}
+		}
 		#channel_list {
-			//overflow:auto;
+			padding-bottom: 50px;
 			.default-item{
 				font-size: 12pt;
 				margin: 10px 0px 10px 50px;
@@ -98,12 +119,10 @@
 				min-height: @channel-container-height;
 				height:auto;
 				box-shadow: @box-shadow;
-				margin-bottom: 10px;
-				margin: 3px 0 10px 3px;
+				margin-bottom: 30px;
 				padding: 10px;
 				border:4px solid @panel-container-color;
 				cursor:pointer;
-
 
 				.profile{
 					height:100%;
