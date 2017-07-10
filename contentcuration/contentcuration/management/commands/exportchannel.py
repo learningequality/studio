@@ -267,7 +267,6 @@ def process_assessment_metadata(ccnode, kolibrinode):
         randomize=randomize,
         is_manipulable=ccnode.kind_id == content_kinds.EXERCISE,
     )
-    import pdb; pdb.set_trace()
 
     return exercise_data
 
