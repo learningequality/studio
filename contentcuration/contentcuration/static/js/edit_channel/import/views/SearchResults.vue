@@ -2,7 +2,7 @@
 
   <div class="SearchResults">
     <div>
-      <p v-show="!resultsLoading" class="TopResults">
+      <p v-show="!resultsLoading" class="TopResults wordwrap">
         Showing top results for "{{ currentSearchTerm }}"
       </p>
       <button @click="goToPreviousPage()" class="button-reset BackButton">
@@ -13,11 +13,11 @@
     <!-- ITEM RESULTS -->
     <div class="Results">
       <h1 class="Results__Header">Items</h1>
-      <span v-if="resultsLoading" class="LoadingMsg">
+      <span v-if="resultsLoading" class="LoadingMsg wordwrap">
         Loading results for "{{ currentSearchTerm }}"...
       </span>
       <template v-else>
-        <div v-show="itemResults.length === 0">
+        <div v-show="itemResults.length === 0" class="wordwrap">
           No documents, exercises, or other files matching "{{ currentSearchTerm }}"
         </div>
         <ul class="list-unstyled Results__List">
@@ -38,11 +38,11 @@
     <!-- TOPIC RESULTS -->
     <div class="Results">
       <h1 class="Results__Header">Topics</h1>
-      <span v-if="resultsLoading" class="LoadingMsg">
+      <span v-if="resultsLoading" class="LoadingMsg wordwrap">
         Loading results for "{{ currentSearchTerm }}"...
       </span>
       <template v-else>
-        <div v-show="topicResults.length === 0">
+        <div v-show="topicResults.length === 0" class="wordwrap">
           No topics matching "{{ currentSearchTerm }}"
         </div>
         <ul class="list-unstyled Results__List">
