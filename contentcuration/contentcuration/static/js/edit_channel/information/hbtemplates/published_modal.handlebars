@@ -1,21 +1,21 @@
 <div class="modal fade information_modal" tabindex="-1" id="published_modal">
+<div class="input-tab-control tab_item" data-next="#modal-copy-btn"></div>
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <button type="button" class="close tab_item" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title">Channel Successfully Published!</h4>
       </div>
       <div class="modal-body">
         <div class="modal-body-content published_wrapper">
             <p>Here is your published ID (for importing channel into Kolibri):</p>
             <h4 class="text-center publish_id_wrapper">
-            <div class="input-tab-control tab_item" data-next="#modal-copy-btn"></div>
                 ID: <input type="text" id="modal-copy-text" class="publish-id-text" value="{{ channel_id }}" readonly/>
-                <button class="btn action-button copy-id-btn first_focus_item" id="modal-copy-btn">COPY</button>
-                <div class="input-tab-control tab_item" data-next="#modal-copy-btn"></div>
+                <button class="btn action-button copy-id-btn tab_item first_focus_item" id="modal-copy-btn">COPY</button>
             </h4>
         </div>
       </div>
     </div>
   </div>
+<div class="input-tab-control tab_item" data-next=".close"></div>
 </div>

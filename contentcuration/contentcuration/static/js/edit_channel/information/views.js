@@ -48,7 +48,7 @@ var PrerequisiteModalView = BaseInfoModalView.extend({
   modal_id: "#prereq_modal",
 });
 
-var PublishedModalView = BaseViews.BaseModalView.extend({
+var PublishedModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/published_modal.handlebars"),
   modal_id: "#published_modal",
   get_render_data: function() { return {channel_id: this.data.channel_id}; },

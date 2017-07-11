@@ -1,8 +1,9 @@
 <div class="modal fade information_modal" id="prereq_modal"  tabindex="-1">
+<div class="input-tab-control tab_item" data-next="#cancel_button"></div>
 <div class="modal-dialog">
     <div class="modal-content">
         <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="close tab_item" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title">Prerequisites</h4>
         </div>
         <div class="modal-body">
@@ -10,11 +11,10 @@
                 <p>Prerequisites help Kolibri recommend content that will allow learners to revisit key prior concepts, which may take the form of foundational skills or immediately relevant background information. For learners on Kolibri, these items will appear alongside the concept for recommended viewing.</p>
             </div>
             <div class="modal-body-bottom container-fluid">
-                <div class="input-tab-control tab_item" data-next="#cancel_button"></div>
-    			<button class="action-button pull-right first_focus_item" id="cancel_button" data-dismiss="modal">CLOSE</button>
-                <div class="input-tab-control tab_item" data-next="#cancel_button"></div>
+    			<button class="action-button pull-right tab_item first_focus_item" id="cancel_button" data-dismiss="modal">CLOSE</button>
             </div>
         </div>
     </div>
 </div>
+<div class="input-tab-control tab_item" data-next=".close"></div>
 </div>

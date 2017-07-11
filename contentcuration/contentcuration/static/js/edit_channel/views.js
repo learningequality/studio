@@ -8,7 +8,6 @@ function get_author(){
 
 var BaseView = Backbone.View.extend({
 	loop_focus:function(event){
-		console.log("LOOP!", event.target)
 		var element = $(event.target);
 		if (element.data('next')){
 			this.$(element.data('next')).focus();
