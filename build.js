@@ -125,7 +125,7 @@ if (watch) {
   b.on('log', infoLog);
 
   b.on('error', function(error) {
-    errLog(error , 'came from watch');
+    errLog(error);
     this.emit('end');
   });
 }
