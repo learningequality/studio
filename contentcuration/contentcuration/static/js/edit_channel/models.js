@@ -174,6 +174,9 @@ var InvitationCollection = BaseCollection.extend({
 /**** CHANNEL AND CONTENT MODELS ****/
 function fetch_nodes(ids, url){
     return new Promise(function(resolve, reject){
+        if(ids.length === 0) {
+            resolve(new ContentNodeCollection()); // No need to make a call to the server
+        }
         $.ajax({
             method:"POST",
             url: url,
@@ -216,6 +219,9 @@ var ContentNodeModel = BaseModel.extend({
                 error:reject
             });
         });
+    },
+    has_related_content: function(){
+        return this.get('prerequisite').length || this.get('is_prerequisite_of').length;
     },
     initialize: function () {
 		if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
@@ -283,6 +289,7 @@ var ContentNodeCollection = BaseCollection.extend({
     save: function() {
         var self = this;
         return new Promise(function(saveResolve, saveReject){
+            var numParser = require("edit_channel/utils/number_parser");
             var fileCollection = new FileCollection();
             var assessmentCollection = new AssessmentItemCollection();
             self.forEach(function(node){
@@ -297,6 +304,12 @@ var ContentNodeCollection = BaseCollection.extend({
                 assessmentCollection.add(node.get('assessment_items'));
                 assessmentCollection.forEach(function(item){
                     item.set('contentnode', node.id);
+                    if(item.get('type') === 'input_question'){
+                        item.get('answers').each( function(a){
+                            var value = numParser.extract_value(a.get('answer'))
+                            a.set('answer', (value)? value.toString() : "");
+                        });
+                    }
                 })
             });
             Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function() {
@@ -309,6 +322,34 @@ var ContentNodeCollection = BaseCollection.extend({
                         saveReject(error);
                     }
                 });
+            });
+        });
+    },
+    has_prerequisites: function(){
+        return this.some(function(model) { return model.get('prerequisite').length; })
+    },
+    has_postrequisites: function(){
+        return this.some(function(model) { return model.get('is_prerequisite_of').length; })
+    },
+    has_related_content: function(){
+        return this.has_prerequisites() || this.has_postrequisites();
+    },
+    get_prerequisites: function(ids, get_postrequisites){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                url: window.Urls.get_prerequisites(),
+                data:  JSON.stringify({"nodes": ids, "get_postrequisites": get_postrequisites}),
+                success: function(data) {
+                    nodes = JSON.parse(data);
+                    resolve({
+                        "prerequisite_mapping": nodes.prerequisite_mapping,
+                        "postrequisite_mapping": nodes.postrequisite_mapping,
+                        "prerequisite_tree_nodes": new ContentNodeCollection(JSON.parse(nodes.prerequisite_tree_nodes)),
+                    });
+                },
+                error:reject
             });
         });
     },
@@ -438,30 +479,42 @@ var ChannelModel = BaseModel.extend({
         count: 0,
         size: 0,
         published: false,
-        view_only: false
+        view_only: false,
+        viewers: []
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
-        return new ContentNodeModel(this.get(tree_name));
+        var root_node = new ContentNodeModel(this.get(tree_name));
+        root_node.set({'title': this.get('name')});
+        return root_node;
     },
     initialize: function () {
-    	if (this.get("thumbnail_encoding") && typeof this.get("thumbnail_encoding") !== "object"){
-			this.set("thumbnail_encoding", JSON.parse(this.get("thumbnail_encoding").replace(/u*'/g, "\"")))
-		}
-	},
-	parse: function(response) {
-    	if (response.thumbnail_encoding !== undefined && response.thumbnail_encoding) {
-    		response.thumbnail_encoding = JSON.parse(response.thumbnail_encoding.replace(/u*'/g, "\""));
-    	}
-	    return response;
-	},
-	toJSON: function() {
-	    var attributes = _.clone(this.attributes);
-		if (attributes.thumbnail_encoding && typeof attributes.thumbnail_encoding !== "string") {
-		    attributes.thumbnail_encoding = JSON.stringify(attributes.thumbnail_encoding);
-		}
-	    return attributes;
-	},
+        if (this.get("preferences") && typeof this.get("preferences") !== "object"){
+            this.set("preferences", JSON.parse(this.get("preferences")))
+        }
+        if (this.get("thumbnail_encoding") && typeof this.get("thumbnail_encoding") !== "object"){
+            this.set("thumbnail_encoding", JSON.parse(this.get("thumbnail_encoding").replace(/u*'/g, "\"")))
+        }
+    },
+    parse: function(response) {
+        if (response !== undefined && response.preferences) {
+            response.preferences = JSON.parse(response.preferences);
+        }
+        if (response.thumbnail_encoding !== undefined && response.thumbnail_encoding) {
+            response.thumbnail_encoding = JSON.parse(response.thumbnail_encoding.replace(/u*'/g, "\""));
+        }
+        return response;
+    },
+    toJSON: function() {
+        var attributes = _.clone(this.attributes);
+        if (typeof attributes.preferences !== "string") {
+            attributes.preferences = JSON.stringify(attributes.preferences);
+        }
+        if (attributes.thumbnail_encoding && typeof attributes.thumbnail_encoding !== "string") {
+            attributes.thumbnail_encoding = JSON.stringify(attributes.thumbnail_encoding);
+        }
+        return attributes;
+    },
     publish:function(callback){
         var self = this;
         return new Promise(function(resolve, reject){
@@ -481,7 +534,7 @@ var ChannelModel = BaseModel.extend({
     },
     get_accessible_channel_roots:function(){
         var self = this;
-        var promise = new Promise(function(resolve, reject){
+        return new Promise(function(resolve, reject){
             $.ajax({
                 method:"POST",
                 data: JSON.stringify({'channel_id': self.id}),
@@ -494,7 +547,32 @@ var ChannelModel = BaseModel.extend({
                 }
             });
         });
-        return promise;
+    },
+    activate_channel:function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({'channel_id': self.id}),
+                url: window.Urls.activate_channel(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
+    get_staged_diff: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({'channel_id': self.id}),
+                url: window.Urls.get_staged_diff(),
+                success: function(data){
+                    resolve(JSON.parse(data))
+                },
+                error:function(error){reject(error.responseText);}
+            });
+        });
     }
 });
 

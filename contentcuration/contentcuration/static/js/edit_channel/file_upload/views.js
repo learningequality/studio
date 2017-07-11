@@ -20,7 +20,8 @@ var FileModalView = BaseViews.BaseModalView.extend({
             container: this,
             model:this.model,
             onsave: options.onsave,
-            onnew: options.onnew
+            onnew: options.onnew,
+            isclipboard: options.isclipboard
         });
         this.$(".modal-body").append(this.file_upload_view.el)
     },
@@ -64,6 +65,7 @@ var FileUploadView = BaseViews.BaseView.extend({
         this.collection = new Models.ContentNodeCollection();
         this.onsave = options.onsave;
         this.onnew = options.onnew;
+        this.isclipboard = options.isclipboard;
         this.switch_view(1);
     },
     events:{
@@ -94,7 +96,8 @@ var FileUploadView = BaseViews.BaseView.extend({
             new_content: true,
             new_topic: false,
             collection: this.collection,
-            allow_edit: true
+            allow_edit: true,
+            isclipboard: this.isclipboard
         }
         switch(stepNumber){
             case 1:
@@ -185,7 +188,10 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
             previewTemplate:this.file_upload_template(),
             parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads()),
             previewsContainer: this.list_selector, // Define the container to display the previews
-            headers: {"X-CSRFToken": get_cookie("csrftoken")},
+            headers: {
+                "X-CSRFToken": get_cookie("csrftoken"),
+                "Preferences": JSON.stringify(window.current_channel.get('preferences'))
+            },
             dictInvalidFileType: "This file type is not supported.",
             dictFileTooBig: "Max file size exceeded.",
             dictResponseError: "Error processing request."
@@ -317,13 +323,16 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     },
     get_metadata:function(){
         return _.reduce(this.model.get("files"), function(dict, file){
-            return !file.preset.display ? dict :
-                {
+            if(!file.preset.display || _.contains(dict.checksums, file.checksum)){
+                return dict;
+            }
+            return {
                     'count': dict.count + 1,
                     'size': dict.size + file.file_size,
-                    'main_file_count': dict.main_file_count + !file.preset.supplementary
+                    'main_file_count': dict.main_file_count + !file.preset.supplementary,
+                    'checksums': dict.checksums.concat(file.checksum)
                 };
-        }, {'count': 0, 'size': 0, 'main_file_count': 0});
+        }, {'count': 0, 'size': 0, 'main_file_count': 0, 'checksums': []});
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);
