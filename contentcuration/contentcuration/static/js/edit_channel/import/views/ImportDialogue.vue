@@ -50,7 +50,7 @@
           {{ topicCount | pluralize('Topic') }} {{ resourceCount | pluralize('Resource') }}
         </span>
         <em id="import_file_size">
-          {{ importFileSizeInWords | parenthesize }}
+          ({{ importFileSizeInWords }})
         </em>
       </span>
     </div>
@@ -64,7 +64,7 @@
 const stringHelper = require('../../utils/string_helper');
 const { hasRelatedContent } = require('../util');
 const { mapGetters, mapState, mapActions, mapMutations } = require('vuex');
-const  { pluralize, parenthesize } = require('./filters');
+const  { pluralize } = require('./filters');
 
 module.exports = {
   components: {
@@ -136,7 +136,6 @@ module.exports = {
   },
   filters: {
     pluralize,
-    parenthesize,
   },
 }
 

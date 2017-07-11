@@ -6,11 +6,6 @@ function pluralize(number, singular, plural) {
     return `${number} ${word}`;
 }
 
-function parenthesize(value) {
-  return '(' + value + ')';
-}
-
 module.exports = {
   pluralize: pluralize,
-  parenthesize: parenthesize,
 }
