@@ -6,43 +6,29 @@
 
 	#import_from_channel_box{
 		width: @import-list-width;
-		.import-list{
-			li{
-				.channel_checkbox{
+		.import-list {
+			li {
+				.channel_checkbox {
 					display:none !important;
 				}
-				.import_channel_item{
+				.import_channel_item {
 					padding:0px 10px;
 					font-size:14pt;
 				}
 
-				.import_item .import_item_title{
+				.import_item .import_item_title {
 					max-width:@import-list-width * 0.5;
 				}
 			}
 		}
-		.topic_list{
-			margin-left:30px;
-		}
-		.disabled{
+		.disabled {
 			color:@gray-700;
-			input[type=checkbox]{
+			input[type=checkbox] {
 				cursor:not-allowed !important;
 			}
-			.selected_counter{
+			.selected_counter {
 				background-color:@gray-400 !important;
 			}
-		}
-	}
-	#import_bottom_container{
-		height:50px;
-		#import_content_submit{
-			margin-right:20px;
-		}
-		#import_file_metadata{
-			padding-right:20px;
-			font-size:12pt;
-			margin-top:2px;
 		}
 	}
 }
