@@ -15,7 +15,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.current_user = new Models.UserModel(window.user);
 		window.workspace_manager = new WorkspaceManager();
 		//this.listenTo(saveDispatcher, "save", this.save);
-		this.channelCollection = new Models.ChannelCollection(window.channels);
+		this.channelCollection = new Models.ChannelCollection();
 
 		this.fileformats = new Models.FileFormatCollection(window.fformats);
 		this.formatpresets = new Models.FormatPresetCollection(window.presets);
@@ -26,6 +26,7 @@ ChannelEditRouter  = Backbone.Router.extend({
   routes: {
 		"": "navigate_channel_home",
 		":channel/edit": "edit_page",
+		":channel/staging": "staging_page",
 		":channel/view": "preview_page",
 		":channel/clipboard": "clipboard_page"
   },
@@ -39,15 +40,23 @@ ChannelEditRouter  = Backbone.Router.extend({
   },
 
 	edit_page : function(){
-		this.open_channel(true, false, window.current_channel.get_root("main_tree"));
+		var data = { "edit_mode_on" : true };
+		this.open_channel(data, window.current_channel.get_root("main_tree"));
+	},
+	staging_page: function(){
+		var data = { "edit_mode_on" : true, "is_staging" : true };
+		this.open_channel(data, window.current_channel.get_root("staging_tree"));
 	},
 	preview_page : function(){
-		this.open_channel(false, false, window.current_channel.get_root("main_tree"));
+		var data = {};
+		this.open_channel(data, window.current_channel.get_root("main_tree"));
 	},
 	clipboard_page:function(){
-		this.open_channel(true, true, window.current_user.get_clipboard());
+		var data = { "edit_mode_on" : true, "is_clipboard" : true };
+		this.open_channel(true, true, false, window.current_user.get_clipboard());
 	},
-	open_channel: function(edit_mode_on, is_clipboard, root){
+	open_channel: function(data, root){
+		window.staging = data.is_staging || false;
 		window.fileformats = this.fileformats ;
 		window.channels = this.channelCollection;
 		window.formatpresets = this.formatpresets;
@@ -60,17 +69,20 @@ ChannelEditRouter  = Backbone.Router.extend({
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
 			collection: this.nodeCollection,
-			edit: edit_mode_on && !window.current_channel.get('ricecooker_version'),
+			edit: data.edit_mode_on && !window.current_channel.get('ricecooker_version'),
 			model : root,
-			is_clipboard : is_clipboard,
+			is_clipboard : data.is_clipboard || false,
+			staging: window.staging
 		});
-		var QueueView = require("edit_channel/queue/views");
-		var queue = new QueueView.Queue({
-	 		el: $("#queue-area"),
-	 		collection: this.nodeCollection,
-	 		clipboard_root : window.current_user.get_clipboard(),
-			trash_root : window.current_channel.get_root("trash_tree"),
-	 	});
+		if(!window.is_staging){
+			var QueueView = require("edit_channel/queue/views");
+			var queue = new QueueView.Queue({
+		 		el: $("#queue-area"),
+		 		collection: this.nodeCollection,
+		 		clipboard_root : window.current_user.get_clipboard(),
+				trash_root : window.current_channel.get_root("trash_tree"),
+		 	});
+		}
 	}
 });
 

@@ -4,6 +4,7 @@
 		<a class="btn btn-tab btn-tab-active tab_button" id="metadata_details_btn">Details</a>
 		<a class="btn btn-tab tab_button" id="metadata_questions_btn">Questions</a>
 		<a class="btn btn-tab tab_button" id="metadata_preview_btn">Preview</a>
+		{{#unless isclipboard}}<a class="btn btn-tab tab_button" id="metadata_prerequisites_btn">Prerequisites <span class="prereq_badge badge">Loading...</span></a>{{/unless}}
 	</nav>
 	<div  class="metadata_panel">
 		<div id="metadata_edit_details" class="input_area tab_panel">
@@ -13,6 +14,7 @@
 		</div>
 		<div id="metadata_questions" class="container-fluid tab_panel"></div>
 		<div id="metadata_preview" class="container-fluid tab_panel"></div>
+		<div id="metadata_prerequisites" class="container-fluid tab_panel"></div>
 	</div>
 	<br/>
 	{{#if allow_edit}}
@@ -25,9 +27,11 @@
 	</div>
 	{{else}}
 	<div class="metadata_copy_buttons container-fluid">
+		{{#unless staging}}
 		<div class="pull-right">
 			<a class="btn btn-default action-button" id="copy_button" class="disable_on_error editmetadata_save">COPY</a>
 		</div>
+		{{/unless}}
 		<a class="disable_on_error action-text" id="close_uploader_button">CLOSE</a>
 	</div>
 	{{/if}}

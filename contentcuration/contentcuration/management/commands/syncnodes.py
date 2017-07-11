@@ -1,9 +1,8 @@
 import copy
-from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from contentcuration.models import Channel, ContentNode, AssessmentItem, File, ContentTag
 from contentcuration.view.node_views import sync_channel
+from contentcuration.models import Channel
 from le_utils.constants import content_kinds
 
 import logging as logmodule

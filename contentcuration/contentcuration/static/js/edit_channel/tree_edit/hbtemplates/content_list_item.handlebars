@@ -4,7 +4,7 @@
 {{else}}
 	<label class="list_item_wrapper file" for="item_{{node.id}}" title="{{node.title}}">
 {{/if}}
-		<div class="options pull-right">
+		<div class="options pull-right hide_on_drag">
 			{{#if edit_mode}}
 				<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
 					<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
@@ -12,11 +12,11 @@
 				<br/>
 				{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
 			{{else}}
-				{{#if isfolder}}<span class="glyphicon glyphicon-list-alt edit_item_button" aria-hidden="true" title="View topic details"></span>{{/if}}
+				{{#if isfolder}}<span class="glyphicon glyphicon-new-window edit_item_button" aria-hidden="true" title="View topic details"></span>{{/if}}
 				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true" title="Copy"></span>
 			{{/if}}
 		</div>
-		<h6 class="content_metadata_summary {{#unless isfolder}}open_file{{/unless}}">
+		<h6 class="content_metadata_summary hide_on_drag {{#unless isfolder}}open_file{{/unless}}">
 			<span class="metadata_to_hide">
 				{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
 				{{#if isfolder}}&nbsp;{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}{{/if}}
@@ -40,8 +40,8 @@
 			</span>
 		</h6>
 		<div class="{{#unless isfolder}}open_file{{/unless}} title_wrapper">
-			<h3 class = "title truncate">
-				<div class="content-item-icon pull-left">
+			<div class = "title truncate">
+				<div class="content-item-icon">
 					{{#if isfolder}}
 						<img src="/static/img/topic.png"/>
 					{{else}}
@@ -49,7 +49,7 @@
 					{{/if}}
 				</div>
 				{{#if node}}{{node.title}}{{else}}<em>[Untitled]</em>{{/if}}
-			</h3>
+			</div>
 			<div class="description_wrapper">
 				<div class="description" title="{{node.description}}">
 					<div class="description_main wordwrap">{{description_first}}</div>
@@ -70,7 +70,7 @@
 	</div>
 </div>
 
-<nav class="context-menu" tabindex="0">
+<nav class="context-menu hide_on_drag" tabindex="0">
   	{{#if isfolder}}<div class="add_subtopic_item_button context-option">Add Subtopic</div>{{/if}}
 	<div class="edit_item_button context-option">Edit</div>
 	<div class="copy_item_button context-option">Copy</div>

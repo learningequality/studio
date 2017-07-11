@@ -1,23 +1,18 @@
 """
 This module acts as the only interface point between other apps and the database backend for the content.
 """
+import json
 import logging
 import os
-import re
 import hashlib
 import shutil
-import tempfile
-import subprocess
-from functools import wraps
-from django.db.models import Q, Value
-from django.db.models.functions import Concat
+from django.db.models import Q, Count, Sum
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
-from django.core.files import File as DjFile
+from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponse
-from kolibri.content import models as KolibriContent
-from le_utils.constants import format_presets, content_kinds, file_formats
+from le_utils.constants import format_presets, content_kinds
 import contentcuration.models as models
+
 
 def check_supported_browsers(user_agent_string):
     if not user_agent_string:
@@ -27,7 +22,8 @@ def check_supported_browsers(user_agent_string):
             return True
     return False
 
-def write_file_to_storage(fobj, check_valid = False, name=None):
+
+def write_file_to_storage(fobj, check_valid=False, name=None):
     # Check that hash is valid
     checksum = hashlib.md5()
     for chunk in iter(lambda: fobj.read(4096), b""):
@@ -49,6 +45,7 @@ def write_file_to_storage(fobj, check_valid = False, name=None):
         shutil.copyfileobj(fobj, destf)
     return full_filename
 
+
 def write_raw_content_to_storage(contents, ext=None):
     # Check that hash is valid
     checksum = hashlib.md5()
@@ -65,14 +62,16 @@ def write_raw_content_to_storage(contents, ext=None):
 
     return filename, full_filename, file_path
 
+
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
-    for child in ContentNode.objects.filter(parent=node).order_by('sort_order'):
+    for child in models.ContentNode.objects.filter(parent=node).order_by('sort_order'):
         recurse(child, level + 1)
+
 
 def clean_db():
     logging.debug("*********** CLEANING DATABASE ***********")
-    for file_obj in models.File.objects.filter(Q(preset = None) & Q(contentnode=None)):
+    for file_obj in models.File.objects.filter(Q(preset=None) & Q(contentnode=None)):
         logging.debug("Deletng unreferenced file {0}".format(file_obj.__dict__))
         file_obj.delete()
     for node_obj in models.ContentNode.objects.filter(Q(parent=None) & Q(channel_main=None) & Q(channel_trash=None) & Q(user_clipboard=None)):
@@ -83,13 +82,14 @@ def clean_db():
         tag_obj.delete()
     logging.debug("*********** DONE ***********")
 
+
 def calculate_node_metadata(node):
     metadata = {
-        "total_count" : node.children.count(),
-        "resource_count" : 0,
-        "max_sort_order" : 1,
-        "resource_size" : 0,
-        "has_changed_descendant" : node.changed
+        "total_count": node.children.count(),
+        "resource_count": 0,
+        "max_sort_order": 1,
+        "resource_size": 0,
+        "has_changed_descendant": node.changed
     }
 
     if node.kind_id == "topic":
@@ -109,6 +109,7 @@ def calculate_node_metadata(node):
 
     return metadata
 
+
 def count_files(node):
     if node.kind_id == "topic":
         count = 0
@@ -117,11 +118,13 @@ def count_files(node):
         return count
     return 1
 
+
 def count_all_children(node):
     count = node.children.count()
     for n in node.children.all():
         count += count_all_children(n)
     return count
+
 
 def get_total_size(node):
     total_size = 0
@@ -133,11 +136,13 @@ def get_total_size(node):
             total_size += f.file_size
     return total_size
 
+
 def get_node_siblings(node):
     siblings = []
     for n in node.get_siblings(include_self=False):
         siblings.append(n.title)
     return siblings
+
 
 def get_node_ancestors(node):
     ancestors = []
@@ -145,11 +150,13 @@ def get_node_ancestors(node):
         ancestors.append(n.id)
     return ancestors
 
+
 def get_child_names(node):
     names = []
     for n in node.get_children():
-        names.append({"title": n.title, "id" : n.id})
+        names.append({"title": n.title, "id": n.id})
     return names
+
 
 def batch_add_tags(request):
     # check existing tag and subtract them from bulk_create
@@ -187,14 +194,84 @@ def add_editor_to_channel(invitation):
     invitation.channel.save()
     invitation.delete()
 
+
 def activate_channel(channel):
-    old_tree = channel.previous_tree
     channel.previous_tree = channel.main_tree
     channel.main_tree = channel.staging_tree
     channel.staging_tree = None
     channel.save()
-    # Delete previous tree if it already exists
-    # if old_tree:
-    #     with transaction.atomic():
-    #         with ContentNode.objects.delay_mptt_updates():
-    #             old_tree.delete()
+
+
+def get_staged_diff(channel_id):
+    channel = models.Channel.objects.get(pk=channel_id)
+
+    has_main = channel.main_tree
+    has_staging = channel.staging_tree
+
+    main_descendants = channel.main_tree.get_descendants() if has_main else None
+    updated_descendants = channel.staging_tree.get_descendants() if has_staging else None
+
+    original_stats = main_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if has_main else {}
+    updated_stats = updated_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if has_staging else {}
+
+    original_file_sizes = main_descendants.aggregate(
+        resource_size=Sum('files__file_size'),
+        assessment_size=Sum('assessment_items__files__file_size'),
+        assessment_count=Count('assessment_items'),
+    ) if has_main else {}
+
+    updated_file_sizes = updated_descendants.aggregate(
+        resource_size=Sum('files__file_size'),
+        assessment_size=Sum('assessment_items__files__file_size'),
+        assessment_count=Count('assessment_items')
+    ) if has_staging else {}
+
+    original_file_size = (original_file_sizes.get('resource_size') or 0) + (original_file_sizes.get('assessment_size') or 0)
+    updated_file_size = (updated_file_sizes.get('resource_size') or 0) + (updated_file_sizes.get('assessment_size') or 0)
+    original_question_count = original_file_sizes.get('assessment_count') or 0
+    updated_question_count = updated_file_sizes.get('assessment_count') or 0
+
+    stats = [
+        {
+            "field": "Date/Time Created",
+            "live": channel.main_tree.created.strftime("%x %X") if main_descendants else "Not Available",
+            "staged": channel.staging_tree.created.strftime("%x %X") if updated_descendants else "Not Available",
+        },
+        {
+            "field": "Ricecooker Version",
+            "live": json.loads(channel.main_tree.extra_fields).get('ricecooker_version') if has_main and channel.main_tree.extra_fields else "---",
+            "staged": json.loads(channel.staging_tree.extra_fields).get('ricecooker_version') if has_staging and channel.staging_tree.extra_fields else "---",
+        },
+        {
+            "field": "File Size",
+            "live": original_file_size,
+            "staged": updated_file_size,
+            "difference": updated_file_size - original_file_size,
+            "format_size": True,
+        },
+    ]
+
+    for kind, name in content_kinds.choices:
+        original = original_stats.get(kind_id=kind)['count'] if has_main and original_stats.filter(kind_id=kind).exists() else 0
+        updated = updated_stats.get(kind_id=kind)['count'] if has_staging and updated_stats.filter(kind_id=kind).exists() else 0
+        stats.append({ "field": "# of {}s".format(name), "live": original, "staged": updated, "difference": updated - original })
+
+    # Add number of questions
+    stats.append({
+        "field": "# of Questions",
+        "live": original_question_count,
+        "staged": updated_question_count,
+        "difference": updated_question_count - original_question_count,
+    })
+
+    # Add number of subtitles
+    original_subtitle_count = main_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if has_main else 0
+    updated_subtitle_count = updated_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if has_staging else 0
+    stats.append({
+        "field": "# of Subtitles",
+        "live": original_subtitle_count,
+        "staged": updated_subtitle_count,
+        "difference": updated_subtitle_count - original_subtitle_count,
+    })
+
+    return stats

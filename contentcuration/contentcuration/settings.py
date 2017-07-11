@@ -16,7 +16,6 @@ import re
 import logging
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STORAGE_ROOT = os.path.join(BASE_DIR, "storage")
@@ -26,11 +25,11 @@ DB_ROOT = os.path.join(BASE_DIR, "databases")
 
 PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
 
-# Quick-start deve lopment settings - unsuitable for production
+# Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2' # TODO(aron): generate secret key, secretly!
+SECRET_KEY = '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2'  # TODO(aron): generate secret key, secretly!
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
@@ -55,6 +54,7 @@ INSTALLED_APPS = (
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
+    'search'
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -84,14 +84,6 @@ SUPPORTED_BROWSERS = [
     'Firefox',
     'Safari',
 ]
-
-#REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
- #   'DEFAULT_PERMISSION_CLASSES': [
- #     'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-  # ]
-#}
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
@@ -129,12 +121,8 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgres',
-    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    # },
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': 'contentcuration',                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
 
@@ -150,6 +138,25 @@ DATABASES = {
 DATABASE_ROUTERS = [
     "kolibri.content.content_db_router.ContentDBRouter",
 ]
+
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': '/django.log',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['file'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#     },
+# }
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -178,7 +185,7 @@ LOGIN_REDIRECT_URL = '/channels/'
 
 AUTH_USER_MODEL = 'contentcuration.User'
 
-ACCOUNT_ACTIVATION_DAYS=7
+ACCOUNT_ACTIVATION_DAYS = 7
 REGISTRATION_OPEN = True
 SITE_ID = 1
 

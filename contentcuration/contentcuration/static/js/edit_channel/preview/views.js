@@ -74,6 +74,7 @@ var PreviewView = BaseViews.BaseView.extend({
         var selected_preview = _.find(this.model.get('files'), function(file){return file.preset.id === event.target.getAttribute('value');});
         this.current_preview = selected_preview;
         this.render_preview();
+        this.$("iframe").prop("src", function(){return $(this).data("src");});
     },
     switch_preview:function(model){
         // called from outside sources
