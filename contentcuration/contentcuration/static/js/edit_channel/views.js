@@ -322,24 +322,24 @@ var BaseWorkspaceView = BaseView.extend({
 });
 
 var BaseModalView = BaseView.extend({
-  callback:null,
-  render: function(closeFunction, renderData) {
-    this.$el.html(this.template(renderData));
-    $("body").append(this.el);
-    this.$(".modal").modal({show: true});
-    this.$(".modal").on("hide.bs.modal", closeFunction);
-  },
-  close: function() {
-  	if(this.modal){
-  		this.$(".modal").modal('hide');
-  	}
-    this.remove();
-  },
-  closed_modal:function(){
-    $("body").addClass('modal-open'); //Make sure modal-open class persists
-    $('.modal-backdrop').slice(1).remove();
-    this.remove();
-  }
+    callback:null,
+    render: function(closeFunction, renderData) {
+        this.$el.html(this.template(renderData));
+        $("body").append(this.el);
+        this.$(".modal").modal({show: true});
+        this.$(".modal").on("hide.bs.modal", closeFunction);
+    },
+    close: function() {
+        if(this.modal){
+            this.$(".modal").modal('hide');
+        }
+        this.remove();
+    },
+    closed_modal:function(){
+        $("body").addClass('modal-open'); //Make sure modal-open class persists
+        $('.modal-backdrop').slice(1).remove();
+        this.remove();
+    }
 });
 
 var BaseListView = BaseView.extend({
