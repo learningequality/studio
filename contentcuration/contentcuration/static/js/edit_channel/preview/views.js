@@ -83,12 +83,14 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     generate_preview:function(force_load){
         if(this.current_preview){
-            extension = this.current_preview.file_format;
+            var extension = this.current_preview.file_format;
+            var source = this.current_preview.storage_url;
             var preview_template;
             switch (extension){
                 case "png":
                 case "jpg":
                 case "jpeg":
+                    source = (this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64) || this.current_preview.storage_url;
                     preview_template = require("./hbtemplates/preview_templates/image.handlebars");
                     break;
                 case "pdf":
@@ -113,7 +115,7 @@ var PreviewView = BaseViews.BaseView.extend({
                     preview_template = require("./hbtemplates/preview_templates/default.handlebars");
             }
             this.$("#preview_window").html(preview_template({
-                source: this.current_preview.storage_url,
+                source: source,
                 extension:this.current_preview.mimetype,
                 checksum:this.current_preview.checksum,
                 subtitles : this.get_subtitles()

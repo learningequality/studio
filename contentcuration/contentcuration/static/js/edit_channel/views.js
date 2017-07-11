@@ -41,6 +41,7 @@ var BaseView = Backbone.View.extend({
 						.union((include_collection) ? collection.pluck("id") : [])
 						.union([window.current_channel.get("main_tree").id])
 						.uniq().value();
+		var self = this;
 		this.retrieve_nodes($.unique(list_to_reload), true).then(function(fetched){
 			fetched.forEach(function(model){
 				var object = window.workspace_manager.get(model.get("id"));
