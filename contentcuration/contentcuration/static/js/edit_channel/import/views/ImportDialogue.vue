@@ -86,7 +86,7 @@ module.exports = {
       'currentImportPage',
     ]),
     searchTermIsValid() {
-      return this.searchTerm.length >= 3;
+      return this.searchTerm.length > 0;
     },
     importIsEnabled() {
       return this.itemsToImport.length > 0;
