@@ -11,13 +11,13 @@ exports.hasRelatedContent = function(contentNodes) {
  * @param {Array<string>} nodeIds
  * @returns {Promise<Array<ContentNode>>}
  */
-exports.fetchContentNodesById = function(nodeIds) {
-    var collection = new Models.ContentNodeCollection();
-    return collection.get_all_fetch_simplified(nodeIds)
-    .then(function(nodeCollection) {
-        return nodeCollection.toJSON();
-    });
-}
+ exports.fetchContentNodesById = function(nodeIds) {
+   var collection = new Models.ContentNodeCollection();
+   return collection.get_all_fetch_simplified(nodeIds)
+   .then(function(nodeCollection) {
+     return nodeCollection.toJSON();
+   });
+ }
 
 function fetchItemSearchResults(searchTerm, currentChannelId) {
   return new Promise(function(resolve, reject) {

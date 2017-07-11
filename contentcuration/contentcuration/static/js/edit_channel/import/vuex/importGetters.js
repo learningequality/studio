@@ -1,4 +1,3 @@
-// IMPORT module getters
 var _ = require('underscore');
 
 // ID of the Channel being edited
@@ -8,19 +7,19 @@ exports.currentChannelId = function() {
 
 // Utility function for importedResourceCounts
 function updateCounts(totals, node) {
-    var counts = node.metadata;
-    // if a leaf node
-    if (node.kind !== 'topic') {
-        return {
-            resources: totals.resources + 1,
-            topics: totals.topics,
-        };
-    }
-    // if a topic node
+  var counts = node.metadata;
+  // if a leaf node
+  if (node.kind !== 'topic') {
     return {
-        resources: totals.resources + counts.resource_count,
-        topics: totals.topics + counts.total_count - counts.resource_count + 1,
+      resources: totals.resources + 1,
+      topics: totals.topics,
     };
+  }
+  // if a topic node
+  return {
+    resources: totals.resources + counts.resource_count,
+    topics: totals.topics + counts.total_count - counts.resource_count + 1,
+  };
 }
 
 // Folds over the `itemsToImport` array, and tallys resources/topics based
