@@ -1,13 +1,13 @@
 import xmlrpclib
 from socket import gaierror
 
-VERSION_OK = "0.5.6"
+VERSION_OK = "0.5.13"
 
 try:
-	pypi = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
-	VERSION_OK = pypi.package_releases('ricecooker')[0]
+    pypi = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
+    VERSION_OK = pypi.package_releases('ricecooker')[0]
 except gaierror:
-	pass
+    pass
 
 VERSION_OK_MESSAGE = "Ricecooker v{} is up-to-date."
 VERSION_SOFT_WARNING = "0.5.6"

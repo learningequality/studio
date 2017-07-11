@@ -3,12 +3,11 @@ import sys
 import os
 import datetime
 from django.conf import settings
-from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import transaction
 from django.core.files import File as DJFile
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from le_utils.constants import content_kinds
 from contentcuration import models
 from contentcuration.api import write_file_to_storage
 import logging as logmodule
@@ -30,6 +29,7 @@ class EarlyExit(BaseException):
         self.message = message
         self.db_path = db_path
 
+
 class Command(BaseCommand):
 
     help = 'Restores a channel based on its exported database (Usage: restore_channel [source-channel-id] [target-channel-id]'
@@ -44,45 +44,43 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-          # Set up variables for restoration process
-          logging.info("\n\n********** STARTING CHANNEL RESTORATION **********")
-          start = datetime.datetime.now()
-          source_id = options['source_id']
-          target_id = options.get('target_id') or source_id
+            # Set up variables for restoration process
+            logging.info("\n\n********** STARTING CHANNEL RESTORATION **********")
+            start = datetime.datetime.now()
+            source_id = options['source_id']
+            target_id = options.get('target_id') or source_id
 
-          # Test connection to database
-          logging.info("Connecting to database for channel {}...".format(source_id))
-          conn = sqlite3.connect(os.path.join(settings.DB_ROOT,'{}.sqlite3'.format(source_id)))
-          cursor=conn.cursor()
+            # Test connection to database
+            logging.info("Connecting to database for channel {}...".format(source_id))
+            conn = sqlite3.connect(os.path.join(settings.DB_ROOT, '{}.sqlite3'.format(source_id)))
+            cursor = conn.cursor()
 
-          # Start by creating channel
-          logging.info("Creating channel...")
-          channel, root_pk = create_channel(conn, target_id)
+            # Start by creating channel
+            logging.info("Creating channel...")
+            channel, root_pk = create_channel(conn, target_id)
 
-          # Create nodes mapping to channel
-          logging.info("   Creating nodes...")
-          root = None
-          with transaction.atomic():
-            root = create_nodes(cursor, target_id)
+            # Create nodes mapping to channel
+            logging.info("   Creating nodes...")
+            root = None
+            with transaction.atomic():
+                root = create_nodes(cursor, target_id)
 
-          # Save tree to target tree
-          channel.main_tree = root
-          channel.save()
+                # Save tree to target tree
+                channel.main_tree = root
+                channel.save()
 
-          # Print stats
-          logging.info("\n\nChannel has been restored (time: {ms}, {node_count} nodes, {file_count} files, {tag_count} tags)\n".format(
-            ms = datetime.datetime.now() - start,
-            node_count = NODE_COUNT,
-            file_count = FILE_COUNT,
-            tag_count = TAG_COUNT)
-          )
-          logging.info("\n\n********** RESTORATION COMPLETE **********\n\n")
+                # Print stats
+                logging.info("\n\nChannel has been restored (time: {ms}, {node_count} nodes, {file_count} files, {tag_count} tags)\n".format(
+                    ms=datetime.datetime.now() - start,
+                    node_count=NODE_COUNT,
+                    file_count=FILE_COUNT,
+                    tag_count=TAG_COUNT)
+                )
+                logging.info("\n\n********** RESTORATION COMPLETE **********\n\n")
 
         except EarlyExit as e:
-            logging.warning("Exited early due to {message}.".format(
-                message=e.message))
-            self.stdout.write("You can find your database in {path}".format(
-                path=e.db_path))
+            logging.warning("Exited early due to {message}.".format(message=e.message))
+            self.stdout.write("You can find your database in {path}".format(path=e.db_path))
 
 
 def create_channel(cursor, target_id):
@@ -102,6 +100,7 @@ def create_channel(cursor, target_id):
     logging.info("\tCreated channel {} with name {}".format(target_id, name))
     return channel, root_pk
 
+
 def write_to_thumbnail_file(raw_thumbnail):
     """ write_to_thumbnail_file: Convert base64 thumbnail to file
         Args:
@@ -109,10 +108,11 @@ def write_to_thumbnail_file(raw_thumbnail):
         Returns: thumbnail filename
     """
     if raw_thumbnail and isinstance(raw_thumbnail, str) and raw_thumbnail != "" and 'static' not in raw_thumbnail:
-        with SimpleUploadedFile('temp.png',raw_thumbnail.replace('data:image/png;base64,', '').decode('base64')) as tempf:
+        with SimpleUploadedFile('temp.png', raw_thumbnail.replace('data:image/png;base64,', '').decode('base64')) as tempf:
             filename = write_file_to_storage(tempf, check_valid=False)
             logging.info("\tCreated thumbnail {}".format(filename))
             return filename
+
 
 def create_nodes(cursor, target_id, parent=None, indent=1):
     """ create_channel: Create channel at target id
@@ -135,20 +135,20 @@ def create_nodes(cursor, target_id, parent=None, indent=1):
 
     # Parse through rows and create models
     for id, title, content_id, description, sort_order, license_owner, author, license_id, kind in query:
-        logging.info("{indent} {id} ({title} - {kind})...".format(indent="   |"*indent, id=id, title=title, kind=kind))
+        logging.info("{indent} {id} ({title} - {kind})...".format(indent="   |" * indent, id=id, title=title, kind=kind))
 
         # Create new node model
         node = models.ContentNode.objects.create(
-            node_id = id,
-            title = title,
-            content_id = content_id,
-            description = description,
-            sort_order = sort_order,
-            copyright_holder = license_owner,
-            author = author,
-            license = retrieve_license_name(cursor, license_id),
-            kind_id = kind,
-            parent = parent,
+            node_id=id,
+            title=title,
+            content_id=content_id,
+            description=description,
+            sort_order=sort_order,
+            copyright_holder=license_owner,
+            author=author,
+            license=retrieve_license_name(cursor, license_id),
+            kind_id=kind,
+            parent=parent,
         )
 
         # Update node stat
@@ -157,12 +157,13 @@ def create_nodes(cursor, target_id, parent=None, indent=1):
 
         # Handle foreign key references (children, files, tags)
         if kind == content_kinds.TOPIC:
-            create_nodes(cursor, target_id, parent=node, indent=indent+1)
+            create_nodes(cursor, target_id, parent=node, indent=indent + 1)
         else:
-            create_files(cursor, node, indent=indent+1)
-        create_tags(cursor, node, target_id, indent=indent+1)
+            create_files(cursor, node, indent=indent + 1)
+        create_tags(cursor, node, target_id, indent=indent + 1)
 
     return node
+
 
 def retrieve_license_name(cursor, license_id):
     """ retrieve_license_name: Get license based on id from exported db
@@ -176,9 +177,9 @@ def retrieve_license_name(cursor, license_id):
         return None
 
     # Return license that matches name
-    name = cursor.execute('SELECT license_name FROM {table} WHERE id={id}'\
-        .format(table=LICENSE_TABLE, id=license_id)).fetchone()
+    name = cursor.execute('SELECT license_name FROM {table} WHERE id={id}'.format(table=LICENSE_TABLE, id=license_id)).fetchone()
     return models.License.objects.get(license_name=name[0])
+
 
 def create_files(cursor, contentnode, indent=0):
     """ create_files: Get license
@@ -193,8 +194,6 @@ def create_files(cursor, contentnode, indent=0):
         'lang_id, preset FROM {table} WHERE contentnode_id=\'{id}\';'\
         .format(table=FILE_TABLE, id=contentnode.node_id)
 
-    # Build up list of files
-    file_list = []
     query = cursor.execute(sql_command).fetchall()
     for checksum, extension, file_size, contentnode_id, lang_id, preset in query:
         filename = "{}.{}".format(checksum, extension)
@@ -205,12 +204,12 @@ def create_files(cursor, contentnode, indent=0):
             # Save values to new or existing file object
             with open(file_path, 'rb') as fobj:
                 file_obj = models.File.objects.create(
-                    file_on_disk = DJFile(fobj),
-                    file_format_id = extension,
-                    file_size = file_size,
-                    contentnode = contentnode,
-                    lang_id = lang_id,
-                    preset_id = preset or "",
+                    file_on_disk=DJFile(fobj),
+                    file_format_id=extension,
+                    file_size=file_size,
+                    contentnode=contentnode,
+                    lang_id=lang_id,
+                    preset_id=preset or "",
                 )
 
             # Update file stat
@@ -221,6 +220,7 @@ def create_files(cursor, contentnode, indent=0):
             logging.warning("\b FAILED (check logs for more details)")
             sys.stderr.write("Restoration Process Error: Failed to save file object {}: {}".format(filename, os.strerror(e.errno)))
             continue
+
 
 def create_tags(cursor, contentnode, target_id, indent=0):
     """ create_tags: Create tags associated with node
@@ -249,8 +249,8 @@ def create_tags(cursor, contentnode, target_id, indent=0):
         # Save values to new or existing tag object
         tag_obj, is_new = models.ContentTag.objects.get_or_create(
             pk=id,
-            tag_name = tag_name,
-            channel_id = target_id,
+            tag_name=tag_name,
+            channel_id=target_id,
         )
         tag_list.append(tag_obj)
 
