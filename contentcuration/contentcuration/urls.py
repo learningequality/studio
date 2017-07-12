@@ -149,6 +149,7 @@ urlpatterns = [
     url(r'^healthz$', views.health, name='health'),
     url(r'^api/search/', include('search.urls'), name='search'),
     url(r'^channels/administration', views.administration, name='administration'),
+    url(r'^public/channel/(?P<channel_id>[^/]+)', views.get_channel_name_by_id, name='get_channel_name_by_id'),
 ]
 
 # Add node api enpoints
