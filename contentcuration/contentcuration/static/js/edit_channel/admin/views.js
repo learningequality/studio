@@ -73,7 +73,6 @@ var ChannelItem = BaseViews.BaseListNodeItemView.extend({
 		this.render();
 	},
 	render:function(){
-		console.log(this.model.toJSON())
 		this.$el.html(this.template({
 			channel: this.model.toJSON()
 		}));
@@ -130,7 +129,6 @@ var UserItem = BaseViews.BaseListNodeItemView.extend({
 		this.render();
 	},
 	render:function(){
-		console.log(this.model.toJSON())
 		this.$el.html(this.template({
 			user: this.model.toJSON()
 		}));

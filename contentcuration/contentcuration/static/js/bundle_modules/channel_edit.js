@@ -14,6 +14,7 @@ $(function() {
         window.current_channel.fetch({async:false});
     }
     $("#channel-edit-content-wrapper").on("click", close_popups);
+    // $("#admin-page").on("click", close_ids);
 });
 
 function open_channel_settings(){

@@ -691,7 +691,7 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'editors', 'viewers', 'staging_tree',
-                  'description', 'count', 'version', 'public', 'thumbnail_url')
+                  'description', 'count', 'version', 'public', 'thumbnail_url', 'deleted')
 
 
 class AdminUserListSerializer(serializers.ModelSerializer):

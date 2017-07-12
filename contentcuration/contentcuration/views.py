@@ -254,10 +254,12 @@ def administration(request):
     if not request.user.is_admin and not request.user.is_staff:
         return redirect(reverse_lazy('unauthorized'))
 
-    channel_list = Channel.objects.exclude(deleted=True).order_by('name')
+    channel_list = Channel.objects.all().order_by('name')
     channel_serializer = AdminChannelListSerializer(channel_list, many=True)
 
-    user_list = User.objects.prefetch_related('editable_channels').prefetch_related('view_only_channels').exclude(pk=request.user.pk).order_by('email')
+    user_list = User.objects.prefetch_related('editable_channels').prefetch_related('view_only_channels')\
+                .exclude(pk=request.user.pk)\
+                .order_by('email')
     user_serializer = AdminUserListSerializer(user_list, many=True)
 
     return render(request, 'administration.html', {

@@ -1,6 +1,6 @@
 <div class="col-xs-2">
 	{{#if user.first_name}}{{user.first_name}} {{user.last_name}}
-	{{else}}<i title="User has been invited to a channel but has not created an account">Anonymous</i>
+	{{else}}<i title="User has not activated account">Anonymous</i>
 	{{/if}}
 </div>
 <div class="col-xs-2">
@@ -9,15 +9,15 @@
 		<span class="glyphicon glyphicon-envelope action-text name_icon" title="Send Email" aria-hidden="true"></span>
 	</a>
 </div>
-<div class="col-xs-4">
+<div class="col-xs-3">
 	{{#if user.editable_channels}}
-		{{#each user.editable_channels}}<p>{{name}}</p>{{/each}}
+		{{#each user.editable_channels}}<p class="truncate">{{name}}</p>{{/each}}
 	{{else}}None
 	{{/if}}
 </div>
-<div class="col-xs-4">
+<div class="col-xs-3">
 	{{#if user.view_only_channels}}
-		{{#each user.view_only_channels}}<p>{{name}}</p>{{/each}}
+		{{#each user.view_only_channels}}<p class="truncate">{{name}}</p>{{/each}}
 	{{else}}None
 	{{/if}}
 </div>

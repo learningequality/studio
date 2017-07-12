@@ -1,5 +1,6 @@
 @import "global-variables.less";
 
+
 #admin-page{
 	padding: 30px;
 	h2{
@@ -24,15 +25,17 @@
 		min-height: 75vh;
 		padding: 15px;
 	}
-	.header_row {
-		font-weight: bold;
-		font-size: 13pt;
-		background-color: @blue-100;
-		.email_button{ margin: -5px; }
-	}
+
 	.row {
 		padding: 10px;
 		margin: 0px;
+		.channel_name_wrapper [class*="col-"] { padding: 0px 5px !important; }
+		&.header_row {
+			font-weight: bold;
+			font-size: 13pt;
+			background-color: @blue-100;
+			.email_button{ margin: -5px; }
+		}
 		&.data_row{
 			border-bottom: 1px solid @gray-200;
 			.name_icon { display:none; cursor: pointer; }
@@ -51,6 +54,19 @@
 			    margin-bottom: -5px;
 			    color: black;
 			}
+			.channel_id {
+				border: none;
+			    outline: none;
+			    font-size: 10pt;
+			    width: 250px;
+			    background-color: @gray-200;
+			    padding-left: 2px;
+			}
+			.option{ color: white; }
+			.delete_button{ background-color: firebrick; }
+			.restore_button{ background-color: seagreen; }
+			.add_button{ background-color: @blue-500; }
+			.review_button{ background-color: dimgray; }
 		}
 	}
 	.admin_table{

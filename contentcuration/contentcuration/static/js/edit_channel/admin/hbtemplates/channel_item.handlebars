@@ -1,14 +1,22 @@
-<div class="col-xs-5 truncate" title="{{channel.name}}">
-	<a href="/channels/{{channel.id}}/edit" target="_blank">
-		<div class="channel_name truncate">{{ channel.name }}</div>
-		<span class="glyphicon glyphicon-new-window action-text name_icon" title="Open in new tab" aria-hidden="true"></span>
-	</a>
+<div class="col-xs-4 truncate channel_name_wrapper" title="{{channel.name}} (Created {{#format_date channel.created }}{{/format_date}})">
+	<div class="col-xs-1">
+		{{#if channel.deleted}}<span class="glyphicon glyphicon-ban-circle" aria-hidden="true" title="Channel has been deleted"></span>
+		{{else}}
+			{{#if channel.staging_tree}}<span class="glyphicon glyphicon-ok-circle" aria-hidden="true" title="Channel needs review"></span>{{/if}}
+		{{/if}}
+	</div>
+	<div class="col-xs-11">
+		{{#unless channel.deleted}}<a href="/channels/{{channel.id}}/edit" target="_blank">{{/unless}}
+			<div class="channel_name truncate">{{ channel.name }}</div>
+			<span class="glyphicon glyphicon-new-window action-text name_icon" title="Open in new tab" aria-hidden="true"></span>
+		{{#unless channel.deleted}}</a>{{/unless}}
+	</div>
 </div>
-<div class="col-xs-1 text-center" title="{{channel.id}}">
-	<a tabindex="0" class="admin_channel_id action-text" role="button" data-toggle="popover" data-html="true" data-popover-content="#{{channel.id}}"><span class="glyphicon glyphicon-collapse-down" aria-hidden="true"></span></a>
-
+<div class="col-xs-3" title="{{channel.id}}">
+	<input type="text" value="{{channel.id}}" class="channel_id" readonly/>&nbsp;
+	<a><span class="glyphicon glyphicon-copy" aria-hidden="true" title="Copy"></span></a>
 </div>
-<div class="col-xs-2">{{#format_date channel.created }}{{/format_date}}</div>
+<div class="col-xs-1 text-center">{{channel.count}}</div>
 <div class="col-xs-3">
 	<ul class="list-unstyled">
 		{{#each channel.editors}}
@@ -24,25 +32,23 @@
 	</ul>
 </div>
 <div class="col-xs-1 text-center">
-	<a class="action-button">
-		<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-		Add
-	</a>
-</div>
-
-
-<div class="popover content-popover" tabindex="0" role="tooltip" id="admin_channel_{{channel.id}}">
-  <div class="popover-body">
-    <input type="text" value="{{channel.id}}"/><a>Copy</a>
-  </div>
-</div>
-<div class="popover content-popover" tabindex="0" role="tooltip" id="options_{{node.id}}">
-	<div class="arrow"></div>
-	<div class="popover-content">
-		<!-- Eventually, would be nice to add in ability to manage deleted channels -->
-		<!-- <div class="edit_item_button option">Recover</div>
-		<div class="copy_item_button option">Delete</div> -->
-		<div class="move_item_button option">Add</div>
-		<div class="delete_item_button option">View</div>
+	<div class="btn-group btn-group-justified" role="group">
+		{{#if channel.deleted}}
+			<div class="btn-group" role="group">
+				<button class="btn option restore_button" title="Restore"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+			</div>
+			<div class="btn-group" role="group">
+				<button class="btn option delete_button" title="Delete Permanently"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></button>
+			</div>
+		{{else}}
+			<div class="btn-group" role="group">
+				<button class="btn option add_button" title="Add to Channel List"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+			</div>
+			{{#if channel.staging_tree}}
+				<div class="btn-group" role="group">
+					<button class="btn option review_button" title="Review"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
+				</div>
+			{{/if}}
+		{{/if}}
 	</div>
 </div>
