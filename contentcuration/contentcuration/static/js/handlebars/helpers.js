@@ -132,3 +132,17 @@ Handlebars.registerHelper('ispositive', function(num, options) {
   }
   return options.inverse(this);
 });
+
+Handlebars.registerHelper('format_date', function(date) {
+  var monthNames = [
+    "Jan", "Feb", "Mar",
+    "Apr", "May", "June", "July",
+    "Aug", "Sep", "Oct",
+    "Nov", "Dec"
+  ];
+  var date = new Date(date);
+  var day = date.getDate();
+  var monthIndex = date.getMonth();
+  var year = date.getFullYear();
+  return monthNames[monthIndex] + " " + day + ", " + year;
+});

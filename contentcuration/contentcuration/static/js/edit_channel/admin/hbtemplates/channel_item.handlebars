@@ -1,0 +1,48 @@
+<div class="col-xs-5 truncate" title="{{channel.name}}">
+	<a href="/channels/{{channel.id}}/edit" target="_blank">
+		<div class="channel_name truncate">{{ channel.name }}</div>
+		<span class="glyphicon glyphicon-new-window action-text name_icon" title="Open in new tab" aria-hidden="true"></span>
+	</a>
+</div>
+<div class="col-xs-1 text-center" title="{{channel.id}}">
+	<a tabindex="0" class="admin_channel_id action-text" role="button" data-toggle="popover" data-html="true" data-popover-content="#{{channel.id}}"><span class="glyphicon glyphicon-collapse-down" aria-hidden="true"></span></a>
+
+</div>
+<div class="col-xs-2">{{#format_date channel.created }}{{/format_date}}</div>
+<div class="col-xs-3">
+	<ul class="list-unstyled">
+		{{#each channel.editors}}
+			<li title="{{first_name}} {{last_name}}" class="truncate">
+				<span class="glyphicon glyphicon-edit access_icon" aria-hidden="true" title="Can Edit"></span> {{first_name}} {{last_name}}
+			</li>
+		{{/each}}
+		{{#each channel.viewers}}
+			<li title="{{first_name}} {{last_name}}" class="truncate">
+				<span class="glyphicon glyphicon-eye-open access_icon" aria-hidden="true" title="Can View"></span> {{first_name}} {{last_name}}
+			</li>
+		{{/each}}
+	</ul>
+</div>
+<div class="col-xs-1 text-center">
+	<a class="action-button">
+		<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+		Add
+	</a>
+</div>
+
+
+<div class="popover content-popover" tabindex="0" role="tooltip" id="admin_channel_{{channel.id}}">
+  <div class="popover-body">
+    <input type="text" value="{{channel.id}}"/><a>Copy</a>
+  </div>
+</div>
+<div class="popover content-popover" tabindex="0" role="tooltip" id="options_{{node.id}}">
+	<div class="arrow"></div>
+	<div class="popover-content">
+		<!-- Eventually, would be nice to add in ability to manage deleted channels -->
+		<!-- <div class="edit_item_button option">Recover</div>
+		<div class="copy_item_button option">Delete</div> -->
+		<div class="move_item_button option">Add</div>
+		<div class="delete_item_button option">View</div>
+	</div>
+</div>

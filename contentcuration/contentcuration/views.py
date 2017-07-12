@@ -11,8 +11,8 @@ from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.urlresolvers import reverse_lazy
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
-from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation
-from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
+from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User
+from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, AdminChannelListSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, AdminUserListSerializer, InvitationSerializer
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -243,3 +243,25 @@ def activate_channel_endpoint(request):
 def get_staged_diff_endpoint(request):
     if request.method == 'POST':
         return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def administration(request):
+    # Check if browser is supported
+    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
+        return redirect(reverse_lazy('unsupported_browser'))
+    if not request.user.is_admin and not request.user.is_staff:
+        return redirect(reverse_lazy('unauthorized'))
+
+    channel_list = Channel.objects.exclude(deleted=True).order_by('name')
+    channel_serializer = AdminChannelListSerializer(channel_list, many=True)
+
+    user_list = User.objects.prefetch_related('editable_channels').prefetch_related('view_only_channels').exclude(pk=request.user.pk).order_by('email')
+    user_serializer = AdminUserListSerializer(user_list, many=True)
+
+    return render(request, 'administration.html', {
+                                                 "channels": JSONRenderer().render(channel_serializer.data),
+                                                 "current_user": JSONRenderer().render(CurrentUserSerializer(request.user).data),
+                                                 "users": JSONRenderer().render(user_serializer.data)
+                                                })

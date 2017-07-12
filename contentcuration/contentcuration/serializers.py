@@ -597,7 +597,6 @@ class ChannelSerializer(serializers.ModelSerializer):
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
             'public', 'thumbnail_url', 'pending_editors', 'viewers', 'tags', 'preferences')
 
-
 class AccessibleChannelListSerializer(serializers.ModelSerializer):
     size = serializers.SerializerMethodField("get_resource_size")
     count = serializers.SerializerMethodField("get_resource_count")
@@ -647,7 +646,6 @@ class ChannelListSerializer(serializers.ModelSerializer):
         fields = ('id', 'created', 'name', 'view_only', 'published', 'pending_editors', 'editors', 'viewers',
                   'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'deleted', 'preferences')
 
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -667,6 +665,42 @@ class UserChannelListSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'first_name', 'last_name', 'id')
 
+
+class AdminChannelListSerializer(serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+    published = serializers.SerializerMethodField('check_published')
+    count = serializers.SerializerMethodField("get_resource_count")
+    created = serializers.SerializerMethodField('get_date_created')
+    editors = UserChannelListSerializer(many=True, read_only=True)
+    viewers = UserChannelListSerializer(many=True, read_only=True)
+
+    def generate_thumbnail_url(self, channel):
+        if channel.thumbnail and 'static' not in channel.thumbnail:
+            return generate_storage_url(channel.thumbnail)
+        return '/static/img/kolibri_placeholder.png'
+
+    def get_date_created(self, channel):
+        return channel.main_tree.created
+
+    def get_resource_count(self, channel):
+        return channel.main_tree.get_descendant_count()
+
+    def check_published(self, channel):
+        return channel.main_tree.published
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'created', 'name', 'published', 'editors', 'viewers', 'staging_tree',
+                  'description', 'count', 'version', 'public', 'thumbnail_url')
+
+
+class AdminUserListSerializer(serializers.ModelSerializer):
+    editable_channels = AdminChannelListSerializer(many=True, read_only=True)
+    view_only_channels = AdminChannelListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels')
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')

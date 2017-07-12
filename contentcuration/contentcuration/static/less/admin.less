@@ -1,0 +1,61 @@
+@import "global-variables.less";
+
+#admin-page{
+	padding: 30px;
+	h2{
+		margin: 0px;
+		margin-bottom: 30px;
+		.back_button { font-size: 20pt;}
+	}
+	a{text-decoration: none;}
+	.tab_nav {
+		margin-right: 10px;
+		a{
+			min-width: 100px;
+			font-size: 13pt;
+			color: @gray-800;
+		}
+		&.active a{ font-weight: bold; }
+	}
+	.tab-content{
+		background-color: white;
+		border: 1px solid #DDD;
+		border-top: none;
+		min-height: 75vh;
+		padding: 15px;
+	}
+	.header_row {
+		font-weight: bold;
+		font-size: 13pt;
+		background-color: @blue-100;
+		.email_button{ margin: -5px; }
+	}
+	.row {
+		padding: 10px;
+		margin: 0px;
+		&.data_row{
+			border-bottom: 1px solid @gray-200;
+			.name_icon { display:none; cursor: pointer; }
+			&:hover {
+				background-color: @gray-200;
+				.name_icon { display: inline; }
+			}
+			&:last-child{ border-bottom:none; }
+			.access_icon{
+				font-size: 10pt;
+				color: @gray-400;
+			}
+			.channel_name, .user_name {
+				display: inline-block;
+			    max-width: 90%;
+			    margin-bottom: -5px;
+			    color: black;
+			}
+		}
+	}
+	.admin_table{
+		font-size: 12pt;
+		min-height: 65vh;
+    	border: 2px solid @blue-100;
+	}
+}

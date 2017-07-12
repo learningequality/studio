@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
+
+	<script>
+		var user = JSON.parse("{{ current_user|escapejs }}");
+		var channels = JSON.parse("{{ channels|escapejs }}");
+		var users = JSON.parse("{{ users|escapejs }}");
+	</script>
+	<script type="text/javascript">
+		var bundle = require("channel_edit");
+		bundle.$(function() {
+            window.channel_router = new bundle.ChannelEditRouter();
+            bundle.Backbone.history.start({pushState: true, root: "{% url 'channels' %}"});
+        });
+
+    </script>
+	<div id="admin-container"></div>
+{% endblock content %}
