@@ -1,6 +1,6 @@
 import json
 import logging
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -243,3 +243,12 @@ def activate_channel_endpoint(request):
 def get_staged_diff_endpoint(request):
     if request.method == 'POST':
         return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
+
+@api_view(['GET'])
+def get_channel_name_by_id(request):
+    channel_id = request.query_params.get('id')
+    try:
+        channel = Channel.objects.get(pk=channel_id)
+        return HttpResponse(json.dumps({"name": channel.name, "description": channel.description}))
+    except ObjectDoesNotExist:
+        return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
