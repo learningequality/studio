@@ -1,39 +1,36 @@
-<div class="col-xs-4 truncate channel_name_wrapper" title="{{channel.name}} (Created {{#format_date channel.created }}{{/format_date}})">
+<div class="col-xs-4 truncate channel_name_wrapper" title="{{name}} (Created {{#format_date created }}{{/format_date}})">
 	<div class="col-xs-1">
-		{{#if channel.deleted}}<span class="glyphicon glyphicon-ban-circle" aria-hidden="true" title="Channel has been deleted"></span>
+		{{#if deleted}}<span class="glyphicon glyphicon-ban-circle" aria-hidden="true" title="Channel has been deleted"></span>
 		{{else}}
-			{{#if channel.staging_tree}}<span class="glyphicon glyphicon-ok-circle" aria-hidden="true" title="Channel needs review"></span>{{/if}}
+			{{#if staging_tree}}<span class="glyphicon glyphicon-ok-circle" aria-hidden="true" title="Channel needs review"></span>{{/if}}
 		{{/if}}
 	</div>
 	<div class="col-xs-11">
-		{{#unless channel.deleted}}<a href="/channels/{{channel.id}}/edit" target="_blank">{{/unless}}
-			<div class="channel_name truncate">{{ channel.name }}</div>
-			<span class="glyphicon glyphicon-new-window action-text name_icon" title="Open in new tab" aria-hidden="true"></span>
-		{{#unless channel.deleted}}</a>{{/unless}}
+		{{#unless deleted}}<a href="/channels/{{id}}/edit" target="_blank">{{/unless}}
+			<div class="channel_name truncate">{{ name }}</div>
+		{{#unless deleted}}<span class="glyphicon glyphicon-new-window action-text name_icon" title="Open in new tab" aria-hidden="true"></span></a>{{/unless}}
 	</div>
 </div>
-<div class="col-xs-3" title="{{channel.id}}">
-	<input type="text" value="{{channel.id}}" class="channel_id" readonly/>&nbsp;
+<div class="col-xs-3" title="{{id}}">
+	<input type="text" value="{{id}}" class="channel_id" readonly/>&nbsp;
 	<a><span class="glyphicon glyphicon-copy" aria-hidden="true" title="Copy"></span></a>
 </div>
-<div class="col-xs-1 text-center">{{channel.count}}</div>
-<div class="col-xs-3">
-	<ul class="list-unstyled">
-		{{#each channel.editors}}
-			<li title="{{first_name}} {{last_name}}" class="truncate">
-				<span class="glyphicon glyphicon-edit access_icon" aria-hidden="true" title="Can Edit"></span> {{first_name}} {{last_name}}
-			</li>
-		{{/each}}
-		{{#each channel.viewers}}
-			<li title="{{first_name}} {{last_name}}" class="truncate">
-				<span class="glyphicon glyphicon-eye-open access_icon" aria-hidden="true" title="Can View"></span> {{first_name}} {{last_name}}
-			</li>
-		{{/each}}
-	</ul>
+<div class="col-xs-1 text-center">
+	{{#if editors}}
+		<a tabindex="0" class="popover_link action-text" data-id="#admin_editors_{{id}}">{{#format_count "Editor" editors.length}}{{/format_count}}</a>
+	{{else}}None
+	{{/if}}
 </div>
 <div class="col-xs-1 text-center">
+	{{#if viewers}}
+		<a tabindex="0" class="popover_link action-text" data-id="#admin_viewers_{{id}}">{{#format_count "Viewer" viewers.length}}{{/format_count}}</a>
+	{{else}}None
+	{{/if}}
+</div>
+<div class="col-xs-2 text-center">{{#format_count "Resource" count}}{{/format_count}}</div>
+<div class="col-xs-1 text-center">
 	<div class="btn-group btn-group-justified" role="group">
-		{{#if channel.deleted}}
+		{{#if deleted}}
 			<div class="btn-group" role="group">
 				<button class="btn option restore_button" title="Restore"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
 			</div>
@@ -44,11 +41,33 @@
 			<div class="btn-group" role="group">
 				<button class="btn option add_button" title="Add to Channel List"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
 			</div>
-			{{#if channel.staging_tree}}
+			{{#if staging_tree}}
 				<div class="btn-group" role="group">
 					<button class="btn option review_button" title="Review"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
 				</div>
 			{{/if}}
 		{{/if}}
+	</div>
+</div>
+
+<div class="popover" tabindex="0" role="popover" id="admin_editors_{{id}}">
+	<div class="arrow"></div>
+	<div class="popover-content">
+		<ul class="list-unstyled">
+			{{#each editors}}
+				<li title="{{first_name}} {{last_name}}" class="truncate"> {{first_name}} {{last_name}}</li>
+			{{/each}}
+		</ul>
+	</div>
+</div>
+
+<div class="popover" tabindex="0" role="popover" id="admin_viewers_{{id}}">
+	<div class="arrow"></div>
+	<div class="popover-content">
+		<ul class="list-unstyled">
+			{{#each viewers}}
+				<li title="{{first_name}} {{last_name}}" class="truncate">{{first_name}} {{last_name}}</li>
+			{{/each}}
+		</ul>
 	</div>
 </div>

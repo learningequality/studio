@@ -48,6 +48,32 @@ var BaseAdminList = BaseViews.BaseListView.extend({
 	},
 });
 
+var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
+	className: "data_row row",
+	tagName:"div",
+
+	initialize: function(options) {
+		this.containing_list_view = options.containing_list_view;
+		this.render();
+	},
+	render:function(){
+		this.$el.html(this.template(this.model.toJSON()));
+		this.create_popover();
+	},
+	create_popover:function(){
+		var self = this;
+		this.$el.find(".popover_link").popover({
+			html: true,
+			placement: "bottom",
+			trigger: "focus",
+			toggle: "popover",
+			content: function () {
+		        return $(this.dataset.id).html();
+		    }
+		});
+	}
+});
+
 var ChannelList = BaseAdminList.extend({
 	template: require("./hbtemplates/channel_list.handlebars"),
 	list_selector:".channel_list",
@@ -63,45 +89,10 @@ var ChannelList = BaseAdminList.extend({
 });
 
 
-var ChannelItem = BaseViews.BaseListNodeItemView.extend({
+var ChannelItem = BaseAdminItem.extend({
 	template: require("./hbtemplates/channel_item.handlebars"),
 	className: "data_row row",
-	tagName:"div",
-
-	initialize: function(options) {
-		this.containing_list_view = options.containing_list_view;
-		this.render();
-	},
-	render:function(){
-		this.$el.html(this.template({
-			channel: this.model.toJSON()
-		}));
-		this.create_popover();
-	},
-	create_popover:function(){
-		var self = this;
-		this.$el.find(".admin_channel_id").popover({
-			animation:false,
-			trigger:"manual",
-			html: true,
-			selector: '[rel="popover"]',
-			content: function () {
-		        return $("#admin_channel_" + self.model.get("id")).html();
-		    }
-		}).click(function(event){
-			var hadClass = $(this).hasClass("active-popover");
-			$('.admin_channel_id').each(function() {
-	            $(this).popover('hide');
-	            $(this).removeClass("active-popover");
-	        });
-			if(!hadClass){
-				$(this).popover('show');
-	        	$(this).addClass("active-popover");
-			}
-	        event.preventDefault();
-	        event.stopPropagation();
-		});
-	}
+	tagName:"div"
 });
 
 var UserList = BaseAdminList.extend({
@@ -119,20 +110,8 @@ var UserList = BaseAdminList.extend({
 });
 
 
-var UserItem = BaseViews.BaseListNodeItemView.extend({
+var UserItem = BaseAdminItem.extend({
 	template: require("./hbtemplates/user_item.handlebars"),
-	className: "data_row row",
-	tagName:"div",
-
-	initialize: function(options) {
-		this.containing_list_view = options.containing_list_view;
-		this.render();
-	},
-	render:function(){
-		this.$el.html(this.template({
-			user: this.model.toJSON()
-		}));
-	}
 });
 
 
