@@ -247,9 +247,8 @@ def get_staged_diff_endpoint(request):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def get_channel_name_by_id(request):
-    """ Endpoint: /public/channel/?id=<channel_id> """
-    channel_id = request.query_params.get('id')
+def get_channel_name_by_id(request, channel_id):
+    """ Endpoint: /public/channel/<channel_id> """
     try:
         channel = Channel.objects.get(pk=channel_id)
         return HttpResponse(json.dumps({"name": channel.name, "description": channel.description}))
