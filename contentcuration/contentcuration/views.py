@@ -246,6 +246,7 @@ def get_staged_diff_endpoint(request):
 
 @api_view(['GET'])
 def get_channel_name_by_id(request):
+    """ Endpoint: /public/channel/?id=<channel_id> """
     channel_id = request.query_params.get('id')
     try:
         channel = Channel.objects.get(pk=channel_id)
