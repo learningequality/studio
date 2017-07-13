@@ -688,10 +688,10 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
         return channel.main_tree.modified
 
     def compute_item_count(self, channel):
-        return channel.main_tree.get_descendant_count()
+        return channel.main_tree.get_descendants().count()
 
     def compute_kind_count(self, channel):
-        return channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by()
+        return channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')
 
     def check_published(self, channel):
         return channel.main_tree.published
