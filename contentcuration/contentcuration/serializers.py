@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files import File as DjFile
 from django.db import transaction
-from django.db.models import Q, Max
+from django.db.models import Q, Max, Count
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -663,13 +663,14 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 class UserChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id')
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active')
 
 
 class AdminChannelListSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
-    count = serializers.SerializerMethodField("get_resource_count")
+    count = serializers.SerializerMethodField("compute_item_count")
+    kind_count = serializers.SerializerMethodField("compute_kind_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
     editors = UserChannelListSerializer(many=True, read_only=True)
@@ -686,15 +687,18 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
     def get_date_modified(self, channel):
         return channel.main_tree.modified
 
-    def get_resource_count(self, channel):
+    def compute_item_count(self, channel):
         return channel.main_tree.get_descendant_count()
+
+    def compute_kind_count(self, channel):
+        return channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by()
 
     def check_published(self, channel):
         return channel.main_tree.published
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree',
+        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree', 'kind_count',
                   'description', 'count', 'version', 'public', 'thumbnail_url', 'deleted', 'ricecooker_version')
 
 

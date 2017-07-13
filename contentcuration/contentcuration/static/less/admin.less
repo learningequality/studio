@@ -111,11 +111,15 @@
 				padding: 5px;
 				min-width: 150px;
 				li { margin-top: 10px; }
+				.content_icon {
+					color: @gray-400;
+					margin-right: 5px;
+				}
 			}
 			.option{ color: white; }
 			.delete_button{ background-color: firebrick; }
 			.restore_button{ background-color: seagreen; }
-			.add_button{ background-color: @blue-500; }
+			.add_button, .email_button{ background-color: @blue-500; }
 			.review_button, .admin_button{ background-color: goldenrod; }
 		}
 	}
@@ -123,5 +127,33 @@
 		font-size: 12pt;
 		min-height: 65vh;
     	border: 2px solid @blue-100;
+	}
+}
+
+#email_modal {
+	.modal-header{ background-color: @blue-200; padding-bottom: 10px; }
+	.modal-dialog{ width: 680px; }
+	.row { margin-bottom: 10px; }
+	.required, .error-text{ color: @red-error-color; }
+	.error-field { background-color: @error-input-color; }
+	.email_field {
+		width: 100%;
+		padding: 2px 4px;
+		border: 1px solid @gray-300;
+		&#sender_field{ background-color: @gray-200; }
+		&#subject_field{ font-size: 12pt; }
+	}
+	.address{
+		background-color: @gray-200;
+		border: 1px solid @gray-300;
+		border-radius: 5px;
+		margin-right: 10px;
+		padding: 2px 5px;
+	}
+	#message_area{
+		min-height: 300px;
+		resize: none;
+		padding: 10px;
+		font-size: 12pt;
 	}
 }

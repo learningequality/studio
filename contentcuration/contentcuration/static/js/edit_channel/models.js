@@ -134,7 +134,10 @@ var UserModel = BaseModel.extend({
 var UserCollection = BaseCollection.extend({
     model: UserModel,
     list_name:"user-list",
-    model_name:"UserCollection"
+    model_name:"UserCollection",
+    send_custom_email:function(subject, message){
+        return mail_helper.send_custom_email(this.pluck('email'), subject, message);
+    }
 });
 
 var InvitationModel = BaseModel.extend({

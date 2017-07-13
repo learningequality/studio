@@ -31,8 +31,11 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     search_selector: "",
     filters: [],
     sort_filters: [],
+    extra_filters: [],
+
     initialize: function(options) {
         this.collection = options.collection;
+        this.extra_filters = this.get_dynamic_filters();
         this.render();
     },
     events: {
@@ -42,7 +45,11 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         "change .select_all" : "check_all",
     },
     render: function() {
-        this.$el.html(this.template({filters: this.filters, sort_filters: this.sort_filters}));
+        this.$el.html(this.template({
+            filters: this.filters,
+            sort_filters: this.sort_filters,
+            extra_filters: this.extra_filters
+        }));
         this.apply_filter();
     },
     check_all: function(event){ this.admin_list.check_all(event); },
@@ -50,7 +57,14 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         var asc = this.$(".order_input").val() === "ascending";
         var filter = _.findWhere(this.filters, {'key': this.$(".view_input").val()}).filter;
         var sort = _.findWhere(this.sort_filters, {'key': this.$(".sort_input").val()}).filter;
-        var filtered_collection = new Models.ContentNodeCollection(this.collection.filter(filter));
+
+        var extra = this.$(".extra_input").val();
+        var extra_filter =_.findWhere(this.extra_filters, {'key': extra}).filter;
+
+        var filtered_list = this.collection.chain().filter(filter)
+                                .filter(function(item) { return extra_filter(item, extra); })
+                                .value();
+        var filtered_collection = new Models.ContentNodeCollection(filtered_list);
         filtered_collection.set_comparator(function(item1, item2){return sort(item1, asc, item2);});
         filtered_collection.sort();
         return filtered_collection;
@@ -73,7 +87,8 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     /* Implement in subclasses */
     apply_filter: function() { },
     check_search: function(item) { return false; },
-    handle_checked: function() { }
+    handle_checked: function() { },
+    get_dynamic_filters: function() { return []; }
 });
 
 var BaseAdminList = BaseViews.BaseListView.extend({
@@ -193,7 +208,29 @@ var ChannelTab = BaseAdminTab.extend({
             }
         },
     ],
+    get_dynamic_filters: function() {
+        var filter = [{
+            key: "all",
+            label: "All Users",
+            selected: true,
+            filter: function(channel, id) { return true; }
+        }];
 
+        return filter.concat(_.chain(this.collection.pluck('editors'))
+            .flatten()
+            .where({is_active : true})
+            .uniq(function(item){ return item.id; })
+            .sortBy('first_name')
+            .map(function(item){
+                return {
+                    key: item.id.toString(),
+                    label: item.first_name + " " + item.last_name,
+                    filter: function(channel, id) {
+                        return _.findWhere(channel.get('editors'), {id: Number(id)});
+                    }
+                }
+            }).value());
+    },
     apply_filter: function(){
         this.$("#admin_channel_search").val("");
         if(this.admin_list) {
@@ -323,6 +360,27 @@ var UserTab = BaseAdminTab.extend({
         "change .select_all" : "check_all",
         "click #email_selected" : "email_selected"
     },
+    get_dynamic_filters: function() {
+        var filter = [{
+            key: "all",
+            label: "All Channels",
+            selected: true,
+            filter: function(user, id) { return true; }
+        }];
+        return filter.concat(_.chain(this.collection.pluck('editable_channels'))
+            .flatten()
+            .uniq(function(item){ return item.id; })
+            .sortBy('name')
+            .map(function(item){
+                return {
+                    key: item.id,
+                    label: item.name,
+                    filter: function(user, id) {
+                        return _.findWhere(user.get('editable_channels'), {id: id});
+                    }
+                }
+            }).value());
+    },
     apply_filter: function(){
         this.$("#admin_user_search").val("");
         this.selected_users = [];
@@ -354,7 +412,14 @@ var UserTab = BaseAdminTab.extend({
         }
     },
     email_selected: function() {
-        console.log("EMAILING", this.selected_users);
+        new EmailModalView({
+            collection: new Models.UserCollection(this.selected_users)
+        })
+    },
+    send_user_email: function(user){
+        new EmailModalView({
+            collection: new Models.UserCollection([user])
+        })
     }
 });
 
@@ -377,7 +442,71 @@ var UserList = BaseAdminList.extend({
 var UserItem = BaseAdminItem.extend({
     template: require("./hbtemplates/user_item.handlebars"),
     events: {
-        'click .user_select_checkbox' : 'handle_checked'
+        'click .user_select_checkbox' : 'handle_checked',
+        'click .email_button' : 'send_email'
+    },
+    send_email: function(){
+        this.container.send_user_email(this.model);
+    }
+});
+
+
+var EmailModalView = BaseViews.BaseModalView.extend({
+    template: require("./hbtemplates/email_modal.handlebars"),
+
+    initialize: function(options) {
+        _.bindAll(this, 'close_modal');
+        this.collection = options.collection
+        this.render(this.close_modal, {
+            sender: window.default_sender,
+            users: this.collection.toJSON()
+        });
+        this.$('[data-toggle="tooltip"]').tooltip();
+    },
+    events: {
+        'keydown #message_area': 'resize_box',
+        'keyup #message_area': 'validate',
+        'keyup #subject_field': 'validate',
+        'click #send_button': 'send_email'
+    },
+    close_modal:function(event){
+        if(event && (this.$("#subject_field").val().trim() || this.$("#message_area").val().trim())){
+            var self = this;
+            dialog.dialog("Draft in Progress", "Draft will be lost upon exiting this editor. Are you sure you want to continue?", {
+              "KEEP OPEN":function(){},
+              "DISCARD DRAFT": function(){
+                  self.close();
+                  $(".modal-backdrop").remove();
+              }
+            }, null);
+            this.cancel_actions(event);
+        } else {
+            this.close();
+            $(".modal-backdrop").remove();
+        }
+    },
+    resize_box: function() {
+        // console.log()
+        // var new_height = Math.max(this.$("#message_area")[0].scrollHeight, 300)
+        // this.$("#message_area").autogrow();
+    },
+    validate: function() {
+        var has_subject = this.$("#subject_field").val().trim();
+        var has_message = this.$("#message_area").val().trim();
+        (has_subject)? this.$("#subject_field").removeClass("error-field") : this.$("#subject_field").addClass("error-field");
+        (has_subject && has_message) ?
+            this.$("#send_button").removeAttr('disabled').removeClass('disabled') :
+            this.$("#send_button").attr('disabled', 'disabled').addClass('disabled');
+    },
+    send_email: function(){
+        var subject = this.$("#subject_field").val().trim();
+        var message = this.$("#message_area").val();
+        var self = this;
+        this.collection.send_custom_email(subject, message).then(function(){
+            dialog.alert("Message Sent", "Message has been sent!", self.close_modal);
+        }).catch(function(error){
+            dialog.alert("Message Failed", "Failed to send message (" + error.responseText + ")");
+        });
     }
 });
 

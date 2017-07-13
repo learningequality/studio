@@ -7,6 +7,7 @@ from django.contrib.auth.views import password_reset
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
 from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect
@@ -20,6 +21,21 @@ from contentcuration.api import add_editor_to_channel
 from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
 from contentcuration.models import Channel, User, Invitation
 from contentcuration.statistics import record_user_registration_stats
+
+
+def send_custom_email(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            subject = render_to_string('registration/custom_email_subject.txt', {'subject': data["subject"]})
+            message = render_to_string('registration/custom_email.txt', {'message': data["message"]})
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, data["emails"])
+
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+        return HttpResponse(json.dumps({"success": True}))
+
 
 """ REGISTRATION/INVITATION ENDPOINTS """
 
@@ -35,8 +51,7 @@ def send_invitation_email(request):
             user_email = data["user_email"]
             channel_id = data["channel_id"]
             share_mode = data["share_mode"]
-            retrieved_user = User.objects.get_or_create(email=user_email)
-            recipient = retrieved_user[0]
+            recipient, _new = User.objects.get_or_create(email=user_email)
             channel = Channel.objects.get(id=channel_id)
             invitation = Invitation.objects.get_or_create(invited=recipient,
                                                           email=user_email,
@@ -79,7 +94,6 @@ def send_invitation_email(request):
             "last_name": invitation.last_name,
             "share_mode": invitation.share_mode,
         }))
-
 
 class InvitationAcceptView(FormView):
     form_class = InvitationAcceptForm

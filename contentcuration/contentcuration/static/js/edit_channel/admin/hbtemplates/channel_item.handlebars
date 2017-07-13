@@ -19,7 +19,12 @@
 	{{else}}None
 	{{/if}}
 </div>
-<div class="col-xs-2 text-center">{{#format_count "Resource" count}}{{/format_count}}</div>
+<div class="col-xs-2 text-center">
+	{{#if count}}
+		<a tabindex="0" class="popover_link action-text" data-id="#admin_counts_{{id}}">{{#format_count "Item" count}}{{/format_count}}</a>
+	{{else}}None
+	{{/if}}
+</div>
 <div class="col-xs-1 text-center">
 	<div class="btn-group btn-group-justified" role="group">
 		{{#if deleted}}
@@ -65,3 +70,15 @@
 		</ul>
 	</div>
 </div>
+
+<div class="popover" tabindex="0" role="popover" id="admin_counts_{{id}}">
+	<div class="arrow"></div>
+	<div class="popover-content">
+		<ul class="list-unstyled">
+			{{#each kind_count}}
+				<li><span class="{{#get_icon kind_id}}{{/get_icon}} content_icon"></span> {{#format_count kind_id count true}}{{/format_count}}</li>
+			{{/each}}
+		</ul>
+	</div>
+</div>
+

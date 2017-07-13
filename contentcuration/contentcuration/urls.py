@@ -191,6 +191,7 @@ urlpatterns += [
     url(r'^new/accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)$', registration_views.InvitationRegisterView.as_view(), name="accept_invitation_and_registration"),
     url(r'^decline_invitation/(?P<invitation_link>[^/]+)$', registration_views.decline_invitation, name="decline_invitation"),
     url(r'^invitation_fail$', registration_views.fail_invitation, name="fail_invitation"),
+    url(r'^api/send_custom_email/$', registration_views.send_custom_email, name='send_custom_email'),
 ]
 
 # Add settings endpoints

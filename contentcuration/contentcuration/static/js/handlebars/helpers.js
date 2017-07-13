@@ -74,7 +74,8 @@ Handlebars.registerHelper('format_file_size', function(text){
   return stringHelper.format_size(text);
 });
 
-Handlebars.registerHelper('format_count', function(text, count){
+Handlebars.registerHelper('format_count', function(text, count, capitalize){
+  text = (capitalize)? text.charAt(0).toUpperCase() + text.slice(1) : text;
   return stringHelper.format_count(text, count);
 });
 Handlebars.registerHelper('get_icon', function(kind){
@@ -143,3 +144,4 @@ Handlebars.registerHelper('format_date', function(date) {
   var year = date.getFullYear();
   return monthNames[monthIndex] + " " + day + ", " + year;
 });
+

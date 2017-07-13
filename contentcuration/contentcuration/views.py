@@ -1,5 +1,6 @@
 import json
 import logging
+from django.conf import settings
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
@@ -264,7 +265,8 @@ def administration(request):
     return render(request, 'administration.html', {
                                                  "channels": JSONRenderer().render(channel_serializer.data),
                                                  "current_user": JSONRenderer().render(CurrentUserSerializer(request.user).data),
-                                                 "users": JSONRenderer().render(user_serializer.data)
+                                                 "users": JSONRenderer().render(user_serializer.data),
+                                                 "default_sender": settings.DEFAULT_FROM_EMAIL
                                                 })
 
 @api_view(['GET'])
