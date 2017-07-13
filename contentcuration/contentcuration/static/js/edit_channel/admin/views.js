@@ -4,6 +4,7 @@ var _ = require("underscore");
 require("admin.less");
 var BaseViews = require("edit_channel/views");
 var dialog = require("edit_channel/utils/dialog");
+var stringHelper = require("edit_channel/utils/string_helper");
 
 var AdminView = BaseViews.BaseView.extend({
     lists: [],
@@ -72,6 +73,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     /* Implement in subclasses */
     apply_filter: function() { },
     check_search: function(item) { return false; },
+    handle_checked: function() { }
 });
 
 var BaseAdminList = BaseViews.BaseListView.extend({
@@ -80,19 +82,12 @@ var BaseAdminList = BaseViews.BaseListView.extend({
 
     initialize: function(options) {
         this.collection = options.collection;
+        this.container = options.container;
         this.render();
     },
     render: function() {
         this.$el.html(this.template());
         this.load_content();
-    },
-    create_new_view:function(model){
-        var newView = new ChannelItem({
-            model: model,
-            containing_list_view:this
-        });
-        this.views.push(newView);
-        return newView;
     },
     apply_search: function(matches){
         _.each(this.views, function(view){
@@ -107,6 +102,7 @@ var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
 
     initialize: function(options) {
         this.containing_list_view = options.containing_list_view;
+        this.container = options.container;
         this.render();
     },
     render:function(){
@@ -124,7 +120,11 @@ var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
                 return $(this.dataset.id).html();
             }
         });
-    }
+    },
+    handle_checked:function(){
+        this.checked = this.$el.find("input[type=checkbox]").is(":checked");
+        this.container.handle_checked();
+    },
 });
 
 
@@ -200,13 +200,15 @@ var ChannelTab = BaseAdminTab.extend({
             this.admin_list.remove();
             delete this.admin_list;
         }
-        this.admin_list = new ChannelList({ collection: this.get_filtered_result() });
+        this.admin_list = new ChannelList({
+            collection: this.get_filtered_result(),
+            container: this
+        });
         this.$("#admin_channel_table_wrapper").html(this.admin_list.el);
     },
     check_search: function(item, text, re) {
         return item.get('name').match(re) || item.id.startsWith(text);
     },
-
 });
 
 
@@ -217,7 +219,8 @@ var ChannelList = BaseAdminList.extend({
     create_new_view:function(model){
         var newView = new ChannelItem({
             model: model,
-            containing_list_view:this
+            containing_list_view:this,
+            container: this.container
         });
         this.views.push(newView);
         return newView;
@@ -313,6 +316,13 @@ var UserTab = BaseAdminTab.extend({
             }
         },
     ],
+    events: {
+        "change .filter_input" : "apply_filter",
+        "keyup .search_input" : "apply_search",
+        "paste .search_input" : "apply_search",
+        "change .select_all" : "check_all",
+        "click #email_selected" : "email_selected"
+    },
     apply_filter: function(){
         this.$("#admin_user_search").val("");
         this.selected_users = [];
@@ -320,12 +330,32 @@ var UserTab = BaseAdminTab.extend({
             this.admin_list.remove();
             delete this.admin_list;
         }
-        this.admin_list = new UserList({ collection: this.get_filtered_result() });
+        this.admin_list = new UserList({
+            collection: this.get_filtered_result(),
+            container: this
+        });
         this.$("#admin_user_table_wrapper").html(this.admin_list.el);
+        this.handle_checked();
+        this.$(".select_all").attr("checked", false);
     },
     check_search: function(item, text, re) {
         return item.get('first_name').match(re) || item.get('last_name').match(re) || item.get('email').match(re);
     },
+    handle_checked: function() {
+        this.selected_users = _.chain(this.admin_list.views).where({checked: true}).pluck('model').value();
+        if(this.selected_users.length) {
+            this.$("#email_selected").removeAttr('disabled');
+            this.$("#email_selected").removeClass('disabled');
+            this.$(".email_button_text").text("Email " + stringHelper.format_count("User", this.selected_users.length));
+        } else {
+            this.$("#email_selected").attr('disabled', 'disabled');
+            this.$("#email_selected").addClass('disabled');
+            this.$(".email_button_text").text("Select Users...");
+        }
+    },
+    email_selected: function() {
+        console.log("EMAILING", this.selected_users);
+    }
 });
 
 var UserList = BaseAdminList.extend({
@@ -335,7 +365,8 @@ var UserList = BaseAdminList.extend({
     create_new_view:function(model){
         var newView = new UserItem({
             model: model,
-            containing_list_view:this
+            containing_list_view:this,
+            container: this.container
         });
         this.views.push(newView);
         return newView;
@@ -345,6 +376,9 @@ var UserList = BaseAdminList.extend({
 
 var UserItem = BaseAdminItem.extend({
     template: require("./hbtemplates/user_item.handlebars"),
+    events: {
+        'click .user_select_checkbox' : 'handle_checked'
+    }
 });
 
 

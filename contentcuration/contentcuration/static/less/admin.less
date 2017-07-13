@@ -51,21 +51,17 @@
 	    	li {
 	    		margin-right: 5px;
 	    		input, select{
-	    			padding: 1px 2px;
+	    			padding: 2px 4px;
 	    			border: none;
 	    			margin-left: 2px;
 	    			margin-right: 5px;
+	    			&.search_input{ width: 300px; }
+	    			&[type='checkbox']{
+						vertical-align: middle;
+						margin: 0;
+					}
+					option{ padding: 5px; }
 	    		}
-	    		.search_input{
-	    			width: 300px;
-	    		}
-	    		input[type='checkbox']{
-					vertical-align: middle;
-					margin: 0;
-				}
-				option{
-					padding: 5px;
-				}
 	    	}
 	    }
 	}

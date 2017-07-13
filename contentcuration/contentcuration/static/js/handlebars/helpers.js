@@ -75,10 +75,7 @@ Handlebars.registerHelper('format_file_size', function(text){
 });
 
 Handlebars.registerHelper('format_count', function(text, count){
-  if(Number(count) === 1){
-    return count + " " + text;
-  }
-  return count + " " + text + "s";
+  return stringHelper.format_count(text, count);
 });
 Handlebars.registerHelper('get_icon', function(kind){
   switch (kind){
