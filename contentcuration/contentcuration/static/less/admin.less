@@ -84,6 +84,7 @@
 				.name_icon { display: inline; }
 			}
 			&:last-child{ border-bottom:none; }
+			.admin_icon{ color: @blue-500; }
 			.access_icon{
 				font-size: 10pt;
 				color: @gray-400;
@@ -117,16 +118,25 @@
 				}
 			}
 			.option{ color: white; }
-			.delete_button{ background-color: firebrick; }
-			.restore_button{ background-color: seagreen; }
-			.add_button, .email_button{ background-color: @blue-500; }
-			.review_button, .admin_button{ background-color: goldenrod; }
+			.btn-red{ background-color: firebrick; }
+			.btn-green{ background-color: seagreen; }
+			.btn-blue{ background-color: @blue-500; }
+			.btn-yellow{ background-color: goldenrod; }
+			.btn-gray{ background-color: @gray-700; }
 		}
 	}
 	.admin_table{
 		font-size: 12pt;
 		min-height: 65vh;
     	border: 2px solid @blue-100;
+    	.default-item {
+		    padding-top: 15%;
+		    text-align: center;
+		    font-size: 20pt;
+		    font-weight: bold;
+		    color: @gray-400;
+		    font-style: italic;
+    	}
 	}
 }
 

@@ -28,6 +28,7 @@ import contentcuration.view.internal_views as internal_views
 import contentcuration.view.zip_views as zip_views
 import contentcuration.view.file_views as file_views
 import contentcuration.view.node_views as node_views
+import contentcuration.view.admin_views as admin_views
 import django_js_reverse.views as django_js_reverse_views
 import django.views as django_views
 
@@ -148,7 +149,6 @@ urlpatterns = [
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
     url(r'^api/search/', include('search.urls'), name='search'),
-    url(r'^channels/administration', views.administration, name='administration'),
     url(r'^public/channel/(?P<channel_id>[^/]+)', views.get_channel_name_by_id, name='get_channel_name_by_id'),
 ]
 
@@ -191,7 +191,6 @@ urlpatterns += [
     url(r'^new/accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)$', registration_views.InvitationRegisterView.as_view(), name="accept_invitation_and_registration"),
     url(r'^decline_invitation/(?P<invitation_link>[^/]+)$', registration_views.decline_invitation, name="decline_invitation"),
     url(r'^invitation_fail$', registration_views.fail_invitation, name="fail_invitation"),
-    url(r'^api/send_custom_email/$', registration_views.send_custom_email, name='send_custom_email'),
 ]
 
 # Add settings endpoints
@@ -220,6 +219,13 @@ urlpatterns += [
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),
     url(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
     url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
+]
+
+# Add admin endpoints
+urlpatterns += [
+    url(r'^channels/administration', admin_views.administration, name='administration'),
+    url(r'^make_editor/$', admin_views.make_editor, name='make_editor'),
+    url(r'^api/send_custom_email/$', admin_views.send_custom_email, name='send_custom_email'),
 ]
 
 urlpatterns += [url(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]

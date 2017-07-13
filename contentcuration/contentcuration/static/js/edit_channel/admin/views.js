@@ -29,20 +29,26 @@ var AdminView = BaseViews.BaseView.extend({
 
 var BaseAdminTab = BaseViews.BaseListView.extend({
     search_selector: "",
+    tab_count_selector: "",
     filters: [],
     sort_filters: [],
     extra_filters: [],
 
     initialize: function(options) {
+        _.bindAll(this, "update_count")
         this.collection = options.collection;
         this.extra_filters = this.get_dynamic_filters();
         this.render();
+        this.listenTo(this.collection, "remove", this.update_count);
     },
     events: {
         "change .filter_input" : "apply_filter",
         "keyup .search_input" : "apply_search",
         "paste .search_input" : "apply_search",
         "change .select_all" : "check_all",
+    },
+    update_count: function(){
+        $(this.tab_count_selector).text(this.collection.length);
     },
     render: function() {
         this.$el.html(this.template({
@@ -146,6 +152,7 @@ var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
 var ChannelTab = BaseAdminTab.extend({
     template: require("./hbtemplates/channel_tab.handlebars"),
     search_selector: "#admin_channel_search",
+    tab_count_selector: "#channel_count",
     filters: [
         {
             key: "all",
@@ -168,6 +175,14 @@ var ChannelTab = BaseAdminTab.extend({
             key: "ricecooker",
             label: "Sushi Chef",
             filter: function(item){ return item.get('ricecooker_version'); }
+        }, {
+            key: "public",
+            label: "Public",
+            filter: function(item){ return item.get('public') && !item.get('deleted'); }
+        }, {
+            key: "private",
+            label: "Private",
+            filter: function(item){ return !item.get('public') && !item.get('deleted'); }
         }
     ],
     sort_filters: [
@@ -264,13 +279,17 @@ var ChannelList = BaseAdminList.extend({
     },
 });
 
-
 var ChannelItem = BaseAdminItem.extend({
     template: require("./hbtemplates/channel_item.handlebars"),
     className: "data_row row",
     tagName:"div",
     events: {
-        "click .copy_id": "copy_id"
+        "click .copy_id": "copy_id",
+        "click .restore_button": "restore_channel",
+        "click .private_button": "make_public",
+        "click .public_button": "make_private",
+        "click .delete_button": "delete_channel",
+        "click .join_button": "join_editors"
     },
     copy_id: function(){
         this.$(".channel_id").focus();
@@ -283,7 +302,67 @@ var ChannelItem = BaseAdminItem.extend({
           }
           setTimeout(function(){
             this.$(".copy_id .glyphicon").removeClass("glyphicon-ok").removeClass("glyphicon-remove").addClass("glyphicon-copy");
-        }, 2500);
+        }, 2000);
+    },
+    submit_change: function(data, message){
+        var self = this;
+        var editors = this.model.get("editors");
+        var viewers = this.model.get("viewers");
+        this.save(data, message).then(function(model){
+            self.model.set({
+                "editors": editors,
+                "viewers": viewers,
+            });
+            self.render();
+        });
+    },
+    restore_channel: function() {
+        this.submit_change({deleted: false}, "Restoring Channel...");
+    },
+    make_public: function(){
+        var self = this;
+        dialog.dialog("Public Access", "Making this channel public will allow all users to view and import from this channel. Make public?", {
+          "CANCEL":function(){},
+          "MAKE PUBLIC": function(){
+              self.submit_change({public: true}, "Making Channel Public...");
+          }
+        }, null);
+    },
+    make_private: function(){
+        var self = this;
+        dialog.dialog("Private Access", "Making this channel private will only be accessible to those with editing or view-only permissions. Make private?", {
+          "CANCEL":function(){},
+          "MAKE PRIVATE": function(){
+              self.submit_change({public: false}, "Making Channel Private...");
+          }
+        }, null);
+    },
+    delete_channel: function(){
+        var self = this;
+        dialog.dialog("Deleting Channel", "Are you sure you want to PERMANENTLY delete this channel and all of its content? Action cannot be undone!", {
+          "CANCEL":function(){},
+          "DELETE CHANNEL": function(){
+            self.container.collection.remove(self.model)
+            self.destroy("Deleting Channel...", function(){
+                self.remove();
+            });
+          }
+        }, null);
+    },
+    join_editors: function(){
+        var self = this;
+        dialog.dialog("Joining Channel", "By joining this channel, you will be listed as an editor and have access to it in your channel list. Continue?", {
+          "CANCEL":function(){},
+          "JOIN": function(){
+                self.model.add_editor(window.current_user.id).then(function(){
+                    self.model.set('can_edit', true);
+                    self.render();
+                    dialog.alert("Success!", "You have been added as an editor to " + self.model.get("name"));
+                }).catch(function(error){
+                    dialog.alert("Action Failed", "Failed to join editors (" + error.responseText + ")");
+                });
+          }
+        }, null);
     }
 });
 
@@ -291,6 +370,7 @@ var UserTab = BaseAdminTab.extend({
     template: require("./hbtemplates/user_tab.handlebars"),
     selected_users: [],
     search_selector: "#admin_user_search",
+    tab_count_selector: "#user_count",
     filters: [
         {
             key: "all",
@@ -438,15 +518,44 @@ var UserList = BaseAdminList.extend({
     },
 });
 
-
 var UserItem = BaseAdminItem.extend({
     template: require("./hbtemplates/user_item.handlebars"),
     events: {
         'click .user_select_checkbox' : 'handle_checked',
-        'click .email_button' : 'send_email'
+        'click .email_button' : 'send_email',
+        "click .activate_button": "activate_user",
+        "click .delete_button": "delete_user"
     },
     send_email: function(){
         this.container.send_user_email(this.model);
+    },
+    submit_change: function(data, message){
+        var self = this;
+        var edit_channels = this.model.get("editable_channels");
+        var view_channels = this.model.get("view_only_channels");
+        this.save(data, message).then(function(model){
+            self.model.set({
+                "editable_channels": edit_channels,
+                "view_only_channels": view_channels,
+                is_active: true
+            });
+            self.render();
+        });
+    },
+    activate_user: function(){
+        this.submit_change({is_active: false}, "Activating User...");
+    },
+    delete_user: function(){
+        var self = this;
+        dialog.dialog("Deleting User", "Are you sure you want to PERMANENTLY delete this user? Action cannot be undone!", {
+          "CANCEL":function(){},
+          "DELETE USER": function(){
+            self.container.collection.remove(self.model)
+            self.destroy("Deleting User...", function(){
+                self.remove();
+            });
+          }
+        }, null);
     }
 });
 

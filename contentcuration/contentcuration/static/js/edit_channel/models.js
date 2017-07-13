@@ -561,6 +561,21 @@ var ChannelModel = BaseModel.extend({
                 error:function(error){reject(error.responseText);}
             });
         });
+    },
+    add_editor: function(user_id){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "user_id": user_id
+                }),
+                url: window.Urls.make_editor(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
     }
 });
 

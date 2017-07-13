@@ -29,22 +29,28 @@
 	<div class="btn-group btn-group-justified" role="group">
 		{{#if deleted}}
 			<div class="btn-group" role="group">
-				<button class="btn option restore_button" title="Restore"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+				<button class="btn option btn-green restore_button" title="Restore"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
 			</div>
 			<div class="btn-group" role="group">
-				<button class="btn option delete_button" title="Delete Permanently"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></button>
+				<button class="btn option btn-red delete_button" title="Delete Permanently"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></button>
 			</div>
 		{{else}}
 			<div class="btn-group" role="group">
-				<button class="btn option add_button" title="Add to Channel List"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+				{{#if can_edit}}<button class="btn option btn-blue disabled" title="You already have edit access to this channel"><span class="glyphicon glyphicon-plus" aria-hidden="true" disabled></span></button>
+				{{else}}<button class="btn option btn-blue join_button" title="Join Editors"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+				{{/if}}
 			</div>
+			<div class="btn-group" role="group">
 			{{#if ricecooker_version}}
-				<div class="btn-group" role="group">
-					{{#if staging_tree}}<a href="/channels/{{id}}/staging" target="_blank" class="btn option review_button" title="Review"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a>
-					{{else}}<button class="btn option review_button disabled" title="No updates to review" disabled><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
-					{{/if}}
-				</div>
+				{{#if staging_tree}}<a href="/channels/{{id}}/staging" target="_blank" class="btn option btn-yellow review_button" title="Review"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a>
+				{{else}}<button class="btn option btn-yellow disabled" title="No updates to review" disabled><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
+				{{/if}}
+			{{else}}
+				{{#if public}}<button class="btn option btn-green public_button" title="Public (click to make private)"><span class="glyphicon glyphicon-globe" aria-hidden="true"></span></button>
+				{{else}}<button class="btn option btn-gray private_button" title="Private (click to make public)"><span class="glyphicon glyphicon-lock" aria-hidden="true"></span></button>
+				{{/if}}
 			{{/if}}
+			</div>
 		{{/if}}
 	</div>
 </div>
@@ -54,7 +60,7 @@
 	<div class="popover-content">
 		<ul class="list-unstyled">
 			{{#each editors}}
-				<li title="{{first_name}} {{last_name}}" class="truncate"> {{first_name}} {{last_name}}</li>
+				<li title="{{first_name}} {{last_name}}" class="truncate"><span class="glyphicon glyphicon-user content_icon"></span> {{first_name}} {{last_name}}</li>
 			{{/each}}
 		</ul>
 	</div>
@@ -65,7 +71,7 @@
 	<div class="popover-content">
 		<ul class="list-unstyled">
 			{{#each viewers}}
-				<li title="{{first_name}} {{last_name}}" class="truncate">{{first_name}} {{last_name}}</li>
+				<li title="{{first_name}} {{last_name}}" class="truncate"><span class="glyphicon glyphicon-user content_icon"></span> {{first_name}} {{last_name}}</li>
 			{{/each}}
 		</ul>
 	</div>
