@@ -28,6 +28,9 @@ var BaseCollection = Backbone.Collection.extend({
     save: function(callback) {
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
     },
+    set_comparator: function(comparator){
+        this.comparator = comparator;
+    },
     get_all_fetch: function(ids, force_fetch){
         force_fetch = (force_fetch)? true : false;
         var self = this;

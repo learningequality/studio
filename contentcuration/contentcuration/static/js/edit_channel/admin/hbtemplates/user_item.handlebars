@@ -1,7 +1,14 @@
-<div class="col-xs-3">
-	{{#if is_active}}{{first_name}} {{last_name}}
-	{{else}}<i title="User has not activated account">Anonymous</i>
-	{{/if}}
+<div class="col-xs-4">
+	<input type="checkbox" class="user_select_checkbox" id="admin_user_check_{{id}}"/>
+	<label for="admin_user_check_{{id}}" class="full_name">
+		{{#if is_active}}{{first_name}} {{last_name}}
+		{{else}}
+			<span title="User has not activated account">
+				{{#if first_name}}{{first_name}} {{last_name}}
+				{{else}}<i>Anonymous</i>{{/if}}
+			</span>
+		{{/if}}
+	</label>
 </div>
 <div class="col-xs-3">
 	<a class="email_user">
@@ -20,24 +27,30 @@
 	{{else}}None
 	{{/if}}
 </div>
-<div class="col-xs-2 text-center">
+<div class="col-xs-1 text-center">
 	<div class="btn-group btn-group-justified" role="group">
 		{{#if is_active}}
 			<div class="btn-group" role="group">
-				<button class="btn option add_button" title="Add to Channel List"><span class="glyphicon glyphicon-envelope action-text name_icon" title="Send Email" aria-hidden="true"></span></button>
+				<button class="btn option add_button" title="Send Email"><span class="glyphicon glyphicon-envelope" aria-hidden="true"></span></button>
+			</div>
+			<div class="btn-group" role="group">
+				{{#if is_admin}}
+					<button class="btn option admin_button disabled" title="User is already an admin" disabled><span class="glyphicon glyphicon-star" aria-hidden="true"></span></button>
+				{{else}}<button class="btn option admin_button" title="Make Admin"><span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span></button>
+				{{/if}}
 			</div>
 		{{else}}
 			<div class="btn-group" role="group">
 				<button class="btn option restore_button" title="Activate Account"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
 			</div>
+			<div class="btn-group" role="group">
+				<button class="btn option delete_button" title="Remove User"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+			</div>
 		{{/if}}
-		<div class="btn-group" role="group">
-			<button class="btn option delete_button" title="Remove User"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
-		</div>
 	</div>
 </div>
 
-<div class="popover" tabindex="0" role="popover" id="admin_edit_channels_{{channel.id}}">
+<div class="popover" tabindex="0" role="popover" id="admin_edit_channels_{{id}}">
 	<div class="arrow"></div>
 	<div class="popover-content">
 		<ul class="list-unstyled">
@@ -46,7 +59,7 @@
 	</div>
 </div>
 
-<div class="popover" tabindex="0" role="popover" id="admin_view_channels_{{channel.id}}">
+<div class="popover" tabindex="0" role="popover" id="admin_view_channels_{{id}}">
 	<div class="arrow"></div>
 	<div class="popover-content">
 		<ul class="list-unstyled">

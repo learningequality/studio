@@ -1,19 +1,11 @@
-<div class="col-xs-4 truncate channel_name_wrapper" title="{{name}} (Created {{#format_date created }}{{/format_date}})">
-	<div class="col-xs-1">
-		{{#if deleted}}<span class="glyphicon glyphicon-ban-circle" aria-hidden="true" title="Channel has been deleted"></span>
-		{{else}}
-			{{#if staging_tree}}<span class="glyphicon glyphicon-ok-circle" aria-hidden="true" title="Channel needs review"></span>{{/if}}
-		{{/if}}
-	</div>
-	<div class="col-xs-11">
-		{{#unless deleted}}<a href="/channels/{{id}}/edit" target="_blank">{{/unless}}
-			<div class="channel_name truncate">{{ name }}</div>
-		{{#unless deleted}}<span class="glyphicon glyphicon-new-window action-text name_icon" title="Open in new tab" aria-hidden="true"></span></a>{{/unless}}
-	</div>
+<div class="col-xs-4 truncate channel_name_wrapper" title="{{name}} (Created {{#format_date created }}{{/format_date}}, Last Updated {{#format_date modified }}{{/format_date}})">
+	{{#if deleted}}<i>{{else}}<a href="/channels/{{id}}/edit" target="_blank">{{/if}}
+		<div class="channel_name truncate">{{ name }}</div>
+	{{#if deleted}}</i>{{else}}<span class="glyphicon glyphicon-new-window action-text name_icon" title="Open in new tab" aria-hidden="true"></span></a>{{/if}}
 </div>
 <div class="col-xs-3" title="{{id}}">
 	<input type="text" value="{{id}}" class="channel_id" readonly/>&nbsp;
-	<a><span class="glyphicon glyphicon-copy" aria-hidden="true" title="Copy"></span></a>
+	<a class="action-text copy_id"><span class="glyphicon glyphicon-copy" aria-hidden="true" title="Copy"></span></a>
 </div>
 <div class="col-xs-1 text-center">
 	{{#if editors}}
@@ -41,9 +33,11 @@
 			<div class="btn-group" role="group">
 				<button class="btn option add_button" title="Add to Channel List"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
 			</div>
-			{{#if staging_tree}}
+			{{#if ricecooker_version}}
 				<div class="btn-group" role="group">
-					<button class="btn option review_button" title="Review"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
+					{{#if staging_tree}}<a href="/channels/{{id}}/staging" target="_blank" class="btn option review_button" title="Review"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a>
+					{{else}}<button class="btn option review_button disabled" title="No updates to review" disabled><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
+					{{/if}}
 				</div>
 			{{/if}}
 		{{/if}}
