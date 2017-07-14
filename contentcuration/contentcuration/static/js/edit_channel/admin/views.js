@@ -244,19 +244,25 @@ var ChannelTab = BaseAdminTab.extend({
             key: "items",
             label: "# of Items",
             filter: function(item1, asc, item2){
-                return (asc)? item1.get("count") - item2.get("count") : item2.get("count") - item1.get("count") ;
+                var count1 = item1.get("count");
+                var count2 = item1.get("count");
+                return (asc)? count1 - count2 : count2 - count1;
             }
         }, {
             key: "modified",
             label: "Last Updated",
-            filter: function(item, asc){
-                return (asc)? new Date(item.get("modified")) : -new Date(item.get("modified"));
+            filter: function(item1, asc, item2){
+                var date1 = new Date(item1.get("modified"));
+                var date2 = new Date(item2.get("modified"));
+                return (asc)? date1 - date2 : date2 - date1;
             }
         }, {
             key: "created",
             label: "Date Created",
-            filter: function(item, asc){
-                return (asc)? new Date(item.get("created")) : -new Date(item.get("created"));
+            filter: function(item1, asc, item2){
+                var date1 = new Date(item1.get("created"));
+                var date2 = new Date(item2.get("created"));
+                return (asc)? date1 - date2 : date2 - date1;
             }
         }
     ],
@@ -492,8 +498,10 @@ var UserTab = BaseAdminTab.extend({
         }, {
             key: "date_joined",
             label: "Date Joined",
-            filter: function(item, asc){
-                return (asc)? new Date(item.get("date_joined")) : -new Date(item.get("date_joined"));
+            filter: function(item1, asc, item2){
+                var date1 = new Date(item1.get("date_joined"));
+                var date2 = new Date(item2.get("date_joined"));
+                return (asc)? date1 - date2 : date2 - date1;
             }
         }, {
             key: "channels",
