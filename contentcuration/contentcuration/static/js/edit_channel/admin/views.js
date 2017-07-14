@@ -180,11 +180,11 @@ var ChannelTab = BaseAdminTab.extend({
         {
             key: "all",
             label: "All",
-            selected: true,
             filter: function(item){ return true; }
         }, {
             key: "live",
             label: "Live",
+            selected: true,
             filter: function(item){ return !item.get("deleted"); }
         }, {
             key: "published",
