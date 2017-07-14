@@ -61,11 +61,11 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     check_all: function(event){ this.admin_list.check_all(event); },
     get_filtered_result: function(){
         var asc = this.$(".order_input").val() === "ascending";
-        var filter = _.findWhere(this.filters, {'key': this.$(".view_input").val()}).filter;
-        var sort = _.findWhere(this.sort_filters, {'key': this.$(".sort_input").val()}).filter;
+        var filter = _.findWhere(this.filters, {"key": this.$(".view_input").val()}).filter;
+        var sort = _.findWhere(this.sort_filters, {"key": this.$(".sort_input").val()}).filter;
 
         var extra = this.$(".extra_input").val();
-        var extra_filter =_.findWhere(this.extra_filters, {'key': extra}).filter;
+        var extra_filter =_.findWhere(this.extra_filters, {"key": extra}).filter;
 
         var filtered_list = this.collection.chain().filter(filter)
                                 .filter(function(item) { return extra_filter(item, extra); })
@@ -81,7 +81,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         var re = new RegExp(text, "i");
         return this.collection.chain()
             .filter(function(item) {return q(item, text, re);})
-            .pluck('id').value();
+            .pluck("id").value();
     },
     apply_search: function() {
         var self = this;
@@ -112,7 +112,7 @@ var BaseAdminList = BaseViews.BaseListView.extend({
     },
     apply_search: function(matches){
         _.each(this.views, function(view){
-            view.$el.css('display', (_.contains(matches, view.model.id))? "block" : "none");
+            view.$el.css("display", (_.contains(matches, view.model.id))? "block" : "none");
         });
     }
 });
@@ -162,27 +162,27 @@ var ChannelTab = BaseAdminTab.extend({
         }, {
             key: "live",
             label: "Live",
-            filter: function(item){ return !item.get('deleted'); }
+            filter: function(item){ return !item.get("deleted"); }
         }, {
             key: "deleted",
             label: "Deleted",
-            filter: function(item){ return item.get('deleted'); }
+            filter: function(item){ return item.get("deleted"); }
         }, {
             key: "staged",
             label: "Needs Review",
-            filter: function(item){ return item.get('staging_tree'); }
+            filter: function(item){ return item.get("staging_tree"); }
         }, {
             key: "ricecooker",
             label: "Sushi Chef",
-            filter: function(item){ return item.get('ricecooker_version'); }
+            filter: function(item){ return item.get("ricecooker_version"); }
         }, {
             key: "public",
             label: "Public",
-            filter: function(item){ return item.get('public') && !item.get('deleted'); }
+            filter: function(item){ return item.get("public") && !item.get("deleted"); }
         }, {
             key: "private",
             label: "Private",
-            filter: function(item){ return !item.get('public') && !item.get('deleted'); }
+            filter: function(item){ return !item.get("public") && !item.get("deleted"); }
         }
     ],
     sort_filters: [
@@ -192,8 +192,8 @@ var ChannelTab = BaseAdminTab.extend({
             selected: true,
             filter: function(item1, asc, item2){
                 return (asc) ?
-                    item1.get('name').localeCompare(item2.get('name')) :
-                    -item1.get('name').localeCompare(item2.get('name'));
+                    item1.get("name").localeCompare(item2.get("name")) :
+                    -item1.get("name").localeCompare(item2.get("name"));
             }
         }, {
             key: "id",
@@ -205,20 +205,20 @@ var ChannelTab = BaseAdminTab.extend({
             key: "modified",
             label: "Last Updated",
             filter: function(item, asc){
-                return (asc)? new Date(item.get('modified')) : -new Date(item.get('modified'));
+                return (asc)? new Date(item.get("modified")) : -new Date(item.get("modified"));
             }
         }, {
             key: "created",
             label: "Date Created",
             filter: function(item, asc){
-                return (asc)? new Date(item.get('created')) : -new Date(item.get('created'));
+                return (asc)? new Date(item.get("created")) : -new Date(item.get("created"));
             }
         }, {
             key: "users",
             label: "# of Users",
             filter: function(item1, asc, item2){
-                var total1 = item1.get('editors').length + item1.get('viewers').length;
-                var total2 = item2.get('editors').length + item2.get('viewers').length;
+                var total1 = item1.get("editors").length + item1.get("viewers").length;
+                var total2 = item2.get("editors").length + item2.get("viewers").length;
                 return (asc)? total1 < total2 : total1 > total2 ;
             }
         },
@@ -231,17 +231,17 @@ var ChannelTab = BaseAdminTab.extend({
             filter: function(channel, id) { return true; }
         }];
 
-        return filter.concat(_.chain(this.collection.pluck('editors'))
+        return filter.concat(_.chain(this.collection.pluck("editors"))
             .flatten()
             .where({is_active : true})
             .uniq(function(item){ return item.id; })
-            .sortBy('first_name')
+            .sortBy("first_name")
             .map(function(item){
                 return {
                     key: item.id.toString(),
                     label: item.first_name + " " + item.last_name,
                     filter: function(channel, id) {
-                        return _.findWhere(channel.get('editors'), {id: Number(id)});
+                        return _.findWhere(channel.get("editors"), {id: Number(id)});
                     }
                 }
             }).value());
@@ -259,7 +259,7 @@ var ChannelTab = BaseAdminTab.extend({
         this.$("#admin_channel_table_wrapper").html(this.admin_list.el);
     },
     check_search: function(item, text, re) {
-        return item.get('name').match(re) || item.id.startsWith(text);
+        return item.get("name").match(re) || item.id.startsWith(text);
     },
 });
 
@@ -355,7 +355,7 @@ var ChannelItem = BaseAdminItem.extend({
           "CANCEL":function(){},
           "JOIN": function(){
                 self.model.add_editor(window.current_user.id).then(function(){
-                    self.model.set('can_edit', true);
+                    self.model.set("can_edit", true);
                     self.render();
                     dialog.alert("Success!", "You have been added as an editor to " + self.model.get("name"));
                 }).catch(function(error){
@@ -380,15 +380,15 @@ var UserTab = BaseAdminTab.extend({
         }, {
             key: "activated",
             label: "Active",
-            filter: function(item){ return item.get('is_active'); }
+            filter: function(item){ return item.get("is_active"); }
         }, {
             key: "not_activated",
             label: "Inactive",
-            filter: function(item){ return !item.get('is_active'); }
+            filter: function(item){ return !item.get("is_active"); }
         }, {
             key: "admins",
             label: "Admins",
-            filter: function(item){ return item.get('is_admin'); }
+            filter: function(item){ return item.get("is_admin"); }
         }
     ],
     sort_filters: [
@@ -398,37 +398,37 @@ var UserTab = BaseAdminTab.extend({
             selected: true,
             filter: function(item1, asc, item2){
                 return (asc) ?
-                    item1.get('email').localeCompare(item2.get('email')) :
-                    -item1.get('email').localeCompare(item2.get('email'));
+                    item1.get("email").localeCompare(item2.get("email")) :
+                    -item1.get("email").localeCompare(item2.get("email"));
             }
         }, {
             key: "first_name",
             label: "First Name",
             filter: function(item1, asc, item2){
                 return (asc) ?
-                    item1.get('first_name').localeCompare(item2.get('first_name')) :
-                    -item1.get('first_name').localeCompare(item2.get('first_name'));
+                    item1.get("first_name").localeCompare(item2.get("first_name")) :
+                    -item1.get("first_name").localeCompare(item2.get("first_name"));
             }
         }, {
             key: "last_name",
             label: "Last Name",
             filter: function(item1, asc, item2){
                 return (asc) ?
-                    item1.get('last_name').localeCompare(item2.get('last_name')) :
-                    -item1.get('last_name').localeCompare(item2.get('last_name'));
+                    item1.get("last_name").localeCompare(item2.get("last_name")) :
+                    -item1.get("last_name").localeCompare(item2.get("last_name"));
             }
         }, {
             key: "date_joined",
             label: "Date Joined",
             filter: function(item, asc){
-                return (asc)? new Date(item.get('date_joined')) : -new Date(item.get('date_joined'));
+                return (asc)? new Date(item.get("date_joined")) : -new Date(item.get("date_joined"));
             }
         }, {
             key: "channels",
             label: "# of Channels",
             filter: function(item1, asc, item2){
-                var total1 = item1.get('editable_channels').length;
-                var total2 = item2.get('editable_channels').length;
+                var total1 = item1.get("editable_channels").length;
+                var total2 = item2.get("editable_channels").length;
                 return (asc)? total1 < total2 : total1 > total2 ;
             }
         },
@@ -447,16 +447,16 @@ var UserTab = BaseAdminTab.extend({
             selected: true,
             filter: function(user, id) { return true; }
         }];
-        return filter.concat(_.chain(this.collection.pluck('editable_channels'))
+        return filter.concat(_.chain(this.collection.pluck("editable_channels"))
             .flatten()
             .uniq(function(item){ return item.id; })
-            .sortBy('name')
+            .sortBy("name")
             .map(function(item){
                 return {
                     key: item.id,
                     label: item.name,
                     filter: function(user, id) {
-                        return _.findWhere(user.get('editable_channels'), {id: id});
+                        return _.findWhere(user.get("editable_channels"), {id: id});
                     }
                 }
             }).value());
@@ -477,17 +477,15 @@ var UserTab = BaseAdminTab.extend({
         this.$(".select_all").attr("checked", false);
     },
     check_search: function(item, text, re) {
-        return item.get('first_name').match(re) || item.get('last_name').match(re) || item.get('email').match(re);
+        return item.get("first_name").match(re) || item.get("last_name").match(re) || item.get("email").match(re);
     },
     handle_checked: function() {
-        this.selected_users = _.chain(this.admin_list.views).where({checked: true}).pluck('model').value();
+        this.selected_users = _.chain(this.admin_list.views).where({checked: true}).pluck("model").value();
         if(this.selected_users.length) {
-            this.$("#email_selected").removeAttr('disabled');
-            this.$("#email_selected").removeClass('disabled');
+            this.$("#email_selected").removeAttr("disabled").removeClass("disabled");
             this.$(".email_button_text").text("Email " + stringHelper.format_count("User", this.selected_users.length));
         } else {
-            this.$("#email_selected").attr('disabled', 'disabled');
-            this.$("#email_selected").addClass('disabled');
+            this.$("#email_selected").attr("disabled", "disabled").addClass("disabled");
             this.$(".email_button_text").text("Select Users...");
         }
     },
@@ -521,8 +519,8 @@ var UserList = BaseAdminList.extend({
 var UserItem = BaseAdminItem.extend({
     template: require("./hbtemplates/user_item.handlebars"),
     events: {
-        'click .user_select_checkbox' : 'handle_checked',
-        'click .email_button' : 'send_email',
+        "click .user_select_checkbox" : "handle_checked",
+        "click .email_button" : "send_email",
         "click .activate_button": "activate_user",
         "click .delete_button": "delete_user"
     },
@@ -564,19 +562,19 @@ var EmailModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/email_modal.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, 'close_modal');
+        _.bindAll(this, "close_modal");
         this.collection = options.collection
         this.render(this.close_modal, {
             sender: window.default_sender,
             users: this.collection.toJSON()
         });
-        this.$('[data-toggle="tooltip"]').tooltip();
+        this.$("[data-toggle='tooltip']").tooltip();
     },
     events: {
-        'keydown #message_area': 'resize_box',
-        'keyup #message_area': 'validate',
-        'keyup #subject_field': 'validate',
-        'click #send_button': 'send_email'
+        "keydown #message_area": "resize_box",
+        "keyup #message_area": "validate",
+        "keyup #subject_field": "validate",
+        "click #send_button": "send_email"
     },
     close_modal:function(event){
         if(event && (this.$("#subject_field").val().trim() || this.$("#message_area").val().trim())){
@@ -604,8 +602,8 @@ var EmailModalView = BaseViews.BaseModalView.extend({
         var has_message = this.$("#message_area").val().trim();
         (has_subject)? this.$("#subject_field").removeClass("error-field") : this.$("#subject_field").addClass("error-field");
         (has_subject && has_message) ?
-            this.$("#send_button").removeAttr('disabled').removeClass('disabled') :
-            this.$("#send_button").attr('disabled', 'disabled').addClass('disabled');
+            this.$("#send_button").removeAttr("disabled").removeClass("disabled") :
+            this.$("#send_button").attr("disabled", "disabled").addClass("disabled");
     },
     send_email: function(){
         var subject = this.$("#subject_field").val().trim();
