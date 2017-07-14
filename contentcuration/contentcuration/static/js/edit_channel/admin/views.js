@@ -145,8 +145,10 @@ var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
     initialize: function(options) {
         this.containing_list_view = options.containing_list_view;
         this.container = options.container;
+        this.set_attributes();
         this.render();
     },
+    set_attributes: function() { /* Implement in subclasses */ },
     render:function(){
         this.$el.html(this.template(this.model.toJSON()));
         this.create_popover();
@@ -313,11 +315,8 @@ var ChannelItem = BaseAdminItem.extend({
     count_template: require("./hbtemplates/channel_counts.handlebars"),
     className: "data_row row",
     tagName:"div",
-    initialize: function(options) {
-        this.containing_list_view = options.containing_list_view;
-        this.container = options.container;
+    set_attributes: function() {
         this.model.set("can_edit", _.find(this.model.get("editors"), function(editor) { return editor.id === window.current_user.id; }));
-        this.render();
     },
     events: {
         "click .copy_id": "copy_id",
