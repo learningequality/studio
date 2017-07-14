@@ -74,11 +74,9 @@ Handlebars.registerHelper('format_file_size', function(text){
   return stringHelper.format_size(text);
 });
 
-Handlebars.registerHelper('format_count', function(text, count){
-  if(Number(count) === 1){
-    return count + " " + text;
-  }
-  return count + " " + text + "s";
+Handlebars.registerHelper('format_count', function(text, count, capitalize){
+  text = (capitalize)? text.charAt(0).toUpperCase() + text.slice(1) : text;
+  return stringHelper.format_count(text, count);
 });
 Handlebars.registerHelper('get_icon', function(kind){
   switch (kind){
@@ -131,4 +129,22 @@ Handlebars.registerHelper('ispositive', function(num, options) {
     return options.fn(this);
   }
   return options.inverse(this);
+});
+
+Handlebars.registerHelper('format_date', function(date) {
+  var monthNames = [
+    "Jan", "Feb", "Mar",
+    "Apr", "May", "June", "July",
+    "Aug", "Sep", "Oct",
+    "Nov", "Dec"
+  ];
+  var date = new Date(date);
+  var day = date.getDate();
+  var monthIndex = date.getMonth();
+  var year = date.getFullYear();
+  return monthNames[monthIndex] + " " + day + ", " + year;
+});
+
+Handlebars.registerHelper('equal', function(val1, val2, options) {
+    return ( val1!=val2 ) ? options.inverse(this) : options.fn(this);
 });

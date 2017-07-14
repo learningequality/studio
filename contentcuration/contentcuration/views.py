@@ -213,7 +213,7 @@ def accessible_channels(request):
         data = json.loads(request.body)
         accessible_list = ContentNode.objects.filter(
             pk__in=Channel.objects.select_related('main_tree')
-            .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))
+            .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))
             .exclude(pk=data["channel_id"]).values_list('main_tree_id', flat=True)
         )
         return HttpResponse(JSONRenderer().render(RootNodeSerializer(accessible_list, many=True).data))
