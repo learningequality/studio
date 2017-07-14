@@ -96,4 +96,22 @@ def make_editor(request):
 
             return HttpResponse(json.dumps({"success": True}))
         except ObjectDoesNotExist:
-            return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
+            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAdminUser,))
+def remove_editor(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        try:
+            user = User.objects.get(pk=data["user_id"])
+            channel = Channel.objects.get(pk=data["channel_id"])
+            channel.editors.remove(user)
+            channel.save()
+
+            return HttpResponse(json.dumps({"success": True}))
+        except ObjectDoesNotExist:
+            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+

@@ -44,11 +44,12 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     extra_filters: [],
 
     initialize: function(options) {
-        _.bindAll(this, "update_count")
+        _.bindAll(this, "handle_removed")
         this.collection = options.collection;
         this.extra_filters = this.get_dynamic_filters();
+        this.count = this.collection.length;
         this.render();
-        this.listenTo(this.collection, "remove", this.update_count);
+        this.listenTo(this.collection, "remove", this.handle_removed);
     },
     events: {
         "change .filter_input" : "apply_filter",
@@ -56,8 +57,12 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         "paste .search_input" : "apply_search",
         "change .select_all" : "check_all",
     },
-    update_count: function(){
-        $(this.tab_count_selector).text(this.collection.length);
+    handle_removed: function(){
+        this.update_count(this.count - 1);
+    },
+    update_count: function(count){
+        this.count = count;
+        $(this.tab_count_selector).text(count);
     },
     render: function() {
         this.$el.html(this.template({
@@ -82,6 +87,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         var filtered_collection = new Models.ContentNodeCollection(filtered_list);
         filtered_collection.set_comparator(function(item1, item2){return sort(item1, asc, item2);});
         filtered_collection.sort();
+        this.update_count(filtered_collection.length);
         return filtered_collection;
     },
     get_search_result: function(text){
@@ -95,7 +101,9 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     apply_search: function() {
         var self = this;
         _.defer(function(){
-            self.admin_list.apply_search(self.get_search_result());
+            var matches = self.get_search_result();
+            var count = self.admin_list.apply_search(matches);
+            self.update_count(count);
         }, 500);
     },
 
@@ -107,8 +115,8 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
 });
 
 var BaseAdminList = BaseViews.BaseListView.extend({
-    list_selector:".admin_table",
-    default_item:".admin_table .default-item",
+    list_selector: ".admin_table",
+    default_item: ".admin_table .default-item",
 
     initialize: function(options) {
         this.collection = options.collection;
@@ -120,9 +128,13 @@ var BaseAdminList = BaseViews.BaseListView.extend({
         this.load_content();
     },
     apply_search: function(matches){
+        var total = 0;
         _.each(this.views, function(view){
-            view.$el.css("display", (_.contains(matches, view.model.id))? "block" : "none");
+            var is_match = _.contains(matches, view.model.id);
+            view.$el.css("display", (is_match) ? "block" : "none");
+            total += (is_match) ? 1 : 0;
         });
+        return total;
     }
 });
 
@@ -173,18 +185,6 @@ var ChannelTab = BaseAdminTab.extend({
             label: "Live",
             filter: function(item){ return !item.get("deleted"); }
         }, {
-            key: "deleted",
-            label: "Deleted",
-            filter: function(item){ return item.get("deleted"); }
-        }, {
-            key: "staged",
-            label: "Needs Review",
-            filter: function(item){ return item.get("staging_tree"); }
-        }, {
-            key: "ricecooker",
-            label: "Sushi Chef",
-            filter: function(item){ return item.get("ricecooker_version"); }
-        },, {
             key: "published",
             label: "Published",
             filter: function(item){ return item.get("published"); }
@@ -200,6 +200,18 @@ var ChannelTab = BaseAdminTab.extend({
             key: "can_edit",
             label: "My Channels",
             filter: function(item){ return item.get("can_edit"); }
+        }, {
+            key: "staged",
+            label: "Needs Review",
+            filter: function(item){ return item.get("staging_tree"); }
+        }, {
+            key: "ricecooker",
+            label: "Sushi Chef",
+            filter: function(item){ return item.get("ricecooker_version"); }
+        }, {
+            key: "deleted",
+            label: "Deleted",
+            filter: function(item){ return item.get("deleted"); }
         }
     ],
     sort_filters: [
@@ -219,6 +231,14 @@ var ChannelTab = BaseAdminTab.extend({
                 return (asc) ? item1.id.localeCompare(item2.id) : -item1.id.localeCompare(item2.id);
             }
         }, {
+            key: "users",
+            label: "# of Users",
+            filter: function(item1, asc, item2){
+                var total1 = item1.get("editors").length + item1.get("viewers").length;
+                var total2 = item2.get("editors").length + item2.get("viewers").length;
+                return (asc)? total1 < total2 : total1 > total2 ;
+            }
+        }, {
             key: "modified",
             label: "Last Updated",
             filter: function(item, asc){
@@ -230,15 +250,7 @@ var ChannelTab = BaseAdminTab.extend({
             filter: function(item, asc){
                 return (asc)? new Date(item.get("created")) : -new Date(item.get("created"));
             }
-        }, {
-            key: "users",
-            label: "# of Users",
-            filter: function(item1, asc, item2){
-                var total1 = item1.get("editors").length + item1.get("viewers").length;
-                var total2 = item2.get("editors").length + item2.get("viewers").length;
-                return (asc)? total1 < total2 : total1 > total2 ;
-            }
-        },
+        }
     ],
     get_dynamic_filters: function() {
         var filter = [{
@@ -308,7 +320,8 @@ var ChannelItem = BaseAdminItem.extend({
         "click .public_button": "make_private",
         "click .delete_button": "delete_channel",
         "click .join_button": "join_editors",
-        "click .count_link": "load_counts"
+        "click .count_link": "load_counts",
+        "click .leave_button": "leave_editors"
     },
     load_counts: function(){
         if(this.counts){
@@ -390,6 +403,22 @@ var ChannelItem = BaseAdminItem.extend({
                     dialog.alert("Success!", "You have been added as an editor to " + self.model.get("name"));
                 }).catch(function(error){
                     dialog.alert("Action Failed", "Failed to join editors (" + error.responseText + ")");
+                });
+          }
+        }, null);
+    },
+    leave_editors: function(){
+        var self = this;
+        dialog.dialog("Leaving Channel", "Leaving this channel will remove it from your channel list. "+
+                    "However, you will still be able to edit and join it as an administrator. Continue?", {
+          "CANCEL":function(){},
+          "LEAVE": function(){
+                self.model.remove_editor(window.current_user.id).then(function(){
+                    self.model.set("can_edit", false);
+                    self.render();
+                    dialog.alert("Success!", "You have left " + self.model.get("name"));
+                }).catch(function(error){
+                    dialog.alert("Action Failed", "Failed to leave channel (" + error.responseText + ")");
                 });
           }
         }, null);
@@ -484,7 +513,7 @@ var UserTab = BaseAdminTab.extend({
             .map(function(item){
                 return {
                     key: item.id,
-                    label: item.name,
+                    label: item.name || "Untitled Channel " + item.id,
                     filter: function(user, id) {
                         return _.findWhere(user.get("editable_channels"), {id: id});
                     }
