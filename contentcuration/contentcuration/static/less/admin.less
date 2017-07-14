@@ -155,12 +155,17 @@
 		&#sender_field{ background-color: @gray-200; }
 		&#subject_field{ font-size: 12pt; }
 	}
+	#recipients_field {
+		max-height: 100px;
+		overflow-y: auto;
+	}
 	.address{
 		background-color: @gray-200;
 		border: 1px solid @gray-300;
 		border-radius: 5px;
 		margin-right: 10px;
 		padding: 2px 5px;
+		margin-bottom: 5px;
 	}
 	#message_area{
 		min-height: 300px;
