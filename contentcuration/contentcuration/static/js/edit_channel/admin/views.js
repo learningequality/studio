@@ -408,11 +408,11 @@ var ChannelItem = BaseAdminItem.extend({
         dialog.dialog("Joining Channel", "By joining this channel, you will be listed as an editor and have access to it in your channel list. Continue?", {
           "CANCEL":function(){},
           "JOIN": function(){
+                self.$(".join_button").attr("disabled", "disabled").addClass("disabled");
                 self.model.add_editor(window.current_user.id).then(function(){
                     self.model.set("can_edit", true);
                     self.model.set("editors", self.model.get("editors").concat(window.current_user.toJSON()));
                     self.render();
-                    dialog.alert("Success!", "You have been added as an editor to " + self.model.get("name"));
                 }).catch(function(error){
                     dialog.alert("Action Failed", "Failed to join editors (" + error.responseText + ")");
                 });
@@ -425,11 +425,11 @@ var ChannelItem = BaseAdminItem.extend({
                     "However, you will still be able to edit and join it as an administrator. Continue?", {
           "CANCEL":function(){},
           "LEAVE": function(){
+                self.$(".leave_button").attr("disabled", "disabled").addClass("disabled");
                 self.model.remove_editor(window.current_user.id).then(function(){
                     self.model.set("can_edit", false);
                     self.model.set("editors", _.reject(self.model.get("editors"), function(user) { return user.id === window.current_user.id }));
                     self.render();
-                    dialog.alert("Success!", "You have left " + self.model.get("name"));
                 }).catch(function(error){
                     dialog.alert("Action Failed", "Failed to leave channel (" + error.responseText + ")");
                 });
