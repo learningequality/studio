@@ -238,7 +238,13 @@ var ChannelTab = BaseAdminTab.extend({
             filter: function(item1, asc, item2){
                 var total1 = item1.get("editors").length + item1.get("viewers").length;
                 var total2 = item2.get("editors").length + item2.get("viewers").length;
-                return (asc)? total1 < total2 : total1 > total2 ;
+                return (asc)? total1 - total2 : total2 - total1 ;
+            }
+        }, {
+            key: "items",
+            label: "# of Items",
+            filter: function(item1, asc, item2){
+                return (asc)? item1.get("count") - item2.get("count") : item2.get("count") - item1.get("count") ;
             }
         }, {
             key: "modified",
@@ -495,7 +501,7 @@ var UserTab = BaseAdminTab.extend({
             filter: function(item1, asc, item2){
                 var total1 = item1.get("editable_channels").length;
                 var total2 = item2.get("editable_channels").length;
-                return (asc)? total1 < total2 : total1 > total2 ;
+                return (asc)? total1 - total2 : total2 - total1 ;
             }
         },
     ],
