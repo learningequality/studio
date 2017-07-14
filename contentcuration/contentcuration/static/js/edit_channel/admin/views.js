@@ -10,19 +10,28 @@ var AdminView = BaseViews.BaseView.extend({
     lists: [],
     template: require("./hbtemplates/admin_area.handlebars"),
     initialize: function(options) {
-        this.channel_collection = options.channel_collection;
-        this.users_collection = options.users_collection;
         this.render();
     },
     render: function() {
-        this.$el.html(this.template({channels: this.channel_collection, users: this.users_collection}));
-        this.channel_list = new ChannelTab({
-            collection:this.channel_collection,
-            el: this.$("#admin_channels")
+        this.$el.html(this.template())
+        this.channel_collection = new Models.ChannelCollection();
+        this.users_collection = new Models.UserCollection();
+
+        var self = this;
+        this.channel_collection.get_all_channels().then(function(collection){
+            self.$("#channel_count").text(collection.length);
+            self.channel_list = new ChannelTab({
+                collection:collection,
+                el: self.$("#admin_channels")
+            });
         });
-        this.channel_list = new UserTab({
-            collection:this.users_collection,
-            el: this.$("#admin_users")
+
+        this.users_collection.get_all_users().then(function(collection){
+            self.$("#user_count").text(collection.length);
+            self.user_list = new UserTab({
+                collection:collection,
+                el: self.$("#admin_users")
+            });
         });
     }
 });
@@ -175,6 +184,10 @@ var ChannelTab = BaseAdminTab.extend({
             key: "ricecooker",
             label: "Sushi Chef",
             filter: function(item){ return item.get("ricecooker_version"); }
+        },, {
+            key: "published",
+            label: "Published",
+            filter: function(item){ return item.get("published"); }
         }, {
             key: "public",
             label: "Public",
@@ -183,6 +196,10 @@ var ChannelTab = BaseAdminTab.extend({
             key: "private",
             label: "Private",
             filter: function(item){ return !item.get("public") && !item.get("deleted"); }
+        }, {
+            key: "can_edit",
+            label: "My Channels",
+            filter: function(item){ return item.get("can_edit"); }
         }
     ],
     sort_filters: [
@@ -281,6 +298,7 @@ var ChannelList = BaseAdminList.extend({
 
 var ChannelItem = BaseAdminItem.extend({
     template: require("./hbtemplates/channel_item.handlebars"),
+    count_template: require("./hbtemplates/channel_counts.handlebars"),
     className: "data_row row",
     tagName:"div",
     events: {
@@ -289,7 +307,19 @@ var ChannelItem = BaseAdminItem.extend({
         "click .private_button": "make_public",
         "click .public_button": "make_private",
         "click .delete_button": "delete_channel",
-        "click .join_button": "join_editors"
+        "click .join_button": "join_editors",
+        "click .count_link": "load_counts"
+    },
+    load_counts: function(){
+        if(this.counts){
+            this.$(".counts_popover").html(this.count_template({counts: this.counts}));
+        } else {
+            var self = this;
+            this.model.get_channel_counts().then(function(counts){
+                self.counts = counts;
+                self.$(".counts_popover").html(self.count_template({counts: self.counts}));
+            });
+        }
     },
     copy_id: function(){
         this.$(".channel_id").focus();

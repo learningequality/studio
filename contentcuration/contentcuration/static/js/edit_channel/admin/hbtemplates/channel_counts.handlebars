@@ -1,0 +1,5 @@
+<ul class="list-unstyled ">
+	{{#each counts}}
+		<li><span class="{{#get_icon kind_id}}{{/get_icon}} content_icon"></span> {{#format_count kind_id count true}}{{/format_count}}</li>
+	{{/each}}
+</ul>

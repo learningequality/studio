@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
-from django.db.models import Q, Case, When, Value, IntegerField
+from django.db.models import Q, Case, When, Value, IntegerField, Count
 from django.core.urlresolvers import reverse_lazy
 from django.template.loader import render_to_string
 from rest_framework.renderers import JSONRenderer
@@ -43,18 +43,39 @@ def administration(request):
     if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
         return redirect(reverse_lazy('unsupported_browser'))
 
-    channel_list = Channel.objects.distinct().annotate(can_edit=Case(When(editors=request.user, then=Value(1)), default=Value(0), output_field=IntegerField()))
-    channel_serializer = AdminChannelListSerializer(channel_list, many=True)
-
-    user_list = User.objects.prefetch_related('editable_channels').prefetch_related('view_only_channels')
-    user_serializer = AdminUserListSerializer(user_list, many=True)
-
     return render(request, 'administration.html', {
-                                                 "channels": JSONRenderer().render(channel_serializer.data),
                                                  "current_user": JSONRenderer().render(CurrentUserSerializer(request.user).data),
-                                                 "users": JSONRenderer().render(user_serializer.data),
                                                  "default_sender": settings.DEFAULT_FROM_EMAIL
                                                 })
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAdminUser,))
+def get_all_channels(request):
+    channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors', 'viewers')\
+                    .distinct()\
+                    .annotate(can_edit=Case(When(editors=request.user, then=Value(1)), default=Value(0), output_field=IntegerField()))
+    channel_serializer = AdminChannelListSerializer(channel_list, many=True)
+
+    return HttpResponse(JSONRenderer().render(channel_serializer.data))
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAdminUser,))
+def get_channel_kind_count(request, channel_id):
+    channel = Channel.objects.get(pk=channel_id)
+    return HttpResponse(json.dumps(list(channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))))
+
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAdminUser,))
+def get_all_users(request):
+    user_list = User.objects.prefetch_related('editable_channels').prefetch_related('view_only_channels').distinct()
+    user_serializer = AdminUserListSerializer(user_list, many=True)
+
+    return HttpResponse(JSONRenderer().render(user_serializer.data))
+
 
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))

@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files import File as DjFile
 from django.db import transaction
-from django.db.models import Q, Max, Count
+from django.db.models import Q, Max
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -669,20 +669,13 @@ class UserChannelListSerializer(serializers.ModelSerializer):
 
 
 class AdminChannelListSerializer(serializers.ModelSerializer):
-    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
     count = serializers.SerializerMethodField("compute_item_count")
-    kind_count = serializers.SerializerMethodField("compute_kind_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
     can_edit = serializers.SerializerMethodField("check_can_edit")
     editors = UserChannelListSerializer(many=True, read_only=True)
     viewers = UserChannelListSerializer(many=True, read_only=True)
-
-    def generate_thumbnail_url(self, channel):
-        if channel.thumbnail and 'static' not in channel.thumbnail:
-            return generate_storage_url(channel.thumbnail)
-        return '/static/img/kolibri_placeholder.png'
 
     def get_date_created(self, channel):
         return channel.main_tree.created
@@ -691,10 +684,7 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
         return channel.main_tree.modified
 
     def compute_item_count(self, channel):
-        return channel.main_tree.get_descendants().count()
-
-    def compute_kind_count(self, channel):
-        return channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')
+        return channel.main_tree.get_descendant_count()
 
     def check_published(self, channel):
         return channel.main_tree.published
@@ -704,13 +694,17 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree', 'kind_count',
-                  'description', 'count', 'version', 'public', 'thumbnail_url', 'deleted', 'ricecooker_version', 'can_edit')
+        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree',
+                  'description', 'count', 'version', 'public', 'deleted', 'ricecooker_version', 'can_edit')
 
+class SimplifiedChannelListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Channel
+        fields = ('id', 'name')
 
 class AdminUserListSerializer(serializers.ModelSerializer):
-    editable_channels = AdminChannelListSerializer(many=True, read_only=True)
-    view_only_channels = AdminChannelListSerializer(many=True, read_only=True)
+    editable_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
+    view_only_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
 
     class Meta:
         model = User

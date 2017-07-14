@@ -26,6 +26,14 @@
 		min-height: 75vh;
 		padding: 15px;
 	}
+	.default-item {
+		padding-top: 15%;
+		text-align: center;
+		font-size: 20pt;
+		font-weight: bold;
+		color: @gray-400;
+		font-style: italic;
+	}
 
 	input[type='checkbox']{
 		width: 15px;
@@ -56,6 +64,7 @@
 					margin-left: 2px;
 					margin-right: 5px;
 					&.search_input{ width: 300px; }
+					&.extra_input{ max-width: 200px; }
 					&[type='checkbox']{
 						vertical-align: middle;
 						margin: 0;
@@ -95,6 +104,7 @@
 				margin-bottom: -5px;
 				color: black;
 			}
+			.deleted .channel_name { color: @red-error-color; }
 			.channel_id {
 				border: none;
 				outline: none;
@@ -129,14 +139,6 @@
 		font-size: 12pt;
 		min-height: 65vh;
 		border: 2px solid @blue-100;
-		.default-item {
-			padding-top: 15%;
-			text-align: center;
-			font-size: 20pt;
-			font-weight: bold;
-			color: @gray-400;
-			font-style: italic;
-		}
 	}
 }
 

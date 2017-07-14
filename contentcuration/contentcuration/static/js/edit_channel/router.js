@@ -41,13 +41,9 @@ ChannelEditRouter  = Backbone.Router.extend({
 	},
 
 	admin_page: function(){
-		var channelCollection = new Models.ChannelCollection(window.channels);
-		var userCollection = new Models.UserCollection(window.users);
 		var AdministrationView = require("edit_channel/admin/views");
 		var admin_view = new AdministrationView.AdminView ({
-			el: $("#admin-container"),
-			channel_collection: channelCollection,
-			users_collection: userCollection
+			el: $("#admin-container")
 		});
 	},
 

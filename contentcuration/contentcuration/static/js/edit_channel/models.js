@@ -137,6 +137,20 @@ var UserCollection = BaseCollection.extend({
     model_name:"UserCollection",
     send_custom_email:function(subject, message){
         return mail_helper.send_custom_email(this.pluck('email'), subject, message);
+    },
+    get_all_users: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_all_users(),
+                error:reject,
+                success: function(users) {
+                    self.reset(JSON.parse(users));
+                    resolve(self);
+                }
+            });
+        });
     }
 });
 
@@ -576,6 +590,19 @@ var ChannelModel = BaseModel.extend({
                 error:function(error){reject(error.responseText);}
             });
         });
+    },
+    get_channel_counts: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_channel_kind_count(self.id),
+                error:reject,
+                success: function(data) {
+                    resolve(JSON.parse(data));
+                }
+            });
+        });
     }
 });
 
@@ -585,6 +612,20 @@ var ChannelCollection = BaseCollection.extend({
     model_name:"ChannelCollection",
     comparator:function(channel){
         return -new Date(channel.get('created'));
+    },
+    get_all_channels: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_all_channels(),
+                error:reject,
+                success: function(channels) {
+                    self.reset(JSON.parse(channels))
+                    resolve(self);
+                }
+            });
+        });
     }
 });
 

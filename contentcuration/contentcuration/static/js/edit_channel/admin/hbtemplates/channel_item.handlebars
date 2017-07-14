@@ -1,7 +1,7 @@
-<div class="col-xs-4 truncate channel_name_wrapper" title="{{name}} (Created {{#format_date created }}{{/format_date}}, Last Updated {{#format_date modified }}{{/format_date}})">
-	{{#if deleted}}<i>{{else}}<a href="/channels/{{id}}/edit" target="_blank">{{/if}}
-		<div class="channel_name truncate">{{ name }}</div>
-	{{#if deleted}}</i>{{else}}<span class="glyphicon glyphicon-new-window action-text name_icon" title="Open in new tab" aria-hidden="true"></span></a>{{/if}}
+<div class="col-xs-4 truncate channel_name_wrapper {{#if deleted}}deleted{{/if}}" title="{{name}} (Created {{#format_date created }}{{/format_date}}, Last Updated {{#format_date modified }}{{/format_date}})">
+	{{#unless deleted}}<a href="/channels/{{id}}/edit" target="_blank">{{/unless}}
+		<div class="channel_name truncate">{{#if name}}{{ name }}{{else}}<i title="Channel does not have a name">[Untitled Channel]</i>{{/if}}</div>
+	{{#unless deleted}}<span class="glyphicon glyphicon-new-window action-text name_icon" title="Open in new tab" aria-hidden="true"></span></a>{{/unless}}
 </div>
 <div class="col-xs-3" title="{{id}}">
 	<input type="text" value="{{id}}" class="channel_id" readonly/>&nbsp;
@@ -21,7 +21,7 @@
 </div>
 <div class="col-xs-2 text-center">
 	{{#if count}}
-		<a tabindex="0" class="popover_link action-text" data-id="#admin_counts_{{id}}">{{#format_count "Item" count}}{{/format_count}}</a>
+		<a tabindex="0" class="popover_link count_link action-text" data-id="#admin_counts_{{id}}">{{#format_count "Item" count}}{{/format_count}}</a>
 	{{else}}None
 	{{/if}}
 </div>
@@ -79,12 +79,6 @@
 
 <div class="popover" tabindex="0" role="popover" id="admin_counts_{{id}}">
 	<div class="arrow"></div>
-	<div class="popover-content">
-		<ul class="list-unstyled">
-			{{#each kind_count}}
-				<li><span class="{{#get_icon kind_id}}{{/get_icon}} content_icon"></span> {{#format_count kind_id count true}}{{/format_count}}</li>
-			{{/each}}
-		</ul>
-	</div>
+	<div class="popover-content counts_popover"><i>Loading...</i></div>
 </div>
 
