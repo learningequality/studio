@@ -36,7 +36,9 @@
 			</div>
 		{{else}}
 			<div class="btn-group" role="group">
-				{{#if can_edit}}<button class="btn option btn-red leave_button" title="Leave Channel"><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span></button>
+				{{#if can_edit}}
+					{{#equal 1 editors.length}}<button class="btn option btn-red disabled" title="Channel must have at least one editor" disabled>
+					{{else}}<button class="btn option btn-red leave_button" title="Leave Channel">{{/equal}}<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span></button>
 				{{else}}<button class="btn option btn-blue join_button" title="Join Editors"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
 				{{/if}}
 			</div>

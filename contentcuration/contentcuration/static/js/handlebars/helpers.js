@@ -145,3 +145,6 @@ Handlebars.registerHelper('format_date', function(date) {
   return monthNames[monthIndex] + " " + day + ", " + year;
 });
 
+Handlebars.registerHelper('equal', function(val1, val2, options) {
+    return ( val1!=val2 ) ? options.inverse(this) : options.fn(this);
+});
