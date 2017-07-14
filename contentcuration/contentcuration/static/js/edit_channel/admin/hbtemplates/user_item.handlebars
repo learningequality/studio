@@ -3,7 +3,7 @@
 	<label for="admin_user_check_{{id}}" class="full_name">
 		{{#if is_active}}
 			{{#if is_admin}}<span class="glyphicon glyphicon-star admin_icon" title="Admin"></span>&nbsp;{{/if}}
-			{{first_name}} {{last_name}}
+			<span title="{{first_name}} {{last_name}} (Joined {{#format_date date_joined}}{{/format_date}}">{{first_name}} {{last_name}}</span>
 		{{else}}
 			{{#if first_name}}<span title="User has not activated account">{{first_name}} {{last_name}}</span>
 			{{else}}<span title="User has not set up account (invited by another user)"><i>Anonymous</i></span>
