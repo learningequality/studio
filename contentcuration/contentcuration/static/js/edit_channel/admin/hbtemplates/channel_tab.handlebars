@@ -5,7 +5,7 @@
 			<select id="admin_channel_user" class="filter_input extra_input">
 				{{#each extra_filters}}<option {{#if selected}}selected{{/if}} value="{{key}}">{{label}}</option>{{/each}}
 			</select>
-	    </li>
+		</li>
 		<li>
 			<label>View</label>
 			<select id="admin_channel_view" class="filter_input view_input">
@@ -19,12 +19,12 @@
 			</select>
 		</li>
 		<li class="filter_input">
-	      <label>Order</label>
-	      <select id="admin_channel_order" class="filter_input order_input">
-	        <option selected value="ascending">Ascending</option>
-	        <option value="descending">Descending</option>
-	      </select>
-	    </li>
+			<label>Order</label>
+			<select id="admin_channel_order" class="filter_input order_input">
+				<option selected value="ascending">Ascending</option>
+				<option value="descending">Descending</option>
+			</select>
+		</li>
 		<li><input type="text" id="admin_channel_search" placeholder="Search..." class="search_input"/></li>
 	</ul>
 </div>
