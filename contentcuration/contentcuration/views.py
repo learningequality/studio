@@ -251,6 +251,6 @@ def get_channel_name_by_id(request, channel_id):
     """ Endpoint: /public/channel/<channel_id> """
     try:
         channel = Channel.objects.get(pk=channel_id)
-        return HttpResponse(json.dumps({"name": channel.name, "description": channel.description}))
+        return HttpResponse(json.dumps({"name": channel.name, "description": channel.description, "version": channel.version}))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
