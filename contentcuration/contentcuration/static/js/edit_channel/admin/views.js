@@ -313,6 +313,12 @@ var ChannelItem = BaseAdminItem.extend({
     count_template: require("./hbtemplates/channel_counts.handlebars"),
     className: "data_row row",
     tagName:"div",
+    initialize: function(options) {
+        this.containing_list_view = options.containing_list_view;
+        this.container = options.container;
+        this.model.set("can_edit", _.find(this.model.get("editors"), function(editor) { return editor.id === window.current_user.id; }));
+        this.render();
+    },
     events: {
         "click .copy_id": "copy_id",
         "click .restore_button": "restore_channel",

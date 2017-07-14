@@ -673,7 +673,6 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
     count = serializers.SerializerMethodField("compute_item_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
-    can_edit = serializers.SerializerMethodField("check_can_edit")
     editors = UserChannelListSerializer(many=True, read_only=True)
     viewers = UserChannelListSerializer(many=True, read_only=True)
 
@@ -689,13 +688,10 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
     def check_published(self, channel):
         return channel.main_tree.published
 
-    def check_can_edit(self, channel):
-        return hasattr(channel, 'can_edit') and channel.can_edit == 1
-
     class Meta:
         model = Channel
         fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree',
-                  'description', 'count', 'version', 'public', 'deleted', 'ricecooker_version', 'can_edit')
+                  'description', 'count', 'version', 'public', 'deleted', 'ricecooker_version')
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
     class Meta:
