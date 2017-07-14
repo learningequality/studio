@@ -43,6 +43,9 @@ def administration(request):
     if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
         return redirect(reverse_lazy('unsupported_browser'))
 
+    if not request.user.is_admin:
+        return redirect(reverse_lazy('unauthorized'))
+
     return render(request, 'administration.html', {
                                                  "current_user": JSONRenderer().render(CurrentUserSerializer(request.user).data),
                                                  "default_sender": settings.DEFAULT_FROM_EMAIL
@@ -52,6 +55,9 @@ def administration(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def get_all_channels(request):
+    if not request.user.is_admin:
+        raise SuspiciousOperation("You are not authorized to access this endpoint")
+
     channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors', 'viewers')\
                     .distinct()\
                     .annotate(can_edit=Case(When(editors=request.user, then=Value(1)), default=Value(0), output_field=IntegerField()))
@@ -63,6 +69,9 @@ def get_all_channels(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def get_channel_kind_count(request, channel_id):
+    if not request.user.is_admin:
+        raise SuspiciousOperation("You are not authorized to access this endpoint")
+
     channel = Channel.objects.get(pk=channel_id)
     return HttpResponse(json.dumps(list(channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))))
 
@@ -71,6 +80,9 @@ def get_channel_kind_count(request, channel_id):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def get_all_users(request):
+    if not request.user.is_admin:
+        raise SuspiciousOperation("You are not authorized to access this endpoint")
+
     user_list = User.objects.prefetch_related('editable_channels').prefetch_related('view_only_channels').distinct()
     user_serializer = AdminUserListSerializer(user_list, many=True)
 
@@ -81,6 +93,9 @@ def get_all_users(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def make_editor(request):
+    if not request.user.is_admin:
+        raise SuspiciousOperation("You are not authorized to access this endpoint")
+
     if request.method == 'POST':
         data = json.loads(request.body)
 
@@ -102,6 +117,9 @@ def make_editor(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def remove_editor(request):
+    if not request.user.is_admin:
+        raise SuspiciousOperation("You are not authorized to access this endpoint")
+
     if request.method == 'POST':
         data = json.loads(request.body)
 
