@@ -399,6 +399,7 @@ var ChannelItem = BaseAdminItem.extend({
           "JOIN": function(){
                 self.model.add_editor(window.current_user.id).then(function(){
                     self.model.set("can_edit", true);
+                    self.model.set("editors", self.model.get("editors").concat(window.current_user.toJSON()));
                     self.render();
                     dialog.alert("Success!", "You have been added as an editor to " + self.model.get("name"));
                 }).catch(function(error){
@@ -415,6 +416,7 @@ var ChannelItem = BaseAdminItem.extend({
           "LEAVE": function(){
                 self.model.remove_editor(window.current_user.id).then(function(){
                     self.model.set("can_edit", false);
+                    self.model.set("editors", _.reject(self.model.get("editors"), function(user) { return user.id === window.current_user.id }));
                     self.render();
                     dialog.alert("Success!", "You have left " + self.model.get("name"));
                 }).catch(function(error){
