@@ -21,7 +21,6 @@ from contentcuration.forms import InvitationForm, InvitationAcceptForm, Registra
 from contentcuration.models import Channel, User, Invitation
 from contentcuration.statistics import record_user_registration_stats
 
-
 """ REGISTRATION/INVITATION ENDPOINTS """
 
 
@@ -36,7 +35,8 @@ def send_invitation_email(request):
             user_email = data["user_email"]
             channel_id = data["channel_id"]
             share_mode = data["share_mode"]
-            recipient, _new = User.objects.get_or_create(email=user_email)
+            retrieved_user = User.objects.get_or_create(email=user_email)
+            recipient = retrieved_user[0]
             channel = Channel.objects.get(id=channel_id)
             invitation = Invitation.objects.get_or_create(invited=recipient,
                                                           email=user_email,
@@ -79,6 +79,7 @@ def send_invitation_email(request):
             "last_name": invitation.last_name,
             "share_mode": invitation.share_mode,
         }))
+
 
 class InvitationAcceptView(FormView):
     form_class = InvitationAcceptForm

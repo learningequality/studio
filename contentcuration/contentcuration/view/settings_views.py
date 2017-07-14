@@ -8,8 +8,6 @@ from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, Pref
 from rest_framework.authtoken.models import Token
 from django.core.urlresolvers import reverse_lazy
 from contentcuration.api import check_supported_browsers
-from contentcuration.models import Channel, User
-from contentcuration.serializers import AdminChannelListSerializer, UserChannelListSerializer
 
 
 @login_required

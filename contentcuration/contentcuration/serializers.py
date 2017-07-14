@@ -597,6 +597,7 @@ class ChannelSerializer(serializers.ModelSerializer):
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
             'public', 'thumbnail_url', 'pending_editors', 'viewers', 'tags', 'preferences')
 
+
 class AccessibleChannelListSerializer(serializers.ModelSerializer):
     size = serializers.SerializerMethodField("get_resource_size")
     count = serializers.SerializerMethodField("get_resource_count")
@@ -645,6 +646,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
         model = Channel
         fields = ('id', 'created', 'name', 'view_only', 'published', 'pending_editors', 'editors', 'viewers',
                   'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'deleted', 'preferences')
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
