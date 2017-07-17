@@ -487,7 +487,7 @@ var ContentNodeCollection = BaseCollection.extend({
             });
         });
     },
-    sync: function(models){
+    sync_nodes: function(models){
         var self = this;
         return new Promise(function(resolve, reject){
             var data = { "nodes" : _.pluck(models, 'id'), "channel_id": window.current_channel.id };
@@ -601,7 +601,7 @@ var ChannelModel = BaseModel.extend({
             });
         });
     },
-    sync: function(options){
+    sync_channel: function(options){
         var self = this;
         return new Promise(function(resolve, reject){
             var data = {
