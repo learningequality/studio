@@ -38,7 +38,24 @@ function send_custom_email(emails, subject, message){
   });
 }
 
+function save_custom_template(name, template){
+  return new Promise(function(resolve, reject){
+    var data = {
+      "name": name,
+      "template": template
+    };
+    $.ajax({
+      method:"POST",
+        url: window.Urls.save_custom_email_template(),
+        data:  JSON.stringify(data),
+        success:resolve,
+        error:reject
+    });
+  });
+}
+
 module.exports = {
   send_mail: send_mail,
-  send_custom_email: send_custom_email
+  send_custom_email: send_custom_email,
+  save_custom_template: save_custom_template
 }

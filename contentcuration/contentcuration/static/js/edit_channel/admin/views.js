@@ -189,7 +189,7 @@ var ChannelTab = BaseAdminTab.extend({
         }, {
             key: "published",
             label: "Published",
-            filter: function(item){ return item.get("published"); }
+            filter: function(item){ return item.get("published") && !item.get("deleted"); }
         }, {
             key: "public",
             label: "Public",
@@ -205,11 +205,11 @@ var ChannelTab = BaseAdminTab.extend({
         }, {
             key: "staged",
             label: "Needs Review",
-            filter: function(item){ return item.get("staging_tree"); }
+            filter: function(item){ return item.get("staging_tree") && !item.get("deleted"); }
         }, {
             key: "ricecooker",
             label: "Sushi Chef",
-            filter: function(item){ return item.get("ricecooker_version"); }
+            filter: function(item){ return item.get("ricecooker_version") && !item.get("deleted"); }
         }, {
             key: "deleted",
             label: "Deleted",
@@ -329,6 +329,8 @@ var ChannelItem = BaseAdminItem.extend({
     tagName:"div",
     set_attributes: function() {
         this.model.set("can_edit", _.find(this.model.get("editors"), function(editor) { return editor.id === window.current_user.id; }));
+        this.model.set("editors", _.sortBy(this.model.get("editors"), "first_name"));
+        this.model.set("viewers", _.sortBy(this.model.get("editors"), "first_name"));
     },
     events: {
         "click .copy_id": "copy_id",
@@ -602,7 +604,12 @@ var UserItem = BaseAdminItem.extend({
         "click .user_select_checkbox" : "handle_checked",
         "click .email_button" : "send_email",
         "click .activate_button": "activate_user",
-        "click .delete_button": "delete_user"
+        "click .delete_button": "delete_user",
+        "click .deactivate_button": "deactivate_user"
+    },
+    set_attributes: function() {
+        this.model.set("editable_channels", _.sortBy(this.model.get("editable_channels"), "name"));
+        this.model.set("view_only_channels", _.sortBy(this.model.get("view_only_channels"), "name"));
     },
     send_email: function(){
         this.container.send_user_email(this.model);
@@ -614,14 +621,22 @@ var UserItem = BaseAdminItem.extend({
         this.save(data, message).then(function(model){
             self.model.set({
                 "editable_channels": edit_channels,
-                "view_only_channels": view_channels,
-                is_active: true
+                "view_only_channels": view_channels
             });
             self.render();
         });
     },
     activate_user: function(){
-        this.submit_change({is_active: false}, "Activating User...");
+        this.submit_change({is_active: true}, "Activating User...");
+    },
+    deactivate_user: function(){
+        var self = this;
+        dialog.dialog("Deactivating User", "Deactivating this user will block them from using this account. Are you sure you want to continue?", {
+          "CANCEL":function(){},
+          "DEACTIVATE USER": function(){
+            self.submit_change({is_active: false}, "Deactivating User...");
+          }
+        }, null);
     },
     delete_user: function(){
         var self = this;
@@ -646,7 +661,8 @@ var EmailModalView = BaseViews.BaseModalView.extend({
         this.collection = options.collection
         this.render(this.close_modal, {
             sender: window.default_sender,
-            users: this.collection.toJSON()
+            users: this.collection.toJSON(),
+            placeholders: window.email_placeholders
         });
         this.$("[data-toggle='tooltip']").tooltip();
     },
@@ -654,7 +670,11 @@ var EmailModalView = BaseViews.BaseModalView.extend({
         "keydown #message_area": "resize_box",
         "keyup #message_area": "validate",
         "keyup #subject_field": "validate",
-        "click #send_button": "send_email"
+        "click #send_button": "send_email",
+        "click .email_option": "toggle_dropdown",
+        "click .close_dropdown": "close_dropdown",
+        "click .placeholder": "insert_placeholder",
+        "click .placeholder": "insert_placeholder",
     },
     close_modal:function(event){
         if(event && (this.$("#subject_field").val().trim() || this.$("#message_area").val().trim())){
@@ -694,6 +714,20 @@ var EmailModalView = BaseViews.BaseModalView.extend({
         }).catch(function(error){
             dialog.alert("Message Failed", "Failed to send message (" + error.responseText + ")");
         });
+    },
+    toggle_dropdown: function(event) {
+        var element = this.$($(event.target).data('toggle'));
+        if(!element.is(":visible")) {
+            this.$(".email_dropdown").css("display", "none");
+            element.slideDown(100);
+        }
+    },
+    close_dropdown: function(){
+        this.$(".email_dropdown").slideUp(100);
+    },
+    insert_placeholder: function(event) {
+        this.$("#message_area").val(this.$("#message_area").val() + event.target.dataset.val);
+        this.$("#message_area").focus();
     }
 });
 

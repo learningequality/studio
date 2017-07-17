@@ -673,8 +673,12 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
     count = serializers.SerializerMethodField("compute_item_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
+    download_url = serializers.SerializerMethodField('generate_db_url')
     editors = UserChannelListSerializer(many=True, read_only=True)
     viewers = UserChannelListSerializer(many=True, read_only=True)
+
+    def generate_db_url(self, channel):
+        return "{path}{id}.sqlite3".format(path=settings.CONTENT_DATABASE_URL, id=channel.pk)
 
     def get_date_created(self, channel):
         return channel.main_tree.created
@@ -691,7 +695,7 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree',
-                  'description', 'count', 'version', 'public', 'deleted', 'ricecooker_version')
+                  'description', 'count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url')
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
     class Meta:
