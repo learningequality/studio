@@ -6,6 +6,8 @@ function get_author(){
 	return window.preferences.author || "";
 }
 
+var TABINDEX = 1;
+
 var BaseView = Backbone.View.extend({
 	loop_focus:function(event){
 		var element = $(event.target);
@@ -19,10 +21,9 @@ var BaseView = Backbone.View.extend({
 		$(".first_focus_item").select();
 	},
 	set_indices: function(){
-        var n = 1;
         var selector = (this.el.id)? "#" + this.el.id : "." + this.el.className;
         $(selector + " .tab_item").each(function(){
-            $(this).attr('tabindex', n++);
+            $(this).attr('tabindex', TABINDEX++);
         });
     },
 	display_load:function(message, callback){

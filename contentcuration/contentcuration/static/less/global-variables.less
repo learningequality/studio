@@ -11,9 +11,9 @@
 @red-error-color:#EF2121;
 .action-button {
   background: @blue-500;
+  border: 1px solid @blue-500;
   color: white;
-  padding: 6px 16px;
-  border: none;
+  padding: 5px 16px;
   border-radius: 2px;
   &:hover {
     cursor: pointer;
@@ -33,6 +33,7 @@
   padding: 6px 16px;
   border: none;
   background-color: transparent;
+  &:focus, &:hover{ text-decoration: underline; }
 }
 .toolbar-button {
   width: 40px;

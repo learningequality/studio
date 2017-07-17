@@ -614,7 +614,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   set_initial_focus:function(){
     var element = null;
-      if(!this.allow_edit){
+      if($("#copy_button").length > 0){
         element = $("#copy_button");
       } else if($("#input_title").length > 0){
         element = $('#input_title');
@@ -622,6 +622,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         element = $('#author_field');
       }else if($("#tag_box").length > 0){
         element = $('#tag_box');
+      } else {
+        element = $("#close_uploader_button");
       }
 
       if(element){

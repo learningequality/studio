@@ -41,6 +41,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         this.allow_edit = options.allow_edit;
         this.aspect_ratio = (options.is_channel)? CHANNEL_ASPECT_RATIO : THUMBNAIL_ASPECT_RATIO;
         this.boundary = (options.is_channel)? CHANNEL_CROP_BOUNDARY : THUMBNAIL_CROP_BOUNDARY;
+        this.cropping = false;
         this.render();
         this.dropzone = null;
         this.image_success = true;
@@ -59,9 +60,12 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
                 picture : thumbnail_src,
                 selector: this.get_selector(),
                 show_generate: this.model.get('kind') != undefined,
-                show_crop: this.image_url != this.default_url
+                show_crop: this.image_url != this.default_url,
+                cropping: this.cropping
             }));
-            _.defer(this.create_dropzone, 1);
+            if(!this.cropping) {
+                _.defer(this.create_dropzone, 1);
+            }
         }else{
             this.$el.html(this.preview_template({
                 picture : thumbnail_src,
@@ -109,8 +113,8 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
 
     /*********** CROPPIE FUNCTIONS ***********/
     create_croppie:function(){
-        this.$(".thumbnail_option").css("display", "none");
-        this.$(".croppie_option").css("display", "inline-block");
+        this.cropping = true;
+        this.render();
         this.$(".finished_area").css("visibility", "visible");
         var selector = "#" + this.get_selector() + "_placeholder";
         var self = this;
@@ -128,12 +132,12 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         }).then(function(){})
     },
     cancel_croppie: function(){
+        this.cropping = false;
         this.thumbnail_encoding = this.original_thumbnail_encoding;
         this.render();
     },
     submit_croppie: function(){
-        this.$(".croppie_option").css("display", "none");
-        this.$(".finished_area").css("visibility", "hidden");
+        this.cropping = false;
         this.get_croppie_encoding(this.croppie.get());
         this.submit_image();
         this.render();
@@ -165,7 +169,6 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         this.thumbnail_encoding = null;
         this.render();
         this.submit_image();
-        // this.create_croppie();
     },
 
     /*********** DROPZONE FUNCTIONS ***********/
@@ -221,16 +224,16 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             this.thumbnail_encoding = null;
             this.render();
             this.submit_image();
-            // this.create_croppie();
         }
     }
 });
 
 var ThumbnailModalView = BaseViews.BaseModalView.extend({
+    id: "thumbnail_modal_wrapper",
     template: require("./hbtemplates/thumbnail_generator_modal.handlebars"),
     img_template: require("./hbtemplates/thumbnail_generator_preview.handlebars"),
     initialize: function(options) {
-        _.bindAll(this, "generate_thumbnail", 'use_thumbnail', 'render_preview');
+        _.bindAll(this, "generate_thumbnail", 'use_thumbnail', 'render_preview', "init_focus");
         this.modal = true;
         this.node = options.node;
         this.onuse = options.onuse;
@@ -239,7 +242,8 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
     },
     events: {
         'click #generate_thumbnail' : 'generate_thumbnail',
-        'click #use_thumbnail' : 'use_thumbnail'
+        'click #use_thumbnail' : 'use_thumbnail',
+        "focus .input-tab-control": "loop_focus"
     },
     render: function() {
         this.$el.html(this.template());
@@ -249,6 +253,11 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
         this.render_preview()
         this.$(".modal").on("hide.bs.modal", this.close);
         this.$(".modal").on("hidden.bs.modal", this.closed_modal);
+        this.$(".modal").on("shown.bs.modal", this.init_focus);
+    },
+    init_focus: function(){
+        this.set_indices();
+        this.set_initial_focus();
     },
     render_preview:function(){
         this.$("#thumbnail_preview").html(this.img_template({

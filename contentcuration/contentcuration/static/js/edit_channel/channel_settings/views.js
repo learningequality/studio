@@ -18,6 +18,7 @@ var SettingsModalView = BaseViews.BaseModalView.extend({
             model: this.model,
             onsave: options.onsave
         });
+        this.$("#channel_settings_modal").on("shown.bs.modal", this.settings_view.init_focus);
     }
 });
 
@@ -25,7 +26,7 @@ var SettingsModalView = BaseViews.BaseModalView.extend({
 var SettingsView = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/settings_dialog.handlebars"),
     initialize: function(options) {
-        _.bindAll(this, "set_thumbnail", "reset_thumbnail", "remove_thumbnail");
+        _.bindAll(this, "set_thumbnail", "reset_thumbnail", "remove_thumbnail", "init_focus");
         this.modal = options.modal;
         this.onsave = options.onsave;
         this.thumbnail_url = this.model.get("thumbnail_url");
@@ -61,13 +62,13 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
             oncancel:this.enable_submit,
             onstart: this.disable_submit,
             onremove: this.remove_thumbnail,
-            allow_edit: true
+            allow_edit: true,
+            is_channel: true
         });
-        // var self = this;
-        // _.defer(function(){
-        //     self.set_indices();
-        //     self.set_initial_focus();
-        // }, 1000);
+    },
+    init_focus: function(){
+        this.set_indices();
+        this.set_initial_focus();
     },
     get_license_id: function(license_name){
         return window.licenses.findWhere({license_name: license_name}).id;
@@ -131,8 +132,9 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         this.model.set("thumbnail", "/static/img/kolibri_placeholder.png");
         this.register_changes();
     },
-    set_thumbnail:function(thumbnail, formatted_name, path){
+    set_thumbnail:function(thumbnail, encoding, formatted_name, path){
         this.model.set("thumbnail", formatted_name);
+        this.model.set("thumbnail_encoding", encoding)
         this.register_changes();
     },
     set_editing: function(edit_mode_on){

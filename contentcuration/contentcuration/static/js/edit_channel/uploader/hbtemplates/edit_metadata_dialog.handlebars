@@ -6,7 +6,7 @@
 		<a class="btn btn-tab tab_button" id="metadata_preview_btn">Preview</a>
 		{{#unless isclipboard}}<a class="btn btn-tab tab_button" id="metadata_prerequisites_btn">Prerequisites <span class="prereq_badge badge">Loading...</span></a>{{/unless}}
 	</nav>
-	<div class="input-tab-control tab_item" data-next="{{#if allow_edit}}#tag_box{{else}}#license_about{{/if}}"></div>
+	<div class="input-tab-control tab_item" data-next="{{#if allow_edit}}#upload_save_finish_button{{else}}#copy_button{{/if}}"></div>
 	<div  class="metadata_panel">
 		<div id="metadata_edit_details" class="input_area tab_panel">
 			<div class="section pull-left edit_details_section">
@@ -22,9 +22,9 @@
 	<div class="metadata_save_buttons container-fluid">
 		<div class="pull-right">
 			<button id="upload_save_button" class="disable_on_error editmetadata_save tab_item">APPLY CHANGES</button>
-			<button class="btn btn-default" id="upload_save_finish_button" class="disable_on_error editmetadata_save tab_item">SAVE &amp; CLOSE</button>
+			<button class="btn btn-default disable_on_error editmetadata_save tab_item" id="upload_save_finish_button">SAVE &amp; CLOSE</button>
 		</div>
-		<button class="action-text tab_item" data-dismiss="modal" aria-label="Close">CLOSE</button>
+		<button class="action-text tab_item" data-dismiss="modal" aria-label="Close" id="close_uploader_button">CLOSE</button>
 	</div>
 	{{else}}
 	<div class="metadata_copy_buttons container-fluid">
@@ -36,4 +36,5 @@
 		<button class="disable_on_error action-text tab_item" id="close_uploader_button">CLOSE</button>
 	</div>
 	{{/if}}
+	<div class="input-tab-control tab_item" data-next="{{#if allow_edit}}#upload_save_finish_button{{else}}{{#if staging}}#close_uploader_button{{else}}#copy_button{{/if}}{{/if}}"></div>
 </div>
