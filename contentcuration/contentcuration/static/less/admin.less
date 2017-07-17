@@ -87,7 +87,12 @@
 		}
 		&.data_row{
 			border-bottom: 1px solid @gray-200;
-			.name_icon { display:none; cursor: pointer; }
+			.name_icon {
+				display:none;
+				cursor: pointer;
+				font-size: 10pt;
+				padding: 5px 8px;
+			}
 			&:hover {
 				background-color: @gray-200;
 				.name_icon { display: inline; }
@@ -100,11 +105,12 @@
 			}
 			.channel_name, .user_name {
 				display: inline-block;
-				max-width: 90%;
+				max-width: 85%;
 				margin-bottom: -5px;
 				color: black;
 			}
 			.deleted .channel_name { color: @red-error-color; }
+			.copy_id { cursor: pointer; }
 			.channel_id {
 				border: none;
 				outline: none;
@@ -173,6 +179,41 @@
 		margin-right: 10px;
 		padding: 2px 5px;
 		margin-bottom: 5px;
+	}
+	.email_options{
+		background-color: @blue-100;
+    	.email_option {
+    		color: @gray-700;
+    		&:hover{ color: black; }
+    	}
+	}
+	.email_dropdown {
+		background-color: @gray-200;
+	    border: 1px solid @gray-300;
+	    padding: 5px;
+	    padding-bottom: 2px;
+	    display: none;
+	    #cancel_template { color: @red-error-color; }
+	    .close_dropdown {
+	    	color: @gray-400;
+	    	cursor: pointer;
+	    	&:hover{ color: @gray-700; }
+	    }
+	    .placeholder{
+	    	border: 1px solid @gray-300;
+	    	background-color: white;
+		    padding: 1px 10px;
+		    border-radius: 10px;
+		    cursor: pointer;
+		    margin-right: 10px;
+   	 		margin-bottom: 3px;
+   	 		display: inline-block;
+   	 		font-size: 10pt;
+		    &:hover{
+		    	font-weight: bold;
+		    	border: 1px solid @gray-700;
+		    }
+	    }
 	}
 	#message_area{
 		min-height: 300px;
