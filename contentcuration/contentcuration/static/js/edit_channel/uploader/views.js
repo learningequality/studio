@@ -681,6 +681,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     'change #m_value': 'set_mastery',
     'change #n_value': 'set_mastery',
     "click #mastery_about": "load_mastery",
+    "focus .input-tab-control": "loop_focus"
   },
   load_tags:function(){
     this.$("#tag_area").html(this.tags_template({

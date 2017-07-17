@@ -120,7 +120,7 @@ var BaseWorkspaceView = BaseView.extend({
 	isclipboard: false,
 	bind_workspace_functions:function(){
 		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move', 'handle_changed_settings',
-			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently');
+			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently', 'sync_content');
 	},
 	publish:function(){
 		if(!$("#channel-publish-button").hasClass("disabled")){
@@ -284,6 +284,20 @@ var BaseWorkspaceView = BaseView.extend({
 			content.list.add_nodes(moved);
 		// Recalculate counts
 		this.reload_ancestors(original_parents, true);
+	},
+	sync_content:function(){
+		var SyncView = require("edit_channel/sync/views");
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var sync = new SyncView.TempSyncModalView({
+			el: $("#dialog"),
+		    onsync: this.reload_ancestors,
+		    model: window.current_channel.get_root("main_tree")
+		});
+		// var sync = new SyncView.SyncModalView({
+		// 	el: $("#dialog"),
+		//     onsync: this.reload_ancestors,
+		//     model: window.current_channel.get_root("main_tree")
+		// });
 	},
 	delete_items_permanently:function(message, list, callback){
 		message = (message!=null)? message: "Deleting...";

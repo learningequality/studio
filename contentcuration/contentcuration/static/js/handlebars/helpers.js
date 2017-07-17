@@ -130,6 +130,15 @@ Handlebars.registerHelper('counter', function(increment){
   return COUNTER;
 });
 
+Handlebars.registerHelper('to_json', function(obj){
+  return JSON.stringify(obj);
+});
+
+Handlebars.registerHelper('parse_question', function(str){
+  if(!str){ return "Question"; }
+  return str.replace(/\$\$([^\$]+)\$\$/g, " [FORMULA] ").replace(/!\[.*\]\(\${☣ CONTENTSTORAGE}\/([^)]+)\)/g, " [IMAGE] ").replace(/\\/g, "");
+});
+
 Handlebars.registerHelper('ispositive', function(num, options) {
   if(num >= 0) {
     return options.fn(this);

@@ -1,16 +1,17 @@
+<div class="input-tab-control tab_item" data-next="#close_archives"></div>
 <div id="archive_controls">
 	<div id="archive_options" class="btn-group pull-right" role="group" aria-label="archive_options">
-		<button type="button" class="btn btn-default archive_option disabled" disabled id="restore_content">
+		<button type="button" class="btn btn-default archive_option disabled tab_item first_focus_item" disabled id="restore_content">
 			<span class="glyphicon glyphicon-share-alt restore_icon"></span>
 			Restore Selected
 		</button>
-		<button type="button" class="btn btn-default archive_option disabled" disabled id="delete_selected_button">
+		<button type="button" class="btn btn-default archive_option disabled tab_item" disabled id="delete_selected_button">
 			<span class="glyphicon glyphicon-trash"></span>
 			Delete Selected
 		</button>
 	</div>
 	<div id="select_all_area">
-		<input type="checkbox" class="select_all" id="select_all_check"/>
+		<input type="checkbox" class="select_all tab_item" id="select_all_check"/>
 		<label for="select_all_check">Select All</label>
 	</div>
 </div>
@@ -18,6 +19,7 @@
 </div>
 <br/>
 <div id="archive_bottom_container" class="modal-bottom-content-default">
-	<button class="action-button pull-right modal-main-action-button" data-dismiss="modal">CLOSE</button>
+	<button class="action-button pull-right modal-main-action-button tab_item" data-dismiss="modal" id="close_archives">CLOSE</button>
 	<div class="modal-status-text"><span id="archive_selected_count"></span></div>
 </div>
+<div class="input-tab-control tab_item" data-next="#restore_content"></div>

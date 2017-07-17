@@ -1,5 +1,5 @@
 <div class="item_wrapper">
-	<input type="checkbox" id="archive_item_{{node.id}}_check" class="archive_checkbox"></input>
+	<input type="checkbox" id="archive_item_{{node.id}}_check" class="archive_checkbox tab_item"></input>
 	<label for="archive_item_{{node.id}}_check" class="archive_item {{#if node.children}}tog_folder{{/if}}" title="{{node.title}}">
 		{{#unless isfolder}}<div class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></div>{{/unless}}
 		<div class="archive_item_title truncate modal-item-title-default">{{node.title}}</div>
