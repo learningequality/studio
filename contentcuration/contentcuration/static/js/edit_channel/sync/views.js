@@ -22,7 +22,7 @@ var TempSyncModalView = BaseViews.BaseModalView.extend({
     sync_content:function(){
         var self = this;
         this.display_load("Syncing Content...", function(resolve, reject){
-           window.current_channel.sync(self.selected_options).then(function(synced){
+           window.current_channel.sync_channel(self.selected_options).then(function(synced){
                 self.onsync(synced);
                 self.close();
                 resolve(true)
@@ -114,7 +114,7 @@ var SyncView = BaseViews.BaseListView.extend({
         var self = this;
         this.display_load("Syncing Content...", function(resolve, reject){
             var selected_models = _.chain(self.synclist.views).where({checked:true}).pluck('model').value();
-            self.collection.sync(selected_models).then(function(synced){
+            self.collection.sync_nodes(selected_models).then(function(synced){
                 self.onsync(synced);
                 self.close_sync();
                 resolve(true)
