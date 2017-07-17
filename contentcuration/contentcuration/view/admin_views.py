@@ -1,5 +1,8 @@
 import json
 import logging
+import os
+import time
+import locale
 
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotFound
@@ -18,16 +21,26 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
+locale.setlocale(locale.LC_TIME, '')
+
+EMAIL_PLACEHOLDERS = [
+    { "name": "First Name", "value": "{first_name}" },
+    { "name": "Last Name", "value": "{last_name}" },
+    { "name": "Email", "value": "{email}" },
+    { "name": "Current Date", "value": "{current_date}" },
+    { "name": "Current Time", "value": "{current_time}" },
+]
 
 def send_custom_email(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         try:
             subject = render_to_string('registration/custom_email_subject.txt', {'subject': data["subject"]})
-            message = render_to_string('registration/custom_email.txt', {'message': data["message"]})
             recipients = User.objects.filter(email__in=data["emails"]).distinct()
 
             for recipient in recipients:
+                text = data["message"].format(current_date=time.strftime("%A, %B %d"), current_time=time.strftime("%H:%M %Z"),**recipient.__dict__)
+                message = render_to_string('registration/custom_email.txt', {'message': text})
                 recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
         except KeyError:
@@ -48,7 +61,8 @@ def administration(request):
 
     return render(request, 'administration.html', {
                                                  "current_user": JSONRenderer().render(CurrentUserSerializer(request.user).data),
-                                                 "default_sender": settings.DEFAULT_FROM_EMAIL
+                                                 "default_sender": settings.DEFAULT_FROM_EMAIL,
+                                                 "placeholders": json.dumps(EMAIL_PLACEHOLDERS, ensure_ascii=False),
                                                 })
 
 @login_required

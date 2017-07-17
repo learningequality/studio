@@ -26,6 +26,29 @@
 					<div class="col-xs-10"><input class="email_field" id="subject_field"></div>
 				</div>
 				<hr/>
+				<div class="email_options">
+					<!-- <a class="btn email_option" data-toggle="#template_options" title="Load Template"><span class="glyphicon glyphicon-file" data-toggle="#template_options"></span></a>
+					<a class="btn email_option" data-toggle="#save_template" title="Save Template"><span class="glyphicon glyphicon-floppy-disk" data-toggle="#save_template"></span></a> -->
+					<a class="btn email_option" data-toggle="#placeholder_options" title="Insert Placeholder"><span class="glyphicon glyphicon-plus-sign" data-toggle="#placeholder_options"></span></a>
+				</div>
+				<div class="email_dropdown container-fluid" id="placeholder_options">
+					<div class="col-xs-11">
+						{{#each placeholders}}<div class="placeholder" data-val="{{value}}">{{name}}</div>{{/each}}
+					</div>
+					<div class="col-xs-1"><span class="glyphicon glyphicon-remove close_dropdown" title="Close"></span></div>
+				</div>
+				<!-- <div class="email_dropdown container-fluid" id="template_options">
+					<div class="col-xs-11">
+						<div class="placeholder">Template</div>
+					</div>
+					<div class="col-xs-1"><span class="glyphicon glyphicon-remove close_dropdown" title="Close"></span></div>
+				</div> -->
+				<!-- <div class="email_dropdown container-fluid" id="save_template">
+					<div class="col-xs-1"><label>Name</label></div>
+					<div class="col-xs-8"><input id="template_name" type="text" class="email_field"></div>
+					<div class="col-xs-2"><a class="action-text" id="submit_template">Save</a></div>
+					<div class="col-xs-1"><a title="Cancel" id="cancel_template" class="close_dropdown"><span class="glyphicon glyphicon-ban-circle"></span></a></div>
+				</div> -->
 				<div class="row">
 					<div class="col-xs-12"><textarea class="email_field" id="message_area"></textarea></div>
 				</div>

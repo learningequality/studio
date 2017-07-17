@@ -34,6 +34,11 @@
 			<div class="btn-group" role="group">
 				<button class="btn option btn-blue email_button" title="Send Email"><span class="glyphicon glyphicon-envelope" aria-hidden="true"></span></button>
 			</div>
+			{{#unless is_admin}}
+			<div class="btn-group" role="group">
+				<button class="btn option btn-red deactivate_button" title="Deactivate"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span></button>
+			</div>
+			{{/unless}}
 		{{else}}
 			<div class="btn-group" role="group">
 			{{#if first_name}}
@@ -53,7 +58,7 @@
 	<div class="arrow"></div>
 	<div class="popover-content">
 		<ul class="list-unstyled">
-			{{#each editable_channels}}<li class="truncate"><span class="glyphicon glyphicon-{{#if public}}globe{{else}}lock{{/if}} content_icon"></span> {{name}}</li>{{/each}}
+			{{#each editable_channels}}<li class="truncate" title="{{name}}"><span class="glyphicon glyphicon-{{#if public}}globe{{else}}lock{{/if}} content_icon"></span> {{name}}</li>{{/each}}
 		</ul>
 	</div>
 </div>
@@ -62,7 +67,7 @@
 	<div class="arrow"></div>
 	<div class="popover-content">
 		<ul class="list-unstyled">
-			{{#each view_only_channels}}<li class="truncate"><span class="glyphicon glyphicon-{{#if public}}globe{{else}}lock{{/if}} content_icon"></span> {{name}}</li>{{/each}}
+			{{#each view_only_channels}}<li class="truncate" title="{{name}}"><span class="glyphicon glyphicon-{{#if public}}globe{{else}}lock{{/if}} content_icon"></span> {{name}}</li>{{/each}}
 		</ul>
 	</div>
 </div>

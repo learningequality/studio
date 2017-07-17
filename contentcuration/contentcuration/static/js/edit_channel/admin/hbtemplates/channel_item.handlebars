@@ -1,7 +1,8 @@
-<div class="col-xs-4 truncate channel_name_wrapper {{#if deleted}}deleted{{/if}}" title="{{name}} (Created {{#format_date created }}{{/format_date}}, Last Updated {{#format_date modified }}{{/format_date}})">
+<div class="col-xs-4 channel_name_wrapper {{#if deleted}}deleted{{/if}}" title="{{name}} (Created {{#format_date created }}{{/format_date}}, Last Updated {{#format_date modified }}{{/format_date}})">
 	{{#unless deleted}}<a href="/channels/{{id}}/edit" target="_blank">{{/unless}}
 		<div class="channel_name truncate">{{#if name}}{{ name }}{{else}}<i title="Channel does not have a name">[Untitled Channel]</i>{{/if}}</div>
 	{{#unless deleted}}<span class="glyphicon glyphicon-new-window action-text name_icon" title="Open in new tab" aria-hidden="true"></span></a>{{/unless}}
+	{{#if published}}<a href="{{download_url}}" class="action-text name_icon" title="Download" download><span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span></a>{{/if}}
 </div>
 <div class="col-xs-3" title="{{id}}">
 	<input type="text" value="{{id}}" class="channel_id" readonly/>&nbsp;
