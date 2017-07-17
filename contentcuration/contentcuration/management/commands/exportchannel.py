@@ -1,3 +1,4 @@
+import ast
 import collections
 import os
 import zipfile
@@ -14,8 +15,9 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.template.loader import render_to_string
-from le_utils.constants import content_kinds, file_formats, format_presets, licenses, exercises
-
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from pressurecooker.encodings import write_base64_to_file
+from contentcuration.utils.files import create_file_from_contents
 from contentcuration import models as ccmodels
 from contentcuration.utils.parser import extract_value
 from kolibri.content import models as kolibrimodels
@@ -177,6 +179,14 @@ def create_bare_contentnode(ccnode):
 
     return kolibrinode
 
+def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None):
+    thumbnail_data = ast.literal_eval(thumbnail_string)
+    if thumbnail_data.get('base64'):
+        with tempfile.NamedTemporaryFile(suffix=".{}".format(file_format_id), delete=False) as tempf:
+            tempf.close()
+            write_base64_to_file(thumbnail_data['base64'], tempf.name)
+            with open(tempf.name, 'rb') as tf:
+                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id)
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating File objects for Node {}".format(kolibrinode.id))
@@ -189,6 +199,8 @@ def create_associated_file_objects(kolibrinode, ccnode):
                 lang_code=ccfilemodel.language.lang_code,
                 lang_subcode=ccfilemodel.language.lang_subcode
             )
+        if preset.thumbnail and ccnode.thumbnail_encoding:
+            ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
 
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
@@ -384,25 +396,29 @@ def map_channel_to_kolibri_channel(channel):
         name=channel.name,
         description=channel.description,
         version=channel.version,
-        thumbnail=convert_channel_thumbnail(channel.thumbnail),
+        thumbnail=convert_channel_thumbnail(channel),
         root_pk=channel.main_tree.node_id,
     )
     logging.info("Generated the channel metadata.")
 
     return kolibri_channel
 
-
-def convert_channel_thumbnail(thumbnail):
+def convert_channel_thumbnail(channel):
     """ encode_thumbnail: gets base64 encoding of thumbnail
         Args:
             thumbnail (str): file path or url to channel's thumbnail
         Returns: base64 encoding of thumbnail
     """
     encoding = None
-    if thumbnail is None or thumbnail == '' or 'static' in thumbnail:
+    if not channel.thumbnail or channel.thumbnail=='' or 'static' in channel.thumbnail:
         return ""
 
-    with open(ccmodels.generate_file_on_disk_name(thumbnail.split('.')[0], thumbnail), 'rb') as file_obj:
+    if channel.thumbnail_encoding:
+        thumbnail_data = ast.literal_eval(channel.thumbnail_encoding)
+        if thumbnail_data.get("base64"):
+            return thumbnail_data["base64"]
+
+    with open(ccmodels.generate_file_on_disk_name(channel.thumbnail.split('.')[0], channel.thumbnail), 'rb') as file_obj:
         encoding = base64.b64encode(file_obj.read()).decode('utf-8')
     return "data:image/png;base64," + encoding
 

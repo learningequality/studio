@@ -83,7 +83,13 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     generate_preview:function(force_load){
         if(this.current_preview){
-            _.defer(render_preview, this.$("#preview_window"), this.current_preview, this.get_subtitles(), force_load && this.model.get('kind') === "video");
+            _.defer(render_preview,
+                this.$("#preview_window"),
+                this.current_preview,
+                this.get_subtitles(),
+                force_load && this.model.get('kind') === "video",
+                this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64
+            );
         }
     },
     get_subtitles:function(){
@@ -146,12 +152,14 @@ var PreviewView = BaseViews.BaseView.extend({
     }
 });
 
-function render_preview(el, file_model, subtitles, force_load){
+function render_preview(el, file_model, subtitles, force_load, encoding){
     var preview_template;
+    var source = file_model.storage_url;
     switch (file_model.file_format){
         case "png":
         case "jpg":
         case "jpeg":
+            source = encoding || source;
             preview_template = require("./hbtemplates/preview_templates/image.handlebars");
             break;
         case "pdf":
