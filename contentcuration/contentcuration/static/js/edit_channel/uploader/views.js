@@ -956,6 +956,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       formats_el.html(this.format_view.el);
       this.format_view.create_thumbnail_view(this.container.disable_submit, this.container.enable_submit, this.container.enable_submit);
       this.listenTo(this.model, "change:files", this.handle_change);
+      this.listenTo(this.model, "change:thumbnail_encoding", this.handle_change);
   },
   load_question_display:function(formats_el){
       if(this.exercise_view){

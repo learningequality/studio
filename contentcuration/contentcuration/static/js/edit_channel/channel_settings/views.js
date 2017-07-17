@@ -2,7 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var FileViews = require("edit_channel/file_upload/views");
+var Images = require("edit_channel/image/views");
 require("channel_settings.less");
 
 var SettingsModalView = BaseViews.BaseModalView.extend({
@@ -48,7 +48,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         $("#mastery_model_select").val(this.model.get("preferences").mastery_model);
         $("#custom_license_description").css("display", (this.get_license_name()==="Special Permissions")? "block" : "none");
         $("#mastery_custom_criterion").css("visibility", ($("#mastery_model_select").val()==="m_of_n")? "visible" : "hidden");
-        this.image_upload = new FileViews.ThumbnailUploadView({
+        this.image_upload = new Images.ThumbnailUploadView({
             model: this.model,
             el: this.$("#channel_thumbnail"),
             preset_id: "channel_thumbnail",

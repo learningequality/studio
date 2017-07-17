@@ -184,7 +184,7 @@ function render_preview(el, file_model, subtitles, force_load, encoding){
             preview_template = require("./hbtemplates/preview_templates/default.handlebars");
     }
     el.html(preview_template({
-        source: file_model.storage_url,
+        source: source,
         extension:file_model.mimetype,
         checksum:file_model.checksum,
         subtitles : subtitles
