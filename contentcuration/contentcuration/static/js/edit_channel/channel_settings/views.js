@@ -35,7 +35,8 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
     events: {
       "click #settings_submit": "submit_changes",
       "change .input_listener": "register_changes",
-      "keyup .input_listener": "register_changes"
+      "keyup .input_listener": "register_changes",
+      "focus .input-tab-control": "loop_focus"
     },
     render: function() {
         this.$el.html(this.template({
@@ -62,6 +63,11 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
             onremove: this.remove_thumbnail,
             allow_edit: true
         });
+        // var self = this;
+        // _.defer(function(){
+        //     self.set_indices();
+        //     self.set_initial_focus();
+        // }, 1000);
     },
     get_license_id: function(license_name){
         return window.licenses.findWhere({license_name: license_name}).id;
