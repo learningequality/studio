@@ -1,0 +1,183 @@
+@import "global-variables.less";
+
+
+#admin-page{
+	padding: 30px;
+	h2{
+		margin: 0px;
+		margin-bottom: 30px;
+		.back_button { font-size: 20pt;}
+	}
+	a{text-decoration: none;}
+	.tab_nav {
+		margin-right: 10px;
+		a{
+			min-width: 100px;
+			font-size: 13pt;
+			color: @gray-800;
+		}
+		&.active a{ font-weight: bold; }
+		.badge { margin-left: 10px; background-color: @gray-500; }
+	}
+	.tab-content{
+		background-color: white;
+		border: 1px solid #DDD;
+		border-top: none;
+		min-height: 75vh;
+		padding: 15px;
+	}
+	.default-item {
+		padding-top: 15%;
+		text-align: center;
+		font-size: 20pt;
+		font-weight: bold;
+		color: @gray-400;
+		font-style: italic;
+	}
+
+	input[type='checkbox']{
+		width: 15px;
+		height: 15px;
+		cursor: pointer;
+		+ label {
+			padding-left: 5px;
+			cursor: pointer;
+			font-weight: normal;
+			vertical-align: middle;
+			margin: 0;
+		}
+		&:checked + label { font-weight: bold; }
+	}
+
+	.table_actions{
+		margin-bottom: 5px;
+		background: @gray-300;
+		padding: 5px 20px;
+		.action_list{
+			margin-top: 5px;
+			margin-bottom: 0px;
+			li {
+				margin-right: 5px;
+				input, select{
+					padding: 2px 4px;
+					border: none;
+					margin-left: 2px;
+					margin-right: 5px;
+					&.search_input{ width: 300px; }
+					&.extra_input{ max-width: 200px; }
+					&[type='checkbox']{
+						vertical-align: middle;
+						margin: 0;
+					}
+					option{ padding: 5px; }
+				}
+			}
+		}
+	}
+
+	.row {
+		padding: 10px;
+		margin: 0px;
+		.channel_name_wrapper [class*="col-"] { padding: 0px 5px !important; }
+		&.header_row {
+			font-weight: bold;
+			font-size: 13pt;
+			background-color: @blue-100;
+			.email_button{ margin: -5px; }
+		}
+		&.data_row{
+			border-bottom: 1px solid @gray-200;
+			.name_icon { display:none; cursor: pointer; }
+			&:hover {
+				background-color: @gray-200;
+				.name_icon { display: inline; }
+			}
+			&:last-child{ border-bottom:none; }
+			.admin_icon{ color: @blue-500; }
+			.access_icon{
+				font-size: 10pt;
+				color: @gray-400;
+			}
+			.channel_name, .user_name {
+				display: inline-block;
+				max-width: 90%;
+				margin-bottom: -5px;
+				color: black;
+			}
+			.deleted .channel_name { color: @red-error-color; }
+			.channel_id {
+				border: none;
+				outline: none;
+				font-size: 10pt;
+				width: 250px;
+				background-color: @gray-300;
+				padding-left: 2px;
+			}
+			.popover_link{
+				padding: 0;
+				font-size: 11pt;
+				&:focus{ outline:none; }
+			}
+			.popover-content{
+				padding: 5px;
+				min-width: 150px;
+				ul{
+					max-height: 200px;
+					overflow-y: auto;
+				}
+				li {
+					padding-top: 10px;
+					margin-right: 10px;
+				}
+				.content_icon {
+					color: @gray-400;
+					margin-right: 5px;
+				}
+			}
+			.option{ color: white; }
+			.btn-red{ background-color: firebrick; }
+			.btn-green{ background-color: seagreen; }
+			.btn-blue{ background-color: @blue-500; }
+			.btn-yellow{ background-color: goldenrod; }
+			.btn-gray{ background-color: @gray-700; }
+		}
+	}
+	.admin_table{
+		font-size: 12pt;
+		min-height: 65vh;
+		border: 2px solid @blue-100;
+	}
+}
+
+#email_modal {
+	.modal-header{ background-color: @blue-200; padding-bottom: 10px; }
+	.modal-dialog{ width: 680px; }
+	.row { margin-bottom: 10px; }
+	.required, .error-text{ color: @red-error-color; }
+	.error-field { background-color: @error-input-color; }
+	.email_field {
+		width: 100%;
+		padding: 2px 4px;
+		border: 1px solid @gray-300;
+		&#sender_field{ background-color: @gray-200; }
+		&#subject_field{ font-size: 12pt; }
+	}
+	#recipients_field {
+		max-height: 100px;
+		overflow-y: auto;
+	}
+	.address{
+		background-color: @gray-200;
+		border: 1px solid @gray-300;
+		border-radius: 5px;
+		margin-right: 10px;
+		padding: 2px 5px;
+		margin-bottom: 5px;
+	}
+	#message_area{
+		min-height: 300px;
+		resize: none;
+		padding: 10px;
+		font-size: 12pt;
+	}
+}

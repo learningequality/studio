@@ -665,8 +665,46 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 class UserChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id')
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active')
 
+
+class AdminChannelListSerializer(serializers.ModelSerializer):
+    published = serializers.SerializerMethodField('check_published')
+    count = serializers.SerializerMethodField("compute_item_count")
+    created = serializers.SerializerMethodField('get_date_created')
+    modified = serializers.SerializerMethodField('get_date_modified')
+    editors = UserChannelListSerializer(many=True, read_only=True)
+    viewers = UserChannelListSerializer(many=True, read_only=True)
+
+    def get_date_created(self, channel):
+        return channel.main_tree.created
+
+    def get_date_modified(self, channel):
+        return channel.main_tree.modified
+
+    def compute_item_count(self, channel):
+        return channel.main_tree.get_descendant_count()
+
+    def check_published(self, channel):
+        return channel.main_tree.published
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree',
+                  'description', 'count', 'version', 'public', 'deleted', 'ricecooker_version')
+
+class SimplifiedChannelListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Channel
+        fields = ('id', 'name')
+
+class AdminUserListSerializer(serializers.ModelSerializer):
+    editable_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
+    view_only_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels', 'is_admin', 'date_joined', 'is_active')
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')

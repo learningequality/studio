@@ -1,0 +1,69 @@
+<div class="col-xs-4">
+	<input type="checkbox" class="user_select_checkbox" id="admin_user_check_{{id}}"/>
+	<label for="admin_user_check_{{id}}" class="full_name">
+		{{#if is_active}}
+			{{#if is_admin}}<span class="glyphicon glyphicon-star admin_icon" title="Admin"></span>&nbsp;{{/if}}
+			<span title="{{first_name}} {{last_name}} (Joined {{#format_date date_joined}}{{/format_date}})">{{first_name}} {{last_name}}</span>
+		{{else}}
+			{{#if first_name}}<span title="User has not activated account">{{first_name}} {{last_name}}</span>
+			{{else}}<span title="User has not set up account (invited by another user)"><i>Anonymous</i></span>
+			{{/if}}
+		{{/if}}
+	</label>
+</div>
+<div class="col-xs-3">
+	<a class="email_user">
+		<div class="user_name truncate">{{ email }}</div>
+	</a>
+</div>
+<div class="col-xs-2 text-center">
+	{{#if editable_channels}}
+		<a tabindex="0" class="popover_link action-text" data-id="#admin_edit_channels_{{id}}">{{#format_count "Channel" editable_channels.length}}{{/format_count}}</a>
+	{{else}}None
+	{{/if}}
+</div>
+<div class="col-xs-2 text-center">
+	{{#if view_only_channels}}
+		<a tabindex="0" class="popover_link action-text" data-id="#admin_view_channels_{{id}}">{{#format_count "Channel" view_only_channels.length}}{{/format_count}}</a>
+	{{else}}None
+	{{/if}}
+</div>
+<div class="col-xs-1 text-center">
+	<div class="btn-group btn-group-justified" role="group">
+		{{#if is_active}}
+			<div class="btn-group" role="group">
+				<button class="btn option btn-blue email_button" title="Send Email"><span class="glyphicon glyphicon-envelope" aria-hidden="true"></span></button>
+			</div>
+		{{else}}
+			<div class="btn-group" role="group">
+			{{#if first_name}}
+				<button class="btn option btn-green activate_button" title="Activate Account"><span class="glyphicon glyphicon-asterisk" aria-hidden="true"></span></button>
+			{{else}}<button class="btn option btn-green disabled" title="User must set up account before activating (invitation pending)" disabled><span class="glyphicon glyphicon-asterisk" aria-hidden="true"></span></button>
+			{{/if}}
+			</div>
+
+			<div class="btn-group" role="group">
+				<button class="btn option btn-red delete_button" title="Remove User"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+			</div>
+		{{/if}}
+	</div>
+</div>
+
+<div class="popover" tabindex="0" role="popover" id="admin_edit_channels_{{id}}">
+	<div class="arrow"></div>
+	<div class="popover-content">
+		<ul class="list-unstyled">
+			{{#each editable_channels}}<li class="truncate"><span class="glyphicon glyphicon-{{#if public}}globe{{else}}lock{{/if}} content_icon"></span> {{name}}</li>{{/each}}
+		</ul>
+	</div>
+</div>
+
+<div class="popover" tabindex="0" role="popover" id="admin_view_channels_{{id}}">
+	<div class="arrow"></div>
+	<div class="popover-content">
+		<ul class="list-unstyled">
+			{{#each view_only_channels}}<li class="truncate"><span class="glyphicon glyphicon-{{#if public}}globe{{else}}lock{{/if}} content_icon"></span> {{name}}</li>{{/each}}
+		</ul>
+	</div>
+</div>
+

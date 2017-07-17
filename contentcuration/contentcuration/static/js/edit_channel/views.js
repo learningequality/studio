@@ -825,7 +825,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 	save:function(data, message){
 		message = (message!=null)? message: "Saving...";
 		var self = this;
-		var promise = new Promise(function(resolve, reject){
+		return new Promise(function(resolve, reject){
 			self.originalData = data;
 			if(self.model.isNew()){
 				self.containing_list_view.create_new_item(data).then(function(newView){
@@ -851,7 +851,6 @@ var BaseListEditableItemView = BaseListItemView.extend({
 				});
 			}
 		});
-		return promise;
 	},
 	delete:function(destroy_model, message, callback){
 		message = (message!=null)? message: "Deleting...";
@@ -879,6 +878,23 @@ var BaseListEditableItemView = BaseListItemView.extend({
 				});
 			});
 		}
+	},
+	destroy:function(message, callback){
+		message = (message!=null)? message: "Deleting...";
+		var self = this;
+		this.display_load(message, function(resolve_load, reject_load){
+			self.model.destroy({
+				success:function(){
+					if(callback){
+						callback();
+					}
+					resolve_load(true);
+				},
+				error:function(obj, error){
+					reject_load(error);
+				}
+			});
+		});
 	},
 	reload:function(model){
 		this.model.set(model.attributes);

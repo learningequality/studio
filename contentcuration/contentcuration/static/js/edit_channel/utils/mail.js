@@ -20,6 +20,25 @@ function send_mail(channel, email, share_mode){
   });
 }
 
+
+function send_custom_email(emails, subject, message){
+  return new Promise(function(resolve, reject){
+    var data = {
+      "subject": subject,
+      "message": message,
+      "emails": emails
+    };
+    $.ajax({
+      method:"POST",
+        url: window.Urls.send_custom_email(),
+        data:  JSON.stringify(data),
+        success:resolve,
+        error:reject
+    });
+  });
+}
+
 module.exports = {
-  send_mail : send_mail
+  send_mail: send_mail,
+  send_custom_email: send_custom_email
 }
