@@ -86,7 +86,10 @@ def get_channel_kind_count(request, channel_id):
 
     channel = Channel.objects.get(pk=channel_id)
 
-    sizes = ContentNode.objects.prefetch_related('assessment_items').prefetch_related('files').prefetch_related('children')\
+    sizes = ContentNode.objects\
+            .prefetch_related('assessment_items')\
+            .prefetch_related('files')\
+            .prefetch_related('children')\
             .filter(tree_id=channel.main_tree.tree_id)\
             .values('files__checksum', 'assessment_items__files__checksum', 'files__file_size', 'assessment_items__files__file_size')\
             .distinct()\
