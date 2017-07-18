@@ -235,16 +235,6 @@ urlpatterns += [
     url(r'^i18n/', include('django.conf.urls.i18n')),
 ]
 
-urlpatterns += patterns('',
-    url(r'^admin/', include(admin.site.urls)),
-    url(r'^i18n/', include('django.conf.urls.i18n')),
-)
-
-urlpatterns += i18n_patterns('',
-    (_(r'^dual-lang/'), include('duallang.urls')),
-    (r'^', include('home.urls')),
-)
-
 if settings.DEBUG:
     # static files (images, css, javascript, etc.)
     urlpatterns += [
