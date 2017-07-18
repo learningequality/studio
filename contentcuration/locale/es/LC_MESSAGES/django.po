@@ -1,0 +1,769 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-07-18 12:58-0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\contentcuration\forms.py:10 .\contentcuration\forms.py:49
+#: .\contentcuration\forms.py:93
+#: .\contentcuration\templates\permissions\permissions_confirm.html:21
+msgid "Password"
+msgstr ""
+
+#: .\contentcuration\forms.py:11 .\contentcuration\forms.py:50
+msgid "Password (again)"
+msgstr ""
+
+#: .\contentcuration\forms.py:20
+msgid "Email already exists."
+msgstr ""
+
+#: .\contentcuration\forms.py:27
+msgid "Email is required."
+msgstr ""
+
+#: .\contentcuration\forms.py:28 .\contentcuration\forms.py:63
+#: .\contentcuration\forms.py:132
+msgid "First name is required."
+msgstr ""
+
+#: .\contentcuration\forms.py:29 .\contentcuration\forms.py:64
+#: .\contentcuration\forms.py:136
+msgid "Last name is required."
+msgstr ""
+
+#: .\contentcuration\forms.py:31 .\contentcuration\forms.py:66
+#: .\contentcuration\forms.py:106
+msgid "Password is required."
+msgstr ""
+
+#: .\contentcuration\forms.py:34 .\contentcuration\forms.py:69
+msgid "Passwords don't match."
+msgstr ""
+
+#: .\contentcuration\forms.py:109
+msgid "Password is incorrect."
+msgstr ""
+
+#: .\contentcuration\forms.py:197
+msgid "Current password is incorrect."
+msgstr ""
+
+#: .\contentcuration\forms.py:199
+msgid "New password is required."
+msgstr ""
+
+#: .\contentcuration\forms.py:202
+msgid "New passwords don't match."
+msgstr ""
+
+#: .\contentcuration\models.py:73
+msgid "active"
+msgstr ""
+
+#: .\contentcuration\models.py:74
+msgid "Designates whether this user should be treated as active."
+msgstr ""
+
+#: .\contentcuration\models.py:75
+msgid "staff status"
+msgstr ""
+
+#: .\contentcuration\models.py:76
+msgid "Designates whether the user can log into this admin site."
+msgstr ""
+
+#: .\contentcuration\models.py:77
+msgid "date joined"
+msgstr ""
+
+#: .\contentcuration\models.py:118
+msgid "User"
+msgstr ""
+
+#: .\contentcuration\models.py:119
+msgid "Users"
+msgstr ""
+
+#: .\contentcuration\models.py:217
+msgid "editors"
+msgstr ""
+
+#: .\contentcuration\models.py:218
+msgid "Users with edit rights"
+msgstr ""
+
+#: .\contentcuration\models.py:224
+msgid "viewers"
+msgstr ""
+
+#: .\contentcuration\models.py:225
+msgid "Users with view only rights"
+msgstr ""
+
+#: .\contentcuration\models.py:238
+msgid "bookmarked by"
+msgstr ""
+
+#: .\contentcuration\models.py:309
+msgid "Channel"
+msgstr ""
+
+#: .\contentcuration\models.py:310
+msgid "Channels"
+msgstr ""
+
+#: .\contentcuration\models.py:348
+msgid "license exists"
+msgstr ""
+
+#: .\contentcuration\models.py:349
+msgid "Tells whether or not a content item is licensed to share"
+msgstr ""
+
+#: .\contentcuration\models.py:394
+msgid "sort order"
+msgstr ""
+
+#: .\contentcuration\models.py:395
+msgid "Ascending, lowest number shown first"
+msgstr ""
+
+#: .\contentcuration\models.py:397
+msgid "Organization of person who holds the essential rights"
+msgstr ""
+
+#: .\contentcuration\models.py:401
+msgid "created"
+msgstr ""
+
+#: .\contentcuration\models.py:402
+msgid "modified"
+msgstr ""
+
+#: .\contentcuration\models.py:407
+msgid "Person who created content"
+msgstr ""
+
+#: .\contentcuration\models.py:513
+msgid "Topic"
+msgstr ""
+
+#: .\contentcuration\models.py:514
+msgid "Topics"
+msgstr ""
+
+#: .\contentcuration\models.py:711
+msgid "Invitation"
+msgstr ""
+
+#: .\contentcuration\models.py:712
+msgid "Invitations"
+msgstr ""
+
+#: .\contentcuration\settings.py:180
+msgid "English"
+msgstr ""
+
+#: .\contentcuration\settings.py:181
+msgid "Spanish"
+msgstr ""
+
+#: .\contentcuration\templates\base.html:35
+msgid "Toggle navigation"
+msgstr ""
+
+#: .\contentcuration\templates\base.html:47
+#: .\contentcuration\templates\permissions\permissions_email.txt:4
+#: .\contentcuration\templates\registration\activation_email.txt:4
+#: .\contentcuration\templates\registration\password_reset_email.txt:3
+msgid "Hello"
+msgstr ""
+
+#: .\contentcuration\templates\base.html:51
+#: .\contentcuration\templates\settings\settings.html:15
+msgid "Account"
+msgstr ""
+
+#: .\contentcuration\templates\base.html:52
+msgid "Log Out"
+msgstr ""
+
+#: .\contentcuration\templates\channel_edit.html:33
+msgid "Select a Channel..."
+msgstr ""
+
+#: .\contentcuration\templates\channel_edit.html:39
+#: .\contentcuration\templates\channel_edit.html:40
+msgid "(View Only)"
+msgstr ""
+
+#: .\contentcuration\templates\channel_edit.html:48
+msgid "No channels found."
+msgstr ""
+
+#: .\contentcuration\templates\channel_edit.html:52
+msgid "VIEW-ONLY"
+msgstr ""
+
+#: .\contentcuration\templates\channel_edit.html:54
+msgid "STAGING VERSION"
+msgstr ""
+
+#: .\contentcuration\templates\channel_edit.html:56
+msgid "Open channel settings"
+msgstr ""
+
+#: .\contentcuration\templates\channel_edit.html:57
+msgid "EDITING"
+msgstr ""
+
+#: .\contentcuration\templates\channel_edit.html:63
+msgid "DEPLOY CHANNEL"
+msgstr ""
+
+#: .\contentcuration\templates\channel_edit.html:71
+msgid "ID"
+msgstr ""
+
+#: .\contentcuration\templates\channel_edit.html:72
+msgid "Copy ID to clipboard"
+msgstr ""
+
+#: .\contentcuration\templates\channel_edit.html:75
+msgid "PUBLISH"
+msgstr ""
+
+#: .\contentcuration\templates\exercise_list.html:56
+msgid "Previous"
+msgstr ""
+
+#: .\contentcuration\templates\exercise_list.html:62
+msgid "current"
+msgstr ""
+
+#: .\contentcuration\templates\exercise_list.html:66
+msgid "Next"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\open_channel_fail.html:12
+msgid "There was an error opening this channel."
+msgstr ""
+
+#: .\contentcuration\templates\permissions\open_channel_fail.html:13
+msgid "Try running ricecooker again."
+msgstr ""
+
+#: .\contentcuration\templates\permissions\open_channel_fail.html:14
+#: .\contentcuration\templates\permissions\permissions_decline.html:14
+#: .\contentcuration\templates\permissions\permissions_fail.html:15
+#: .\contentcuration\templates\staging_not_found.html:13
+#: .\contentcuration\templates\unauthorized.html:13
+msgid "Go Home"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_confirm.html:13
+msgid "Welcome back, "
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_confirm.html:14
+msgid "Please enter your password to accept your invitation or "
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_confirm.html:15
+msgid "ignore it."
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_confirm.html:23
+msgid "Accept Invite"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_confirm.html:24
+#, python-format
+msgid "%(form.password.errors.0)s"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_decline.html:13
+msgid "You have successfully declined your invitation to edit this channel"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_email.txt:6
+#, python-format
+msgid "has invited you to %(share_mode)s a channel at "
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_email.txt:8
+msgid "Please follow this link to accept the invitation:"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_email.txt:15
+msgid "or if you'd like to decline the invitation, follow this link:"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_email.txt:18
+#: .\contentcuration\templates\registration\activation_email.txt:12
+#: .\contentcuration\templates\registration\password_reset_email.txt:14
+msgid "Thanks for using our site!"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_email_subject.txt:1
+#, python-format
+msgid "You've been invited to %(share_mode)s"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_fail.html:12
+msgid "Accepting invitation to edit failed."
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_fail.html:13
+msgid ""
+"This invitation has already been used or is no longer valid. You may need to "
+"contact the person who invited you to send you a new invitation."
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_fail.html:14
+msgid "We apologize for the inconvenience."
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_register.html:12
+msgid "You must create an account before you can access this channel."
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_register.html:14
+msgid "Creating account for email:"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_register.html:20
+#, python-format
+msgid "%(error)s"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_register.html:30
+#: .\contentcuration\templates\registration\registration_form.html:32
+#, python-format
+msgid "%(field.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_register.html:35
+#: .\contentcuration\templates\registration\registration_form.html:37
+msgid "Register"
+msgstr ""
+
+#: .\contentcuration\templates\permissions\permissions_register.html:36
+#: .\contentcuration\templates\registration\registration_form.html:39
+msgid "Cancel"
+msgstr ""
+
+#: .\contentcuration\templates\registration\activate.html:13
+msgid "Failed to activate account. Please try again."
+msgstr ""
+
+#: .\contentcuration\templates\registration\activation_complete.html:12
+msgid "Your account is now activated."
+msgstr ""
+
+#: .\contentcuration\templates\registration\activation_complete.html:13
+msgid "Continue to login..."
+msgstr ""
+
+#: .\contentcuration\templates\registration\activation_email.html:101
+#, python-format
+msgid ""
+"Click here to activate your account.</p>\n"
+"\t\t\t\t<p class=\"message-invitation-instructions\">This link is valid for "
+"<strong>%(expiration_days)s days</strong>."
+msgstr ""
+
+#: .\contentcuration\templates\registration\activation_email.txt:6
+msgid "Here is your activation link for"
+msgstr ""
+
+#: .\contentcuration\templates\registration\activation_email.txt:10
+#, python-format
+msgid "This link is valid for %(expiration_days)s days."
+msgstr ""
+
+#: .\contentcuration\templates\registration\activation_email_subject.txt:1
+msgid "Account activation link for"
+msgstr ""
+
+#: .\contentcuration\templates\registration\login.html:23
+msgid "Your username and password didn't match. Please try again."
+msgstr ""
+
+#: .\contentcuration\templates\registration\login.html:28
+msgid ""
+"Your account doesn't have access to this page. To proceed, please login with "
+"an account that has access."
+msgstr ""
+
+#: .\contentcuration\templates\registration\login.html:30
+msgid "Please login to see this page."
+msgstr ""
+
+#: .\contentcuration\templates\registration\login.html:39
+#: .\contentcuration\templates\registration\password_reset_form.html:23
+msgid "Email:"
+msgstr ""
+
+#: .\contentcuration\templates\registration\login.html:43
+msgid "Password:"
+msgstr ""
+
+#: .\contentcuration\templates\registration\login.html:46
+msgid "Lost password?"
+msgstr ""
+
+#: .\contentcuration\templates\registration\login.html:51
+#: .\contentcuration\templates\registration\logout.html:20
+msgid "Login"
+msgstr ""
+
+#: .\contentcuration\templates\registration\login.html:54
+msgid "Create an Account"
+msgstr ""
+
+#: .\contentcuration\templates\registration\logout.html:17
+msgid "You have successfully logged out."
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_change_done.html:12
+msgid "Password changed successfully."
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_change_done.html:13
+msgid "Continue to home..."
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_change_form.html:15
+msgid "Password Change"
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_change_form.html:18
+#: .\contentcuration\templates\registration\password_reset_form.html:19
+#, python-format
+msgid "%(form.email.errors)s"
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_change_form.html:23
+#: .\contentcuration\templates\registration\password_reset_confirm.html:16
+#, python-format
+msgid "%(form.as_p)s"
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_change_form.html:24
+#: .\contentcuration\templates\registration\password_reset_confirm.html:17
+msgid "Submit"
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_complete.html:12
+msgid "Password reset successfully"
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_complete.html:13
+msgid "Your password has been set. You may go ahead and log in now."
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_complete.html:14
+msgid "Log in"
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_confirm.html:14
+#: .\contentcuration\templates\registration\password_reset_form.html:15
+msgid "Password Reset"
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_confirm.html:20
+msgid "Password reset unsuccessful."
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_confirm.html:21
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used. "
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_confirm.html:22
+msgid "Request a new password reset."
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_done.html:12
+msgid "Password reset email sent."
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_done.html:13
+msgid ""
+"We've emailed you instructions for setting your password, if an account "
+"exists with the email you entered. You should receive them shortly."
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_done.html:14
+msgid ""
+"If you don't receive an email, please make sure you've entered the address "
+"you registered with, and check your spam folder."
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_email.html:101
+#, python-format
+msgid ""
+"Please click the button below and choose a new password.</p>\n"
+"                <p class=\"message-invitation-instructions\">Your username "
+"is <strong>%(user)s</strong>."
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_email.txt:5
+msgid ""
+"You're receiving this e-mail because you requested a password reset for your "
+"user account at"
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_email.txt:7
+msgid "Please go to the following page and choose a new password:"
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_email.txt:12
+msgid "Your username, in case you've forgotten:"
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_form.html:16
+msgid ""
+"Enter your email, and we'll send instructions for setting a new password."
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_form.html:24
+msgid "Reset Password"
+msgstr ""
+
+#: .\contentcuration\templates\registration\password_reset_subject.txt:1
+msgid "Password reset on"
+msgstr ""
+
+#: .\contentcuration\templates\registration\registration_closed.html:11
+msgid "Registration is temporarily closed. Please check back later."
+msgstr ""
+
+#: .\contentcuration\templates\registration\registration_complete.html:14
+msgid ""
+"Thanks for registering! Please check your email for your activation link."
+msgstr ""
+
+#: .\contentcuration\templates\registration\registration_form.html:23
+#: .\contentcuration\templates\settings\account.html:18
+#: .\contentcuration\templates\settings\preferences.html:18
+#: .\contentcuration\templates\settings\profile.html:19
+#, python-format
+msgid "%(error|escape)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\account.html:8
+msgid "My Account"
+msgstr ""
+
+#: .\contentcuration\templates\settings\account.html:9
+msgid "Change your password or recover your current one."
+msgstr ""
+
+#: .\contentcuration\templates\settings\account.html:29
+msgid "Current Password"
+msgstr ""
+
+#: .\contentcuration\templates\settings\account.html:33
+msgid "New Password"
+msgstr ""
+
+#: .\contentcuration\templates\settings\account.html:37
+msgid "Verify Password"
+msgstr ""
+
+#: .\contentcuration\templates\settings\account.html:42
+msgid "SUBMIT"
+msgstr ""
+
+#: .\contentcuration\templates\settings\account_success.html:7
+msgid "Your password has been successfully changed."
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:7
+#: .\contentcuration\templates\settings\settings.html:17
+msgid "Preferences"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:8
+msgid ""
+"Set defaults for filling out content details. Defaults will be applied when "
+"a new channel is created."
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:11
+msgid "Your preferences have been updated."
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:28
+msgid "General"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:31
+#, python-format
+msgid "%(form.author.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:37
+#, python-format
+msgid "%(form.license.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:41
+#, python-format
+msgid "%(form.copyright_holder.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:47
+#, python-format
+msgid "%(form.license_description.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:52
+msgid "Automatically generate thumbnails for..."
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:56
+#, python-format
+msgid "%(form.auto_derive_video_thumbnail.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:60
+#, python-format
+msgid "%(form.auto_derive_audio_thumbnail.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:64
+#, python-format
+msgid "%(form.auto_derive_html5_thumbnail.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:68
+#, python-format
+msgid "%(form.auto_derive_document_thumbnail.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:72
+msgid "Exercises"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:75
+#, python-format
+msgid "%(form.mastery_model.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:80
+#, python-format
+msgid "%(form.m_value.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:83
+msgid "of"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:85
+#, python-format
+msgid "%(form.n_value.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:92
+#, python-format
+msgid "%(form.auto_randomize_questions.label)s"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:97
+#: .\contentcuration\templates\settings\profile.html:43
+msgid "No Changes Found"
+msgstr ""
+
+#: .\contentcuration\templates\settings\preferences.html:106
+#: .\contentcuration\templates\settings\profile.html:49
+msgid "SAVE CHANGES"
+msgstr ""
+
+#: .\contentcuration\templates\settings\profile.html:12
+msgid "Your profile has been updated."
+msgstr ""
+
+#: .\contentcuration\templates\settings\profile.html:30
+msgid "Username"
+msgstr ""
+
+#: .\contentcuration\templates\settings\profile.html:34
+msgid "First Name"
+msgstr ""
+
+#: .\contentcuration\templates\settings\profile.html:38
+msgid "Last Name"
+msgstr ""
+
+#: .\contentcuration\templates\settings\settings.html:9
+msgid "Home"
+msgstr ""
+
+#: .\contentcuration\templates\settings\settings.html:12
+msgid "My Settings"
+msgstr ""
+
+#: .\contentcuration\templates\settings\settings.html:14
+msgid "Profile"
+msgstr ""
+
+#: .\contentcuration\templates\settings\settings.html:16
+msgid "Tokens"
+msgstr ""
+
+#: .\contentcuration\templates\settings\tokens.html:7
+msgid "Access Tokenss"
+msgstr ""
+
+#: .\contentcuration\templates\settings\tokens.html:8
+msgid "Get tokens for authentication."
+msgstr ""
+
+#: .\contentcuration\templates\settings\tokens.html:16
+#: .\contentcuration\templates\settings\tokens.html:33
+msgid "COPY"
+msgstr ""
+
+#: .\contentcuration\templates\settings\tokens.html:27
+msgid "Copied!"
+msgstr ""
+
+#: .\contentcuration\templates\settings\tokens.html:30
+msgid "Copy Failed"
+msgstr ""
+
+#: .\contentcuration\templates\staging_not_found.html:12
+msgid "No updates to review."
+msgstr ""
+
+#: .\contentcuration\templates\unauthorized.html:12
+msgid "You do not have access to this page."
+msgstr ""
+
+#: .\contentcuration\templates\unsupported_browser.html:12
+msgid "Unsupported Browser."
+msgstr ""
+
+#: .\contentcuration\templates\unsupported_browser.html:13
+msgid ""
+"We're sorry, the browser you are currently using is not supported. Please "
+"try again on a different browser."
+msgstr ""

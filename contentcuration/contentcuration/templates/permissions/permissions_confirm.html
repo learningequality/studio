@@ -10,18 +10,18 @@
 	</div>
 	<div class="message-wrapper">
 		<br/>
-		<h2>{% trans "Welcome back, " %}{% trans  view.user.first_name %}</h2>
+		<h2>{% trans "Welcome back, " %} view.user.first_name</h2>
 		<h4>{% trans "Please enter your password to accept your invitation or " %}
-		<a href="/" class="action-text invitation-action-text" id="invitation-action-text">ignore it.</a></h4>
+		<a href="/" class="action-text invitation-action-text" id="invitation-action-text">{% trans "ignore it." %}</a></h4>
 		<form method="post" id="invitation_accept_form">
 			<div id="form-wrapper">
-				<input type="hidden" value="{% trans view.user.email %}" name="username"/>
+				<input type="hidden" value="{{view.user.email}}" name="username"/>
 				{% csrf_token %}
 				<p>
-				 	<label><i class="required_asterisk">*</i> {{form.password.label}}</label>
+				 	<label><i class="required_asterisk">*</i> {% trans "Password" %}</label>
 				 	{{form.password}}
-				 	<input class="btn message-btn" type="submit" value="Accept Invite" id="invitation_accept_button"/>
-					<span id="accept-error">{{form.password.errors.0}}</span>
+				 	<input class="btn message-btn" type="submit" value="{% trans 'Accept Invite' %}" id="invitation_accept_button"/>
+					<span id="accept-error">{% blocktrans %}{{form.password.errors.0}}{% endblocktrans %}</span>
 				 </p>
 			</div>
 		</form>

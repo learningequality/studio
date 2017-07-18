@@ -3,64 +3,64 @@
 {% load i18n %}
 
 <html>
-    <head>
+		<head>
 
-        {% block head %}
-        <!--[if lt IE 9]>
-            <script src="{% static "js/html5shiv.js" %}"></script>
-        <![endif] -->
+				{% block head %}
+				<!--[if lt IE 9]>
+						<script src="{% static "js/html5shiv.js" %}"></script>
+				<![endif] -->
 		<link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
 
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+				<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Kolibri Studio</title>
-        <!-- TODO work out why debug is not working here and use the static version -->
-        <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
-        <script type="text/javascript" src="{% static 'js/bundles/common.js' %}"></script>
-        <script type="text/javascript" src="{% static 'js/bundles/base.js' %}"></script>
-        <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
-        {% endblock head %}
+				<title>Kolibri Studio</title>
+				<!-- TODO work out why debug is not working here and use the static version -->
+				<script src="{% url 'js_reverse' %}" type="text/javascript"></script>
+				<script type="text/javascript" src="{% static 'js/bundles/common.js' %}"></script>
+				<script type="text/javascript" src="{% static 'js/bundles/base.js' %}"></script>
+				<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
+				{% endblock head %}
 
-    </head>
+		</head>
 
-    <body>
-        {% block nav %}
-        <!-- Navigation bar -->
-        <nav class="nav navbar navbar-default" id="top-navigation">
-          <div class="container-fluid">
-            <!-- Brand and toggle get grouped for better mobile display -->
-            <div class="navbar-header">
-              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                <span class="sr-only">{%trans "Toggle navigation" %}</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-              </button>
-              <a href="/channels" id="logo-container">
-                <img class="navbar-brand" src="{% static 'img/logo.png' %}">
-                <label id="kolibri_label">Kolibri</label>
-              </a>
-            </div>
-              <ul class="nav navbar-nav navbar-right">
-                <!-- <li> <a class="btn btn-main">Discover</a></li> -->
-                <li id="username_label">{%trans "Hello" %}, {{ user.first_name }}</li>
-                <li class="dropdown" id="settings-dd-wrapper">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-user" aria-hidden="true"></span></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="{% url 'profile_settings' %}" >{%trans "Account" %}</a></li>
-                    <li><a href="{% url 'django.contrib.auth.views.logout' %}">{%trans "Log Out" %}</a></li>
-                  </ul>
-                </li>
-              </ul>
+		<body>
+				{% block nav %}
+				<!-- Navigation bar -->
+				<nav class="nav navbar navbar-default" id="top-navigation">
+					<div class="container-fluid">
+						<!-- Brand and toggle get grouped for better mobile display -->
+						<div class="navbar-header">
+							<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+								<span class="sr-only">{%trans "Toggle navigation" %}</span>
+								<span class="icon-bar"></span>
+								<span class="icon-bar"></span>
+								<span class="icon-bar"></span>
+							</button>
+							<a href="/channels" id="logo-container">
+								<img class="navbar-brand" src="{% static 'img/logo.png' %}">
+								<label id="kolibri_label">Kolibri</label>
+							</a>
+						</div>
+							<ul class="nav navbar-nav navbar-right">
+								<!-- <li> <a class="btn btn-main">Discover</a></li> -->
+								<li id="username_label">{% trans "Hello" %}, {{ user.first_name }}</li>
+								<li class="dropdown" id="settings-dd-wrapper">
+									<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-user" aria-hidden="true"></span></a>
+									<ul class="dropdown-menu">
+										<li><a href="{% url 'profile_settings' %}" >{% trans "Account" %}</a></li>
+										<li><a href="{% url 'django.contrib.auth.views.logout' %}">{% trans "Log Out" %}</a></li>
+									</ul>
+								</li>
+							</ul>
 
-            </div><!-- /.navbar-collapse -->
-          </div><!-- /.container-fluid -->
-        </nav>
+						</div><!-- /.navbar-collapse -->
+					</div><!-- /.container-fluid -->
+				</nav>
 
-        {% endblock nav %}
+				{% endblock nav %}
 
-        <!-- Site content gets injected here -->
+				<!-- Site content gets injected here -->
 		{% block content %}{% endblock content %}
-    </body>
+		</body>
 </html>
