@@ -27,7 +27,6 @@
     <nav class="navbar" id="secondary-nav">
         <ul class="nav navbar-nav navbar-left">
             <li><a href="/channels"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
-            <!-- Collect the nav links, forms, and other content for toggling -->
              <li class="dropdown" id="channel_select_dd_wrapper">
                 <a href="#" id="channel_selection_dropdown" class="dropdown-toggle truncate" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                     {%if channel_name %}{{channel_name}}
@@ -54,7 +53,7 @@
             {% if allow_edit %}
                 {% if staging %}<li class="channel_edit_label">{%trans "STAGING VERSION" %}</li>
                 {% else %}
-                    <li id="channel_settings" title="{%trans 'Channel Settings' %}"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></li>
+                    <li id="channel_settings" title="{%trans 'Open channel settings' %}"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></li>
                     <li class="channel_edit_label">{%trans "EDITING" %}</li>
                 {% endif %}
             {% endif %}
