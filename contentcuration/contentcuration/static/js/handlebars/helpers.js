@@ -134,3 +134,7 @@ Handlebars.registerHelper('ispositive', function(num, options) {
   }
   return options.inverse(this);
 });
+
+Handlebars.registerHelper( 'concat', function(str1, str2) {
+    return str1 + str2;
+});

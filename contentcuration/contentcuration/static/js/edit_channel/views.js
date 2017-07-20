@@ -14,7 +14,7 @@ var BaseView = Backbone.View.extend({
 	messages: {},
 	globalMessageStore: require("utils/translations"),
 	get_intl_data: function(){
-		var messages = _.extend(this.messages, this.globalMessageStore[this.locale][this.name] || {});
+		var messages = _.extend(this.messages, this.globalMessageStore[this.name] || {});
 		return {
 			intl: {
 				locales: this.locales,
@@ -22,8 +22,9 @@ var BaseView = Backbone.View.extend({
 			}
 		}
 	},
-	get_translation: function(message_id){
-		var messages = _.extend(this.messages, this.globalMessageStore[this.locale][this.name] || {});
+	get_translation: function(message_id, context){
+		// Get dynamically generated messages
+		var messages = _.extend(this.messages, this.globalMessageStore[this.name] || {});
 		return messages[message_id];
 	},
 	display_load:function(message, callback){

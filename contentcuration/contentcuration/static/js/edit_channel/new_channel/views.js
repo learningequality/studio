@@ -17,7 +17,32 @@ var MESSAGES = {
 	"add_channel_disbaled_title": "Cannot create a new channel while another channel is being edited.",
 	"add_channel_title": "Create a new channel",
 	"loading": "Loading...",
-	"pending_loading": "Checking for invitations..."
+	"pending_loading": "Checking for invitations...",
+	"cancel": "CANCEL",
+	"delete_channel": "DELETE CHANNEL",
+	"save_channel": "SAVE",
+	"deleting_channel": "Deleting Channel...",
+	"warning": "WARNING",
+	"delete_warning": "All content under this channel will be permanently deleted.\nAre you sure you want to delete this channel?",
+	"saving": "Saving Channel...",
+	"channel_name_error": "Channel must have a name",
+	"name_placeholder": "Enter channel name...",
+	"description_placeholder": "Enter channel description...",
+	"channel_id": "ID",
+	"copy_id": "Copy ID to clipboard",
+	"unpublished": "Unpublished",
+	"view_only": "View Only",
+	"resource_count": "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
+	"invitation_error": "Invitation Error",
+	"declining_invitation": "Declining Invitation",
+	"declining_invitation_message": "Are you sure you want to decline this invitation?",
+	"decline": "DECLINE",
+	"accept": "ACCEPT",
+	"accept_prompt": "has invited you to",
+	"edit": "edit",
+	"view": "view",
+	"accept_success": "Accepted invitation to",
+	"decline_success": "Declined invitation to"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -109,8 +134,9 @@ var CurrentChannelList  = ChannelList.extend({
 	}
 });
 
-
 var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
+	name: NAMESPACE,
+	messages: MESSAGES,
 	tagName: "li",
 	id: function(){
 		return (this.model)? this.model.get("id") : "new";
@@ -152,6 +178,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			resource_count: this.model.get("count"),
 			channel_link : this.model.get("id"),
 			picture : this.thumbnail_url,
+		}, {
+			data: this.get_intl_data()
 		}));
 		if(this.edit){
 			this.image_upload = new FileViews.ThumbnailUploadView({
@@ -242,11 +270,10 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.containing_list_view.set_editing(false);
 		}else{
 			var self = this;
-            dialog.dialog("WARNING", "All content under this channel will be permanently deleted."
-					+ "\nAre you sure you want to delete this channel?", {
-                "CANCEL":function(){},
-                "DELETE CHANNEL": function(){
-					self.save({"deleted":true}, "Deleting Channel...").then(function(){
+            dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning"), {
+                [this.get_translation("cancel")]:function(){},
+                [this.get_translation("delete_channel")]: function(){
+					self.save({"deleted":true}, this.get_translation("deleting_channel")).then(function(){
 						self.containing_list_view.set_editing(false);
 						self.containing_list_view.collection.remove(self.model);
 						self.containing_list_view.render();
@@ -290,7 +317,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.edit = false;
 
 			var self = this;
-			this.save(data, "Saving Channel...").then(function(channel){
+			this.save(data, this.get_translation("saving")).then(function(channel){
 				self.model = channel;
 				self.render();
 			});
@@ -305,7 +332,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	set_channel:function(){
 		this.set({
-			name: (this.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : this.$el.find("#new_channel_name").val().trim(),
+			name: this.$el.find("#new_channel_name").val().trim(),
 			description: this.$el.find("#new_channel_description").val(),
 			thumbnail : this.thumbnail
 		});
@@ -374,6 +401,8 @@ var PendingChannelList  = ChannelList.extend({
 });
 
 var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
+	name: NAMESPACE,
+	messages: MESSAGES,
 	tagName: "li",
 	id: function(){
 		return (this.model)? this.model.get("id") : "new";
@@ -392,6 +421,8 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		this.$el.html(this.template({
 			invitation: this.model.toJSON(),
 			status: this.status
+		}, {
+			data: this.get_intl_data()
 		}));
 	},
 	events: {
@@ -403,14 +434,14 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		this.model.accept_invitation().then(function(channel){
 			self.submit_invitation(true, channel);
 		}).catch(function(error){
-			dialog.alert("Invitation Error", error.responseText);
+			dialog.alert(self.get_translation("invitation_error"), error.responseText);
         });
 	},
 	decline: function(){
 		var self = this;
-		dialog.dialog("Declining Invitation", "Are you sure you want to decline this invitation?", {
-            "CANCEL":function(){},
-            "DECLINE": function(){
+		dialog.dialog(self.get_translation("declining_invitation"), self.get_translation("declining_invitation_message"), {
+            [self.get_translation("cancel")]:function(){},
+            [self.get_translation("decline")]: function(){
             	self.model.decline_invitation().then(function(){
             		self.submit_invitation(false, null);
             	});
