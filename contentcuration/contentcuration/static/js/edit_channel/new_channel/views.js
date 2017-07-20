@@ -11,7 +11,6 @@ var stringHelper = require("edit_channel/utils/string_helper")
 var dialog = require("edit_channel/utils/dialog");
 
 var NAMESPACE = "new_channel";
-var LOCALES = ["en-US"];
 var MESSAGES = {
 	"header": "My Channels",
 	"add_channel": "Channel",
@@ -25,7 +24,6 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
 	list_selector: "#channel_list",
 	name: NAMESPACE,
-	locales: LOCALES,
 	messages: MESSAGES,
 	initialize: function(options) {
 		_.bindAll(this, 'new_channel');
@@ -51,7 +49,6 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 
 var ChannelList  = BaseViews.BaseEditableListView.extend({
 	name: NAMESPACE,
-	locales: LOCALES,
 	messages: MESSAGES,
 	initialize: function(options) {
 		this.bind_edit_functions();
