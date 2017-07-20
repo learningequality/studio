@@ -10,17 +10,31 @@ var get_cookie = require("utils/get_cookie");
 var stringHelper = require("edit_channel/utils/string_helper")
 var dialog = require("edit_channel/utils/dialog");
 
+var NAMESPACE = "new_channel";
+var LOCALES = ["en-US"];
+var MESSAGES = {
+	"header": "My Channels",
+	"add_channel": "Channel",
+	"add_channel_disbaled_title": "Cannot create a new channel while another channel is being edited.",
+	"add_channel_title": "Create a new channel",
+	"loading": "Loading...",
+	"pending_loading": "Checking for invitations..."
+}
+
 var ChannelListPage  = BaseViews.BaseView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
 	list_selector: "#channel_list",
-	default_item: ".default-item",
-
+	name: NAMESPACE,
+	locales: LOCALES,
+	messages: MESSAGES,
 	initialize: function(options) {
 		_.bindAll(this, 'new_channel');
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template());
+		this.$el.html(this.template(null, {
+			data: this.get_intl_data()
+		}));
 		this.current_channel_list = new CurrentChannelList({container: this, el: this.$("#channel_list")});
 		this.pending_channel_list = new PendingChannelList({container: this, el: this.$("#pending_list")});
 	},
@@ -36,8 +50,9 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 });
 
 var ChannelList  = BaseViews.BaseEditableListView.extend({
-	default_item: ".default-item",
-
+	name: NAMESPACE,
+	locales: LOCALES,
+	messages: MESSAGES,
 	initialize: function(options) {
 		this.bind_edit_functions();
 		this.container = options.container;
@@ -56,7 +71,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
 		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
 		(edit_mode_on)? $(".new_channel_button").addClass("disabled") : $(".new_channel_button").removeClass("disabled");
-		$(".new_channel_button").prop('title', (edit_mode_on)? 'Cannot create a new channel while another channel is being edited.' : "Create a new channel");
+		$(".new_channel_button").prop("title", (edit_mode_on)? this.get_translation("add_channel_disbaled_title") : this.get_translation("add_channel_title"));
 	}
 });
 
@@ -66,7 +81,9 @@ var CurrentChannelList  = ChannelList.extend({
 
 	render: function() {
 		this.set_editing(false);
-		this.$el.html(this.template());
+		this.$el.html(this.template(null, {
+			data: this.get_intl_data()
+		}));
 		this.collection = new Models.ChannelCollection();
 		var self = this;
 		window.current_user.get_channels().then(function(channels){
@@ -95,9 +112,7 @@ var CurrentChannelList  = ChannelList.extend({
 	}
 });
 
-/*
-	edit: determines whether to load channel or editor
-*/
+
 var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	tagName: "li",
 	id: function(){
@@ -326,11 +341,9 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 });
 
-var PendingChannelList  = BaseViews.BaseEditableListView.extend({
+var PendingChannelList  = ChannelList.extend({
 	template: require("./hbtemplates/channel_list_pending.handlebars"),
 	list_selector: "#channel_list_pending",
-	default_item: ".default-item",
-
 	initialize: function(options) {
 		this.bind_edit_functions();
 		this.container = options.container;
@@ -338,7 +351,9 @@ var PendingChannelList  = BaseViews.BaseEditableListView.extend({
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template());
+		this.$el.html(this.template(null, {
+			data: this.get_intl_data()
+		}));
 		var self = this;
 		window.current_user.get_pending_invites().then(function(invitations){
 			self.collection.reset(invitations.toJSON());
