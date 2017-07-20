@@ -525,7 +525,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license',
                   'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors',
-                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of')
 
 
