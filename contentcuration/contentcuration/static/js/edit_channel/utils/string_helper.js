@@ -110,6 +110,12 @@ var CONSTANT_TRANSLATIONS = {
                       "law, including all related and neighboring rights.",
   "Special Permissions_description": "Special Permissions is a custom license to use when the current licenses do not apply to " +
                       "the content. The owner of this license is responsible for creating a description of what this license entails.",
+  "view_access": "Can View",
+  "edit_access": "Can Edit",
+  "view": "view",
+  "edit": "edit",
+  "view_access_only": "You can only grant view access",
+  "edit_access_only": "You can only grant edit access"
 }
 
 function translate(constant_id){
