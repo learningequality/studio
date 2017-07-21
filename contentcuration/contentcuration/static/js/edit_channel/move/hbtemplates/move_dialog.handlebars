@@ -8,15 +8,15 @@
 	</div>
 	<div class="move_section col-sm-7 move_list_section modal-content-default">
 		<div id="target_list_area">
-			<em class="default-item empty_default">Calculating valid moves...</em>
+			<em class="default-item empty_default">{{formatMessage (intlGet 'messages.calculating_moves')}}</em>
 		</div>
 	</div>
 </div>
 <br/>
 <div id="move_bottom_container" class="modal-bottom-content-default">
-	<button class="action-text tab_item" id="cancel_button" data-dismiss="modal">CANCEL</button>
+	<button class="action-text tab_item" id="cancel_button" data-dismiss="modal">{{formatMessage (intlGet 'messages.cancel')}}</button>
 	<button disabled class="action-button pull-right disabled modal-main-action-button tab_item first_focus_item" id="move_content_button">
-		MOVE
+		{{formatMessage (intlGet 'messages.move')}}
 	</button>
 	<span id="move_status" class="pull-right truncate modal-status-text"></span>
 </div>

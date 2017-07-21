@@ -24,7 +24,7 @@ var BaseView = Backbone.View.extend({
 			}
 		}
 	},
-	get_translation: function(message_id, data){
+	get_translation: function(message_id, data, data2){
 		// Get dynamically generated messages
 		var messages = _.extend(this.messages, this.globalMessageStore[this.name] || {});
 		if (data !== undefined){
@@ -33,6 +33,7 @@ var BaseView = Backbone.View.extend({
 			div.id = "intl_wrapper";
 			$(div).html(template({
 				data: data,
+				data2: data2,
 				message_id: message_id
 			}, {
 				data: this.get_intl_data()

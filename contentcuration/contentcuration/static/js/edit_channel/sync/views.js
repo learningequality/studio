@@ -55,7 +55,7 @@ var MESSAGES = {
     "loading_changes": "Loading changes...",
     "select_item_prompt": "Select an item to view updates",
     "updated_content": "Updated Content",
-    "updated_content_text": "Select content to sync"
+    "updated_content_text": "Select content to sync",
     "preview_content": "Preview",
     "preview_content_text": "Review changes made to original content"
 }
