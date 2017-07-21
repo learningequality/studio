@@ -20,7 +20,7 @@
 			<ul>
 				{% for field in form %}
 					{% for error in field.errors %}
-						<li>{% blocktrans %}{{ error|escape }}{% endblocktrans %}</li>
+						<li>{{ error|escape }}</li>
 					{% endfor %}
 				{% endfor %}
 			</ul>
@@ -29,7 +29,7 @@
 					{% csrf_token %}
 					{% for field in form %}
 					<p>
-						<label>{% if field.field.required %}<i class="required_asterisk">*</i>{% endif %} {% blocktrans %}{{field.label}}{% endblocktrans %}</label>
+						<label>{% if field.field.required %}<i class="required_asterisk">*</i>{% endif %} {{field.label}}</label>
 						{{field}}
 					</p>
 					{% endfor %}

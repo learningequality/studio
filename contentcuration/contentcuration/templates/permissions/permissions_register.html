@@ -27,7 +27,7 @@
 				{% csrf_token %}
 				{% for field in form %}
 				<p>
-					{% if field.field.required %}<label><i class="required_asterisk">*</i>{% blocktrans %}{{field.label}}{% endblocktrans %}</label>{% endif %}
+					{% if field.field.required %}<label><i class="required_asterisk">*</i> {{field.label}}</label>{% endif %}
 					{{field}}
 				</p>
 				{% endfor %}

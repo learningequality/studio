@@ -7,6 +7,9 @@ from le_utils.constants import exercises, licenses
 
 
 class RegistrationForm(UserCreationForm):
+    first_name = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
+    first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
+    last_name = forms.CharField(widget=forms.TextInput, label=_('Last Name'), required=True)
     password1 = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)
     password2 = forms.CharField(widget=forms.PasswordInput, label=_('Password (again)'), required=True)
 
@@ -46,6 +49,8 @@ class RegistrationForm(UserCreationForm):
 
 
 class InvitationForm(UserCreationForm):
+    first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
+    last_name = forms.CharField(widget=forms.TextInput, label=_('Last Name'), required=True)
     password1 = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)
     password2 = forms.CharField(widget=forms.PasswordInput, label=_('Password (again)'), required=True)
 
@@ -146,18 +151,18 @@ class ProfileSettingsForm(UserChangeForm):
 
 class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
-    author = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
-    copyright_holder = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
-    license_description = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
-    license = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=licenses.choices)
-    mastery_model = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=exercises.MASTERY_MODELS, label="Mastery at")
-    m_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label="M")
-    n_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label="N")
-    auto_derive_video_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Videos")
-    auto_derive_audio_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Audio")
-    auto_derive_document_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Documents")
-    auto_derive_html5_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="HTML Apps")
-    auto_randomize_questions = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Automatically randomize question order")
+    author = forms.CharField(required=False, label=_('Author'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    copyright_holder = forms.CharField(required=False, label=_('Copyright Holder'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    license_description = forms.CharField(required=False, label=_('License Description'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    license = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('License'), choices=licenses.choices)
+    mastery_model = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=exercises.MASTERY_MODELS, label=_("Mastery at"))
+    m_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label=_("M"))
+    n_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label=_("N"))
+    auto_derive_video_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("Videos"))
+    auto_derive_audio_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("Audio"))
+    auto_derive_document_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("Documents"))
+    auto_derive_html5_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("HTML Apps"))
+    auto_randomize_questions = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("Automatically randomize question order"))
 
     class Meta:
         model = User

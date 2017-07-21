@@ -47,7 +47,7 @@ var BaseInfoModalView = BaseViews.BaseModalView.extend({
     'focus .input-tab-control': 'loop_focus'
   },
   render: function() {
-      this.$el.html(this.template(this.get_render_data(){
+      this.$el.html(this.template(this.get_render_data(), {
         data: this.get_intl_data()
       }));
       $("body").append(this.el);

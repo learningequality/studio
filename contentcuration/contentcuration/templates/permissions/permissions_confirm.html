@@ -10,7 +10,7 @@
 	</div>
 	<div class="message-wrapper">
 		<br/>
-		<h2>{% trans "Welcome back, " %} view.user.first_name</h2>
+		<h2>{% trans "Welcome back, " %} {{view.user.first_name}}</h2>
 		<h4>{% trans "Please enter your password to accept your invitation or " %}
 		<a href="/" class="action-text invitation-action-text" id="invitation-action-text">{% trans "ignore it." %}</a></h4>
 		<form method="post" id="invitation_accept_form">
@@ -21,7 +21,7 @@
 				 	<label><i class="required_asterisk">*</i> {% trans "Password" %}</label>
 				 	{{form.password}}
 				 	<input class="btn message-btn" type="submit" value="{% trans 'Accept Invite' %}" id="invitation_accept_button"/>
-					<span id="accept-error">{% blocktrans %}{{form.password.errors.0}}{% endblocktrans %}</span>
+					<span id="accept-error">{{form.password.errors.0}}</span>
 				 </p>
 			</div>
 		</form>

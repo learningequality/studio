@@ -23,7 +23,6 @@ var MESSAGES = {
     "empty": "(empty)",
     "warning": "WARNING",
     "delete_item_warning": "Are you sure you want to PERMANENTLY delete this item? Changes cannot be undone!"
-
 }
 
 var ArchiveModalView = BaseViews.BaseModalView.extend({

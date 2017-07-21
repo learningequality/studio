@@ -19,7 +19,8 @@ var MESSAGES = {
     "resource_count": "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
     "calculating": "(Calculating...)",
     "cancel": "CANCEL",
-    "empty": "(empty)"
+    "empty": "(empty)",
+    "publishing": "Publishing..."
 }
 
 
@@ -59,7 +60,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     },
     publish:function(){
         var self = this;
-        this.display_load("Publishing...", function(resolve, reject){
+        this.display_load(this.get_translation("publishing"), function(resolve, reject){
             window.current_channel.publish().then(function(){
                 self.onpublish(window.workspace_manager.get_published_collection());
                 self.close();
