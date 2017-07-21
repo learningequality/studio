@@ -4,7 +4,7 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("information.less");
 
-var NAMESPACE = "channel_settings";
+var NAMESPACE = "information";
 var MESSAGES = {
     "copied": "Copied!",
     "copy_failed": "Copy Failed",

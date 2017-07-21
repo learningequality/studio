@@ -6,7 +6,7 @@ var stringHelper = require("edit_channel/utils/string_helper");
 require("export.less");
 
 
-var NAMESPACE = "channel_settings";
+var NAMESPACE = "export";
 var MESSAGES = {
     "learn_more": "LEARN MORE",
     "close": "CLOSE",
