@@ -114,7 +114,6 @@ var CONSTANT_TRANSLATIONS = {
 }
 
 function translate(constant_id){
-  console.log(constant_id)
   var messages = _.extend(CONSTANT_TRANSLATIONS, globalMessageStore["constants"] || {});
   return messages[constant_id];
 }

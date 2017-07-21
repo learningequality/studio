@@ -5,8 +5,28 @@ var Models = require("edit_channel/models");
 var stringHelper = require("edit_channel/utils/string_helper");
 require("export.less");
 
+
+var NAMESPACE = "channel_settings";
+var MESSAGES = {
+    "learn_more": "LEARN MORE",
+    "close": "CLOSE",
+    "loading": "Loading...",
+    "publish_id": "PUBLISH ID:",
+    "publishing_channel": "Publishing Channel...",
+    "current_version": "Current Version:",
+    "publish_text": "The following content will be published:",
+    "publish": "PUBLISH",
+    "resource_count": "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
+    "calculating": "(Calculating...)",
+    "cancel": "CANCEL",
+    "empty": "(empty)"
+}
+
+
 var ExportModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/export_modal.handlebars"),
+    name: NAMESPACE,
+    messages: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, "publish");
         this.modal = true;
@@ -15,6 +35,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             licenses: window.licenses.toJSON(),
             version: window.current_channel.get("version") + 1,
             node: this.model.toJSON(),
+            resource_count: this.model.get("metadata").resource_count
         });
         this.onpublish = options.onpublish;
         this.export_view = new ExportListView({
@@ -50,6 +71,8 @@ var ExportListView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/export_list.handlebars"),
     default_item:">.export_list >.default-item",
     list_selector: ">.export_list",
+    name: NAMESPACE,
+    messages: MESSAGES,
 
     initialize: function(options) {
         this.collection = new Models.ContentNodeCollection();
@@ -58,7 +81,9 @@ var ExportListView = BaseViews.BaseListView.extend({
     },
 
     render: function() {
-        this.$el.html(this.template({id: this.model.get("id")}));
+        this.$el.html(this.template({id: this.model.get("id")}, {
+            data: this.get_intl_data()
+        }));
         var self = this;
         this.fetch_model(this.model).then(function(fetched){
             self.collection.get_all_fetch_simplified(fetched.get("children")).then(function(fetchedCollection){
@@ -86,6 +111,8 @@ var ExportItem = BaseViews.BaseListNodeItemView.extend({
     expandedClass: "glyphicon-menu-down",
     list_selector: ">.export_list",
     item_to_import: false,
+    name: NAMESPACE,
+    messages: MESSAGES,
 
     getToggler: function () { return this.$("#menu_toggle_" + this.model.id); },
     getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },
@@ -106,7 +133,10 @@ var ExportItem = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             node: this.model.toJSON(),
             isfolder: this.model.get("kind") === "topic",
-            isempty:this.model.get("children").length ===0
+            isempty:this.model.get("children").length ===0,
+            resource_count: this.model.get("metadata").resource_count
+        }, {
+            data: this.get_intl_data()
         }));
     },
     load_subfiles:function(){
