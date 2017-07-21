@@ -2,22 +2,22 @@
 	<div id="archive_options" class="btn-group pull-right" role="group" aria-label="archive_options">
 		<button type="button" class="btn btn-default archive_option disabled" disabled id="restore_content">
 			<span class="glyphicon glyphicon-share-alt restore_icon"></span>
-			Restore Selected
+			{{formatMessage (intlGet 'messages.restore_selected')}}
 		</button>
 		<button type="button" class="btn btn-default archive_option disabled" disabled id="delete_selected_button">
 			<span class="glyphicon glyphicon-trash"></span>
-			Delete Selected
+			{{formatMessage (intlGet 'messages.delete_selected')}}
 		</button>
 	</div>
 	<div id="select_all_area">
 		<input type="checkbox" class="select_all" id="select_all_check"/>
-		<label for="select_all_check">Select All</label>
+		<label for="select_all_check">{{formatMessage (intlGet 'messages.select_all')}}</label>
 	</div>
 </div>
 <div id="archive_content" class='modal-content-default'>
 </div>
 <br/>
 <div id="archive_bottom_container" class="modal-bottom-content-default">
-	<button class="action-button pull-right modal-main-action-button" data-dismiss="modal">CLOSE</button>
+	<button class="action-button pull-right modal-main-action-button" data-dismiss="modal">{{formatMessage (intlGet 'messages.close')}}</button>
 	<div class="modal-status-text"><span id="archive_selected_count"></span></div>
 </div>

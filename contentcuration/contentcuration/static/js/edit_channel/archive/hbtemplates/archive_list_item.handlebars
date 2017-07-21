@@ -15,5 +15,5 @@
 </div>
 
 {{#if node.children}}
-	<div id="archive_item_{{node.id}}_sub" class="subdirectory"><em class="default-item">Loading...</em></div>
+	<div id="archive_item_{{node.id}}_sub" class="subdirectory"><em class="default-item">{{formatMessage (intlGet 'messages.loading')}}</em></div>
 {{/if}}

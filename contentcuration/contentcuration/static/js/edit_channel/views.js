@@ -25,18 +25,23 @@ var BaseView = Backbone.View.extend({
 	get_translation: function(message_id, num){
 		// Get dynamically generated messages
 		var messages = _.extend(this.messages, this.globalMessageStore[this.name] || {});
-		var template = require("edit_channel/utils/hbtemplates/intl.handlebars");
-		var div = document.createElement("DIV");
-		div.id = "intl_wrapper";
-		$(div).html(template({
-			num: num,
-			message_id: message_id
-		}, {
-			data: this.get_intl_data()
-		}));
-		var contents = div.innerHTML;
-		div.remove();
-		return contents;
+		if (num !== undefined){
+			var template = require("edit_channel/utils/hbtemplates/intl.handlebars");
+			var div = document.createElement("DIV");
+			div.id = "intl_wrapper";
+			$(div).html(template({
+				num: num,
+				message_id: message_id
+			}, {
+				data: this.get_intl_data()
+			}));
+			var contents = div.innerHTML;
+			div.remove();
+			return contents;
+		} else {
+			return messages[message_id];
+		}
+
 	},
 	display_load:function(message, callback){
     	var self = this;
@@ -355,7 +360,9 @@ var BaseWorkspaceView = BaseView.extend({
 var BaseModalView = BaseView.extend({
     callback:null,
     render: function(closeFunction, renderData) {
-        this.$el.html(this.template(renderData));
+        this.$el.html(this.template(renderData, {
+			data: this.get_intl_data()
+		}));
         $("body").append(this.el);
         this.$(".modal").modal({show: true});
         this.$(".modal").on("hide.bs.modal", closeFunction);

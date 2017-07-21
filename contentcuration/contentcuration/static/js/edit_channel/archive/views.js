@@ -6,8 +6,30 @@ require("archive.less");
 var stringHelper = require("edit_channel/utils/string_helper");
 var dialog = require("edit_channel/utils/dialog");
 
+var NAMESPACE = "archive";
+var MESSAGES = {
+    "header": "Managing deleted content",
+    "count": "{num, plural,\n =0 {}\n =1 {# item selected }\n other {# items selected }}",
+    "delete_message": "Are you sure you want to delete these selected items permanently? Changes cannot be undone!",
+    "cancel": "CANCEL",
+    "delete": "DELETE",
+    "deleting_content": "Deleting Content...",
+    "restore_selected": "Restore Selected",
+    "delete_selected": "Delete Selected",
+    "select_all": "Select All",
+    "close": "CLOSE",
+    "loading": "Loading...",
+    "no_items": "No items found",
+    "empty": "(empty)",
+    "warning": "WARNING",
+    "delete_item_warning": "Are you sure you want to PERMANENTLY delete this item? Changes cannot be undone!"
+
+}
+
 var ArchiveModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/archive_modal.handlebars"),
+    name: NAMESPACE,
+    messages: MESSAGES,
 
     initialize: function(options) {
         this.modal = true;
@@ -23,6 +45,8 @@ var ArchiveModalView = BaseViews.BaseModalView.extend({
 
 var ArchiveView = BaseViews.BaseWorkspaceView.extend({
     template: require("./hbtemplates/archive_dialog.handlebars"),
+    name: NAMESPACE,
+    messages: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'restore_content', 'delete_content', 'update_count', 'select_all');
         this.bind_workspace_functions();
@@ -36,7 +60,9 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
       "change #select_all_check" : "select_all"
     },
     render: function() {
-        this.$el.html(this.template());
+        this.$el.html(this.template(null, {
+            data: this.get_intl_data()
+        }));
         this.main_archive_list = new ArchiveList({
             model : this.model,
             el: this.$("#archive_content"),
@@ -61,18 +87,7 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
             $(".archive_option").removeClass("disabled");
         }
         var data = this.main_archive_list.get_metadata();
-        var status = "";
-        switch(collection.length){
-            case 0:
-                status = "";
-                break;
-            case 1:
-                status = collection.length + " item selected ";
-                break;
-            default:
-                status = collection.length + " items selected ";
-        }
-        this.$("#archive_selected_count").html(status);
+        this.$("#archive_selected_count").html(this.get_translation("count", collection.length));
     },
     restore_content:function(){
         var list = this.get_selected();
@@ -81,10 +96,14 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
         this.move_content(moveCollection);
     },
     delete_content:function(){
-        if(confirm("Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
-            this.delete_items_permanently("Deleting Content...", this.get_selected(), this.update_count);
-            this.$("#select_all_check").attr("checked", false);
-        }
+        var self = this;
+        dialog.dialog(this.get_translation("warning"), self.get_translation("delete_message"), {
+            [self.get_translation("cancel")]:function(){},
+            [self.get_translation("delete")]: function(){
+                self.delete_items_permanently(self.get_translation("deleting_content"), self.get_selected(), self.update_count);
+                self.$("#select_all_check").attr("checked", false);
+            },
+        }, function(){ });
     },
     handle_move:function(target, moved, original_parents){
         // Recalculate counts
@@ -122,6 +141,8 @@ var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
     template: require("./hbtemplates/archive_list.handlebars"),
     default_item:">.archive-list >.default-item",
     list_selector: ">.archive-list",
+    name: NAMESPACE,
+    messages: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'update_count', 'get_metadata');
         this.collection = new Models.ContentNodeCollection();
@@ -136,11 +157,13 @@ var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
         this.load_content();
         this.$el.html(this.template({
             node : this.model.toJSON()
+        }, {
+            data: this.get_intl_data()
         }));
-        this.$(this.default_item).text("Loading...");
+        this.$(this.default_item).text(this.get_translation("loading"));
         var self = this;
         this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
-            self.$(self.default_item).text("No items found.");
+            self.$(self.default_item).text(self.get_translation("no_items"));
             fetchedCollection.sort_by_order();
             self.load_content(fetchedCollection);
             window.workspace_manager.put_list(self.model.id, self);
@@ -180,12 +203,6 @@ var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
             self.metadata.size += entry.metadata.size;
         });
         return this.metadata;
-    },
-    delete_items:function(){
-        if(confirm("Are you sure you want to delete these selected items permanently? Changes cannot be undone!")){
-            this.delete_items_permanently("Deleting Content...", this.update_count);
-            this.$(".select_all").attr("checked", false);
-        }
     }
 });
 
@@ -200,6 +217,8 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     expandedClass: "glyphicon-triangle-bottom",
     list_selector: ">.archive-list",
     item_to_archive: false,
+    name: NAMESPACE,
+    messages: MESSAGES,
 
     getToggler: function () { return this.$("#menu_toggle_" + this.model.get("id")); },
     getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },
@@ -228,6 +247,8 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
             node:this.model.toJSON(),
             isfolder: this.model.get("kind") === "topic",
             checked: this.checked
+        }, {
+            data: this.get_intl_data()
         }));
         this.load_folder_toggle();
         this.$el.find(".archive_checkbox").prop("checked", this.checked);
@@ -245,6 +266,8 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
             this.$("#" + this.id() + "_options").html(this.options_template({
                 node:this.model.toJSON(),
                 is_open:this.getSubdirectory().is(":visible")
+            }, {
+                data: this.get_intl_data()
             }));
         }
     },
@@ -306,10 +329,10 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         event.stopPropagation();
         event.preventDefault();
         var self = this;
-        dialog.dialog("WARNING", "Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!", {
-            "CANCEL":function(){},
-            "DELETE": function(){
-                self.delete(true, "Deleting Content...", function(){
+        dialog.dialog(this.get_translation("warning"), this.get_translation("delete_item_warning"), {
+            [self.get_translation("cancel")]:function(){},
+            [self.get_translation("delete")]: function(){
+                self.delete(true, self.get_translation("deleting_content"), function(){
                     self.metadata = {"count": 0, "size": 0};
                     self.item_to_archive = false;
                     self.containing_list_view.update_count();
