@@ -22,10 +22,21 @@ var BaseView = Backbone.View.extend({
 			}
 		}
 	},
-	get_translation: function(message_id, context){
+	get_translation: function(message_id, num){
 		// Get dynamically generated messages
 		var messages = _.extend(this.messages, this.globalMessageStore[this.name] || {});
-		return messages[message_id];
+		var template = require("edit_channel/utils/hbtemplates/intl.handlebars");
+		var div = document.createElement("DIV");
+		div.id = "intl_wrapper";
+		$(div).html(template({
+			num: num,
+			message_id: message_id
+		}, {
+			data: this.get_intl_data()
+		}));
+		var contents = div.innerHTML;
+		div.remove();
+		return contents;
 	},
 	display_load:function(message, callback){
     	var self = this;
