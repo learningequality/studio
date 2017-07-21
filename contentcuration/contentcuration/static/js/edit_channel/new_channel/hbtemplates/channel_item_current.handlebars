@@ -1,3 +1,4 @@
+<div class="input-tab-control tab_item" data-next=".save_channel"></div>
 <div class="channel-container-wrapper {{#unless edit}}open_channel{{/unless}}">
 	<div class="profile pull-left text-center">
 		{{#if edit}}
@@ -10,15 +11,14 @@
 	</div>
 	{{#if edit}}
 		<p id="channel_name_error">{{formatMessage (intlGet 'messages.channel_name_error')}}</p>
-		<input type="text" id="new_channel_name" placeholder="{{formatMessage (intlGet 'messages.name_placeholder')}}" value = "{{channel.name}}" maxlength="200"></input>
-		<textarea id="new_channel_description" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" value="{{channel.description}}"  maxlength="400">{{channel.description}}</textarea>
+		<input type="text" id="new_channel_name" placeholder="{{formatMessage (intlGet 'messages.name_placeholder')}}" value="{{channel.name}}" maxlength="200" class="tab_item first_focus_item"></input>
+		<textarea id="new_channel_description" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" value="{{channel.description}}"  maxlength="400" class="tab_item">{{channel.description}}</textarea>
 		<a class="delete_channel">{{formatMessage (intlGet 'messages.delete_channel')}}</a>
 		<div class="channel_options">
-			<a class="save_channel btn pull-right">{{formatMessage (intlGet 'messages.save_channel')}}</a>
-			<a class="channel_toggle action-text pull-right">{{formatMessage (intlGet 'messages.cancel')}}</a>
+			<button class="save_channel btn pull-right tab_item">{{formatMessage (intlGet 'messages.save_channel')}}</button>
+			<button class="channel_toggle action-text pull-right tab_item">{{formatMessage (intlGet 'messages.cancel')}}</button>
 		</div>
 	{{else}}
-
 		<span class="channel_metadata">
 			<span class="resource_count">{{formatMessage (intlGet 'messages.resource_count') count=resource_count}}</span>
 			&nbsp;&nbsp;{{formatMessage (intlGet 'messages.channel_id')}}
@@ -49,3 +49,4 @@
 		</div>
 	{{/if}}
 </div>
+<div class="input-tab-control tab_item" data-next="#new_channel_name"></div>

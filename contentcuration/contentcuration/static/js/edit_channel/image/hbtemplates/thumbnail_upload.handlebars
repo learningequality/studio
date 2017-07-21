@@ -1,0 +1,20 @@
+<div class="image_dropzone" id="{{selector}}">
+    <div class="img-wrapper">
+        <!-- /*<div class="dz-placeholder" id="{{selector}}_placeholder" style="background-image:url('{{picture}}')"></div>*/ -->
+        <img class="dz-placeholder" id="{{selector}}_placeholder" src="{{picture}}"/>
+    </div>
+    <div class="finished_area">
+        <div class="image_options text-center">
+            {{#if cropping}}
+                <span class="image_option croppie_option glyphicon glyphicon-ban-circle cancel_image" aria-hidden="true" title="Cancel"></span>
+                <span class="image_option croppie_option glyphicon glyphicon-ok submit_image" aria-hidden="true" title="Submit"></span>
+            {{else}}
+                <span id="{{selector}}_swap" class="image_option thumbnail_option glyphicon glyphicon-picture" aria-hidden="true" title="Upload"></span>
+                {{#if show_crop}}<span class="image_option thumbnail_option glyphicon glyphicon-screenshot crop_image" aria-hidden="true" title="Recenter/Crop"></span>{{/if}}
+                {{#if show_generate}}<span class="image_option thumbnail_option glyphicon glyphicon-random open_thumbnail_generator" aria-hidden="true" title="Generate"></span>
+                {{/if}}
+                {{#if show_crop}}<span class="image_option thumbnail_option glyphicon glyphicon-remove remove_image" aria-hidden="true" title="Remove"></span>{{/if}}
+            {{/if}}
+        </div>
+    </div>
+</div>

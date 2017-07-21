@@ -22,7 +22,6 @@ function escape_str(text){
   return text.replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/\&/g, "&amp;").replace(/\"/g, "&quot;");
 }
 
-
 var CONSTANT_TRANSLATIONS = {
   "topic": "Topic",
   "video": "Video",
@@ -118,9 +117,16 @@ function translate(constant_id){
   return messages[constant_id];
 }
 
+function format_count(text, count){
+  if(Number(count) === 1){
+    return count + " " + text;
+  }
+  return count + " " + text + "s";
+}
 
 module.exports = {
   format_size : format_size,
-  escape_str: escape_str,
+  escape_str:escape_str,
+  format_count: format_count,
   translate: translate
 }

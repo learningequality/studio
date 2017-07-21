@@ -30,7 +30,7 @@ var MoveView = BaseViews.BaseListView.extend({
     target_node:null,
 
     initialize: function(options) {
-        _.bindAll(this, 'move_content');
+        _.bindAll(this, 'move_content', 'loop_focus', 'set_indices');
         this.modal = options.modal;
         this.onmove = options.onmove;
         this.collection = options.collection;
@@ -41,7 +41,8 @@ var MoveView = BaseViews.BaseListView.extend({
         this.render();
     },
     events: {
-      "click #move_content_button" : "move_content"
+      "click #move_content_button" : "move_content",
+      'focus .input-tab-control': 'loop_focus'
     },
     close_move:function(){
         (this.modal)? this.modal.close() : this.remove();
@@ -78,6 +79,7 @@ var MoveView = BaseViews.BaseListView.extend({
             collection:  fetched,
             container: this
         });
+        _.defer(this.set_indices);
     },
 
     /*********** MOVING METHODS ***********/
@@ -122,6 +124,7 @@ var MoveView = BaseViews.BaseListView.extend({
             ((this.to_move_ids.length === 1)? " item to " : " items to ") +
             this.target_node.get("title")
         );
+        this.set_initial_focus();
     }
 });
 
@@ -212,6 +215,7 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
                 container: self.container,
                 isclipboard: self.isclipboard
             });
+            _.defer(self.container.set_indices);
         });
     },
     handle_checked:function(event){

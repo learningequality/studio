@@ -23,6 +23,7 @@ var ShareModalView = BaseViews.BaseModalView.extend({
             model: this.model,
             current_user: options.current_user
         });
+        this.$(".modal").on("shown.bs.modal", this.share_view.set_initial_focus);
     }
 });
 
@@ -30,7 +31,7 @@ var ShareView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/share_dialog.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, "send_invite");
+        _.bindAll(this, "send_invite", 'loop_focus', 'set_initial_focus', 'set_indices');
         this.container = options.container;
         this.current_user = options.current_user;
         this.originalData = this.model.toJSON();
@@ -43,7 +44,8 @@ var ShareView = BaseViews.BaseView.extend({
     },
     events:{
         'keypress #share_email_address' : 'send_invite',
-         "click #share_invite_button" : "send_invite"
+        "click #share_invite_button" : "send_invite",
+        'focus .input-tab-control': "loop_focus"
     },
 
     render: function() {
@@ -93,6 +95,8 @@ var ShareView = BaseViews.BaseView.extend({
                 el: self.$("#pending_list_wrapper"),
                 model: self.model
             });
+            _.defer(self.set_indices);
+            _.defer(self.set_initial_focus, 100);
         });
     },
     send_invite:function(event){

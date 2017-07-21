@@ -30,86 +30,60 @@ var MESSAGES = {
     "id": "ID:"
 }
 
-
-var BaseInformationView = BaseViews.BaseModalView.extend({
+var BaseInfoModalView = BaseViews.BaseModalView.extend({
+  template: require("./hbtemplates/license_modal.handlebars"),
+  modal_id: ".modal",
+  className: "information_wrapper",
   name: NAMESPACE,
   messages: MESSAGES,
-});
-
-var LicenseModalView = BaseInformationView.extend({
-  template: require("./hbtemplates/license_modal.handlebars"),
+  get_render_data: function(){ return {}; },
   initialize: function(options) {
+      _.bindAll(this, 'loop_focus', 'set_indices', "init_focus");
       this.modal = true;
-      this.select_license = options.select_license;
-      this.render();
-  },
-
-  render: function() {
-      this.$el.html(this.template({
-          license: this.select_license.toJSON()
-      }, {
-        data: this.get_intl_data()
-      }));
-      $("body").append(this.el);
-      this.$("#license_modal").modal({show: true});
-      this.$("#license_modal").on("hidden.bs.modal", this.closed_modal);
-  }
-});
-
-var MasteryModalView = BaseInformationView.extend({
-  template: require("./hbtemplates/mastery_modal.handlebars"),
-
-  initialize: function(options) {
-      this.modal = true;
-      this.render();
-  },
-
-  render: function() {
-      this.$el.html(this.template(null, {
-        data: this.get_intl_data()
-      }));
-      $("body").append(this.el);
-      this.$("#mastery_modal").modal({show: true});
-      this.$("#mastery_modal").on("hidden.bs.modal", this.closed_modal);
-  }
-});
-
-var PrerequisiteModalView = BaseInformationView.extend({
-  template: require("./hbtemplates/prereq_modal.handlebars"),
-
-  initialize: function(options) {
-      this.modal = true;
-      this.render();
-  },
-
-  render: function() {
-      this.$el.html(this.template(null, {
-        data: this.get_intl_data()
-      }));
-      $("body").append(this.el);
-      this.$("#prereq_modal").modal({show: true});
-      this.$("#prereq_modal").on("hidden.bs.modal", this.closed_modal);
-  }
-});
-
-var PublishedModalView = BaseInformationView.extend({
-  template: require("./hbtemplates/published_modal.handlebars"),
-
-  initialize: function(options) {
-      this.channel_id = options.channel_id
-      this.modal = true;
+      this.data = options;
       this.render();
   },
   events: {
-    'click #modal-copy-btn' : 'copy_publish_id'
+    'focus .input-tab-control': 'loop_focus'
   },
   render: function() {
-      this.$el.html(this.template({channel_id: this.channel_id}, {
+      this.$el.html(this.template(this.get_render_data(){
         data: this.get_intl_data()
       }));
       $("body").append(this.el);
-      this.$("#published_modal").modal({show: true});
-      this.$("#published_modal").on("hidden.bs.modal", this.closed_modal);
+      this.$(this.modal_id).modal({show: true});
+      this.$(this.modal_id).on("hidden.bs.modal", this.closed_modal);
+      this.$(this.modal_id).on("shown.bs.modal", this.init_focus);
+  },
+  init_focus: function(){
+    this.set_indices();
+    this.set_initial_focus();
+  }
+});
+
+var LicenseModalView = BaseInfoModalView.extend({
+  template: require("./hbtemplates/license_modal.handlebars"),
+  modal_id: "#license_modal",
+  get_render_data: function(){ return { license: this.data.select_license.toJSON() }; }
+});
+
+var MasteryModalView = BaseInfoModalView.extend({
+  template: require("./hbtemplates/mastery_modal.handlebars"),
+  modal_id: "#mastery_modal",
+});
+
+var PrerequisiteModalView = BaseInfoModalView.extend({
+  template: require("./hbtemplates/prereq_modal.handlebars"),
+  modal_id: "#prereq_modal",
+});
+
+var PublishedModalView = BaseInfoModalView.extend({
+  template: require("./hbtemplates/published_modal.handlebars"),
+  modal_id: "#published_modal",
+  get_render_data: function() { return {channel_id: this.data.channel_id}; },
+  events: {
+    'click #modal-copy-btn' : 'copy_publish_id',
+    'focus .input-tab-control': 'loop_focus'
   },
   copy_publish_id: function(){
     this.$("#modal-copy-text").focus();
@@ -121,8 +95,10 @@ var PublishedModalView = BaseInformationView.extend({
       } catch(e) {
           $("#modal-copy-btn").text(self.get_translation("copy_failed"));
       }
+      var self = this;
       setTimeout(function(){
         $("#modal-copy-btn").text(self.get_translation("copy"));
+        self.set_initial_focus();
       }, 2500);
   }
 });

@@ -76,11 +76,9 @@ Handlebars.registerHelper('format_file_size', function(text){
   return stringHelper.format_size(text);
 });
 
-Handlebars.registerHelper('format_count', function(text, count){
-  if(Number(count) === 1){
-    return count + " " + text;
-  }
-  return count + " " + text + "s";
+Handlebars.registerHelper('format_count', function(text, count, capitalize){
+  text = (capitalize)? text.charAt(0).toUpperCase() + text.slice(1) : text;
+  return stringHelper.format_count(text, count);
 });
 Handlebars.registerHelper('get_icon', function(kind){
   switch (kind){
@@ -128,6 +126,21 @@ Handlebars.registerHelper('question_default_text', function(type){
   return type === "perseus_question"? "Perseus Question" : "No text provided";
 });
 
+var COUNTER = 0;
+Handlebars.registerHelper('counter', function(increment){
+  COUNTER += (isNaN(increment))? 1 : Number(increment);
+  return COUNTER;
+});
+
+Handlebars.registerHelper('to_json', function(obj){
+  return JSON.stringify(obj);
+});
+
+Handlebars.registerHelper('parse_question', function(str){
+  if(!str){ return "Question"; }
+  return str.replace(/\$\$([^\$]+)\$\$/g, " [FORMULA] ").replace(/!\[.*\]\(\${☣ CONTENTSTORAGE}\/([^)]+)\)/g, " [IMAGE] ").replace(/\\/g, "");
+});
+
 Handlebars.registerHelper('ispositive', function(num, options) {
   if(num >= 0) {
     return options.fn(this);
@@ -143,3 +156,20 @@ Handlebars.registerHelper( 'translate', function(text) {
     return stringHelper.translate(text);
 });
 
+Handlebars.registerHelper('format_date', function(date) {
+  var monthNames = [
+    "Jan", "Feb", "Mar",
+    "Apr", "May", "June", "July",
+    "Aug", "Sep", "Oct",
+    "Nov", "Dec"
+  ];
+  var date = new Date(date);
+  var day = date.getDate();
+  var monthIndex = date.getMonth();
+  var year = date.getFullYear();
+  return monthNames[monthIndex] + " " + day + ", " + year;
+});
+
+Handlebars.registerHelper('equal', function(val1, val2, options) {
+    return ( val1!=val2 ) ? options.inverse(this) : options.fn(this);
+});

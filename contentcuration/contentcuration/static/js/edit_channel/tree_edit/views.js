@@ -33,6 +33,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		'change input[type=checkbox]' : 'handle_checked',
 		'click .permissions_button' : 'edit_permissions',
 		'click .archive_button' : 'open_archive',
+		'click .sync_button' : 'sync_content',
 		'click .move_button' : 'move_items',
 		'click .approve_channel' : 'activate_channel',
 		'click .stats_button': 'open_stats'
@@ -76,7 +77,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			});
 			this.lists.push(container_view);
 			var self = this;
-			setTimeout(function(){
+			_.defer(function(){
 				self.$("#container_area").width(self.$("#container_area").width() + self.lists[0].$el.width());
 			}, 400)
 

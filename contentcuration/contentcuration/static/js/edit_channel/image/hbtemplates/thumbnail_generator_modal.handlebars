@@ -6,22 +6,20 @@
                 <h4 class="modal-title">Generate Thumbnail</h4>
             </div>
             <div class="modal-body">
+                <div class="input-tab-control tab_item" data-next="#cancel_thumbnail_modal"></div>
                 <div id="thumbnail_area">
-                    <button id="generate_thumbnail" class="btn btn-default action-button">
+                    <button id="generate_thumbnail" class="btn btn-default action-button tab_item first_focus_item">
                         GENERATE
                     </button>
                     <span id="generate_thumbnail_text">&nbsp;Loading...</span>
                     <div id="thumbnail_preview" class="text-center"></div>
                     <div id="generate_thumbnail_error" class="text-center"></div>
                     <div id="thumbnail_buttons">
-                        <button class="action-button pull-right" id="use_thumbnail">
-                            <span>USE</span>
-                        </button>
-                        <a class="action-text" data-dismiss="modal">
-                            <span>CANCEL</span>
-                        </a>
+                        <button class="action-button pull-right tab_item" id="use_thumbnail">USE</button>
+                        <a class="action-text tab_item" data-dismiss="modal" id="cancel_thumbnail_modal">CANCEL</a>
                     </div>
                 </div>
+                <div class="input-tab-control tab_item" data-next="#generate_thumbnail"></div>
             </div>
         </div>
     </div>

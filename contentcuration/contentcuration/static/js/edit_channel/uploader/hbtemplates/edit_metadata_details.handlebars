@@ -13,7 +13,7 @@
 		<p class="detail_field wordwrap">{{#if node.title}}{{node.title}}{{else}}<span class="default_detail_field">---</span>{{/if}}</p>
 	{{/if}}
 	{{#if is_exercise}}
-		<h4>Mastery Criteria <span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="mastery_about"></span></h4>
+		<h4>Mastery Criteria <span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="mastery_about"></span></h4>
 		<p class="detail_field" id="mastery_detail_field">{{#if mastery}}{{mastery}}{{else}}<span class="default_detail_field">---</span>{{/if}}</p>
 	{{/if}}
 	{{#if is_file}}
@@ -28,7 +28,7 @@
 				<h4>License</h4>
 				<p class="detail_field">
 					<span id="license_detail_field">{{#if license}}{{license}}{{else}}<span class="default_detail_field">---</span>{{/if}}</span>
-					<span class="glyphicon glyphicon glyphicon-info-sign" aria-hidden="true" id="license_about"></span>
+					<span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="license_about"></span>
 				</p>
 				<p id="custom_license_description" class="license_description_text">{{license_description}}</p>
 			</div>
@@ -52,3 +52,4 @@
 		</div>
 	</div>
 {{/if}}
+<div class="input-tab-control tab_item" data-next="#copy_button"></div>

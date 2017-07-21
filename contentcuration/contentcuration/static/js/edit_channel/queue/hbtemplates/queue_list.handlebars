@@ -8,12 +8,12 @@
 						<div class="add_items"><span class="glyphicon glyphicon-plus-sign" id="clipboard_add_dd"></span></div>
 						<a class="add_items">{{formatMessage (intlGet 'messages.add')}}</a>
 					</div>
-				  <ul class="dropdown-menu clipboard_add_options" aria-labelledby="clipboard_add_dd">
-				    <li><a class="create_new_content">{{formatMessage (intlGet 'messages.topic')}}</a></li>
-				    <li><a class="upload_files_button">{{formatMessage (intlGet 'messages.upload')}}</a></li>
-				    <li><a class="create_exercise_button">{{formatMessage (intlGet 'messages.exercise')}}</a></li>
-				    <li><a class="import_content">{{formatMessage (intlGet 'messages.import')}}</a></li>
-				  </ul>
+					<ul class="dropdown-menu clipboard_add_options" aria-labelledby="clipboard_add_dd">
+						<li><a class="create_new_content">{{formatMessage (intlGet 'messages.topic')}}</a></li>
+						<li><a class="upload_files_button">{{formatMessage (intlGet 'messages.upload')}}</a></li>
+						<li><a class="create_exercise_button">{{formatMessage (intlGet 'messages.exercise')}}</a></li>
+						<li><a class="import_content">{{formatMessage (intlGet 'messages.import')}}</a></li>
+					</ul>
 				</div>
 			</div>
 			<div class="toolbar-button queue-disable-none-selected col-xs-3">
@@ -24,7 +24,6 @@
 				<div class="move_items"><span class="glyphicon glyphicon-move"></span></div>
 				<a class="move_items">{{formatMessage (intlGet 'messages.move')}}</a>
 			</div>
-			<!--<a class="col-xs-3 move_selected_queue btn btn-option construction">Move<br/>Selected</a>-->
 			<div class="toolbar-button queue-disable-none-selected col-xs-3">
 				<div class="delete_items"><span class="glyphicon glyphicon-remove"></span></div>
 				<a class="delete_items">{{formatMessage (intlGet 'messages.delete')}}</a>
@@ -32,14 +31,11 @@
 		</div>
 		<div id="clipboard_list" class="list_content">
 		<div class="select_all_fixed">
-			<!-- {{#if is_clipboard}}
-				<a class="action-text pull-right manage_clipboard" href="clipboard">MANAGE</a>
-			{{/if}} -->
 			<input type="checkbox" class="select_all select_all_component" id="select_all_check_{{id}}"/>
 			<label for="select_all_check_{{id}}">{{formatMessage (intlGet 'messages.select_all')}}</label>
 		</div>
 		<div class="queue-list-wrapper">
-	{{/if}}
+{{/if}}
 			<ul class="list-unstyled content-list" id="list_for_{{id}}">
 				<li class="default-item">{{formatMessage (intlGet 'messages.loading')}}</li>
 			</ul>

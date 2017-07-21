@@ -1,29 +1,15 @@
+<div class="input-tab-control tab_item" data-next="#share_close_button"></div>
 <div id="share_area">
-	<!-- <div class="pull-right" id="share_public_option">
-		<h4>Access Options</h4>
-		<p>
-			<input type="radio" id="share_public_channel" name="share_option" {{#if channel.public}}checked{{/if}}>
-			<label for="share_public_channel"><span class="glyphicon glyphicon-globe" aria-hidden="true"></span> Public <em>Anyone can import content from this channel</em></label>
-		</p>
-		<p>
-			<input type="radio" id="share_organization_channel" name="share_option">
-			<label for="share_organization_channel"><span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span> Organization <em>Anyone from your organization can import from this channel</em></label>
-		</p>
-		<p>
-			<input type="radio" id="share_private_channel" name="share_option" {{#unless channel.public}}checked{{/unless}}>
-			<label for="share_private_channel"><span class="glyphicon glyphicon-lock" aria-hidden="true"></span> Private <em>Only people with editing permission can import content from this channel</em></label>
-		</p>
-	</div> -->
 	<div id="editor_list_area">
 		<h4>Invite people to this channel</h4>
 		<div id="share_email">
 			<p id="share_error"></p>
 			<p id="share_success"></p>
-			<input type="text" placeholder="Enter email address..." id="share_email_address">
-			<select id="share_mode" {{#if single_share_option}}title="You can only grant {{share_modes.0.share_mode}} access" class="disabled" disabled{{/if}}>
+			<input type="text" placeholder="Enter email address..." id="share_email_address" class="tab_item first_focus_item">
+			<select id="share_mode" {{#if single_share_option}}title="You can only grant {{share_modes.0.share_mode}} access" class="disabled" disabled{{else}}class="tab_item"{{/if}}>
 				{{#each share_modes}}<option value="{{share_mode}}">{{text}}</option>{{/each}}
 			</select>
-			<input type="submit" class="action-button" value="Invite" id="share_invite_button">
+			<input type="submit" class="action-button tab_item" value="Invite" id="share_invite_button">
 		</div>
 		{{#if show_list}}
 			<hr/>
@@ -45,12 +31,11 @@
 	</div>
 	<br/>
 	<div id="share_bottom_container">
-		<a class="action-text" data-dismiss="modal">
-			<span>CLOSE</span>
-		</a>
+		<button id="share_close_button" class="action-text tab_item" data-dismiss="modal">CLOSE</button>
 		<!-- <button class="action-button pull-right" id="share_content_submit">
 			<span>SAVE</span>
 		</button> -->
 		<span id="share_change_indicator" class="pull-right">Changes Saved</span>
 	</div>
 </div>
+<div class="input-tab-control tab_item" data-next="#share_email_address"></div>

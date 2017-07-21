@@ -57,7 +57,8 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
     events: {
       "click #restore_content" : "restore_content",
       "click #delete_selected_button" : "delete_content",
-      "change #select_all_check" : "select_all"
+      "change #select_all_check" : "select_all",
+      "focus .input-tab-control": "loop_focus"
     },
     render: function() {
         this.$el.html(this.template(null, {
@@ -167,6 +168,8 @@ var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
             fetchedCollection.sort_by_order();
             self.load_content(fetchedCollection);
             window.workspace_manager.put_list(self.model.id, self);
+            self.container.set_indices();
+            self.container.set_initial_focus();
         });
     },
     create_new_view:function(model){
@@ -284,6 +287,7 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
             this.subcontent_view.check_all(this.checked);
         }
         this.update_count();
+        this.container.set_initial_focus();
     },
     check_item:function(checked){
         this.item_to_archive = false;

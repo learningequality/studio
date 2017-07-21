@@ -6,6 +6,7 @@
 		<a class="btn btn-tab tab_button" id="metadata_preview_btn">Preview</a>
 		{{#unless isclipboard}}<a class="btn btn-tab tab_button" id="metadata_prerequisites_btn">Prerequisites <span class="prereq_badge badge">Loading...</span></a>{{/unless}}
 	</nav>
+	<div class="input-tab-control tab_item" data-next="{{#if allow_edit}}#upload_save_finish_button{{else}}#copy_button{{/if}}"></div>
 	<div  class="metadata_panel">
 		<div id="metadata_edit_details" class="input_area tab_panel">
 			<div class="section pull-left edit_details_section">
@@ -20,19 +21,20 @@
 	{{#if allow_edit}}
 	<div class="metadata_save_buttons container-fluid">
 		<div class="pull-right">
-			<a id="upload_save_button" class="disable_on_error editmetadata_save">APPLY CHANGES</a>
-			<a class="btn btn-default" id="upload_save_finish_button" class="disable_on_error editmetadata_save">SAVE &amp; CLOSE</a>
+			<button id="upload_save_button" class="disable_on_error editmetadata_save tab_item">APPLY CHANGES</button>
+			<button class="btn btn-default disable_on_error editmetadata_save tab_item" id="upload_save_finish_button">SAVE &amp; CLOSE</button>
 		</div>
-		<a class="action-text" data-dismiss="modal" aria-label="Close">CANCEL</a>
+		<button class="action-text tab_item" data-dismiss="modal" aria-label="Close" id="close_uploader_button">CLOSE</button>
 	</div>
 	{{else}}
 	<div class="metadata_copy_buttons container-fluid">
 		{{#unless staging}}
 		<div class="pull-right">
-			<a class="btn btn-default action-button" id="copy_button" class="disable_on_error editmetadata_save">COPY</a>
+			<button class="btn btn-default action-button tab_item" id="copy_button">COPY</button>
 		</div>
 		{{/unless}}
-		<a class="disable_on_error action-text" id="close_uploader_button">CLOSE</a>
+		<button class="disable_on_error action-text tab_item" id="close_uploader_button">CLOSE</button>
 	</div>
 	{{/if}}
+	<div class="input-tab-control tab_item" data-next="{{#if allow_edit}}#upload_save_finish_button{{else}}{{#if staging}}#close_uploader_button{{else}}#copy_button{{/if}}{{/if}}"></div>
 </div>

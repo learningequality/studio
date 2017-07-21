@@ -98,46 +98,14 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     generate_preview:function(force_load){
         if(this.current_preview){
-            extension = this.current_preview.file_format;
-            var preview_template;
-            switch (extension){
-                case "png":
-                case "jpg":
-                case "jpeg":
-                    preview_template = require("./hbtemplates/preview_templates/image.handlebars");
-                    break;
-                case "pdf":
-                case "PDF":
-                case "vtt":
-                case "srt":
-                    preview_template = require("./hbtemplates/preview_templates/document.handlebars");
-                    break;
-                case "mp3":
-                    preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
-                    break;
-                case "mp4":
-                    preview_template = require("./hbtemplates/preview_templates/video.handlebars");
-                    break;
-                case "perseus":
-                    preview_template = require("./hbtemplates/preview_templates/exercise.handlebars");
-                    break;
-                case "zip":
-                    preview_template = require("./hbtemplates/preview_templates/html5.handlebars");
-                    break;
-                default:
-                    preview_template = require("./hbtemplates/preview_templates/default.handlebars");
-            }
-            this.$("#preview_window").html(preview_template({
-                source: this.current_preview.storage_url,
-                extension:this.current_preview.mimetype,
-                checksum:this.current_preview.checksum,
-                subtitles : this.get_subtitles()
-            },  {
-                data: this.get_intl_data()
-            }));
-            if(force_load && this.model.get('kind') === "video"){
-                $("#preview_window video").load();
-            }
+            _.defer(render_preview,
+                this.$("#preview_window"),
+                this.current_preview,
+                this.get_subtitles(),
+                force_load && this.model.get('kind') === "video",
+                this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64,
+                this.get_intl_data()
+            );
         }
     },
     get_subtitles:function(){
@@ -200,7 +168,52 @@ var PreviewView = BaseViews.BaseView.extend({
     }
 });
 
+function render_preview(el, file_model, subtitles, force_load, encoding, intl_data){
+    var preview_template;
+    var source = file_model.storage_url;
+    switch (file_model.file_format){
+        case "png":
+        case "jpg":
+        case "jpeg":
+            source = encoding || source;
+            preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+            break;
+        case "pdf":
+        case "PDF":
+        case "vtt":
+        case "srt":
+            preview_template = require("./hbtemplates/preview_templates/document.handlebars");
+            break;
+        case "mp3":
+            preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
+            break;
+        case "mp4":
+            preview_template = require("./hbtemplates/preview_templates/video.handlebars");
+            break;
+        case "perseus":
+            preview_template = require("./hbtemplates/preview_templates/exercise.handlebars");
+            break;
+        case "zip":
+            preview_template = require("./hbtemplates/preview_templates/html5.handlebars");
+            break;
+        default:
+            preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+    }
+    el.html(preview_template({
+        source: source,
+        extension:file_model.mimetype,
+        checksum:file_model.checksum,
+        subtitles : subtitles
+    },  {
+        data: intl_data
+    }));
+    if(force_load){
+        el.find("video").load();
+    }
+};
+
 module.exports = {
     PreviewModalView:PreviewModalView,
     PreviewView:PreviewView,
+    render_preview: render_preview
 }

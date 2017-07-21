@@ -28,6 +28,9 @@ var BaseCollection = Backbone.Collection.extend({
     save: function(callback) {
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
     },
+    set_comparator: function(comparator){
+        this.comparator = comparator;
+    },
     get_all_fetch: function(ids, force_fetch){
         force_fetch = (force_fetch)? true : false;
         var self = this;
@@ -131,7 +134,24 @@ var UserModel = BaseModel.extend({
 var UserCollection = BaseCollection.extend({
     model: UserModel,
     list_name:"user-list",
-    model_name:"UserCollection"
+    model_name:"UserCollection",
+    send_custom_email:function(subject, message){
+        return mail_helper.send_custom_email(this.pluck('email'), subject, message);
+    },
+    get_all_users: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_all_users(),
+                error:reject,
+                success: function(users) {
+                    self.reset(JSON.parse(users));
+                    resolve(self);
+                }
+            });
+        });
+    }
 });
 
 var InvitationModel = BaseModel.extend({
@@ -224,23 +244,32 @@ var ContentNodeModel = BaseModel.extend({
         return this.get('prerequisite').length || this.get('is_prerequisite_of').length;
     },
     initialize: function () {
-        if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
-            this.set("extra_fields", JSON.parse(this.get("extra_fields")))
-        }
-    },
-    parse: function(response) {
-        if (response !== undefined && response.extra_fields) {
-            response.extra_fields = JSON.parse(response.extra_fields);
-        }
-        return response;
-    },
-    toJSON: function() {
-        var attributes = _.clone(this.attributes);
-        if (typeof attributes.extra_fields !== "string") {
-            attributes.extra_fields = JSON.stringify(attributes.extra_fields);
-        }
-        return attributes;
-    },
+		if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
+			this.set("extra_fields", JSON.parse(this.get("extra_fields")))
+		}
+		if (this.get("thumbnail_encoding") && typeof this.get("thumbnail_encoding") !== "object"){
+			this.set("thumbnail_encoding", JSON.parse(this.get("thumbnail_encoding")))
+		}
+	},
+	parse: function(response) {
+    	if (response !== undefined && response.extra_fields) {
+    		response.extra_fields = JSON.parse(response.extra_fields);
+    	}
+    	if (response !== undefined && response.thumbnail_encoding) {
+    		response.thumbnail_encoding = JSON.parse(response.thumbnail_encoding);
+    	}
+	    return response;
+	},
+	toJSON: function() {
+	    var attributes = _.clone(this.attributes);
+	    if (typeof attributes.extra_fields !== "string") {
+		    attributes.extra_fields = JSON.stringify(attributes.extra_fields);
+		}
+		if (attributes.thumbnail_encoding !== null && typeof attributes.thumbnail_encoding !== "string") {
+		    attributes.thumbnail_encoding = JSON.stringify(attributes.thumbnail_encoding);
+		}
+	    return attributes;
+	},
     setExtraFields:function(){
         if(typeof this.get('extra_fields') === 'string'){
             this.set('extra_fields', JSON.parse(this.get('extra_fields')));
@@ -457,6 +486,21 @@ var ContentNodeCollection = BaseCollection.extend({
                 }
             });
         });
+    },
+    sync_nodes: function(models){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = { "nodes" : _.pluck(models, 'id'), "channel_id": window.current_channel.id };
+            $.ajax({
+                method:"POST",
+                url: window.Urls.sync_nodes(),
+                data:  JSON.stringify(data),
+                error:reject,
+                success: function(synced) {
+                    resolve(new ContentNodeCollection(JSON.parse(synced)));
+                }
+            });
+        });
     }
 });
 
@@ -483,10 +527,16 @@ var ChannelModel = BaseModel.extend({
         if (this.get("preferences") && typeof this.get("preferences") !== "object"){
             this.set("preferences", JSON.parse(this.get("preferences")))
         }
+        if (this.get("thumbnail_encoding") && typeof this.get("thumbnail_encoding") !== "object"){
+            this.set("thumbnail_encoding", JSON.parse(this.get("thumbnail_encoding").replace(/u*'/g, "\"")))
+        }
     },
     parse: function(response) {
         if (response !== undefined && response.preferences) {
             response.preferences = JSON.parse(response.preferences);
+        }
+        if (response.thumbnail_encoding !== undefined && response.thumbnail_encoding) {
+            response.thumbnail_encoding = JSON.parse(response.thumbnail_encoding.replace(/u*'/g, "\""));
         }
         return response;
     },
@@ -494,6 +544,9 @@ var ChannelModel = BaseModel.extend({
         var attributes = _.clone(this.attributes);
         if (typeof attributes.preferences !== "string") {
             attributes.preferences = JSON.stringify(attributes.preferences);
+        }
+        if (attributes.thumbnail_encoding && typeof attributes.thumbnail_encoding !== "string") {
+            attributes.thumbnail_encoding = JSON.stringify(attributes.thumbnail_encoding);
         }
         return attributes;
     },
@@ -530,6 +583,46 @@ var ChannelModel = BaseModel.extend({
             });
         });
     },
+    get_node_diff: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                url: window.Urls.get_node_diff(),
+                data:  JSON.stringify({'channel_id': self.id}),
+                success: function(data) {
+                    nodes = JSON.parse(data);
+                    resolve({
+                        "original" : new ContentNodeCollection(JSON.parse(nodes.original)),
+                        "changed" : new ContentNodeCollection(JSON.parse(nodes.changed))
+                    });
+                },
+                error:reject
+            });
+        });
+    },
+    sync_channel: function(options){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = {
+                'channel_id': self.id,
+                'attributes': options.attributes,
+                'tags': options.tags,
+                'files': options.files,
+                'assessment_items': options.assessment_items,
+                'sort': options.sort
+            }
+            $.ajax({
+                method:"POST",
+                url: window.Urls.sync_channel(),
+                data:  JSON.stringify(data),
+                success: function(data) {
+                    resolve(new ContentNodeCollection(JSON.parse(data)));
+                },
+                error:reject
+            });
+        });
+    },
     activate_channel:function(){
         var self = this;
         return new Promise(function(resolve, reject){
@@ -555,6 +648,49 @@ var ChannelModel = BaseModel.extend({
                 error:function(error){reject(error.responseText);}
             });
         });
+    },
+    add_editor: function(user_id){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "user_id": user_id
+                }),
+                url: window.Urls.make_editor(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
+    remove_editor: function(user_id){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "user_id": user_id
+                }),
+                url: window.Urls.remove_editor(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
+    get_channel_counts: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_channel_kind_count(self.id),
+                error:reject,
+                success: function(data) {
+                    resolve(JSON.parse(data));
+                }
+            });
+        });
     }
 });
 
@@ -564,6 +700,20 @@ var ChannelCollection = BaseCollection.extend({
     model_name:"ChannelCollection",
     comparator:function(channel){
         return -new Date(channel.get('created'));
+    },
+    get_all_channels: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_all_channels(),
+                error:reject,
+                success: function(channels) {
+                    self.reset(JSON.parse(channels))
+                    resolve(self);
+                }
+            });
+        });
     }
 });
 

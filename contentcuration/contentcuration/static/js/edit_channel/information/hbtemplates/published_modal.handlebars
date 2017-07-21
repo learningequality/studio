@@ -1,8 +1,9 @@
 <div class="modal fade information_modal" tabindex="-1" id="published_modal">
+<div class="input-tab-control tab_item" data-next="#modal-copy-btn"></div>
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <button type="button" class="close tab_item" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title">{{formatMessage (intlGet 'messages.published')}}</h4>
       </div>
       <div class="modal-body">
@@ -10,10 +11,11 @@
             <p>{{formatMessage (intlGet 'messages.published_prompt')}}</p>
             <h4 class="text-center publish_id_wrapper">
                 {{formatMessage (intlGet 'messages.id')}} <input type="text" id="modal-copy-text" class="publish-id-text" value="{{ channel_id }}" readonly/>
-                <a class="btn action-button copy-id-btn" id="modal-copy-btn">{{formatMessage (intlGet 'messages.copy')}}</a>
+                <button class="btn action-button copy-id-btn tab_item first_focus_item" id="modal-copy-btn">{{formatMessage (intlGet 'messages.copy')}}</button>
             </h4>
         </div>
       </div>
     </div>
   </div>
+<div class="input-tab-control tab_item" data-next=".close"></div>
 </div>

@@ -1,35 +1,36 @@
+<div class="input-tab-control tab_item" data-next="#settings_submit"></div>
 <div id="channel_settings_dialog" class="modal-content-default">
     <div class="profile text-center pull-left"><div class="new_channel_pic" id="channel_thumbnail"></div></div>
     <div class="channel_section">
         <h4>{{formatMessage (intlGet 'messages.channel_name')}} <label class="required">*<span id="channel_error">{{formatMessage (intlGet 'messages.channel_name_error')}}</span></label></h4>
-        <input type="text" id="input_title" class="upload_input input_listener" placeholder="{{formatMessage (intlGet 'messages.channel_name_placeholder')}}" maxlength="200" value="{{channel.name}}" required/>
+        <input type="text" id="input_title" class="upload_input input_listener tab_item first_focus_item" placeholder="{{formatMessage (intlGet 'messages.channel_name_placeholder')}}" maxlength="200" value="{{channel.name}}" required/>
         <h4>{{formatMessage (intlGet 'messages.channel_description')}}</h4>
-        <textarea type="text" id="input_description" class="upload_input input_listener" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" maxlength="400" value="{{channel.description}}">{{channel.description}}</textarea>
+        <textarea type="text" id="input_description" class="upload_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" maxlength="400" value="{{channel.description}}">{{channel.description}}</textarea>
     </div>
     <hr/>
     <h3>{{formatMessage (intlGet 'messages.content_defaults')}}</h3>
     <p><em>{{formatMessage (intlGet 'messages.content_defaults_prompt')}}</em></p>
     <div class="section">
         <h4>{{formatMessage (intlGet 'messages.author')}}</h4>
-        <input type="text" id="author_field" class="upload_input input_listener" value="{{preferences.author}}" placeholder="{{formatMessage (intlGet 'messages.author_placeholder')}}"/>
+        <input type="text" id="author_field" class="upload_input input_listener tab_item" value="{{preferences.author}}" placeholder="{{formatMessage (intlGet 'messages.author_placeholder')}}"/>
         <div class="row">
             <div class="content_nodes_only col-sm-6">
                 <h4>{{formatMessage (intlGet 'messages.license')}}</h4>
-                <select id="license_select" class="input_listener">
+                <select id="license_select" class="input_listener tab_item">
                     {{#each licenses}}
                         <option value={{id}}>{{#translate license_name}}{{/translate}}</option>
                     {{/each}}
                 </select>
-                <textarea id="custom_license_description" class="input_listener" placeholder="{{formatMessage (intlGet 'messages.license_description_placeholder')}}" value={{preferences.license_description}}>{{preferences.license_description}}</textarea>
+                <textarea id="custom_license_description" class="input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.license_description_placeholder')}}" value={{preferences.license_description}}>{{preferences.license_description}}</textarea>
             </div>
             <div class="content_nodes_only col-sm-6">
                 <h4>{{formatMessage (intlGet 'messages.copyright_holder')}}</h4>
-                <input type="text" id="input_copyright_holder" class="copyright_input input_listener" placeholder="{{formatMessage (intlGet 'messages.copyright_holder_placeholder')}}" maxlength="200" value="{{preferences.copyright_holder}}"/>
+                <input type="text" id="input_copyright_holder" class="copyright_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.copyright_holder_placeholder')}}" maxlength="200" value="{{preferences.copyright_holder}}"/>
             </div>
         </div>
         <h4>{{formatMessage (intlGet 'messages.exercise_criteria')}}</h4>
         <div>
-            <select id="mastery_model_select" class="input_listener">
+            <select id="mastery_model_select" class="input_listener tab_item">
                 <option value="num_correct_in_a_row_2" selected>{{#translate "num_correct_in_a_row_2"}}{{/translate}}</option>
                 <option value="num_correct_in_a_row_3" selected>{{#translate "num_correct_in_a_row_3"}}{{/translate}}</option>
                 <option value="num_correct_in_a_row_5">{{#translate "num_correct_in_a_row_5"}}{{/translate}}</option>
@@ -38,22 +39,23 @@
                 <option value="m_of_n">{{#translate "m_of_n"}}{{/translate}}</option>
             </select>
             <span id="mastery_custom_criterion">
-                <input type="number" class="input_listener" id="m_value" min="1" max="20" value="{{preferences.m_value}}" maxlength="2" size="2"/>
+                <input type="number" class="input_listener tab_item" id="m_value" min="1" max="20" value="{{preferences.m_value}}" maxlength="2" size="2"/>
                 &nbsp;{{formatMessage (intlGet 'messages.of')}}&nbsp;
-                <input type="number" class="input_listener" id="n_value" min="1" max="20" value="{{preferences.n_value}}" maxlength="2" size="2"/>
+                <input type="number" class="input_listener tab_item" id="n_value" min="1" max="20" value="{{preferences.n_value}}" maxlength="2" size="2"/>
             </span>
         </div>
         <br/>
         <h4>{{formatMessage (intlGet 'messages.auto_thumbnail')}}</h4>
-        <input type="checkbox" class="input_listener" id="auto_video_thumbnail" {{#if preferences.auto_derive_video_thumbnail}}checked{{/if}}><label for="auto_video_thumbnail">{{formatMessage (intlGet 'messages.videos')}}</label>
-        <input type="checkbox" class="input_listener" id="auto_audio_thumbnail" {{#if preferences.auto_derive_audio_thumbnail}}checked{{/if}}><label for="auto_audio_thumbnail">{{formatMessage (intlGet 'messages.audio')}}</label>
-        <input type="checkbox" class="input_listener" id="auto_html5_thumbnail" {{#if preferences.auto_derive_html5_thumbnail}}checked{{/if}}><label for="auto_html5_thumbnail">{{formatMessage (intlGet 'messages.html')}}</label>
-        <input type="checkbox" class="input_listener" id="auto_document_thumbnail" {{#if preferences.auto_derive_document_thumbnail}}checked{{/if}}><label for="auto_document_thumbnail">{{formatMessage (intlGet 'messages.documents')}}</label>
+        <input type="checkbox" class="input_listener tab_item" id="auto_video_thumbnail" {{#if preferences.auto_derive_video_thumbnail}}checked{{/if}}><label for="auto_video_thumbnail">{{formatMessage (intlGet 'messages.videos')}}</label>
+        <input type="checkbox" class="input_listener tab_item" id="auto_audio_thumbnail" {{#if preferences.auto_derive_audio_thumbnail}}checked{{/if}}><label for="auto_audio_thumbnail">{{formatMessage (intlGet 'messages.audio')}}</label>
+        <input type="checkbox" class="input_listener tab_item" id="auto_html5_thumbnail" {{#if preferences.auto_derive_html5_thumbnail}}checked{{/if}}><label for="auto_html5_thumbnail">{{formatMessage (intlGet 'messages.html')}}</label>
+        <input type="checkbox" class="input_listener tab_item" id="auto_document_thumbnail" {{#if preferences.auto_derive_document_thumbnail}}checked{{/if}}><label for="auto_document_thumbnail">{{formatMessage (intlGet 'messages.documents')}}</label>
     </div>
 </div>
 <div class="modal-bottom-content-default">
-    <a class="action-text" data-dismiss="modal">{{formatMessage (intlGet 'messages.close')}}</a>
-    <button disabled class="disabled action-button pull-right modal-main-action-button" id="settings_submit">
+    <a class="action-text tab_item" data-dismiss="modal">{{formatMessage (intlGet 'messages.close')}}</a>
+    <button disabled class="disabled action-button pull-right modal-main-action-button tab_item" id="settings_submit">
         {{formatMessage (intlGet 'messages.no_changes')}}
     </button>
 </div>
+<div class="input-tab-control tab_item" data-next="#input_title"></div>
