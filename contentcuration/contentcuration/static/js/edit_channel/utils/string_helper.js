@@ -47,6 +47,8 @@ var CONSTANT_TRANSLATIONS = {
   "multiple_selection": "Multiple Selection",
   "single_selection": "Single Selection",
   "perseus_question": "Perseus Question",
+  "true_false": "True/False",
+  "unknown_question": "Unknown Question Type",
   "mp4": "MP4 Video",
   "vtt": "VTT Subtitle",
   "mp3": "MP3 Audio",
@@ -115,7 +117,15 @@ var CONSTANT_TRANSLATIONS = {
   "view": "view",
   "edit": "edit",
   "view_access_only": "You can only grant view access",
-  "edit_access_only": "You can only grant edit access"
+  "edit_access_only": "You can only grant edit access",
+  "title": "Title",
+  "description": "Description",
+  "license": "License",
+  "license_description": "License Description",
+  "copyright_holder": "Copyright Holder",
+  "author": "Author",
+  "extra_fields": "Extra Fields",
+  "question": "Question"
 }
 
 function translate(constant_id){

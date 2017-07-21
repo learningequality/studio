@@ -2,12 +2,66 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
+var stringHelper = require("edit_channel/utils/string_helper");
 require("sync.less");
+
+var NAMESPACE = "sync";
+var MESSAGES = {
+    "cancel": "CANCEL",
+    "check_changes": "Checking for changes...",
+    "sync": "SYNC",
+    "loading": "Loading...",
+    "close": "CLOSE",
+    "syncing_content": "Syncing Content...",
+    "select_fields_prompt": "Select which fields to update...",
+    "details": "Details",
+    "details_text": "Title, description, etc.",
+    "files": "Files",
+    "files_text": "Replace files with source",
+    "tags": "Tags",
+    "tags_text": "Replace tags with source",
+    "assessment_items": "Assessment Items",
+    "assessment_items_text": "Questions, answers, etc.",
+    "syncing_items": "Syncing {data, plural,\n =1 {# item}\n other {# items}...",
+    "license_field": "License",
+    "mastery_field": "Mastery Criteria",
+    "question_order": "Question Order",
+    "randomized": "Randomized",
+    "ordered": "Ordered",
+    "tags_field": "Tags",
+    "files_field": "Files",
+    "previewing": "Previewing {data}",
+    "previewing_exercise": "Previewing Exercise",
+    "questions_field": "Questions",
+    "answer_order_changed": "Answer Order Changed",
+    "randomized_answers": "Randomized Answer Order",
+    "ordered_answers": "Ordered Answers",
+    "url": "Url: ",
+    "source": "Source: ",
+    "field": "FIELD",
+    "update": "UPDATE",
+    "question_deleted": "Question Deleted",
+    "deleted": "Deleted",
+    "hint_count": "{count, plural,\n =1 {# hint}\n other {# hints}",
+    "answer_count": "{count, plural,\n =1 {# answer}\n other {# answers}",
+    "question_modified": "Question Modified",
+    "changed": "Changed",
+    "answer": "Answer",
+    "hint": "Hint",
+    "properties": "Properties",
+    "question_added": "Question Added",
+    "added": "Added",
+    "loading_changes": "Loading changes...",
+    "select_item_prompt": "Select an item to view updates"
+}
+
 
 /*********** MODAL CONTAINER FOR SYNC OPERATION ***********/
 var TempSyncModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/temp_sync_modal.handlebars"),
     modal: true,
+    name: NAMESPACE,
+    messages: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, "init_focus");
@@ -28,7 +82,7 @@ var TempSyncModalView = BaseViews.BaseModalView.extend({
     },
     sync_content:function(){
         var self = this;
-        this.display_load("Syncing Content...", function(resolve, reject){
+        this.display_load(this.get_translation("syncing_content"), function(resolve, reject){
            window.current_channel.sync_channel(self.selected_options).then(function(synced){
                 self.onsync(synced);
                 self.close();
@@ -97,7 +151,9 @@ var SyncView = BaseViews.BaseListView.extend({
     /*********** LOADING METHODS ***********/
     render: function() {
         var self = this;
-        this.$el.html(this.template());
+        this.$el.html(this.template(null, {
+            data: this.get_intl_data()
+        }));
         window.current_channel.get_node_diff().then(function(difference){
             self.collection = difference.original;
             self.changed_collection = difference.changed;
@@ -119,7 +175,7 @@ var SyncView = BaseViews.BaseListView.extend({
     /*********** SYNCING METHODS ***********/
     sync_content:function(){
         var self = this;
-        this.display_load("Syncing Content...", function(resolve, reject){
+        this.display_load(this.get_translation("syncing_content"), function(resolve, reject){
             var selected_models = _.chain(self.synclist.views).where({checked:true}).pluck('model').value();
             self.collection.sync_nodes(selected_models).then(function(synced){
                 self.onsync(synced);
@@ -133,7 +189,7 @@ var SyncView = BaseViews.BaseListView.extend({
         if(this.selected_collection.length){
             this.$("#sync_content_button").prop("disabled", false);
             this.$("#sync_content_button").removeClass("disabled");
-            this.$("#sync_status").text("Syncing " + this.selected_collection.length + (this.selected_collection.length===1? " item..." : " items..."));
+            this.$("#sync_status").text(this.get_translation("syncing_items", this.selected_collection.length));
         } else {
             this.$("#sync_content_button").prop("disabled", true);
             this.$("#sync_content_button").addClass("disabled");
@@ -161,7 +217,9 @@ var SyncPreviewView = BaseViews.BaseView.extend({
     },
     /*********** LOADING METHODS ***********/
     render: function() {
-        this.$el.html(this.template({loading: this.loading}));
+        this.$el.html(this.template({loading: this.loading}, {
+            data: this.get_intl_data()
+        }));
         this.render_diff();
     },
     render_diff: function(){
@@ -235,9 +293,9 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         switch(field){
             case "license":
                 return {
-                    "field" : "License",
-                    "current": window.licenses.get(this.model.get(field)).get('license_name'),
-                    "source": window.licenses.get(this.changed.get(field)).get('license_name')
+                    "field" : this.get_translation("license_field"),
+                    "current": stringHelper.translate(window.licenses.get(this.model.get(field)).get('license_name')),
+                    "source": stringHelper.translate(window.licenses.get(this.changed.get(field)).get('license_name'))
                 }
             case "extra_fields":
                 if(this.model.get('kind') === 'exercise'){
@@ -246,16 +304,16 @@ var SyncPreviewView = BaseViews.BaseView.extend({
                     var changes = [];
                     if(current_mastery !== source_mastery){
                         changes.push({
-                            "field" : "Mastery Criteria",
+                            "field" : this.get_translation("mastery_field"),
                             "current": current_mastery,
                             "source": source_mastery
                         });
                     }
                     if(this.model.get('extra_fields').randomize !== this.changed.get('extra_fields').randomize){
                         changes.push({
-                            "field" : "Question Order",
-                            "current": (this.model.get('extra_fields').randomize) ? "Randomized" : "Ordered",
-                            "source": (this.changed.get('extra_fields').randomize) ? "Randomized" : "Ordered"
+                            "field" : this.get_translation("question_order"),
+                            "current": (this.model.get('extra_fields').randomize) ? this.get_translation("randomized") : this.get_translation("ordered"),
+                            "source": (this.changed.get('extra_fields').randomize) ? this.get_translation("randomized") : this.get_translation("ordered")
                         });
                     }
                     return changes;
@@ -263,31 +321,24 @@ var SyncPreviewView = BaseViews.BaseView.extend({
                 return null;
             default:
                 return {
-                    "field" : this.generate_readable_field_name(field),
+                    "field" : stringHelper.translate(field),
                     "current": this.model.get(field),
                     "source": this.changed.get(field)
                 }
         }
     },
-    generate_readable_field_name: function(field){
-        return _.reduce(field.split('_'), function(s, w) { return s + w.charAt(0).toUpperCase() + w.slice(1) + " "; }, "").trim();
-    },
     generate_mastery_model_string: function(criteria){
-        switch(criteria.mastery_model){
-            case 'm_of_n':
-                return criteria.m + " of " + criteria.n;
-            case 'do_all':
-                return '100% Correct';
-            default:
-                return criteria.mastery_model.charAt(criteria.mastery_model.length - 1) + " in a Row";
+        if(criteria.mastery_model === "m_of_n"){
+            return criteria.m + " of " + criteria.n;
         }
+        return stringHelper.translate(criteria.mastery_model);
     },
     generate_tag_diff: function(){
         var current_tags = _.pluck(this.model.get('tags'), 'tag_name');
         var source_tags = _.pluck(this.changed.get('tags'), 'tag_name');
         if(_.difference(current_tags, source_tags).length){
             return {
-                "field": "Tags",
+                "field": this.get_translation("tags_field"),
                 "current": current_tags.join(', '),
                 "source": source_tags.join(', ')
             }
@@ -306,7 +357,7 @@ var SyncPreviewView = BaseViews.BaseView.extend({
             var source_return = _.chain(source_files).filter(function(f){ return f.preset.display || f.preset.subtitle; }).sortBy(function(f) {return f.preset.order;}).value();
             if(current_return.length || source_return.length){
                 return {
-                    "field": "Files",
+                    "field": this.get_translation("files_field"),
                     "current": current_return,
                     "source": source_return,
                     "is_file": true
@@ -334,7 +385,7 @@ var SyncPreviewView = BaseViews.BaseView.extend({
             partition.changed = _.chain(current_questions).filter(function(q){return _.contains(common_ids, q.assessment_id);})
                 .map(function(q){return {'current': q, 'source': _.findWhere(source_questions, {'assessment_id': q.assessment_id})};}).value();
             return {
-                "field": "Questions",
+                "field": this.get_translation("questions_field"),
                 "current": _.map(partition.current, function(q) { return self.generate_question_object(q); }),
                 "source": _.map(partition.source, function(q) { return self.generate_question_object(q); }),
                 "is_exercise": true,
@@ -387,19 +438,19 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         var metadata1 = [];
         var metadata2 = [];
         if(q1.type !== q2.type){
-            metadata1.push(this.generate_readable_field_name(q1.type));
-            metadata2.push(this.generate_readable_field_name(q2.type));
+            metadata1.push(stringHelper.translate(q1.type));
+            metadata2.push(stringHelper.translate(q2.type));
         }
         if(q1.order !== q2.order){
-            metadata2.push("Answer Order Changed");
+            metadata2.push(this.get_translation("answer_order_changed"));
         }
         if(q1.randomize !== q2.randomize){
-            metadata1.push((q1.randomize)? "Randomized Answer Order" : "Ordered Answers");
-            metadata2.push((q2.randomize)? "Randomized Answer Order" : "Ordered Answers");
+            metadata1.push((q1.randomize)? this.get_translation("randomized_answers") : this.get_translation("ordered_answers"));
+            metadata2.push((q2.randomize)? this.get_translation("randomized_answers") : this.get_translation("ordered_answers"));
         }
         if(q1.source_url !== q2.source_url){
-            metadata1.push("Url: " + q1.source_url);
-            metadata2.push("Url: " + q2.source_url);
+            metadata1.push(this.get_translation("url") + q1.source_url);
+            metadata2.push(this.get_translation("url") + q2.source_url);
         }
         metadata1 = metadata1.join(", ");
         metadata2 = metadata2.join(", ");
@@ -421,7 +472,9 @@ var SyncPreviewModalView = BaseViews.BaseModalView.extend({
     header: null,
     template: require("./hbtemplates/sync_preview_modal.handlebars"),
     render: function() {
-        this.$el.html(this.template({header: this.header()}));
+        this.$el.html(this.template({header: this.header()}, {
+            data: this.get_intl_data()
+        }));
         $("body").append(this.el);
         this.$("#sync_preview_modal").modal({show: true});
         this.$("#sync_preview_modal").on("hidden.bs.modal", this.closed_modal);
@@ -429,7 +482,7 @@ var SyncPreviewModalView = BaseViews.BaseModalView.extend({
 });
 
 var SyncPreviewFileView = SyncPreviewModalView.extend({
-    header: function(){ return "Previewing " + this.model.display_name; },
+    header: function(){ return this.get_translation("previewing", this.model.display_name); },
     initialize: function(options) {
         _.bindAll(this, 'create_preview');
         this.subtitles = options.subtitles;
@@ -447,7 +500,7 @@ var SyncPreviewFileView = SyncPreviewModalView.extend({
 
 var SyncPreviewExerciseView = SyncPreviewModalView.extend({
     exercise_template: require("./hbtemplates/sync_exercise.handlebars"),
-    header: function(){ return "Previewing Exercise";},
+    header: function(){ return this.get_translation("previewing_exercise");},
     initialize: function(options) {
         _.bindAll(this, 'create_exercise');
         this.exercises = options.exercises;
@@ -479,7 +532,9 @@ var SyncList = BaseViews.BaseListView.extend({
         this.render();
     },
     render: function() {
-        this.$el.html(this.template({ node : this.model }));
+        this.$el.html(this.template({ node : this.model }, {
+            data: this.get_intl_data()
+        }));
         this.load_content();
     },
     create_new_view:function(model){
@@ -523,6 +578,8 @@ var SyncItem = BaseViews.BaseListNodeItemView.extend({
         this.$el.html(this.template({
             node: this.model && this.model.toJSON(),
             isfolder: this.model && this.model.get("kind") === "topic"
+        }, {
+            data: this.get_intl_data()
         }));
     },
     handle_checked:function(event){

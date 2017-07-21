@@ -104,17 +104,13 @@ Handlebars.registerHelper('get_icon', function(kind){
 Handlebars.registerHelper('format_question_type', function(type){
   switch (type){
       case "multiple_selection":
-          return "Multiple Selection";
       case "single_selection":
-          return "Single Selection";
-        case "true_false":
-          return "True/False";
+      case "true_false":
       case "input_question":
-          return "Numeric Input";
       case "perseus_question":
-          return "Perseus Question";
+          return stringHelper.translate(type);
       default:
-          return "Unknown Question Type";
+          return stringHelper.translate("unknown_question");
   }
 });
 
@@ -137,7 +133,7 @@ Handlebars.registerHelper('to_json', function(obj){
 });
 
 Handlebars.registerHelper('parse_question', function(str){
-  if(!str){ return "Question"; }
+  if(!str){ return stringHelper.translate("question"); }
   return str.replace(/\$\$([^\$]+)\$\$/g, " [FORMULA] ").replace(/!\[.*\]\(\${☣ CONTENTSTORAGE}\/([^)]+)\)/g, " [IMAGE] ").replace(/\\/g, "");
 });
 
