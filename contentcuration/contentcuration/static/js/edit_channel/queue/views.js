@@ -28,8 +28,8 @@ var MESSAGES = {
     "delete_item": "DELETE ITEM",
     "delete_item_warning": "Are you sure you want to PERMANENTLY delete this item? Changes cannot be undone!",
     "related_content": "RELATED CONTENT DETECTED",
-    "related_content_message": "Any content associated with {num, plural,\n =1 {this item}\n other {these items}}" +
-							" will no longer reference {num, plural,\n =1 {it}\n other {them}} as related content." +
+    "related_content_message": "Any content associated with {data, plural,\n =1 {this item}\n other {these items}}" +
+							" will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content." +
 							" Are you sure you want to continue?",
 	"continue": "CONTINUE",
 	"empty": "(empty)"

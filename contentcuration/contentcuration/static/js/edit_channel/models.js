@@ -163,6 +163,9 @@ var InvitationModel = BaseModel.extend({
     resend_invitation_email:function(channel){
         return mail_helper.send_mail(channel, this.get("email"), this.get("share_mode"));
     },
+    get_full_name: function(){
+        return this.get('first_name') + " " + this.get('last_name');
+    },
     accept_invitation:function(){
         var self = this;
         return new Promise(function(resolve, reject){

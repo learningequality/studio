@@ -9,7 +9,7 @@ var dialog = require("edit_channel/utils/dialog");
 var NAMESPACE = "archive";
 var MESSAGES = {
     "header": "Managing deleted content",
-    "count": "{num, plural,\n =0 {}\n =1 {# item selected }\n other {# items selected }}",
+    "count": "{data, plural,\n =0 {}\n =1 {# item selected }\n other {# items selected }}",
     "delete_message": "Are you sure you want to delete these selected items permanently? Changes cannot be undone!",
     "cancel": "CANCEL",
     "delete": "DELETE",

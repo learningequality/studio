@@ -24,15 +24,15 @@ var BaseView = Backbone.View.extend({
 			}
 		}
 	},
-	get_translation: function(message_id, num){
+	get_translation: function(message_id, data){
 		// Get dynamically generated messages
 		var messages = _.extend(this.messages, this.globalMessageStore[this.name] || {});
-		if (num !== undefined){
+		if (data !== undefined){
 			var template = require("edit_channel/utils/hbtemplates/intl.handlebars");
 			var div = document.createElement("DIV");
 			div.id = "intl_wrapper";
 			$(div).html(template({
-				num: num,
+				data: data,
 				message_id: message_id
 			}, {
 				data: this.get_intl_data()

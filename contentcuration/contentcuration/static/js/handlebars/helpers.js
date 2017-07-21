@@ -148,8 +148,12 @@ Handlebars.registerHelper('ispositive', function(num, options) {
   return options.inverse(this);
 });
 
-Handlebars.registerHelper( 'concat', function(str1, str2) {
-    return str1 + str2;
+Handlebars.registerHelper( 'concat', function() {
+  var str = "";
+  for (var i = 0; i < arguments.length - 1; ++i){
+    str += arguments[i];
+  }
+  return str;
 });
 
 Handlebars.registerHelper( 'translate', function(text) {
