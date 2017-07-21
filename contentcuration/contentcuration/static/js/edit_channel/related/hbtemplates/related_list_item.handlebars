@@ -8,12 +8,12 @@
 		&nbsp;{{node.title}}
 	</div>
 	<div class="col-xs-3 text-center prereq_cell">
-	{{#if is_prerequisite}}Already selected
+	{{#if is_prerequisite}}{{formatMessage (intlGet 'messages.already_selected')}}
 	{{else}}
 		{{#if isfolder}}
 			<span class="glyphicon glyphicon-menu-right pull-right" aria-hidden="true"></span>
 		{{else}}
-			<a class="action-text select_prereq">SELECT</a>
+			<a class="action-text select_prereq">{{formatMessage (intlGet 'messages.select')}}</a>
 		{{/if}}
 	{{/if}}
 	</div>

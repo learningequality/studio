@@ -7,6 +7,24 @@ var staticModals = require("edit_channel/information/views");
 
 const PREREQ_LIMIT = 5;
 
+var NAMESPACE = "move";
+var MESSAGES = {
+    "prereqs": "Prerequisites",
+    "loading": "Loading...",
+    "loading_content": "Loading Content...",
+    "already_selected": "Already selected",
+    "select": "SELECT",
+    "back_to_list": "Back to List",
+    "select_text": "Select content learners should know before engaging with this content",
+    "getting_prereqs": "Getting valid prerequisite options...",
+    "name": "Name",
+    "topic": "Topic",
+    "add": "ADD",
+    "loading_prereqs": "Getting prerequisites...",
+    "prereq_text": "Prerequisite content items cover any immediate prior knowledge a learner should have before engaging with this content.",
+    "prereq_limit": "Limit prerequisites for a more guided learning experience (recommended: {count, plural,\n =1 {# item}\n other {# items}})",
+}
+
 function PrerequisiteTree() {
     var self = this;
     this.prerequisites = {};
@@ -124,6 +142,8 @@ var PrereqTree = new PrerequisiteTree();
 
 var PrerequisiteModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/related_modal.handlebars"),
+    name: NAMESPACE,
+    messages: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, "close_prerequisites");
@@ -154,6 +174,8 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/selected_dialog.handlebars"),
     onselect:null,
     lists: [],
+    name: NAMESPACE,
+    messages: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, 'render_selected_view');
@@ -163,12 +185,14 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
         this.oncount = options.oncount;
         this.allow_edit = options.allow_edit;
         this.views_to_update = options.views_to_update;
-        this.oncount("Loading...");
+        this.oncount(this.get_translation("loading"));
         this.render();
     },
     render: function() {
         var self = this;
-        this.$el.html(this.template({node: this.model.toJSON()}));
+        this.$el.html(this.template({node: this.model.toJSON()}, {
+            data: this.get_intl_data()
+        }));
         PrereqTree.set(this.model).then(this.render_selected_view);
     },
     render_selected_view: function(){
@@ -222,6 +246,8 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
 });
 
 var BasePrerequisiteView = BaseViews.BaseView.extend({
+    name: NAMESPACE,
+    messages: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'render');
         this.modal = options.modal;
@@ -243,7 +269,9 @@ var BasePrerequisiteView = BaseViews.BaseView.extend({
 var SelectedView = BasePrerequisiteView.extend({
     template: require("./hbtemplates/selected_view.handlebars"),
     render: function() {
-        this.$el.html(this.template({allow_edit: this.allow_edit}));
+        this.$el.html(this.template({allow_edit: this.allow_edit}, {
+            data: this.get_intl_data()
+        }));
         var self = this;
         self.collection.get_all_fetch_simplified(PrereqTree.get_immediate_prerequisites()).then(function(collection){
             self.selectedList = new SelectedList({
@@ -265,7 +293,9 @@ var RelatedView = BasePrerequisiteView.extend({
     template: require("./hbtemplates/related_view.handlebars"),
     render: function() {
         var self = this;
-        this.$el.html(this.template());
+        this.$el.html(this.template(null, {
+            data: this.get_intl_data()
+        }));
         this.collection.get_all_fetch_simplified([this.model.get('parent')]).then(function(collection){
             self.navigate_to_node(collection.at(0) || window.current_channel.get_root("main_tree"));
         });
@@ -311,6 +341,8 @@ var SelectedList = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/selected_list.handlebars"),
     default_item:">.default-item",
     list_selector: "#selected_prerequisites",
+    name: NAMESPACE,
+    messages: MESSAGES,
     initialize: function(options) {
         this.collection = options.collection;
         this.container = options.container;
@@ -324,6 +356,8 @@ var SelectedList = BaseViews.BaseListView.extend({
         this.$el.html(this.template({
             prereq_limit: PREREQ_LIMIT,
             allow_edit: this.allow_edit
+        }, {
+            data: this.get_intl_data()
         }));
         this.container.update_count()
         this.load_content();
@@ -354,6 +388,8 @@ var RelatedList = BaseViews.BaseListView.extend({
     default_item:".default-item",
     list_selector: ".select-list",
     className: "related_list_wrapper",
+    name: NAMESPACE,
+    messages: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'navigate_to_node');
         this.collection = options.collection;
@@ -369,6 +405,8 @@ var RelatedList = BaseViews.BaseListView.extend({
         this.$el.html(this.template({
             node: this.model.toJSON(),
             has_parent: this.model.get('ancestors').length > 1
+        }, {
+            data: this.get_intl_data()
         }));
         var fetchList = _.filter(this.model.get('children'), function(id){return PrereqTree.is_valid_prerequisite(id)});
         this.collection.get_all_fetch_simplified(fetchList).then(function(collection){
@@ -399,6 +437,8 @@ var RelatedList = BaseViews.BaseListView.extend({
 var BasePrerequisiteItem = BaseViews.BaseListNodeItemView.extend({
     tagName: "div",
     className: "select_list_item container-fluid prereq_row",
+    name: NAMESPACE,
+    messages: MESSAGES,
     'id': function() { return "select_item_" + this.model.get("id"); },
     initialize: function(options) {
         this.container = options.container;
@@ -418,6 +458,8 @@ var SelectedItem = BasePrerequisiteItem.extend({
         this.$el.html(this.template({
             node:this.model.toJSON(),
             allow_edit: this.allow_edit
+        }, {
+            data: this.get_intl_data()
         }));
     },
     remove_prerequisite: function(){
@@ -440,6 +482,8 @@ var RelatedItem = BasePrerequisiteItem.extend({
             isfolder: this.model.get("kind") === "topic",
             count: PrereqTree.get_sub_prerequisite_count(this.model.id),
             is_prerequisite: PrereqTree.is_prerequisite(this.model.id)
+        }, {
+            data: this.get_intl_data()
         }));
     },
     select_prerequisite:function(){
