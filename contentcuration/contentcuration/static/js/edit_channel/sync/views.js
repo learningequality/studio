@@ -12,6 +12,7 @@ var MESSAGES = {
     "sync": "SYNC",
     "loading": "Loading...",
     "close": "CLOSE",
+    "sync_header": "Syncing Content",
     "syncing_content": "Syncing Content...",
     "select_fields_prompt": "Select which fields to update...",
     "details": "Details",
@@ -52,7 +53,11 @@ var MESSAGES = {
     "question_added": "Question Added",
     "added": "Added",
     "loading_changes": "Loading changes...",
-    "select_item_prompt": "Select an item to view updates"
+    "select_item_prompt": "Select an item to view updates",
+    "updated_content": "Updated Content",
+    "updated_content_text": "Select content to sync"
+    "preview_content": "Preview",
+    "preview_content_text": "Review changes made to original content"
 }
 
 
