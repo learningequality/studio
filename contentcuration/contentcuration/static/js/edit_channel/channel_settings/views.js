@@ -5,9 +5,40 @@ var Models = require("edit_channel/models");
 var FileViews = require("edit_channel/file_upload/views");
 require("channel_settings.less");
 
+var NAMESPACE = "channel_settings";
+var MESSAGES = {
+    "header": "CHANNEL SETTINGS",
+    "saving": "Saving...",
+    "saved": "SAVED!",
+    "no_changes": "No Changes Found",
+    "save_changes": "SAVE CHANGES",
+    "close": "CLOSE",
+    "channel_name": "Channel Name",
+    "channel_name_error": "Channel name cannot be blank.",
+    "channel_name_placeholder": "Enter channel name...",
+    "channel_description": "Channel Description",
+    "description_placeholder": "Enter channel description...",
+    "content_defaults": "Content Defaults",
+    "content_defaults_prompt": "Set defaults for new content items",
+    "author": "Author",
+    "author_placeholder": "Enter author name...",
+    "license": "License",
+    "license_description_placeholder": "Enter license description...",
+    "copyright_holder": "Copyright Holder",
+    "copyright_holder_placeholder": "Enter copyright holder name...",
+    "exercise_criteria": "Exercise Mastery Criteria",
+    "of": "of",
+    "auto_thumbnail": "Automatically generate thumbnails for...",
+    "videos": "Videos",
+    "audio": "Audio",
+    "html": "HTML Apps",
+    "documents": "Documents",
+}
+
 var SettingsModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/settings_modal.handlebars"),
-
+    name: NAMESPACE,
+    messages: MESSAGES,
     initialize: function(options) {
         this.parent_view = options.parent_view;
         this.modal = true;
@@ -24,6 +55,8 @@ var SettingsModalView = BaseViews.BaseModalView.extend({
 
 var SettingsView = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/settings_dialog.handlebars"),
+    name: NAMESPACE,
+    messages: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, "set_thumbnail", "reset_thumbnail", "remove_thumbnail");
         this.modal = options.modal;
@@ -42,6 +75,8 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
             channel: this.model.toJSON(),
             licenses: window.licenses.toJSON(),
             preferences: this.model.get("preferences")
+        },  {
+            data: this.get_intl_data()
         }));
         $("#license_select").val(this.get_license_id(this.model.get("preferences").license));
         $("#mastery_model_select").val(this.model.get("preferences").mastery_model);
@@ -83,7 +118,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         preferences.auto_derive_document_thumbnail = $("#auto_document_thumbnail").is(":checked");
         preferences.auto_derive_html5_thumbnail = $("#auto_html5_thumbnail").is(":checked");
         var self = this;
-        $("#settings_submit").html("Saving...")
+        $("#settings_submit").html(this.get_translation("saving"))
                             .attr("disabled", "disabled")
                             .addClass("disabled");
         this.save({
@@ -93,9 +128,9 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
             "preferences": JSON.stringify(preferences)
         }).then(function(data){
             self.onsave(data);
-            $("#settings_submit").html("SAVED!");
+            $("#settings_submit").html(self.get_translation("saved"));
             setTimeout(function(){
-                $("#settings_submit").html("No Changes Found");
+                $("#settings_submit").html(self.get_translation("no_changes"));
             }, 2000);
         });
     },
@@ -105,7 +140,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         if(Number($("#m_value").val()) > Number($("#n_value").val())) {
             $("#n_value").val($("#m_value").val());
         }
-        $("#settings_submit").html("SAVE CHANGES");
+        $("#settings_submit").html(this.get_translation("save_changes"));
 
         var isvalid = $("#input_title").val().trim() !== "";
         $("#channel_error").css("display", (isvalid)? "none" : "inline-block");
