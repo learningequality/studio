@@ -2,7 +2,19 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
+var stringHelper = require("edit_channel/utils/string_helper");
 require("modal-styles.less");
+
+var NAMESPACE = "preview";
+var MESSAGES = {
+    "no_preview": "No preview available",
+    "show_fullscreen": "Show Fullscreen",
+    "hide_fullscreen": "Hide Fullscreen",
+    "select_file": "Select a format to preview.",
+    "preview_exercise": "Preview this exercise on the source website",
+    "image_error": "Error loading image",
+    "video_error": "Your browser does not support the video tag."
+}
 
 var PreviewModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/preview_modal.handlebars"),
@@ -22,6 +34,8 @@ var PreviewModalView = BaseViews.BaseModalView.extend({
 });
 
 var PreviewView = BaseViews.BaseView.extend({
+    name: NAMESPACE,
+    messages: MESSAGES,
     tabs_template: require("./hbtemplates/preview_templates/tabs.handlebars"),
     template: require("./hbtemplates/preview_dialog.handlebars"),
     initialize: function(options) {
@@ -37,13 +51,15 @@ var PreviewView = BaseViews.BaseView.extend({
         this.load_preview();
         this.$el.html(this.template({
             file: this.current_preview
+        },  {
+            data: this.get_intl_data()
         }));
         this.load_preset_dropdown();
         this.render_preview();
     },
     render_preview:function(){
         if(this.current_preview){
-            this.$(".preview_format_switch").text(this.current_preview.preset.readable_name);
+            this.$(".preview_format_switch").text(stringHelper.translate(this.current_preview.preset.id));
             this.generate_preview(true);
         }
     },
@@ -68,7 +84,6 @@ var PreviewView = BaseViews.BaseView.extend({
              presets: this.load_presets().toJSON()
         }));
     },
-
     select_preview:function(event){
         // called internally
         var selected_preview = _.find(this.model.get('files'), function(file){return file.preset.id === event.target.getAttribute('value');});
@@ -117,6 +132,8 @@ var PreviewView = BaseViews.BaseView.extend({
                 extension:this.current_preview.mimetype,
                 checksum:this.current_preview.checksum,
                 subtitles : this.get_subtitles()
+            },  {
+                data: this.get_intl_data()
             }));
             if(force_load && this.model.get('kind') === "video"){
                 $("#preview_window video").load();
@@ -140,7 +157,7 @@ var PreviewView = BaseViews.BaseView.extend({
 
         if (!this.check_fullscreen()){
             this.$("#preview_content_main").addClass('preview_on');
-            this.$(".view_fullscreen").html("Hide Fullscreen");
+            this.$(".view_fullscreen").html(this.get_translation("hide_fullscreen"));
             if (elem.requestFullscreen) {
               elem.requestFullscreen();
             } else if (elem.msRequestFullscreen) {
@@ -168,7 +185,7 @@ var PreviewView = BaseViews.BaseView.extend({
     exit_fullscreen:function(){
         if (!this.check_fullscreen()){
             this.$("#preview_content_main").removeClass('preview_on');
-            this.$(".view_fullscreen").html("Show Fullscreen");
+            this.$(".view_fullscreen").html(this.get_translation("show_fullscreen"));
             $(document).off('webkitfullscreenchange');
             $(document).off('mozfullscreenchange');
             $(document).off('fullscreenchange');
