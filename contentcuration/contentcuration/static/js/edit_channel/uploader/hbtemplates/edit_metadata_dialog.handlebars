@@ -1,16 +1,16 @@
 <div id="metadata" class="container">
 	<div class="section pull-left tree_section" id="topic_tree_selector"></div>
 	<nav>
-		<a class="btn btn-tab btn-tab-active tab_button" id="metadata_details_btn">Details</a>
-		<a class="btn btn-tab tab_button" id="metadata_questions_btn">Questions</a>
-		<a class="btn btn-tab tab_button" id="metadata_preview_btn">Preview</a>
-		{{#unless isclipboard}}<a class="btn btn-tab tab_button" id="metadata_prerequisites_btn">Prerequisites <span class="prereq_badge badge">Loading...</span></a>{{/unless}}
+		<a class="btn btn-tab btn-tab-active tab_button" id="metadata_details_btn">{{formatMessage (intlGet 'messages.details')}}</a>
+		<a class="btn btn-tab tab_button" id="metadata_questions_btn">{{formatMessage (intlGet 'messages.questions')}}</a>
+		<a class="btn btn-tab tab_button" id="metadata_preview_btn">{{formatMessage (intlGet 'messages.preview')}}</a>
+		{{#unless isclipboard}}<a class="btn btn-tab tab_button" id="metadata_prerequisites_btn">{{formatMessage (intlGet 'messages.prereqs')}} <span class="prereq_badge badge">{{formatMessage (intlGet 'messages.loading')}}</span></a>{{/unless}}
 	</nav>
 	<div class="input-tab-control tab_item" data-next="{{#if allow_edit}}#upload_save_finish_button{{else}}#copy_button{{/if}}"></div>
 	<div  class="metadata_panel">
 		<div id="metadata_edit_details" class="input_area tab_panel">
 			<div class="section pull-left edit_details_section">
-				<div id="edit_details_wrapper"><div id="metadata_placeholder" class="container-fluid text-center">Loading content...</div></div>
+				<div id="edit_details_wrapper"><div id="metadata_placeholder" class="container-fluid text-center">{{formatMessage (intlGet 'messages.loading_content')}}</div></div>
 			</div>
 		</div>
 		<div id="metadata_questions" class="container-fluid tab_panel"></div>
@@ -21,19 +21,19 @@
 	{{#if allow_edit}}
 	<div class="metadata_save_buttons container-fluid">
 		<div class="pull-right">
-			<button id="upload_save_button" class="disable_on_error editmetadata_save tab_item">APPLY CHANGES</button>
-			<button class="btn btn-default disable_on_error editmetadata_save tab_item" id="upload_save_finish_button">SAVE &amp; CLOSE</button>
+			<button id="upload_save_button" class="disable_on_error editmetadata_save tab_item">{{formatMessage (intlGet 'messages.apply_changes')}}</button>
+			<button class="btn btn-default disable_on_error editmetadata_save tab_item" id="upload_save_finish_button">{{formatMessage (intlGet 'messages.save_and_close')}}</button>
 		</div>
-		<button class="action-text tab_item" data-dismiss="modal" aria-label="Close" id="close_uploader_button">CLOSE</button>
+		<button class="action-text tab_item" data-dismiss="modal" aria-label="Close" id="close_uploader_button">{{formatMessage (intlGet 'messages.close')}}</button>
 	</div>
 	{{else}}
 	<div class="metadata_copy_buttons container-fluid">
 		{{#unless staging}}
 		<div class="pull-right">
-			<button class="btn btn-default action-button tab_item" id="copy_button">COPY</button>
+			<button class="btn btn-default action-button tab_item" id="copy_button">{{formatMessage (intlGet 'messages.copy')}}</button>
 		</div>
 		{{/unless}}
-		<button class="disable_on_error action-text tab_item" id="close_uploader_button">CLOSE</button>
+		<button class="disable_on_error action-text tab_item" id="close_uploader_button">{{formatMessage (intlGet 'messages.close')}}</button>
 	</div>
 	{{/if}}
 	<div class="input-tab-control tab_item" data-next="{{#if allow_edit}}#upload_save_finish_button{{else}}{{#if staging}}#close_uploader_button{{else}}#copy_button{{/if}}{{/if}}"></div>

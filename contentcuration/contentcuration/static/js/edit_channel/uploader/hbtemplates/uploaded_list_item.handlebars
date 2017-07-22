@@ -1,7 +1,7 @@
 <input type="checkbox" id="check_{{node.id}}" class="upload_item_checkbox"/>
 <label for="check_{{node.id}}" class="uploaded_list_item">
 	{{#if new_topic}}
-	<span class="glyphicon glyphicon-remove remove_topic pull-right" aria-hidden="true"></span>
+	<span class="glyphicon glyphicon-remove remove_topic pull-right" aria-hidden="true" title="{{formatMessage (intlGet 'messages.remove')}}"></span>
 	{{/if}}
 	<h5 class="truncate" title="{{node.title}}" >
 		<div class="content-item-icon">
