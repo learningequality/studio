@@ -10,6 +10,7 @@ from django.db.models import Q, Count, Sum
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponse
+from django.utils.translation import ugettext as _
 from le_utils.constants import format_presets, content_kinds
 import contentcuration.models as models
 
@@ -233,17 +234,17 @@ def get_staged_diff(channel_id):
 
     stats = [
         {
-            "field": "Date/Time Created",
-            "live": channel.main_tree.created.strftime("%x %X") if main_descendants else "Not Available",
-            "staged": channel.staging_tree.created.strftime("%x %X") if updated_descendants else "Not Available",
+            "field": _("Date/Time Created"),
+            "live": channel.main_tree.created.strftime("%x %X") if main_descendants else _("Not Available"),
+            "staged": channel.staging_tree.created.strftime("%x %X") if updated_descendants else _("Not Available"),
         },
         {
-            "field": "Ricecooker Version",
+            "field": _("Ricecooker Version"),
             "live": json.loads(channel.main_tree.extra_fields).get('ricecooker_version') if has_main and channel.main_tree.extra_fields else "---",
             "staged": json.loads(channel.staging_tree.extra_fields).get('ricecooker_version') if has_staging and channel.staging_tree.extra_fields else "---",
         },
         {
-            "field": "File Size",
+            "field": _("File Size"),
             "live": original_file_size,
             "staged": updated_file_size,
             "difference": updated_file_size - original_file_size,
@@ -254,11 +255,11 @@ def get_staged_diff(channel_id):
     for kind, name in content_kinds.choices:
         original = original_stats.get(kind_id=kind)['count'] if has_main and original_stats.filter(kind_id=kind).exists() else 0
         updated = updated_stats.get(kind_id=kind)['count'] if has_staging and updated_stats.filter(kind_id=kind).exists() else 0
-        stats.append({ "field": "# of {}s".format(name), "live": original, "staged": updated, "difference": updated - original })
+        stats.append({ "field": _("# of {}s".format(name)), "live": original, "staged": updated, "difference": updated - original })
 
     # Add number of questions
     stats.append({
-        "field": "# of Questions",
+        "field": _("# of Questions"),
         "live": original_question_count,
         "staged": updated_question_count,
         "difference": updated_question_count - original_question_count,
@@ -268,7 +269,7 @@ def get_staged_diff(channel_id):
     original_subtitle_count = main_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if has_main else 0
     updated_subtitle_count = updated_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if has_staging else 0
     stats.append({
-        "field": "# of Subtitles",
+        "field": _("# of Subtitles"),
         "live": original_subtitle_count,
         "staged": updated_subtitle_count,
         "difference": updated_subtitle_count - original_subtitle_count,
