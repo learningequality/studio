@@ -15,7 +15,7 @@ var BaseView = Backbone.View.extend({
 	locale: navigator.language || navigator.browserLanguage,
 	messages: {},
 	globalMessageStore: require("utils/translations"),
-	defaultTranslations: {
+	sharedTranslations: {
 		"refresh_page": "Error with asynchronous call. Please refresh the page",
 		"call_error": "Error with asynchronous call",
 		"publish": "PUBLISH",
@@ -45,7 +45,11 @@ var BaseView = Backbone.View.extend({
 		"copying_to_clipboard": "Copying to Clipboard..."
 	},
 	get_translation_library: function(){
-		return _.extend(this.defaultTranslations, _.extend(this.messages, this.globalMessageStore[this.name] || {}));
+		return _.chain(this.sharedTranslations)
+					.extend(this.messages)
+					.extend(this.globalMessageStore["shared"] || {})
+					.extend(this.globalMessageStore[this.name] || {})
+					.value();
 	},
 	get_intl_data: function(){
 		return {

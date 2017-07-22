@@ -7,7 +7,7 @@ var staticModals = require("edit_channel/information/views");
 
 const PREREQ_LIMIT = 5;
 
-var NAMESPACE = "move";
+var NAMESPACE = "related";
 var MESSAGES = {
     "prereqs": "Prerequisites",
     "loading": "Loading...",

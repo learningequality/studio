@@ -1,18 +1,18 @@
 <div class="show_on_focus answer_header">
-	{{#if input_answer}}ACCEPTED ANSWER(S)
+	{{#if input_answer}}{{formatMessage (intlGet 'messages.accepted_answers')}}
 	{{else}}
 	    <div class="col-sm-1 correct_header">
-			<span class="glyphicon glyphicon-check" aria-hidden="true" title="Correct?"></span>
+			<span class="glyphicon glyphicon-check" aria-hidden="true" title="{{formatMessage (intlGet 'messages.correct_header')}}"></span>
 		</div>
-		<div class="col-sm-11">ANSWERS</div>
+		<div class="col-sm-11">{{formatMessage (intlGet 'messages.answers')}}</div>
 	{{/if}}
 </div>
-{{#if input_answer}}<div class="input_question_prompt">NOTE: Equivalent formats are treated as the same value (1 1/2 = 3/2 = 1.5)</div>{{/if}}
+{{#if input_answer}}<div class="input_question_prompt">{{formatMessage (intlGet 'messages.numeric_help_text')}}</div>{{/if}}
 <ul class="list-unstyled answer_list">
-	<div class="default-item">Loading...</div>
+	<div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div>
 </ul>
 {{#unless true_false}}
-<div class="show_on_focus addanswer" title="Add">
-	<span class="glyphicon glyphicon-plus"></span>&nbsp; <span class="addanswertext">ANSWER</span>
+<div class="show_on_focus addanswer" title="{{formatMessage (intlGet 'messages.add')}}">
+	<span class="glyphicon glyphicon-plus"></span>&nbsp; <span class="addanswertext">{{formatMessage (intlGet 'messages.answer')}}</span>
 </div>
 {{/unless}}
