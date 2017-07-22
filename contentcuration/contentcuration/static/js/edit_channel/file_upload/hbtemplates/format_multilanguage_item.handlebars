@@ -1,5 +1,5 @@
 <div class="col-xs-2 format_editor_format_name multilanguage_name">
-	<span class="format_preset_name">New:</span>
+	<span class="format_preset_name">{{formatMessage (intlGet 'messages.new')}}</span>
 </div>
 <div class="col-xs-3 format_editor_format_name">
 	<select id="{{selector}}_dropdown" class="language_dropdown text-center"></select>
@@ -9,16 +9,16 @@
       <div class="format_metadata">
         <div class="format_editor_options_wrapper pull-right">
           {{#if file}}
-            <span class="format_editor_replace glyphicon glyphicon-file dz-clickable" title="Replace File" aria-hidden="true"></span>
-            <span class="glyphicon glyphicon-remove format_editor_remove {{#unless preset.supplementary}}main_file_remove{{/unless}}" aria-hidden="true" title="Delete File"></span>
+            <span class="format_editor_replace glyphicon glyphicon-file dz-clickable" title="{{formatMessage (intlGet 'messages.replace_file')}}" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-remove format_editor_remove {{#unless preset.supplementary}}main_file_remove{{/unless}}" aria-hidden="true" title="{{formatMessage (intlGet 'messages.delete_file')}}"></span>
           {{/if}}
       </div>
       <div class="format_editor_file_name_wrapper">
         {{#if file}}
-          <div class="format_editor_file_name truncate" title="{{file.original_filename}}">{{#if file.original_filename}}{{file.original_filename}}{{else}}File{{/if}}</div>
+          <div class="format_editor_file_name truncate" title="{{file.original_filename}}">{{#if file.original_filename}}{{file.original_filename}}{{else}}{{formatMessage (intlGet 'messages.default_filename')}}{{/if}}</div>
           <i class="format_editor_selected_size">({{#format_file_size file.file_size}}{{/format_file_size}})</i>
         {{else}}
-            <a class="action-text add_format_button dz-clickable">+ ADD</a>
+            <a class="action-text add_format_button dz-clickable">+ {{formatMessage (intlGet 'messages.add')}}</a>
         {{/if}}
       </div>
     </div>

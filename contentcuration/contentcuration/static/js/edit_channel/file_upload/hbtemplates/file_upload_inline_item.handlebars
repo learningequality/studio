@@ -3,10 +3,10 @@
     <div class="inline col-xs-8 format_section format_metadata_section">
     {{#if has_files}}
         <h4 class="format_editor_header">
-            Files
-            <span class="pull-right file_size_metadata">Total Size: <em class="format_size_text"></em></span>
+            {{formatMessage (intlGet 'messages.files')}}
+            <span class="pull-right file_size_metadata">{{formatMessage (intlGet 'messages.total_size')}} <em class="format_size_text"></em></span>
         </h4>
-        <div class="format_editor_list"><p>Loading...</p></div>
+        <div class="format_editor_list"><p>{{formatMessage (intlGet 'messages.loading')}}</p></div>
     {{/if}}
     </div>
 </div>

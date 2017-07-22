@@ -11,8 +11,49 @@ var browserHelper = require("edit_channel/utils/browser_functions");
 var dialog = require("edit_channel/utils/dialog");
 var ImageViews = require("edit_channel/image/views");
 
+var NAMESPACE = "file_upload";
+var MESSAGES = {
+    "cancel": "CANCEL",
+    "close": "CLOSE",
+    "loading": "Loading...",
+    "upload_files": "Upload Files",
+    "edit_metadata": "Edit Metadata",
+    "add_files": "Add files to continue",
+    "no_preview": "No Preview Available",
+    "title_placeholder": "Title *",
+    "files": "Files",
+    "total_size": "Total Size: ",
+    "select_language": "Select language",
+    "uploading_only": "View uploading only",
+    "add_files_action": "ADD FILES",
+    "drag_text": "(or drag and drop files below)",
+    "upload_count": "{data, plural,\n =1 {# file}\n other {# files}} uploaded",
+    "new": "New:",
+    "replace_file": "Replace File",
+    "delete_file": "Delete File",
+    "default_filename": "File",
+    "add": "ADD",
+    "preset_plural": "{preset}s",
+    "not_available": "Not Available",
+    "download_file": "Download File",
+    "unsaved_changes": "Unsaved Changes!",
+    "unsaved_changes_text": "Exiting now will undo any new changes. Are you sure you want to exit?",
+    "dont_save": "DON'T SAVE",
+    "keep_open": "KEEP OPEN",
+    "upload_in_progress": "Upload in progress...",
+    "edit_metadata_button": "EDIT METADATA",
+    "drop_files_text": "Drop files here to add them to your channel",
+    "file_not_supported": "This file type is not supported.",
+    "max_size_exceeded": "Max file size exceeded.",
+    "processing_error": "Error processing request.",
+    "upload_error": "Error Uploading File"
+}
+
+
 var FileModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/file_upload_modal.handlebars"),
+    name: NAMESPACE,
+    messages: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, "close_file_uploader");
         this.render(this.close_file_uploader, {});
@@ -43,14 +84,13 @@ var FileModalView = BaseViews.BaseModalView.extend({
         if(this.file_upload_view.collection.length === 0){
             this.close();
         }else{
-            dialog.dialog("Unsaved Changes!", "Exiting now will"
-            + " undo any new changes. Are you sure you want to exit?", {
-                "DON'T SAVE": function(){
+            dialog.dialog(this.get_translation("unsaved_changes"), this.get_translation("unsaved_changes_text"), {
+                [this.get_translation("dont_save")]: function(){
                     self.file_upload_view.reset();
                     self.close();
                     $(".modal-backdrop").remove();
                 },
-                "KEEP OPEN":function(){},
+                [this.get_translation("keep_open")]:function(){},
             }, null);
             self.cancel_actions(event);
         }
@@ -61,6 +101,8 @@ var FileUploadView = BaseViews.BaseView.extend({
     'id': "file_upload_view_el",
     template: require("./hbtemplates/file_upload.handlebars"),
     navigation_template: require("./hbtemplates/file_upload_buttons.handlebars"),
+    name: NAMESPACE,
+    messages: MESSAGES,
     initialize: function(options) {
         _.bindAll(this,"go_to_upload", "go_to_metadata", "close_file_uploader", "set_initial_focus", "set_indices", 'loop_focus');
         this.container = options.container;
@@ -84,9 +126,13 @@ var FileUploadView = BaseViews.BaseView.extend({
         if(this.current_view){
             this.current_view.remove();
         }
-        this.$el.html(this.template());
+        this.$el.html(this.template(null, {
+            data: this.get_intl_data()
+        }));
         this.$("#file_upload_buttons").html(this.navigation_template({
             uploading: stepNumber === 1
+        }, {
+            data: this.get_intl_data()
         }));
         var data = {
             el: this.$("#file_upload_list_wrapper"),
@@ -125,12 +171,12 @@ var FileUploadView = BaseViews.BaseView.extend({
     disable_next:function(upload_in_progress){
         $(".go_to_metadata").attr("disabled", "disabled");
         $(".go_to_metadata").addClass("disabled");
-        this.$(".go_to_metadata").text((upload_in_progress)? "Upload in progress..." : "Add files to continue");
+        this.$(".go_to_metadata").text((upload_in_progress)? this.get_translation("upload_in_progress") : this.get_translation("add_files"));
     },
     enable_next:function(){
         $(".go_to_metadata").removeAttr("disabled");
         $(".go_to_metadata").removeClass("disabled");
-        this.$(".go_to_metadata").text("EDIT METADATA");
+        this.$(".go_to_metadata").text(this.get_translation("edit_metadata_button"));
         setTimeout(function(){
             $(".go_to_metadata").focus();
         }, 100);
@@ -145,6 +191,8 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     default_item:"#file_upload_list >.default-item",
     template: require("./hbtemplates/file_upload_upload_list.handlebars"),
     file_upload_template: require("./hbtemplates/file_upload_dropzone_item.handlebars"),
+    name: NAMESPACE,
+    messages: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, "file_uploaded",  "all_files_uploaded", "file_added", "file_removed","file_failed", "create_dropzone", "set_initial_focus");
@@ -166,9 +214,17 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
       "click #show_uploading" : "show_uploading"
     },
     render: function() {
-        this.$el.html(this.template());
-        this.load_content(this.collection, "Drop files here to add them to your channel");
+        this.$el.html(this.template(null, {
+            data: this.get_intl_data()
+        }));
+        this.load_content(this.collection, this.get_translation("drop_files_text"));
         _.defer(this.create_dropzone, 1);
+    },
+    show_uploading:function(event){
+        var is_checked = this.$("#show_uploading").is(":checked");
+        (is_checked)? this.$el.addClass('hide_uploaded') : this.$el.removeClass('hide_uploaded');
+        this.$(this.default_item).css("display", (this.$(".format_item").length || is_checked) ? "none" : "block");
+        this.$("#file_upload_count").css("display", (is_checked) ? "flex" : "none");
     },
     disable_next:function(upload_in_progress){
         this.container.disable_next(upload_in_progress);
@@ -199,16 +255,16 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
             clickable: ["#dropzone", ".fileinput-button"],
             acceptedFiles: this.acceptedFiles,
             url: window.Urls.file_create(),
-            previewTemplate:this.file_upload_template(),
+            previewTemplate:this.file_upload_template(null, { data: this.get_intl_data() }),
             parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads()),
             previewsContainer: this.list_selector, // Define the container to display the previews
             headers: {
                 "X-CSRFToken": get_cookie("csrftoken"),
                 "Preferences": JSON.stringify(window.current_channel.get('preferences'))
             },
-            dictInvalidFileType: "This file type is not supported.",
-            dictFileTooBig: "Max file size exceeded.",
-            dictResponseError: "Error processing request."
+            dictInvalidFileType: this.get_translation("file_not_supported"),
+            dictFileTooBig: this.get_translation("max_size_exceeded"),
+            dictResponseError: this.get_translation("processing_error")
         });
         this.dropzone.on("success", this.file_uploaded);
         this.dropzone.on("queuecomplete", this.all_files_uploaded);
@@ -253,7 +309,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     },
     file_removed: function(file) {
         if (this.views.length === 0) {
-            this.load_content(this.collection, "Drop files here to add them to your channel");
+            this.load_content(this.collection, this.get_translation("drop_files_text"));
         }
     },
     handle_completed:function(){
@@ -262,7 +318,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         }
     },
     update_count:function(){
-        $("#file_upload_count").text(this.views.length + (this.views.length===1? " file" : " files") + " uploaded");
+        $("#file_upload_count").text(this.get_translation("upload_count", this.views.length));
     }
 });
 
@@ -275,6 +331,8 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     expandedClass: "glyphicon-triangle-bottom",
     collapsedClass: "glyphicon-triangle-top",
     thumbnail_template: require("./hbtemplates/file_upload_thumbnail.handlebars"),
+    name: NAMESPACE,
+    messages: MESSAGES,
 
     getToggler: function () { return this.$(".expand_format_editor"); },
     getSubdirectory: function () {return this.$(".format_editor_list"); },
@@ -401,6 +459,8 @@ var FormatInlineItem = FormatEditorItem.extend({
         this.$el.html(this.template({
             node: this.model.toJSON(),
             has_files: this.presets.length,
+        }, {
+            data: this.get_intl_data()
         }));
         this.load_subfiles();
     },
@@ -434,6 +494,8 @@ var FormatFormatItem = FormatEditorItem.extend({
             presets:this.presets.toJSON(),
             files: this.files.toJSON(),
             node: this.model.toJSON()
+        }, {
+            data: this.get_intl_data()
         }));
         this.update_metadata();
         this.load_subfiles();
@@ -455,6 +517,8 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     template: require("./hbtemplates/file_upload_format_slot_list.handlebars"),
     list_selector:">.preset_list",
     default_item:">.preset_list .default-slot-item",
+    name: NAMESPACE,
+    messages: MESSAGES,
     initialize: function(options) {
         this.content_node_view = options.content_node_view;
         this.node = this.model;
@@ -465,7 +529,9 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
         this.render();
     },
     render: function() {
-        this.$el.html(this.template());
+        this.$el.html(this.template(null, {
+            data: this.get_intl_data()
+        }));
         this.load_content();
     },
     update_metadata: function(model){
@@ -515,6 +581,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     upload_in_progress:false,
     collapsedClass: "glyphicon-menu-up",
     expandedClass: "glyphicon-menu-down",
+    name: NAMESPACE,
+    messages: MESSAGES,
 
     getToggler: function () { return this.$("#format_item_" + this.model.id); },
     getSubdirectory: function () {return this.$("#format_item_" + this.model.id +"_sub"); },
@@ -545,8 +613,11 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             preset: this.model.toJSON(),
             selector: this.selector(),
             multi_language: this.model.get('multi_language') && !this.file,
+            is_language: this.containing_list_view.is_language,
             allow_edit: this.allow_edit,
             src: (this.file)? this.file.get('storage_url') : null
+        }, {
+            data: this.get_intl_data()
         }));
         if(this.allow_edit && (!this.model.get('multi_language') || this.file)){
             _.defer(this.create_dropzone);
@@ -562,7 +633,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
            clickable: clickables,
            acceptedFiles: this.get_accepted_files(),
            url: window.Urls.file_upload(),
-           previewTemplate:this.dropzone_template(),
+           previewTemplate:this.dropzone_template(null, { data: this.get_intl_data() }),
            maxFiles: 1,
            previewsContainer: dz_selector,
            headers: {
@@ -608,7 +679,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     file_failed:function(file, error){
         var self = this;
-        dialog.alert("Error Uploading File", error, function(){
+        dialog.alert(this.get_translation("upload_error"), error, function(){
             self.render();
             self.set_uploading(false);
             self.containing_list_view.update_metadata();
@@ -649,6 +720,9 @@ var MultiLanguageSlotList = FormatSlotList.extend({
     template: require("./hbtemplates/file_upload_multilanguage_slot_list.handlebars"),
     list_selector:">.multilanguage_list .preset_list",
     default_item:">.multilanguage_list .preset_list .default-slot-item",
+    is_language: true,
+    name: NAMESPACE,
+    messages: MESSAGES,
 
     initialize: function(options) {
         this.container = options.containing_view;
@@ -662,7 +736,9 @@ var MultiLanguageSlotList = FormatSlotList.extend({
         this.render();
     },
     render: function() {
-        this.$el.html(this.template());
+        this.$el.html(this.template(null, {
+            data: this.get_intl_data()
+        }));
         if(this.allow_edit){
             this.language_view = new MultiLanguageUploadSlot({
                 el: this.$(".add_multilanguage_item_wrapper"),
@@ -691,6 +767,8 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
     template: require("./hbtemplates/format_multilanguage_item.handlebars"),
     language_template: require("./hbtemplates/format_multilanguage_dropdown.handlebars"),
     className:"row format_editor_item",
+    name: NAMESPACE,
+    messages: MESSAGES,
     'id': function() { return "format_slot_item_" + this.model.get("id"); },
     selector: function() { return this.model.get("id") + "_"  + this.node.get('id') + "_dropzone"; },
     initialize: function(options) {
@@ -715,12 +793,16 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
             preset: this.model.toJSON(),
             selector: this.selector(),
             preset_name : (this.file && this.file.get("display_name"))? this.file.get("display_name") : this.model.get("readable_name")
+        }, {
+            data: this.get_intl_data()
         }));
         _.defer(this.create_dropzone);
         this.load_languages();
     },
     load_languages: function(){
-        this.$(".language_dropdown").html(this.language_template({languages: this.languages.toJSON()}));
+        this.$(".language_dropdown").html(this.language_template({languages: this.languages.toJSON()}, {
+            data: this.get_intl_data()
+        }));
         if(!this.file){ this.language = null; }
         if(this.language) this.$('.language_dropdown').val(this.language);
     },
