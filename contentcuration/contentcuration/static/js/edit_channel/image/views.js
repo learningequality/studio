@@ -376,22 +376,25 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
     },
     render_dropzone:function(){
         this.$(".modal-body").html(this.template({file: this.file, alt_text: this.alt_text}, { data: this.get_intl_data() }));
-        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
-            maxFiles: 1,
-            clickable: ["#dropzone", "#dropzone_placeholder"],
-            acceptedFiles: window.formatpresets.get({id:this.preset_id}).get('associated_mimetypes').join(','),
-            url: window.Urls.exercise_image_upload(),
-            thumbnailWidth:null,
-            thumbnailHeight:null,
-            previewTemplate:this.dropzone_template(null, { data: this.get_intl_data() }),
-            previewsContainer: "#dropzone",
-            headers: {"X-CSRFToken": get_cookie("csrftoken")}
-        });
-        this.dropzone.on("success", this.file_uploaded);
-        this.dropzone.on("addedfile", this.file_added);
-        this.dropzone.on("removedfile", this.file_removed);
-        this.dropzone.on("error", this.file_failed);
-        this.dropzone.on("queuecomplete", this.file_complete);
+        Dropzone.autoDiscover = false;
+        if(this.$("#dropzone")){
+            this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
+                maxFiles: 1,
+                clickable: ["#dropzone", "#dropzone_placeholder"],
+                acceptedFiles: window.formatpresets.get({id:this.preset_id}).get('associated_mimetypes').join(','),
+                url: window.Urls.exercise_image_upload(),
+                thumbnailWidth:null,
+                thumbnailHeight:null,
+                previewTemplate:this.dropzone_template(null, { data: this.get_intl_data() }),
+                previewsContainer: "#dropzone",
+                headers: {"X-CSRFToken": get_cookie("csrftoken")}
+            });
+            this.dropzone.on("success", this.file_uploaded);
+            this.dropzone.on("addedfile", this.file_added);
+            this.dropzone.on("removedfile", this.file_removed);
+            this.dropzone.on("error", this.file_failed);
+            this.dropzone.on("queuecomplete", this.file_complete);
+        }
     },
     set_alt_text: function(event){
         this.alt_text = event.target.value;

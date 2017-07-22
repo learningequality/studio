@@ -251,26 +251,29 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         return list.join(",");
     },
     create_dropzone: function(){
-        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
-            clickable: ["#dropzone", ".fileinput-button"],
-            acceptedFiles: this.acceptedFiles,
-            url: window.Urls.file_create(),
-            previewTemplate:this.file_upload_template(null, { data: this.get_intl_data() }),
-            parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads()),
-            previewsContainer: this.list_selector, // Define the container to display the previews
-            headers: {
-                "X-CSRFToken": get_cookie("csrftoken"),
-                "Preferences": JSON.stringify(window.current_channel.get('preferences'))
-            },
-            dictInvalidFileType: this.get_translation("file_not_supported"),
-            dictFileTooBig: this.get_translation("max_size_exceeded"),
-            dictResponseError: this.get_translation("processing_error")
-        });
-        this.dropzone.on("success", this.file_uploaded);
-        this.dropzone.on("queuecomplete", this.all_files_uploaded);
-        this.dropzone.on("addedfile", this.file_added);
-        this.dropzone.on("removedfile", this.file_removed);
-        this.dropzone.on("error", this.file_failed);
+        if(this.$("#dropzone")){
+            Dropzone.autoDiscover = false;
+            this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
+                clickable: ["#dropzone", ".fileinput-button"],
+                acceptedFiles: this.acceptedFiles,
+                url: window.Urls.file_create(),
+                previewTemplate:this.file_upload_template(null, { data: this.get_intl_data() }),
+                parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads()),
+                previewsContainer: this.list_selector, // Define the container to display the previews
+                headers: {
+                    "X-CSRFToken": get_cookie("csrftoken"),
+                    "Preferences": JSON.stringify(window.current_channel.get('preferences'))
+                },
+                dictInvalidFileType: this.get_translation("file_not_supported"),
+                dictFileTooBig: this.get_translation("max_size_exceeded"),
+                dictResponseError: this.get_translation("processing_error")
+            });
+            this.dropzone.on("success", this.file_uploaded);
+            this.dropzone.on("queuecomplete", this.all_files_uploaded);
+            this.dropzone.on("addedfile", this.file_added);
+            this.dropzone.on("removedfile", this.file_removed);
+            this.dropzone.on("error", this.file_failed);
+        }
     },
     create_new_view:function(model){
         var new_format_item = new FormatFormatItem({
@@ -629,26 +632,29 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         if(this.file){
             clickables.push(dz_selector + " .format_editor_file_name");
         }
-        var dropzone = new Dropzone(dz_selector, {
-           clickable: clickables,
-           acceptedFiles: this.get_accepted_files(),
-           url: window.Urls.file_upload(),
-           previewTemplate:this.dropzone_template(null, { data: this.get_intl_data() }),
-           maxFiles: 1,
-           previewsContainer: dz_selector,
-           headers: {
-                "X-CSRFToken": get_cookie("csrftoken"),
-                "Node" : this.node.get('id'),
-                "Preset": this.model.get("name") || this.model.id,
-                "Language": (this.file && this.file.get("language"))? this.file.get("language").id : null
-            }
-        });
-        dropzone.on("success", this.file_uploaded);
+        if($(dz_selector)){
+            Dropzone.autoDiscover = false;
+            var dropzone = new Dropzone(dz_selector, {
+               clickable: clickables,
+               acceptedFiles: this.get_accepted_files(),
+               url: window.Urls.file_upload(),
+               previewTemplate:this.dropzone_template(null, { data: this.get_intl_data() }),
+               maxFiles: 1,
+               previewsContainer: dz_selector,
+               headers: {
+                    "X-CSRFToken": get_cookie("csrftoken"),
+                    "Node" : this.node.get('id'),
+                    "Preset": this.model.get("name") || this.model.id,
+                    "Language": (this.file && this.file.get("language"))? this.file.get("language").id : null
+                }
+            });
+            dropzone.on("success", this.file_uploaded);
 
-        // Only enable the submit upload files button once all files have finished uploading.
-        dropzone.on("addedfile", this.file_added);
-        dropzone.on("removedfile", this.file_removed);
-        dropzone.on("error", this.file_failed);
+            // Only enable the submit upload files button once all files have finished uploading.
+            dropzone.on("addedfile", this.file_added);
+            dropzone.on("removedfile", this.file_removed);
+            dropzone.on("error", this.file_failed);
+        }
     },
     get_accepted_files:function(){
         var preset_name = this.model.get('name') || this.model.id
