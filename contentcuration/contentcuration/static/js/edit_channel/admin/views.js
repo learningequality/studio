@@ -343,13 +343,14 @@ var ChannelItem = BaseAdminItem.extend({
         "click .leave_button": "leave_editors"
     },
     load_counts: function(){
-        if(this.counts){
-            this.$(".counts_popover").html(this.count_template({counts: this.counts}));
+        if(this.counts && this.size){
+            this.$(".counts_popover").html(this.count_template({counts: this.counts, size: this.size}));
         } else {
             var self = this;
             this.model.get_channel_counts().then(function(counts){
-                self.counts = counts;
-                self.$(".counts_popover").html(self.count_template({counts: self.counts}));
+                self.counts = counts.counts;
+                self.size = counts.size;
+                self.$(".counts_popover").html(self.count_template({counts: self.counts, size: self.size}));
             });
         }
     },
