@@ -1,0 +1,22 @@
+<div class="assessment_item_wrapper">
+    {{#if exercises.current}}
+    <ul class="list-unstyled original assessment_item_list">
+        <li class="exercise_header">
+            <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
+        </li>
+        <li id="assessment_item_current" class="exercise_body"></li>
+    </ul>
+    {{/if}}
+    {{#if exercises.source}}
+    <ul class="list-unstyled updated assessment_item_list">
+        <li class="exercise_header">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+        </li>
+        <li id="assessment_item_source" class="exercise_body"></li>
+    </ul>
+    {{/if}}
+</div>
