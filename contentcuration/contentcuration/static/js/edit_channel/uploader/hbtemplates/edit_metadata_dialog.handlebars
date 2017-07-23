@@ -24,16 +24,16 @@
 			<button id="upload_save_button" class="disable_on_error editmetadata_save tab_item">{{formatMessage (intlGet 'messages.apply_changes')}}</button>
 			<button class="btn btn-default disable_on_error editmetadata_save tab_item" id="upload_save_finish_button">{{formatMessage (intlGet 'messages.save_and_close')}}</button>
 		</div>
-		<button class="action-text tab_item" data-dismiss="modal" aria-label="Close" id="close_uploader_button">{{formatMessage (intlGet 'messages.close')}}</button>
+		<button class="action-text tab_item uppercase" data-dismiss="modal" aria-label="Close" id="close_uploader_button">{{formatMessage (intlGet 'messages.close')}}</button>
 	</div>
 	{{else}}
 	<div class="metadata_copy_buttons container-fluid">
 		{{#unless staging}}
 		<div class="pull-right">
-			<button class="btn btn-default action-button tab_item" id="copy_button">{{formatMessage (intlGet 'messages.copy')}}</button>
+			<button class="btn btn-default action-button tab_item uppercase" id="copy_button">{{formatMessage (intlGet 'messages.copy')}}</button>
 		</div>
 		{{/unless}}
-		<button class="disable_on_error action-text tab_item" id="close_uploader_button">{{formatMessage (intlGet 'messages.close')}}</button>
+		<button class="disable_on_error action-text tab_item uppercase" id="close_uploader_button">{{formatMessage (intlGet 'messages.close')}}</button>
 	</div>
 	{{/if}}
 	<div class="input-tab-control tab_item" data-next="{{#if allow_edit}}#upload_save_finish_button{{else}}{{#if staging}}#close_uploader_button{{else}}#copy_button{{/if}}{{/if}}"></div>

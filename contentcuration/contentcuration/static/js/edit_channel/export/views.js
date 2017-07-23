@@ -9,17 +9,10 @@ require("export.less");
 var NAMESPACE = "export";
 var MESSAGES = {
     "learn_more": "LEARN MORE",
-    "close": "CLOSE",
-    "loading": "Loading...",
-    "publish_id": "PUBLISH ID:",
     "publishing_channel": "Publishing Channel...",
     "current_version": "Current Version:",
     "publish_text": "The following content will be published:",
-    "publish": "PUBLISH",
-    "resource_count": "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
     "calculating": "(Calculating...)",
-    "cancel": "CANCEL",
-    "empty": "(empty)",
     "publishing": "Publishing..."
 }
 
@@ -64,7 +57,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             window.current_channel.publish().then(function(){
                 self.onpublish(window.workspace_manager.get_published_collection());
                 self.close();
-                resolve("Success!");
+                resolve(true);
             }).catch(function(error){
                 reject(error);
             });

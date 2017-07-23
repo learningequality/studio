@@ -12,37 +12,31 @@ var dialog = require("edit_channel/utils/dialog");
 
 var NAMESPACE = "new_channel";
 var MESSAGES = {
+	"channel": "Channel",
 	"header": "My Channels",
-	"add_channel": "Channel",
 	"add_channel_disbaled_title": "Cannot create a new channel while another channel is being edited.",
 	"add_channel_title": "Create a new channel",
-	"loading": "Loading...",
 	"pending_loading": "Checking for invitations...",
-	"cancel": "CANCEL",
 	"delete_channel": "DELETE CHANNEL",
 	"save_channel": "SAVE",
 	"deleting_channel": "Deleting Channel...",
-	"warning": "WARNING",
 	"delete_warning": "All content under this channel will be permanently deleted.\nAre you sure you want to delete this channel?",
-	"saving": "Saving Channel...",
 	"channel_name_error": "Channel must have a name",
 	"name_placeholder": "Enter channel name...",
 	"description_placeholder": "Enter channel description...",
-	"channel_id": "ID",
 	"copy_id": "Copy ID to clipboard",
 	"unpublished": "Unpublished",
 	"view_only": "View Only",
-	"resource_count": "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
 	"invitation_error": "Invitation Error",
 	"declining_invitation": "Declining Invitation",
 	"declining_invitation_message": "Are you sure you want to decline this invitation?",
 	"decline": "DECLINE",
 	"accept": "ACCEPT",
 	"accept_prompt": "has invited you to",
+	"accept_success": "Accepted invitation to",
+	"decline_success": "Declined invitation to",
 	"edit": "edit",
 	"view": "view",
-	"accept_success": "Accepted invitation to",
-	"decline_success": "Declined invitation to"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({

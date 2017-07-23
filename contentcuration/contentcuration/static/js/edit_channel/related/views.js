@@ -10,16 +10,12 @@ const PREREQ_LIMIT = 5;
 var NAMESPACE = "related";
 var MESSAGES = {
     "prereqs": "Prerequisites",
-    "loading": "Loading...",
-    "loading_content": "Loading Content...",
     "already_selected": "Already selected",
-    "select": "SELECT",
+    "select": "Select",
     "back_to_list": "Back to List",
     "select_text": "Select content learners should know before engaging with this content",
     "getting_prereqs": "Getting valid prerequisite options...",
     "name": "Name",
-    "topic": "Topic",
-    "add": "ADD",
     "loading_prereqs": "Getting prerequisites...",
     "prereq_text": "Prerequisite content items cover any immediate prior knowledge a learner should have before engaging with this content.",
     "prereq_limit": "Limit prerequisites for a more guided learning experience (recommended: {count, plural,\n =1 {# item}\n other {# items}})",

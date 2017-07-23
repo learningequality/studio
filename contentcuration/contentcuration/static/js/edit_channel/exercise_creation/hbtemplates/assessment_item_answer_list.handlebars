@@ -1,10 +1,10 @@
 <div class="show_on_focus answer_header">
-	{{#if input_answer}}{{formatMessage (intlGet 'messages.accepted_answers')}}
+	{{#if input_answer}}<span class="uppercase">{{formatMessage (intlGet 'messages.accepted_answers')}}</span>
 	{{else}}
 	    <div class="col-sm-1 correct_header">
 			<span class="glyphicon glyphicon-check" aria-hidden="true" title="{{formatMessage (intlGet 'messages.correct_header')}}"></span>
 		</div>
-		<div class="col-sm-11">{{formatMessage (intlGet 'messages.answers')}}</div>
+		<div class="col-sm-11 uppercase">{{formatMessage (intlGet 'messages.answers')}}</div>
 	{{/if}}
 </div>
 {{#if input_answer}}<div class="input_question_prompt">{{formatMessage (intlGet 'messages.numeric_help_text')}}</div>{{/if}}
@@ -13,6 +13,6 @@
 </ul>
 {{#unless true_false}}
 <div class="show_on_focus addanswer" title="{{formatMessage (intlGet 'messages.add')}}">
-	<span class="glyphicon glyphicon-plus"></span>&nbsp; <span class="addanswertext">{{formatMessage (intlGet 'messages.answer')}}</span>
+	<span class="glyphicon glyphicon-plus"></span>&nbsp; <span class="addanswertext uppercase">{{formatMessage (intlGet 'messages.answer')}}</span>
 </div>
 {{/unless}}

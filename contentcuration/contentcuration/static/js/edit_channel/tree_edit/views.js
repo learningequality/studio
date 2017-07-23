@@ -8,25 +8,16 @@ var dialog = require("edit_channel/utils/dialog");
 
 var NAMESPACE = "tree_edit";
 var MESSAGES = {
-    "cancel": "CANCEL",
-    "close": "CLOSE",
-    "loading": "Loading...",
-    "loading_content": "Loading Content...",
+	"new": "New",
     "comparison": "Comparison",
     "live": "Live (Deployed)",
     "staged": "Staged (Updated)",
     "changed": "CHANGED",
     "summary_header": "Summary of Updated Ricecooker Channel",
     "generating_summary": "Generating Summary...",
-    "add": "ADD",
     "toggle_dropdown": "Toggle Dropdown",
     "subtopic": "Add Subtopic",
     "back": "Back",
-    "edit": "Edit",
-    "view": "View",
-    "copy": "Copy",
-    "move": "Move",
-    "delete": "Delete",
     "trash": "Trash",
     "sync": "Sync",
     "sync_title": "Sync imported content",
@@ -46,7 +37,6 @@ var MESSAGES = {
     "create_exercise": "Create Exercise",
     "import": "Import from Channels",
     "view_topic": "View topic details",
-    "resource_count": "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
     "question_count": "{count, plural,\n =1 {# Question}\n other {# Questions}}",
     "updated": "Updated",
     "new": "New",
@@ -55,20 +45,9 @@ var MESSAGES = {
     "untitled": "[Untitled]",
     "more": "... More",
     "less": " Less",
-    "warning": "WARNING",
     "delete_warning": "Are you sure you want to delete these selected items?",
-    "related_content": "RELATED CONTENT DETECTED",
-    "related_content_warning": "Any content associated with {data, plural,\n =1 {this item}\n other {these items}} will no longer reference " +
-    							"{data, plural,\n =1 {it}\n other {them}} as related content. Are you sure you want to delete " +
-    							"{data, plural,\n =1 {this item}\n other {these selected items}}?",
-    "delete_items": "DELETE ITEMS",
-    "deleting_content": "Deleting Content...",
     "related_content_alert": "Related content will not be included in the copy of this content.",
-    "copying_content": "Copying Content...",
-    "success": "Success!",
-    "no_items_found": "No items found",
     "delete_item_warning": "Are you sure you want to delete {data}?",
-    "delete_item": "DELETE"
 }
 
 /**
@@ -183,7 +162,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		}
         dialog.dialog(title, message, {
             [this.get_translation("cancel")]:function(){},
-            [this.get_translation("delete_items")]: function(){
+            [this.get_translation("delete")]: function(){
 
 				/* Create list of nodes to delete */
 				var opened = _.find(list, function(list){return list.$el.hasClass(list.openedFolderClass);});
@@ -205,7 +184,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	call_duplicate: function(){
 		var self = this;
-		this.display_load(this.get_translation("copying_content"), function(load_resolve, load_reject){
+		this.display_load(this.get_translation("copying_to_clipboard"), function(load_resolve, load_reject){
 			var promises = [];
 			for(var i = 0; i < self.lists.length; i++){
 				promises.push(self.lists[i].copy_selected());
@@ -219,7 +198,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 					nodeCollection.add(list.models);
 				});
 				window.workspace_manager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
-				load_resolve(self.get_translation("success"));
+				load_resolve(true);
 			}).catch(function(error){
 				console.log(error);
 				load_reject(error);
@@ -307,7 +286,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 
 		var self = this;
 		this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
-			self.$el.find(this.default_item).text(self.get_translation("no_items_found"));
+			self.$el.find(this.default_item).text(self.get_translation("no_items"));
 			fetchedCollection.sort_by_order();
 			self.load_content(fetchedCollection);
 			if(self.edit_mode){
@@ -519,7 +498,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		}
         dialog.dialog(title, message, {
             [this.get_translation("cancel")]:function(){},
-            [this.get_translation("delete_item")]: function(){
+            [this.get_translation("delete")]: function(){
 				self.add_to_trash();
 				if(self.subcontent_view){
 					self.subcontent_view.close_container();

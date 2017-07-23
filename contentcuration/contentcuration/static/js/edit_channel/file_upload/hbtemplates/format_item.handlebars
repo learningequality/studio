@@ -23,7 +23,7 @@
         <div class="format_editor_file_name truncate" title="{{file.original_filename}}">{{#if file.original_filename}}{{file.original_filename}}{{else}}{{formatMessage (intlGet 'messages.default_filename')}}{{/if}}</div>
         <i class="format_editor_selected_size">({{#format_file_size file.file_size}}{{/format_file_size}})</i>
       {{else}}
-          <a class="action-text add_format_button dz-clickable">+ {{formatMessage (intlGet 'messages.add')}}</a>
+          <a class="action-text add_format_button dz-clickable uppercase">+ {{formatMessage (intlGet 'messages.add')}}</a>
       {{/if}}
     {{else}}
       {{#if file}}

@@ -14,27 +14,25 @@ require("uploader.less");
 
 var NAMESPACE = "uploader";
 var MESSAGES = {
-    "cancel": "CANCEL",
-    "close": "CLOSE",
-    "loading": "Loading...",
+    "of": "of",
+    "author": "Author",
+    "details": "Details",
+    "license": "License",
+    "questions": "Questions",
+    "tags": "Tags",
+    "copyright_holder": "Copyright Holder",
+    "prereqs": "Prerequisites",
+    "dont_save": "Don't Save",
+    "keep_open": "Keep Open",
+    "mastery_criteria": "Mastery Criteria",
     "editing_header": "Editing Content Details",
-    "select_all": "Select All",
-    "topic": "TOPIC",
-    "topic_title": "Topic",
     "remove_tag": "Remove Tag",
-    "remove": "Remove",
     "adding_topics": "Adding Topics to {title}",
     "adding_exercise": "Adding Exercise to {title}",
     "editing_content": "Editing Content",
     "viewing_content": "Viewing Content",
-    "details": "Details",
-    "questions": "Questions",
-    "preview": "Preview",
-    "prereqs": "Prerequisites",
-    "loading_content": "Loading Content...",
     "apply_changes": "APPLY CHANGES",
     "save_and_close": "SAVE & CLOSE",
-    "copy": "COPY",
     "select_prompt": "Please select an item to view.",
     "select_to_edit": "Please select an item to edit.",
     "selected_count": "Viewing data for {count, plural,\n =1 {# item}\n other {# items}}",
@@ -44,33 +42,20 @@ var MESSAGES = {
     "title": "Title",
     "title_error": "Title cannot be blank.",
     "title_placeholder": "Enter a title...",
-    "mastery_criteria": "Mastery Criteria",
-    "of": "of",
     "source": "Source:",
     "readonly": "[READ-ONLY] Source:",
-    "author": "Author",
-    "author_placeholder": "Enter author name...",
-    "license": "License",
-    "license_placeholder": "Enter license description...",
     "permissions_vary": "Permissions Vary",
-    "copyright_holder": "Copyright Holder",
-    "copyright_holder_placeholder": "Enter copyright holder name...",
     "description": "Description",
     "chars_left": "{data, plural,\n =1 {# character}\n other {# characters}} left",
     "too_long": "Too long - recommend removing {data, plural,\n =1 {# character}\n other {# characters}}",
     "description_placeholder": "Enter a description of your content...",
-    "tags": "Tags",
     "tags_text": "(press 'Enter' to add new tag)",
     "tags_error": "Invalid characters found.",
     "tags_placeholder": "Enter tag...",
-    "unsaved_changes": "Unsaved Changes!",
-    "unsaved_changes_text": "Exiting now will undo any new changes. Are you sure you want to exit?",
-    "dont_save": "DON'T SAVE",
-    "keep_open": "KEEP OPEN",
-    "saving_content": "Saving Content...",
-    "warning": "WARNING",
     "related_content_warning": "Related content will not be included in the copy of this content.",
-    "copying_content": "Copying Content...",
+    "author_placeholder": "Enter author name...",
+    "license_description_placeholder": "Enter license description...",
+    "copyright_holder_placeholder": "Enter copyright holder name...",
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -320,7 +305,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   save_and_keep_open:function(){
     var self = this;
     this.editor_view.add_tag(null);
-    this.save(this.get_translation("saving_content"), this.save_nodes).then(function(collection){
+    this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
       self.process_updated_collection(collection);
     });
   },
@@ -333,7 +318,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   save_and_finish: function(event){
     var self = this;
     this.editor_view.add_tag(null);
-    this.save(this.get_translation("saving_content"), this.save_nodes).then(function(collection){
+    this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
       self.process_updated_collection(collection);
       self.onclose();
     });
@@ -349,9 +334,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var self = this;
     var clipboard = window.workspace_manager.get_queue_view();
     clipboard.open_queue();
-    this.display_load(this.get_translation("copying_content"), function(load_resolve, load_reject){
+    this.display_load(this.get_translation("copying_to_clipboard"), function(load_resolve, load_reject){
       self.collection.duplicate(clipboard.clipboard_queue.model).then(function(collection){
-        self.onnew(collection, self.get_translation("copying_content"));
+        self.onnew(collection, self.get_translation("copying_to_clipboard"));
         self.onclose();
         load_resolve(true);
       }).catch(function(error){
@@ -501,7 +486,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     var self = this;
     this.collection.create_new_node({
       "kind":"topic",
-      "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic_title") : this.get_translation("topic_title"),
+      "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
       "sort_order" : this.collection.length,
       "author": window.preferences.author || ""
     }).then(function(new_topic){

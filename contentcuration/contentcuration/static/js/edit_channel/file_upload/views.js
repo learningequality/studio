@@ -13,40 +13,32 @@ var ImageViews = require("edit_channel/image/views");
 
 var NAMESPACE = "file_upload";
 var MESSAGES = {
-    "cancel": "CANCEL",
-    "close": "CLOSE",
-    "loading": "Loading...",
+    "new": "New",
+    "files": "Files",
+    "dont_save": "Don't Save",
+    "keep_open": "Keep Open",
     "upload_files": "Upload Files",
     "edit_metadata": "Edit Metadata",
     "add_files": "Add files to continue",
     "no_preview": "No Preview Available",
-    "title_placeholder": "Title *",
-    "files": "Files",
     "total_size": "Total Size: ",
     "select_language": "Select language",
     "uploading_only": "View uploading only",
     "add_files_action": "ADD FILES",
     "drag_text": "(or drag and drop files below)",
     "upload_count": "{data, plural,\n =1 {# file}\n other {# files}} uploaded",
-    "new": "New:",
     "replace_file": "Replace File",
     "delete_file": "Delete File",
     "default_filename": "File",
-    "add": "ADD",
     "preset_plural": "{preset}s",
-    "not_available": "Not Available",
     "download_file": "Download File",
-    "unsaved_changes": "Unsaved Changes!",
-    "unsaved_changes_text": "Exiting now will undo any new changes. Are you sure you want to exit?",
-    "dont_save": "DON'T SAVE",
-    "keep_open": "KEEP OPEN",
     "upload_in_progress": "Upload in progress...",
-    "edit_metadata_button": "EDIT METADATA",
     "drop_files_text": "Drop files here to add them to your channel",
     "file_not_supported": "This file type is not supported.",
     "max_size_exceeded": "Max file size exceeded.",
     "processing_error": "Error processing request.",
-    "upload_error": "Error Uploading File"
+    "upload_error": "Error Uploading File",
+    "not_available": "Not Available",
 }
 
 
@@ -176,7 +168,7 @@ var FileUploadView = BaseViews.BaseView.extend({
     enable_next:function(){
         $(".go_to_metadata").removeAttr("disabled");
         $(".go_to_metadata").removeClass("disabled");
-        this.$(".go_to_metadata").text(this.get_translation("edit_metadata_button"));
+        this.$(".go_to_metadata").text(this.get_translation("edit_metadata").toUpperCase());
         setTimeout(function(){
             $(".go_to_metadata").focus();
         }, 100);

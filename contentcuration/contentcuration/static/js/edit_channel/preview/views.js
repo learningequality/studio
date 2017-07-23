@@ -7,12 +7,10 @@ require("modal-styles.less");
 
 var NAMESPACE = "preview";
 var MESSAGES = {
-    "no_preview": "No preview available",
     "show_fullscreen": "Show Fullscreen",
     "hide_fullscreen": "Hide Fullscreen",
     "select_file": "Select a format to preview.",
     "preview_exercise": "Preview this exercise on the source website",
-    "image_error": "Error loading image",
     "video_error": "Your browser does not support the video tag."
 }
 

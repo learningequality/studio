@@ -3,7 +3,7 @@
 	<div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div>
 </ul>
 {{#unless isdisplay}}
-<button class="addhint show_on_focus text-center tab_item first_focus_item" title="Add">
+<button class="addhint show_on_focus text-center tab_item first_focus_item uppercase" title="{{formatMessage (intlGet 'messages.add')}}">
 	<span class="glyphicon glyphicon-plus"></span>&nbsp; {{formatMessage (intlGet 'messages.hint')}}
 </button>
 {{/unless}}

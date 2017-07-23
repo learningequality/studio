@@ -16,34 +16,62 @@ var BaseView = Backbone.View.extend({
 	messages: {},
 	globalMessageStore: require("utils/translations"),
 	sharedTranslations: {
+		"cancel": "Cancel",
+		"delete": "Delete",
+		"move": "Move",
+		"edit": "Edit",
+    	"view": "View",
+    	"publish": "PUBLISH",
+    	"close": "CLOSE",
+		"add": "Add",
+		"remove": "Remove",
+		"deploy_option": "Deploy Channel?",
+		"view_summary": "View Summary",
+		"keep_reviewing": "Keep Reviewing",
+		"deploy": "Deploy",
+		"copy": "Copy",
+		"topic": "Topic",
+		"exercise_title": "Exercise",
+		"select_all": "Select All",
+	    "preview": "Preview",
+    	"deleting": "Deleting...",
+		"archiving": "Archiving Content...",
+		"moving_content": "Moving Content...",
+		"moving_to_clipboard": "Moving to Clipboard...",
+		"deleting_content": "Deleting Content...",
+		"copying_to_clipboard": "Copying to Clipboard...",
+		"loading": "Loading...",
+		"saving": "Saving...",
+		"creating": "Creating...",
+		"loading_content": "Loading Content...",
+		"no_changes_detected": "No changes detected",
+		"not_approved": "Channel not approved",
+		"no_items": "No items found",
+		"empty": "(empty)",
+		"no_preview": "No Preview Available",
 		"refresh_page": "Error with asynchronous call. Please refresh the page",
 		"call_error": "Error with asynchronous call",
-		"publish": "PUBLISH",
-		"no_changes_detected": "No changes detected",
-		"deleting": "Deleting...",
-		"archiving": "Archiving Content...",
-		"deploy_option": "Deploy Channel?",
+		"error_moving_content": "Error Moving Content",
+		"error": "ERROR",
+		"warning": "WARNING",
 		"deploy_stats": "Deploying this topic tree will replace the live topic tree ({data, plural,\n =1 {# topic}\n other {# topics}}, " +
 						"{data2, plural,\n =1 {# resource}\n other {# resources}}) with this staged topic tree " +
 						"({data3, plural,\n =1 {# topic}\n other {# topics}}, {data4, plural,\n =1 {# resource}\n other {# resources}}). " +
 						"Are you sure you want to deploy this updated topic tree?",
-		"not_approved": "Channel not approved",
-		"view_summary": "View Summary",
-		"keep_reviewing": "Keep Reviewing",
-		"deploy": "Deploy",
-		"success": "Success!",
-		"moving_content": "Moving Content...",
-		"moving_to_clipboard": "Moving to Clipboard...",
-		"no_items_found": "No items found",
-		"deleting_content": "Deleting Content...",
-		"error_moving_content": "Error Moving Content",
-		"topic_title": "Topic",
-		"exercise_title": "Exercise",
-		"saving": "Saving...",
-		"creating": "Creating...",
-		"error": "ERROR",
-		"copying_to_clipboard": "Copying to Clipboard..."
+		"delete_item_warning": "Are you sure you want to PERMANENTLY delete this item? Changes cannot be undone!",
+		"delete_message": "Are you sure you want to delete these selected items PERMANENTLY? Changes cannot be undone!",
+		"unsaved_changes": "Unsaved Changes!",
+		"unsaved_changes_text": "Exiting now will undo any new changes. Are you sure you want to exit?",
+		"count": "{data, plural,\n =0 {}\n =1 {# item selected }\n other {# items selected }}",
+	    "resource_count": "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
+    	"id": "ID:",
+    	"continue": "Continue",
+    	"related_content": "RELATED CONTENT DETECTED",
+    	"related_content_warning": "Any content associated with {data, plural,\n =1 {this item}\n other {these items}} " +
+            "will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content. Are you sure you want to continue?",
 	},
+
+
 	get_translation_library: function(){
 		return _.chain(this.sharedTranslations)
 					.extend(this.messages)
@@ -406,7 +434,7 @@ var BaseWorkspaceView = BaseView.extend({
 				if(callback){
 					callback();
 				}
-				resolve_load(self.get_translation("success"));
+				resolve_load(true);
 			}).catch(function(error){
 				reject_load(error);
 			});
@@ -479,7 +507,7 @@ var BaseListView = BaseView.extend({
 	},
 	load_content: function(collection, default_text){
 		collection = (collection)? collection : this.collection;
-		default_text = (default_text)? default_text : this.get_translation("no_items_found");
+		default_text = (default_text)? default_text : this.get_translation("no_items");
 		this.views = [];
 		var default_element = this.$(this.default_item);
 		default_element.text(default_text);
@@ -615,7 +643,7 @@ var BaseEditableListView = BaseListView.extend({
 			}
 			Promise.all(promise_list).then(function(){
 				self.handle_if_empty();
-				resolve_load(self.get_translation("success"));
+				resolve_load(true);
 			}).catch(function(error){
 				reject_load(error);
 			});
@@ -653,7 +681,7 @@ var BaseEditableListView = BaseListView.extend({
 			}
 			Promise.all(promise_list).then(function(){
 				self.handle_if_empty();
-				resolve_load(self.get_translation("success"));
+				resolve_load(true);
 			}).catch(function(error){
 				reject_load(error);
 			});
@@ -796,7 +824,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		var self = this;
 		this.collection.create_new_node({
             "kind":"topic",
-            "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic_title") : this.get_translation("topic_title"),
+            "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
             "author": get_author(),
         }).then(function(new_topic){
         	var edit_collection = new Models.ContentNodeCollection([new_topic]);

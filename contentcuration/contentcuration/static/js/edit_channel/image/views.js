@@ -17,29 +17,20 @@ const THUMBNAIL_CROP_BOUNDARY = { width: THUMBNAIL_ASPECT_RATIO.width + 10,  hei
 
 var NAMESPACE = "image";
 var MESSAGES = {
-    "cancel": "CANCEL",
-    "no_preview": "No Preview Available",
+    "upload": "Upload",
+    "submit": "Submit",
     "use": "USE",
-    "loading": "Loading...",
     "image_error": "Image Error",
     "file_error_text": "Error uploading file: connection interrupted",
-    "remove": "REMOVE",
     "removing_image": "Removing Image",
     "removing_image_text": "Are you sure you want to remove this image?",
-    "error_loading_image": "Error loading image",
     "alt_prompt": "Enter text to display if image fails to load",
     "drop_prompt": "Click or drop file here...",
     "adding_image": "Adding image to exercise",
-    "generate": "GENERATE",
-    "generate_thumbnail": "Generate Thumbnail",
+    "generate": "Generate",
     "generate_thumbnail_text": "Click 'Generate' to create a thumbnail",
-    "cancel_thumbnail": "Cancel",
-    "submit_thumbnail": "Submit",
-    "upload_thumbnail": "Upload Thumbnail",
     "recenter_thumbnail": "Recenter/Crop",
-    "remove_thumbnail": "Remove Thumbnail",
 }
-
 
 var ThumbnailUploadView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/thumbnail_upload.handlebars"),

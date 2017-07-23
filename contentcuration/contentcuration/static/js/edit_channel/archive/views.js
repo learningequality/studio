@@ -9,20 +9,8 @@ var dialog = require("edit_channel/utils/dialog");
 var NAMESPACE = "archive";
 var MESSAGES = {
     "header": "Managing deleted content",
-    "count": "{data, plural,\n =0 {}\n =1 {# item selected }\n other {# items selected }}",
-    "delete_message": "Are you sure you want to delete these selected items permanently? Changes cannot be undone!",
-    "cancel": "CANCEL",
-    "delete": "DELETE",
-    "deleting_content": "Deleting Content...",
     "restore_selected": "Restore Selected",
-    "delete_selected": "Delete Selected",
-    "select_all": "Select All",
-    "close": "CLOSE",
-    "loading": "Loading...",
-    "no_items": "No items found",
-    "empty": "(empty)",
-    "warning": "WARNING",
-    "delete_item_warning": "Are you sure you want to PERMANENTLY delete this item? Changes cannot be undone!"
+    "delete_selected": "Delete Selected"
 }
 
 var ArchiveModalView = BaseViews.BaseModalView.extend({

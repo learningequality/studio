@@ -7,12 +7,17 @@ require("channel_settings.less");
 
 var NAMESPACE = "channel_settings";
 var MESSAGES = {
-    "header": "CHANNEL SETTINGS",
-    "saving": "Saving...",
+    "of": "of",
+    "videos": "Videos",
+    "audio": "Audio",
+    "html": "HTML Apps",
+    "documents": "Documents",
+    "author": "Author",
+    "license": "License",
     "saved": "SAVED!",
-    "no_changes": "No Changes Found",
+    "copyright_holder": "Copyright Holder",
+    "header": "CHANNEL SETTINGS",
     "save_changes": "SAVE CHANGES",
-    "close": "CLOSE",
     "channel_name": "Channel Name",
     "channel_name_error": "Channel name cannot be blank.",
     "channel_name_placeholder": "Enter channel name...",
@@ -20,19 +25,11 @@ var MESSAGES = {
     "description_placeholder": "Enter channel description...",
     "content_defaults": "Content Defaults",
     "content_defaults_prompt": "Set defaults for new content items",
-    "author": "Author",
-    "author_placeholder": "Enter author name...",
-    "license": "License",
-    "license_description_placeholder": "Enter license description...",
-    "copyright_holder": "Copyright Holder",
-    "copyright_holder_placeholder": "Enter copyright holder name...",
     "exercise_criteria": "Exercise Mastery Criteria",
-    "of": "of",
     "auto_thumbnail": "Automatically generate thumbnails for...",
-    "videos": "Videos",
-    "audio": "Audio",
-    "html": "HTML Apps",
-    "documents": "Documents",
+    "author_placeholder": "Enter author name...",
+    "license_description_placeholder": "Enter license description...",
+    "copyright_holder_placeholder": "Enter copyright holder name...",
 }
 
 var SettingsModalView = BaseViews.BaseModalView.extend({
@@ -137,7 +134,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
             self.onsave(data);
             $("#settings_submit").html(self.get_translation("saved"));
             setTimeout(function(){
-                $("#settings_submit").html(self.get_translation("no_changes"));
+                $("#settings_submit").html(self.get_translation("no_changes_detected"));
             }, 2000);
         });
     },

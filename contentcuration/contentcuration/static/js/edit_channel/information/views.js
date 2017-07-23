@@ -8,9 +8,7 @@ var NAMESPACE = "information";
 var MESSAGES = {
     "copied": "Copied!",
     "copy_failed": "Copy Failed",
-    "copy": "COPY",
     "learn_more": "LEARN MORE",
-    "close": "CLOSE",
     "exercise": "What is an Exercise?",
     "exercise_description": "An exercise contains a set of interactive " +
               "questions that a learner can engage with in Kolibri. They " +
@@ -27,7 +25,6 @@ var MESSAGES = {
               "will appear alongside the concept for recommended viewing.",
     "published": "Channel Successfully Published!",
     "published_prompt": "Here is your published ID (for importing channel into Kolibri):",
-    "id": "ID:"
 }
 
 var BaseInfoModalView = BaseViews.BaseModalView.extend({
@@ -97,7 +94,7 @@ var PublishedModalView = BaseInfoModalView.extend({
       }
       var self = this;
       setTimeout(function(){
-        $("#modal-copy-btn").text(self.get_translation("copy"));
+        $("#modal-copy-btn").text(self.get_translation("copy").toUpperCase());
         self.set_initial_focus();
       }, 2500);
   }

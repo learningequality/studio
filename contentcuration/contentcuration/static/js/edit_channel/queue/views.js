@@ -9,30 +9,10 @@ var dialog = require("edit_channel/utils/dialog");
 var NAMESPACE = "queue";
 var MESSAGES = {
     "clipboard_label": "CLIPBOARD",
-    "loading": "Loading...",
-    "select_all": "Select All",
-    "delete": "Delete",
-    "move": "Move",
-    "edit": "Edit",
     "import": "Import from Channels",
-    "exercise": "Create Exercise",
-    "upload": "Upload Files",
-    "topic": "Add Topics",
-    "add": "Add",
-    "no_items": "No items found.",
-    "warning": "WARNING",
-    "delete_warning": "Are you sure you want to delete these selected items PERMANENTLY? Changes cannot be undone!",
-    "deleting_message": "Deleting Content...",
-    "cancel": "CANCEL",
-    "delete_items": "DELETE ITEMS",
-    "delete_item": "DELETE ITEM",
-    "delete_item_warning": "Are you sure you want to PERMANENTLY delete this item? Changes cannot be undone!",
-    "related_content": "RELATED CONTENT DETECTED",
-    "related_content_message": "Any content associated with {data, plural,\n =1 {this item}\n other {these items}}" +
-							" will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content." +
-							" Are you sure you want to continue?",
-	"continue": "CONTINUE",
-	"empty": "(empty)"
+    "create_exercise": "Create Exercise",
+    "upload_files": "Upload Files",
+    "add_topics": "Add Topics",
 }
 
 /* Loaded when user clicks clipboard button below navigation bar */
@@ -181,10 +161,10 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	delete_items:function(){
 		var self = this;
-        dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning"), {
+        dialog.dialog(this.get_translation("warning"), this.get_translation("delete_message"), {
             [this.get_translation("cancel")]:function(){},
-            [this.get_translation("delete_items")]: function(){
-				self.delete_items_permanently(self.get_translation("deleting_message"));
+            [this.get_translation("delete")]: function(){
+				self.delete_items_permanently(self.get_translation("deleting_content"));
 				self.$(".select_all").attr("checked", false);
             },
         }, null);
@@ -200,7 +180,7 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		this.$(this.default_item).css("display", "none");
 		return new Promise(function(resolve, reject){
 			if(collection.has_related_content()){
-				dialog.dialog(self.get_translation("related_content"), self.get_translation("related_content_message", collection.length), {
+				dialog.dialog(self.get_translation("related_content"), self.get_translation("related_content_warning", collection.length), {
 		            [self.get_translation("cancel")]:function(){},
 		            [self.get_translation("continue")]: function(){
 	            		resolve(collection);
@@ -290,7 +270,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		var self = this;
         dialog.dialog(this.get_translation("warning"), this.get_translation("delete_item_warning"), {
             [self.get_translation("cancel")]:function(){},
-            [self.get_translation("delete_item")]: function(){
+            [self.get_translation("delete")]: function(){
             	self.add_to_trash()
             }
         }, null);

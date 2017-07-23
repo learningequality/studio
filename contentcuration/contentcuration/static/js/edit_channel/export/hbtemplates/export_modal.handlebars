@@ -9,7 +9,7 @@
             <div class="modal-body">
                 <div id="export_area">
                     <h3 class="export_channel_name truncate" title="{{channel.name}}">{{channel.name}}</h3>
-                    <em >{{formatMessage (intlGet 'messages.publish_id')}} {{channel.id}}</em>
+                    <em >{{formatMessage (intlGet 'messages.id')}} {{channel.id}}</em>
                     <em class="pull-right" id="version_number">{{formatMessage (intlGet 'messages.current_version')}} {{version}}</em>
                     <hr/>
                     <p>{{formatMessage (intlGet 'messages.publish_text')}}</p>
@@ -20,7 +20,7 @@
                             {{formatMessage (intlGet 'messages.resource_count') count=resource_count}}
                             <em class="annotation" id="export_size">{{formatMessage (intlGet 'messages.calculating')}}</em>
                         </span>
-                        <button class="action-text tab_item" id="export_cancel" data-dismiss="modal">{{formatMessage (intlGet 'messages.cancel')}}</button>
+                        <button class="action-text tab_item uppercase" id="export_cancel" data-dismiss="modal">{{formatMessage (intlGet 'messages.cancel')}}</button>
                     </div>
                 </div>
             </div>

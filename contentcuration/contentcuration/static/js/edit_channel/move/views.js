@@ -7,19 +7,10 @@ require("move.less");
 
 var NAMESPACE = "move";
 var MESSAGES = {
-    "cancel": "CANCEL",
     "calculating_moves": "Calculating valid moves...",
-    "move": "MOVE",
-    "loading": "Loading...",
-    "close": "CLOSE",
     "move_header": "Moving Content",
-    "moving_content": "Moving Content...",
     "cannot_move": "Cannot move to selected topics",
     "my_clipboard": "My Clipboard",
-    "related_content": "RELATED CONTENT DETECTED",
-    "related_content_warning": "Any content associated with {data, plural,\n =1 {this item}\n other {these items}} " +
-            "will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content. Are you sure you want to continue?",
-    "continue": "CONTINUE",
     "moving_to": "Moving {data, plural,\n =1 {# item}\n other {# items}} to {data2}"
 }
 

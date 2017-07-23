@@ -11,13 +11,11 @@ var EDITOR_SHARE_MODES = [{'share_mode': 'edit', 'text': 'Can edit'}].concat(VIE
 
 var NAMESPACE = "share";
 var MESSAGES = {
-    "loading": "Loading...",
     "invite_people": "Invite people to this channel",
     "email_placeholder": "Enter email address...",
     "access_list": "People who can access this channel",
     "you": "You",
     "loading_editors": "Loading editor list...",
-    "close": "CLOSE",
     "changes_saved": "Changes Saved",
     "invite": "INVITE",
     "sharing_channel": "Sharing channel with others",
@@ -42,10 +40,8 @@ var MESSAGES = {
     "invite_sent_to": "Invitation sent to {data}",
     "invalid_email": "Invalid email address.",
     "uninviting_prompt": "Are you sure you want to uninvite {data}?",
-    "cancel": "CANCEL",
     "uninvite": "UNINVITE",
     "send": "SEND",
-    "remove": "REMOVE",
     "removing_editor": "Removing Editor",
     "removing_prompt": "Are you sure you want to remove {data} from the list?"
 }

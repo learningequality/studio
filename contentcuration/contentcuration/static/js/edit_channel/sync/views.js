@@ -7,30 +7,22 @@ require("sync.less");
 
 var NAMESPACE = "sync";
 var MESSAGES = {
-    "cancel": "CANCEL",
+    "files": "Files",
+    "tags": "Tags",
     "check_changes": "Checking for changes...",
     "sync": "SYNC",
-    "loading": "Loading...",
-    "close": "CLOSE",
     "sync_header": "Syncing Content",
     "syncing_content": "Syncing Content...",
     "select_fields_prompt": "Select which fields to update...",
-    "details": "Details",
     "details_text": "Title, description, etc.",
-    "files": "Files",
     "files_text": "Replace files with source",
-    "tags": "Tags",
     "tags_text": "Replace tags with source",
     "assessment_items": "Assessment Items",
     "assessment_items_text": "Questions, answers, etc.",
     "syncing_items": "Syncing {data, plural,\n =1 {# item}\n other {# items}...",
-    "license_field": "License",
-    "mastery_field": "Mastery Criteria",
     "question_order": "Question Order",
     "randomized": "Randomized",
     "ordered": "Ordered",
-    "tags_field": "Tags",
-    "files_field": "Files",
     "previewing": "Previewing {data}",
     "previewing_exercise": "Previewing Exercise",
     "questions_field": "Questions",
@@ -56,7 +48,6 @@ var MESSAGES = {
     "select_item_prompt": "Select an item to view updates",
     "updated_content": "Updated Content",
     "updated_content_text": "Select content to sync",
-    "preview_content": "Preview",
     "preview_content_text": "Review changes made to original content"
 }
 
@@ -298,7 +289,7 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         switch(field){
             case "license":
                 return {
-                    "field" : this.get_translation("license_field"),
+                    "field" : this.get_translation("license"),
                     "current": stringHelper.translate(window.licenses.get(this.model.get(field)).get('license_name')),
                     "source": stringHelper.translate(window.licenses.get(this.changed.get(field)).get('license_name'))
                 }
@@ -309,7 +300,7 @@ var SyncPreviewView = BaseViews.BaseView.extend({
                     var changes = [];
                     if(current_mastery !== source_mastery){
                         changes.push({
-                            "field" : this.get_translation("mastery_field"),
+                            "field" : this.get_translation("mastery_criteria"),
                             "current": current_mastery,
                             "source": source_mastery
                         });
@@ -343,7 +334,7 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         var source_tags = _.pluck(this.changed.get('tags'), 'tag_name');
         if(_.difference(current_tags, source_tags).length){
             return {
-                "field": this.get_translation("tags_field"),
+                "field": this.get_translation("tags"),
                 "current": current_tags.join(', '),
                 "source": source_tags.join(', ')
             }
@@ -362,7 +353,7 @@ var SyncPreviewView = BaseViews.BaseView.extend({
             var source_return = _.chain(source_files).filter(function(f){ return f.preset.display || f.preset.subtitle; }).sortBy(function(f) {return f.preset.order;}).value();
             if(current_return.length || source_return.length){
                 return {
-                    "field": this.get_translation("files_field"),
+                    "field": this.get_translation("files"),
                     "current": current_return,
                     "source": source_return,
                     "is_file": true
