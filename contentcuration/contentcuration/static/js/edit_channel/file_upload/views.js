@@ -15,6 +15,7 @@ var NAMESPACE = "file_upload";
 var MESSAGES = {
     "new": "New",
     "files": "Files",
+    "title": "Title",
     "dont_save": "Don't Save",
     "keep_open": "Keep Open",
     "upload_files": "Upload Files",
@@ -243,7 +244,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         return list.join(",");
     },
     create_dropzone: function(){
-        if(this.$("#dropzone")){
+        if(this.$("#dropzone").get(0)){
             Dropzone.autoDiscover = false;
             this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
                 clickable: ["#dropzone", ".fileinput-button"],
@@ -624,7 +625,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         if(this.file){
             clickables.push(dz_selector + " .format_editor_file_name");
         }
-        if($(dz_selector)){
+        if($(dz_selector).get(0)){
             Dropzone.autoDiscover = false;
             var dropzone = new Dropzone(dz_selector, {
                clickable: clickables,

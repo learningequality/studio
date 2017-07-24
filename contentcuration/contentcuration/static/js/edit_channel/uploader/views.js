@@ -691,7 +691,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     if(license_name==='Special Permissions'){
       this.$("#custom_license_description").css('display', 'block');
       if(this.shared_data){
-        this.$("#custom_license_description").attr('placeholder', (this.selected_individual() || this.shared_data.shared_license_description !== null) ? this.get_translation("license_placeholder") : "---");
+        this.$("#custom_license_description").attr('placeholder', (this.selected_individual() || this.shared_data.shared_license_description !== null) ? this.get_translation("license_description_placeholder") : "---");
         if(this.all_original() && this.allow_edit){
           this.$("#custom_license_description").val(this.shared_data.shared_license_description);
         } else{

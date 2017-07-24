@@ -97,7 +97,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
 
     /*********** GET IMAGE INFORMATION ***********/
     get_selector: function(){
-        return "dropzone_" + this.cid;
+        return "dropzone_image_" + this.cid;
     },
     get_thumbnail_url:function(ignore_encoding){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
@@ -195,7 +195,8 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     /*********** DROPZONE FUNCTIONS ***********/
     create_dropzone:function(){
         var selector = "#" + this.get_selector();
-        if(this.$(selector)){
+        if(this.$(selector).get(0)){
+            console.log(this.$(selector).get(0));
             Dropzone.autoDiscover = false;
             this.dropzone = new Dropzone(this.$(selector).get(0), {
                 maxFiles: 1,
@@ -333,7 +334,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
     name: NAMESPACE,
     messages: MESSAGES,
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed", "submit_file", "file_complete", "set_alt_text", "init_focus");
+        _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed", "submit_file", "file_complete", "set_alt_text", "init_focus", "render_dropzone");
         this.callback = options.callback;
         this.file = this.alt_text = null;
         this.preset_id = options.preset_id;
@@ -359,7 +360,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
         this.$(".modal").on("hide.bs.modal", this.close);
         this.$(".modal").on("hidden.bs.modal", this.closed_modal);
         this.$(".modal").on("shown.bs.modal", this.init_focus);
-        this.render_dropzone();
+        _.defer(this.render_dropzone);
     },
     init_focus: function(){
         this.set_indices();
@@ -368,7 +369,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
     render_dropzone:function(){
         this.$(".modal-body").html(this.template({file: this.file, alt_text: this.alt_text}, { data: this.get_intl_data() }));
         Dropzone.autoDiscover = false;
-        if(this.$("#dropzone")){
+        if(this.$("#dropzone").get(0)){
             this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
                 maxFiles: 1,
                 clickable: ["#dropzone", "#dropzone_placeholder"],
@@ -405,7 +406,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
     file_removed:function(){
         this.file_error = null;
         this.file = null;
-        this.render_dropzone();
+        _.defer(this.render_dropzone);
     },
     file_failed:function(data, error){
         this.file_error = error;
@@ -414,7 +415,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
         if(this.file_error){
             dialog.alert(this.get_translation("image_error"), this.file_error);
         }
-        this.render_dropzone();
+        _.defer(this.render_dropzone);
     }
 });
 
