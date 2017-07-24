@@ -205,6 +205,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
         $("#metadata_details_btn").addClass("btn-tab-active");
         $("#metadata_edit_details").css("display", "block");
         $("#metadata_preview").find("iframe").prop("src", "about:blank");
+        if (this.editor_view){
+          this.editor_view.set_initial_focus();
+        }
     }
   },
   load_list:function(){
