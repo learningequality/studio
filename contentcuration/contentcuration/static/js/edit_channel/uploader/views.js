@@ -127,7 +127,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   initialize: function(options) {
     _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit',
       'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items',
-      'set_prerequisites', 'call_duplicate', 'update_prereq_count','loop_focus', 'set_indices');
+      'set_prerequisites', 'call_duplicate', 'update_prereq_count','loop_focus', 'set_indices', 'set_editor_focus');
     this.bind_edit_functions();
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
@@ -286,7 +286,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   set_editor_focus: function(){
     if(this.editor_view){
-      _.defer(this.editor_view.set_initial_focus, 0);
+      _.defer(this.editor_view.set_initial_focus);
     }
   },
   enable_submit:function(){

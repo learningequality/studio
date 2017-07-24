@@ -6,7 +6,7 @@
 {{#if allow_edit}}
 <div class="prereq_row prereq_add_row container-fluid">
 	<div class="col-xs-12 prereq_cell"><a class="action-text add_prereq">
-		<span class="glyphicon glyphicon-plus uppercase" aria-hidden="true"></span> {{formatMessage (intlGet 'messages.add')}}</a>
+		<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> <span class="uppercase">{{formatMessage (intlGet 'messages.add')}}</span></a>
 		<span class="add_warning">{{formatMessage (intlGet 'messages.prereq_limit') count=prereq_limit}}</span>
 	</div>
 </div>

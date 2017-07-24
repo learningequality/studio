@@ -11,6 +11,7 @@ var MESSAGES = {
     "tags": "Tags",
     "check_changes": "Checking for changes...",
     "sync": "SYNC",
+    "details": "Details",
     "sync_header": "Syncing Content",
     "syncing_content": "Syncing Content...",
     "select_fields_prompt": "Select which fields to update...",

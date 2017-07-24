@@ -8,7 +8,6 @@ require("export.less");
 
 var NAMESPACE = "export";
 var MESSAGES = {
-    "learn_more": "LEARN MORE",
     "publishing_channel": "Publishing Channel...",
     "current_version": "Current Version:",
     "publish_text": "The following content will be published:",

@@ -196,7 +196,6 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     create_dropzone:function(){
         var selector = "#" + this.get_selector();
         if(this.$(selector).get(0)){
-            console.log(this.$(selector).get(0));
             Dropzone.autoDiscover = false;
             this.dropzone = new Dropzone(this.$(selector).get(0), {
                 maxFiles: 1,

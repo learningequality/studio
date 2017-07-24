@@ -320,7 +320,7 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         event.stopPropagation();
         event.preventDefault();
         var self = this;
-        dialog.dialog(this.get_translation("warning"), this.get_translation("delete_item_warning"), {
+        dialog.dialog(this.get_translation("warning"), this.get_translation("delete_item_warning", this.model.get("title")), {
             [self.get_translation("cancel")]:function(){},
             [self.get_translation("delete")]: function(){
                 self.delete(true, self.get_translation("deleting_content"), function(){

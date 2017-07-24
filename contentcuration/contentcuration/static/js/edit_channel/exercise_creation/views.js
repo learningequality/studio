@@ -36,7 +36,6 @@ if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("S
 /* TRANSLATIONS */
 var NAMESPACE = "exercise_creation";
 var MESSAGES = {
-    "header": "Managing deleted content",
     "question_placeholder": "Enter Question...",
     "answer_placeholder": "Enter Answer...",
     "hint_placeholder": "Enter Hint...",

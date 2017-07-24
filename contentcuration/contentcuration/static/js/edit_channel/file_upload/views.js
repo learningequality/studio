@@ -74,7 +74,7 @@ var FileModalView = BaseViews.BaseModalView.extend({
     },
     close_file_uploader:function(event){
         var self = this;
-        if(this.file_upload_view.collection.length === 0){
+        if(this.file_upload_view.collection.length === 0 || this.file_upload_view.current_view.uploads_in_progress){
             this.close();
         }else{
             dialog.dialog(this.get_translation("unsaved_changes"), this.get_translation("unsaved_changes_text"), {
@@ -211,12 +211,13 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
             data: this.get_intl_data()
         }));
         this.load_content(this.collection, this.get_translation("drop_files_text"));
+        this.update_count();
         _.defer(this.create_dropzone, 1);
     },
     show_uploading:function(event){
         var is_checked = this.$("#show_uploading").is(":checked");
         (is_checked)? this.$el.addClass('hide_uploaded') : this.$el.removeClass('hide_uploaded');
-        this.$(this.default_item).css("display", (this.$(".format_item").length || is_checked) ? "none" : "block");
+        this.$(this.default_item).css("display", (this.$(".format_item").length || this.uploads_in_progress || is_checked) ? "none" : "block");
         this.$("#file_upload_count").css("display", (is_checked) ? "flex" : "none");
     },
     disable_next:function(upload_in_progress){
@@ -224,6 +225,10 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     },
     enable_next:function(){
         this.container.enable_next();
+    },
+    set_uploading:function(uploading){
+        (uploading) ? this.uploads_in_progress++ : this.uploads_in_progress--;
+        (this.uploads_in_progress <= 0)? this.container.enable_next() : this.container.disable_next(this.uploads_in_progress);
     },
     check_uploads_and_enable:function(){
         if(this.uploads_in_progress <= 0){
