@@ -360,7 +360,7 @@ var SharePendingItem = ShareItem.extend({
         'click .remove_editor' : 'remove_editor',
         'click .reinvite_editor' : 'reinvite_editor'
     },
-    remove_editor:function(){
+    remove_editor:function(event){
         this.cancel_actions(event);
         var self = this;
         dialog.dialog(this.get_translation("uninviting_editor"), this.get_translation("uninviting_prompt", this.model.get("email")), {

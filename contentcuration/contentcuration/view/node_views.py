@@ -12,13 +12,19 @@ from contentcuration.utils.files import duplicate_file
 from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import authentication_classes, permission_classes
 from contentcuration.statistics import record_node_duplication_stats
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
 
+from contentcuration.statistics import record_node_duplication_stats
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def get_node_diff(request):
 
     if request.method == 'POST':
@@ -141,7 +147,7 @@ def get_nodes_by_ids_complete(request):
                            .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
 
-@authentication_classes((TokenAuthentication, SessionAuthentication, BasicAuthentication))
+@authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
@@ -292,7 +298,8 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
 
     return new_node
 
-@authentication_classes((TokenAuthentication, SessionAuthentication, BasicAuthentication))
+
+@authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
@@ -347,7 +354,7 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
 
     return node
 
-@authentication_classes((TokenAuthentication, SessionAuthentication, BasicAuthentication))
+@authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def sync_nodes(request):
     logging.debug("Entering the sync_nodes endpoint")
@@ -393,7 +400,8 @@ def _sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_fi
                 parents_to_check.append(node.parent)
     return node, parents_to_check
 
-@authentication_classes((TokenAuthentication, SessionAuthentication, BasicAuthentication))
+
+@authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def sync_channel_endpoint(request):
     logging.debug("Entering the sync_nodes endpoint")

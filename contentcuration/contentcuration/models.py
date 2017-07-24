@@ -11,15 +11,18 @@ from django.contrib.auth.models import PermissionsMixin
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, MultipleObjectsReturned
 from django.core.files.storage import FileSystemStorage
-from django.core.mail import send_mail
-from django.db import IntegrityError, models, connection
-from django.db.models import Q, Sum
-from django.dispatch import receiver
-from django.utils import timezone
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.db import IntegrityError, connections, models, connection
+from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
+from django.db.utils import ConnectionDoesNotExist
 from django.utils.translation import ugettext as _
-from le_utils.constants import content_kinds, file_formats, format_presets, licenses, exercises
+from django.dispatch import receiver
+from django.template.loader import render_to_string
+from django.utils import timezone
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
-
+from rest_framework import permissions
+from rest_framework.authtoken.models import Token
 from contentcuration.statistics import record_channel_stats
 from rest_framework import permissions
 
@@ -425,6 +428,13 @@ class ContentNode(MPTTModel, models.Model):
                               null=True)
 
     objects = TreeManager()
+
+    @raise_if_unsaved
+    def get_root(self):
+        # Only topics can be root nodes
+        if not self.parent and self.kind_id != content_kinds.TOPIC:
+            return self
+        return super(ContentNode, self).get_root()
 
     def __init__(self, *args, **kwargs):
         super(ContentNode, self).__init__(*args, **kwargs)

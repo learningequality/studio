@@ -21,6 +21,7 @@ from django.core.urlresolvers import reverse_lazy
 from django.views.i18n import javascript_catalog
 from django.conf.urls.i18n import i18n_patterns
 from django.utils.translation import ugettext_lazy as _
+from django.db.models import Q
 from rest_framework import routers, viewsets
 from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, AssessmentItem, ContentKind, Language, User, Invitation
 import contentcuration.serializers as serializers
@@ -38,6 +39,11 @@ import django.views as django_views
 from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
 
+def get_channel_tree_ids(user):
+    channels = Channel.objects.select_related('trash_tree').select_related('main_tree').filter(Q(editors=user) | Q(viewers=user) | Q(public=True))
+    trash_tree_ids = channels.values_list('trash_tree__tree_id', flat=True).distinct()
+    main_tree_ids = channels.values_list('main_tree__tree_id', flat=True).distinct()
+    return [user.clipboard_tree.tree_id] + list(trash_tree_ids) + list(main_tree_ids)
 
 class LicenseViewSet(viewsets.ModelViewSet):
     queryset = License.objects.all()
@@ -55,11 +61,20 @@ class ChannelViewSet(viewsets.ModelViewSet):
     queryset = Channel.objects.all()
     serializer_class = serializers.ChannelSerializer
 
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return Channel.objects.all()
+        return Channel.objects.filter(Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True)).distinct()
 
 class FileViewSet(BulkModelViewSet):
     queryset = File.objects.all()
     serializer_class = serializers.FileSerializer
 
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return File.objects.all()
+        tree_ids = get_channel_tree_ids(self.request.user)
+        return File.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
 
 class FileFormatViewSet(viewsets.ModelViewSet):
     queryset = FileFormat.objects.all()
@@ -81,10 +96,12 @@ class ContentNodeViewSet(BulkModelViewSet):
     serializer_class = serializers.ContentNodeCompleteSerializer
 
     def get_queryset(self):
-        queryset = ContentNode.objects.all()
+        if self.request.user.is_admin:
+            return ContentNode.objects.all()
+
         # Set up eager loading to avoid N+1 selects
-        queryset = self.get_serializer_class().setup_eager_loading(queryset)
-        return queryset
+        tree_ids = get_channel_tree_ids(self.request.user)
+        return ContentNode.objects.prefetch_related('children').prefetch_related('files').prefetch_related('assessment_items').filter(tree_id__in=tree_ids).distinct()
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -92,24 +109,43 @@ class TagViewSet(viewsets.ModelViewSet):
 
     serializer_class = serializers.TagSerializer
 
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return ContentTag.objects.all()
+        return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True)).distinct()
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
 
     serializer_class = serializers.UserSerializer
 
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return User.objects.all()
+        channel_list = list(self.request.user.editable_channels.values_list('pk', flat=True))
+        channel_list.extend(list(self.request.user.view_only_channels.values_list('pk', flat=True)))
+        return User.objects.filter(Q(pk=self.request.user.pk) | Q(editable_channels__pk__in=channel_list) | Q(view_only_channels__pk__in=channel_list)).distinct()
 
 class InvitationViewSet(viewsets.ModelViewSet):
     queryset = Invitation.objects.all()
 
     serializer_class = serializers.InvitationSerializer
 
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return Invitation.objects.all()
+        return Invitation.objects.filter(Q(invited=self.request.user) | Q(sender=self.request.user)).distinct()
 
 class AssessmentItemViewSet(BulkModelViewSet):
     queryset = AssessmentItem.objects.all()
 
     serializer_class = serializers.AssessmentItemSerializer
 
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return AssessmentItem.objects.all()
+        tree_ids = get_channel_tree_ids(self.request.user)
+        return AssessmentItem.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
