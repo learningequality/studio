@@ -28,6 +28,9 @@ var BaseCollection = Backbone.Collection.extend({
     save: function(callback) {
         Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
     },
+    set_comparator: function(comparator){
+        this.comparator = comparator;
+    },
     get_all_fetch: function(ids, force_fetch){
         force_fetch = (force_fetch)? true : false;
         var self = this;
@@ -131,7 +134,24 @@ var UserModel = BaseModel.extend({
 var UserCollection = BaseCollection.extend({
     model: UserModel,
     list_name:"user-list",
-    model_name:"UserCollection"
+    model_name:"UserCollection",
+    send_custom_email:function(subject, message){
+        return mail_helper.send_custom_email(this.pluck('email'), subject, message);
+    },
+    get_all_users: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_all_users(),
+                error:reject,
+                success: function(users) {
+                    self.reset(JSON.parse(users));
+                    resolve(self);
+                }
+            });
+        });
+    }
 });
 
 var InvitationModel = BaseModel.extend({
@@ -466,6 +486,21 @@ var ContentNodeCollection = BaseCollection.extend({
                 }
             });
         });
+    },
+    sync_nodes: function(models){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = { "nodes" : _.pluck(models, 'id'), "channel_id": window.current_channel.id };
+            $.ajax({
+                method:"POST",
+                url: window.Urls.sync_nodes(),
+                data:  JSON.stringify(data),
+                error:reject,
+                success: function(synced) {
+                    resolve(new ContentNodeCollection(JSON.parse(synced)));
+                }
+            });
+        });
     }
 });
 
@@ -548,6 +583,46 @@ var ChannelModel = BaseModel.extend({
             });
         });
     },
+    get_node_diff: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                url: window.Urls.get_node_diff(),
+                data:  JSON.stringify({'channel_id': self.id}),
+                success: function(data) {
+                    nodes = JSON.parse(data);
+                    resolve({
+                        "original" : new ContentNodeCollection(JSON.parse(nodes.original)),
+                        "changed" : new ContentNodeCollection(JSON.parse(nodes.changed))
+                    });
+                },
+                error:reject
+            });
+        });
+    },
+    sync_channel: function(options){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = {
+                'channel_id': self.id,
+                'attributes': options.attributes,
+                'tags': options.tags,
+                'files': options.files,
+                'assessment_items': options.assessment_items,
+                'sort': options.sort
+            }
+            $.ajax({
+                method:"POST",
+                url: window.Urls.sync_channel(),
+                data:  JSON.stringify(data),
+                success: function(data) {
+                    resolve(new ContentNodeCollection(JSON.parse(data)));
+                },
+                error:reject
+            });
+        });
+    },
     activate_channel:function(){
         var self = this;
         return new Promise(function(resolve, reject){
@@ -573,6 +648,49 @@ var ChannelModel = BaseModel.extend({
                 error:function(error){reject(error.responseText);}
             });
         });
+    },
+    add_editor: function(user_id){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "user_id": user_id
+                }),
+                url: window.Urls.make_editor(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
+    remove_editor: function(user_id){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "user_id": user_id
+                }),
+                url: window.Urls.remove_editor(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
+    get_channel_counts: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_channel_kind_count(self.id),
+                error:reject,
+                success: function(data) {
+                    resolve(JSON.parse(data));
+                }
+            });
+        });
     }
 });
 
@@ -582,6 +700,20 @@ var ChannelCollection = BaseCollection.extend({
     model_name:"ChannelCollection",
     comparator:function(channel){
         return -new Date(channel.get('created'));
+    },
+    get_all_channels: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_all_channels(),
+                error:reject,
+                success: function(channels) {
+                    self.reset(JSON.parse(channels))
+                    resolve(self);
+                }
+            });
+        });
     }
 });
 

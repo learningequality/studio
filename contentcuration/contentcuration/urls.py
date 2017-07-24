@@ -28,6 +28,7 @@ import contentcuration.view.internal_views as internal_views
 import contentcuration.view.zip_views as zip_views
 import contentcuration.view.file_views as file_views
 import contentcuration.view.node_views as node_views
+import contentcuration.view.admin_views as admin_views
 import django_js_reverse.views as django_js_reverse_views
 import django.views as django_views
 
@@ -133,10 +134,10 @@ urlpatterns = [
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^(?P<channel_id>[^/]+)/edit', views.redirect_to_channel_edit, name='redirect_to_channel_edit'),
     url(r'^(?P<channel_id>[^/]+)/view', views.redirect_to_channel_view, name='redirect_to_channel_view'),
-    url(r'^channels/(?P<channel_id>[^/]+)/?$', views.redirect_to_channel, name='redirect_to_channel'),
-    url(r'^channels/(?P<channel_id>[^/]+)/edit', views.channel, name='channel'),
-    url(r'^channels/(?P<channel_id>[^/]+)/view', views.channel_view_only, name='channel_view_only'),
-    url(r'^channels/(?P<channel_id>[^/]+)/staging', views.channel_staging, name='channel_staging'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/?$', views.redirect_to_channel, name='redirect_to_channel'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/edit', views.channel, name='channel'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/view', views.channel_view_only, name='channel_view_only'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/staging', views.channel_staging, name='channel_staging'),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
     url(r'^staging_not_found/$', views.staging_not_found, name='staging_not_found'),
@@ -147,6 +148,8 @@ urlpatterns = [
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
+    url(r'^api/search/', include('search.urls'), name='search'),
+    url(r'^api/public/channel/(?P<channel_id>[^/]+)', views.get_channel_name_by_id, name='get_channel_name_by_id'),
 ]
 
 # Add node api enpoints
@@ -158,6 +161,9 @@ urlpatterns += [
     url(r'^api/get_nodes_by_ids_simplified$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
     url(r'^api/get_nodes_by_ids_complete$', node_views.get_nodes_by_ids_complete, name='get_nodes_by_ids_complete'),
     url(r'^api/create_new_node$', node_views.create_new_node, name='create_new_node'),
+    url(r'^api/get_node_diff$', node_views.get_node_diff, name='get_node_diff'),
+    url(r'^api/internal/sync_nodes$', node_views.sync_nodes, name='sync_nodes'),
+    url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
     url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
 ]
 
@@ -216,6 +222,17 @@ urlpatterns += [
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),
     url(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
     url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
+]
+
+# Add admin endpoints
+urlpatterns += [
+    url(r'^channels/administration/', admin_views.administration, name='administration'),
+    url(r'^api/make_editor/$', admin_views.make_editor, name='make_editor'),
+    url(r'^api/remove_editor/$', admin_views.remove_editor, name='remove_editor'),
+    url(r'^api/send_custom_email/$', admin_views.send_custom_email, name='send_custom_email'),
+    url(r'^api/get_all_channels/$', admin_views.get_all_channels, name='get_all_channels'),
+    url(r'^api/get_all_users/$', admin_views.get_all_users, name='get_all_users'),
+    url(r'^api/get_channel_kind_count/(?P<channel_id>[^/]+)$', admin_views.get_channel_kind_count, name='get_channel_kind_count'),
 ]
 
 urlpatterns += [url(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]

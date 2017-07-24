@@ -366,7 +366,7 @@ class ContentNode(MPTTModel, models.Model):
     # interacts with a piece of content, all substantially similar pieces of
     # content should be marked as such as well. We track these "substantially
     # similar" types of content by having them have the same content_id.
-    content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
+    content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False, db_index=True)
     node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
     # TODO: disallow nulls once existing models have been set
@@ -413,12 +413,13 @@ class ContentNode(MPTTModel, models.Model):
 
     def __init__(self, *args, **kwargs):
         super(ContentNode, self).__init__(*args, **kwargs)
-        self._original_fields = self._as_dict()
+        self._original_fields = self._as_dict() # Fast way to keep track of updates (no need to query db again)
 
     def _as_dict(self):
         return dict([(f.name, getattr(self, f.name)) for f in self._meta.local_fields if not f.rel])
 
     def get_changed_fields(self):
+        """ Returns a dictionary of all of the changed (dirty) fields """
         new_state = self._as_dict()
         return dict([(key, value) for key, value in self._original_fields.iteritems() if value != new_state[key]])
 
@@ -489,7 +490,7 @@ class ContentNode(MPTTModel, models.Model):
             return None
 
     def save(self, *args, **kwargs):
-        self.changed = len(self.get_changed_fields()) > 0
+        self.changed = self.changed or len(self.get_changed_fields()) > 0
 
         # Detect if node has been moved to another tree
         if self.pk and ContentNode.objects.filter(pk=self.pk).exists():
