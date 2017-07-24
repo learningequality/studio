@@ -23,7 +23,8 @@ var FileModalView = BaseViews.BaseModalView.extend({
             onnew: options.onnew,
             isclipboard: options.isclipboard
         });
-        this.$(".modal-body").append(this.file_upload_view.el)
+        this.$(".modal-body").append(this.file_upload_view.el);
+        this.$(".modal").on('shown.bs.modal', this.file_upload_view.set_initial_focus);
     },
     events:{
       "click .go_to_upload" : "go_to_upload",
@@ -57,10 +58,11 @@ var FileModalView = BaseViews.BaseModalView.extend({
 });
 
 var FileUploadView = BaseViews.BaseView.extend({
+    'id': "file_upload_view_el",
     template: require("./hbtemplates/file_upload.handlebars"),
     navigation_template: require("./hbtemplates/file_upload_buttons.handlebars"),
     initialize: function(options) {
-        _.bindAll(this,"go_to_upload", "go_to_metadata", "close_file_uploader");
+        _.bindAll(this,"go_to_upload", "go_to_metadata", "close_file_uploader", "set_initial_focus", "set_indices", 'loop_focus');
         this.container = options.container;
         this.collection = new Models.ContentNodeCollection();
         this.onsave = options.onsave;
@@ -69,7 +71,8 @@ var FileUploadView = BaseViews.BaseView.extend({
         this.switch_view(1);
     },
     events:{
-      "click .go_to_metadata": "go_to_metadata"
+      "click .go_to_metadata": "go_to_metadata",
+      'focus .input-tab-control': 'loop_focus'
     },
     go_to_upload:function(){
         this.switch_view(1);
@@ -103,7 +106,7 @@ var FileUploadView = BaseViews.BaseView.extend({
             case 1:
                 $("#metadata_step_number").removeClass("active_number");
                 this.current_view = new FileUploadList(data);
-                this.current_view.check_completed() ? this.enable_next() : this.disable_next();
+                this.enable_next();
                 break;
             case 2:
                 var UploaderViews = require("edit_channel/uploader/views");
@@ -111,6 +114,9 @@ var FileUploadView = BaseViews.BaseView.extend({
                 this.current_view = new UploaderViews.EditMetadataView(data);
                 break;
         }
+    },
+    set_initial_focus: function(){
+        this.current_view.set_initial_focus();
     },
     close_file_uploader:function(){
         this.container.close();
@@ -125,6 +131,9 @@ var FileUploadView = BaseViews.BaseView.extend({
         $(".go_to_metadata").removeAttr("disabled");
         $(".go_to_metadata").removeClass("disabled");
         this.$(".go_to_metadata").text("EDIT METADATA");
+        setTimeout(function(){
+            $(".go_to_metadata").focus();
+        }, 100);
     },
     reset:function(){
         if(this.current_view){ this.current_view.reset(); }
@@ -138,7 +147,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     file_upload_template: require("./hbtemplates/file_upload_dropzone_item.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded",  "all_files_uploaded", "file_added", "file_removed","file_failed", "create_dropzone");
+        _.bindAll(this, "file_uploaded",  "all_files_uploaded", "file_added", "file_removed","file_failed", "create_dropzone", "set_initial_focus");
         this.container = options.container;
         this.collection = options.collection;
         this.acceptedFiles = this.get_accepted_files();
@@ -146,7 +155,12 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         this.onnew = options.onnew;
         this.uploads_in_progress = 0;
         this.render();
+        _.defer(this.set_initial_focus);
         (this.views.length)? this.enable_next() : this.disable_next(this.uploads_in_progress);
+    },
+    set_initial_focus: function(){
+        this.container.set_indices();
+        this.$(".fileinput-button").focus();
     },
     events:{
       "click #show_uploading" : "show_uploading"
@@ -242,22 +256,6 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
             this.load_content(this.collection, "Drop files here to add them to your channel");
         }
     },
-    remove_view: function(view){
-        this.views.splice(this.views.indexOf(this), 1);
-        this.collection.remove(view.model);
-        view.remove();
-        this.handle_if_empty();
-        (this.views.length === 0)? this.container.switch_view(1) : this.handle_completed();
-    },
-    check_completed:function(){
-        return _.some(this.views, function(view){ return view.check_for_completion(); });
-    },
-    show_uploading:function(event){
-        var is_checked = this.$("#show_uploading").is(":checked");
-        (is_checked)? this.$el.addClass('hide_uploaded') : this.$el.removeClass('hide_uploaded');
-        this.$(this.default_item).css("display", (this.$(".format_item").length || is_checked) ? "none" : "block");
-        this.$("#file_upload_count").css("display", (is_checked) ? "flex" : "none");
-    },
     handle_completed:function(){
         if(this.check_completed() && this.uploads_in_progress === 0){
             this.enable_next();
@@ -265,9 +263,6 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     },
     update_count:function(){
         $("#file_upload_count").text(this.views.length + (this.views.length===1? " file" : " files") + " uploaded");
-    },
-    set_uploading:function(is_uploading){
-        is_uploading? this.disable_next(true) : this.enable_next();
     }
 });
 
@@ -416,9 +411,10 @@ var FormatFormatItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_format_item.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, 'update_name', 'remove_item', 'set_thumbnail', 'disable_next', 'enable_next', 'remove_thumbnail');
+        _.bindAll(this, 'update_name', 'remove_item', 'set_focus', 'set_thumbnail', 'disable_next', 'enable_next', 'remove_thumbnail');
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
+        this.tab_index = options.tab_index;
         this.containing_list_view = options.containing_list_view;
         this.init_collections();
         this.render();
@@ -442,6 +438,12 @@ var FormatFormatItem = FormatEditorItem.extend({
         this.update_metadata();
         this.load_subfiles();
         this.create_thumbnail_view(this.disable_next, this.enable_next, this.enable_next);
+        _.defer(this.set_focus);
+    },
+    set_focus:function(){
+        this.containing_list_view.set_initial_focus();
+        this.$(".name_content_input").focus();
+        this.$(".name_content_input").select();
     },
     update_name:function(event){
         this.model.set("title", event.target.value);

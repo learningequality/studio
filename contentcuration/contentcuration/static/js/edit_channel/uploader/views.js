@@ -38,6 +38,15 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       allow_edit: this.allow_edit,
       isclipboard: this.isclipboard
     });
+    this.$(".modal").on('shown.bs.modal', this.metadata_view.set_editor_focus);
+  },
+  events: {
+    'keydown #uploaderModal': 'handle_escape',
+  },
+  handle_escape: function(event){
+    if(event && (event.keyCode || event.which) === 27){
+      this.close_uploader();
+    }
   },
   close_uploader:function(event){
     if(!this.allow_edit || (this.metadata_view && !this.metadata_view.check_for_changes()) || !event){
@@ -67,8 +76,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
 
   initialize: function(options) {
-    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit', 'update_prereq_count',
-      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items', 'set_prerequisites', 'call_duplicate');
+    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit',
+      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items',
+      'set_prerequisites', 'call_duplicate', 'update_prereq_count','loop_focus', 'set_indices');
     this.bind_edit_functions();
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
@@ -89,8 +99,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'click #metadata_prerequisites_btn': 'render_prerequisites',
     'click #upload_save_button' : 'save_and_keep_open',
     'click #upload_save_finish_button' : 'save_and_finish',
+    'keypress #upload_save_finish_button': 'handle_save_and_finish_key',
     'click #copy_button': 'copy_items',
-    'click #close_uploader_button': 'close_upload'
+    'click #close_uploader_button': 'close_upload',
+    'focus .input-tab-control': 'loop_focus',
   },
   render: function() {
     this.$el.html(this.template({
@@ -219,6 +231,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     if(this.edit_list){
       this.edit_list.adjust_list_height();
     }
+    this.set_indices();
+  },
+  set_editor_focus: function(){
+    if(this.editor_view){
+      _.defer(this.editor_view.set_initial_focus, 0);
+    }
   },
   enable_submit:function(){
       this.$("#upload_save_button, #upload_save_finish_button").removeAttr("disabled");
@@ -239,6 +257,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.save("Saving Content...", this.save_nodes).then(function(collection){
       self.process_updated_collection(collection);
     });
+  },
+  handle_save_and_finish_key:function(event){
+    var code = (!event)? null : event.keyCode ? event.keyCode : event.which;
+    if(code == 13){
+      this.save_and_finish(event);
+    }
   },
   save_and_finish: function(event){
     var self = this;
@@ -434,6 +458,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         this.container.load_questions(this.selected_items[0]);
       }
     }
+    this.container.load_editor(this.selected_items);
   },
   update_shared_values:function(reset, view){
     if(reset){
@@ -482,7 +507,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   selected_items: [],
 
   initialize: function(options) {
-    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'select_tag');
+    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'loop_focus', 'select_tag', 'set_initial_focus');
     this.new_content = options.new_content;
     this.selected_items = options.selected_items;
     this.shared_data = options.shared_data;
@@ -569,6 +594,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         this.$("#randomize_exercise").prop("checked", randomize);
       }
     }
+    _.defer(this.set_initial_focus, 1);
   },
   get_mastery_string: function(){
     switch(this.shared_data.shared_exercise_data.mastery_model){
@@ -585,6 +611,25 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       case "m_of_n":
         return this.m_value + " of " + this.n_value
     }
+  },
+  set_initial_focus:function(){
+    var element = null;
+      if($("#copy_button").length > 0){
+        element = $("#copy_button");
+      } else if($("#input_title").length > 0){
+        element = $('#input_title');
+      }else if($("#author_field").length > 0){
+        element = $('#author_field');
+      }else if($("#tag_box").length > 0){
+        element = $('#tag_box');
+      } else {
+        element = $("#close_uploader_button");
+      }
+
+      if(element){
+        element.focus();
+        element.select();
+      }
   },
   get_license: function(license_id){
     if(isNaN(license_id)){ return license_id; }
@@ -638,6 +683,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     'change #m_value': 'set_mastery',
     'change #n_value': 'set_mastery',
     "click #mastery_about": "load_mastery",
+    "focus .input-tab-control": "loop_focus"
   },
   load_tags:function(){
     this.$("#tag_area").html(this.tags_template({
@@ -912,6 +958,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       formats_el.html(this.format_view.el);
       this.format_view.create_thumbnail_view(this.container.disable_submit, this.container.enable_submit, this.container.enable_submit);
       this.listenTo(this.model, "change:files", this.handle_change);
+      this.listenTo(this.model, "change:thumbnail_encoding", this.handle_change);
   },
   load_question_display:function(formats_el){
       if(this.exercise_view){

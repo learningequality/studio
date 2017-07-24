@@ -107,8 +107,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	template: require("./hbtemplates/channel_item_current.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','update_title', 'copy_id','open_channel',
-				'set_thumbnail', 'reset_thumbnail','enable_submit', 'disable_submit', 'remove_thumbnail');
+		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','update_title', 'loop_focus', 'copy_id', 'set_indices',
+						'open_channel', 'set_thumbnail', 'reset_thumbnail','enable_submit', 'disable_submit', 'remove_thumbnail');
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = false;
 		this.containing_list_view = options.containing_list_view;
@@ -125,6 +125,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.isNew = false;
 		this.thumbnail_success = true;
 	},
+
 	set_is_new:function(isNew){
 		this.isNew = isNew;
 		if (this.isNew){
@@ -161,6 +162,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				is_channel: true
 			});
 		}
+		this.set_indices();
+		this.set_initial_focus();
 	},
 	events: {
 		'click .edit_channel':'edit_channel',
@@ -172,6 +175,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		'keyup #new_channel_name': 'update_title',
 		'keyup #new_channel_name': 'update_title',
 		'paste #new_channel_name': 'update_title',
+		'focus .input-tab-control': 'loop_focus',
 		'click .copy-id-btn' : 'copy_id',
 		'click .open_channel': 'open_channel',
 		'mouseover .open_channel': 'add_highlight',

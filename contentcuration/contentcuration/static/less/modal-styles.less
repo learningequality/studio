@@ -207,6 +207,7 @@ div#dropzone { min-height: 150px; }
 	width:100% !important;
 	height:100%;
 	min-height:300px;
+	margin-top: 10px;
 }
 
 .audio_preview{
@@ -233,21 +234,27 @@ video::-webkit-media-controls-fullscreen-button { display: none; }
 }
 
 #preview_tabs_dropdown{
+	border: none;
 	margin-top:-2px;
 	margin-left:15px;
-	width:90%;
+	width:92%;
+	border-radius: 0px;
+	.preview_btn_tab{
+		width:100%;
+		padding:10px;
+		border-radius: 0px;
+		&:hover{ background-color: @gray-200; }
+	}
 }
-.preview_btn_tab{
-	font-size:10pt;
-	width:100%;
-	padding:10px;
-	&:hover{ background-color: @gray-200; }
+.btn-preview{
+	background-color: @gray-300;
+	border: none;
+	font-size:12pt;
 }
 
 .view_fullscreen{ width:100%; }
 
 .preview_format_switch{
-	font-size:11pt;
 	width:100%;
 	max-height:35px;
 }

@@ -1,3 +1,4 @@
+<div class="input-tab-control tab_item" data-next=".save_channel"></div>
 <div class="channel-container-wrapper {{#unless edit}}open_channel{{/unless}}">
 	<div class="profile pull-left text-center">
 		{{#if edit}}
@@ -10,15 +11,14 @@
 	</div>
 	{{#if edit}}
 		<p id="channel_name_error">Channel must have a name</p>
-		<input type="text" id="new_channel_name" placeholder="Channel Name" value = "{{channel.name}}" maxlength="200"></input>
-		<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}"  maxlength="400">{{channel.description}}</textarea>
+		<input type="text" id="new_channel_name" placeholder="Channel Name" value="{{channel.name}}" maxlength="200" class="tab_item first_focus_item"></input>
+		<textarea id="new_channel_description" placeholder="Channel Description" value="{{channel.description}}"  maxlength="400" class="tab_item">{{channel.description}}</textarea>
 		<a class="delete_channel">DELETE CHANNEL</a>
 		<div class="channel_options">
-			<a class="save_channel btn pull-right">SAVE</a>
-			<a class="channel_toggle action-text pull-right">CANCEL</a>
+			<button class="save_channel btn pull-right tab_item">SAVE</button>
+			<button class="channel_toggle action-text pull-right tab_item">CANCEL</button>
 		</div>
 	{{else}}
-
 		<span class="channel_metadata">
 			<span class="resource_count">{{#format_count "Resource" resource_count}}{{/format_count}}</span>
 			&nbsp;&nbsp;ID:
@@ -49,3 +49,4 @@
 		</div>
 	{{/if}}
 </div>
+<div class="input-tab-control tab_item" data-next="#new_channel_name"></div>

@@ -10,14 +10,21 @@ var TempSyncModalView = BaseViews.BaseModalView.extend({
     modal: true,
 
     initialize: function(options) {
+        _.bindAll(this, "init_focus");
         this.onsync = options.onsync;
         this.collection = options.collection;
         this.selected_options = {};
         this.render(this.close, {});
+        this.$("#temp_sync_modal").on("shown.bs.modal", this.init_focus);
     },
     events: {
         'click .category_check' : 'handle_selection',
-        "click #sync_content_button" : "sync_content"
+        "click #sync_content_button" : "sync_content",
+        "focus .input-tab-control": "loop_focus"
+    },
+    init_focus: function(){
+        this.set_indices();
+        this.set_initial_focus();
     },
     sync_content:function(){
         var self = this;

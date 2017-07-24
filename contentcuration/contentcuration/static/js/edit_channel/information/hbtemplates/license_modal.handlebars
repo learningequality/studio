@@ -2,7 +2,7 @@
 <div class="modal-dialog">
     <div class="modal-content">
         <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="close_license"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title text-center">{{license.license_name}}</h4>
         </div>
         <div class="modal-body">
@@ -10,10 +10,10 @@
             	<p>{{license.license_description}}</p>
             </div>
             <div class="container-fluid">
-    			{{#if license.license_url}}<a target="_blank" href="{{license.license_url}}" class="action-text">LEARN MORE</a>{{/if}}
-    			<a class="action-text pull-right" data-dismiss="modal">
-    	            <span>CLOSE</span>
-    	        </a>
+                <div class="input-tab-control tab_item" data-next="#license_close_button"></div>
+    			{{#if license.license_url}}<button target="_blank" href="{{license.license_url}}" class="action-text tab_item first_focus_item" id="learn_more_button">LEARN MORE</button>{{/if}}
+    			<button class="action-button pull-right tab_item" data-dismiss="modal" id="license_close_button">CLOSE</button>
+                <div class="input-tab-control tab_item" data-next="#learn_more_button"></div>
             </div>
         </div>
     </div>

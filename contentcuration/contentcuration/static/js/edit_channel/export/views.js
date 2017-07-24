@@ -6,9 +6,10 @@ var stringHelper = require("edit_channel/utils/string_helper");
 require("export.less");
 
 var ExportModalView = BaseViews.BaseModalView.extend({
+    id: "publishing_modal",
     template: require("./hbtemplates/export_modal.handlebars"),
     initialize: function(options) {
-        _.bindAll(this, "publish");
+        _.bindAll(this, "publish", 'loop_focus', 'set_indices');
         this.modal = true;
         this.render(this.close, {
             channel: window.current_channel.toJSON(),
@@ -23,14 +24,17 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             model: this.model,
             onpublish:this.onpublish
         });
-
+        this.set_indices();
         var self = this;
         this.model.calculate_size().then(function(size){
             self.$("#export_size").text("(" + stringHelper.format_size(size) + ")");
+            _.defer(self.set_initial_focus);
         });
+        this.$(".modal").on("shown.bs.modal", this.set_initial_focus);
     },
     events:{
-      "click #publish_btn" : "publish"
+      "click #publish_btn" : "publish",
+      'focus .input-tab-control': 'loop_focus'
     },
     publish:function(){
         var self = this;
