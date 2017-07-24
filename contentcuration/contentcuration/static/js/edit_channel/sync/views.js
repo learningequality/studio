@@ -14,7 +14,7 @@ var MESSAGES = {
     "details": "Details",
     "sync_header": "Syncing Content",
     "syncing_content": "Syncing Content...",
-    "select_fields_prompt": "Select which fields to update...",
+    "select_fields_prompt": "Syncing content will update any imported content with their original source content. Select which fields to sync...",
     "details_text": "Title, description, etc.",
     "files_text": "Replace files with source",
     "tags_text": "Replace tags with source",
