@@ -1,11 +1,7 @@
-import os
 import pytest
-import zipfile
 import tempfile
 from mixer.backend.django import mixer
 from contentcuration import models as cc
-from kolibri.content import models as k
-from django.core.management import call_command
 from django.conf import settings
 
 

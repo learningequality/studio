@@ -2,6 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
+var dialog = require("edit_channel/utils/dialog");
 require("move.less");
 
 /*********** MODAL CONTAINER FOR MOVE OPERATION ***********/
@@ -33,6 +34,7 @@ var MoveView = BaseViews.BaseListView.extend({
         this.modal = options.modal;
         this.onmove = options.onmove;
         this.collection = options.collection;
+        this.clipboard_selected = false;
 
         // Calculate valid moves using node descendants
         this.to_move_ids = this.collection.pluck('id');
@@ -80,6 +82,19 @@ var MoveView = BaseViews.BaseListView.extend({
 
     /*********** MOVING METHODS ***********/
     move_content:function(){
+        if(this.clipboard_selected && this.collection.has_related_content()){
+            var message = "Any content associated with " + ((this.collection.length === 1)? "this item" : "these items") +
+                            " will no longer reference " + ((this.collection.length === 1)? "it" : "them") + " as related content." +
+                            " Are you sure you want to continue?";
+            dialog.dialog("RELATED CONTENT DETECTED", message, {
+                "CANCEL":function(){},
+                "CONTINUE": this.call_move,
+            }, null);
+        } else {
+            this.call_move();
+        }
+    },
+    call_move: function(){
         var self = this;
         this.display_load("Moving Content...", function(resolve, reject){
             var sort_order = self.target_node.get('metadata').max_sort_order;
@@ -95,9 +110,10 @@ var MoveView = BaseViews.BaseListView.extend({
             }).catch(reject);
         });
     },
-    handle_target_selection:function(node){
+    handle_target_selection:function(node, clipboard_selected){
         // Set node to move items to
         this.target_node = node;
+        this.clipboard_selected = clipboard_selected;
         this.$("#move_content_button").prop("disabled", false);
         this.$("#move_content_button").removeClass("disabled");
 
@@ -118,6 +134,7 @@ var MoveList = BaseViews.BaseListView.extend({
         this.is_target = options.is_target;
         this.container = options.container;
         this.collection = options.collection;
+        this.isclipboard = options.isclipboard;
         this.render();
     },
     render: function() {
@@ -132,7 +149,8 @@ var MoveList = BaseViews.BaseListView.extend({
             container: this.container,
             containing_list_view : this,
             model : model,
-            is_target : this.is_target
+            is_target : this.is_target,
+            isclipboard: this.isclipboard
         });
         this.views.push(new_view);
         return new_view;
@@ -161,6 +179,7 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
         this.is_target = options.is_target;
         this.container = options.container;
         this.collection = new Models.ContentNodeCollection();
+        this.isclipboard = options.isclipboard || this.model.id === window.current_user.get_clipboard().id;
         this.render();
     },
     events: {
@@ -190,13 +209,14 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
                 el: $(self.getSubdirectory()),
                 is_target: self.is_target,
                 collection: new Models.ContentNodeCollection(_.pluck(nodes, 'attributes')),
-                container: self.container
+                container: self.container,
+                isclipboard: self.isclipboard
             });
         });
     },
     handle_checked:function(event){
         if(this.$(event.target).is(':checked')){
-            this.container.handle_target_selection(this.model);
+            this.container.handle_target_selection(this.model, this.isclipboard);
         }
     }
 });

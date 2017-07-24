@@ -3,7 +3,7 @@ var _ = require("underscore");
 var Models = require("./models");
 //var UndoManager = require("backbone-undo");
 function get_author(){
-	return (window.preferences.author === null)? window.current_user.get_full_name() : window.preferences.author;
+	return window.preferences.author || "";
 }
 
 var BaseView = Backbone.View.extend({
@@ -36,14 +36,12 @@ var BaseView = Backbone.View.extend({
   },
   	reload_ancestors:function(collection, include_collection){
   		include_collection = include_collection==null || include_collection;
-		var list_to_reload = (include_collection) ? collection.pluck("id") : [];
+		var list_to_reload = collection.chain()
+						.reduce(function(list, item){ return list.concat(item.get('ancestors'));}, [])
+						.union((include_collection) ? collection.pluck("id") : [])
+						.union([window.current_channel.get("main_tree").id])
+						.uniq().value();
 		var self = this;
-		collection.forEach(function(entry){
-      		$.merge(list_to_reload, entry.get("ancestors"));
-		});
-		if(window.current_channel.get("main_tree")){
-			list_to_reload.push(window.current_channel.get("main_tree").id)
-		}
 		this.retrieve_nodes($.unique(list_to_reload), true).then(function(fetched){
 			fetched.forEach(function(model){
 				var object = window.workspace_manager.get(model.get("id"));
@@ -99,9 +97,10 @@ var BaseView = Backbone.View.extend({
 
 var BaseWorkspaceView = BaseView.extend({
 	lists: [],
+	isclipboard: false,
 	bind_workspace_functions:function(){
-		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move',
-			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently');
+		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move', 'handle_changed_settings',
+			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently', 'sync_content');
 	},
 	publish:function(){
 		if(!$("#channel-publish-button").hasClass("disabled")){
@@ -138,7 +137,8 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	handle_published:function(collection){
 		this.reload_ancestors(collection);
-		$("#publish-get-id-modal").modal("show");
+		var staticModal = require('edit_channel/information/views');
+		new staticModal.PublishedModalView({channel_id: window.current_channel.id});
 	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");
@@ -147,7 +147,7 @@ var BaseWorkspaceView = BaseView.extend({
 			current_user: window.current_user
 		});
 	},
-	edit_selected:function(allow_edit){
+	edit_selected:function(allow_edit, isclipboard){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var list = this.get_selected();
 		var edit_collection = new Models.ContentNodeCollection();
@@ -169,7 +169,9 @@ var BaseWorkspaceView = BaseView.extend({
 			model: content,
 			new_content: false,
 		    onsave: this.reload_ancestors,
-		    allow_edit: allow_edit
+		    allow_edit: allow_edit,
+		    isclipboard: this.isclipboard,
+		    onnew: this.add_to_clipboard
 		});
 	},
 	add_to_trash:function(collection, message){
@@ -263,6 +265,20 @@ var BaseWorkspaceView = BaseView.extend({
 		// Recalculate counts
 		this.reload_ancestors(original_parents, true);
 	},
+	sync_content:function(){
+		var SyncView = require("edit_channel/sync/views");
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var sync = new SyncView.TempSyncModalView({
+			el: $("#dialog"),
+		    onsync: this.reload_ancestors,
+		    model: window.current_channel.get_root("main_tree")
+		});
+		// var sync = new SyncView.SyncModalView({
+		// 	el: $("#dialog"),
+		//     onsync: this.reload_ancestors,
+		//     model: window.current_channel.get_root("main_tree")
+		// });
+	},
 	delete_items_permanently:function(message, list, callback){
 		message = (message!=null)? message: "Deleting...";
 		var self = this;
@@ -302,28 +318,40 @@ var BaseWorkspaceView = BaseView.extend({
 				reject_load(error);
 			});
 		});
+	},
+	open_channel_settings: function(){
+		var settings = require('edit_channel/channel_settings/views');
+		new settings.SettingsModalView({
+			model: window.current_channel,
+			onsave: this.handle_changed_settings
+		});
+	},
+	handle_changed_settings: function(data){
+		$("#channel_selection_dropdown").text(data.get('name'));
+		window.workspace_manager.get_main_view().model.set('title', data.get('name'));
+		window.preferences = data.get('preferences');
 	}
 });
 
 var BaseModalView = BaseView.extend({
-  callback:null,
-  render: function(closeFunction, renderData) {
-    this.$el.html(this.template(renderData));
-    $("body").append(this.el);
-    this.$(".modal").modal({show: true});
-    this.$(".modal").on("hide.bs.modal", closeFunction);
-  },
-  close: function() {
-  	if(this.modal){
-  		this.$(".modal").modal('hide');
-  	}
-    this.remove();
-  },
-  closed_modal:function(){
-    $("body").addClass('modal-open'); //Make sure modal-open class persists
-    $('.modal-backdrop').slice(1).remove();
-    this.remove();
-  }
+    callback:null,
+    render: function(closeFunction, renderData) {
+        this.$el.html(this.template(renderData));
+        $("body").append(this.el);
+        this.$(".modal").modal({show: true});
+        this.$(".modal").on("hide.bs.modal", closeFunction);
+    },
+    close: function() {
+        if(this.modal){
+            this.$(".modal").modal('hide');
+        }
+        this.remove();
+    },
+    closed_modal:function(){
+        $("body").addClass('modal-open'); //Make sure modal-open class persists
+        $('.modal-backdrop').slice(1).remove();
+        this.remove();
+    }
 });
 
 var BaseListView = BaseView.extend({
@@ -462,6 +490,38 @@ var BaseEditableListView = BaseListView.extend({
 	    })
 	  	return promise;
 	},
+	delete_items_permanently:function(message){
+		message = (message!=null)? message: "Deleting...";
+		var self = this;
+		this.display_load(message, function(resolve_load, reject_load){
+			var list = self.get_selected();
+			var promise_list = [];
+			for(var i = 0; i < list.length; i++){
+				var view = list[i];
+				if(view){
+					promise_list.push(new Promise(function(resolve, reject){
+						view.model.destroy({
+							success:function(data){
+								resolve(data);
+							},
+							error:function(obj, error){
+								reject(error);
+							}
+						});
+						self.collection.remove(view.model);
+						self.views.splice(view,1);
+						view.remove();
+					}));
+				}
+			}
+			Promise.all(promise_list).then(function(){
+				self.handle_if_empty();
+				resolve_load("Success!");
+			}).catch(function(error){
+				reject_load(error);
+			});
+		});
+	},
 	delete:function(view){
       	this.collection.remove(view.model);
       	this.views = _.reject(this.views, function(el) { return el.model.id === view.model.id; });
@@ -513,6 +573,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	list_selector:null,
 	default_item:null,
 	content_node_view:null,
+	isclipboard: false,
 
 	/* Functions to overwrite */
 	create_new_view:null,
@@ -610,7 +671,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 							});
 				        });
 		        	});
-				});
+				}).catch(reject);
 			}
 		});
 	},
@@ -650,7 +711,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	            new_topic: true,
 	            onsave: self.reload_ancestors,
 	            onnew:self.add_nodes,
-	            allow_edit: true
+	            allow_edit: true,
+	            isclipboard: self.isclipboard
 	        });
         });
 	},
@@ -668,7 +730,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
       parent_view: this,
       model:this.model,
       onsave: this.reload_ancestors,
-	  onnew:this.add_nodes
+	  onnew:this.add_nodes,
+	  isclipboard: this.isclipboard
   	});
   },
   add_to_clipboard:function(collection, message){
@@ -707,7 +770,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	            new_exercise: true,
 	            onsave: self.reload_ancestors,
 	            onnew:self.add_nodes,
-	            allow_edit: true
+	            allow_edit: true,
+	            isclipboard: self.isclipboard
 	        });
         });
 	}
@@ -751,7 +815,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 	save:function(data, message){
 		message = (message!=null)? message: "Saving...";
 		var self = this;
-		var promise = new Promise(function(resolve, reject){
+		return new Promise(function(resolve, reject){
 			self.originalData = data;
 			if(self.model.isNew()){
 				self.containing_list_view.create_new_item(data).then(function(newView){
@@ -777,7 +841,6 @@ var BaseListEditableItemView = BaseListItemView.extend({
 				});
 			}
 		});
-		return promise;
 	},
 	delete:function(destroy_model, message, callback){
 		message = (message!=null)? message: "Deleting...";
@@ -805,6 +868,23 @@ var BaseListEditableItemView = BaseListItemView.extend({
 				});
 			});
 		}
+	},
+	destroy:function(message, callback){
+		message = (message!=null)? message: "Deleting...";
+		var self = this;
+		this.display_load(message, function(resolve_load, reject_load){
+			self.model.destroy({
+				success:function(){
+					if(callback){
+						callback();
+					}
+					resolve_load(true);
+				},
+				error:function(obj, error){
+					reject_load(error);
+				}
+			});
+		});
 	},
 	reload:function(model){
 		this.model.set(model.attributes);
@@ -864,6 +944,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	model: null,
 	tagName: "li",
 	selectedClass: "content-selected",
+	isclipboard: false,
 
 	bind_workspace_functions:function(){
 		this.bind_node_functions();
@@ -912,7 +993,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			content.list.add_nodes(moved);
 		}
 	},
-	open_edit:function(allow_edit){
+	open_edit:function(allow_edit, isclipboard){
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var editCollection =  new Models.ContentNodeCollection([this.model]);
@@ -923,6 +1004,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			model: this.containing_list_view.model,
 		  	onsave: this.reload_ancestors,
 		  	allow_edit: allow_edit,
+		  	isclipboard: this.isclipboard,
 		  	onnew: (!this.allow_edit)? this.containing_list_view.add_to_clipboard : null
 		});
 	},

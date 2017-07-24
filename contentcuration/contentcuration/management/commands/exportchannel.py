@@ -1,3 +1,4 @@
+import ast
 import collections
 import os
 import zipfile
@@ -15,7 +16,8 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.template.loader import render_to_string
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
-
+from pressurecooker.encodings import write_base64_to_file
+from contentcuration.utils.files import create_file_from_contents
 from contentcuration import models as ccmodels
 from contentcuration.utils.parser import extract_value
 from kolibri.content import models as kolibrimodels
@@ -32,6 +34,7 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 
 PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
+
 
 class EarlyExit(BaseException):
     def __init__(self, message, db_path):
@@ -62,6 +65,7 @@ class Command(BaseCommand):
                 map_content_tags(channel)
                 map_channel_to_kolibri_channel(channel)
                 map_content_nodes(channel.main_tree,)
+                map_prerequisites(channel.main_tree)
                 save_export_database(channel_id)
                 increment_channel_version(channel)
                 mark_all_nodes_as_changed(channel)
@@ -86,6 +90,7 @@ def create_kolibri_license_object(ccnode):
 def increment_channel_version(channel):
     channel.version += 1
     channel.save()
+
 
 def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
@@ -116,7 +121,6 @@ def map_content_nodes(root_node):
         except IndexError:
             return None
 
-
     # kolibri_license = kolibrimodels.License.objects.get(license_name=license.license_name)
     with transaction.atomic():
         with ccmodels.ContentNode.objects.delay_mptt_updates():
@@ -137,6 +141,7 @@ def map_content_nodes(root_node):
                     create_associated_file_objects(kolibrinode, node)
                     map_tags_to_node(kolibrinode, node)
 
+
 def create_bare_contentnode(ccnode):
     logging.debug("Creating a Kolibri node for instance id {}".format(
         ccnode.node_id))
@@ -147,10 +152,11 @@ def create_bare_contentnode(ccnode):
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
-        defaults={'kind': ccnode.kind.kind,
+        defaults={
+            'kind': ccnode.kind.kind,
             'title': ccnode.title,
             'content_id': ccnode.content_id,
-            'author' : ccnode.author or "",
+            'author': ccnode.author or "",
             'description': ccnode.description,
             'sort_order': ccnode.sort_order,
             'license_owner': ccnode.copyright_holder or "",
@@ -173,6 +179,14 @@ def create_bare_contentnode(ccnode):
 
     return kolibrinode
 
+def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None):
+    thumbnail_data = ast.literal_eval(thumbnail_string)
+    if thumbnail_data.get('base64'):
+        with tempfile.NamedTemporaryFile(suffix=".{}".format(file_format_id), delete=False) as tempf:
+            tempf.close()
+            write_base64_to_file(thumbnail_data['base64'], tempf.name)
+            with open(tempf.name, 'rb') as tf:
+                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id)
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating File objects for Node {}".format(kolibrinode.id))
@@ -185,6 +199,8 @@ def create_associated_file_objects(kolibrinode, ccnode):
                 lang_code=ccfilemodel.language.lang_code,
                 lang_subcode=ccfilemodel.language.lang_subcode
             )
+        if preset.thumbnail and ccnode.thumbnail_encoding:
+            ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
 
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
@@ -199,9 +215,10 @@ def create_associated_file_objects(kolibrinode, ccnode):
             thumbnail=preset.thumbnail,
         )
 
+
 def create_perseus_exercise(ccnode, kolibrinode, exercise_data):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
-    filename="{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
+    filename = "{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
         create_perseus_zip(ccnode, exercise_data, tempf)
         file_size = tempf.tell()
@@ -219,6 +236,7 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data):
         )
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
+
 def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
     assessment_items = ccnode.assessment_items.all().order_by('order')
@@ -227,7 +245,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
     randomize = exercise_data.get('randomize') or True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
-    mastery_model = { 'type' : exercise_data.get('mastery_model') or exercises.M_OF_N }
+    mastery_model = {'type': exercise_data.get('mastery_model') or exercises.M_OF_N}
     if mastery_model['type'] == exercises.M_OF_N:
         mastery_model.update({'n': exercise_data.get('n') or min(5, assessment_items.count()) or 1})
         mastery_model.update({'m': exercise_data.get('m') or min(5, assessment_items.count()) or 1})
@@ -249,7 +267,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
         'n': mastery_model.get('n'),
         'm': mastery_model.get('m'),
         'all_assessment_items': assessment_item_ids,
-        'assessment_mapping': {a.assessment_id : a.type if a.type != 'true_false' else exercises.SINGLE_SELECTION.decode('utf-8') for a in assessment_items},
+        'assessment_mapping': {a.assessment_id: a.type if a.type != 'true_false' else exercises.SINGLE_SELECTION.decode('utf-8') for a in assessment_items},
     })
 
     kolibriassessmentmetadatamodel = kolibrimodels.AssessmentMetaData.objects.create(
@@ -259,7 +277,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
         number_of_assessments=assessment_items.count(),
         mastery_model=json.dumps(mastery_model),
         randomize=randomize,
-        is_manipulable=ccnode.kind_id==content_kinds.EXERCISE,
+        is_manipulable=ccnode.kind_id == content_kinds.EXERCISE,
     )
 
     return exercise_data
@@ -297,12 +315,14 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
         finally:
             zf.close()
 
+
 def write_to_zipfile(filename, content, zf):
     info = zipfile.ZipInfo(filename, date_time=(2013, 3, 14, 1, 59, 26))
     info.comment = "Perseus file generated during export process".encode()
     info.compress_type = zipfile.ZIP_STORED
     info.create_system = 0
     zf.writestr(info, content)
+
 
 def write_assessment_item(assessment_item, zf):
     if assessment_item.type == exercises.MULTIPLE_SELECTION:
@@ -327,7 +347,8 @@ def write_assessment_item(assessment_item, zf):
             # In case perseus doesn't support =wxh syntax, use below code
             # answer['answer'], answer_images = process_image_strings(answer['answer'])
             # answer.update({'images': answer_images})
-    answer_data = list(filter(lambda a: a['answer'], answer_data)) # Filter out empty answers
+
+    answer_data = list(filter(lambda a: a['answer'] or a['answer'] == 0, answer_data)) # Filter out empty answers, but not 0
 
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
@@ -337,15 +358,16 @@ def write_assessment_item(assessment_item, zf):
     context = {
         'question': question,
         'question_images': question_images,
-        'answers': sorted(answer_data, lambda x,y: cmp(x.get('order'), y.get('order'))),
+        'answers': sorted(answer_data, lambda x, y: cmp(x.get('order'), y.get('order'))),
         'multiple_select': assessment_item.type == exercises.MULTIPLE_SELECTION,
         'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR),
-        'hints': sorted(hint_data, lambda x,y: cmp(x.get('order'), y.get('order'))),
+        'hints': sorted(hint_data, lambda x, y: cmp(x.get('order'), y.get('order'))),
         'randomize': assessment_item.randomize,
     }
 
     result = render_to_string(template, context).encode('utf-8', "ignore")
     write_to_zipfile("{0}.json".format(assessment_item.assessment_id), result, zf)
+
 
 def process_image_strings(content):
     image_list = []
@@ -361,6 +383,12 @@ def process_image_strings(content):
             content = content.replace(match.group(1), img_match.group(1))
     return content, image_list
 
+def map_prerequisites(root_node):
+    for n in ccmodels.PrerequisiteContentRelationship.objects.filter(prerequisite__tree_id=root_node.tree_id)\
+                                                            .values('prerequisite__node_id', 'target_node__node_id'):
+        target_node = kolibrimodels.ContentNode.objects.get(pk=n['target_node__node_id'])
+        target_node.has_prerequisite.add(n['prerequisite__node_id'])
+
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")
     kolibri_channel = kolibrimodels.ChannelMetadata.objects.create(
@@ -368,26 +396,32 @@ def map_channel_to_kolibri_channel(channel):
         name=channel.name,
         description=channel.description,
         version=channel.version,
-        thumbnail=convert_channel_thumbnail(channel.thumbnail),
+        thumbnail=convert_channel_thumbnail(channel),
         root_pk=channel.main_tree.node_id,
     )
     logging.info("Generated the channel metadata.")
 
     return kolibri_channel
 
-def convert_channel_thumbnail(thumbnail):
+def convert_channel_thumbnail(channel):
     """ encode_thumbnail: gets base64 encoding of thumbnail
         Args:
             thumbnail (str): file path or url to channel's thumbnail
         Returns: base64 encoding of thumbnail
     """
     encoding = None
-    if thumbnail is None or thumbnail=='' or 'static' in thumbnail:
+    if not channel.thumbnail or channel.thumbnail=='' or 'static' in channel.thumbnail:
         return ""
 
-    with open(ccmodels.generate_file_on_disk_name(thumbnail.split('.')[0], thumbnail), 'rb') as file_obj:
+    if channel.thumbnail_encoding:
+        thumbnail_data = ast.literal_eval(channel.thumbnail_encoding)
+        if thumbnail_data.get("base64"):
+            return thumbnail_data["base64"]
+
+    with open(ccmodels.generate_file_on_disk_name(channel.thumbnail.split('.')[0], channel.thumbnail), 'rb') as file_obj:
         encoding = base64.b64encode(file_obj.read()).decode('utf-8')
     return "data:image/png;base64," + encoding
+
 
 def map_tags_to_node(kolibrinode, ccnode):
     """ map_tags_to_node: assigns tags to nodes (creates fk relationship)
@@ -404,6 +438,7 @@ def map_tags_to_node(kolibrinode, ccnode):
     kolibrinode.tags = tags_to_add
     kolibrinode.save()
 
+
 def prepare_export_database(tempdb):
     call_command("flush", "--noinput", database=get_active_content_database())  # clears the db!
     call_command("migrate",
@@ -412,7 +447,6 @@ def prepare_export_database(tempdb):
                  database=get_active_content_database(),
                  noinput=True)
     logging.info("Prepared the export database.")
-
 
 
 def raise_if_nodes_are_all_unchanged(channel):
@@ -435,6 +469,7 @@ def mark_all_nodes_as_changed(channel):
 
     logging.info("Marked all nodes as changed.")
 
+
 def save_export_database(channel_id):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
@@ -446,6 +481,7 @@ def save_export_database(channel_id):
 
     shutil.copyfile(current_export_db_location, target_export_db_location)
     logging.info("Successfully copied to {}".format(target_export_db_location))
+
 
 def get_active_content_database():
 

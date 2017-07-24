@@ -1,8 +1,6 @@
-from django.conf import settings
 from django.contrib.sites.models import Site
-from django.core.management import call_command
 from django.core.management.base import BaseCommand
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages
+from le_utils.constants import content_kinds, file_formats, format_presets, licenses, languages
 from contentcuration import models
 import logging as logmodule
 from django.core.cache import cache
@@ -10,30 +8,30 @@ logging = logmodule.getLogger(__name__)
 
 SITES = [
     {
-        "model" : Site,
-        "pk" : "id",
+        "model": Site,
+        "pk": "id",
         "fields": {
             "id": 1,
-            "name"  : "Kolibri Studio",
-            "domain" : "contentworkshop.learningequality.org",
+            "name": "Kolibri Studio",
+            "domain": "contentworkshop.learningequality.org",
         },
     },
     {
-        "model" : Site,
-        "pk" : "id",
+        "model": Site,
+        "pk": "id",
         "fields": {
             "id": 2,
-            "name"  : "Kolibri Studio (Debug Mode)",
-            "domain" : "127.0.0.1:8000",
+            "name": "Kolibri Studio (Debug Mode)",
+            "domain": "127.0.0.1:8000",
         },
     },
     {
-        "model" : Site,
-        "pk" : "id",
+        "model": Site,
+        "pk": "id",
         "fields": {
             "id": 3,
-            "name"  : "Kolibri Studio (Develop)",
-            "domain" : "develop.contentworkshop.learningequality.org",
+            "name": "Kolibri Studio (Develop)",
+            "domain": "develop.contentworkshop.learningequality.org",
         },
     },
 ]
@@ -146,7 +144,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.MP4,
-            "mimetype" : file_formats.MP4_MIMETYPE,
+            "mimetype": file_formats.MP4_MIMETYPE,
         },
     },
     {
@@ -154,7 +152,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.VTT,
-            "mimetype" : ".vtt",
+            "mimetype": ".vtt",
         },
     },
     {
@@ -162,7 +160,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.PDF,
-            "mimetype" : file_formats.PDF_MIMETYPE,
+            "mimetype": file_formats.PDF_MIMETYPE,
         },
     },
     {
@@ -170,7 +168,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.MP3,
-            "mimetype" : file_formats.MP3_MIMETYPE,
+            "mimetype": file_formats.MP3_MIMETYPE,
         },
     },
     {
@@ -178,7 +176,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.JPG,
-            "mimetype" : file_formats.JPG_MIMETYPE,
+            "mimetype": file_formats.JPG_MIMETYPE,
         },
     },
     {
@@ -186,7 +184,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.JPEG,
-            "mimetype" : file_formats.JPG_MIMETYPE,
+            "mimetype": file_formats.JPG_MIMETYPE,
         },
     },
     {
@@ -194,7 +192,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.PNG,
-            "mimetype" : file_formats.PNG_MIMETYPE,
+            "mimetype": file_formats.PNG_MIMETYPE,
         },
     },
     {
@@ -202,7 +200,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.GIF,
-            "mimetype" : file_formats.GIF_MIMETYPE,
+            "mimetype": file_formats.GIF_MIMETYPE,
         },
     },
     {
@@ -210,7 +208,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.PERSEUS,
-            "mimetype" : file_formats.PERSEUS_MIMETYPE,
+            "mimetype": file_formats.PERSEUS_MIMETYPE,
         },
     },
     {
@@ -218,7 +216,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.SVG,
-            "mimetype" : file_formats.SVG_MIMETYPE,
+            "mimetype": file_formats.SVG_MIMETYPE,
         },
     },
     {
@@ -226,7 +224,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.JSON,
-            "mimetype" : file_formats.JSON_MIMETYPE,
+            "mimetype": file_formats.JSON_MIMETYPE,
         },
     },
     {
@@ -234,7 +232,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.GRAPHIE,
-            "mimetype" : file_formats.GRAPHIE_MIMETYPE,
+            "mimetype": file_formats.GRAPHIE_MIMETYPE,
         },
     },
     {
@@ -242,7 +240,7 @@ FILE_FORMATS = [
         "pk": "extension",
         "fields": {
             "extension": file_formats.HTML5,
-            "mimetype" : file_formats.HTML5_MIMETYPE,
+            "mimetype": file_formats.HTML5_MIMETYPE,
         },
     },
 ]
@@ -297,255 +295,255 @@ PRESETS = [
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.VIDEO_HIGH_RES,
-            "readable_name" : format_presets.VIDEO_HIGH_RES_READABLE,
-            "multi_language" : False,
-            "supplementary" : False,
-            "thumbnail" : False,
+            "id": format_presets.VIDEO_HIGH_RES,
+            "readable_name": format_presets.VIDEO_HIGH_RES_READABLE,
+            "multi_language": False,
+            "supplementary": False,
+            "thumbnail": False,
             "subtitle": False,
             "display": True,
-            "order" : 1,
-            "kind_id" : content_kinds.VIDEO,
-            "allowed_formats" : [file_formats.MP4],
+            "order": 1,
+            "kind_id": content_kinds.VIDEO,
+            "allowed_formats": [file_formats.MP4],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.VIDEO_LOW_RES,
+            "id": format_presets.VIDEO_LOW_RES,
             "readable_name": format_presets.VIDEO_LOW_RES_READABLE,
-            "multi_language" : False,
-            "supplementary" : False,
-            "thumbnail" : False,
+            "multi_language": False,
+            "supplementary": False,
+            "thumbnail": False,
             "subtitle": False,
             "display": True,
-            "order" : 2,
-            "kind_id" : content_kinds.VIDEO,
-            "allowed_formats" : [file_formats.MP4],
+            "order": 2,
+            "kind_id": content_kinds.VIDEO,
+            "allowed_formats": [file_formats.MP4],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.VIDEO_THUMBNAIL,
+            "id": format_presets.VIDEO_THUMBNAIL,
             "readable_name": format_presets.VIDEO_THUMBNAIL_READABLE,
-            "multi_language" : False,
-            "supplementary" : True,
-            "thumbnail" : True,
+            "multi_language": False,
+            "supplementary": True,
+            "thumbnail": True,
             "subtitle": False,
             "display": True,
-            "order" : 3,
-            "kind_id" : content_kinds.VIDEO,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+            "order": 3,
+            "kind_id": content_kinds.VIDEO,
+            "allowed_formats": [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.VIDEO_SUBTITLE,
+            "id": format_presets.VIDEO_SUBTITLE,
             "readable_name": format_presets.VIDEO_SUBTITLE_READABLE,
-            "multi_language" : True,
-            "supplementary" : True,
-            "thumbnail" : False,
+            "multi_language": True,
+            "supplementary": True,
+            "thumbnail": False,
             "subtitle": True,
             "display": True,
-            "order" : 4,
-            "kind_id" : content_kinds.VIDEO,
-            "allowed_formats" : [file_formats.VTT],
+            "order": 4,
+            "kind_id": content_kinds.VIDEO,
+            "allowed_formats": [file_formats.VTT],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.AUDIO,
+            "id": format_presets.AUDIO,
             "readable_name": format_presets.AUDIO_READABLE,
-            "multi_language" : False,
-            "supplementary" : False,
-            "thumbnail" : False,
+            "multi_language": False,
+            "supplementary": False,
+            "thumbnail": False,
             "subtitle": False,
             "display": True,
-            "order" : 1,
-            "kind_id" : content_kinds.AUDIO,
-            "allowed_formats" : [file_formats.MP3],
+            "order": 1,
+            "kind_id": content_kinds.AUDIO,
+            "allowed_formats": [file_formats.MP3],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.AUDIO_THUMBNAIL,
+            "id": format_presets.AUDIO_THUMBNAIL,
             "readable_name": format_presets.AUDIO_THUMBNAIL_READABLE,
-            "multi_language" : False,
-            "supplementary" : True,
-            "thumbnail" : True,
+            "multi_language": False,
+            "supplementary": True,
+            "thumbnail": True,
             "subtitle": False,
             "display": True,
-            "order" : 2,
-            "kind_id" : content_kinds.AUDIO,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+            "order": 2,
+            "kind_id": content_kinds.AUDIO,
+            "allowed_formats": [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.DOCUMENT,
+            "id": format_presets.DOCUMENT,
             "readable_name": format_presets.DOCUMENT_READABLE,
-            "multi_language" : False,
-            "supplementary" : False,
-            "thumbnail" : False,
+            "multi_language": False,
+            "supplementary": False,
+            "thumbnail": False,
             "subtitle": False,
             "display": True,
-            "order" : 1,
-            "kind_id" : content_kinds.DOCUMENT,
-            "allowed_formats" : [file_formats.PDF],
+            "order": 1,
+            "kind_id": content_kinds.DOCUMENT,
+            "allowed_formats": [file_formats.PDF],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.DOCUMENT_THUMBNAIL,
+            "id": format_presets.DOCUMENT_THUMBNAIL,
             "readable_name": format_presets.DOCUMENT_THUMBNAIL_READABLE,
-            "multi_language" : False,
-            "supplementary" : True,
-            "thumbnail" : True,
+            "multi_language": False,
+            "supplementary": True,
+            "thumbnail": True,
             "subtitle": False,
             "display": True,
-            "order" : 2,
-            "kind_id" : content_kinds.DOCUMENT,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG]
+            "order": 2,
+            "kind_id": content_kinds.DOCUMENT,
+            "allowed_formats": [file_formats.PNG, file_formats.JPG, file_formats.JPEG]
         }
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.EXERCISE,
+            "id": format_presets.EXERCISE,
             "readable_name": format_presets.EXERCISE_READABLE,
-            "multi_language" : False,
-            "supplementary" : False,
-            "thumbnail" : False,
+            "multi_language": False,
+            "supplementary": False,
+            "thumbnail": False,
             "subtitle": False,
             "display": False,
-            "order" : 1,
-            "kind_id" : content_kinds.EXERCISE,
-            "allowed_formats" : [file_formats.PERSEUS],
+            "order": 1,
+            "kind_id": content_kinds.EXERCISE,
+            "allowed_formats": [file_formats.PERSEUS],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.EXERCISE_THUMBNAIL,
+            "id": format_presets.EXERCISE_THUMBNAIL,
             "readable_name": format_presets.EXERCISE_THUMBNAIL_READABLE,
-            "multi_language" : False,
-            "supplementary" : True,
-            "thumbnail" : True,
+            "multi_language": False,
+            "supplementary": True,
+            "thumbnail": True,
             "subtitle": False,
             "display": True,
-            "order" : 2,
-            "kind_id" : content_kinds.EXERCISE,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+            "order": 2,
+            "kind_id": content_kinds.EXERCISE,
+            "allowed_formats": [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.EXERCISE_IMAGE,
+            "id": format_presets.EXERCISE_IMAGE,
             "readable_name": format_presets.EXERCISE_IMAGE_READABLE,
-            "multi_language" : False,
-            "supplementary" : True,
-            "thumbnail" : False,
+            "multi_language": False,
+            "supplementary": True,
+            "thumbnail": False,
             "subtitle": False,
             "display": False,
-            "order" : 3,
-            "kind_id" : content_kinds.EXERCISE,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG, file_formats.GIF, file_formats.SVG],
+            "order": 3,
+            "kind_id": content_kinds.EXERCISE,
+            "allowed_formats": [file_formats.PNG, file_formats.JPG, file_formats.JPEG, file_formats.GIF, file_formats.SVG],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.EXERCISE_GRAPHIE,
+            "id": format_presets.EXERCISE_GRAPHIE,
             "readable_name": format_presets.EXERCISE_GRAPHIE_READABLE,
-            "multi_language" : False,
-            "supplementary" : True,
-            "thumbnail" : False,
+            "multi_language": False,
+            "supplementary": True,
+            "thumbnail": False,
             "subtitle": False,
             "display": False,
-            "order" : 4,
-            "kind_id" : content_kinds.EXERCISE,
-            "allowed_formats" : [file_formats.SVG, file_formats.JSON],
+            "order": 4,
+            "kind_id": content_kinds.EXERCISE,
+            "allowed_formats": [file_formats.SVG, file_formats.JSON],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.CHANNEL_THUMBNAIL,
+            "id": format_presets.CHANNEL_THUMBNAIL,
             "readable_name": format_presets.CHANNEL_THUMBNAIL_READABLE,
-            "multi_language" : False,
-            "supplementary" : True,
-            "thumbnail" : True,
+            "multi_language": False,
+            "supplementary": True,
+            "thumbnail": True,
             "subtitle": False,
             "display": True,
-            "order" : 0,
-            "kind_id" : None,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+            "order": 0,
+            "kind_id": None,
+            "allowed_formats": [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.TOPIC_THUMBNAIL,
+            "id": format_presets.TOPIC_THUMBNAIL,
             "readable_name": format_presets.TOPIC_THUMBNAIL_READABLE,
-            "multi_language" : False,
-            "supplementary" : True,
-            "thumbnail" : True,
+            "multi_language": False,
+            "supplementary": True,
+            "thumbnail": True,
             "display": True,
-            "order" : 1,
-            "kind_id" : content_kinds.TOPIC,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+            "order": 1,
+            "kind_id": content_kinds.TOPIC,
+            "allowed_formats": [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.HTML5_ZIP,
+            "id": format_presets.HTML5_ZIP,
             "readable_name": format_presets.HTML5_ZIP_READABLE,
-            "multi_language" : False,
-            "supplementary" : False,
-            "thumbnail" : False,
+            "multi_language": False,
+            "supplementary": False,
+            "thumbnail": False,
             "subtitle": False,
             "display": True,
-            "order" : 0,
-            "kind_id" : content_kinds.HTML5,
-            "allowed_formats" : [file_formats.HTML5],
+            "order": 0,
+            "kind_id": content_kinds.HTML5,
+            "allowed_formats": [file_formats.HTML5],
         },
     },
     {
         "model": models.FormatPreset,
         "pk": "id",
         "fields": {
-            "id" : format_presets.HTML5_THUMBNAIL,
+            "id": format_presets.HTML5_THUMBNAIL,
             "readable_name": format_presets.HTML5_THUMBNAIL_READABLE,
-            "multi_language" : False,
-            "supplementary" : True,
-            "thumbnail" : True,
+            "multi_language": False,
+            "supplementary": True,
+            "thumbnail": True,
             "subtitle": False,
             "display": True,
-            "order" : 1,
-            "kind_id" : content_kinds.HTML5,
-            "allowed_formats" : [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+            "order": 1,
+            "kind_id": content_kinds.HTML5,
+            "allowed_formats": [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
         },
     },
 ]
@@ -554,15 +552,16 @@ LANGUAGES = [{
     "model": models.Language,
     "pk": "id",
     "fields": {
-            "id": l.code,
-            "lang_code": l.primary_code,
-            "lang_subcode": l.subcode,
-            "readable_name": l.name,
-            "native_name" : l.native_name,
-        },
-} for l in languages.LANGUAGELIST ]
+        "id": l.code,
+        "lang_code": l.primary_code,
+        "lang_subcode": l.subcode,
+        "readable_name": l.name,
+        "native_name": l.native_name,
+    },
+} for l in languages.LANGUAGELIST]
 
 CONSTANTS = [SITES, LICENSES, FILE_FORMATS, KINDS, PRESETS, LANGUAGES]
+
 
 class EarlyExit(BaseException):
     def __init__(self, message, db_path):
@@ -581,10 +580,10 @@ class Command(BaseCommand):
                 current_model = ""
                 new_model_count = 0
                 for constant in constant_list:
-                    current_model=constant['model'].__name__
+                    current_model = constant['model'].__name__
                     if cache.has_key(current_model):
                         cache.delete(current_model)
-                    obj, isNew = constant['model'].objects.update_or_create(**{constant['pk'] : constant['fields'][constant['pk']]})
+                    obj, isNew = constant['model'].objects.update_or_create(**{constant['pk']: constant['fields'][constant['pk']]})
                     new_model_count += 1 if isNew else 0
                     for attr, value in constant['fields'].items():
                         setattr(obj, attr, value)

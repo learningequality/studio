@@ -18,6 +18,7 @@
   &:hover {
     cursor: pointer;
     background: @blue-500;
+    color: white;
   }
 }
 .action-text {
@@ -60,6 +61,7 @@
 
 @body-font-color: #30302F;
 @annotation-gray: #A4A4A4;
+@gray-100: #F6F6F6;
 @gray-200: #EEEEEE;
 @gray-300: #D0D0D0;
 @gray-400: #BDBDBD;
@@ -151,12 +153,8 @@ ul li.placeholder:before {
   }
 
   .wordwrap {
-   white-space: pre-wrap;      /* CSS3 */
-   white-space: -moz-pre-wrap; /* Firefox */
-   white-space: -pre-wrap;     /* Opera <7 */
-   white-space: -o-pre-wrap;   /* Opera 7 */
-   word-wrap: break-word;      /* IE */
-}
+     white-space: normal;
+  }
 
 
 #kolibri_load_gif{
@@ -182,19 +180,22 @@ ul li.placeholder:before {
   margin-left:20px;
 }
 
-#loading_modal{
+#loading_modal, #offline_overlay{
   position: fixed;
     left: 0;
     top: 0;
     bottom: 0;
     right: 0;
     background: #000;
-    opacity: 0.8;
+    opacity: 0.5;
     filter: alpha(opacity=80);
     z-index:99999999999;
 }
+
+.offline-ui{z-index: 999999999999;}
 
 .disabled{
   opacity:0.5;
   cursor:not-allowed !important;
 }
+
