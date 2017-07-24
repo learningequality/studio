@@ -365,13 +365,12 @@ def sync_nodes(request):
             return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
         all_nodes = []
-        with transaction.atomic():
-            with ContentNode.objects.delay_mptt_updates():
-                for n in nodes:
-                    node, _ = _sync_node(ContentNode.objects.get(pk=n), channel_id, sync_attributes=True, sync_tags=True, sync_files=True, sync_assessment_items=True)
-                    if node.changed:
-                        node.save()
-                    all_nodes.append(node)
+        with transaction.atomic(), ContentNode.objects.delay_mptt_updates():
+            for n in nodes:
+                node, _ = _sync_node(ContentNode.objects.get(pk=n), channel_id, sync_attributes=True, sync_tags=True, sync_files=True, sync_assessment_items=True)
+                if node.changed:
+                    node.save()
+                all_nodes.append(node)
         return HttpResponse(JSONRenderer().render(ContentNodeSerializer(all_nodes, many=True).data))
 
 
@@ -380,15 +379,15 @@ def _sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_fi
     original_node = node.get_original_node()
     if original_node.node_id != node.node_id: # Only update if node is not original
         logging.info("----- Syncing: {} from {}".format(node.title.encode('utf-8'), original_node.get_channel().name.encode('utf-8')))
-        if sync_attributes:
+        if sync_attributes: # Sync node metadata
             sync_node_data(node, original_node)
-        if sync_tags:
+        if sync_tags: # Sync node tags
             sync_node_tags(node, original_node, channel_id)
-        if sync_files:
+        if sync_files: # Sync node files
             sync_node_files(node, original_node)
-        if sync_assessment_items and node.kind_id == content_kinds.EXERCISE:
+        if sync_assessment_items and node.kind_id == content_kinds.EXERCISE: # Sync node exercises
             sync_node_assessment_items(node, original_node)
-        if sync_sort_order:
+        if sync_sort_order: # Sync node sort order
             node.sort_order = original_node.sort_order
             if node.parent not in parents_to_check:
                 parents_to_check.append(node.parent)

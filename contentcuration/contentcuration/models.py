@@ -428,12 +428,13 @@ class ContentNode(MPTTModel, models.Model):
 
     def __init__(self, *args, **kwargs):
         super(ContentNode, self).__init__(*args, **kwargs)
-        self._original_fields = self._as_dict()
+        self._original_fields = self._as_dict() # Fast way to keep track of updates (no need to query db again)
 
     def _as_dict(self):
         return dict([(f.name, getattr(self, f.name)) for f in self._meta.local_fields if not f.rel])
 
     def get_changed_fields(self):
+        """ Returns a dictionary of all of the changed (dirty) fields """
         new_state = self._as_dict()
         return dict([(key, value) for key, value in self._original_fields.iteritems() if value != new_state[key]])
 
