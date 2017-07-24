@@ -188,6 +188,8 @@ def channel_staging(request, channel_id):
 
 
 @csrf_exempt
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
     if request.method != 'POST':
@@ -197,6 +199,7 @@ def publish_channel(request):
 
         try:
             channel_id = data["channel_id"]
+            request.user.can_edit(channel_id)
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 

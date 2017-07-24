@@ -13,16 +13,13 @@ from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
 from contentcuration.statistics import record_node_duplication_stats
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import authentication_classes, permission_classes
 
 
 
 def get_node_diff(request):
-
-
-    from datetime import datetime
-    start_time = datetime.now()
-
-
 
     if request.method == 'POST':
         channel_id = json.loads(request.body)['channel_id']
@@ -43,10 +40,6 @@ def get_node_diff(request):
 
         # Use dictionary for faster lookup speed
         content_id_mapping = {n.content_id: n for n in original_nodes}
-
-
-        mid1_time = datetime.now()
-        print "\n\n\n\nQuery Time: {time}s".format(time=(mid1_time - start_time).total_seconds())
 
         for copied_node in copied_nodes:
             node = content_id_mapping.get(copied_node.content_id)
@@ -74,27 +67,14 @@ def get_node_diff(request):
                     original.append(copied_node)
                     changed.append(node)
 
-
-
-
-        mid2_time = datetime.now()
-        print "Diff Time: {time}s".format(time=(mid2_time - mid1_time).total_seconds())
-
-
-
         serialized_original = JSONRenderer().render(SimplifiedContentNodeSerializer(original, many=True).data)
         serialized_changed = JSONRenderer().render(SimplifiedContentNodeSerializer(changed, many=True).data)
-
-
-
-        end_time = datetime.now()
-        print "Serialize Time: {time}s\n".format(time=(end_time - mid2_time).total_seconds())
-        print "TOTAL TIME: {time}s\n\n\n\n".format(time=(end_time - start_time).total_seconds())
 
         return HttpResponse(json.dumps({
             "original" : serialized_original,
             "changed" : serialized_changed,
         }))
+
 
 def create_new_node(request):
     if request.method == 'POST':
@@ -161,7 +141,8 @@ def get_nodes_by_ids_complete(request):
                            .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
 
-
+@authentication_classes((TokenAuthentication, SessionAuthentication, BasicAuthentication))
+@permission_classes((IsAuthenticated,))
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
 
@@ -173,9 +154,11 @@ def duplicate_nodes(request):
         try:
             nodes = data["nodes"]
             sort_order = data.get("sort_order") or 1
-            target_parent = data["target_parent"]
             channel_id = data["channel_id"]
             new_nodes = []
+            target_parent = ContentNode.objects.get(pk=data["target_parent"])
+            channel = target_parent.get_channel()
+            request.user.can_edit(channel and channel.pk)
 
             nodes_being_copied = []
             for node_data in nodes:
@@ -309,7 +292,8 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
 
     return new_node
 
-
+@authentication_classes((TokenAuthentication, SessionAuthentication, BasicAuthentication))
+@permission_classes((IsAuthenticated,))
 def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
 
@@ -324,6 +308,9 @@ def move_nodes(request):
             channel_id = data["channel_id"]
             min_order = data.get("min_order") or 0
             max_order = data.get("max_order") or min_order + len(nodes)
+
+            channel = target_parent.get_channel()
+            request.user.can_edit(channel and channel.pk)
 
         except KeyError:
             return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -360,6 +347,8 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
 
     return node
 
+@authentication_classes((TokenAuthentication, SessionAuthentication, BasicAuthentication))
+@permission_classes((IsAuthenticated,))
 def sync_nodes(request):
     logging.debug("Entering the sync_nodes endpoint")
 
@@ -405,6 +394,8 @@ def _sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_fi
                 parents_to_check.append(node.parent)
     return node, parents_to_check
 
+@authentication_classes((TokenAuthentication, SessionAuthentication, BasicAuthentication))
+@permission_classes((IsAuthenticated,))
 def sync_channel_endpoint(request):
     logging.debug("Entering the sync_nodes endpoint")
 

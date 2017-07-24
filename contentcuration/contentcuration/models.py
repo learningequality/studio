@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, MultipleObjectsReturned
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
 from django.db import IntegrityError, models, connection
@@ -21,6 +21,8 @@ from le_utils.constants import content_kinds, file_formats, format_presets, lice
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
 
 from contentcuration.statistics import record_channel_stats
+from rest_framework import permissions
+
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -84,6 +86,18 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __unicode__(self):
         return self.email
+
+    def can_edit(self, channel_id):
+        channel = Channel.objects.filter(pk=channel_id).first()
+        if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists():
+            raise PermissionDenied("Cannot edit content")
+        return True
+
+    def can_view(self, channel_id):
+        channel = Channel.objects.filter(pk=channel_id).first()
+        if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists() and not channel.viewers.filter(pk=self.pk).exists():
+            raise PermissionDenied("Cannot view content")
+        return True
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
@@ -251,6 +265,7 @@ class Channel(models.Model):
         return "{}_resource_size".format(self.pk)
 
     # Might be good to display resource size, but need to improve query time first
+
     def get_resource_size(self):
         cached_data = cache.get(self.resource_size_key())
         if cached_data:
@@ -489,6 +504,11 @@ class ContentNode(MPTTModel, models.Model):
             return None
 
     def save(self, *args, **kwargs):
+        if kwargs.get('request'):
+            request = kwargs.pop('request')
+            channel = self.get_channel()
+            request.user.can_edit(channel and channel.pk)
+
         self.changed = self.changed or len(self.get_changed_fields()) > 0
 
         # Detect if node has been moved to another tree
