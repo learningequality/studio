@@ -524,8 +524,8 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license',
-                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors',
-                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
+                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of')
 
 
@@ -544,7 +544,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license',
-                  'license_description', 'assessment_items', 'files', 'parent_title', 'content_id',
+                  'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding')
 

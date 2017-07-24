@@ -10,12 +10,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
-from django.db.models import Q, Case, When, Value, IntegerField, Count
+from django.db.models import Q, Case, When, Value, IntegerField, Count, Sum
 from django.core.urlresolvers import reverse_lazy
 from django.template.loader import render_to_string
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers
-from contentcuration.models import Channel, User, Invitation
+from contentcuration.models import Channel, User, Invitation, ContentNode
 from contentcuration.serializers import AdminChannelListSerializer, AdminUserListSerializer, CurrentUserSerializer
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -85,7 +85,20 @@ def get_channel_kind_count(request, channel_id):
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
     channel = Channel.objects.get(pk=channel_id)
-    return HttpResponse(json.dumps(list(channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))))
+
+    sizes = ContentNode.objects\
+            .prefetch_related('assessment_items')\
+            .prefetch_related('files')\
+            .prefetch_related('children')\
+            .filter(tree_id=channel.main_tree.tree_id)\
+            .values('files__checksum', 'assessment_items__files__checksum', 'files__file_size', 'assessment_items__files__file_size')\
+            .distinct()\
+            .aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
+
+    return HttpResponse(json.dumps({
+            "counts": list(channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')),
+            "size": (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0),
+    }))
 
 
 @login_required

@@ -18,12 +18,6 @@ from contentcuration.statistics import record_node_duplication_stats
 
 def get_node_diff(request):
 
-
-    from datetime import datetime
-    start_time = datetime.now()
-
-
-
     if request.method == 'POST':
         channel_id = json.loads(request.body)['channel_id']
         original = []   # Currently imported nodes
@@ -43,10 +37,6 @@ def get_node_diff(request):
 
         # Use dictionary for faster lookup speed
         content_id_mapping = {n.content_id: n for n in original_nodes}
-
-
-        mid1_time = datetime.now()
-        print "\n\n\n\nQuery Time: {time}s".format(time=(mid1_time - start_time).total_seconds())
 
         for copied_node in copied_nodes:
             node = content_id_mapping.get(copied_node.content_id)
@@ -74,22 +64,8 @@ def get_node_diff(request):
                     original.append(copied_node)
                     changed.append(node)
 
-
-
-
-        mid2_time = datetime.now()
-        print "Diff Time: {time}s".format(time=(mid2_time - mid1_time).total_seconds())
-
-
-
         serialized_original = JSONRenderer().render(SimplifiedContentNodeSerializer(original, many=True).data)
         serialized_changed = JSONRenderer().render(SimplifiedContentNodeSerializer(changed, many=True).data)
-
-
-
-        end_time = datetime.now()
-        print "Serialize Time: {time}s\n".format(time=(end_time - mid2_time).total_seconds())
-        print "TOTAL TIME: {time}s\n\n\n\n".format(time=(end_time - start_time).total_seconds())
 
         return HttpResponse(json.dumps({
             "original" : serialized_original,
@@ -376,13 +352,12 @@ def sync_nodes(request):
             return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
         all_nodes = []
-        with transaction.atomic():
-            with ContentNode.objects.delay_mptt_updates():
-                for n in nodes:
-                    node, _ = _sync_node(ContentNode.objects.get(pk=n), channel_id, sync_attributes=True, sync_tags=True, sync_files=True, sync_assessment_items=True)
-                    if node.changed:
-                        node.save()
-                    all_nodes.append(node)
+        with transaction.atomic(), ContentNode.objects.delay_mptt_updates():
+            for n in nodes:
+                node, _ = _sync_node(ContentNode.objects.get(pk=n), channel_id, sync_attributes=True, sync_tags=True, sync_files=True, sync_assessment_items=True)
+                if node.changed:
+                    node.save()
+                all_nodes.append(node)
         return HttpResponse(JSONRenderer().render(ContentNodeSerializer(all_nodes, many=True).data))
 
 
@@ -391,15 +366,15 @@ def _sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_fi
     original_node = node.get_original_node()
     if original_node.node_id != node.node_id: # Only update if node is not original
         logging.info("----- Syncing: {} from {}".format(node.title.encode('utf-8'), original_node.get_channel().name.encode('utf-8')))
-        if sync_attributes:
+        if sync_attributes: # Sync node metadata
             sync_node_data(node, original_node)
-        if sync_tags:
+        if sync_tags: # Sync node tags
             sync_node_tags(node, original_node, channel_id)
-        if sync_files:
+        if sync_files: # Sync node files
             sync_node_files(node, original_node)
-        if sync_assessment_items and node.kind_id == content_kinds.EXERCISE:
+        if sync_assessment_items and node.kind_id == content_kinds.EXERCISE: # Sync node exercises
             sync_node_assessment_items(node, original_node)
-        if sync_sort_order:
+        if sync_sort_order: # Sync node sort order
             node.sort_order = original_node.sort_order
             if node.parent not in parents_to_check:
                 parents_to_check.append(node.parent)
