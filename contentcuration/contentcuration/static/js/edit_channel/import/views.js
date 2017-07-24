@@ -48,7 +48,7 @@ var MESSAGES = {
 
 var ImportModalView = BaseViews.BaseView.extend({
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         this.options = options;
         this.statusWatcher = store.watch(

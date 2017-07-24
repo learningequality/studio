@@ -14,9 +14,9 @@ INSTALLED_APPS += ('debug_panel', 'debug_toolbar', 'pympler')
 
 MIDDLEWARE_CLASSES += ('debug_panel.middleware.DebugPanelMiddleware',)
 
-# DEBUG_TOOLBAR_CONFIG = {
-#     'SHOW_TOOLBAR_CALLBACK': lambda x: True,
-# }
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': lambda x: True,
+}
 
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
