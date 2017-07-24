@@ -1,0 +1,6 @@
+<ul class="list-unstyled ">
+	<li><b>Total Size: {{#format_file_size size}}{{/format_file_size}}</b></li>
+	{{#each counts}}
+		<li><span class="{{#get_icon kind_id}}{{/get_icon}} content_icon"></span> {{#format_count kind_id count true}}{{/format_count}}</li>
+	{{/each}}
+</ul>

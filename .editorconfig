@@ -1,5 +1,15 @@
-[*.py]
+root = true
+
+[*.js]
+indent_size = 2
+
+[*.vue]
+indent_size = 2
+
+[*.{js,vue,py}]
 indent_style = space
-indent_size = 4
 trim_trailing_whitespace = true
 insert_final_newline = true
+
+[*.py]
+indent_size = 4

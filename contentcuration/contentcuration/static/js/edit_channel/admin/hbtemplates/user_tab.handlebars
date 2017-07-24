@@ -1,0 +1,34 @@
+<div class="table_actions container-fluid">
+	<button class="action-button email_button disabled pull-right" id="email_selected" disabled><span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>&nbsp; <span class="email_button_text">Select Users...</span></button></li>
+	<ul class="list-inline action_list">
+		<li><input type="checkbox" id="admin_user_select_all" class="select_all"><label for="admin_user_select_all">Select All</label></li>
+		<li class="filter_input">
+			<label>Users For</label>
+			<select id="admin_user_channel" class="filter_input extra_input">
+				{{#each extra_filters}}<option {{#if selected}}selected{{/if}} value="{{key}}">{{label}}</option>{{/each}}
+			</select>
+		</li>
+		<li>
+			<label>View</label>
+			<select id="admin_user_view" class="filter_input view_input">
+				{{#each filters}}<option {{#if selected}}selected{{/if}} value="{{key}}">{{label}}</option>{{/each}}
+			</select>
+		</li>
+		<li class="filter_input">
+			<label>Sort By</label>
+			<select id="admin_user_sort" class="filter_input sort_input">
+				{{#each sort_filters}}<option {{#if selected}}selected{{/if}} value="{{key}}">{{label}}</option>{{/each}}
+			</select>
+		</li>
+		<li class="filter_input">
+			<label>Order</label>
+			<select id="admin_user_order" class="filter_input order_input">
+				<option selected value="ascending">Ascending</option>
+				<option value="descending">Descending</option>
+			</select>
+		</li>
+		<li><input type="text" id="admin_user_search" placeholder="Search..." class="search_input"/></li>
+	</ul>
+</div>
+
+<div id="admin_user_table_wrapper"></div>
