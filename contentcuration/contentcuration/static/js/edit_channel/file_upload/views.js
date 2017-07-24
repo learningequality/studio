@@ -9,6 +9,7 @@ require("dropzone/dist/dropzone.css");
 var stringHelper = require("edit_channel/utils/string_helper");
 var browserHelper = require("edit_channel/utils/browser_functions");
 var dialog = require("edit_channel/utils/dialog");
+var ImageViews = require("edit_channel/image/views");
 
 var FileModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/file_upload_modal.handlebars"),
@@ -350,31 +351,34 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     create_thumbnail_view:function(onstart, onfinish, onerror){
         if(!this.thumbnail_view){
             var preset_id = _.findWhere(this.model.get('associated_presets'), {thumbnail: true}).id
-            this.thumbnail_view = new ThumbnailUploadView({
+            this.thumbnail_view = new ImageViews.ThumbnailUploadView({
               model: this.model,
               preset_id: preset_id,
               upload_url: window.Urls.image_upload(),
+              default_url: "/static/img/" + this.model.get("kind") + "_placeholder.png",
               acceptedFiles: window.formatpresets.get({id:preset_id}).get('associated_mimetypes').join(','),
               onsuccess: this.set_thumbnail,
               onremove: this.remove_thumbnail,
               onerror: onerror,
               onfinish:onfinish,
               onstart: onstart,
-              allow_edit: this.allow_edit
+              allow_edit: this.allow_edit,
+              is_channel: false
           });
         }
         this.$(".preview_thumbnail").append(this.thumbnail_view.el);
     },
     remove_thumbnail:function(){
-        this.set_thumbnail(null);
+        this.set_thumbnail(null, null);
     },
-    set_thumbnail:function(thumbnail){
+    set_thumbnail:function(thumbnail, encoding){
         var files = _.reject(this.model.get('files'), function(f){ return f.preset.thumbnail; });
         if(thumbnail){
             thumbnail.set('contentnode', this.model.id);
             files = files.concat(thumbnail.toJSON());
         }
         this.model.set('files', files);
+        this.model.set('thumbnail_encoding', encoding);
     }
 });
 
@@ -749,281 +753,8 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
     }
 });
 
-var ThumbnailUploadView = BaseViews.BaseView.extend({
-    template: require("./hbtemplates/thumbnail_upload.handlebars"),
-    preview_template: require("./hbtemplates/thumbnail_preview.handlebars"),
-    dropzone_template: require("./hbtemplates/thumbnail_dropzone.handlebars"),
-    initialize: function(options) {
-        _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed', 'use_image');
-        this.image_url = options.image_url;
-        this.onsuccess = options.onsuccess;
-        this.onremove = options.onremove;
-        this.onerror = options.onerror;
-        this.onfinish = options.onfinish;
-        this.onstart = options.onstart;
-        this.preset_id = options.preset_id;
-        this.acceptedFiles = options.acceptedFiles;
-        this.upload_url = options.upload_url;
-        this.default_url = options.default_url;
-        this.allow_edit = options.allow_edit;
-        this.render();
-        this.dropzone = null;
-        this.image_success = true;
-    },
-    events: {
-        'click .remove_image ' : 'remove_image',
-        'click .open_thumbnail_generator': 'open_thumbnail_generator'
-    },
-    render: function() {
-        if(this.allow_edit){
-            this.$el.html(this.template({
-                picture : this.get_thumbnail_url(),
-                selector: this.get_selector(),
-                show_generate: this.model.get('kind') != undefined
-            }));
-            _.defer(this.create_dropzone, 1);
-        }else{
-            this.$el.html(this.preview_template({
-                picture : this.get_thumbnail_url(),
-                name: this.model.get('title')
-            }));
-        }
-    },
-    get_thumbnail_url:function(){
-        var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
-        if(this.image_url){ return this.image_url; }
-        else if(thumbnail){ return thumbnail.storage_url; }
-        else if(this.model.get('kind') != undefined) { return "/static/img/" + this.model.get("kind") + "_placeholder.png"; }
-        else{ return "/static/img/kolibri_placeholder.png"; }
-    },
-    remove_image: function(){
-        var self = this;
-        dialog.dialog("Removing Image", "Are you sure you want to remove this image?", {
-            "CANCEL":function(){},
-            "REMOVE": function(){
-                self.image = null;
-                self.image_url = self.default_url;
-                self.onremove();
-                self.render();
-            },
-        }, function(){});
-    },
-    get_selector: function(){
-        return "dropzone_" + this.cid;
-    },
-    create_dropzone:function(){
-        var selector = "#" + this.get_selector();
-        this.dropzone = new Dropzone(this.$(selector).get(0), {
-            maxFiles: 1,
-            clickable: [selector + "_placeholder", selector + "_swap"],
-            acceptedFiles: this.acceptedFiles,
-            url: this.upload_url,
-            previewTemplate:this.dropzone_template({src:"/static/img/loading_placeholder.png"}),
-            previewsContainer: selector,
-            headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id, "Node": this.model.id}
-        });
-        this.dropzone.on("success", this.image_uploaded);
-        this.dropzone.on("addedfile", this.image_added);
-        this.dropzone.on("removedfile", this.image_removed);
-        this.dropzone.on("queuecomplete", this.image_completed);
-        this.dropzone.on("error", this.image_failed);
-    },
-    image_uploaded:function(image){
-        this.image_error = null;
-        result = JSON.parse(image.xhr.response)
-        if(result.file){
-            this.image = new Models.FileModel(JSON.parse(result.file));
-        }
-        this.image_url = result.path;
-        this.image_formatted_name = result.formatted_filename;
-    },
-    image_completed:function(){
-        if(this.image_error){
-            dialog.alert("Image Error", this.image_error);
-            if(this.onerror){ this.onerror(); }
-        }else{
-            if(this.onsuccess){ this.onsuccess(this.image, this.image_formatted_name, this.image_url); }
-            if(this.onfinish){ this.onfinish(); }
-        }
-        this.render();
-    },
-    image_failed:function(data, error){
-        this.image_error = error;
-    },
-    image_added:function(thumbnail){
-        this.image_error = "Error uploading file: connection interrupted";
-        this.$(".finished_area").css('display', 'none');
-        this.$("#" + this.get_selector() + "_placeholder").css("display", "none");
-        if(this.onstart){ this.onstart(); }
-    },
-    image_removed:function(thumbnail){
-        this.image_error = null;
-        this.$("#" + this.get_selector() + "_placeholder").css("display", "block");
-        this.$(".finished_area").css('display', 'block');
-        if(this.onfinish){ this.onfinish(); }
-    },
-    use_image:function(file){
-        this.image = file;
-        this.image_url = file.get('storage_url');
-        this.onsuccess(this.image, this.image_formatted_name, this.image_url);
-        this.render();
-        if(this.onfinish){ this.onfinish(); }
-    },
-    open_thumbnail_generator:function(){
-        var thumbnail_modal = new ThumbnailModalView({
-            node: this.model,
-            onuse: this.use_image,
-            model: this.image
-        });
-    }
-});
-
-var ThumbnailModalView = BaseViews.BaseModalView.extend({
-    template: require("./hbtemplates/thumbnail_generator_modal.handlebars"),
-    img_template: require("./hbtemplates/thumbnail_generator_preview.handlebars"),
-    initialize: function(options) {
-        _.bindAll(this, "generate_thumbnail", 'use_thumbnail', 'render_preview');
-        this.modal = true;
-        this.node = options.node;
-        this.onuse = options.onuse;
-        this.render();
-
-    },
-    events: {
-        'click #generate_thumbnail' : 'generate_thumbnail',
-        'click #use_thumbnail' : 'use_thumbnail'
-    },
-    render: function() {
-        this.$el.html(this.template());
-        $("body").append(this.el);
-        this.$("#thumbnail_modal").modal({show: true});
-        this.$("#thumbnail_modal").on("hide.bs.modal", this.close);
-        this.render_preview()
-        this.$(".modal").on("hide.bs.modal", this.close);
-        this.$(".modal").on("hidden.bs.modal", this.closed_modal);
-    },
-    render_preview:function(){
-        this.$("#thumbnail_preview").html(this.img_template({
-          model: this.model? this.model.toJSON() : null
-        }));
-        this.handle_file();
-    },
-    generate_thumbnail:function(){
-        var self = this;
-        this.$("#thumbnail_area").removeClass('error').addClass('loading');
-        this.$("#generate_thumbnail").attr("disabled", "disabled");
-        this.node.generate_thumbnail().then(function(result){
-            self.$("#thumbnail_area").removeClass('loading');
-            self.model = result;
-            self.render_preview();
-            self.enable_generate();
-        }).catch(function(error){
-            self.$("#thumbnail_area").removeClass('loading').addClass('error');
-            self.$("#generate_thumbnail_error").text(error.responseText);
-            self.enable_generate();
-        });
-    },
-    enable_generate:function(){
-        $("#generate_thumbnail").removeAttr("disabled");
-        $("#generate_thumbnail").removeClass("disabled");
-    },
-    use_thumbnail:function(){
-        this.onuse(this.model);
-        this.close();
-    },
-    handle_file:function(){
-        if(this.model){
-           this.$("#use_thumbnail").removeAttr("disabled");
-           this.$("#use_thumbnail").removeClass("disabled");
-        } else{
-            this.$("#use_thumbnail").attr("disabled", "disabled");
-           this.$("#use_thumbnail").addClass("disabled");
-        }
-    }
-});
-
-var ImageUploadView = BaseViews.BaseModalView.extend({
-    modal: true,
-
-    initialize: function(options) {
-        _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed", "submit_file", "file_complete", "set_alt_text");
-        this.callback = options.callback;
-        this.file = this.alt_text = null;
-        this.preset_id = options.preset_id;
-        this.render();
-    },
-
-    template: require("./hbtemplates/image_upload.handlebars"),
-    dropzone_template : require("./hbtemplates/image_upload_dropzone.handlebars"),
-    modal_template: require("./hbtemplates/image_upload_modal.handlebars"),
-
-    events: {
-        "click #submit_file": "submit_file",
-        "change #alt_text_box": "set_alt_text"
-    },
-
-    render: function() {
-        this.$el.html(this.modal_template());
-        $("body").append(this.el);
-        this.$(".modal").modal({show: true});
-        this.$(".modal").on("hide.bs.modal", this.close);
-        this.$(".modal").on("hidden.bs.modal", this.closed_modal);
-        this.render_dropzone();
-    },
-    render_dropzone:function(){
-        this.$(".modal-body").html(this.template({file: this.file, alt_text: this.alt_text}));
-        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
-            maxFiles: 1,
-            clickable: ["#dropzone", "#dropzone_placeholder"],
-            acceptedFiles: window.formatpresets.get({id:this.preset_id}).get('associated_mimetypes').join(','),
-            url: window.Urls.exercise_image_upload(),
-            thumbnailWidth:null,
-            thumbnailHeight:null,
-            previewTemplate:this.dropzone_template(),
-            previewsContainer: "#dropzone",
-            headers: {"X-CSRFToken": get_cookie("csrftoken")}
-        });
-        this.dropzone.on("success", this.file_uploaded);
-        this.dropzone.on("addedfile", this.file_added);
-        this.dropzone.on("removedfile", this.file_removed);
-        this.dropzone.on("error", this.file_failed);
-        this.dropzone.on("queuecomplete", this.file_complete);
-    },
-    set_alt_text: function(event){
-        this.alt_text = event.target.value;
-    },
-    submit_file:function(){
-        this.callback(this.file.file_id, this.file.formatted_filename, this.alt_text);
-        this.close();
-    },
-    file_uploaded: function(file) {
-        this.file_error = null;
-        this.file = JSON.parse(file.xhr.response);
-    },
-    file_added:function(file){
-        this.file_error = "Error uploading file: connection interrupted";
-        this.$("#dropzone_placeholder").css("display", "none");
-    },
-    file_removed:function(){
-        this.file_error = null;
-        this.file = null;
-        this.render_dropzone();
-    },
-    file_failed:function(data, error){
-        this.file_error = error;
-    },
-    file_complete:function(){
-        if(this.file_error){
-            dialog.alert("Image Error", this.file_error);
-        }
-        this.render_dropzone();
-    }
-});
-
 module.exports = {
     FileUploadView:FileUploadView,
     FileModalView:FileModalView,
-    FormatInlineItem:FormatInlineItem,
-    ThumbnailUploadView: ThumbnailUploadView,
-    ImageUploadView:ImageUploadView
+    FormatInlineItem:FormatInlineItem
 }

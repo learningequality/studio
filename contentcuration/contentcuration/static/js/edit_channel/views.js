@@ -36,14 +36,12 @@ var BaseView = Backbone.View.extend({
   },
   	reload_ancestors:function(collection, include_collection){
   		include_collection = include_collection==null || include_collection;
-		var list_to_reload = (include_collection) ? collection.pluck("id") : [];
+		var list_to_reload = collection.chain()
+						.reduce(function(list, item){ return list.concat(item.get('ancestors'));}, [])
+						.union((include_collection) ? collection.pluck("id") : [])
+						.union([window.current_channel.get("main_tree").id])
+						.uniq().value();
 		var self = this;
-		collection.forEach(function(entry){
-      		$.merge(list_to_reload, entry.get("ancestors"));
-		});
-		if(window.current_channel.get("main_tree")){
-			list_to_reload.push(window.current_channel.get("main_tree").id)
-		}
 		this.retrieve_nodes($.unique(list_to_reload), true).then(function(fetched){
 			fetched.forEach(function(model){
 				var object = window.workspace_manager.get(model.get("id"));
