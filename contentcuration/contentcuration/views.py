@@ -125,7 +125,8 @@ def get_user_channels(request):
 
     return HttpResponse(JSONRenderer().render(channel_serializer.data))
 
-
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def get_user_pending_channels(request):
     pending_list = Invitation.objects.select_related('channel', 'sender').filter(invited=request.user)
     invitation_serializer = InvitationSerializer(pending_list, many=True)
@@ -188,6 +189,8 @@ def channel_staging(request, channel_id):
 
 
 @csrf_exempt
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
     if request.method != 'POST':
@@ -197,6 +200,7 @@ def publish_channel(request):
 
         try:
             channel_id = data["channel_id"]
+            request.user.can_edit(channel_id)
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
@@ -208,6 +212,8 @@ def publish_channel(request):
         }))
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def accessible_channels(request):
     if request.method == 'POST':
         data = json.loads(request.body)

@@ -12,10 +12,16 @@ from contentcuration.utils.files import duplicate_file
 from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import authentication_classes, permission_classes
+from contentcuration.statistics import record_node_duplication_stats
+
 from contentcuration.statistics import record_node_duplication_stats
 
 
-
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def get_node_diff(request):
 
     if request.method == 'POST':
@@ -137,7 +143,8 @@ def get_nodes_by_ids_complete(request):
                            .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
 
-
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
 
@@ -149,9 +156,11 @@ def duplicate_nodes(request):
         try:
             nodes = data["nodes"]
             sort_order = data.get("sort_order") or 1
-            target_parent = data["target_parent"]
             channel_id = data["channel_id"]
             new_nodes = []
+            target_parent = ContentNode.objects.get(pk=data["target_parent"])
+            channel = target_parent.get_channel()
+            request.user.can_edit(channel and channel.pk)
 
             nodes_being_copied = []
             for node_data in nodes:
@@ -285,7 +294,8 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
 
     return new_node
 
-
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
 
@@ -300,6 +310,9 @@ def move_nodes(request):
             channel_id = data["channel_id"]
             min_order = data.get("min_order") or 0
             max_order = data.get("max_order") or min_order + len(nodes)
+
+            channel = target_parent.get_channel()
+            request.user.can_edit(channel and channel.pk)
 
         except KeyError:
             return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -336,6 +349,8 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
 
     return node
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def sync_nodes(request):
     logging.debug("Entering the sync_nodes endpoint")
 
@@ -380,6 +395,8 @@ def _sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_fi
                 parents_to_check.append(node.parent)
     return node, parents_to_check
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def sync_channel_endpoint(request):
     logging.debug("Entering the sync_nodes endpoint")
 

@@ -245,10 +245,13 @@ class CustomListSerializer(serializers.ListSerializer):
                             setattr(node, attr, value)
                         node.tags = taglist
 
+                        node.save(request=self.context['request'])
+
                         PrerequisiteContentRelationship.objects.filter(target_node_id=node_id).delete()
                         for prereq_node in prerequisite_mapping.get(node_id) or []:
                             PrerequisiteContentRelationship.objects.get_or_create(target_node_id=node_id, prerequisite_id=prereq_node.id)
                         node.save()
+
                         ret.append(node)
         return ret
 

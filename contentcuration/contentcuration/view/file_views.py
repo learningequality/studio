@@ -11,8 +11,12 @@ from contentcuration.models import File, FormatPreset, ContentNode, License, gen
 from contentcuration.serializers import FileSerializer, ContentNodeEditSerializer
 from le_utils.constants import format_presets, content_kinds, exercises, licenses
 from pressurecooker.videos import guess_video_preset_by_resolution
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import authentication_classes, permission_classes
 
-
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def file_upload(request):
     if request.method == 'POST':
         # Implement logic for switching out files without saving it yet
@@ -33,7 +37,8 @@ def file_upload(request):
             "file": JSONRenderer().render(FileSerializer(file_object).data)
         }))
 
-
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def file_create(request):
     if request.method == 'POST':
         original_filename, ext = os.path.splitext(request.FILES.values()[0]._name)
@@ -71,7 +76,8 @@ def file_create(request):
             "node": JSONRenderer().render(ContentNodeEditSerializer(new_node).data)
         }))
 
-
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def generate_thumbnail(request):
     logging.debug("Entering the generate_thumbnail endpoint")
 
@@ -89,7 +95,8 @@ def generate_thumbnail(request):
             "path": generate_storage_url(str(thumbnail_object)),
         }))
 
-
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def thumbnail_upload(request):
     if request.method == 'POST':
         fobj = request.FILES.values()[0]
@@ -102,7 +109,8 @@ def thumbnail_upload(request):
             "path": generate_storage_url(formatted_filename),
         }))
 
-
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def image_upload(request):
     if request.method == 'POST':
         name, ext = os.path.splitext(request.FILES.values()[0]._name)  # gets file extension without leading period
@@ -120,7 +128,8 @@ def image_upload(request):
             "path": generate_storage_url(str(file_object)),
         }))
 
-
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def exercise_image_upload(request):
     if request.method == 'POST':
         ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:]  # gets file extension without leading period
