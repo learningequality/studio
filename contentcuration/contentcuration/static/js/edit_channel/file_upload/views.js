@@ -46,7 +46,7 @@ var MESSAGES = {
 var FileModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/file_upload_modal.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, "close_file_uploader");
         this.render(this.close_file_uploader, {});
@@ -95,7 +95,7 @@ var FileUploadView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/file_upload.handlebars"),
     navigation_template: require("./hbtemplates/file_upload_buttons.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this,"go_to_upload", "go_to_metadata", "close_file_uploader", "set_initial_focus", "set_indices", 'loop_focus');
         this.container = options.container;
@@ -185,7 +185,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     template: require("./hbtemplates/file_upload_upload_list.handlebars"),
     file_upload_template: require("./hbtemplates/file_upload_dropzone_item.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, "file_uploaded",  "all_files_uploaded", "file_added", "file_removed","file_failed", "create_dropzone", "set_initial_focus");
@@ -333,7 +333,7 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     collapsedClass: "glyphicon-triangle-top",
     thumbnail_template: require("./hbtemplates/file_upload_thumbnail.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     getToggler: function () { return this.$(".expand_format_editor"); },
     getSubdirectory: function () {return this.$(".format_editor_list"); },
@@ -519,7 +519,7 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     list_selector:">.preset_list",
     default_item:">.preset_list .default-slot-item",
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         this.content_node_view = options.content_node_view;
         this.node = this.model;
@@ -583,7 +583,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     collapsedClass: "glyphicon-menu-up",
     expandedClass: "glyphicon-menu-down",
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     getToggler: function () { return this.$("#format_item_" + this.model.id); },
     getSubdirectory: function () {return this.$("#format_item_" + this.model.id +"_sub"); },
@@ -725,8 +725,6 @@ var MultiLanguageSlotList = FormatSlotList.extend({
     list_selector:">.multilanguage_list .preset_list",
     default_item:">.multilanguage_list .preset_list .default-slot-item",
     is_language: true,
-    name: NAMESPACE,
-    messages: MESSAGES,
 
     initialize: function(options) {
         this.container = options.containing_view;
@@ -771,8 +769,6 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
     template: require("./hbtemplates/format_multilanguage_item.handlebars"),
     language_template: require("./hbtemplates/format_multilanguage_dropdown.handlebars"),
     className:"row format_editor_item",
-    name: NAMESPACE,
-    messages: MESSAGES,
     'id': function() { return "format_slot_item_" + this.model.get("id"); },
     selector: function() { return this.model.get("id") + "_"  + this.node.get('id') + "_dropzone"; },
     initialize: function(options) {

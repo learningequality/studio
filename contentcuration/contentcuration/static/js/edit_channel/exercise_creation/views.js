@@ -89,7 +89,7 @@ var MESSAGES = {
 var AddFormulaView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/add_formula.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, 'add_formula', 'add_character', 'add_format', 'activate_mq');
@@ -221,7 +221,7 @@ var EditorView = BaseViews.BaseView.extend({
     view_template: require("./hbtemplates/editor_view.handlebars"),
     default_template: require("./hbtemplates/editor_view_default.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
@@ -511,7 +511,7 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     template: null,
     additem_el: null,
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     get_default_attributes: function(){ return {}; }, // Default attributes to use when adding to list
     get_next_order: function(){
         if(this.collection.length > 0){
@@ -583,7 +583,7 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
     open: false,                    // Determines if editor is open
     error_template: require("./hbtemplates/assessment_item_errors.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     numbers_only: function() {return false;},
 
     /*********** EDITOR METHODS ***********/
@@ -1183,7 +1183,7 @@ var HintQuestionDisplayView = BaseViews.BaseView.extend({
     className:"assessment_li",
     template: require("./hbtemplates/assessment_item_display.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         this.render();
@@ -1206,7 +1206,7 @@ var HintModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/assessment_item_hint_modal.handlebars"),
     className: "hint_modal_wrapper",
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, "closing_hints", "show", "closed_hints", "init_focus", "loop_focus");

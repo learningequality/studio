@@ -37,7 +37,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     preview_template: require("./hbtemplates/thumbnail_preview.handlebars"),
     dropzone_template: require("./hbtemplates/thumbnail_dropzone.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed',
                          'use_image', 'create_croppie', 'cancel_croppie', 'submit_image', 'get_croppie_encoding', 'submit_croppie');
@@ -256,7 +256,7 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/thumbnail_generator_modal.handlebars"),
     img_template: require("./hbtemplates/thumbnail_generator_preview.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, "generate_thumbnail", 'use_thumbnail', 'render_preview', "init_focus");
         this.modal = true;
@@ -331,7 +331,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
     modal: true,
     className: "exercise_image_upload_modal",
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed", "submit_file", "file_complete", "set_alt_text", "init_focus", "render_dropzone");
         this.callback = options.callback;

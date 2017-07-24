@@ -139,7 +139,7 @@ var PrereqTree = new PrerequisiteTree();
 var PrerequisiteModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/related_modal.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, "close_prerequisites");
@@ -171,7 +171,7 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
     onselect:null,
     lists: [],
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, 'render_selected_view');
@@ -243,7 +243,7 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
 
 var BasePrerequisiteView = BaseViews.BaseView.extend({
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'render');
         this.modal = options.modal;
@@ -338,7 +338,7 @@ var SelectedList = BaseViews.BaseListView.extend({
     default_item:">.default-item",
     list_selector: "#selected_prerequisites",
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         this.collection = options.collection;
         this.container = options.container;
@@ -385,7 +385,7 @@ var RelatedList = BaseViews.BaseListView.extend({
     list_selector: ".select-list",
     className: "related_list_wrapper",
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'navigate_to_node');
         this.collection = options.collection;
@@ -434,7 +434,7 @@ var BasePrerequisiteItem = BaseViews.BaseListNodeItemView.extend({
     tagName: "div",
     className: "select_list_item container-fluid prereq_row",
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     'id': function() { return "select_item_" + this.model.get("id"); },
     initialize: function(options) {
         this.container = options.container;

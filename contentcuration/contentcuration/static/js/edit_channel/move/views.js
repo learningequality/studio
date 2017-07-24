@@ -19,7 +19,7 @@ var MoveModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/move_modal.handlebars"),
     modal: true,
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         this.render(this.close, {});
@@ -40,7 +40,7 @@ var MoveView = BaseViews.BaseListView.extend({
     lists: [],
     target_node:null,
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, 'move_content', 'loop_focus', 'set_indices');
@@ -180,7 +180,7 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
     expandedClass: "glyphicon-triangle-bottom",
     list_selector: ">.move-list",
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     getToggler: function () { return this.$("#menu_toggle_" + this.model.id); },
     getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },

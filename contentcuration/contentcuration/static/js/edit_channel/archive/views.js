@@ -16,7 +16,7 @@ var MESSAGES = {
 var ArchiveModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/archive_modal.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         this.modal = true;
@@ -33,7 +33,7 @@ var ArchiveModalView = BaseViews.BaseModalView.extend({
 var ArchiveView = BaseViews.BaseWorkspaceView.extend({
     template: require("./hbtemplates/archive_dialog.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'restore_content', 'delete_content', 'update_count', 'select_all');
         this.bind_workspace_functions();
@@ -130,7 +130,7 @@ var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
     default_item:">.archive-list >.default-item",
     list_selector: ">.archive-list",
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'update_count', 'get_metadata');
         this.collection = new Models.ContentNodeCollection();
@@ -208,7 +208,7 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     list_selector: ">.archive-list",
     item_to_archive: false,
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     getToggler: function () { return this.$("#menu_toggle_" + this.model.get("id")); },
     getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },

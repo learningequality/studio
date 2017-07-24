@@ -33,7 +33,7 @@ var PreviewModalView = BaseViews.BaseModalView.extend({
 
 var PreviewView = BaseViews.BaseView.extend({
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     tabs_template: require("./hbtemplates/preview_templates/tabs.handlebars"),
     template: require("./hbtemplates/preview_dialog.handlebars"),
     initialize: function(options) {

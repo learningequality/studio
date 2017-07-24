@@ -16,7 +16,7 @@
           @click.prevent="submitSearch"
           :disabled="!searchTermIsValid"
         >
-          Search
+          {{ $tr('searchButtonLabel')  }}
         </button>
       </form>
     </div>
@@ -29,8 +29,8 @@
     <br/>
 
     <div id="import_bottom_container" class="modal-bottom-content-default">
-      <a class="action-text" data-dismiss="modal">
-        <span>CANCEL</span>
+      <a class="action-text uppercase" data-dismiss="modal">
+        <span>{{ $tr('cancelButtonLabel')  }}</span>
       </a>
       <button
         class="action-button pull-right modal-main-action-button"
@@ -39,15 +39,15 @@
         :disabled="!importIsEnabled"
       >
         <span v-if="!importIsEnabled">
-          Select content to import...
+          {{ $tr('selectContentPrompt')  }}
         </span>
-        <span v-else>
-          IMPORT
+        <span v-else class="uppercase">
+          {{ $tr('importButtonLabel')  }}
         </span>
       </button>
       <span id="import_file_metadata" class="pull-right">
         <span id="import_file_count">
-          {{ topicCount | pluralize('Topic') }} {{ resourceCount | pluralize('Resource') }}
+          {{ $tr('importCountText', {'topicCount': topicCount, 'resourceCount': resourceCount})  }}
         </span>
         <em id="import_file_size">
           ({{ importFileSizeInWords }})
@@ -67,6 +67,15 @@ const { mapGetters, mapState, mapActions, mapMutations } = require('vuex');
 const  { pluralize } = require('./filters');
 
 module.exports = {
+  name: 'ImportDialogue',
+  $trs: {
+    'searchButtonLabel': "Search",
+    'cancelButtonLabel': "Cancel",
+    'selectContentPrompt': "Select content to import...",
+    'importButtonLabel': "Import",
+    'importCountText': "{topicCount, plural, =1 {# Topic} other {# Topics}}, {resourceCount, plural, =1 {# Resource} other {# Resources}}",
+    'calculatingSizeText': "Calculating Size..."
+  },
   components: {
     ImportChannelList: require('./ImportChannelList.vue'),
   },
@@ -99,7 +108,7 @@ module.exports = {
     },
     importFileSizeInWords() {
       if (this.importSizeInBytes < 0) {
-        return 'Calculating Size...';
+        return this.$tr('calculatingSizeText');
       }
       return `${stringHelper.format_size(this.importSizeInBytes)}`;
     },

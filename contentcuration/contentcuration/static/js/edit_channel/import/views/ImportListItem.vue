@@ -34,7 +34,7 @@
         </template>
 
         <em v-else class="ListItem__ChildCount">
-          (empty)
+          {{ $tr('empty')  }}
         </em>
       </template>
 
@@ -47,7 +47,7 @@
     <!-- TODO re-insert smooth transition -->
       <div v-show="isExpanded ">
         <em v-show="isLoading" class="default-item">
-          Loading...
+          {{ $tr('loading')  }}
         </em>
         <ul class="ListItem__SubList">
           <transition-group name="fade">
@@ -79,6 +79,10 @@ const { pluralize } = require('./filters');
 
 module.exports = {
   name: 'ImportListItem',
+  $trs: {
+    'loading': "Loading",
+    'empty': "(empty)"
+  },
   props: {
     isChannel: RequiredBoolean,
     isFolder: RequiredBoolean,

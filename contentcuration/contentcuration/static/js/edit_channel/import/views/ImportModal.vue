@@ -7,7 +7,7 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
-          <h4 class="modal-title">Import from Another Channel</h4>
+          <h4 class="modal-title">{{ $tr('importHeader') }}</h4>
         </div>
         <div class="modal-body">
           <ImportDialogue>
@@ -26,6 +26,10 @@
 const { mapGetters, mapActions } = require('vuex');
 
 module.exports = {
+  name: 'ImportModal',
+  $trs: {
+    'importHeader': "Import from Other Channels"
+  },
   components: {
     ImportDialogue: require('./ImportDialogue.vue'),
     ImportChannelList: require('./ImportChannelList.vue'),

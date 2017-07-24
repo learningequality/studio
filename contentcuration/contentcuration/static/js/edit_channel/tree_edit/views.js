@@ -61,7 +61,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	lists: [],
 	template: require("./hbtemplates/container_area.handlebars"),
 	name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 	initialize: function(options) {
 		_.bindAll(this, 'copy_content', 'call_duplicate', 'delete_content' , 'move_items' ,'add_container','toggle_details', 'handle_checked', 'open_archive');
 		this.bind_workspace_functions();
@@ -242,7 +242,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	openedFolderClass: "current_topic",
 	item_class_selector: ".content-item",
 	name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
 	'id': function() {
 		return "list_" + this.model.get("id");
@@ -355,7 +355,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	selectedClass: "content-selected",
 	openedFolderClass: "current_topic",
 	name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 	'id': function() {
 		return this.model.get("id");
 	},
@@ -517,7 +517,7 @@ var DiffModalView = BaseViews.BaseModalView.extend({
 	modal_template: require("./hbtemplates/stats_modal.handlebars"),
 	template: require("./hbtemplates/stats_table.handlebars"),
 	name: NAMESPACE,
-	messages: MESSAGES,
+	$trs: MESSAGES,
 	id: "stat_modal_wrapper",
 	initialize: function(options) {
 		_.bindAll(this, "init_focus");

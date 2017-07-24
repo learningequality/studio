@@ -61,7 +61,7 @@ var MESSAGES = {
 var MetadataModalView = BaseViews.BaseModalView.extend({
   template: require("./hbtemplates/uploader_modal.handlebars"),
   name: NAMESPACE,
-  messages: MESSAGES,
+  $trs: MESSAGES,
   initialize: function(options) {
     _.bindAll(this, "close_uploader");
     this.allow_edit = options.allow_edit;
@@ -122,7 +122,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
 var EditMetadataView = BaseViews.BaseEditableListView.extend({
   template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
   name: NAMESPACE,
-  messages: MESSAGES,
+  $trs: MESSAGES,
 
   initialize: function(options) {
     _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit',
@@ -403,7 +403,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
 var EditMetadataList = BaseViews.BaseEditableListView.extend({
   template : require("./hbtemplates/edit_metadata_list.handlebars"),
   name: NAMESPACE,
-  messages: MESSAGES,
+  $trs: MESSAGES,
   selected_items: [],
   shared_data:{
     shared_tags:[],
@@ -563,7 +563,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   description_limit : 400,
   selected_items: [],
   name: NAMESPACE,
-  messages: MESSAGES,
+  $trs: MESSAGES,
 
   initialize: function(options) {
     _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'loop_focus', 'select_tag', 'set_initial_focus');
@@ -880,7 +880,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   template: require("./hbtemplates/uploaded_list_item.handlebars"),
   selectedClass:"current_item",
   name: NAMESPACE,
-  messages: MESSAGES,
+  $trs: MESSAGES,
   format_view:null,
   'id': function() {
       return "item_" + this.model.get("id");

@@ -22,7 +22,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 	trash_queue:null,
 	clipboard_selector: "#clipboard-queue",
 	name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
 	initialize: function(options) {
 		_.bindAll(this, 'toggle_queue', 'open_queue', 'close_queue');
@@ -86,7 +86,7 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	list_wrapper_selector: "#clipboard-queue",
 	item_class_selector: ".queue-item",
 	name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 	'id': function() {
 		return "list_" + this.model.get("id");
 	},
@@ -204,7 +204,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	collapsedClass: "glyphicon-menu-up",
 	className: "queue-item",
 	name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 	getToggler: function () { return this.$("#menu_toggle_" + this.model.id); },
 	getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },
 	'id': function() {

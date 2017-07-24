@@ -32,7 +32,7 @@ var BaseInfoModalView = BaseViews.BaseModalView.extend({
   modal_id: ".modal",
   className: "information_wrapper",
   name: NAMESPACE,
-  messages: MESSAGES,
+  $trs: MESSAGES,
   get_render_data: function(){ return {}; },
   initialize: function(options) {
       _.bindAll(this, 'loop_focus', 'set_indices', "init_focus");

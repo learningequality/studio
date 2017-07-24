@@ -21,7 +21,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/export_modal.handlebars"),
     name: NAMESPACE,
     messages: MESSAGES,
-    initialize: function(options) {
+    $trs: function(options) {
         _.bindAll(this, "publish", 'loop_focus', 'set_indices');
         this.modal = true;
         this.render(this.close, {
@@ -69,7 +69,7 @@ var ExportListView = BaseViews.BaseListView.extend({
     default_item:">.export_list >.default-item",
     list_selector: ">.export_list",
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         this.collection = new Models.ContentNodeCollection();
@@ -109,7 +109,7 @@ var ExportItem = BaseViews.BaseListNodeItemView.extend({
     list_selector: ">.export_list",
     item_to_import: false,
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     getToggler: function () { return this.$("#menu_toggle_" + this.model.id); },
     getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },

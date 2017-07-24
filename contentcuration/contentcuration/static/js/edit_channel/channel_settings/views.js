@@ -35,7 +35,7 @@ var MESSAGES = {
 var SettingsModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/settings_modal.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         this.parent_view = options.parent_view;
         this.modal = true;
@@ -54,7 +54,7 @@ var SettingsModalView = BaseViews.BaseModalView.extend({
 var SettingsView = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/settings_dialog.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, "set_thumbnail", "reset_thumbnail", "remove_thumbnail", "init_focus");
         this.modal = options.modal;

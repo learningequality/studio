@@ -8,73 +8,75 @@ function get_author(){
 
 var TABINDEX = 1;
 
+var NAMESPACE = "shared";
+var MESSAGES = {
+	"cancel": "Cancel",
+	"delete": "Delete",
+	"move": "Move",
+	"edit": "Edit",
+	"view": "View",
+	"publish": "PUBLISH",
+	"close": "CLOSE",
+	"add": "Add",
+	"remove": "Remove",
+	"deploy_option": "Deploy Channel?",
+	"view_summary": "View Summary",
+	"keep_reviewing": "Keep Reviewing",
+	"deploy": "Deploy",
+	"copy": "Copy",
+	"topic": "Topic",
+	"exercise_title": "Exercise",
+	"select_all": "Select All",
+    "preview": "Preview",
+	"deleting": "Deleting...",
+	"archiving": "Archiving Content...",
+	"moving_content": "Moving Content...",
+	"moving_to_clipboard": "Moving to Clipboard...",
+	"deleting_content": "Deleting Content...",
+	"copying_to_clipboard": "Copying to Clipboard...",
+	"loading": "Loading...",
+	"saving": "Saving...",
+	"creating": "Creating...",
+	"loading_content": "Loading Content...",
+	"no_changes_detected": "No changes detected",
+	"not_approved": "Channel not approved",
+	"no_items": "No items found",
+	"empty": "(empty)",
+	"no_preview": "No Preview Available",
+	"refresh_page": "Error with asynchronous call. Please refresh the page",
+	"call_error": "Error with asynchronous call",
+	"error_moving_content": "Error Moving Content",
+	"error": "ERROR",
+	"warning": "WARNING",
+	"deploy_stats": "Deploying this topic tree will replace the live topic tree ({data, plural,\n =1 {# topic}\n other {# topics}}, " +
+					"{data2, plural,\n =1 {# resource}\n other {# resources}}) with this staged topic tree " +
+					"({data3, plural,\n =1 {# topic}\n other {# topics}}, {data4, plural,\n =1 {# resource}\n other {# resources}}). " +
+					"Are you sure you want to deploy this updated topic tree?",
+	"delete_item_warning": "Are you sure you want to PERMANENTLY delete this item? Changes cannot be undone!",
+	"delete_message": "Are you sure you want to delete these selected items PERMANENTLY? Changes cannot be undone!",
+	"unsaved_changes": "Unsaved Changes!",
+	"unsaved_changes_text": "Exiting now will undo any new changes. Are you sure you want to exit?",
+	"count": "{data, plural,\n =0 {}\n =1 {# item selected }\n other {# items selected }}",
+    "resource_count": "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
+	"id": "ID:",
+	"continue": "Continue",
+	"related_content": "RELATED CONTENT DETECTED",
+	"related_content_warning": "Any content associated with {data, plural,\n =1 {this item}\n other {these items}} " +
+        "will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content. Are you sure you want to continue?",
+}
+
 var BaseView = Backbone.View.extend({
 	default_item: ".default-item",
-	name: "namespace",
+	name: NAMESPACE,
 	locales: ["en-US"],
 	locale: navigator.language || navigator.browserLanguage,
-	messages: {},
+	$trs: {},
 	globalMessageStore: require("utils/translations"),
-	sharedTranslations: {
-		"cancel": "Cancel",
-		"delete": "Delete",
-		"move": "Move",
-		"edit": "Edit",
-    	"view": "View",
-    	"publish": "PUBLISH",
-    	"close": "CLOSE",
-		"add": "Add",
-		"remove": "Remove",
-		"deploy_option": "Deploy Channel?",
-		"view_summary": "View Summary",
-		"keep_reviewing": "Keep Reviewing",
-		"deploy": "Deploy",
-		"copy": "Copy",
-		"topic": "Topic",
-		"exercise_title": "Exercise",
-		"select_all": "Select All",
-	    "preview": "Preview",
-    	"deleting": "Deleting...",
-		"archiving": "Archiving Content...",
-		"moving_content": "Moving Content...",
-		"moving_to_clipboard": "Moving to Clipboard...",
-		"deleting_content": "Deleting Content...",
-		"copying_to_clipboard": "Copying to Clipboard...",
-		"loading": "Loading...",
-		"saving": "Saving...",
-		"creating": "Creating...",
-		"loading_content": "Loading Content...",
-		"no_changes_detected": "No changes detected",
-		"not_approved": "Channel not approved",
-		"no_items": "No items found",
-		"empty": "(empty)",
-		"no_preview": "No Preview Available",
-		"refresh_page": "Error with asynchronous call. Please refresh the page",
-		"call_error": "Error with asynchronous call",
-		"error_moving_content": "Error Moving Content",
-		"error": "ERROR",
-		"warning": "WARNING",
-		"deploy_stats": "Deploying this topic tree will replace the live topic tree ({data, plural,\n =1 {# topic}\n other {# topics}}, " +
-						"{data2, plural,\n =1 {# resource}\n other {# resources}}) with this staged topic tree " +
-						"({data3, plural,\n =1 {# topic}\n other {# topics}}, {data4, plural,\n =1 {# resource}\n other {# resources}}). " +
-						"Are you sure you want to deploy this updated topic tree?",
-		"delete_item_warning": "Are you sure you want to PERMANENTLY delete this item? Changes cannot be undone!",
-		"delete_message": "Are you sure you want to delete these selected items PERMANENTLY? Changes cannot be undone!",
-		"unsaved_changes": "Unsaved Changes!",
-		"unsaved_changes_text": "Exiting now will undo any new changes. Are you sure you want to exit?",
-		"count": "{data, plural,\n =0 {}\n =1 {# item selected }\n other {# items selected }}",
-	    "resource_count": "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
-    	"id": "ID:",
-    	"continue": "Continue",
-    	"related_content": "RELATED CONTENT DETECTED",
-    	"related_content_warning": "Any content associated with {data, plural,\n =1 {this item}\n other {these items}} " +
-            "will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content. Are you sure you want to continue?",
-	},
-
+	sharedTranslations: MESSAGES,
 
 	get_translation_library: function(){
 		return _.chain(this.sharedTranslations)
-					.extend(this.messages)
+					.extend(this.$trs)
 					.extend(this.globalMessageStore["shared"] || {})
 					.extend(this.globalMessageStore[this.name] || {})
 					.value();

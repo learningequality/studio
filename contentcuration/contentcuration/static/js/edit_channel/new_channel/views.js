@@ -43,7 +43,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
 	list_selector: "#channel_list",
 	name: NAMESPACE,
-	messages: MESSAGES,
+	$trs: MESSAGES,
 	initialize: function(options) {
 		_.bindAll(this, 'new_channel');
 		this.render();
@@ -68,7 +68,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 
 var ChannelList  = BaseViews.BaseEditableListView.extend({
 	name: NAMESPACE,
-	messages: MESSAGES,
+	$trs: MESSAGES,
 	initialize: function(options) {
 		this.bind_edit_functions();
 		this.container = options.container;
@@ -130,7 +130,7 @@ var CurrentChannelList  = ChannelList.extend({
 
 var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	name: NAMESPACE,
-	messages: MESSAGES,
+	$trs: MESSAGES,
 	tagName: "li",
 	id: function(){
 		return (this.model)? this.model.get("id") : "new";
@@ -408,7 +408,7 @@ var PendingChannelList  = ChannelList.extend({
 
 var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 	name: NAMESPACE,
-	messages: MESSAGES,
+	$trs: MESSAGES,
 	tagName: "li",
 	id: function(){
 		return (this.model)? this.model.get("id") : "new";

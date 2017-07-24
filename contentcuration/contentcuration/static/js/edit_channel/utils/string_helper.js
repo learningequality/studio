@@ -1,5 +1,5 @@
 var globalMessageStore = require("utils/translations");
-var CONSTANT_TRANSLATIONS =  require("edit_channel/utils/data/local_translations.json");
+var $trs =  require("edit_channel/utils/data/local_translations.json");
 var _ = require("underscore");
 
 function format_size(text){
@@ -24,7 +24,7 @@ function escape_str(text){
 }
 
 function translate(constant_id){
-  var messages = _.extend(CONSTANT_TRANSLATIONS, globalMessageStore["constants"] || {});
+  var messages = _.extend($trs, globalMessageStore["constants"] || {});
   return messages[constant_id];
 }
 

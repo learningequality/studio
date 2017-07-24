@@ -58,7 +58,7 @@ var TempSyncModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/temp_sync_modal.handlebars"),
     modal: true,
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, "init_focus");
@@ -110,6 +110,8 @@ var TempSyncModalView = BaseViews.BaseModalView.extend({
 var SyncModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/sync_modal.handlebars"),
     modal: true,
+    name: NAMESPACE,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         this.render(this.close, {});
@@ -128,6 +130,8 @@ var SyncView = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/sync_dialog.handlebars"),
     onsync:null,
     lists: [],
+    name: NAMESPACE,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, 'sync_content');
@@ -200,6 +204,8 @@ var SyncView = BaseViews.BaseListView.extend({
 
 var SyncPreviewView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/sync_preview.handlebars"),
+    name: NAMESPACE,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, 'generate_diff_item', 'compare_field', 'render_diff');
@@ -468,6 +474,8 @@ var SyncPreviewModalView = BaseViews.BaseModalView.extend({
     modal: true,
     header: null,
     template: require("./hbtemplates/sync_preview_modal.handlebars"),
+    name: NAMESPACE,
+    $trs: MESSAGES,
     render: function() {
         this.$el.html(this.template({header: this.header()}, {
             data: this.get_intl_data()
@@ -522,6 +530,8 @@ var SyncList = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/sync_list.handlebars"),
     default_item:".sync-list .default-item",
     list_selector: ".sync-list",
+    name: NAMESPACE,
+    $trs: MESSAGES,
     initialize: function(options) {
         this.container = options.container;
         this.collection = options.collection;
@@ -556,6 +566,8 @@ var SyncItem = BaseViews.BaseListNodeItemView.extend({
     tagName: "li",
     className: "sync_list_item",
     selectedClass: "sync-selected",
+    name: NAMESPACE,
+    $trs: MESSAGES,
 
     'id': function() { return "sync_item_" + this.model.get("id"); },
     initialize: function(options) {

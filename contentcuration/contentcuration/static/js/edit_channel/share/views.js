@@ -49,7 +49,7 @@ var MESSAGES = {
 var ShareModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/share_modal.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, "close");
         this.render(this.close, {
@@ -69,7 +69,7 @@ var ShareModalView = BaseViews.BaseModalView.extend({
 var ShareView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/share_dialog.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, "send_invite", 'loop_focus', 'set_initial_focus', 'set_indices');
@@ -258,7 +258,7 @@ var ShareView = BaseViews.BaseView.extend({
 
 var BaseShareList = BaseViews.BaseEditableListView.extend({
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     render: function() {
         this.$el.html(this.template(null, {
             data: this.get_intl_data()
@@ -334,7 +334,7 @@ var ShareItem = BaseViews.BaseListEditableItemView.extend({
     className: "share_list_item",
     share_mode: "edit",
     name: NAMESPACE,
-    messages: MESSAGES,
+    $trs: MESSAGES,
     'id': function() {
         return "share_item_" + this.model.get("id");
     },
