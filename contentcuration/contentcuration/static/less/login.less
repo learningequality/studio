@@ -1,250 +1,179 @@
 @import "global-variables.less";
 
-/* LOGIN STYLING */
-#login-container{
-	@login-background: rgba(145,81,148,.6); /*#915194*/
-	@login-secondary-color: rgba(255,255,255,.85); /*#DEEDE9*/
-	@login-text-bg-color: rgba(85,170,147,.5); /*#55AA93*/
-	@login-btn-color:  #067C7B;
-
-	/* Image background */
-	/*background: url('/static/img/kolibri_login.png');*/
-
-	/* Gradient background */
-	background: white; /* For browsers that do not support gradients */
-    background: -webkit-linear-gradient(black, white); /* For Safari 5.1 to 6.0 */
-    background: -o-linear-gradient(black, white); /* For Opera 11.1 to 12.0 */
-    background: -moz-linear-gradient(black, white); /* For Firefox 3.6 to 15 */
-    background: linear-gradient(black, white); /* Standard syntax */
-
-	background-size: 100vw 100vh;
-	width:100vw;
-	height:100vh;
-	margin:0;
-
-	#login_le{
-		margin-left:400px;
-		color:white;
-		margin-top:10px;
-		font-size:12pt;
-		text-decoration:none;
-		#le_img{
-			width:32px;
-			height:32px;
-			margin-right:5px;
-		}
-	}
-
-	#login_le:hover{
-		font-weight:bold;
-		#le_img{
-			width:36px;
-			height:36px;
-		}
-	}
-
-	#login-overlay{
-		background:@login-background;
-		height:100vh;
-		width:100vw;
-		ul{
-			list-style:none;
-		}
-
-		li{
-			color:@red-error-color;
-			font-weight:bold;
-		}
-		.required_asterisk {
-			color:@red-error-color;
-		}
-
-		#login-form{
-			margin-top:10%;
-			padding:30px;
-			background-color:@login-secondary-color;
-			width:600px;
-			#login-title-area{
-				margin-bottom:40px;
-				width:400px;
-				margin-left:100px;
-
-				#login-image{
-					width:120px;
-					height:100px;
-					margin:0;
-					margin-right:-100px;
-					margin-top: -10px;
-					/*background-color:white;
-					border-radius:500px;*/
-					padding:10px;
-				}
-				#login-title{
-					font-size:40pt;
-					margin:0;
-				}
-				#login-subheading{
-					font-size:15pt;
-					color:gray;
-					display: block;
-					font-style:italic;
-					margin:0;
-				}
-			}
-			input{
-				outline-color: #55AA93;
-				border:none;
-				background-color:@login-text-bg-color;
-				padding:5px;
-				font-size:14pt;
-			}
-
-			#id_last_name{
-				margin-bottom:30px;
-			}
-
-			#form-wrapper{
-				text-align:right;
-				margin-right:25%;
-
-			}
-
-			.btn-login{
-				width:50%;
-				background-color:@login-btn-color;
-				margin-bottom:10px;
-				margin-top: 20px;
-				font-size:15pt;
-				color:white;
-			}
-
-			#lost_password_prompt{
-				margin-right:-10px;
-			}
-
-			.login-action-text{
-				color:@login-btn-color;
-			}
-
-			#register_prompt{
-				font-size:14pt;
-			}
-		}
-	}
+html, body, .login, .login-branding, .login-content{
+	// standardizing height across the app
+	height: 100%
 }
 
-.message-page{
-	@reset-btn-color:  #067C7B;
-	@invitation_register-width: 380px;
+.content-padding-top(){
+	padding-top: 20%;
+}
 
-	padding-top:15vw;
-	padding-left:10vw;
-	.message-img-wrapper{
-		vertical-align:middle;
-		display:inline-block;
-		.message-logo{
-			width:160px;
-			height:130px;
-			margin-right:20px;
-			margin-top:25px;
-		}
-	}
-	input{
-		padding:2px;
-	}
+@iphone-screen-width: 480px;
 
-	.message-wrapper{
-		vertical-align:middle;
-		display:inline-block;
-		width:65vw;
-		p{
-			font-size:12pt;
-		}
+// /* LOGIN STYLING */
+.login{
+	// fighting container-fluid
+	padding: 0;
 
-		.message-btn{
-			padding:2px 10px;
-			background-color:@reset-btn-color;
-			color:white;
-			font-size:12pt;
-		}
-		ul{
-			list-style:none;
+	&-branding{
+		background: black;
+		.content-padding-top();
+
+		&-kolibri{
+
+			&-logo{
+					display: inline-block;
+					width: @iphone-screen-width;
+			}
+
+			&-title {
+					display: inline-block;
+			}
 		}
 
-		li{
-			color:@red-error-color;
-			font-weight:bold;
-		}
-	}
-	#email_area{
-		margin-left:40px;
-		width: @invitation_register-width;
-		padding-top:10px;
-		#invited_email{
-			margin:2px;
-			margin-bottom:20px;
-		}
-		#invited_email_hint{
-			margin:2px;
+		&-footer{
+			position: absolute;
+			bottom: 0;
+			left: 0;
+
+			&-le-logo{
+				//TODO make this a variable
+				height: 40px;
+				width: auto;
+			}
+
+			&-le-title{
+				text-align: left;
+			}
 		}
 	}
 
-	#invitation_error_list{
-		width:@invitation_register-width;
-		text-align:center;
-		margin-left:40px;
-	}
+	&-content{
+		.content-padding-top();
+		background-color: red;
 
-	#invitation_register_form{
-		margin-left:40px;
-		margin-top:10px;
-		width:@invitation_register-width;
-		text-align:right;
-
-		.required_asterisk{
-			color:@red-error-color;
-			font-weight:bold;
-		}
-		#invitation_register_button{
-			margin-top:10px;
-			width:100%;
-			text-align:center;
-			padding:5px;
-			margin-bottom:20px;
-		}
-		#invitation-action-text{
-			color:@reset-btn-color;
-			margin-right:40%;
-			font-size:12pt;
-		}
-	}
-	.invitation-action-text{
-		padding:0;
-		color:@reset-btn-color;
-	}
-	#invitation_accept_form{
-		margin-top:20px;
-		.required_asterisk{
-			color:@red-error-color;
-			font-weight:bold;
-		}
-		#invitation_accept_button{
-			padding:5px 10px;
-			font-size:12pt;
-		}
-		#invitation_accept_button:hover{
-			font-weight:bold;
-		}
-		#invitation-action-text{
-			color:@reset-btn-color;
-			font-size:12pt;
-		}
-		#accept-error{
-			display:inline;
-			font-weight:bold;
-			color:@red-error-color;
-			margin-left:10px;
+		&-form{
+			width: @iphone-screen-width;
+			max-width: 100%;
+			overflow-y: auto;
 		}
 
 	}
 }
+//
+// .message-page{
+// 	@reset-btn-color:  #067C7B;
+// 	@invitation_register-width: 382px;
+//
+// 	padding-top:15vw;
+// 	padding-left:13vw;
+// 	.message-img-wrapper{
+// 		vertical-align:middle;
+// 		display:inline-block;
+// 		.message-logo{
+// 			width:160px;
+// 			height:130px;
+// 			margin-right:20px;
+// 			margin-top:25px;
+// 		}
+// 	}
+// 	input{
+// 		padding:20px;
+// 	}
+//
+// 	.message-wrapper{
+// 		vertical-align:middle;
+// 		display:inline-block;
+// 		width:65vw;
+// 		p{
+// 			font-size:12pt;
+// 		}
+//
+// 		.message-btn{
+// 			padding:2px 10px;
+// 			background-color:@reset-btn-color;
+// 			color:white;
+// 			font-size:12pt;
+// 		}
+// 		ul{
+// 			list-style:none;
+// 		}
+//
+// 		li{
+// 			color:@red-error-color;
+// 			font-weight:bold;
+// 		}
+// 	}
+// 	#email_area{
+// 		margin-left:40px;
+// 		width: @invitation_register-width;
+// 		padding-top:10px;
+// 		#invited_email{
+// 			margin:2px;
+// 			margin-bottom:20px;
+// 		}
+// 		#invited_email_hint{
+// 			margin:2px;
+// 		}
+// 	}
+//
+// 	#invitation_error_list{
+// 		width:@invitation_register-width;
+// 		text-align:center;
+// 		margin-left:40px;
+// 	}
+//
+// 	#invitation_register_form{
+// 		margin-left:40px;
+// 		margin-top:10px;
+// 		width:@invitation_register-width;
+// 		text-align:right;
+//
+// 		.required_asterisk{
+// 			color:@red-error-color;
+// 			font-weight:bold;
+// 		}
+// 		#invitation_register_button{
+// 			margin-top:10px;
+// 			width:100%;
+// 			text-align:center;
+// 			padding:5px;
+// 			margin-bottom:20px;
+// 		}
+// 		#invitation-action-text{
+// 			color:@reset-btn-color;
+// 			margin-right:40%;
+// 			font-size:12pt;
+// 		}
+// 	}
+// 	.invitation-action-text{
+// 		padding:0;
+// 		color:@reset-btn-color;
+// 	}
+// 	#invitation_accept_form{
+// 		margin-top:20px;
+// 		.required_asterisk{
+// 			color:@red-error-color;
+// 			font-weight:bold;
+// 		}
+// 		#invitation_accept_button{
+// 			padding:5px 10px;
+// 			font-size:12pt;
+// 		}
+// 		#invitation_accept_button:hover{
+// 			font-weight:bold;
+// 		}
+// 		#invitation-action-text{
+// 			color:@reset-btn-color;
+// 			font-size:12pt;
+// 		}
+// 		#accept-error{
+// 			display:inline;
+// 			font-weight:bold;
+// 			color:@red-error-color;
+// 			margin-left:10px;
+// 		}
+//
+// 	}
+// }
