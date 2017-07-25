@@ -135,15 +135,24 @@ def get_node_path(request):
         data = json.loads(request.body)
 
         try:
-            topic = ContentNode.objects.prefetch_related('children').get(pk=data['topic_id'], tree_id=data['tree_id'], kind_id=content_kinds.TOPIC)
-            node = data['node_id'] and ContentNode.objects.prefetch_related('files')\
-                                                            .prefetch_related('assessment_items')\
-                                                            .prefetch_related('tags').get(pk=data['node_id'], tree_id=data['tree_id'])
+            topic = ContentNode.objects.prefetch_related('children').get(pk=data['topic_id'], tree_id=data['tree_id'])
 
-            nodes = topic.get_ancestors(include_self=True, ascending=True)
+            if topic.kind_id != content_kinds.TOPIC:
+                node =  ContentNode.objects.prefetch_related('files')\
+                                            .prefetch_related('assessment_items')\
+                                            .prefetch_related('tags').get(pk=data['topic_id'], tree_id=data['tree_id'])
+                nodes = node.get_ancestors(ascending=True)
+            else:
+                node =  data['node_id'] and ContentNode.objects.prefetch_related('files')\
+                                            .prefetch_related('assessment_items')\
+                                            .prefetch_related('tags').get(pk=data['node_id'], tree_id=data['tree_id'])
+                nodes = topic.get_ancestors(include_self=True, ascending=True)
+
+
             return HttpResponse(json.dumps({
                 'path': JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data),
-                'node': node and JSONRenderer().render(ContentNodeEditSerializer(node).data)
+                'node': node and JSONRenderer().render(ContentNodeEditSerializer(node).data),
+                'navigate': topic.kind_id != content_kinds.TOPIC
             }))
         except ObjectDoesNotExist:
             return HttpResponseNotFound("Invalid URL: the referenced content does not exist in this channel.")

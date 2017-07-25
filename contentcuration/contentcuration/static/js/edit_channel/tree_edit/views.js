@@ -62,11 +62,15 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		if(this.path.topic) {
 			var self = this;
 			this.collection.get_node_path(this.path.topic, this.model.get("tree_id"), this.path.node).then(function(path){
-				if(path.node){
+				if (path.navigate){ // If the url points to a resource rather than a topic, navigate to topic of resource
+					window.channel_router.update_url(path.node.get("parent"), path.node.id);
+				}
+				if(path.node){ // Open the edit modal if a node is specified
 					var to_edit = new Models.ContentNodeCollection([path.node]);
 					self.edit_nodes(self.is_edit_page, to_edit, self.is_clipboard, path.parent);
 				}
 
+				// Open containers along path
 				var ids = path.collection.pluck("id");
 				_.each(path.collection.sortBy(function(model){return model.get("ancestors").length;}), function(model){
 					self.add_container(self.lists.length, model, null, function(list){
@@ -80,7 +84,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				});
 			}).catch(function(error) {
 				window.channel_router.update_url(self.model.id);
-				self.add_container(self.lists.length, self.model, null);
+				self.add_container(self.lists.length, self.model);
 			});
 		}
 	},

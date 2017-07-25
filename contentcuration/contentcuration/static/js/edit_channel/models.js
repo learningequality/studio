@@ -396,7 +396,8 @@ var ContentNodeCollection = BaseCollection.extend({
                     }
                     resolve({
                         "collection": returnCollection,
-                        "node": node
+                        "node": node,
+                        "navigate": data.navigate
                     });
                 },
                 error:reject
