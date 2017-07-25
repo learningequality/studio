@@ -469,7 +469,7 @@ class RootNodeSerializer(SimplifiedContentNodeSerializer):
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'channel_name', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors')
+        fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'channel_name', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id')
 
 
 class ContentNodeSerializer(SimplifiedContentNodeSerializer):

@@ -373,6 +373,36 @@ var ContentNodeCollection = BaseCollection.extend({
             });
         });
     },
+    get_node_path: function(topic_id, tree_id, node_id){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                url: window.Urls.get_node_path(),
+                data:  JSON.stringify({
+                    "topic_id" : topic_id,
+                    "tree_id": tree_id,
+                    "node_id": node_id
+                }),
+                success: function(result) {
+                    var data = JSON.parse(result);
+                    var returnCollection = new ContentNodeCollection(JSON.parse(data.path));
+                    self.add(returnCollection.toJSON());
+
+                    var node = null;
+                    if(data.node){
+                        node = new ContentNodeModel(JSON.parse(data.node));
+                        self.add(node);
+                    }
+                    resolve({
+                        "collection": returnCollection,
+                        "node": node
+                    });
+                },
+                error:reject
+            });
+        });
+    },
     calculate_size: function(){
         var self = this;
         return new Promise(function(resolve, reject){

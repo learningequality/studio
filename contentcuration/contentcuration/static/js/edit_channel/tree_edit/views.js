@@ -23,6 +23,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		this.collection = options.collection;
 		this.is_clipboard = options.is_clipboard;
 		this.staging = options.staging;
+		this.path = options.path;
 		this.render();
 	},
 	events: {
@@ -58,9 +59,32 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 
 		(this.is_edit_page) ? $("#channel-edit-button").addClass("active") : $("#channel-preview-button").addClass("active");
 
-		this.add_container(this.lists.length, this.model);
+		if(this.path.topic) {
+			var self = this;
+			this.collection.get_node_path(this.path.topic, this.model.get("tree_id"), this.path.node).then(function(path){
+				if(path.node){
+					var to_edit = new Models.ContentNodeCollection([path.node]);
+					self.edit_nodes(self.is_edit_page, to_edit, self.is_clipboard, path.parent);
+				}
+
+				var ids = path.collection.pluck("id");
+				_.each(path.collection.sortBy(function(model){return model.get("ancestors").length;}), function(model){
+					self.add_container(self.lists.length, model, null, function(list){
+						var view = _.find(list.views, function(view) { return _.contains(ids, view.model.id); });
+						if(view) {
+							view.$el.addClass(view.openedFolderClass);
+							list.set_current(view.model);
+							view.content_node_view = list;
+						}
+					});
+				});
+			}).catch(function(error) {
+				window.channel_router.update_url(self.model.id);
+				self.add_container(self.lists.length, self.model, null);
+			});
+		}
 	},
-	add_container: function(index, topic, view){
+	add_container: function(index, topic, view, onload){
 		/* Step 1: Close directories of children and siblings of opened topic*/
 			if(index < this.lists.length){
 				this.remove_containers_from(index);
@@ -73,7 +97,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				edit_mode: this.is_edit_page,
 				collection: this.collection,
 				container : this,
-				content_node_view: view
+				content_node_view: view,
+				onload: onload
 			});
 			this.lists.push(container_view);
 			var self = this;
@@ -91,7 +116,9 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			this.lists[this.lists.length -1].remove();
 			this.lists.splice(this.lists.length-1);
 		}
-		this.lists[this.lists.length-1].close_folders();
+		var closing_list = this.lists[this.lists.length-1];
+		closing_list.close_folders();
+		window.channel_router.update_url(closing_list.model.id);
 		this.handle_checked();
 	},
 	handle_checked:function(){
@@ -208,6 +235,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		this.collection = options.collection;
 		this.content_node_view = options.content_node_view;
 		this.current_model = null;
+		this.onload = options.onload;
 		this.render();
 		this.listenTo(this.model, 'change:title', this.update_name);
 		this.listenTo(this.model, 'change:children', this.update_views);
@@ -240,6 +268,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 			if(self.edit_mode){
 				self.refresh_droppable();
 			}
+			if(self.onload) self.onload(self);
 		});
 		setTimeout(function(){
 			self.$el.removeClass("pre_animation").addClass("post_animation");
@@ -412,11 +441,13 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			this.subcontent_view = this.containing_list_view.add_container(this);
 			this.$el.addClass(this.openedFolderClass);
 			this.containing_list_view.set_current(this.model);
+			window.channel_router.update_url(this.model.id);
 		}
 	},
 	open_node: function(event){
 		this.cancel_actions(event);
 		this.open_edit(this.edit_mode);
+		window.channel_router.update_url(null, this.model.id);
 	},
 	copy_node:function(event){
 		this.cancel_actions(event);
