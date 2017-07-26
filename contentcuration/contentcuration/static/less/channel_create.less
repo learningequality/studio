@@ -13,40 +13,22 @@
 
 #channel_area_wrapper{
 	padding:10px;
-	padding-bottom:100px;
 	overflow-y:auto;
 	height:90vh;
-	margin-top:20px;
-	#manage-channel-nav{
-		color: @body-font-color;
-		#search_channels_input{
-			width:100%;
-			font-size:13pt;
-			padding: 5px;
-			margin-bottom:10px;
+	#manage-channel-nav.nav-tabs{
+		border-bottom: none;
+		margin-bottom: 10px;
+		.channel_tab{
+		    font-size: 14pt;
+		    color: @body-font-color;
+		    margin-right: 10px;
+		    &:hover { border-color: @body-background; }
 		}
-
-		.btn-filter{
-			border:1px solid @btn-filter-color;
-			color:@btn-filter-color;
-		}
-
-		#channel_find_button{
-			background-color: @btn-find-color;
-			color:black;
-		}
-
-		.search_section{
-			font-size:14pt;
-			padding:5px;
-
-			#language_filter_input{
-				width:100%;
-			}
-
-			.btn{
-				width:100%;
-			}
+		.active .channel_tab{
+			background-color: @body-background;
+			font-weight: bold;
+			border: none;
+			border-bottom: 3px solid @blue-500;
 		}
 	}
 	#channel-list-area{
@@ -60,23 +42,22 @@
 		@channel-btn-color:#CCCCCC;
 
 		height:100vh - 30vh;
-	    width: 900px;
+	    width: @channel-container-width + 50;
 	    margin: auto;
 	    display: block;
 
-		h3 {
-			color: @body-font-color;
-			margin-bottom: 30px;
-		}
-
-		.new_channel_button {
-			cursor: pointer;
-			font-size: 18px;
-			text-decoration: none;
-			margin-right:100px;
-		}
-		.new_channel_button:hover{
-			color:white;
+		.channel_list_wrapper {
+			padding-top: 20px;
+			.add_channel_wrapper {
+				margin-bottom: 15px;
+				padding-right: 50px;
+				.new_channel_button {
+					cursor: pointer;
+					font-size: 18px;
+					text-decoration: none;
+					&:hover { color:white; }
+				}
+			}
 		}
 
 		.new-channel {
@@ -106,7 +87,7 @@
 		        &:last-child{ margin-bottom: 50px; }
 			}
 		}
-		#channel_list {
+		.channel_list {
 			padding-bottom: 50px;
 			.default-item{
 				font-size: 12pt;
@@ -128,7 +109,7 @@
 					height:100%;
 					width: @channel-profile-width;
 					margin: 5px 15px 5px 5px;
-					min-height:@channel-container-height;
+					min-height:@channel-container-height - 75;
 					.image_dropzone{ width: auto; }
 					img{
 					    width:130px;
@@ -185,23 +166,23 @@
 						max-width:75%;
 						height:@channel-font-size + 10px;
 					}
-					.edit_channel {
+					.channel_option_icon {
 						cursor:pointer;
 						display:inline-block;
 						font-size: @channel-font-size * .9;
-						padding:20px;
-						padding-top:5px;
+						padding:15px;
 						color: @gray-700;
 						position: relative;
-						top: -27px;
-					}
-
-					.edit_channel:hover{
-						color: @blue-500;
+						top: -45px;
+						&:not(.disabled):hover{ color: @blue-500; }
+						&.unstar_channel{
+							color: @blue-500;
+							&:hover{ color: @blue-200; }
+						}
 					}
 				}
 				.description{
-					height: @channel-container-height - @channel-font-size - 100px;
+					min-height: @channel-container-height - @channel-font-size - 115px;
 					width:@channel-container-width - @channel-profile-width - 50px;
 					margin-left:@channel-profile-width;
 					overflow-y:auto;
@@ -261,32 +242,18 @@
 						font-size:9pt;
 					}
 				}
+				.updated_time {
+					font-style: italic;
+					font-size: 10pt;
+				    font-weight: bold;
+				    color: gray;
+				}
 			}
 			.highlight{
 				border:4px solid @blue-500;
 				.channel_name{
 					color:@blue-500 !important;
 				}
-			}
-		}
-	}
-
-	@channel-bookmark-width : 400px;
-	#bookmark-area{
-		right:0em;
-		color: white;
-		overflow: auto;
-		padding: 15px;
-		margin-right:50px;
-		width:@channel-bookmark-width ;
-
-		#subscribed_clipboard_button{
-			width:100%;
-			background-color:@channel-clipboard-btn-color;
-			border:1px solid @channel-btn-border-color;
-
-			.badge{
-				margin-left:10px;
 			}
 		}
 	}

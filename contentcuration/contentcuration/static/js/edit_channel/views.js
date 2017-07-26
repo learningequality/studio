@@ -162,7 +162,7 @@ var BaseView = Backbone.View.extend({
 		var list_to_reload = collection.chain()
 						.reduce(function(list, item){ return list.concat(item.get('ancestors'));}, [])
 						.union((include_collection) ? collection.pluck("id") : [])
-						.union([window.current_channel.get("main_tree").id])
+						.union((window.current_channel)? [window.current_channel.get("main_tree").id] : [])
 						.uniq().value();
 		var self = this;
 		this.retrieve_nodes($.unique(list_to_reload), true).then(function(fetched){

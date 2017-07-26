@@ -14,6 +14,8 @@ var NAMESPACE = "new_channel";
 var MESSAGES = {
 	"channel": "Channel",
 	"header": "My Channels",
+	"starred": "Starred",
+	"public": "Public",
 	"add_channel_disbaled_title": "Cannot create a new channel while another channel is being edited.",
 	"add_channel_title": "Create a new channel",
 	"pending_loading": "Checking for invitations...",
@@ -37,6 +39,11 @@ var MESSAGES = {
 	"decline_success": "Declined invitation to",
 	"edit": "edit",
 	"view": "view",
+	"edit_channel": "Edit Details",
+	"star_channel": "Star Channel",
+	"unstar_channel": "Remove Star",
+	"viewonly": "View-Only",
+	"last_updated": "Updated {date}"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -52,8 +59,30 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		this.$el.html(this.template(null, {
 			data: this.get_intl_data()
 		}));
-		this.current_channel_list = new CurrentChannelList({container: this, el: this.$("#channel_list")});
 		this.pending_channel_list = new PendingChannelList({container: this, el: this.$("#pending_list")});
+		var self = this;
+		window.current_user.get_channels().then(function(channels){
+			self.current_channel_list = new CurrentChannelList({
+				container: self,
+				el: self.$("#channel_list"),
+				collection: channels.edit
+			});
+			self.starred_channel_list = new StarredChannelList({
+				container: self,
+				el: self.$("#starred_list"),
+				collection: channels.bookmarked
+			});
+			self.public_channel_list = new PublicChannelList({
+				container: self,
+				el: self.$("#public_list"),
+				collection: channels.public
+			});
+			self.viewonly_channel_list = new ViewOnlyChannelList({
+				container: self,
+				el: self.$("#viewonly_list"),
+				collection: channels.viewonly
+			});
+		});
 	},
 	events: {
 		'click .new_channel_button' : 'new_channel'
@@ -67,17 +96,28 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 });
 
 var ChannelList  = BaseViews.BaseEditableListView.extend({
+	template: require("./hbtemplates/channel_list.handlebars"),
+	list_selector: ".channel_list",
+	default_item: ".default-item",
 	name: NAMESPACE,
 	$trs: MESSAGES,
 	initialize: function(options) {
 		this.bind_edit_functions();
 		this.container = options.container;
+		this.collection = options.collection;
 		this.render();
+	},
+	render: function() {
+		this.set_editing(false);
+		this.$el.html(this.template(null, {
+			data: this.get_intl_data()
+		}));
+		this.load_content();
 	},
 	create_new_view:function(data){
 		var newView = new ChannelListItem({
 			model: data,
-			containing_list_view: this,
+			containing_list_view: this
 		});
 		this.views.push(newView);
   		return newView;
@@ -92,21 +132,6 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 });
 
 var CurrentChannelList  = ChannelList.extend({
-	template: require("./hbtemplates/channel_list_current.handlebars"),
-	list_selector: "#channel_list_current",
-
-	render: function() {
-		this.set_editing(false);
-		this.$el.html(this.template(null, {
-			data: this.get_intl_data()
-		}));
-		this.collection = new Models.ChannelCollection();
-		var self = this;
-		window.current_user.get_channels().then(function(channels){
-			self.collection.reset(channels.toJSON());
-			self.load_content(self.collection.where({deleted:false}));
-		});
-	},
 	new_channel: function(){
 		var data = {
 			editors: [window.current_user.id],
@@ -128,6 +153,23 @@ var CurrentChannelList  = ChannelList.extend({
 	}
 });
 
+var StarredChannelList  = ChannelList.extend({
+	add_channel: function(channel){
+		this.collection.add(channel);
+		var newView = this.create_new_view(channel);
+		newView.$el.css('display', 'none');
+		newView.$el.fadeIn(300);
+		this.$(this.list_selector).prepend(newView.el);
+		this.$(".default-item").css('display', 'none');
+	}
+});
+
+var PublicChannelList  = ChannelList.extend({
+});
+
+var ViewOnlyChannelList  = ChannelList.extend({
+});
+
 var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	name: NAMESPACE,
 	$trs: MESSAGES,
@@ -136,7 +178,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		return (this.model)? this.model.get("id") : "new";
 	},
 	className:"channel_container",
-	template: require("./hbtemplates/channel_item_current.handlebars"),
+	template: require("./hbtemplates/channel_item.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
 		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','update_title', 'loop_focus', 'copy_id', 'set_indices',
@@ -151,7 +193,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.thumbnail_url = this.original_thumbnail_url;
 		this.thumbnail = this.original_thumbnail;
 		this.originalData = (this.model)? this.model.toJSON() : null;
-		this.isViewOnly = this.model.get("viewers").indexOf(window.current_user.id) >= 0;
+		this.can_edit = this.model.get("editors").indexOf(window.current_user.id) >= 0;
 		this.render();
 		this.dropzone = null;
 		this.isNew = false;
@@ -168,13 +210,14 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	render: function() {
 		this.$el.html(this.template({
-			view_only: this.isViewOnly,
+			can_edit: this.can_edit,
 			edit: this.edit,
 			channel: this.model.toJSON(),
 			total_file_size: this.model.get("size"),
 			resource_count: this.model.get("count"),
 			channel_link : this.model.get("id"),
-			picture : (this.thumbnail_encoding && this.thumbnail_encoding.base64) || this.thumbnail_url
+			picture : (this.thumbnail_encoding && this.thumbnail_encoding.base64) || this.thumbnail_url,
+			modified: this.model.get("modified")
 		}, {
 			data: this.get_intl_data()
 		}));
@@ -196,12 +239,14 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				is_channel: true
 			});
 		}
+		this.$('[data-toggle="tooltip"]').tooltip();
 		this.set_indices();
 		this.set_initial_focus();
 	},
 	events: {
 		'click .edit_channel':'edit_channel',
-		'mouseover .edit_channel':'remove_highlight',
+		'click .star_channel': 'star_channel',
+		'mouseover .channel_option_icon':'remove_highlight',
 		'mouseover .copy-id-btn':'remove_highlight',
 		'click .delete_channel' : 'delete_channel',
 		'click .channel_toggle': 'toggle_channel',
@@ -224,7 +269,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.$('.channel-container-wrapper').addClass('highlight');
 	},
 	open_channel:function(event){
-		if(!this.edit){
+		if(this.$('.channel-container-wrapper').hasClass('highlight')){
 			window.location.href = '/channels/' + this.model.get("id") + ((this.model.get('view_only'))? '/view' : '/edit');
 		}
 	},
@@ -263,6 +308,11 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	edit_channel: function(){
 		this.containing_list_view.set_editing(true);
 		this.edit = true;
+		this.render();
+	},
+	star_channel: function(){
+		console.log("CALLED")
+		this.model.set("is_bookmarked", true);
 		this.render();
 	},
 	delete_channel: function(event){

@@ -119,11 +119,17 @@ def channel_list(request):
 @permission_classes((IsAuthenticated,))
 def get_user_channels(request):
     channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers') \
-                          .filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk))) \
-                          .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)), default=Value(1), output_field=IntegerField()))
-    channel_serializer = ChannelListSerializer(channel_list, many=True)
+                          .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
+                          .annotate(is_bookmarked=Case(When(bookmarked_by=request.user, then=Value(1)), default=Value(0), output_field=IntegerField()))
+    # channel_serializer = ChannelListSerializer(channel_list, many=True)
 
-    return HttpResponse(JSONRenderer().render(channel_serializer.data))
+    return HttpResponse(json.dumps({
+            "edit": JSONRenderer().render(ChannelListSerializer(channel_list.filter(editors=request.user.pk), many=True).data),
+            "viewonly": JSONRenderer().render(ChannelListSerializer(channel_list.filter(viewers=request.user.pk), many=True).data),
+            "public": JSONRenderer().render(ChannelListSerializer(channel_list.filter(public=True), many=True).data),
+            "bookmarked": JSONRenderer().render(ChannelListSerializer(channel_list.filter(bookmarked_by=request.user), many=True).data),
+        })
+    )
 
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))

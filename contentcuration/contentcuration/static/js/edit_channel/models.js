@@ -111,7 +111,13 @@ var UserModel = BaseModel.extend({
                 url: window.Urls.get_user_channels(),
                 error: reject,
                 success: function(data) {
-                    resolve(new ChannelCollection(JSON.parse(data)));
+                    var collections = JSON.parse(data);
+                    resolve({
+                        "edit": new ChannelCollection(JSON.parse(collections.edit)),
+                        "viewonly": new ChannelCollection(JSON.parse(collections.viewonly)),
+                        "public": new ChannelCollection(JSON.parse(collections.public)),
+                        "bookmarked": new ChannelCollection(JSON.parse(collections.bookmarked)),
+                    });
                 }
             });
         });

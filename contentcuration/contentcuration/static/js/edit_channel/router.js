@@ -11,7 +11,7 @@ ChannelEditRouter  = Backbone.Router.extend({
   initialize: function(options) {
     _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page", "admin_page");
 		this.nodeCollection = new Models.ContentNodeCollection();
-		window.current_channel = new Models.ChannelModel(window.channel);
+		window.current_channel = window.channel && new Models.ChannelModel(window.channel);
 		window.current_user = new Models.UserModel(window.user);
 		window.workspace_manager = new WorkspaceManager();
 		//this.listenTo(saveDispatcher, "save", this.save);
