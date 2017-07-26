@@ -246,6 +246,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	events: {
 		'click .edit_channel':'edit_channel',
 		'click .star_channel': 'star_channel',
+		'click .unstar_channel': 'unstar_channel',
 		'mouseover .channel_option_icon':'remove_highlight',
 		'mouseover .copy-id-btn':'remove_highlight',
 		'click .delete_channel' : 'delete_channel',
@@ -311,8 +312,11 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.render();
 	},
 	star_channel: function(){
-		console.log("CALLED")
 		this.model.set("is_bookmarked", true);
+		this.render();
+	},
+	unstar_channel: function(){
+		this.model.set("is_bookmarked", false);
 		this.render();
 	},
 	delete_channel: function(event){
