@@ -365,7 +365,7 @@ var ContentNodeCollection = BaseCollection.extend({
                 url: window.Urls.get_prerequisites(),
                 data:  JSON.stringify({"nodes": ids, "get_postrequisites": get_postrequisites}),
                 success: function(data) {
-                    nodes = JSON.parse(data);
+                    var nodes = JSON.parse(data);
                     resolve({
                         "prerequisite_mapping": nodes.prerequisite_mapping,
                         "postrequisite_mapping": nodes.postrequisite_mapping,
@@ -594,7 +594,7 @@ var ChannelModel = BaseModel.extend({
                 url: window.Urls.get_node_diff(),
                 data:  JSON.stringify({'channel_id': self.id}),
                 success: function(data) {
-                    nodes = JSON.parse(data);
+                    var nodes = JSON.parse(data);
                     resolve({
                         "original" : new ContentNodeCollection(JSON.parse(nodes.original)),
                         "changed" : new ContentNodeCollection(JSON.parse(nodes.changed))
