@@ -72,7 +72,7 @@ ChannelEditRouter  = Backbone.Router.extend({
 		window.contenttags = new Models.TagCollection(window.current_channel.get('tags'));
 		window.licenses = new Models.LicenseCollection(window.license_list);
 
-		data.topic = data.topic || window.current_channel.get((data.is_staging)? "staging_tree" : "main_tree").id;
+		data.topic = data.topic || window.current_channel.get((data.is_staging)? "staging_tree" : "main_tree").node_id;
 		window.current_page = data.page;
 		this.update_url(data.topic, data.node);
 

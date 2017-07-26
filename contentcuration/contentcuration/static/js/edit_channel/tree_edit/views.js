@@ -62,8 +62,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		if(this.path.topic) {
 			var self = this;
 			this.collection.get_node_path(this.path.topic, this.model.get("tree_id"), this.path.node).then(function(path){
-				if (path.navigate){ // If the url points to a resource rather than a topic, navigate to topic of resource
-					window.channel_router.update_url(path.node.get("parent"), path.node.id);
+				if (path.parent_node_id){ // If the url points to a resource rather than a topic, navigate to topic of resource
+					window.channel_router.update_url(path.parent_node_id, path.node.get("node_id"));
 				}
 				if(path.node){ // Open the edit modal if a node is specified
 					var to_edit = new Models.ContentNodeCollection([path.node]);
@@ -83,7 +83,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 					});
 				});
 			}).catch(function(error) {
-				window.channel_router.update_url(self.model.id);
+				window.channel_router.update_url(self.model.get("node_id"));
 				self.add_container(self.lists.length, self.model);
 			});
 		}
@@ -122,7 +122,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		}
 		var closing_list = this.lists[this.lists.length-1];
 		closing_list.close_folders();
-		window.channel_router.update_url(closing_list.model.id);
+		window.channel_router.update_url(closing_list.model.get("node_id"));
 		this.handle_checked();
 	},
 	handle_checked:function(){
@@ -445,13 +445,13 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			this.subcontent_view = this.containing_list_view.add_container(this);
 			this.$el.addClass(this.openedFolderClass);
 			this.containing_list_view.set_current(this.model);
-			window.channel_router.update_url(this.model.id);
+			window.channel_router.update_url(this.model.get("node_id"));
 		}
 	},
 	open_node: function(event){
 		this.cancel_actions(event);
 		this.open_edit(this.edit_mode);
-		window.channel_router.update_url(null, this.model.id);
+		window.channel_router.update_url(null, this.model.get("node_id"));
 	},
 	copy_node:function(event){
 		this.cancel_actions(event);
