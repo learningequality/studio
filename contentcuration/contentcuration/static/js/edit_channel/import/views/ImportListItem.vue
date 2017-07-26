@@ -150,40 +150,42 @@ module.exports = {
       return this.node.children.length > 0;
     }
   },
-  methods: {
-    ...mapActions('import', [
+  methods: Object.assign(
+    mapActions('import', [
       'addItemToImportList',
       'removeItemFromImportList',
     ]),
-    fetchChildData() {
-      // If children are loaded once, then do nothing
-      if (this.childrenAreLoaded) return;
-      this.isLoading = true;
-      return fetchContentNodesById(this.node.children)
-      .then((childData) => {
-        this.isLoading = false;
-        this.childrenAreLoaded = true;
-        this.subFiles = childData;
-      });
-    },
-    handleClickLabel() {
-      const isToggleable = this.isChannel || this.hasChildren;
-      if (isToggleable) {
-        this.isExpanded = !this.isExpanded;
-        if (this.isExpanded) {
-          this.fetchChildData();
+    {
+      fetchChildData() {
+        // If children are loaded once, then do nothing
+        if (this.childrenAreLoaded) return;
+        this.isLoading = true;
+        return fetchContentNodesById(this.node.children)
+        .then((childData) => {
+          this.isLoading = false;
+          this.childrenAreLoaded = true;
+          this.subFiles = childData;
+        });
+      },
+      handleClickLabel() {
+        const isToggleable = this.isChannel || this.hasChildren;
+        if (isToggleable) {
+          this.isExpanded = !this.isExpanded;
+          if (this.isExpanded) {
+            this.fetchChildData();
+          }
         }
-      }
+      },
+      handleCheckboxChange() {
+        this.isChecked = !this.isChecked;
+        if (this.isChecked) {
+          this.addItemToImportList(_.clone(this.node));
+        } else {
+          this.removeItemFromImportList(this.node.id);
+        }
+      },
     },
-    handleCheckboxChange() {
-      this.isChecked = !this.isChecked;
-      if (this.isChecked) {
-        this.addItemToImportList(_.clone(this.node));
-      } else {
-        this.removeItemFromImportList(this.node.id);
-      }
-    },
-  },
+  ),
   filters: {
     pluralize,
   }
