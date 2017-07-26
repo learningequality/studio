@@ -20,8 +20,8 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     id: "publishing_modal",
     template: require("./hbtemplates/export_modal.handlebars"),
     name: NAMESPACE,
-    messages: MESSAGES,
-    $trs: function(options) {
+    $trs: MESSAGES,
+    initialize: function(options) {
         _.bindAll(this, "publish", 'loop_focus', 'set_indices');
         this.modal = true;
         this.render(this.close, {
