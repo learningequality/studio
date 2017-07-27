@@ -591,7 +591,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     getSubdirectory: function () {return this.$("#format_item_" + this.model.id +"_sub"); },
 
     'id': function() { return "format_slot_item_" + this.model.get("id"); },
-    selector: function() { return this.model.get("id") + "_"  + this.node.get('id') + "_dropzone" + ((this.file)? "_swap" : "") },
+    selector: function() { return this.cid + "_"+ this.model.get("id") + "_"  + this.node.get('id') + "_dropzone" + ((this.file)? "_swap" : "") },
     className:"row format_editor_item",
     initialize: function(options) {
         _.bindAll(this, 'remove_item','file_uploaded','file_added','file_removed','file_failed', 'create_dropzone', 'set_file', 'set_uploading');
@@ -633,7 +633,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             clickables.push(dz_selector + " .format_editor_file_name");
         }
         Dropzone.autoDiscover = false;
-        if(!$(dz_selector).hasClass("dropzone_attached")){
+        if($(dz_selector).length && !$(dz_selector).hasClass("dropzone_attached")){
             var dropzone = new Dropzone($(dz_selector).get(0), {
                clickable: clickables,
                acceptedFiles: this.get_accepted_files(),
@@ -648,7 +648,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                     "Language": (this.file && this.file.get("language"))? this.file.get("language").id : null
                 }
             });
-            console.log($(dz_selector))
             dropzone.on("success", this.file_uploaded);
 
             // Only enable the submit upload files button once all files have finished uploading.
