@@ -309,7 +309,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	open_channel:function(event){
 		if(this.$('.channel-container-wrapper').hasClass('highlight')){
-			window.location.href = '/channels/' + this.model.get("id") + ((this.model.get('view_only'))? '/view' : '/edit');
+			window.location.href = '/channels/' + this.model.get("id") + ((this.can_edit)? '/edit' : '/view');
 		}
 	},
 	copy_id:function(event){
