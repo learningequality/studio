@@ -30,9 +30,9 @@
 		</span>
 		<h4>
 			{{#if channel.is_bookmarked}}
-				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.unstar_channel')}}" class="glyphicon glyphicon-star disable-on-edit pull-right channel_option_icon unstar_channel" aria-hidden="true"></span>
+				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.unstar_channel')}}" class="glyphicon glyphicon-star disable-on-edit pull-right channel_option_icon star_option unstar_channel" aria-hidden="true"></span>
 			{{else}}
-				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.star_channel')}}" class="glyphicon glyphicon-star-empty disable-on-edit pull-right channel_option_icon star_channel" aria-hidden="true"></span>
+				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.star_channel')}}" class="glyphicon glyphicon-star-empty disable-on-edit pull-right channel_option_icon star_option star_channel" aria-hidden="true"></span>
 			{{/if}}
 			{{#if can_edit}}
 				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.edit_channel')}}" class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right channel_option_icon"></span>

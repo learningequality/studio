@@ -43,7 +43,9 @@ var MESSAGES = {
 	"star_channel": "Star Channel",
 	"unstar_channel": "Remove Star",
 	"viewonly": "View-Only",
-	"last_updated": "Updated {date}"
+	"last_updated": "Updated {date}",
+	"starred_channel": "Star Added!",
+	"unstarred_channel": "Star Removed"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -182,7 +184,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	initialize: function(options) {
 		this.bind_edit_functions();
 		_.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','update_title', 'loop_focus', 'copy_id', 'set_indices',
-						'open_channel', 'set_thumbnail', 'reset_thumbnail','enable_submit', 'disable_submit', 'remove_thumbnail');
+						'open_channel', 'set_thumbnail', 'reset_thumbnail','enable_submit', 'disable_submit', 'remove_thumbnail', 'set_star_icon');
 		this.listenTo(this.model, "sync", this.render);
 		this.edit = false;
 		this.containing_list_view = options.containing_list_view;
@@ -312,12 +314,29 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.render();
 	},
 	star_channel: function(){
-		this.model.set("is_bookmarked", true);
-		this.render();
+		var self = this;
+		this.model.add_bookmark(window.current_user.id).then(function() {
+			self.model.set("is_bookmarked", true);
+			self.render();
+			self.set_star_icon(self.get_translation("starred_channel"), self.get_translation("unstar_channel"));
+		});
 	},
 	unstar_channel: function(){
-		this.model.set("is_bookmarked", false);
-		this.render();
+		var self = this;
+		this.model.remove_bookmark(window.current_user.id).then(function() {
+			self.model.set("is_bookmarked", false);
+			self.render();
+			self.set_star_icon(self.get_translation("unstarred_channel"), self.get_translation("star_channel"));
+		});
+	},
+	set_star_icon: function(temporary_message, new_message){
+		this.$(".star_option").attr("data-original-title", temporary_message);
+		this.$(".star_option").tooltip("show");
+		var self = this;
+		setTimeout(function(){
+			self.$(".star_option").attr("data-original-title", new_message);
+			self.$(".star_option").tooltip("hide");
+		}, 2000);
 	},
 	delete_channel: function(event){
 		if(this.isNew){

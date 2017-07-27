@@ -11,7 +11,7 @@ from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.urlresolvers import reverse_lazy
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
-from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation
+from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User
 from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -266,3 +266,37 @@ def get_channel_name_by_id(request, channel_id):
         return HttpResponse(json.dumps({"name": channel.name, "description": channel.description, "version": channel.version}))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
+
+
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def add_bookmark(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        try:
+            user = User.objects.get(pk=data["user_id"])
+            channel = Channel.objects.get(pk=data["channel_id"])
+            channel.bookmarked_by.add(user)
+            channel.save()
+
+            return HttpResponse(json.dumps({"success": True}))
+        except ObjectDoesNotExist:
+            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def remove_bookmark(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        try:
+            user = User.objects.get(pk=data["user_id"])
+            channel = Channel.objects.get(pk=data["channel_id"])
+            channel.bookmarked_by.remove(user)
+            channel.save()
+
+            return HttpResponse(json.dumps({"success": True}))
+        except ObjectDoesNotExist:
+            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+

@@ -688,6 +688,36 @@ var ChannelModel = BaseModel.extend({
             });
         });
     },
+    add_bookmark: function(user_id) {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "user_id": user_id
+                }),
+                url: window.Urls.add_bookmark(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
+    remove_bookmark: function(user_id) {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "user_id": user_id
+                }),
+                url: window.Urls.remove_bookmark(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
     get_channel_counts: function(){
         var self = this;
         return new Promise(function(resolve, reject){
