@@ -709,7 +709,7 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'description', 'version')
 
 class AdminUserListSerializer(serializers.ModelSerializer):
     editable_channels = SimplifiedChannelListSerializer(many=True, read_only=True)

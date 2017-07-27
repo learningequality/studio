@@ -12,7 +12,7 @@ from django.core.urlresolvers import reverse_lazy
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
 from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User
-from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
+from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -267,6 +267,12 @@ def get_channel_name_by_id(request, channel_id):
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
 
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_public_channels(request):
+    """ Endpoint: /public/public_channels """
+    channels = Channel.objects.filter(public=True).values("id", "name", "description", "version")
+    return HttpResponse(json.dumps(SimplifiedChannelListSerializer(channels, many=True).data))
 
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
