@@ -37,12 +37,10 @@ module.exports = {
   components: {
     ImportListItem: require('./ImportListItem.vue'),
   },
-  computed: {
-    ...mapState('import', [
-      'channels',
-      'channelsAreLoading',
-    ]),
-  },
+  computed: mapState('import', [
+    'channels',
+    'channelsAreLoading',
+  ]),
 };
 
 </script>

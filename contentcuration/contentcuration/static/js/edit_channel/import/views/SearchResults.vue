@@ -90,12 +90,10 @@ module.exports = {
       resultsLoading: false,
     };
   },
-  computed: {
-    ...mapGetters('import', [
-      'currentSearchTerm',
-      'currentChannelId',
-    ]),
-  },
+  computed: mapGetters('import', [
+    'currentSearchTerm',
+    'currentChannelId',
+  ]),
   watch: {
     currentSearchTerm() {
       this.updateResults();
@@ -104,21 +102,23 @@ module.exports = {
   mounted() {
     this.updateResults();
   },
-  methods: {
-    ...mapActions('import', ['goToPreviousPage']),
-    updateResults() {
-      if (this.currentSearchTerm.length < 3) return;
-      this.resultsLoading = true;
-      return fetchSearchResults(this.currentSearchTerm, this.currentChannelId)
-      .then(({ itemResults, topicResults, searchTerm }) => {
-        if (searchTerm === this.currentSearchTerm) {
-          this.resultsLoading = false;
-          this.itemResults = itemResults;
-          this.topicResults = topicResults;
-        }
-      });
+  methods: Object.assign(
+    mapActions('import', ['goToPreviousPage']),
+    {
+      updateResults() {
+        if (this.currentSearchTerm.length < 3) return;
+        this.resultsLoading = true;
+        return fetchSearchResults(this.currentSearchTerm, this.currentChannelId)
+        .then(({ itemResults, topicResults, searchTerm }) => {
+          if (searchTerm === this.currentSearchTerm) {
+            this.resultsLoading = false;
+            this.itemResults = itemResults;
+            this.topicResults = topicResults;
+          }
+        });
+      },
     },
-  },
+  ),
 }
 
 </script>

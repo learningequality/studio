@@ -39,34 +39,38 @@ module.exports = {
     this.openModal();
     this.loadChannels();
   },
-  computed: {
-    ...mapGetters({
+  computed: Object.assign(
+    mapGetters({
       currentImportPage: 'import/currentImportPage',
       channels: 'import/channels',
     }),
-    pageType: function() {
-      const pageType = this.currentImportPage;
-      if (pageType === 'tree_view') {
-        return 'ImportChannelList';
-      } else if (pageType === 'search_results') {
-        return 'SearchResults'
+    {
+      pageType: function() {
+        const pageType = this.currentImportPage;
+        if (pageType === 'tree_view') {
+          return 'ImportChannelList';
+        } else if (pageType === 'search_results') {
+          return 'SearchResults'
+        }
       }
-    }
-  },
-  methods: {
-    ...mapActions('import', ['loadChannels']),
-    openModal() {
-      $(this.$refs.topmodal)
-        .modal({ show: true })
-        .on('hidden.bs.modal', () => {
-          // Event to tell BB View to cleanup
-          this.$emit('modalclosed');
-        });
     },
-    closeModal() {
-      $(this.$refs.topmodal).modal('hide');
+  ),
+  methods: Object.assign(
+    mapActions('import', ['loadChannels']),
+    {
+      openModal() {
+        $(this.$refs.topmodal)
+          .modal({ show: true })
+          .on('hidden.bs.modal', () => {
+            // Event to tell BB View to cleanup
+            this.$emit('modalclosed');
+          });
+      },
+      closeModal() {
+        $(this.$refs.topmodal).modal('hide');
+      },
     },
-  },
+  ),
 }
 
 </script>

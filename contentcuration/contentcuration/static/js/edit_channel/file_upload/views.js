@@ -11,7 +11,7 @@ var browserHelper = require("edit_channel/utils/browser_functions");
 var dialog = require("edit_channel/utils/dialog");
 var ImageViews = require("edit_channel/image/views");
 
-var NAMESPACE = "file_upload";
+var NAMESPACE = "fileUpload";
 var MESSAGES = {
     "new": "New",
     "files": "Files",

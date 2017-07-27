@@ -34,7 +34,7 @@ if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("S
 }
 
 /* TRANSLATIONS */
-var NAMESPACE = "exercise_creation";
+var NAMESPACE = "exerciseCreation";
 var MESSAGES = {
     "question_placeholder": "Enter Question...",
     "answer_placeholder": "Enter Answer...",

@@ -70,7 +70,7 @@ var BaseView = Backbone.View.extend({
 	name: NAMESPACE,
 	locales: ["en-US"],
 	locale: navigator.language || navigator.browserLanguage,
-	$trs: {},
+	$trs: MESSAGES,
 	globalMessageStore: require("utils/translations"),
 	sharedTranslations: MESSAGES,
 

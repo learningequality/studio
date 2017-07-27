@@ -103,12 +103,12 @@ var ShareView = BaseViews.BaseView.extend({
     },
     show_list: function(){
         return _.find(window.current_channel.get("editors"), function(u){
-            return u === this.current_user.id
+            return u === window.current_user.id
         });
     },
     get_share_modes: function(){
         if (!this.share_modes){
-            var user_is_editor = _.find(window.current_channel.get("editors"), function(u){return u === this.current_user.id});
+            var user_is_editor = _.find(window.current_channel.get("editors"), function(u){return u === window.current_user.id});
             if(user_is_editor){
                 this.share_modes = EDITOR_SHARE_MODES;
             }else{
@@ -130,7 +130,7 @@ var ShareView = BaseViews.BaseView.extend({
                 collection: collections[0],
                 el: self.$("#current_list_wrapper"),
                 model: self.model,
-                current_user: this.current_user
+                current_user: window.current_user
             });
             collections[1].reject({email:null})
             self.pending_view = new SharePendingList({

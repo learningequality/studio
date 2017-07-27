@@ -5,7 +5,7 @@ var Models = require("edit_channel/models");
 var Images = require("edit_channel/image/views");
 require("channel_settings.less");
 
-var NAMESPACE = "channel_settings";
+var NAMESPACE = "channelSettings";
 var MESSAGES = {
     "of": "of",
     "videos": "Videos",

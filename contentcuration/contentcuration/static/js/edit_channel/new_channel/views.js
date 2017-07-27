@@ -10,7 +10,7 @@ var get_cookie = require("utils/get_cookie");
 var stringHelper = require("edit_channel/utils/string_helper")
 var dialog = require("edit_channel/utils/dialog");
 
-var NAMESPACE = "new_channel";
+var NAMESPACE = "newChannel";
 var MESSAGES = {
 	"channel": "Channel",
 	"header": "My Channels",

@@ -6,7 +6,7 @@ var BaseViews = require("./../views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var dialog = require("edit_channel/utils/dialog");
 
-var NAMESPACE = "tree_edit";
+var NAMESPACE = "treeEdit";
 var MESSAGES = {
 	"new": "New",
     "comparison": "Comparison",
@@ -286,7 +286,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 
 		var self = this;
 		this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
-			self.$el.find(this.default_item).text(self.get_translation("no_items"));
+			self.$el.find(self.default_item).text(self.get_translation("no_items"));
 			fetchedCollection.sort_by_order();
 			self.load_content(fetchedCollection);
 			if(self.edit_mode){
@@ -402,8 +402,8 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		if (description.length - split_index <= 15){
 			split_index = description.length;
 		}
-		first_part = description.substring(0, Math.min(split_index, description.length));
-		last_part = (description.length > split_index) ? description.substring(split_index, description.length) : null;
+		var first_part = description.substring(0, Math.min(split_index, description.length));
+		var last_part = (description.length > split_index) ? description.substring(split_index, description.length) : null;
 		return [first_part, last_part];
 	},
 	create_popover:function(){
