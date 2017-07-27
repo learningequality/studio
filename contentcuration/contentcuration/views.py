@@ -58,7 +58,7 @@ def redirect_to_channel(request, channel_id):
     channel = Channel.objects.get(pk=channel_id)
     if channel.editors.filter(pk=request.user.pk).exists():
         return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
-    elif channel.viewers.filter(pk=request.user.pk).exists():
+    elif channel.viewers.filter(pk=request.user.pk).exists() or channel.public:
         return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
     return redirect(reverse_lazy('unauthorized'))
 
@@ -88,6 +88,7 @@ def channel_page(request, channel, allow_edit=False, staging=False):
 
     return render(request, 'channel_edit.html', {"allow_edit": allow_edit,
                                                  "staging": staging,
+                                                 "is_public": channel.public,
                                                  "channel": json_renderer.render(channel_serializer.data),
                                                  "channel_id": channel.pk,
                                                  "channel_name": channel.name,
@@ -168,7 +169,7 @@ def channel_view_only(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
 
     # Check user has permission to view channel
-    if not channel.editors.filter(id=request.user.id).exists() and not channel.viewers.filter(id=request.user.id).exists() and not request.user.is_admin:
+    if not channel.public and not channel.editors.filter(id=request.user.id).exists() and not channel.viewers.filter(id=request.user.id).exists() and not request.user.is_admin:
         return redirect(reverse_lazy('unauthorized'))
 
     return channel_page(request, channel)
