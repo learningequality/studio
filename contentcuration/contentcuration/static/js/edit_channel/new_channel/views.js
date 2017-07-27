@@ -108,15 +108,21 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		}
 		this.set_all_models(channel);
 	},
+	delete_channel: function(channel){
+		this.starred_channel_list.delete_channel(channel);
+		this.current_channel_list.delete_channel(channel);
+		this.public_channel_list.delete_channel(channel);
+		this.viewonly_channel_list.delete_channel(channel);
+	},
 	remove_star: function(channel){
 		this.starred_channel_list.remove_channel(channel);
 		this.set_all_models(channel);
 	},
-	set_all_models: function(channel){
-		this.starred_channel_list.set_model(channel);
-		this.current_channel_list.set_model(channel);
-		this.public_channel_list.set_model(channel);
-		this.viewonly_channel_list.set_model(channel);
+	set_all_models: function(channel, current_page){
+		this.starred_channel_list.set_model(channel, current_page);
+		this.current_channel_list.set_model(channel, current_page);
+		this.public_channel_list.set_model(channel, current_page);
+		this.viewonly_channel_list.set_model(channel, current_page);
 	}
 });
 
@@ -174,6 +180,10 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 				view.render();
 			}
 		});
+	},
+	delete_channel: function(channel){
+		this.collection.remove(channel);
+		this.render();
 	}
 });
 
@@ -375,10 +385,9 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning"), {
 				[this.get_translation("cancel")]:function(){},
 				[this.get_translation("delete_channel")]: function(){
-					self.save({"deleted":true}, this.get_translation("deleting_channel")).then(function(){
+					self.save({"deleted":true}, self.get_translation("deleting_channel")).then(function(){
 						self.containing_list_view.set_editing(false);
-						self.containing_list_view.collection.remove(self.model);
-						self.containing_list_view.render();
+						self.container.delete_channel(self.model);
 					});
 				},
 			}, null);
