@@ -408,6 +408,7 @@ class ContentNode(MPTTModel, models.Model):
                                           through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
     is_related = models.ManyToManyField('self', related_name='relate_to', through='RelatedContentRelationship',
                                         symmetrical=False, blank=True)
+    language = models.ForeignKey('Language', null=True, blank=True, related_name='content_language')
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
     sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"),

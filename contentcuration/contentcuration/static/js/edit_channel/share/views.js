@@ -138,8 +138,6 @@ var ShareView = BaseViews.BaseView.extend({
                 el: self.$("#pending_list_wrapper"),
                 model: self.model
             });
-            _.defer(self.set_indices);
-            _.defer(self.set_initial_focus, 100);
         });
     },
     send_invite:function(event){
