@@ -96,9 +96,11 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		switch(category){
 			case "edit":
 				this.current_channel_list.add_channel(channel);
+				this.$('#manage-channel-nav a[href="#channels"]').tab('show');
 				break;
 			case "view":
 				this.viewonly_channel_list.add_channel(channel);
+				this.$('#manage-channel-nav a[href="#viewonly"]').tab('show');
 				break;
 			case "star":
 				this.starred_channel_list.add_channel(channel);
@@ -144,7 +146,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 			container: this.container
 		});
 		this.views.push(newView);
-  		return newView;
+		return newView;
 	},
 	set_editing: function(edit_mode_on){
 		$(".disable-on-edit").prop("disabled", edit_mode_on);
@@ -230,8 +232,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.isNew = isNew;
 		if (this.isNew){
 			this.$(".save_channel").attr("disabled", "disabled");
-	  		this.$(".save_channel").prop("disabled", true);
-	  		this.$(".save_channel").css("cursor", "not-allowed");
+			this.$(".save_channel").prop("disabled", true);
+			this.$(".save_channel").css("cursor", "not-allowed");
 		}
 	},
 	render: function() {
@@ -307,14 +309,14 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.$(".copy-id-text").focus();
 		this.$(".copy-id-text").select();
 		try {
-	    	document.execCommand("copy");
-	    	self.$(".copy-id-btn").removeClass("glyphicon-copy").addClass("glyphicon-ok");
-	    } catch(e) {
-	        self.$(".copy-id-btn").removeClass("glyphicon-copy").addClass("glyphicon-remove");
-	    }
-	    setTimeout(function(){
-	    	self.$(".copy-id-btn").removeClass("glyphicon-ok").removeClass("glyphicon-remove").addClass("glyphicon-copy");
-	    }, 2500);
+			document.execCommand("copy");
+			self.$(".copy-id-btn").removeClass("glyphicon-copy").addClass("glyphicon-ok");
+		} catch(e) {
+			self.$(".copy-id-btn").removeClass("glyphicon-copy").addClass("glyphicon-remove");
+		}
+		setTimeout(function(){
+			self.$(".copy-id-btn").removeClass("glyphicon-ok").removeClass("glyphicon-remove").addClass("glyphicon-copy");
+		}, 2500);
 	},
 	update_title:function(){
 		this.show_error(!this.$("#new_channel_name").val().length);
@@ -323,13 +325,13 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		if(is_error){
 			this.$("#channel_name_error").css("visibility", "visible");
 			this.$(".save_channel").attr("disabled", "disabled");
-      		this.$(".save_channel").prop("disabled", true);
-      		this.$(".save_channel").css("cursor", "not-allowed");
+			this.$(".save_channel").prop("disabled", true);
+			this.$(".save_channel").css("cursor", "not-allowed");
 		}else{
 			this.$("#channel_name_error").css("visibility", "hidden");
 			this.$(".save_channel").removeAttr("disabled");
-	        this.$(".save_channel").prop("disabled", false);
-	        this.$(".save_channel").css("cursor", "pointer");
+			this.$(".save_channel").prop("disabled", false);
+			this.$(".save_channel").css("cursor", "pointer");
 		}
 	},
 	edit_channel: function(){
@@ -370,17 +372,17 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.containing_list_view.set_editing(false);
 		}else{
 			var self = this;
-            dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning"), {
-                [this.get_translation("cancel")]:function(){},
-                [this.get_translation("delete_channel")]: function(){
+			dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning"), {
+				[this.get_translation("cancel")]:function(){},
+				[this.get_translation("delete_channel")]: function(){
 					self.save({"deleted":true}, this.get_translation("deleting_channel")).then(function(){
 						self.containing_list_view.set_editing(false);
 						self.containing_list_view.collection.remove(self.model);
 						self.containing_list_view.render();
 					});
-                },
-            }, null);
-            self.cancel_actions(event);
+				},
+			}, null);
+			self.cancel_actions(event);
 		}
 	},
 	toggle_channel: function(event){
@@ -495,7 +497,7 @@ var PendingChannelList  = ChannelList.extend({
 			containing_list_view: this,
 		});
 		this.views.push(newView);
-  		return newView;
+		return newView;
 	},
 	invitation_submitted: function(invitation, channel){
 		this.collection.remove(invitation);
@@ -540,18 +542,18 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 			self.submit_invitation(true, channel);
 		}).catch(function(error){
 			dialog.alert(self.get_translation("invitation_error"), error.responseText);
-        });
+		});
 	},
 	decline: function(){
 		var self = this;
 		dialog.dialog(self.get_translation("declining_invitation"), self.get_translation("declining_invitation_message"), {
-            [self.get_translation("cancel")]:function(){},
-            [self.get_translation("decline")]: function(){
-            	self.model.decline_invitation().then(function(){
-            		self.submit_invitation(false, null);
-            	});
-            },
-        }, function(){ });
+			[self.get_translation("cancel")]:function(){},
+			[self.get_translation("decline")]: function(){
+				self.model.decline_invitation().then(function(){
+					self.submit_invitation(false, null);
+				});
+			},
+		}, function(){ });
 	},
 	submit_invitation: function(accepted, channel){
 		// Show invitation was accepted
