@@ -30,7 +30,7 @@ class LanguageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Language
-        fields = ('lang_code', 'lang_subcode', 'id', 'readable_name', 'ietf_name')
+        fields = ('lang_code', 'lang_subcode', 'id', 'readable_name', 'ietf_name', 'native_name')
 
 
 class FileFormatSerializer(serializers.ModelSerializer):
@@ -242,7 +242,10 @@ class CustomListSerializer(serializers.ListSerializer):
 
                         # potential optimization opportunity
                         for attr, value in data.items():
-                            setattr(node, attr, value)
+                            if attr == 'language':
+                                node.language_id = value
+                            else:
+                                setattr(node, attr, value)
                         node.tags = taglist
 
                         node.save(request=self.context['request'])
@@ -536,6 +539,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
     files = FileSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
     assessment_items = AssessmentItemSerializer(many=True, read_only=True)
+    language = serializers.PrimaryKeyRelatedField(allow_null=True, queryset=Language.objects.all())
 
     def retrieve_original_channel(self, node):
         original = node.get_original_node()
@@ -545,7 +549,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
-        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license',
+        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
                   'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding')
@@ -558,7 +562,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
         model = ContentNode
         fields = (
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
-            'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors',
+            'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
             'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
