@@ -84,35 +84,37 @@ module.exports = {
       searchTerm: '',
     };
   },
-  computed: {
-    ...mapState('import', [
+  computed: Object.assign(
+    mapState('import', [
       'itemsToImport',
       'importSizeInBytes',
     ]),
-    ...mapGetters('import', [
+    mapGetters('import', [
       'importedItemCounts',
       'currentSearchTerm',
       'currentImportPage',
     ]),
-    searchTermIsValid() {
-      return this.searchTerm.length > 0;
+    {
+      searchTermIsValid() {
+        return this.searchTerm.length > 0;
+      },
+      importIsEnabled() {
+        return this.itemsToImport.length > 0;
+      },
+      topicCount() {
+        return this.importedItemCounts.topics;
+      },
+      resourceCount() {
+        return this.importedItemCounts.resources;
+      },
+      importFileSizeInWords() {
+        if (this.importSizeInBytes < 0) {
+          return this.$tr('calculatingSizeText');
+        }
+        return `${stringHelper.format_size(this.importSizeInBytes)}`;
+      },
     },
-    importIsEnabled() {
-      return this.itemsToImport.length > 0;
-    },
-    topicCount() {
-      return this.importedItemCounts.topics;
-    },
-    resourceCount() {
-      return this.importedItemCounts.resources;
-    },
-    importFileSizeInWords() {
-      if (this.importSizeInBytes < 0) {
-        return this.$tr('calculatingSizeText');
-      }
-      return `${stringHelper.format_size(this.importSizeInBytes)}`;
-    },
-  },
+  ),
   watch: {
     currentImportPage(newVal, oldVal) {
       // HACK to clear out search terms when user clicks 'back' on results
@@ -121,28 +123,30 @@ module.exports = {
       }
     }
   },
-  methods: {
-    ...mapMutations('import', {
+  methods: Object.assign(
+    mapMutations('import', {
       updateImportStatus: 'UPDATE_IMPORT_STATUS',
     }),
-    ...mapActions('import', [
+    mapActions('import', [
       'goToSearchResults',
     ]),
-    submitSearch() {
-      // Do nothing if searching for what's currently in results, or double clicking
-      if (this.currentSearchTerm === this.searchTerm) return;
-      this.goToSearchResults({ searchTerm: this.searchTerm });
-    },
-    handleClickImport() {
-      // Check to see if imports have related content
-      if (hasRelatedContent(this.itemsToImport)) {
-        this.updateImportStatus('show_warning');
-      } else {
-        // Triggers import action from ImportModal BB View
-        this.updateImportStatus('import_confirmed');
+    {
+      submitSearch() {
+        // Do nothing if searching for what's currently in results, or double clicking
+        if (this.currentSearchTerm === this.searchTerm) return;
+        this.goToSearchResults({ searchTerm: this.searchTerm });
+      },
+      handleClickImport() {
+        // Check to see if imports have related content
+        if (hasRelatedContent(this.itemsToImport)) {
+          this.updateImportStatus('show_warning');
+        } else {
+          // Triggers import action from ImportModal BB View
+          this.updateImportStatus('import_confirmed');
+        }
       }
-    }
-  },
+    },
+  ),
   filters: {
     pluralize,
   },

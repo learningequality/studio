@@ -1001,7 +1001,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.tags = [];
       if(this.model.get("tags")){
           var self = this;
-          fetch_tags = [];
+          var fetch_tags = [];
           this.model.get("tags").forEach(function(entry){
               fetch_tags.push((entry.id)? entry.id : entry);
           });

@@ -3,6 +3,7 @@ var browserify = require('browserify');
 var lessify = require('node-lessify');
 var hbsfy = require('hbsfy');
 var vueify = require('vueify');
+var babelify = require('babelify');
 var fs = require('fs');
 var _ = require('underscore');
 
@@ -96,6 +97,8 @@ _.each(bundles,
 b.transform(vueify);
 // handlebars translation
 b.transform(hbsfy);
+
+b.transform(babelify);
 
 // less translation
 b.transform(lessify,

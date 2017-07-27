@@ -6,7 +6,7 @@ var WorkspaceManager = require("./utils/workspace_manager");
 
 //var saveDispatcher = _.clone(Backbone.Events);
 
-ChannelEditRouter  = Backbone.Router.extend({
+var ChannelEditRouter  = Backbone.Router.extend({
   nodeCollection: new Models.ContentNodeCollection(),
   initialize: function(options) {
     _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page", "admin_page");
