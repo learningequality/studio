@@ -693,7 +693,7 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
         return channel.main_tree.created
 
     def get_date_modified(self, channel):
-        return channel.main_tree.modified
+        return channel.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
 
     def compute_item_count(self, channel):
         return channel.main_tree.get_descendant_count()
