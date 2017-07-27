@@ -6,7 +6,7 @@ var BaseViews = require("./../views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var dialog = require("edit_channel/utils/dialog");
 
-var NAMESPACE = "tree_edit";
+var NAMESPACE = "treeEdit";
 var MESSAGES = {
 	"new": "New",
     "comparison": "Comparison",
