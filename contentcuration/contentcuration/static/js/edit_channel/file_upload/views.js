@@ -204,7 +204,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         this.$(".fileinput-button").focus();
     },
     events:{
-      "click #show_uploading" : "show_uploading"
+      "click #show_uploading" : "show_uploading",
     },
     render: function() {
         this.$el.html(this.template(null, {
@@ -309,7 +309,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         this.disable_next(this.uploads_in_progress > 0);
     },
     file_removed: function(file) {
-        if (this.views.length === 0) {
+        if (this.views.length === 0 && this.uploads_in_progress===0) {
             this.load_content(this.collection, this.get_translation("drop_files_text"));
         }
     },
@@ -320,6 +320,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     },
     update_count:function(){
         $("#file_upload_count").text(this.get_translation("upload_count", this.views.length));
+        this.show_uploading();
     }
 });
 
@@ -394,6 +395,7 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     remove_item:function(){
         this.files.forEach(function(file){ if(file) file.destroy(); });
         this.containing_list_view.remove_view(this);
+        this.remove();
         this.containing_list_view.update_count();
         this.model.destroy();
     },
@@ -630,9 +632,9 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         if(this.file){
             clickables.push(dz_selector + " .format_editor_file_name");
         }
-        if($(dz_selector).get(0)){
-            Dropzone.autoDiscover = false;
-            var dropzone = new Dropzone(dz_selector, {
+        Dropzone.autoDiscover = false;
+        if(!$(dz_selector).hasClass("dropzone_attached")){
+            var dropzone = new Dropzone($(dz_selector).get(0), {
                clickable: clickables,
                acceptedFiles: this.get_accepted_files(),
                url: window.Urls.file_upload(),
@@ -646,12 +648,14 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                     "Language": (this.file && this.file.get("language"))? this.file.get("language").id : null
                 }
             });
+            console.log($(dz_selector))
             dropzone.on("success", this.file_uploaded);
 
             // Only enable the submit upload files button once all files have finished uploading.
             dropzone.on("addedfile", this.file_added);
             dropzone.on("removedfile", this.file_removed);
             dropzone.on("error", this.file_failed);
+            $(dz_selector).addClass("dropzone_attached");
         }
     },
     get_accepted_files:function(){
