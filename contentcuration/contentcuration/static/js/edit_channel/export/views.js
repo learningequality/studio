@@ -14,7 +14,8 @@ var MESSAGES = {
     "calculating": "(Calculating...)",
     "publishing": "Publishing...",
     "channel_language": "Please select the language of your channel",
-    "select_a_language": "Select a language..."
+    "select_a_language": "Select a language...",
+    "language_label": "Channel Language"
 }
 
 

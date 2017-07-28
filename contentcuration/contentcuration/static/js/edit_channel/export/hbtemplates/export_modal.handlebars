@@ -17,7 +17,7 @@
                             <option disabled selected value=0>{{formatMessage (intlGet 'messages.select_language')}}</option>
                             {{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
                         </select>
-                        <b class="language_label pull-right">{{formatMessage (intlGet 'messages.language')}}&nbsp;</b>
+                        <b class="language_label pull-right">{{formatMessage (intlGet 'messages.language_label')}}&nbsp;</b>
                         <i class="select_language_prompt">{{formatMessage (intlGet 'messages.channel_language')}}</i>
                     </div>
                     <p>{{formatMessage (intlGet 'messages.publish_text')}}</p>

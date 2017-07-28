@@ -136,7 +136,6 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
             "language": (language===0)? null : language
         }).then(function(data){
             self.onsave(data);
-            console.log(data)
             $("#settings_submit").html(self.get_translation("saved"));
             setTimeout(function(){
                 $("#settings_submit").html(self.get_translation("no_changes_detected"));

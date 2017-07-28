@@ -2,7 +2,7 @@
 <div id="channel_settings_dialog" class="modal-content-default">
     <div class="profile text-center pull-left"><div class="new_channel_pic" id="channel_thumbnail"></div></div>
     <div class="channel_section">
-        <div class="language_wrapper row">
+        <div class="language_wrapper container-fluid">
             <select id="select_language" class="tab_item input_listener pull-right">
                 <option disabled selected value=0>{{formatMessage (intlGet 'messages.select_language')}}</option>
                 {{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}

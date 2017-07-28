@@ -437,7 +437,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			var self = this;
 			this.save(data, this.get_translation("saving")).then(function(channel){
 				self.model = channel;
-				console.log(self.model)
 				self.render();
 			});
 		}
