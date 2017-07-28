@@ -30,6 +30,8 @@ var MESSAGES = {
     "author_placeholder": "Enter author name...",
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
+    "language": "Language",
+    "select_language": "Select a Language..."
 }
 
 var SettingsModalView = BaseViews.BaseModalView.extend({
@@ -73,7 +75,8 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         this.$el.html(this.template({
             channel: this.model.toJSON(),
             licenses: window.licenses.toJSON(),
-            preferences: this.model.get("preferences")
+            preferences: this.model.get("preferences"),
+            languages: window.languages.toJSON()
         },  {
             data: this.get_intl_data()
         }));
