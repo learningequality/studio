@@ -242,10 +242,7 @@ class CustomListSerializer(serializers.ListSerializer):
 
                         # potential optimization opportunity
                         for attr, value in data.items():
-                            if attr == 'language':
-                                node.language_id = value and value.get('id')
-                            else:
-                                setattr(node, attr, value)
+                            setattr(node, attr, value)
                         node.tags = taglist
 
                         node.save(request=self.context['request'])
@@ -539,7 +536,6 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
     files = FileSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
     assessment_items = AssessmentItemSerializer(many=True, read_only=True)
-    language = LanguageSerializer(many=False, required=False, allow_null=True)
 
     def retrieve_original_channel(self, node):
         original = node.get_original_node()
@@ -564,7 +560,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
             'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
-            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding',
+            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata')
 
@@ -634,7 +630,6 @@ class ChannelListSerializer(serializers.ModelSerializer):
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
-    # language = LanguageSerializer(many=False, required=False, allow_null=True)
 
     def get_date_created(self, channel):
         return channel.main_tree.created

@@ -2,13 +2,14 @@
 <div id="channel_settings_dialog" class="modal-content-default">
     <div class="profile text-center pull-left"><div class="new_channel_pic" id="channel_thumbnail"></div></div>
     <div class="channel_section">
+        <div class="language_wrapper row">
+            <select id="select_language" class="tab_item input_listener pull-right">
+                <option disabled selected value=0>{{formatMessage (intlGet 'messages.select_language')}}</option>
+                {{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
+            </select>
+        </div>
         <h4>{{formatMessage (intlGet 'messages.channel_name')}} <label class="required">*<span id="channel_error">{{formatMessage (intlGet 'messages.channel_name_error')}}</span></label></h4>
         <input type="text" id="input_title" class="upload_input input_listener tab_item first_focus_item" placeholder="{{formatMessage (intlGet 'messages.channel_name_placeholder')}}" maxlength="200" value="{{channel.name}}" required/>
-        <h4>{{formatMessage (intlGet 'messages.language')}}</h4>
-        <select id="select_language" class="tab_item input_listener">
-            <option disabled selected>{{formatMessage (intlGet 'messages.select_language')}}</option>
-            {{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
-        </select>
         <h4>{{formatMessage (intlGet 'messages.channel_description')}}</h4>
         <textarea type="text" id="input_description" class="upload_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" maxlength="400" value="{{channel.description}}">{{channel.description}}</textarea>
     </div>

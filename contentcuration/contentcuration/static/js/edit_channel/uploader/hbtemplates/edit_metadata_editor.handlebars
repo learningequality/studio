@@ -9,20 +9,19 @@
 		<div id="editmetadata_format_section"></div>
 		<hr/>
 		<br/>
+	{{/if}}
+	<div class="pull-right">
+		<label id="language_label">{{formatMessage (intlGet 'messages.language')}}</label>
+		<select id="select_language" class="tab_item">
+			<option value="inherit" selected>{{language_default}}</option>
+			<option disabled value=0>---</option>
+			{{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
+		</select>
+	</div>
+	{{#if node}}
 		<h4>{{formatMessage (intlGet 'messages.title')}}<label class="required">*<span id="title_error">{{formatMessage (intlGet 'messages.title_error')}}</span></label></h4>
 		<input type="text" id="input_title" class="upload_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.title')}} *" maxlength="200" value="{{node.title}}" required/>
 	{{/if}}
-	<div class="row">
-		<div class="col-xs-6">
-			<h4>{{formatMessage (intlGet 'messages.language')}}</h4>
-			<select id="select_language" class="tab_item">
-				<option value="inherit" selected>{{language_default}}</option>
-				<option disabled value=0>---</option>
-				{{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
-			</select>
-		</div>
-	</div>
-	<br/>
 	{{#if is_exercise}}
 		<h4>{{formatMessage (intlGet 'messages.mastery_criteria')}} <label class="required">*</label></h4>
 		<select id="mastery_model_select" class="tab_item">

@@ -45,7 +45,9 @@ var MESSAGES = {
 	"viewonly": "View-Only",
 	"last_updated": "Updated {date}",
 	"starred_channel": "Star Added!",
-	"unstarred_channel": "Star Removed"
+	"unstarred_channel": "Star Removed",
+	"language": "Language",
+    "select_language": "Select a Language..."
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -255,7 +257,9 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			resource_count: this.model.get("count"),
 			channel_link : this.model.get("id"),
 			picture : (this.thumbnail_encoding && this.thumbnail_encoding.base64) || this.thumbnail_url,
-			modified: this.model.get("modified")
+			modified: this.model.get("modified"),
+			languages: window.languages.toJSON(),
+			language: window.languages.findWhere({id: this.model.get("language")})
 		}, {
 			data: this.get_intl_data()
 		}));
@@ -348,6 +352,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.containing_list_view.set_editing(true);
 		this.edit = true;
 		this.render();
+		this.$("#select_language").val(this.model.get("language") || 0);
 	},
 	star_channel: function(){
 		var self = this;
@@ -416,6 +421,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.set_is_new(false);
 			var title = this.$el.find("#new_channel_name").val().trim();
 			var description = this.$el.find("#new_channel_description").val();
+			var language = window.languages.findWhere({id: this.$el.find("#select_language").val()});
 			var data = {
 				name: title,
 				description: description,
@@ -423,7 +429,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				thumbnail_encoding: this.thumbnail_encoding,
 				editors: this.model.get('editors'),
 				pending_editors: this.model.get('pending_editors'),
-				preferences: JSON.stringify(this.model.get('preferences') || window.user_preferences)
+				preferences: JSON.stringify(this.model.get('preferences') || window.user_preferences),
+				language: this.$el.find("#select_language").val()
 			};
 			this.original_thumbnail = this.thumbnail;
 			this.original_thumbnail_url = this.thumbnail_url;
@@ -432,6 +439,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			var self = this;
 			this.save(data, this.get_translation("saving")).then(function(channel){
 				self.model = channel;
+				console.log(self.model)
 				self.render();
 			});
 		}
