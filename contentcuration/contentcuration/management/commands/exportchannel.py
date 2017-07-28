@@ -213,6 +213,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             supplementary=preset.supplementary,
             lang_id=str(ccfilemodel.language),
             thumbnail=preset.thumbnail,
+            priority=preset.order,
         )
 
 
