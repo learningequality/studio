@@ -16,7 +16,7 @@
 		<div class="col-xs-6">
 			<h4>{{formatMessage (intlGet 'messages.language')}}</h4>
 			<select id="select_language" class="tab_item">
-				<option value="inherit" selected>Same as Topic</option>
+				<option value="inherit" selected>{{language_default}}</option>
 				<option disabled value=0>---</option>
 				{{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
 			</select>

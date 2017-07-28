@@ -243,7 +243,7 @@ class CustomListSerializer(serializers.ListSerializer):
                         # potential optimization opportunity
                         for attr, value in data.items():
                             if attr == 'language':
-                                node.language_id = value.get('id')
+                                node.language_id = value and value.get('id')
                             else:
                                 setattr(node, attr, value)
                         node.tags = taglist

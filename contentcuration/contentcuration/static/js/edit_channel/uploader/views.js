@@ -56,7 +56,9 @@ var MESSAGES = {
     "author_placeholder": "Enter author name...",
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
-    "language": "Language"
+    "language": "Language",
+    "same_as_channel": "Same as Channel",
+    "same_as_topic": "Same as Topic"
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -593,6 +595,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
+    var all_top_level = _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
 
     if(this.allow_edit){
       this.$el.html(this.template({
@@ -611,7 +614,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         m_value: this.m_value,
         n_value: this.n_value,
         license_description: this.shared_data && this.shared_data.shared_license_description,
-        languages: window.languages.toJSON()
+        languages: window.languages.toJSON(),
+        language_default: this.get_language(null, all_top_level)
       }, {
         data: this.get_intl_data()
       }));
@@ -641,7 +645,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         has_files: has_files,
         is_exercise: this.shared_data && this.shared_data.all_exercises,
         license_description: this.shared_data && this.shared_data.shared_license_description,
-        language: this.shared_data && this.get_language(this.shared_data.shared_language),
+        language: this.shared_data && this.get_language(this.shared_data.shared_language, all_top_level),
       }, {
         data: this.get_intl_data()
       }));
@@ -674,9 +678,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
     return stringHelper.translate(this.shared_data.shared_exercise_data.mastery_model);
   },
-  get_language: function(language){
+  get_language: function(language, all_top_level){
     if (language === 0){ return "---"; }
-    else if(!language) { return "Same as Topic"; }
+    else if(!language) { return (all_top_level)? this.get_translation("same_as_channel") : this.get_translation("same_as_topic"); }
     return window.languages.findWhere({id: language}).get("readable_name");
   },
   set_initial_focus:function(){
