@@ -604,7 +604,7 @@ class ChannelSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
-            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences')
+            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences', 'language')
 
 
 class AccessibleChannelListSerializer(serializers.ModelSerializer):
@@ -634,6 +634,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
+    # language = LanguageSerializer(many=False, required=False, allow_null=True)
 
     def get_date_created(self, channel):
         return channel.main_tree.created
@@ -657,7 +658,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'is_bookmarked', 'modified',
+        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'is_bookmarked', 'modified', 'language',
                   'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'preferences')
 
 

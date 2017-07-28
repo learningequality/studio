@@ -110,9 +110,13 @@ def channel_list(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
         return redirect(reverse_lazy('unsupported_browser'))
 
+    languages = get_or_set_cached_constants(Language, LanguageSerializer)
+
     return render(request, 'channel_list.html', {"channel_name": False,
                                                  "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
-                                                 "user_preferences": request.user.preferences})
+                                                 "user_preferences": request.user.preferences,
+                                                 "langs_list": languages,
+                                                })
 
 
 @api_view(['GET'])

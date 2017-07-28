@@ -171,6 +171,5 @@ Handlebars.registerHelper('format_date', function(date) {
 });
 
 Handlebars.registerHelper('equal', function(val1, val2, options) {
-  console.log(val1, val2)
     return ( val1!=val2 ) ? options.inverse(this) : options.fn(this);
 });

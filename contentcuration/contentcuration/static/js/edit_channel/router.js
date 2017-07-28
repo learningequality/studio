@@ -33,6 +33,7 @@ var ChannelEditRouter  = Backbone.Router.extend({
   },
 
 	navigate_channel_home: function() {
+		window.languages = this.languages;
 		var ChannelManageView = require("edit_channel/new_channel/views");
 		var channel_manager_view = new ChannelManageView.ChannelListPage ({
 			el: $("#channel-container"),
