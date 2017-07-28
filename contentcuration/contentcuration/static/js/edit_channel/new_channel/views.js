@@ -46,8 +46,6 @@ var MESSAGES = {
 	"last_updated": "Updated {date}",
 	"starred_channel": "Star Added!",
 	"unstarred_channel": "Star Removed",
-	"language": "Language",
-    "select_language": "Select a Language..."
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({

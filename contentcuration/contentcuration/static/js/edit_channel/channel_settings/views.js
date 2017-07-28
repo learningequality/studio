@@ -30,8 +30,6 @@ var MESSAGES = {
     "author_placeholder": "Enter author name...",
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
-    "language": "Language",
-    "select_language": "Select a Language..."
 }
 
 var SettingsModalView = BaseViews.BaseModalView.extend({

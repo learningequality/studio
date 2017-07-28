@@ -56,7 +56,6 @@ var MESSAGES = {
     "author_placeholder": "Enter author name...",
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
-    "language": "Language",
     "same_as_channel": "Same as Channel",
     "same_as_topic": "Same as Topic"
 }

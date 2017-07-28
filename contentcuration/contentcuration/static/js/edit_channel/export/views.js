@@ -12,7 +12,9 @@ var MESSAGES = {
     "current_version": "Current Version:",
     "publish_text": "The following content will be published:",
     "calculating": "(Calculating...)",
-    "publishing": "Publishing..."
+    "publishing": "Publishing...",
+    "channel_language": "Please select the language of your channel",
+    "select_a_language": "Select a language..."
 }
 
 
@@ -22,15 +24,18 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     name: NAMESPACE,
     $trs: MESSAGES,
     initialize: function(options) {
-        _.bindAll(this, "publish", 'loop_focus', 'set_indices');
+        _.bindAll(this, "publish", 'loop_focus', 'set_indices', "toggle_language_prompt");
         this.modal = true;
         this.render(this.close, {
             channel: window.current_channel.toJSON(),
             licenses: window.licenses.toJSON(),
             version: window.current_channel.get("version") + 1,
             node: this.model.toJSON(),
-            resource_count: this.model.get("metadata").resource_count
+            resource_count: this.model.get("metadata").resource_count,
+            languages: window.languages.toJSON()
         });
+        this.$("#select_language").val(window.current_channel.get("language") || 0);
+        this.toggle_language_prompt();
         this.onpublish = options.onpublish;
         this.export_view = new ExportListView({
             el: this.$("#export_preview"),
@@ -46,9 +51,30 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         });
         this.$(".modal").on("shown.bs.modal", this.set_initial_focus);
     },
+    toggle_language_prompt: function(){
+        if(!window.current_channel.get("language")) {
+            this.$(".language_wrapper").addClass("prompt");
+            this.$("#publish_btn").addClass("disabled")
+                                .attr("disabled", "disabled")
+                                .text(this.get_translation("select_a_language"));
+            this.$("#select_language").focus();
+        } else {
+            this.$(".language_wrapper").removeClass("prompt");
+            this.$("#publish_btn").removeClass("disabled")
+                                .removeAttr("disabled")
+                                .text(this.get_translation("publish").toUpperCase());
+            this.set_initial_focus();
+        }
+    },
     events:{
       "click #publish_btn" : "publish",
-      'focus .input-tab-control': 'loop_focus'
+      'focus .input-tab-control': 'loop_focus',
+      "change #select_language": "language_selected"
+    },
+    language_selected: function(){
+        window.current_channel.save({"language": this.$("#select_language").val()}, {
+            success: this.toggle_language_prompt
+        });
     },
     publish:function(){
         var self = this;

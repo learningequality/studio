@@ -64,7 +64,7 @@ class Command(BaseCommand):
                 prepare_export_database(tempdb)
                 map_content_tags(channel)
                 map_channel_to_kolibri_channel(channel)
-                map_content_nodes(channel.main_tree,)
+                map_content_nodes(channel.main_tree, channel.language)
                 map_prerequisites(channel.main_tree)
                 save_export_database(channel_id)
                 increment_channel_version(channel)
@@ -107,7 +107,7 @@ def map_content_tags(channel):
     logging.info("Finished creating the Kolibri content tags.")
 
 
-def map_content_nodes(root_node):
+def map_content_nodes(root_node, default_language):
 
     # make sure we process nodes higher up in the tree first, or else when we
     # make mappings the parent nodes might not be there
@@ -133,6 +133,9 @@ def map_content_nodes(root_node):
                     node_queue.extend(children)
 
                     kolibrinode = create_bare_contentnode(node)
+
+                    # Set language for recursive language setting, but don't save
+                    node.language = node.language or (node.parent and node.parent.language) or default_language
 
                     if node.kind.kind == content_kinds.EXERCISE:
                         exercise_data = process_assessment_metadata(node, kolibrinode)
@@ -193,11 +196,12 @@ def create_associated_file_objects(kolibrinode, ccnode):
     for ccfilemodel in ccnode.files.exclude(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
-        if ccfilemodel.language_id:
+        language = ccfilemodel.language or ccnode.language
+        if language:
             kolibrimodels.Language.objects.get_or_create(
-                id=str(ccfilemodel.language),
-                lang_code=ccfilemodel.language.lang_code,
-                lang_subcode=ccfilemodel.language.lang_subcode
+                id=language.pk,
+                lang_code=language.lang_code,
+                lang_subcode=language.lang_subcode
             )
         if preset.thumbnail and ccnode.thumbnail_encoding:
             ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
@@ -211,7 +215,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
-            lang_id=str(ccfilemodel.language),
+            lang_id=language.pk,
             thumbnail=preset.thumbnail,
             priority=preset.order,
         )

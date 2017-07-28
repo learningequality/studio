@@ -28,7 +28,7 @@
 		#export_totals{ margin-right:10px; }
 		.export_channel_name {
 			margin: 0px;
-			margin-bottom: 10px;
+			padding-bottom: 10px;
 			font-size: 15pt;
 			font-weight: bold;
 		}
@@ -52,6 +52,15 @@
 				display:inline-block;
 				vertical-align:middle;
 			}
+		}
+		.language_label{ visibibility: visible; }
+		.select_language_prompt { visibility: hidden; }
+		.language_wrapper.prompt {
+			padding: 10px;
+		    background-color: cornsilk;
+		    margin-bottom: 15px;
+		    .select_language_prompt { visibility: visible; }
+		    .language_label{ visibibility: collapse; }
 		}
 		#export_preview{
 			margin: 10px;
