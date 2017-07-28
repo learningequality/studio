@@ -243,7 +243,7 @@ class CustomListSerializer(serializers.ListSerializer):
                         # potential optimization opportunity
                         for attr, value in data.items():
                             if attr == 'language':
-                                node.language_id = value
+                                node.language_id = value.get('id')
                             else:
                                 setattr(node, attr, value)
                         node.tags = taglist
@@ -528,7 +528,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
-        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license',
+        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license','language',
                   'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of')
@@ -539,7 +539,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
     files = FileSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
     assessment_items = AssessmentItemSerializer(many=True, read_only=True)
-    language = serializers.PrimaryKeyRelatedField(allow_null=True, queryset=Language.objects.all())
+    language = LanguageSerializer(many=False, required=False, allow_null=True)
 
     def retrieve_original_channel(self, node):
         original = node.get_original_node()

@@ -529,7 +529,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.shared_license_description = view.model.get('license_description');
       this.shared_data.all_files = view.model.get("kind") !== "topic";
       this.shared_data.all_exercises = view.model.get("kind") === "exercise";
-      this.shared_data.shared_language = view.model.get("language");
+      this.shared_data.shared_language = view.model.get("language") && view.model.get("language").id || null;
       if(view.model.get("extra_fields")){
         this.shared_data.shared_exercise_data = view.model.get("extra_fields");
       }
@@ -541,7 +541,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.shared_license_description = (this.shared_data.shared_license_description === view.model.get("license_description"))? this.shared_data.shared_license_description : null;
       this.shared_data.all_files = this.shared_data.all_files && view.model.get("kind")  !== "topic";
       this.shared_data.all_exercises = this.shared_data.all_exercises && view.model.get("kind")  === "exercise";
-      this.shared_data.shared_language = (this.shared_data.shared_language === view.model.get("language"))? this.shared_data.shared_language : 0;
+
+      var language = view.model.get("language");
+      this.shared_data.shared_language = (this.shared_data.shared_language === (language && language.id) || null)? this.shared_data.shared_language : 0;
 
       if(this.shared_data.all_exercises){
         if(view.model.get("extra_fields")){
@@ -773,7 +775,10 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     new Info.MasteryModalView();
   },
   load_language: function(){
-    this.$("#select_language").val(this.shared_data && this.shared_data.shared_language);
+    var language = this.shared_data && this.shared_data.shared_language;
+    if(language===0) { this.$("#select_language").val(0); }
+    else if (!language) { this.$("#select_language").val("inherit"); }
+    else { this.$("#select_language").val(language); }
   },
   update_count:function(){
     if(this.selected_individual()){
@@ -1009,7 +1014,8 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.set_edited(true);
   },
   set_language: function(language){
-    this.set({"language": language});
+    language = (language === "inherit")? null : window.languages.findWhere({id: language});
+    this.set({"language": language.toJSON()});
     this.set_edited(true);
   },
   set_random:function(randomize){
