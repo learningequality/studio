@@ -27,25 +27,23 @@
 				<span class="glyphicon glyphicon-copy copy-id-btn" aria-hidden="true" title="{{formatMessage (intlGet 'messages.copy_id')}}"></span>
 			{{else}}<em>({{formatMessage (intlGet 'messages.unpublished')}})</em>
 			{{/if}}
-			{{#if channel.view_only}}
-				<b class="pull-right">&nbsp;{{formatMessage (intlGet 'messages.view_only')}}</b>
-			{{/if}}
 		</span>
 		<h4>
-			{{#unless channel.view_only}}
-				<span class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right"></span>
-			{{/unless}}
+			{{#if channel.is_bookmarked}}
+				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.unstar_channel')}}" class="glyphicon glyphicon-star disable-on-edit pull-right channel_option_icon star_option unstar_channel" aria-hidden="true"></span>
+			{{else}}
+				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.star_channel')}}" class="glyphicon glyphicon-star-empty disable-on-edit pull-right channel_option_icon star_option star_channel" aria-hidden="true"></span>
+			{{/if}}
+			{{#if can_edit}}
+				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.edit_channel')}}" class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right channel_option_icon"></span>
+			{{/if}}
 			<p class="truncate channel_name" title="{{channel.name}}">{{channel.name}}</p>
 		</h4>
 		<div class="description">
 			<p id="channel_description" class="wordwrap" title="{{channel.description}}">{{channel.description}}</p>
 		</div>
-		<div class="tag_area">
-			<ul class="list-unstyle list-inline">
-			{{#each tag_list}}
-				<li>{{name}}</li>
-			{{/each}}
-			</ul>
+		<div class="container-fluid updated_time">
+			{{formatMessage (intlGet 'messages.last_updated') date=(formatRelative modified)}}
 		</div>
 	{{/if}}
 </div>

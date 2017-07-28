@@ -111,7 +111,13 @@ var UserModel = BaseModel.extend({
                 url: window.Urls.get_user_channels(),
                 error: reject,
                 success: function(data) {
-                    resolve(new ChannelCollection(JSON.parse(data)));
+                    var collections = JSON.parse(data);
+                    resolve({
+                        "edit": new ChannelCollection(JSON.parse(collections.edit)),
+                        "viewonly": new ChannelCollection(JSON.parse(collections.viewonly)),
+                        "public": new ChannelCollection(JSON.parse(collections.public)),
+                        "bookmarked": new ChannelCollection(JSON.parse(collections.bookmarked)),
+                    });
                 }
             });
         });
@@ -518,7 +524,8 @@ var ChannelModel = BaseModel.extend({
         size: 0,
         published: false,
         view_only: false,
-        viewers: []
+        viewers: [],
+        modified: new Date().toLocaleString()
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
@@ -677,6 +684,36 @@ var ChannelModel = BaseModel.extend({
                     "user_id": user_id
                 }),
                 url: window.Urls.remove_editor(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
+    add_bookmark: function(user_id) {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "user_id": user_id
+                }),
+                url: window.Urls.add_bookmark(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
+    remove_bookmark: function(user_id) {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "user_id": user_id
+                }),
+                url: window.Urls.remove_bookmark(),
                 success: resolve,
                 error:function(error){reject(error.responseText);}
             });
