@@ -274,7 +274,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
             dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning"), {
                 [this.get_translation("cancel")]:function(){},
                 [this.get_translation("delete_channel")]: function(){
-					self.save({"deleted":true}, this.get_translation("deleting_channel")).then(function(){
+					self.save({"deleted":true}, self.get_translation("deleting_channel")).then(function(){
 						self.containing_list_view.set_editing(false);
 						self.containing_list_view.collection.remove(self.model);
 						self.containing_list_view.render();
