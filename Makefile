@@ -6,9 +6,27 @@ collectstatic:
 	python contentcuration/manage.py collectstatic_js_reverse
 	python contentcuration/manage.py loadconstants
 
-
 migrate:
 	python contentcuration/manage.py migrate
+
+ensurecrowdinclient:
+	ls -l crowdin-cli.jar || wget https://crowdin.com/downloads/crowdin-cli.jar # make sure we have the official crowdin cli client
+
+makemessages:
+	# generate backend messages
+	python contentcuration/manage.py makemessages
+	# generate frontend messages
+	npm run makemessages
+
+uploadmessages:
+	java -jar crowdin-cli.jar upload sources -b `git symbolic-ref HEAD | xargs basename`
+
+downloadmessages:
+	java -jar crowdin-cli.jar download -b `git symbolic-ref HEAD | xargs basename`
+
+compilemessages:
+	python contentcuration/manage.py compilemessages
+
 
 devserver:
 	cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8000
@@ -16,3 +34,7 @@ devserver:
 vagrantdevserver:
 	echo "Server to run on 192.168.31.9:8000"
 	vagrant ssh -c 'cd /vagrant/contentcuration;python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8000;cd -;'
+
+vagrantceleryworkers:
+	echo "Starting up celery workers"
+	vagrant ssh -c 'cd /vagrant/contentcuration;'
