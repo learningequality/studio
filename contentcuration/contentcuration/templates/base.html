@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 {% load staticfiles %}
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 
 <html>
 	<head>
@@ -16,6 +17,10 @@
 
 			<title>Kolibri Studio</title>
 			<!-- TODO work out why debug is not working here and use the static version -->
+      <script>
+        window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
+        window.languageCode = "{{LANGUAGE_CODE}}";
+      </script>
 			<script src="{% url 'js_reverse' %}" type="text/javascript"></script>
 			<script type="text/javascript" src="{% static 'js/bundles/common.js' %}"></script>
 			<script type="text/javascript" src="{% static 'js/bundles/base.js' %}"></script>
