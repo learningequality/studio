@@ -2,10 +2,10 @@
 
   <div>
     <div v-if="channelsAreLoading">
-      Channels are loading...
+    {{ $tr('channelLoadingText') }}
     </div>
     <div v-else-if="channels.length === 0">
-      No Channels available to import from
+      {{ $tr('noChannelsText') }}
     </div>
 
     <ul v-else class="Channels">
@@ -29,15 +29,18 @@
 const { mapState } = require('vuex');
 
 module.exports = {
+  name: 'ImportChannelList',
+  $trs: {
+    'channelLoadingText': "Channels are loading...",
+    'noChannelsText': "No channels available to import from"
+  },
   components: {
     ImportListItem: require('./ImportListItem.vue'),
   },
-  computed: {
-    ...mapState('import', [
-      'channels',
-      'channelsAreLoading',
-    ]),
-  },
+  computed: mapState('import', [
+    'channels',
+    'channelsAreLoading',
+  ]),
 };
 
 </script>

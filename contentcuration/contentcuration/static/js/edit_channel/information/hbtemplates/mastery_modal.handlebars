@@ -4,39 +4,43 @@
     <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close tab_item" data-dismiss="modal" id="close_mastery_modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title">What is an Exercise?</h4>
+            <h4 class="modal-title">{{formatMessage (intlGet 'messages.exercise')}}</h4>
         </div>
         <div class="modal-body">
         	<div class="modal-body-content">
-                <p>An exercise contains a set of interactive questions that a learner can engage with in Kolibri. They will receive instant feedback on whether they answer each question correctly or incorrectly. Kolibri will cycle through the available questions in an exercise until the Learner achieves mastery.</p>
+                <p>{{formatMessage (intlGet 'messages.exercise_description')}}</p>
                 <hr/>
-                <h3>Achieving Mastery</h3>
-                <p>Kolibri marks an exercise as "completed" when the mastery criteria is met. Here are the different types of mastery criteria for an exercise:</p>
+                <h3>{{formatMessage (intlGet 'messages.mastery')}}</h3>
+                <p>{{formatMessage (intlGet 'messages.mastery_description')}}</p>
                 <div class="mastery_container">
                     <div class="row">
-                        <div class="col-xs-2 criterion_name"><b>3 in a Row</b></div>
-                        <div class="col-xs-10 criterion_description">Learner must answer three questions in a row correctly</div>
+                        <div class="col-xs-2 criterion_name"><b>{{#translate "num_correct_in_a_row_2"}}{{/translate}}</b></div>
+                        <div class="col-xs-10 criterion_description">{{#translate (concat "num_correct_in_a_row_2" "_description")}}{{/translate}}</div>
                     </div>
                     <div class="row">
-                        <div class="col-xs-2 criterion_name"><b>5 in a Row</b></div>
-                        <div class="col-xs-10 criterion_description">Learner must answer five questions in a row correctly</div>
+                        <div class="col-xs-2 criterion_name"><b>{{#translate "num_correct_in_a_row_3"}}{{/translate}}</b></div>
+                        <div class="col-xs-10 criterion_description">{{#translate (concat "num_correct_in_a_row_3" "_description")}}{{/translate}}</div>
                     </div>
                     <div class="row">
-                        <div class="col-xs-2 criterion_name"><b>10 in a Row</b></div>
-                        <div class="col-xs-10 criterion_description">Learner must answer ten questions in a row correctly</div>
+                        <div class="col-xs-2 criterion_name"><b>{{#translate "num_correct_in_a_row_5"}}{{/translate}}</b></div>
+                        <div class="col-xs-10 criterion_description">{{#translate (concat "num_correct_in_a_row_5" "_description")}}{{/translate}}</div>
                     </div>
                     <div class="row">
-                        <div class="col-xs-2 criterion_name"><b>100% Correct</b></div>
-                        <div class="col-xs-10 criterion_description">Learner must answer all questions in the exercise correctly (not recommended for long exercises)</div>
+                        <div class="col-xs-2 criterion_name"><b>{{#translate "num_correct_in_a_row_10"}}{{/translate}}</b></div>
+                        <div class="col-xs-10 criterion_description">{{#translate (concat "num_correct_in_a_row_10" "_description")}}{{/translate}}</div>
                     </div>
                     <div class="row">
-                        <div class="col-xs-2 criterion_name"><b>M out of N</b></div>
-                        <div class="col-xs-10 criterion_description">Learner must answer M questions correctly from the last N questions answered (e.g. 3 out of 5 means learners need to answer 3 questions correctly out of the 5 most recently answered questions)</div>
+                        <div class="col-xs-2 criterion_name"><b>{{#translate "do_all"}}{{/translate}}</b></div>
+                        <div class="col-xs-10 criterion_description">{{#translate (concat "do_all" "_description")}}{{/translate}}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-2 criterion_name"><b>{{#translate "m_of_n"}}{{/translate}}</b></div>
+                        <div class="col-xs-10 criterion_description">{{#translate (concat "m_of_n" "_description")}}{{/translate}}</div>
                     </div>
                 </div>
             </div>
             <div class="modal-body-bottom container-fluid">
-    			<button class="action-button pull-right tab_item first_focus_item" data-dismiss="modal" id="mastery_modal_close_button"">CLOSE</button>
+    			<button class="action-button pull-right tab_item first_focus_item" data-dismiss="modal" id="mastery_modal_close_button">{{formatMessage (intlGet 'messages.close')}}</button>
             </div>
         </div>
     </div>

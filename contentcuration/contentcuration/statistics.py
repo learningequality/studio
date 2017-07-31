@@ -187,3 +187,38 @@ def record_channel_action_stats(action_attributes):
     """
     if 'action' in action_attributes:
         newrelic.agent.record_custom_event("ChannelStats", params=action_attributes)
+
+
+def record_action_stats(nodes_being_added, user_id):
+    """
+    :param nodes_being_added: The nodes being added to the human channel.
+    :param user_id: The id of the user committing the action.
+    """
+
+    action_attributes = dict(action_source='Human', content_source='Human', user_id=user_id)
+
+    # The first node to be added in this action.
+    first_node = nodes_being_added.itervalues().next()
+    action_attributes['content_type'] = first_node['kind'].kind.title()
+
+    if 'id' in first_node and ContentNode.objects.get(id=first_node['id']).parent is not None:
+        action_attributes['action'] = 'Update'
+    else:
+        action_attributes['action'] = 'Create'
+        action_attributes['num_nodes_added'] = len(nodes_being_added)
+        num_resources = 0
+        for id, node in nodes_being_added.items():
+            if node['kind'].kind != content_kinds.TOPIC:
+                num_resources += 1
+        action_attributes['num_resources_added'] = num_resources
+
+    # The parent the new nodes are being added to.
+    parent_node = first_node['parent']
+    action_attributes['channel_id'] = parent_node.get_channel().id
+
+    root_node = parent_node.get_root()
+    action_attributes['channel_num_resources'] = root_node.get_descendants().exclude(kind=content_kinds.TOPIC).count() \
+        + (action_attributes.get('num_resources_added') or 0)
+    action_attributes['channel_num_nodes'] = root_node.get_descendant_count() + (action_attributes.get('num_nodes_added') or 0)
+
+    record_channel_action_stats(action_attributes)

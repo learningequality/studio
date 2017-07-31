@@ -4,21 +4,23 @@
         <div class="modal-content modal-dialog-default" id="export_modal_content">
             <div class="modal-header">
                 <button type="button" class="close tab_item" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title truncate">Publishing {{channel.name}}</h4>
+                <h4 class="modal-title">{{formatMessage (intlGet 'messages.publishing_channel')}}</h4>
             </div>
             <div class="modal-body">
                 <div id="export_area">
-                    <em >PUBLISH ID: {{channel.id}}</em>
-                    <em class="pull-right" id="version_number">Current Version: {{version}}</em>
-                    <h4>The following content will be published:</h4>
+                    <h3 class="export_channel_name truncate" title="{{channel.name}}">{{channel.name}}</h3>
+                    <em >{{formatMessage (intlGet 'messages.id')}} {{channel.id}}</em>
+                    <em class="pull-right" id="version_number">{{formatMessage (intlGet 'messages.current_version')}} {{version}}</em>
+                    <hr/>
+                    <p>{{formatMessage (intlGet 'messages.publish_text')}}</p>
                     <div id="export_preview" class="modal-content-default"></div>
                     <div id="export_buttons" class="modal-bottom-content-default">
-                        <button class="action-button pull-right tab_item modal-main-action-button first_focus_item" id="publish_btn">PUBLISH</button>
+                        <button class="action-button pull-right tab_item modal-main-action-button first_focus_item" id="publish_btn">{{formatMessage (intlGet 'messages.publish')}}</button>
                         <span id="export_totals" class="pull-right modal-status-text">
-                            {{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}
-                            <em class="annotation" id="export_size">(Calculating...)</em>
+                            {{formatMessage (intlGet 'messages.resource_count') count=resource_count}}
+                            <em class="annotation" id="export_size">{{formatMessage (intlGet 'messages.calculating')}}</em>
                         </span>
-                        <button class="action-text tab_item" id="export_cancel" data-dismiss="modal">CANCEL</button>
+                        <button class="action-text tab_item uppercase" id="export_cancel" data-dismiss="modal">{{formatMessage (intlGet 'messages.cancel')}}</button>
                     </div>
                 </div>
             </div>

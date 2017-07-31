@@ -1,21 +1,21 @@
 {% load i18n %}
 
 {% autoescape off %}
-Hello {% if is_new %}{{ user.email }}{% else %}{{ user.first_name }}{% endif %},
+{% trans "Hello" %} {% if is_new %}{{ user.email }}{% else %}{{ user.first_name }}{% endif %},
 
-{{ sender.first_name }} {{ sender.last_name }} has invited you to {% trans share_mode %} a channel at {{ site.name }}.
+{{ sender.first_name }} {{ sender.last_name }} {% blocktrans %}has invited you to {{share_mode}} a channel at {% endblocktrans %}{{ site.name }}.
 
-Please follow this link to accept the invitation:
+{% trans "Please follow this link to accept the invitation:" %}
 {% if is_new %}
 {{ domain }}{% url 'accept_invitation_and_registration' user.id invitation_key %}
 {% else %}
 {{ domain }}{% url 'accept_invitation' invitation_key %}
 {% endif %}
 
-or if you'd like to decline the invitation, follow this link:
+{% trans "or if you'd like to decline the invitation, follow this link:" %}
 {{ domain }}{% url 'decline_invitation' invitation_key %}
 
-Thanks for using our site!
+{% trans "Thanks for using our site!" %}
 
 The Learning Equality Team
 

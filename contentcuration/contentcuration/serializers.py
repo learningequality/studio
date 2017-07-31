@@ -12,7 +12,7 @@ from rest_framework.utils import model_meta
 from rest_framework_bulk import BulkSerializerMixin
 
 from contentcuration.models import *
-from contentcuration.statistics import record_node_addition_stats
+from contentcuration.statistics import record_node_addition_stats, record_action_stats
 
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -250,8 +250,7 @@ class CustomListSerializer(serializers.ListSerializer):
                         PrerequisiteContentRelationship.objects.filter(target_node_id=node_id).delete()
                         for prereq_node in prerequisite_mapping.get(node_id) or []:
                             PrerequisiteContentRelationship.objects.get_or_create(target_node_id=node_id, prerequisite_id=prereq_node.id)
-                        node.save()
-
+                        node.save(request=self.context['request'])
                         ret.append(node)
         return ret
 

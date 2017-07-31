@@ -6,12 +6,58 @@ var dialog = require("../utils/dialog");
 var ImportModalComponent = require('./views/ImportModal.vue')
 var ImportModal = Vue.extend(ImportModalComponent);
 var store = require('./vuex/store');
+var vueIntl = require("vue-intl");
+var translations = require("utils/translations");
+
+
+// Flatten translation dictionary
+var unnested_translations = {};
+Object.keys(translations).forEach(function (key) {
+    Object.keys(translations[key]).forEach(function(nestedKey) {
+        unnested_translations[key + "." + nestedKey] = translations[key][nestedKey];
+    });
+});
+
+Vue.use(vueIntl, {"defaultLocale": "en"});
+
+var currentLanguage = "en";
+if (global.languageCode) {
+    currentLanguage = global.languageCode;
+    Vue.setLocale(currentLanguage);
+}
+
+Vue.registerMessages(currentLanguage, unnested_translations);
+Vue.prototype.$tr = function $tr(messageId, args) {
+    const nameSpace = this.$options.name;
+    if (args) {
+        if (!Array.isArray(args) && typeof args !== 'object') {
+            logging.error(`The $tr functions take either an array of positional
+                            arguments or an object of named options.`);
+        }
+    }
+    const defaultMessageText = this.$options.$trs[messageId];
+    const message = {
+        id: `${nameSpace}.${messageId}`,
+        defaultMessage: defaultMessageText,
+    };
+
+    return this.$formatMessage(message, args);
+};
+
 
 function getImportStatus(state) {
   return state.import.importStatus;
 }
 
-var ImportModalView = Backbone.View.extend({
+var NAMESPACE = "import";
+var MESSAGES = {
+    "warning_message": "Any associated content will not be imported or referenced as related content.",
+    "importing_content": "Importing Content..."
+}
+
+var ImportModalView = BaseViews.BaseView.extend({
+    name: NAMESPACE,
+    $trs: MESSAGES,
     initialize: function(options) {
         this.options = options;
         this.statusWatcher = store.watch(
@@ -73,8 +119,8 @@ var ImportModalView = Backbone.View.extend({
 
     _showWarning: function() {
         dialog.alert(
-            "WARNING",
-            "Any associated content will not be imported or referenced as related content.",
+            this.get_translation("warning"),
+            this.get_translation("warning_message"),
             this._dispatchCopyImportListToChannel.bind(this)
         );
     },
@@ -87,7 +133,7 @@ var ImportModalView = Backbone.View.extend({
                 resolve(true);
             });
         }
-        this.listView.display_load("Importing Content...", onFinishImport);
+        this.listView.display_load(this.get_translation("importing_content"), onFinishImport);
     },
 
     _finishImport: function() {

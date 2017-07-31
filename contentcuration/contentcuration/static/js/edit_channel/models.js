@@ -163,6 +163,9 @@ var InvitationModel = BaseModel.extend({
     resend_invitation_email:function(channel){
         return mail_helper.send_mail(channel, this.get("email"), this.get("share_mode"));
     },
+    get_full_name: function(){
+        return this.get('first_name') + " " + this.get('last_name');
+    },
     accept_invitation:function(){
         var self = this;
         return new Promise(function(resolve, reject){
@@ -362,7 +365,7 @@ var ContentNodeCollection = BaseCollection.extend({
                 url: window.Urls.get_prerequisites(),
                 data:  JSON.stringify({"nodes": ids, "get_postrequisites": get_postrequisites}),
                 success: function(data) {
-                    nodes = JSON.parse(data);
+                    var nodes = JSON.parse(data);
                     resolve({
                         "prerequisite_mapping": nodes.prerequisite_mapping,
                         "postrequisite_mapping": nodes.postrequisite_mapping,
@@ -591,7 +594,7 @@ var ChannelModel = BaseModel.extend({
                 url: window.Urls.get_node_diff(),
                 data:  JSON.stringify({'channel_id': self.id}),
                 success: function(data) {
-                    nodes = JSON.parse(data);
+                    var nodes = JSON.parse(data);
                     resolve({
                         "original" : new ContentNodeCollection(JSON.parse(nodes.original)),
                         "changed" : new ContentNodeCollection(JSON.parse(nodes.changed))

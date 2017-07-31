@@ -102,6 +102,7 @@
 		#channel-publish-button, #channel-activate-button{
 			margin: 0 40px 0 0;
 			.action-button;
+			border: none;
 		}
 		#channel-activate-button{ background-color: #2A982A; &:hover{background-color: #67D267;}}
 		#publish-id{
@@ -594,9 +595,11 @@
 
 #stats_modal{
 	@border-emphasis: 2px solid @blue-500;
+	.modal-dialog { width: 750px; }
 	.modal-content-default{
 		display:block;
 		#stats_table{
+			margin-bottom: 30px;
 			.table-header{
 				font-weight:bold;
 				background-color: @blue-200;
@@ -610,6 +613,11 @@
 			}
 			.table-row{
 				border-bottom: 1px solid @gray-300;
+				display: -webkit-box;
+				display: -webkit-flex;
+				display: -ms-flexbox;
+				display: flex;
+				flex-wrap: wrap;
 				&:last-child{
 					border: none;
 					.table-cell:last-child{border-bottom: @border-emphasis}
@@ -618,6 +626,8 @@
 				.table-cell{
 					padding: 7px;
 					cursor: default;
+					display: flex;
+  					flex-direction: column;
 					.positive{ color: green; font-weight: bold; }
 					.negative{ color: red; font-weight: bold; }
 					&:last-child{border-left: @border-emphasis; border-right: @border-emphasis;}

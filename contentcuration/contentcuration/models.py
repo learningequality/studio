@@ -24,6 +24,8 @@ from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
 from rest_framework import permissions
 from rest_framework.authtoken.models import Token
 from contentcuration.statistics import record_channel_stats
+from rest_framework import permissions
+
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -89,12 +91,16 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def can_edit(self, channel_id):
-        from contentcuration.permissions import user_can_edit
-        return user_can_edit(self, channel_id)
+        channel = Channel.objects.filter(pk=channel_id).first()
+        if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists():
+            raise PermissionDenied("Cannot edit content")
+        return True
 
     def can_view(self, channel_id):
-        from contentcuration.permissions import user_can_view
-        return user_can_view(self, channel_id)
+        channel = Channel.objects.filter(pk=channel_id).first()
+        if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists() and not channel.viewers.filter(pk=self.pk).exists():
+            raise PermissionDenied("Cannot view content")
+        return True
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
@@ -262,6 +268,7 @@ class Channel(models.Model):
         return "{}_resource_size".format(self.pk)
 
     # Might be good to display resource size, but need to improve query time first
+
     def get_resource_size(self):
         cached_data = cache.get(self.resource_size_key())
         if cached_data:
@@ -508,7 +515,6 @@ class ContentNode(MPTTModel, models.Model):
             return None
 
     def save(self, *args, **kwargs):
-
         if kwargs.get('request'):
             request = kwargs.pop('request')
             channel = self.get_channel()

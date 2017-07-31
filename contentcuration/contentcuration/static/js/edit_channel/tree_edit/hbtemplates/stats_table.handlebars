@@ -1,9 +1,9 @@
 <div id="stats_table" class="table-striped container-fluid">
     <div class="row table-header">
-        <div class="table-cell col-xs-3 text-center">Comparison</div>
-        <div class="table-cell col-xs-3 text-center">Live (Deployed)</div>
-        <div class="table-cell col-xs-3 text-center">Staged (Updated)</div>
-        <div class="table-cell col-xs-3 text-center">CHANGED</div>
+        <div class="table-cell col-xs-3 text-center">{{formatMessage (intlGet 'messages.comparison')}}</div>
+        <div class="table-cell col-xs-3 text-center">{{formatMessage (intlGet 'messages.live')}}</div>
+        <div class="table-cell col-xs-3 text-center">{{formatMessage (intlGet 'messages.staged')}}</div>
+        <div class="table-cell col-xs-3 text-center">{{formatMessage (intlGet 'messages.changed')}}</div>
     </div>
     {{#each stats}}
         <div class="row table-row">

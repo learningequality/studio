@@ -16,6 +16,9 @@ from rest_framework.authentication import TokenAuthentication, SessionAuthentica
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
 from contentcuration.statistics import record_node_duplication_stats
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import authentication_classes, permission_classes
 
 from contentcuration.statistics import record_node_duplication_stats
 
@@ -77,6 +80,7 @@ def get_node_diff(request):
             "original" : serialized_original,
             "changed" : serialized_changed,
         }))
+
 
 def create_new_node(request):
     if request.method == 'POST':
@@ -165,7 +169,7 @@ def duplicate_nodes(request):
             nodes_being_copied = []
             for node_data in nodes:
                 nodes_being_copied.append(ContentNode.objects.get(pk=node_data['id']))
-            record_node_duplication_stats(nodes_being_copied, ContentNode.objects.get(pk=target_parent),
+            record_node_duplication_stats(nodes_being_copied, ContentNode.objects.get(pk=target_parent.pk),
                                           Channel.objects.get(pk=channel_id))
 
             with transaction.atomic():
@@ -294,6 +298,7 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
 
     return new_node
 
+
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def move_nodes(request):
@@ -394,6 +399,7 @@ def _sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_fi
             if node.parent not in parents_to_check:
                 parents_to_check.append(node.parent)
     return node, parents_to_check
+
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))

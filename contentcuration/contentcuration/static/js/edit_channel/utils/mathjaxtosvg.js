@@ -1,4 +1,4 @@
-_ = require('underscore');
+var _ = require('underscore');
 
 var config = {
     showProcessingMessages: false,

@@ -2,7 +2,7 @@
 	<div class="row">
 		{{#unless input_answer}}
 		<div class="col-sm-1 text-center">
-		 		<input class="correct" type="{{#if single_selection}}radio{{else}}checkbox{{/if}}" aria-label="Correct" name="{{#if isdisplay}}display_{{/if}}answer_{{groupName}}" {{#unless allow_toggle}}disabled{{/unless}} {{#if answer.correct}}checked{{/if}} title="{{#if answer.correct}}Correct{{else}}Incorrect{{/if}}">
+		 		<input class="correct" type="{{#if single_selection}}radio{{else}}checkbox{{/if}}" aria-label="Correct" name="{{#if isdisplay}}display_{{/if}}answer_{{groupName}}" {{#unless allow_toggle}}disabled{{/unless}} {{#if answer.correct}}checked{{/if}} title="{{#if answer.correct}}{{formatMessage (intlGet 'messages.correct')}}{{else}}{{formatMessage (intlGet 'messages.incorrect')}}{{/if}}">
 		</div>
 		{{/unless}}
 		<div class="col-sm-{{#if input_answer}}10{{else}}9{{/if}} editor-col">

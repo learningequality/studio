@@ -5,10 +5,21 @@ var Models = require("edit_channel/models");
 var dialog = require("edit_channel/utils/dialog");
 require("move.less");
 
+var NAMESPACE = "move";
+var MESSAGES = {
+    "calculating_moves": "Calculating valid moves...",
+    "move_header": "Moving Content",
+    "cannot_move": "Cannot move to selected topics",
+    "my_clipboard": "My Clipboard",
+    "moving_to": "Moving {data, plural,\n =1 {# item}\n other {# items}} to {data2}"
+}
+
 /*********** MODAL CONTAINER FOR MOVE OPERATION ***********/
 var MoveModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/move_modal.handlebars"),
     modal: true,
+    name: NAMESPACE,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         this.render(this.close, {});
@@ -28,6 +39,8 @@ var MoveView = BaseViews.BaseListView.extend({
     onmove:null,
     lists: [],
     target_node:null,
+    name: NAMESPACE,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, 'move_content', 'loop_focus', 'set_indices');
@@ -50,7 +63,9 @@ var MoveView = BaseViews.BaseListView.extend({
 
     /*********** LOADING METHODS ***********/
     render: function() {
-        this.$el.html(this.template());
+        this.$el.html(this.template(null, {
+            data: this.get_intl_data()
+        }));
         this.moveList = new MoveList({
             model : null,
             el:$("#move_list_area"),
@@ -69,7 +84,7 @@ var MoveView = BaseViews.BaseListView.extend({
 
         // Add clipboard node
         var clipboard_node = window.current_user.get_clipboard().clone();
-        clipboard_node.set({'title': 'My Clipboard'});
+        clipboard_node.set({'title': this.get_translation("my_clipboard")});
         fetched.add(clipboard_node);
 
         this.targetList = new MoveList({
@@ -83,14 +98,11 @@ var MoveView = BaseViews.BaseListView.extend({
     },
 
     /*********** MOVING METHODS ***********/
-    move_content:function(){
+    move_content:function(){;
         if(this.clipboard_selected && this.collection.has_related_content()){
-            var message = "Any content associated with " + ((this.collection.length === 1)? "this item" : "these items") +
-                            " will no longer reference " + ((this.collection.length === 1)? "it" : "them") + " as related content." +
-                            " Are you sure you want to continue?";
-            dialog.dialog("RELATED CONTENT DETECTED", message, {
-                "CANCEL":function(){},
-                "CONTINUE": this.call_move,
+            dialog.dialog(this.get_translation("related_content"), this.get_translation("related_content_warning", this.collection.length), {
+                [this.get_translation("cancel")]:function(){},
+                [this.get_translation("continue")]: this.call_move,
             }, null);
         } else {
             this.call_move();
@@ -98,7 +110,7 @@ var MoveView = BaseViews.BaseListView.extend({
     },
     call_move: function(){
         var self = this;
-        this.display_load("Moving Content...", function(resolve, reject){
+        this.display_load(this.get_translation("moving_content"), function(resolve, reject){
             var sort_order = self.target_node.get('metadata').max_sort_order;
             var original_parents = self.collection.pluck('parent');
             // Get original parents
@@ -120,10 +132,7 @@ var MoveView = BaseViews.BaseListView.extend({
         this.$("#move_content_button").removeClass("disabled");
 
         // Calculate number of items
-        this.$("#move_status").text("Moving " + this.to_move_ids.length +
-            ((this.to_move_ids.length === 1)? " item to " : " items to ") +
-            this.target_node.get("title")
-        );
+        this.$("#move_status").text(this.get_translation("moving_to", this.to_move_ids.length, this.target_node.get("title")));
         this.set_initial_focus();
     }
 });
@@ -133,6 +142,7 @@ var MoveList = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/move_list.handlebars"),
     default_item:">.default-item",
     list_selector: ">.move-list",
+
     initialize: function(options) {
         this.is_target = options.is_target;
         this.container = options.container;
@@ -169,6 +179,8 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
     collapsedClass: "glyphicon-triangle-top",
     expandedClass: "glyphicon-triangle-bottom",
     list_selector: ">.move-list",
+    name: NAMESPACE,
+    $trs: MESSAGES,
 
     getToggler: function () { return this.$("#menu_toggle_" + this.model.id); },
     getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },
@@ -198,6 +210,8 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
             is_target:this.is_target,
             has_descendants: (this.is_target)? has_descendants : this.model.get("children").length,
             is_disabled: this.is_target && (_.contains(this.container.to_move_ids, this.model.id))
+        }, {
+            data: this.get_intl_data()
         }));
     },
     load_subfiles:function(){

@@ -1,17 +1,17 @@
 <div class="btn-group-vertical pull-right open_toolbar" role="group" aria-label="Edit Tools">
-	 <button type="button" class="btn btn-default toggle" title="Ok">
+	 <button type="button" class="btn btn-default toggle" title="{{formatMessage (intlGet 'messages.submit')}}">
 	 	<span class="glyphicon glyphicon-ok option" ></span>
 	 </button>
-	 <button type="button" class="btn btn-default cancel" {{#unless undo}}disabled="disabled"{{/unless}} title="Cancel">
+	 <button type="button" class="btn btn-default cancel" {{#unless undo}}disabled="disabled"{{/unless}} title="{{formatMessage (intlGet 'messages.cancel_changes')}}">
 	 	<span class="glyphicon glyphicon-ban-circle option"></span>
 	 </button>
-	 <button type="button" class="btn btn-default move_up" title="Move Up">
+	 <button type="button" class="btn btn-default move_up" title="{{formatMessage (intlGet 'messages.move_up')}}">
 	 	<span class="glyphicon glyphicon-triangle-top option"></span>
 	</button>
-	<button type="button" class="btn btn-default move_down" title="Move Down">
+	<button type="button" class="btn btn-default move_down" title="{{formatMessage (intlGet 'messages.move_down')}}">
 	 	<span class="glyphicon glyphicon-triangle-bottom option"></span>
 	</button>
-	 <button type="button" class="btn btn-default delete" title="Delete">
+	 <button type="button" class="btn btn-default delete" title="{{formatMessage (intlGet 'messages.delete')}}">
 	 	<span class="glyphicon glyphicon-trash option"></span>
 	 </button>
 </div>

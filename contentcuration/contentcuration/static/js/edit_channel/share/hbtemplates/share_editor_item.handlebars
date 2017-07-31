@@ -1,9 +1,9 @@
 <span class="editor_name truncate" title="{{editor.first_name}} {{editor.last_name}}">{{editor.first_name}} {{editor.last_name}}</span>
-<span class="editor_email">&nbsp;(<div class="share_item_email truncate" title="{{editor.email}}">{{editor.email}}</div>{{#if isviewonly}} - view only{{/if}})</span>
+<span class="editor_email">&nbsp;(<div class="share_item_email truncate" title="{{editor.email}}">{{editor.email}}</div>{{#if isviewonly}} - {{formatMessage (intlGet 'messages.view_only')}}{{/if}})</span>
 <div class="pull-right">
 	{{#if editor.sender}}
-		<span class="pending_indicator">Pending...</span>
-		<span class="reinvite_editor glyphicon glyphicon-envelope" title="Resend Invitation"></span>
-		<span class="remove_editor glyphicon glyphicon-remove" title="Cancel Invitation"></span>
+		<span class="pending_indicator">{{formatMessage (intlGet 'messages.pending')}}</span>
+		<span class="reinvite_editor glyphicon glyphicon-envelope" title="{{formatMessage (intlGet 'messages.resend')}}"></span>
+		<span class="remove_editor glyphicon glyphicon-remove" title="{{formatMessage (intlGet 'messages.cancel_invite')}}"></span>
 	{{/if}}
 </div>

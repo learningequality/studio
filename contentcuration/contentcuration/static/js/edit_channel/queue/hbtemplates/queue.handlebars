@@ -1,8 +1,8 @@
 <div id="queue" class="closed">
 	<a class="btn btn-default queue-button pull-left">
-		CLIPBOARD
+		{{formatMessage (intlGet 'messages.clipboard_label')}}
 		<br/>
-		<span class="badge queue-badge">Loading...</span>
+		<span class="badge queue-badge">{{formatMessage (intlGet 'messages.loading')}}</span>
 	</a>
 	<div id="main-queue">
 		<div id="clipboard-queue" class="queue-interior"></div>

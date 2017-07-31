@@ -1,11 +1,11 @@
 <div class="{{#if isfolder}} folder_item {{#unless isempty}}export_folder{{/unless}}{{/if}}" title="{{node.title}}">
     {{#unless isfolder}}<span class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}} content_icon"></span>{{/unless}}
-    <div class="export_item_title truncate">{{node.title}}</div>
+    <div class="export_item_title truncate" title="{{node.title}}">{{node.title}}</div>
     {{#if isfolder}}
         {{#if isempty}}
-            <em class="annotation">(empty)</em>
+            <em class="annotation">{{formatMessage (intlGet 'messages.empty')}}</em>
         {{else}}
-            <em class="annotation">{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}</em>
+            <em class="annotation">{{formatMessage (intlGet 'messages.resource_count') count=resource_count}}</em>
             <span id="menu_toggle_{{node.id}}" class="toggler glyphicon glyphicon-menu-right"></span>
         {{/if}}
     {{/if}}
