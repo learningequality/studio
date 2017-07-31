@@ -39,7 +39,7 @@
       </template>
 
       <i v-show="(isFolder || isChannel) & isChecked" class="ListItem__Counter badge">
-        {{ node.metadata.resource_count }}
+        {{ $tr('importCountText', {'resourceCount': node.metadata.resource_count})  }}
       </i>
     </label>
 
@@ -81,7 +81,8 @@ module.exports = {
   name: 'ImportListItem',
   $trs: {
     'loading': "Loading",
-    'empty': "(empty)"
+    'empty': "(empty)",
+    'resourceCount': "{resourceCount, plural, =1 {# Resource} other {# Resources}}",
   },
   props: {
     isChannel: RequiredBoolean,

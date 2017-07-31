@@ -9,6 +9,15 @@ var store = require('./vuex/store');
 var vueIntl = require("vue-intl");
 var translations = require("utils/translations");
 
+
+// Flatten translation dictionary
+var unnested_translations = {};
+Object.keys(translations).forEach(function (key) {
+    Object.keys(translations[key]).forEach(function(nestedKey) {
+        unnested_translations[key + "." + nestedKey] = translations[key][nestedKey];
+    });
+});
+
 Vue.use(vueIntl, {"defaultLocale": "en"});
 
 var currentLanguage = "en";
@@ -17,7 +26,7 @@ if (global.languageCode) {
     Vue.setLocale(currentLanguage);
 }
 
-Vue.registerMessages(currentLanguage, translations);
+Vue.registerMessages(currentLanguage, unnested_translations);
 Vue.prototype.$tr = function $tr(messageId, args) {
     const nameSpace = this.$options.name;
     if (args) {

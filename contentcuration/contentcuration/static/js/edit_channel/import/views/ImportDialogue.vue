@@ -8,7 +8,7 @@
           class="search-input"
           v-model="searchTerm"
           type="text"
-          placeholder="What are you looking for?"
+          :placeholder="$tr('searchPrompt')"
         />
         <button
           type="submit"
@@ -74,7 +74,8 @@ module.exports = {
     'selectContentPrompt': "Select content to import...",
     'importButtonLabel': "Import",
     'importCountText': "{topicCount, plural, =1 {# Topic} other {# Topics}}, {resourceCount, plural, =1 {# Resource} other {# Resources}}",
-    'calculatingSizeText': "Calculating Size..."
+    'calculatingSizeText': "Calculating Size...",
+    'searchPrompt': "What are you looking for?"
   },
   components: {
     ImportChannelList: require('./ImportChannelList.vue'),
