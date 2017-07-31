@@ -13,10 +13,10 @@ ensurecrowdinclient:
 	ls -l crowdin-cli.jar || wget https://crowdin.com/downloads/crowdin-cli.jar # make sure we have the official crowdin cli client
 
 makemessages:
-	# generate backend messages
-	python contentcuration/manage.py makemessages
 	# generate frontend messages
 	npm run makemessages
+	# generate backend messages
+	python contentcuration/manage.py makemessages
 
 uploadmessages:
 	java -jar crowdin-cli.jar upload sources -b `git symbolic-ref HEAD | xargs basename`
