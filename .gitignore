@@ -85,3 +85,6 @@ TAGS
 
 # Ignore test files
 /contentcuration/contentcuration/test_settings.py
+
+# ignore locale files
+contentcuration/locale/
