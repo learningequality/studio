@@ -3,7 +3,7 @@ set -eo pipefail
 set -x
 
 curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-apt-get install -y python python-pip python-dev postgresql-server-dev-all postgresql-contrib postgresql-client postgresql ffmpeg nodejs python-tk libmagickwand-dev rabbitmq-server
+apt-get install -y python python-pip python-dev postgresql-server-dev-all postgresql-contrib postgresql-client postgresql ffmpeg nodejs python-tk libmagickwand-dev redis-server gettext openjdk-8-jdk-headless
 cd /vagrant/
 sudo -u postgres psql <<-DatabaseSetup
   CREATE USER learningequality with PASSWORD 'kolibri' NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS;
