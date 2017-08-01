@@ -16,6 +16,9 @@ RUN mkdir -p contentcuration/static/js/bundles #
 RUN yarn install
 RUN node build.js
 
+# generate the translation files
+RUN make downloadmessages compilemessages
+
 EXPOSE 8000
 
 ENTRYPOINT ["make", "prodserver"]
