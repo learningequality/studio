@@ -46,12 +46,12 @@
 				<a class="nav-label sync_button disable-on-edit">{{formatMessage (intlGet 'messages.sync')}}</a>
 			</div>
 		{{/if}}
-		{{#unless staging}}
+		{{#if show_invite}}
 		<div class="nav-button-container">
 			<div class="nav-button permissions_button disable-on-edit"><span class="glyphicon glyphicon-user"></span></div>
 			<a class="nav-label permissions_button disable-on-edit">{{formatMessage (intlGet 'messages.invite')}}</a>
 		</div>
-		{{/unless}}
+		{{/if}}
 		{{#if channel.ricecooker_version}}
 			{{#unless view_only}}
 				{{#unless staging}}

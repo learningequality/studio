@@ -85,7 +85,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
                 data: this.get_intl_data()
             }));
             if(!this.cropping) {
-                _.defer(this.create_dropzone, 1);
+                _.defer(this.create_dropzone);
             }
         }else{
             this.$el.html(this.preview_template({
@@ -195,14 +195,14 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     /*********** DROPZONE FUNCTIONS ***********/
     create_dropzone:function(){
         var selector = "#" + this.get_selector();
-        if(this.$(selector).get(0)){
-            Dropzone.autoDiscover = false;
+        Dropzone.autoDiscover = false;
+        if(this.$(selector).is(":visible")){
             this.dropzone = new Dropzone(this.$(selector).get(0), {
                 maxFiles: 1,
                 clickable: [selector + "_placeholder", selector + "_swap"],
                 acceptedFiles: this.acceptedFiles,
                 url: this.upload_url,
-                previewTemplate:this.dropzone_template({src:"/static/img/loading_placeholder.png"}, { data: this.get_intl_data() }),
+                previewTemplate:this.dropzone_template(null, { data: this.get_intl_data() }),
                 previewsContainer: selector,
                 headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id, "Node": this.model.id}
             });
@@ -230,7 +230,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     image_uploaded:function(image){
         this.image_error = null;
-        result = JSON.parse(image.xhr.response)
+        var result = JSON.parse(image.xhr.response)
         if(result.file){
             this.image = new Models.FileModel(JSON.parse(result.file));
         }

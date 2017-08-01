@@ -2,7 +2,7 @@ import copy
 import json
 import logging
 import uuid
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
@@ -134,6 +134,32 @@ def get_nodes_by_ids(request):
                            .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
         return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
 
+def get_node_path(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        try:
+            topic = ContentNode.objects.prefetch_related('children').get(node_id=data['topic_id'], tree_id=data['tree_id'])
+
+            if topic.kind_id != content_kinds.TOPIC:
+                node =  ContentNode.objects.prefetch_related('files')\
+                                            .prefetch_related('assessment_items')\
+                                            .prefetch_related('tags').get(node_id=data['topic_id'], tree_id=data['tree_id'])
+                nodes = node.get_ancestors(ascending=True)
+            else:
+                node =  data['node_id'] and ContentNode.objects.prefetch_related('files')\
+                                            .prefetch_related('assessment_items')\
+                                            .prefetch_related('tags').get(node_id=data['node_id'], tree_id=data['tree_id'])
+                nodes = topic.get_ancestors(include_self=True, ascending=True)
+
+
+            return HttpResponse(json.dumps({
+                'path': JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data),
+                'node': node and JSONRenderer().render(ContentNodeEditSerializer(node).data),
+                'parent_node_id': topic.kind_id != content_kinds.TOPIC and node.parent and node.parent.node_id
+            }))
+        except ObjectDoesNotExist:
+            return HttpResponseNotFound("Invalid URL: the referenced content does not exist in this channel.")
 
 def get_nodes_by_ids_simplified(request):
     if request.method == 'POST':

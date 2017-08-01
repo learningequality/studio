@@ -11,7 +11,7 @@ def get_accessible_contentnodes(request):
     # Get tree_ids for channels accessible to the user
     tree_ids = cc_models.Channel.objects \
         .select_related('main_tree') \
-        .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user))) \
+        .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))) \
 
     if exclude_channel is not None:
         tree_ids = tree_ids.exclude(pk=exclude_channel)
