@@ -1,7 +1,8 @@
 import json
 import logging
+import math
 import os
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotAllowed
 from django.conf import settings
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
@@ -14,6 +15,11 @@ from pressurecooker.videos import guess_video_preset_by_resolution
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
+
+def check_user_space(user, file_size):
+    space = user.get_available_space()
+    if space < file_size:
+        raise HttpResponseNotAllowed("Out of file storage ({}MB left)".format(math.floor(space/1000000)))
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))

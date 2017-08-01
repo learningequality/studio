@@ -103,6 +103,15 @@ class User(AbstractBaseUser, PermissionsMixin):
             raise PermissionDenied("Cannot view content")
         return True
 
+    def get_available_space(self):
+        active_trees = Channel.objects.values_list('main_tree__tree_id', flat=True)
+        files = self.files.select_related('contentnode').select_related('assessment_item')\
+                            .filter(Q(contentnode__tree_id__in=active_trees) | Q(assessment_item__contentnode__tree_id__in=active_trees))\
+                            .values('checksum', 'file_size')\
+                            .distinct()\
+                            .aggregate(total_used=Sum('file_size'))
+        return self.disk_space - (files['total_used'] or 0)
+
     def email_user(self, subject, message, from_email=None, **kwargs):
         # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
         # msg.attach_alternative(kwargs["html_message"],"text/html")
