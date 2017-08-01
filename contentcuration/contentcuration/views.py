@@ -11,8 +11,8 @@ from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.urlresolvers import reverse_lazy
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
-from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation
-from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
+from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User
+from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
 from contentcuration.utils.messages import get_messages
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -59,7 +59,7 @@ def redirect_to_channel(request, channel_id):
     channel = Channel.objects.get(pk=channel_id)
     if channel.editors.filter(pk=request.user.pk).exists():
         return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
-    elif channel.viewers.filter(pk=request.user.pk).exists():
+    elif channel.viewers.filter(pk=request.user.pk).exists() or channel.public:
         return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
     return redirect(reverse_lazy('unauthorized'))
 
@@ -89,6 +89,7 @@ def channel_page(request, channel, allow_edit=False, staging=False):
 
     return render(request, 'channel_edit.html', {"allow_edit": allow_edit,
                                                  "staging": staging,
+                                                 "is_public": channel.public,
                                                  "channel": json_renderer.render(channel_serializer.data),
                                                  "channel_id": channel.pk,
                                                  "channel_name": channel.name,
@@ -123,11 +124,17 @@ def channel_list(request):
 @permission_classes((IsAuthenticated,))
 def get_user_channels(request):
     channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers') \
-                          .filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk))) \
-                          .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)), default=Value(1), output_field=IntegerField()))
-    channel_serializer = ChannelListSerializer(channel_list, many=True)
+                          .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
+                          .annotate(is_bookmarked=Case(When(bookmarked_by=request.user, then=Value(1)), default=Value(0), output_field=IntegerField()))
+    # channel_serializer = ChannelListSerializer(channel_list, many=True)
 
-    return HttpResponse(JSONRenderer().render(channel_serializer.data))
+    return HttpResponse(json.dumps({
+            "edit": JSONRenderer().render(ChannelListSerializer(channel_list.filter(editors=request.user.pk), many=True).data),
+            "viewonly": JSONRenderer().render(ChannelListSerializer(channel_list.filter(viewers=request.user.pk), many=True).data),
+            "public": JSONRenderer().render(ChannelListSerializer(channel_list.filter(public=True), many=True).data),
+            "bookmarked": JSONRenderer().render(ChannelListSerializer(channel_list.filter(bookmarked_by=request.user), many=True).data),
+        })
+    )
 
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -166,7 +173,7 @@ def channel_view_only(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
 
     # Check user has permission to view channel
-    if not channel.editors.filter(id=request.user.id).exists() and not channel.viewers.filter(id=request.user.id).exists() and not request.user.is_admin:
+    if not channel.public and not channel.editors.filter(id=request.user.id).exists() and not channel.viewers.filter(id=request.user.id).exists() and not request.user.is_admin:
         return redirect(reverse_lazy('unauthorized'))
 
     return channel_page(request, channel)
@@ -264,3 +271,43 @@ def get_channel_name_by_id(request, channel_id):
         return HttpResponse(json.dumps({"name": channel.name, "description": channel.description, "version": channel.version}))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_public_channels(request):
+    """ Endpoint: /public/public_channels """
+    channels = Channel.objects.filter(public=True).values("id", "name", "description", "version")
+    return HttpResponse(json.dumps(SimplifiedChannelListSerializer(channels, many=True).data))
+
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def add_bookmark(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        try:
+            user = User.objects.get(pk=data["user_id"])
+            channel = Channel.objects.get(pk=data["channel_id"])
+            channel.bookmarked_by.add(user)
+            channel.save()
+
+            return HttpResponse(json.dumps({"success": True}))
+        except ObjectDoesNotExist:
+            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def remove_bookmark(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        try:
+            user = User.objects.get(pk=data["user_id"])
+            channel = Channel.objects.get(pk=data["channel_id"])
+            channel.bookmarked_by.remove(user)
+            channel.save()
+
+            return HttpResponse(json.dumps({"success": True}))
+        except ObjectDoesNotExist:
+            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+

@@ -86,12 +86,14 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	edit_content:function(){ this.edit_selected(this.is_edit_page)},
 	render: function() {
+		var show_invite = !this.staging && (this.is_edit_page || _.contains(window.current_channel.get('viewers'), window.current_user.id));
 		this.$el.html(this.template({
 			edit: this.is_edit_page,
 			channel : window.current_channel.toJSON(),
 			is_clipboard : this.is_clipboard,
 			staging: this.staging,
-			view_only: _.contains(window.current_channel.get('viewers'), window.current_user.id)
+			view_only: _.contains(window.current_channel.get('viewers'), window.current_user.id),
+			show_invite: show_invite
 		}, {
 			data: this.get_intl_data()
 		}));
