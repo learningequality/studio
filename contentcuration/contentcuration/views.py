@@ -260,3 +260,10 @@ def get_channel_name_by_id(request, channel_id):
         return HttpResponse(json.dumps({"name": channel.name, "description": channel.description, "version": channel.version}))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
+
+
+@api_view(['GET'])
+def get_channel_list_given_token(request, token):
+    channel_list = token.channels.all()
+    channel_serializer = ChannelListSerializer(channel_list, many=True)
+    return HttpResponse(JSONRenderer().render(channel_serializer.data))

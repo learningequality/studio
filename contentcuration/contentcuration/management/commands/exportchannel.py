@@ -26,6 +26,7 @@ from contentcuration.statistics import record_publish_stats
 from kolibri.content.content_db_router import using_content_database, THREAD_LOCAL
 from django.db import transaction, connections
 from django.db.utils import ConnectionDoesNotExist
+from le_utils import humanhash
 
 import logging as logmodule
 logmodule.basicConfig()
@@ -69,6 +70,7 @@ class Command(BaseCommand):
                 save_export_database(channel_id)
                 increment_channel_version(channel)
                 mark_all_nodes_as_changed(channel)
+                add_tokens_to_channel(channel, channel_id)
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -500,3 +502,17 @@ def get_active_content_database():
         }
 
     return alias
+
+
+def add_tokens_to_channel(channel, channel_id):
+    if not channel.secret_tokens.filter(is_primary=True).exists():
+        logging.info("Generating tokens for the channel.")
+        token = humanhash.humanize(channel_id, words=5)
+        tk_human = ccmodels.SecretToken(token=token, is_primary=True)
+        tk = ccmodels.SecretToken(token=channel_id)
+        tk_human.save()
+        tk.save()
+        channel.secret_tokens.add(tk_human, tk)
+        logging.debug("Generating channel token {token} with id {id}".format(
+            token=tk_human, id=channel_id))
+
