@@ -10,6 +10,10 @@ sudo -u postgres psql <<-DatabaseSetup
   CREATE DATABASE "contentcuration" --owner="learningequality"
 DatabaseSetup
 
+# install docker
+curl https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64/docker-ce_17.06.0~ce-0~ubuntu_amd64.deb -O docker.deb
+dpkg -i docker.deb
+
 cd /vagrant/contentcuration
 
 devSettings="--settings=contentcuration.dev_settings"
