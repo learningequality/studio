@@ -273,7 +273,6 @@ var BaseWorkspaceView = BaseView.extend({
 		});
 	},
 	edit_selected:function(allow_edit, isclipboard){
-		var UploaderViews = require("edit_channel/uploader/views");
 		var list = this.get_selected();
 		var edit_collection = new Models.ContentNodeCollection();
 		/* Create list of nodes to edit */
@@ -282,20 +281,24 @@ var BaseWorkspaceView = BaseView.extend({
 			model.view = list[i];
 			edit_collection.add(model);
 		}
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var content = null;
+		var parent = null;
 		if(edit_collection.length ==1){
-			content = edit_collection.models[0];
+			parent = edit_collection.models[0];
 		}
+		this.edit_nodes(allow_edit, edit_collection, this.isclipboard, parent)
+	},
+	edit_nodes:function(allow_edit, collection, is_clipboard, parent){
+		var UploaderViews = require("edit_channel/uploader/views");
+		$("#main-content-area").append("<div id='dialog'></div>");
 
 		var metadata_view = new UploaderViews.MetadataModalView({
-			collection: edit_collection,
+			collection: collection,
 			el: $("#dialog"),
-			model: content,
+			model: parent,
 			new_content: false,
 		    onsave: this.reload_ancestors,
 		    allow_edit: allow_edit,
-		    isclipboard: this.isclipboard,
+		    isclipboard: is_clipboard,
 		    onnew: this.add_to_clipboard
 		});
 	},

@@ -102,6 +102,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     if(!this.allow_edit || (this.metadata_view && !this.metadata_view.check_for_changes()) || !event){
       this.close();
       $(".modal-backdrop").remove();
+      window.channel_router.update_url(null, null);
     }else{
       var t = event.target;
       var self = this;
@@ -110,10 +111,12 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
               self.metadata_view.undo_changes();
               self.close();
               $(".modal-backdrop").remove();
+              window.channel_router.update_url(null, null);
           },
           [self.get_translation("keep_open")]:function(){},
           [self.get_translation("save_and_close")]:function(){
             self.metadata_view.save_and_finish();
+            window.channel_router.update_url(null, null);
           },
       }, null);
       self.cancel_actions(event);

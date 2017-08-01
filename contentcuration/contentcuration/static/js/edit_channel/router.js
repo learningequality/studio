@@ -16,7 +16,6 @@ var ChannelEditRouter  = Backbone.Router.extend({
 		window.workspace_manager = new WorkspaceManager();
 		//this.listenTo(saveDispatcher, "save", this.save);
 		this.channelCollection = new Models.ChannelCollection();
-
 		this.fileformats = new Models.FileFormatCollection(window.fformats);
 		this.formatpresets = new Models.FormatPresetCollection(window.presets);
 		this.contentkinds = new Models.ContentKindCollection(window.kinds);
@@ -26,10 +25,10 @@ var ChannelEditRouter  = Backbone.Router.extend({
   routes: {
 		"": "navigate_channel_home",
 		"administration/": "admin_page",
-		":channel/edit": "edit_page",
-		":channel/staging": "staging_page",
-		":channel/view": "preview_page",
-		":channel/clipboard": "clipboard_page"
+		":channel/edit(/:topic)(/:node)": "edit_page",
+		":channel/staging(/:topic)(/:node)": "staging_page",
+		":channel/view(/:topic)(/:node)": "preview_page",
+		":channel/clipboard(/:topic)(/:node)": "clipboard_page"
   },
 
 	navigate_channel_home: function() {
@@ -48,20 +47,20 @@ var ChannelEditRouter  = Backbone.Router.extend({
 		});
 	},
 
-	edit_page : function(){
-		var data = { "edit_mode_on" : true };
+	edit_page : function(channel, topic, node){
+		var data = { "edit_mode_on" : true, "topic": topic, "node": node, "page": "edit" };
 		this.open_channel(data, window.current_channel.get_root("main_tree"));
 	},
-	staging_page: function(){
-		var data = { "edit_mode_on" : true, "is_staging" : true };
+	staging_page: function(channel, topic, node){
+		var data = { "edit_mode_on" : true, "is_staging" : true, "topic": topic, "node": node, "page": "staging"  };
 		this.open_channel(data, window.current_channel.get_root("staging_tree"));
 	},
-	preview_page : function(){
-		var data = {};
+	preview_page : function(channel, topic, node){
+		var data = {"topic": topic, "node": node, "page": "view"};
 		this.open_channel(data, window.current_channel.get_root("main_tree"));
 	},
-	clipboard_page:function(){
-		var data = { "edit_mode_on" : true, "is_clipboard" : true };
+	clipboard_page:function(channel, topic, node){
+		var data = { "edit_mode_on" : true, "is_clipboard" : true, "topic": topic, "node": node, "page": "clipboard" };
 		this.open_channel(true, true, false, window.current_user.get_clipboard());
 	},
 	open_channel: function(data, root){
@@ -74,12 +73,17 @@ var ChannelEditRouter  = Backbone.Router.extend({
 		window.contenttags = new Models.TagCollection(window.current_channel.get('tags'));
 		window.licenses = new Models.LicenseCollection(window.license_list);
 
+		data.topic = data.topic || window.current_channel.get((data.is_staging)? "staging_tree" : "main_tree").node_id;
+		window.current_page = data.page;
+		this.update_url(data.topic, data.node);
+
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
 			el: $("#main-content-area"),
 			collection: this.nodeCollection,
 			edit: data.edit_mode_on && !window.current_channel.get('ricecooker_version'),
 			model : root,
+			path: data,
 			is_clipboard : data.is_clipboard || false,
 			staging: window.staging
 		});
@@ -92,6 +96,14 @@ var ChannelEditRouter  = Backbone.Router.extend({
 				trash_root : window.current_channel.get_root("trash_tree"),
 		 	});
 		}
+	},
+	update_url: function(topic, node){
+		window.topic = topic || window.topic;
+		window.node = node;
+		var urlString = window.current_channel.id + "/" + window.current_page;
+		urlString += (window.topic)? "/" + window.topic : "";
+		urlString += (window.node) ? "/" + window.node : "";
+		this.navigate(urlString);
 	}
 });
 
