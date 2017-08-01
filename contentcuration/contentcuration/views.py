@@ -11,7 +11,7 @@ from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.urlresolvers import reverse_lazy
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
-from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation
+from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, SecretToken
 from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
 from contentcuration.utils.messages import get_messages
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -267,7 +267,8 @@ def get_channel_name_by_id(request, channel_id):
 
 
 @api_view(['GET'])
-def get_channel_list_given_token(request, token):
-    channel_list = token.channels.all()
-    channel_serializer = ChannelListSerializer(channel_list, many=True)
+def get_channel_list_by_token(request, token):
+    token_object = SecretToken.objects.get(token=token)
+    channel_list = token_object.channels.all()
+    channel_serializer = ChannelSerializer(channel_list, many=True)
     return HttpResponse(JSONRenderer().render(channel_serializer.data))
