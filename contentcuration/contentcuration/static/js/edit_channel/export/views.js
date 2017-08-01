@@ -13,7 +13,7 @@ var MESSAGES = {
     "publish_text": "The following content will be published:",
     "calculating": "(Calculating...)",
     "publishing": "Publishing...",
-    "channel_language": "Please select the language of your channel",
+    "channel_language": "Channel language required",
     "select_a_language": "Select a language...",
     "language_label": "Channel Language"
 }
