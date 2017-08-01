@@ -1,9 +1,9 @@
-<div class="hint-errors">Please fix the items below before closing</div>
+<div class="hint-errors">{{formatMessage (intlGet 'messages.hint_error_prompt')}}</div>
 <ul class="list-unstyled hint_list">
-	<div class="default-item">Loading...</div>
+	<div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div>
 </ul>
 {{#unless isdisplay}}
-<div class="addhint show_on_focus text-center" title="Add">
-	<span class="glyphicon glyphicon-plus"></span>&nbsp; HINT
-</div>
+<button class="addhint show_on_focus text-center tab_item first_focus_item uppercase" title="{{formatMessage (intlGet 'messages.add')}}">
+	<span class="glyphicon glyphicon-plus"></span>&nbsp; {{formatMessage (intlGet 'messages.hint')}}
+</button>
 {{/unless}}

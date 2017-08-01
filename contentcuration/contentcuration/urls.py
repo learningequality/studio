@@ -18,6 +18,9 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
+from django.views.i18n import javascript_catalog
+from django.conf.urls.i18n import i18n_patterns
+from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from rest_framework import routers, viewsets
 from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, AssessmentItem, ContentKind, Language, User, Invitation
@@ -272,6 +275,16 @@ urlpatterns += [
 ]
 
 urlpatterns += [url(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]
+
+# I18N Endpoints
+js_info_dict = {
+    'packages': ('your.app.package',),
+}
+
+urlpatterns += [
+    url(r'^jsi18n/$', javascript_catalog, js_info_dict, name='javascript-catalog'),
+    url(r'^i18n/', include('django.conf.urls.i18n')),
+]
 
 if settings.DEBUG:
     # static files (images, css, javascript, etc.)

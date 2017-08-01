@@ -15,10 +15,29 @@ const CHANNEL_CROP_BOUNDARY = { width: CHANNEL_ASPECT_RATIO.width + 20,  height:
 const THUMBNAIL_ASPECT_RATIO = { width: 160,  height: 90 };
 const THUMBNAIL_CROP_BOUNDARY = { width: THUMBNAIL_ASPECT_RATIO.width + 10,  height: THUMBNAIL_ASPECT_RATIO.height + 10 };
 
+var NAMESPACE = "image";
+var MESSAGES = {
+    "upload": "Upload",
+    "submit": "Submit",
+    "use": "USE",
+    "image_error": "Image Error",
+    "file_error_text": "Error uploading file: connection interrupted",
+    "removing_image": "Removing Image",
+    "removing_image_text": "Are you sure you want to remove this image?",
+    "alt_prompt": "Enter text to display if image fails to load",
+    "drop_prompt": "Click or drop file here...",
+    "adding_image": "Adding image to exercise",
+    "generate": "Generate",
+    "generate_thumbnail_text": "Click 'Generate' to create a thumbnail",
+    "recenter_thumbnail": "Recenter/Crop",
+}
+
 var ThumbnailUploadView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/thumbnail_upload.handlebars"),
     preview_template: require("./hbtemplates/thumbnail_preview.handlebars"),
     dropzone_template: require("./hbtemplates/thumbnail_dropzone.handlebars"),
+    name: NAMESPACE,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed',
                          'use_image', 'create_croppie', 'cancel_croppie', 'submit_image', 'get_croppie_encoding', 'submit_croppie');
@@ -62,9 +81,11 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
                 show_generate: this.model.get('kind') != undefined,
                 show_crop: this.image_url != this.default_url,
                 cropping: this.cropping
+            }, {
+                data: this.get_intl_data()
             }));
             if(!this.cropping) {
-                _.defer(this.create_dropzone, 1);
+                _.defer(this.create_dropzone);
             }
         }else{
             this.$el.html(this.preview_template({
@@ -76,7 +97,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
 
     /*********** GET IMAGE INFORMATION ***********/
     get_selector: function(){
-        return "dropzone_" + this.cid;
+        return "dropzone_image_" + this.cid;
     },
     get_thumbnail_url:function(ignore_encoding){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
@@ -94,9 +115,9 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     /*********** UPDATE IMAGE FIELDS ***********/
     remove_image: function(){
         var self = this;
-        dialog.dialog("Removing Image", "Are you sure you want to remove this image?", {
-            "CANCEL":function(){},
-            "REMOVE": function(){
+        dialog.dialog(this.get_translation("removing_image"), this.get_translation("removing_image_text"), {
+            [this.get_translation("cancel")]:function(){},
+            [this.get_translation("remove")]: function(){
                 self.image = null;
                 self.image_url = self.default_url;
                 self.thumbnail_encoding = null;
@@ -175,26 +196,28 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     create_dropzone:function(){
         var selector = "#" + this.get_selector();
         Dropzone.autoDiscover = false;
-        this.dropzone = new Dropzone(this.$(selector).get(0), {
-            maxFiles: 1,
-            clickable: [selector + "_placeholder", selector + "_swap"],
-            acceptedFiles: this.acceptedFiles,
-            url: this.upload_url,
-            previewTemplate:this.dropzone_template({src:"/static/img/loading_placeholder.png"}),
-            previewsContainer: selector,
-            headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id, "Node": this.model.id}
-        });
-        this.dropzone.on("success", this.image_uploaded);
-        this.dropzone.on("addedfile", this.image_added);
-        this.dropzone.on("removedfile", this.image_removed);
-        this.dropzone.on("queuecomplete", this.image_completed);
-        this.dropzone.on("error", this.image_failed);
+        if(this.$(selector).is(":visible")){
+            this.dropzone = new Dropzone(this.$(selector).get(0), {
+                maxFiles: 1,
+                clickable: [selector + "_placeholder", selector + "_swap"],
+                acceptedFiles: this.acceptedFiles,
+                url: this.upload_url,
+                previewTemplate:this.dropzone_template(null, { data: this.get_intl_data() }),
+                previewsContainer: selector,
+                headers: {"X-CSRFToken": get_cookie("csrftoken"), "Preset": this.preset_id, "Node": this.model.id}
+            });
+            this.dropzone.on("success", this.image_uploaded);
+            this.dropzone.on("addedfile", this.image_added);
+            this.dropzone.on("removedfile", this.image_removed);
+            this.dropzone.on("queuecomplete", this.image_completed);
+            this.dropzone.on("error", this.image_failed);
+        }
     },
     image_failed:function(data, error){
         this.image_error = error;
     },
     image_added:function(thumbnail){
-        this.image_error = "Error uploading file: connection interrupted";
+        this.image_error = this.get_translation("file_error_text");
         this.$(".finished_area").css('display', 'none');
         this.$("#" + this.get_selector() + "_placeholder").css("display", "none");
         if(this.onstart){ this.onstart(); }
@@ -207,7 +230,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     image_uploaded:function(image){
         this.image_error = null;
-        result = JSON.parse(image.xhr.response)
+        var result = JSON.parse(image.xhr.response)
         if(result.file){
             this.image = new Models.FileModel(JSON.parse(result.file));
         }
@@ -217,7 +240,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     image_completed:function(){
         if(this.image_error){
             var self = this;
-            dialog.alert("Image Error", this.image_error);
+            dialog.alert(this.get_translation("image_error"), this.image_error);
             if(this.onerror){ this.onerror(); }
             this.render();
         }else{
@@ -232,13 +255,14 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
     id: "thumbnail_modal_wrapper",
     template: require("./hbtemplates/thumbnail_generator_modal.handlebars"),
     img_template: require("./hbtemplates/thumbnail_generator_preview.handlebars"),
+    name: NAMESPACE,
+    $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, "generate_thumbnail", 'use_thumbnail', 'render_preview', "init_focus");
         this.modal = true;
         this.node = options.node;
         this.onuse = options.onuse;
         this.render();
-
     },
     events: {
         'click #generate_thumbnail' : 'generate_thumbnail',
@@ -246,7 +270,9 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
         "focus .input-tab-control": "loop_focus"
     },
     render: function() {
-        this.$el.html(this.template());
+        this.$el.html(this.template(null, {
+            data: this.get_intl_data()
+        }));
         $("body").append(this.el);
         this.$("#thumbnail_modal").modal({show: true});
         this.$("#thumbnail_modal").on("hide.bs.modal", this.close);
@@ -262,6 +288,8 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
     render_preview:function(){
         this.$("#thumbnail_preview").html(this.img_template({
           model: this.model? this.model.toJSON() : null
+        }, {
+            data: this.get_intl_data()
         }));
         this.handle_file();
     },
@@ -301,9 +329,11 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
 
 var ImageUploadView = BaseViews.BaseModalView.extend({
     modal: true,
-
+    className: "exercise_image_upload_modal",
+    name: NAMESPACE,
+    $trs: MESSAGES,
     initialize: function(options) {
-        _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed", "submit_file", "file_complete", "set_alt_text");
+        _.bindAll(this, "file_uploaded", "file_added", "file_removed", "file_failed", "submit_file", "file_complete", "set_alt_text", "init_focus", "render_dropzone");
         this.callback = options.callback;
         this.file = this.alt_text = null;
         this.preset_id = options.preset_id;
@@ -316,35 +346,46 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
 
     events: {
         "click #submit_file": "submit_file",
-        "change #alt_text_box": "set_alt_text"
+        "change #alt_text_box": "set_alt_text",
+        "focus .input-tab-control": "loop_focus"
     },
 
     render: function() {
-        this.$el.html(this.modal_template());
+        this.$el.html(this.modal_template(null, {
+            data: this.get_intl_data()
+        }));
         $("body").append(this.el);
         this.$(".modal").modal({show: true});
         this.$(".modal").on("hide.bs.modal", this.close);
         this.$(".modal").on("hidden.bs.modal", this.closed_modal);
-        this.render_dropzone();
+        this.$(".modal").on("shown.bs.modal", this.init_focus);
+        _.defer(this.render_dropzone);
+    },
+    init_focus: function(){
+        this.set_indices();
+        this.set_initial_focus();
     },
     render_dropzone:function(){
-        this.$(".modal-body").html(this.template({file: this.file, alt_text: this.alt_text}));
-        this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
-            maxFiles: 1,
-            clickable: ["#dropzone", "#dropzone_placeholder"],
-            acceptedFiles: window.formatpresets.get({id:this.preset_id}).get('associated_mimetypes').join(','),
-            url: window.Urls.exercise_image_upload(),
-            thumbnailWidth:null,
-            thumbnailHeight:null,
-            previewTemplate:this.dropzone_template(),
-            previewsContainer: "#dropzone",
-            headers: {"X-CSRFToken": get_cookie("csrftoken")}
-        });
-        this.dropzone.on("success", this.file_uploaded);
-        this.dropzone.on("addedfile", this.file_added);
-        this.dropzone.on("removedfile", this.file_removed);
-        this.dropzone.on("error", this.file_failed);
-        this.dropzone.on("queuecomplete", this.file_complete);
+        this.$(".modal-body").html(this.template({file: this.file, alt_text: this.alt_text}, { data: this.get_intl_data() }));
+        Dropzone.autoDiscover = false;
+        if(this.$("#dropzone").get(0)){
+            this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
+                maxFiles: 1,
+                clickable: ["#dropzone", "#dropzone_placeholder"],
+                acceptedFiles: window.formatpresets.get({id:this.preset_id}).get('associated_mimetypes').join(','),
+                url: window.Urls.exercise_image_upload(),
+                thumbnailWidth:null,
+                thumbnailHeight:null,
+                previewTemplate:this.dropzone_template(null, { data: this.get_intl_data() }),
+                previewsContainer: "#dropzone",
+                headers: {"X-CSRFToken": get_cookie("csrftoken")}
+            });
+            this.dropzone.on("success", this.file_uploaded);
+            this.dropzone.on("addedfile", this.file_added);
+            this.dropzone.on("removedfile", this.file_removed);
+            this.dropzone.on("error", this.file_failed);
+            this.dropzone.on("queuecomplete", this.file_complete);
+        }
     },
     set_alt_text: function(event){
         this.alt_text = event.target.value;
@@ -358,22 +399,22 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
         this.file = JSON.parse(file.xhr.response);
     },
     file_added:function(file){
-        this.file_error = "Error uploading file: connection interrupted";
+        this.file_error = this.get_translation("file_error_text");
         this.$("#dropzone_placeholder").css("display", "none");
     },
     file_removed:function(){
         this.file_error = null;
         this.file = null;
-        this.render_dropzone();
+        _.defer(this.render_dropzone);
     },
     file_failed:function(data, error){
         this.file_error = error;
     },
     file_complete:function(){
         if(this.file_error){
-            dialog.alert("Image Error", this.file_error);
+            dialog.alert(this.get_translation("image_error"), this.file_error);
         }
-        this.render_dropzone();
+        _.defer(this.render_dropzone);
     }
 });
 

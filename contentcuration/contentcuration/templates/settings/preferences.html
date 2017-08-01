@@ -4,20 +4,20 @@
 {% load i18n %}
 
 {% block settingscontent %}
-<h4>Preferences</h4>
-<p>Set defaults for filling out content details. Defaults will be applied when a new channel is created.</p>
+<h4>{% trans "Preferences" %}</h4>
+<p>{% trans "Set defaults for filling out content details. Defaults will be applied when a new channel is created." %}</p>
 <hr/>
 	{% if success %}
-		<div class="alert alert-success" role="alert">Your preferences have been updated.</div>
+		<div class="alert alert-success" role="alert">{% trans "Your preferences have been updated." %}</div>
 	{% else %}
 		{% if form.errors %}
 			<div class="alert alert-danger" role="alert">
 				<ul class="list-unstyled">
 					{% for field in form %}
-				        {% for error in field.errors %}
-				            <li>{{ error|escape }}</li>
-				        {% endfor %}
-				    {% endfor %}
+						{% for error in field.errors %}
+							<li>{{ error|escape }}</li>
+						{% endfor %}
+					{% endfor %}
 				</ul>
 			</div>
 		{% endif %}
@@ -25,76 +25,76 @@
 	<form action="{% url 'preferences_settings' %}" method="post">
 		<div id="form-wrapper" class="row preferences_form">
 			{% csrf_token %}
-			<h5>General</h5>
+			<h5>{% trans "General" %}</h5>
 			<div class="row">
 				<div class="input-group settings_field col-xs-12">
-				  <span class="input-group-addon">{{ form.author.label }}</span>
-				  {{ form.author }}
+					<span class="input-group-addon">{% trans "Author" %}</span>
+					{{ form.author }}
 				</div>
 			</div>
 			<div class="row">
 				<div class="input-group settings_field col-xs-5">
-				  <span class="input-group-addon">{{ form.license.label }}</span>
-				  {{ form.license }}
+					<span class="input-group-addon">{% trans "License" %}</span>
+					{{ form.license }}
 				</div>
 				<div class="input-group settings_field col-xs-7">
-				  <span class="input-group-addon">{{ form.copyright_holder.label }}</span>
-				  {{ form.copyright_holder }}
+					<span class="input-group-addon">{% trans "Copyright Holder" %}</span>
+					{{ form.copyright_holder }}
 				</div>
 			</div>
 			<div class="row" id="license_description_input">
 				<div class="input-group settings_field col-xs-12">
-				  <span class="input-group-addon">{{ form.license_description.label }}</span>
-				  {{ form.license_description }}
+					<span class="input-group-addon">{% trans "License Description" %}</span>
+					{{ form.license_description }}
 				</div>
 			</div>
 			<br>
-			<h5>Automatically generate thumbnails for...</h5>
+			<h5>{% trans "Automatically generate thumbnails for..." %}</h5>
 			<div class="row">
 				<div class="input-group settings_field col-xs-2">
-				  {{ form.auto_derive_video_thumbnail }}
-				  &nbsp;<label for="id_auto_derive_video_thumbnail">{{ form.auto_derive_video_thumbnail.label }}</label>
+					{{ form.auto_derive_video_thumbnail }}
+					&nbsp;<label for="id_auto_derive_video_thumbnail">{% trans "Videos" %}</label>
 				</div>
 				<div class="input-group settings_field col-xs-2">
-				  {{ form.auto_derive_audio_thumbnail }}
-				  &nbsp;<label for="id_auto_derive_audio_thumbnail">{{ form.auto_derive_audio_thumbnail.label }}</label>
+					{{ form.auto_derive_audio_thumbnail }}
+					&nbsp;<label for="id_auto_derive_audio_thumbnail">{% trans "Audio" %}</label>
 				</div>
 				<div class="input-group settings_field col-xs-3">
-				  {{ form.auto_derive_html5_thumbnail }}
-				  &nbsp;<label for="id_auto_derive_html5_thumbnail">{{ form.auto_derive_html5_thumbnail.label }}</label>
+					{{ form.auto_derive_document_thumbnail }}
+					&nbsp;<label for="id_auto_derive_document_thumbnail">{% trans "Documents" %}</label>
 				</div>
-				<div class="input-group settings_field col-xs-3">
-				  {{ form.auto_derive_document_thumbnail }}
-				  &nbsp;<label for="id_auto_derive_document_thumbnail">{{ form.auto_derive_document_thumbnail.label }}</label>
+				<div class="input-group settings_field col-xs-5">
+					{{ form.auto_derive_html5_thumbnail }}
+					&nbsp;<label for="id_auto_derive_html5_thumbnail">{% trans "HTML Apps" %}</label>
 				</div>
 			</div>
 			<br>
-			<h5>Exercises</h5>
+			<h5>{% trans "Exercises" %}</h5>
 			<div class="row">
 				<div class="input-group settings_field col-xs-6">
-				  <span class="input-group-addon">{{ form.mastery_model.label }}</span>
-				  {{ form.mastery_model }}
+					<span class="input-group-addon">{% trans "Mastery At" %}</span>
+					{{ form.mastery_model }}
 				</div>
 				<div class="col-xs-1"></div>
 				<div class="input-group settings_field  col-xs-2 mastery_criteria">
-				  <span class="input-group-addon">{{ form.m_value.label }}</span>
-				  {{ form.m_value }}
+					<span class="input-group-addon">{% trans "M" %}</span>
+					{{ form.m_value }}
 				</div>
-				<div class="input-group settings_field text-center col-xs-1 mastery_criteria criteria_label">of</div>
+				<div class="input-group settings_field text-center col-xs-1 mastery_criteria criteria_label">{% trans "of" %}</div>
 				<div class="input-group settings_field  col-xs-2 mastery_criteria">
-				  <span class="input-group-addon">{{ form.n_value.label }}</span>
-				  {{ form.n_value }}
+					<span class="input-group-addon">{% trans "N" %}</span>
+					{{ form.n_value }}
 				</div>
 			</div>
 			<div class="row">
 				<div class="input-group settings_field col-xs-12">
-				  {{ form.auto_randomize_questions }}
-				  <label for="id_auto_randomize_questions">&nbsp;{{ form.auto_randomize_questions.label }}</label>
+					{{ form.auto_randomize_questions }}
+					<label for="id_auto_randomize_questions">&nbsp;{% trans "Automatically randomize question order" %}</label>
 				</div>
 			</div>
 		</div>
 		<br>
-		<input id="save" class="action-button pull-right" type="submit" value="No Changes Found" disabled/>
+		<input id="save" class="action-button pull-right" type="submit" value="{% trans 'No Changes Found' %}" disabled/>
 	</form>
 </div>
 <script>
@@ -103,7 +103,7 @@
 		$(".mastery_criteria").css('display', ($("#id_mastery_model").val()==="m_of_n")? "inline-table" : "none");
 		if(Number($("#id_m_value").val()) > Number($("#id_n_value").val())) $("#id_n_value").val($("#id_m_value").val());
 		$("#save").attr("disabled", false);
-		$("#save").val("SAVE CHANGES");
+		$("#save").val("{% trans 'SAVE CHANGES' %}");
 	}
 	$(".setting_input").on("keyup", registerChange);
 	$(".setting_change").on("change", registerChange);

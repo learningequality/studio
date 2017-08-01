@@ -10,17 +10,48 @@ var get_cookie = require("utils/get_cookie");
 var stringHelper = require("edit_channel/utils/string_helper")
 var dialog = require("edit_channel/utils/dialog");
 
+var NAMESPACE = "newChannel";
+var MESSAGES = {
+	"channel": "Channel",
+	"header": "My Channels",
+	"add_channel_disbaled_title": "Cannot create a new channel while another channel is being edited.",
+	"add_channel_title": "Create a new channel",
+	"pending_loading": "Checking for invitations...",
+	"delete_channel": "DELETE CHANNEL",
+	"save_channel": "SAVE",
+	"deleting_channel": "Deleting Channel...",
+	"delete_warning": "All content under this channel will be permanently deleted.\nAre you sure you want to delete this channel?",
+	"channel_name_error": "Channel must have a name",
+	"name_placeholder": "Enter channel name...",
+	"description_placeholder": "Enter channel description...",
+	"copy_id": "Copy ID to clipboard",
+	"unpublished": "Unpublished",
+	"view_only": "View Only",
+	"invitation_error": "Invitation Error",
+	"declining_invitation": "Declining Invitation",
+	"declining_invitation_message": "Are you sure you want to decline this invitation?",
+	"decline": "DECLINE",
+	"accept": "ACCEPT",
+	"accept_prompt": "has invited you to",
+	"accept_success": "Accepted invitation to",
+	"decline_success": "Declined invitation to",
+	"edit": "edit",
+	"view": "view",
+}
+
 var ChannelListPage  = BaseViews.BaseView.extend({
 	template: require("./hbtemplates/channel_create.handlebars"),
 	list_selector: "#channel_list",
-	default_item: ".default-item",
-
+	name: NAMESPACE,
+	$trs: MESSAGES,
 	initialize: function(options) {
 		_.bindAll(this, 'new_channel');
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template());
+		this.$el.html(this.template(null, {
+			data: this.get_intl_data()
+		}));
 		this.current_channel_list = new CurrentChannelList({container: this, el: this.$("#channel_list")});
 		this.pending_channel_list = new PendingChannelList({container: this, el: this.$("#pending_list")});
 	},
@@ -36,8 +67,8 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 });
 
 var ChannelList  = BaseViews.BaseEditableListView.extend({
-	default_item: ".default-item",
-
+	name: NAMESPACE,
+	$trs: MESSAGES,
 	initialize: function(options) {
 		this.bind_edit_functions();
 		this.container = options.container;
@@ -56,7 +87,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
 		$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
 		(edit_mode_on)? $(".new_channel_button").addClass("disabled") : $(".new_channel_button").removeClass("disabled");
-		$(".new_channel_button").prop('title', (edit_mode_on)? 'Cannot create a new channel while another channel is being edited.' : "Create a new channel");
+		$(".new_channel_button").prop("title", (edit_mode_on)? this.get_translation("add_channel_disbaled_title") : this.get_translation("add_channel_title"));
 	}
 });
 
@@ -66,7 +97,9 @@ var CurrentChannelList  = ChannelList.extend({
 
 	render: function() {
 		this.set_editing(false);
-		this.$el.html(this.template());
+		this.$el.html(this.template(null, {
+			data: this.get_intl_data()
+		}));
 		this.collection = new Models.ChannelCollection();
 		var self = this;
 		window.current_user.get_channels().then(function(channels){
@@ -95,10 +128,9 @@ var CurrentChannelList  = ChannelList.extend({
 	}
 });
 
-/*
-	edit: determines whether to load channel or editor
-*/
 var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
+	name: NAMESPACE,
+	$trs: MESSAGES,
 	tagName: "li",
 	id: function(){
 		return (this.model)? this.model.get("id") : "new";
@@ -143,6 +175,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			resource_count: this.model.get("count"),
 			channel_link : this.model.get("id"),
 			picture : (this.thumbnail_encoding && this.thumbnail_encoding.base64) || this.thumbnail_url
+		}, {
+			data: this.get_intl_data()
 		}));
 		if(this.edit){
 			this.image_upload = new ImageViews.ThumbnailUploadView({
@@ -235,13 +269,13 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		if(this.isNew){
 			this.delete(true, " ");
 			this.containing_list_view.set_editing(false);
+			this.remove();
 		}else{
 			var self = this;
-            dialog.dialog("WARNING", "All content under this channel will be permanently deleted."
-					+ "\nAre you sure you want to delete this channel?", {
-                "CANCEL":function(){},
-                "DELETE CHANNEL": function(){
-					self.save({"deleted":true}, "Deleting Channel...").then(function(){
+            dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning"), {
+                [this.get_translation("cancel")]:function(){},
+                [this.get_translation("delete_channel")]: function(){
+					self.save({"deleted":true}, self.get_translation("deleting_channel")).then(function(){
 						self.containing_list_view.set_editing(false);
 						self.containing_list_view.collection.remove(self.model);
 						self.containing_list_view.render();
@@ -287,7 +321,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.edit = false;
 
 			var self = this;
-			this.save(data, "Saving Channel...").then(function(channel){
+			this.save(data, this.get_translation("saving")).then(function(channel){
 				self.model = channel;
 				self.render();
 			});
@@ -302,7 +336,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	set_channel:function(){
 		this.set({
-			name: (this.$el.find("#new_channel_name").val().trim() == "")? "[Untitled Channel]" : this.$el.find("#new_channel_name").val().trim(),
+			name: this.$el.find("#new_channel_name").val().trim(),
 			description: this.$el.find("#new_channel_description").val(),
 			thumbnail : this.thumbnail,
 			thumbnail_encoding: this.thumbnail_encoding
@@ -338,11 +372,9 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 });
 
-var PendingChannelList  = BaseViews.BaseEditableListView.extend({
+var PendingChannelList  = ChannelList.extend({
 	template: require("./hbtemplates/channel_list_pending.handlebars"),
 	list_selector: "#channel_list_pending",
-	default_item: ".default-item",
-
 	initialize: function(options) {
 		this.bind_edit_functions();
 		this.container = options.container;
@@ -350,7 +382,9 @@ var PendingChannelList  = BaseViews.BaseEditableListView.extend({
 		this.render();
 	},
 	render: function() {
-		this.$el.html(this.template());
+		this.$el.html(this.template(null, {
+			data: this.get_intl_data()
+		}));
 		var self = this;
 		window.current_user.get_pending_invites().then(function(invitations){
 			self.collection.reset(invitations.toJSON());
@@ -374,6 +408,8 @@ var PendingChannelList  = BaseViews.BaseEditableListView.extend({
 });
 
 var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
+	name: NAMESPACE,
+	$trs: MESSAGES,
 	tagName: "li",
 	id: function(){
 		return (this.model)? this.model.get("id") : "new";
@@ -392,6 +428,8 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		this.$el.html(this.template({
 			invitation: this.model.toJSON(),
 			status: this.status
+		}, {
+			data: this.get_intl_data()
 		}));
 	},
 	events: {
@@ -403,14 +441,14 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		this.model.accept_invitation().then(function(channel){
 			self.submit_invitation(true, channel);
 		}).catch(function(error){
-			dialog.alert("Invitation Error", error.responseText);
+			dialog.alert(self.get_translation("invitation_error"), error.responseText);
         });
 	},
 	decline: function(){
 		var self = this;
-		dialog.dialog("Declining Invitation", "Are you sure you want to decline this invitation?", {
-            "CANCEL":function(){},
-            "DECLINE": function(){
+		dialog.dialog(self.get_translation("declining_invitation"), self.get_translation("declining_invitation_message"), {
+            [self.get_translation("cancel")]:function(){},
+            [self.get_translation("decline")]: function(){
             	self.model.decline_invitation().then(function(){
             		self.submit_invitation(false, null);
             	});

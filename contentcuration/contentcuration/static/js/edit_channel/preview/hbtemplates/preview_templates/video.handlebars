@@ -3,5 +3,5 @@
   	{{#each subtitles}}
   		<track label="{{language.readable_name}}" kind="subtitles" srclang="{{language.lang_code}}" src="{{storage_url}}">
   	{{/each}}
-	Your browser does not support the video tag.
+	{{formatMessage (intlGet 'messages.video_error')}}
 </video>

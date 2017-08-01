@@ -3,22 +3,22 @@
   <div class="SearchResults">
     <div>
       <p v-show="!resultsLoading" class="TopResults wordwrap">
-        Showing top results for "{{ currentSearchTerm }}"
+        {{ $tr('showingResultsText', {currentSearchTerm: currentSearchTerm})  }}
       </p>
       <button @click="goToPreviousPage()" class="button-reset BackButton">
-        Go Back To Browse
+        {{ $tr('backToBrowseButton')  }}
       </button>
     </div>
 
     <!-- ITEM RESULTS -->
     <div class="Results">
-      <h1 class="Results__Header">Resources</h1>
+      <h1 class="Results__Header">{{ $tr('resourcesLabel')  }}</h1>
       <span v-if="resultsLoading" class="LoadingMsg wordwrap">
-        Loading results for "{{ currentSearchTerm }}"...
+        {{ $tr('loadingResultsText', {currentSearchTerm: currentSearchTerm})  }}
       </span>
       <template v-else>
         <div v-show="itemResults.length === 0" class="wordwrap">
-          No documents, exercises, or other files matching "{{ currentSearchTerm }}"
+          {{ $tr('noContentFoundText', {currentSearchTerm: currentSearchTerm})  }}
         </div>
         <ul class="list-unstyled Results__List">
           <ImportListItem
@@ -37,13 +37,13 @@
 
     <!-- TOPIC RESULTS -->
     <div class="Results">
-      <h1 class="Results__Header">Topics</h1>
+      <h1 class="Results__Header">{{ $tr('topicsLabel')  }}</h1>
       <span v-if="resultsLoading" class="LoadingMsg wordwrap">
-        Loading results for "{{ currentSearchTerm }}"...
+        {{ $tr('loadingResultsText', {currentSearchTerm: currentSearchTerm})  }}
       </span>
       <template v-else>
         <div v-show="topicResults.length === 0" class="wordwrap">
-          No topics matching "{{ currentSearchTerm }}"
+          {{ $tr('noTopicsText', {currentSearchTerm: currentSearchTerm})  }}
         </div>
         <ul class="list-unstyled Results__List">
           <ImportListItem
@@ -70,6 +70,16 @@ const { mapGetters, mapActions } = require('vuex');
 const { fetchSearchResults } = require('../util');
 
 module.exports = {
+  name: 'SearchResults',
+  $trs: {
+    'showingResultsText': "Showing top results for \"{currentSearchTerm}\"",
+    'loadingResultsText': "Loading results for \"{currentSearchTerm}\"...",
+    'backToBrowseButton': "Go Back To Browse",
+    'resourcesLabel': "Resources",
+    'noContentFoundText': "No documents, exercises, or other files matching \"{ currentSearchTerm }\"",
+    'topicsLabel': "Topics",
+    'noTopicsText': "No topics matching \"{ currentSearchTerm }\""
+  },
   components: {
     ImportListItem: require('./ImportListItem.vue'),
   },
@@ -80,12 +90,10 @@ module.exports = {
       resultsLoading: false,
     };
   },
-  computed: {
-    ...mapGetters('import', [
-      'currentSearchTerm',
-      'currentChannelId',
-    ]),
-  },
+  computed: mapGetters('import', [
+    'currentSearchTerm',
+    'currentChannelId',
+  ]),
   watch: {
     currentSearchTerm() {
       this.updateResults();
@@ -94,21 +102,23 @@ module.exports = {
   mounted() {
     this.updateResults();
   },
-  methods: {
-    ...mapActions('import', ['goToPreviousPage']),
-    updateResults() {
-      if (this.currentSearchTerm.length < 3) return;
-      this.resultsLoading = true;
-      return fetchSearchResults(this.currentSearchTerm, this.currentChannelId)
-      .then(({ itemResults, topicResults, searchTerm }) => {
-        if (searchTerm === this.currentSearchTerm) {
-          this.resultsLoading = false;
-          this.itemResults = itemResults;
-          this.topicResults = topicResults;
-        }
-      });
+  methods: Object.assign(
+    mapActions('import', ['goToPreviousPage']),
+    {
+      updateResults() {
+        if (this.currentSearchTerm.length < 3) return;
+        this.resultsLoading = true;
+        return fetchSearchResults(this.currentSearchTerm, this.currentChannelId)
+        .then(({ itemResults, topicResults, searchTerm }) => {
+          if (searchTerm === this.currentSearchTerm) {
+            this.resultsLoading = false;
+            this.itemResults = itemResults;
+            this.topicResults = topicResults;
+          }
+        });
+      },
     },
-  },
+  ),
 }
 
 </script>

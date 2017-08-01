@@ -1,83 +1,43 @@
 {{#if add_controls}}
-<div class="wrapper"> <!-- used for dragging/dropping -->
-	<!--<input type="text" placeholder="Find in Queue... (under construction)" class="search_queue construction"/>
-	<div class="sort_box">
-		<label for="sort_queue">Sort by</label>
-		<br/>
-		<select id="sort_queue construction">
-			<option>Recently Added</option>
-			<option>Oldest First</option>
-			<option>A-Z</option>
-			<option>Z-A</option>
-		</select>
-	</div>
-	<div class="sort_box">
-		<label for="show_queue">Show only</label>
-		</br>
-		<select id="show_queue construction">
-			<option>All Media Types</option>
-			<option>Audio</option>
-			<option>Exercises</option>
-			<option>PDF</option>
-			<option>Video</option>
-		</select>
-	</div>-->
+<div class="wrapper">
 	<div id="queue_content">
-		{{#if is_clipboard}}
-			<div class="row clipboard_options text-center">
-				<div class="toolbar-button col-xs-3">
-					<div class="dropdown" id="clipboard_dropdown">
-						<div data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" >
-							<div class="add_items"><span class="glyphicon glyphicon-plus-sign" id="clipboard_add_dd"></span></div>
-							<a class="add_items">Add</a>
-						</div>
-					  <ul class="dropdown-menu clipboard_add_options" aria-labelledby="clipboard_add_dd">
-					    <li><a class="create_new_content">Add Topics</a></li>
-					    <li><a class="upload_files_button">Upload Files</a></li>
-					    <li><a class="create_exercise_button" name="{{topic.title}}">Create Exercise</a></li>
-					    <li><a class="import_content">Import from Channels</a></li>
-					  </ul>
+		<div class="row clipboard_options text-center">
+			<div class="toolbar-button col-xs-3">
+				<div class="dropdown" id="clipboard_dropdown">
+					<div data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" >
+						<div class="add_items"><span class="glyphicon glyphicon-plus-sign" id="clipboard_add_dd"></span></div>
+						<a class="add_items">{{formatMessage (intlGet 'messages.add')}}</a>
 					</div>
-				</div>
-				<div class="toolbar-button queue-disable-none-selected col-xs-3">
-					<div class="edit_items"><span class="glyphicon glyphicon-pencil"></span></div>
-					<a class="edit_items">Edit</a>
-				</div>
-				<div class="toolbar-button queue-disable-none-selected col-xs-3">
-					<div class="move_items"><span class="glyphicon glyphicon-move"></span></div>
-					<a class="move_items">Move</a>
-				</div>
-				<!--<a class="col-xs-3 move_selected_queue btn btn-option construction">Move<br/>Selected</a>-->
-				<div class="toolbar-button queue-disable-none-selected col-xs-3">
-					<div class="delete_items"><span class="glyphicon glyphicon-remove"></span></div>
-					<a class="delete_items">Delete</a>
+					<ul class="dropdown-menu clipboard_add_options" aria-labelledby="clipboard_add_dd">
+						<li><a class="create_new_content">{{formatMessage (intlGet 'messages.add_topics')}}</a></li>
+						<li><a class="upload_files_button">{{formatMessage (intlGet 'messages.upload_files')}}</a></li>
+						<li><a class="create_exercise_button">{{formatMessage (intlGet 'messages.create_exercise')}}</a></li>
+						<li><a class="import_content">{{formatMessage (intlGet 'messages.import')}}</a></li>
+					</ul>
 				</div>
 			</div>
-			<div id="clipboard_list" class="list_content">
-		{{else}}
-			<div class="row trash_options text-center">
-				<div class="toolbar-button queue-disable-none-selected" title="Recover to your clipboard">
-					<div class="move_trash"><span class="glyphicon glyphicon-share-alt"></span></div>
-					<a class="move_trash">Recover</a>
-				</div>
-				<div class="toolbar-button queue-disable-none-selected">
-					<div class="delete_items"><span class="glyphicon glyphicon-remove-circle"></span></div>
-					<a class="delete_items">Clear</a>
-				</div>
+			<div class="toolbar-button queue-disable-none-selected col-xs-3">
+				<div class="edit_items"><span class="glyphicon glyphicon-pencil"></span></div>
+				<a class="edit_items">{{formatMessage (intlGet 'messages.edit')}}</a>
 			</div>
-			<div id = "trash_list" class="list_content">
-		{{/if}}
-			<div class="select_all_fixed">
-				<!-- {{#if is_clipboard}}
-					<a class="action-text pull-right manage_clipboard" href="clipboard">MANAGE</a>
-				{{/if}} -->
-				<input type="checkbox" class="select_all select_all_component" id="select_all_check_{{id}}"/>
-				<label for="select_all_check_{{id}}">Select All</label>
+			<div class="toolbar-button queue-disable-none-selected col-xs-3">
+				<div class="move_items"><span class="glyphicon glyphicon-move"></span></div>
+				<a class="move_items">{{formatMessage (intlGet 'messages.move')}}</a>
 			</div>
+			<div class="toolbar-button queue-disable-none-selected col-xs-3">
+				<div class="delete_items"><span class="glyphicon glyphicon-remove"></span></div>
+				<a class="delete_items">{{formatMessage (intlGet 'messages.delete')}}</a>
+			</div>
+		</div>
+		<div id="clipboard_list" class="list_content">
+		<div class="select_all_fixed">
+			<input type="checkbox" class="select_all select_all_component" id="select_all_check_{{id}}"/>
+			<label for="select_all_check_{{id}}">{{formatMessage (intlGet 'messages.select_all')}}</label>
+		</div>
 		<div class="queue-list-wrapper">
-	{{/if}}
+{{/if}}
 			<ul class="list-unstyled content-list" id="list_for_{{id}}">
-				<li class="default-item">Loading...</li>
+				<li class="default-item">{{formatMessage (intlGet 'messages.loading')}}</li>
 			</ul>
 	{{#if add_controls}}
 			</div>
