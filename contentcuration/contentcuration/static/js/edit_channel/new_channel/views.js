@@ -383,6 +383,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		if(this.isNew){
 			this.delete(true, " ");
 			this.containing_list_view.set_editing(false);
+			this.remove();
 		}else{
 			var self = this;
 			dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning", this.model.get("name")), {

@@ -15,7 +15,7 @@
 			<ul class="list-unstyled">
 			{% for field in form %}
 				{% for error in field.errors %}
-					<li>{% blocktrans %}{{ error|escape }}{% endblocktrans %}</li>
+					<li>{{ error|escape }}</li>
 				{% endfor %}
 			{% endfor %}
 			</ul>
