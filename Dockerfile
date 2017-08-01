@@ -17,7 +17,7 @@ RUN yarn install
 RUN node build.js
 
 # generate the translation files
-RUN make downloadmessages compilemessages
+RUN make ensurecrowdinclient downloadmessages compilemessages
 
 EXPOSE 8000
 
