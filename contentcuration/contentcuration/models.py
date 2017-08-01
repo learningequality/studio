@@ -82,6 +82,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
+    disk_space = models.IntegerField(default=500000000, help_text=_('How many bytes a user can upload'))
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -641,6 +642,7 @@ class File(models.Model):
     language = models.ForeignKey(Language, related_name='files', blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
+    uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True)
 
     class Admin:
         pass
