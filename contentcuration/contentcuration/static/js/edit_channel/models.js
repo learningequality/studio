@@ -111,7 +111,13 @@ var UserModel = BaseModel.extend({
                 url: window.Urls.get_user_channels(),
                 error: reject,
                 success: function(data) {
-                    resolve(new ChannelCollection(JSON.parse(data)));
+                    var collections = JSON.parse(data);
+                    resolve({
+                        "edit": new ChannelCollection(JSON.parse(collections.edit)),
+                        "viewonly": new ChannelCollection(JSON.parse(collections.viewonly)),
+                        "public": new ChannelCollection(JSON.parse(collections.public)),
+                        "bookmarked": new ChannelCollection(JSON.parse(collections.bookmarked)),
+                    });
                 }
             });
         });
@@ -376,6 +382,37 @@ var ContentNodeCollection = BaseCollection.extend({
             });
         });
     },
+    get_node_path: function(topic_id, tree_id, node_id){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                url: window.Urls.get_node_path(),
+                data:  JSON.stringify({
+                    "topic_id" : topic_id,
+                    "tree_id": tree_id,
+                    "node_id": node_id
+                }),
+                success: function(result) {
+                    var data = JSON.parse(result);
+                    var returnCollection = new ContentNodeCollection(JSON.parse(data.path));
+                    self.add(returnCollection.toJSON());
+
+                    var node = null;
+                    if(data.node){
+                        node = new ContentNodeModel(JSON.parse(data.node));
+                        self.add(node);
+                    }
+                    resolve({
+                        "collection": returnCollection,
+                        "node": node,
+                        "parent_node_id": data.parent_node_id
+                    });
+                },
+                error:reject
+            });
+        });
+    },
     calculate_size: function(){
         var self = this;
         return new Promise(function(resolve, reject){
@@ -518,7 +555,8 @@ var ChannelModel = BaseModel.extend({
         size: 0,
         published: false,
         view_only: false,
-        viewers: []
+        viewers: [],
+        modified: new Date().toLocaleString()
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
@@ -677,6 +715,36 @@ var ChannelModel = BaseModel.extend({
                     "user_id": user_id
                 }),
                 url: window.Urls.remove_editor(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
+    add_bookmark: function(user_id) {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "user_id": user_id
+                }),
+                url: window.Urls.add_bookmark(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
+    },
+    remove_bookmark: function(user_id) {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "user_id": user_id
+                }),
+                url: window.Urls.remove_bookmark(),
                 success: resolve,
                 error:function(error){reject(error.responseText);}
             });

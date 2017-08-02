@@ -50,7 +50,7 @@
 					{% endfor %}
 				</ul>
 			</li>
-			{% if not allow_edit %}<li class="channel_edit_label">{%trans "VIEW-ONLY" %}</li>{% endif %}
+			{% if not allow_edit %}<li class="channel_edit_label">{% if is_public %}{%trans "PUBLIC" %}{% else %}{%trans "VIEW-ONLY" %}{% endif %}</li>{% endif %}
 			{% if allow_edit %}
 				{% if staging %}<li class="channel_edit_label">{%trans "STAGING VERSION" %}</li>
 				{% else %}

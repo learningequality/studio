@@ -189,6 +189,9 @@ urlpatterns = [
     url(r'^healthz$', views.health, name='health'),
     url(r'^api/search/', include('search.urls'), name='search'),
     url(r'^api/public/channel/(?P<channel_id>[^/]+)', views.get_channel_name_by_id, name='get_channel_name_by_id'),
+    url(r'^api/public/public_channels', views.get_public_channels, name='get_public_channels'),
+    url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
+    url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
 ]
 
 # Add node api enpoints
@@ -204,6 +207,7 @@ urlpatterns += [
     url(r'^api/internal/sync_nodes$', node_views.sync_nodes, name='sync_nodes'),
     url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
     url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
+    url(r'^api/get_node_path$', node_views.get_node_path, name='get_node_path'),
 ]
 
 # Add file api enpoints
