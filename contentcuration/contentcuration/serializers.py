@@ -1,9 +1,11 @@
+import math
 from collections import OrderedDict
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
+from django.http import HttpResponseNotAllowed
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -109,7 +111,12 @@ class FileListSerializer(serializers.ListSerializer):
         if update_files:
             with transaction.atomic():
                 for file_id, data in update_files.items():
+                    user = self.context['request'].user
                     file_obj, is_new = File.objects.get_or_create(pk=file_id)
+                    space = user.get_available_space()
+                    import pdb; pdb.set_trace()
+                    if space < file_obj.file_size:
+                        raise HttpResponseNotAllowed("Out of file storage ({}MB left)".format(math.floor(space/1000000)))
                     # potential optimization opportunity
                     for attr, value in data.items():
                         if attr != "preset" and attr != "language":
@@ -446,7 +453,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors')
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id')
 
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
@@ -528,7 +535,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license','language',
                   'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata',
-                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id')
+                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id')
 
 
 class ContentNodeEditSerializer(ContentNodeSerializer):
@@ -547,7 +554,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
                   'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
-                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding')
 
 
@@ -560,7 +567,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
             'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
-            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language',
+            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language', 'tree_id',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata')
 

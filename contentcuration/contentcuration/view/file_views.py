@@ -1,8 +1,7 @@
 import json
 import logging
-import math
 import os
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
@@ -16,10 +15,6 @@ from rest_framework.authentication import TokenAuthentication, SessionAuthentica
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
 
-def check_user_space(user, file_size):
-    space = user.get_available_space()
-    if space < file_size:
-        raise HttpResponseNotAllowed("Out of file storage ({}MB left)".format(math.floor(space/1000000)))
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -35,6 +30,7 @@ def file_upload(request):
             original_filename=request.FILES.values()[0]._name,
             preset_id=request.META.get('HTTP_PRESET'),
             language_id=request.META.get('HTTP_LANGUAGE'),
+            uploaded_by=request.user,
         )
         file_object.save()
         return HttpResponse(json.dumps({
@@ -59,7 +55,14 @@ def file_create(request):
         if license.license_name == licenses.SPECIAL_PERMISSIONS:
             new_node.license_description = preferences.get('license_description')
         new_node.save()
-        file_object = File(file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:].lower(), original_filename=request.FILES.values()[0]._name, contentnode=new_node, file_size=size)
+        file_object = File(
+            file_on_disk=DjFile(request.FILES.values()[0]),
+            file_format_id=ext[1:].lower(),
+            original_filename=request.FILES.values()[0]._name,
+            contentnode=new_node,
+            file_size=size,
+            uploaded_by=request.user,
+        )
         file_object.save()
         if kind.pk == content_kinds.VIDEO:
             file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))

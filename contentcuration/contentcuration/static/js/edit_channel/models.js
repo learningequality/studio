@@ -323,6 +323,7 @@ var ContentNodeCollection = BaseCollection.extend({
             var assessmentCollection = new AssessmentItemCollection();
             self.forEach(function(node){
                 node.get("files").forEach(function(file){
+                    console.log(node.get("tree_id"))
                     var to_add = new FileModel(file);
                     var preset_data = to_add.get("preset");
                     preset_data.id = file.preset.name || file.preset.id;

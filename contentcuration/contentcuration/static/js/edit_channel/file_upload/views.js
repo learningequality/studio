@@ -195,6 +195,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         this.onsave = options.onsave;
         this.onnew = options.onnew;
         this.uploads_in_progress = 0;
+        console.log(this.model.get("tree_id"))
         this.render();
         _.defer(this.set_initial_focus);
         (this.views.length)? this.enable_next() : this.disable_next(this.uploads_in_progress);
@@ -274,6 +275,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         }
     },
     create_new_view:function(model){
+        model.set("tree_id", this.model.get("tree_id"));
         var new_format_item = new FormatFormatItem({
             model: model,
             containing_list_view : this
