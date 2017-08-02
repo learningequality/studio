@@ -373,8 +373,7 @@ def write_assessment_item(assessment_item, zf):
     write_to_zipfile("{0}.json".format(assessment_item.assessment_id), result, zf)
 
 def process_formulas(content):
-    for match in re.finditer(ur'\$(\$[^\$]+\$)\$', content):
-        # content.replace(match.group(0))
+    for match in re.finditer(ur'\$(\$.+\$)\$', content):
         content = content.replace(match.group(0), match.group(1))
     return content
 
