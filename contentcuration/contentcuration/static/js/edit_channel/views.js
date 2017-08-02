@@ -606,21 +606,27 @@ var BaseEditableListView = BaseListView.extend({
 			entry.model.unset();
 		});
 	},
-	save:function(message, beforeSave){
+	save:function(message, beforeSave, onerror){
 		message = (message!=null)? message: this.get_translation("saving");
 		var self = this;
 	    var promise = new Promise(function(resolve, reject){
-	        self.display_load(message, function(load_resolve, load_reject){
+	    	if(onerror) {
+	    		self.collection.save().then(resolve).catch(function(error) {
+					onerror(error);
+					reject(error);
+				});
+	    	} else {
+	    		self.display_load(message, function(load_resolve, load_reject){
 					if(beforeSave){
 						beforeSave();
 					}
-		      self.collection.save().then(function(collection){
-		          resolve(collection);
-		          load_resolve(true);
-		      }).catch(function(error){
-			    	load_reject(error);
+					self.collection.save().then(function(collection){
+						resolve(collection);
+						load_resolve(true);
+					}).catch(load_reject);
 			    });
-		    });
+	    	}
+
 	    })
 	  	return promise;
 	},

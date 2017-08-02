@@ -110,7 +110,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                             .values('checksum', 'file_size')\
                             .distinct()\
                             .aggregate(total_used=Sum('file_size'))
-        return self.disk_space - (files['total_used'] or 0)
+        return max(self.disk_space - (files['total_used'] or 0), 0)
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])

@@ -352,7 +352,7 @@ var ContentNodeCollection = BaseCollection.extend({
                         saveReject(error);
                     }
                 });
-            });
+            }).catch(saveReject);
         });
     },
     has_prerequisites: function(){
@@ -860,6 +860,7 @@ var FileCollection = BaseCollection.extend({
             Backbone.sync("update", self, {
                 url: self.model.prototype.urlRoot(),
                 success:function(data){
+                    console.log(data)
                     resolve(new FileCollection(data));
                 },
                 error:reject

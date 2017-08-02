@@ -57,7 +57,12 @@ var MESSAGES = {
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
     "same_as_channel": "Same as Channel",
-    "same_as_topic": "Same as Topic"
+    "same_as_topic": "Same as Topic",
+    "error_saving": "Save Failed",
+    "out_of_space": "Out of Disk Space",
+    "out_of_space_text": "You don't have enough space to save these files. Request more space under the Settings > Account page.",
+    "open_settings": "Open Settings",
+    "ok": "OK"
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -132,7 +137,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   initialize: function(options) {
     _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit',
       'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items',
-      'set_prerequisites', 'call_duplicate', 'update_prereq_count','loop_focus', 'set_indices', 'set_editor_focus');
+      'set_prerequisites', 'call_duplicate', 'update_prereq_count','loop_focus', 'set_indices', 'set_editor_focus', 'save_error');
     this.bind_edit_functions();
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
@@ -313,7 +318,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   save_and_keep_open:function(){
     var self = this;
     this.editor_view.add_tag(null);
-    this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
+    this.save(this.get_translation("saving"), this.save_nodes, this.save_error).then(function(collection){
       self.process_updated_collection(collection);
     });
   },
@@ -326,10 +331,23 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   save_and_finish: function(event){
     var self = this;
     this.editor_view.add_tag(null);
-    this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
+    this.save(this.get_translation("saving"), this.save_nodes, this.save_error).then(function(collection){
       self.process_updated_collection(collection);
       self.onclose();
     });
+  },
+  save_error: function(error){
+    if(error.status===403) {
+      dialog.dialog(this.get_translation("out_of_space"), this.get_translation("out_of_space_text"), {
+        [this.get_translation("open_settings")]: function() {
+          var tab = window.open(window.Urls.account_settings(), "_blank");
+          tab.focus();
+        },
+        [this.get_translation("ok")]: function(){}
+      })
+    } else {
+      dialog.alert(this.get_translation("error_saving"), error.responseText);
+    }
   },
   copy_items: function(){
     if(this.collection.has_related_content()){
@@ -366,7 +384,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       if(self.new_content){
         entry.set({
           parent:self.model.id,
-          sort_order:++sort_order
+          sort_order:++sort_order,
+          tree_id: self.model.get("tree_id")
         });
       }
     });

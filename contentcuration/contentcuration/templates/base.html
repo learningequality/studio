@@ -54,8 +54,8 @@
                 <li class="dropdown" id="settings-dd-wrapper">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-user" aria-hidden="true"></span></a>
                   <ul class="dropdown-menu">
-                    <li><a href="{% url 'profile_settings' %}" >{% trans "Account" %}</a></li>
                     {% if user.is_admin %}<li><a href="{% url 'administration' %}" >{% trans "Administration" %}</a></li>{% endif %}
+                    <li><a href="{% url 'profile_settings' %}" >{% trans "Settings" %}</a></li>
                     <li><a href="{% url 'django.contrib.auth.views.logout' %}">{% trans "Log Out" %}</a></li>
                   </ul>
                 </li>

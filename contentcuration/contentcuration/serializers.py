@@ -1,11 +1,11 @@
 import math
 from collections import OrderedDict
 from django.core.cache import cache
-from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
-from django.http import HttpResponseNotAllowed
+from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -64,12 +64,17 @@ class FileListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
         ret = []
         update_files = {}
+        user = self.context['request'].user
         with transaction.atomic():
+            total_size = 0
             for item in validated_data:
                 item.update({
                     'preset_id': item['preset']['id'],
                     'language_id': item.get('language')['id'] if item.get('language') else None
                 })
+
+                if not user.files.filter(checksum__in=item.get('checksum')).exists():
+                    total_size = total_size + (item.get('file_size') or 0)
 
                 # User should not be able to change files without a display
                 if item['preset']['display']:
@@ -80,6 +85,10 @@ class FileListSerializer(serializers.ListSerializer):
                         ret.append(File.objects.create(**item))
                 item.pop('preset', None)
                 item.pop('language', None)
+
+        space = user.get_available_space()
+        if space < total_size:
+            raise PermissionDenied(_("Out of file storage ({}MB left). Request more storage under Settings > Account.").format(math.floor(space/1000000)))
 
         files_to_delete = []
         nodes_to_parse = []
@@ -111,12 +120,8 @@ class FileListSerializer(serializers.ListSerializer):
         if update_files:
             with transaction.atomic():
                 for file_id, data in update_files.items():
-                    user = self.context['request'].user
-                    file_obj, is_new = File.objects.get_or_create(pk=file_id)
-                    space = user.get_available_space()
-                    import pdb; pdb.set_trace()
-                    if space < file_obj.file_size:
-                        raise HttpResponseNotAllowed("Out of file storage ({}MB left)".format(math.floor(space/1000000)))
+                    file_obj = File.objects.get_or_create(pk=file_id)
+
                     # potential optimization opportunity
                     for attr, value in data.items():
                         if attr != "preset" and attr != "language":
@@ -667,7 +672,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id', 'is_staff')
+        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id', 'is_staff', 'disk_space')
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
