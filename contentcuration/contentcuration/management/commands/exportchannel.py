@@ -70,7 +70,7 @@ class Command(BaseCommand):
                 save_export_database(channel_id)
                 increment_channel_version(channel)
                 mark_all_nodes_as_changed(channel)
-                add_tokens_to_channel(channel, channel_id)
+                add_tokens_to_channel(channel)
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -505,10 +505,10 @@ def get_active_content_database():
     return alias
 
 
-def add_tokens_to_channel(channel, channel_id):
+def add_tokens_to_channel(channel):
     if not channel.secret_tokens.filter(is_primary=True).exists():
         logging.info("Generating tokens for the channel.")
-        token = humanhash.humanize(channel_id, words=5)
+        token = humanhash.humanize(channel.id, words=5)
         tk_human = ccmodels.SecretToken.objects.create(token=token, is_primary=True)
-        tk = ccmodels.SecretToken.objects.create(token=channel_id)
+        tk = ccmodels.SecretToken.objects.create(token=channel.id)
         channel.secret_tokens.add(tk_human, tk)
