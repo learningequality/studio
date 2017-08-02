@@ -1,4 +1,4 @@
-prodserver: collectstatic
+prodserver: collectstatic ensurecrowdinclient downloadmessages compilemessages
 	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=500 --error-logfile=/var/log/gunicorn-error.log --workers=3 --bind=0.0.0.0:8000 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
 
 collectstatic:
