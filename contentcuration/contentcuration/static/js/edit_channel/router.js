@@ -75,7 +75,7 @@ var ChannelEditRouter  = Backbone.Router.extend({
 
 		data.topic = data.topic || window.current_channel.get((data.is_staging)? "staging_tree" : "main_tree").node_id;
 		window.current_page = data.page;
-		this.update_url(data.topic, data.node);
+		this.update_url(data.topic, data.node, true);
 
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({
@@ -97,13 +97,13 @@ var ChannelEditRouter  = Backbone.Router.extend({
 		 	});
 		}
 	},
-	update_url: function(topic, node){
+	update_url: function(topic, node, replace){
 		window.topic = topic || window.topic;
 		window.node = node;
 		var urlString = window.current_channel.id + "/" + window.current_page;
 		urlString += (window.topic)? "/" + window.topic : "";
 		urlString += (window.node) ? "/" + window.node : "";
-		this.navigate(urlString);
+		this.navigate(urlString, {replace: replace});
 	}
 });
 

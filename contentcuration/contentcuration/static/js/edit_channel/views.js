@@ -70,7 +70,7 @@ var MESSAGES = {
 var BaseView = Backbone.View.extend({
 	default_item: ".default-item",
 	name: NAMESPACE,
-	locales: ["en-US"],
+	locales: [window.languageCode],
 	locale: navigator.language || navigator.browserLanguage,
 	$trs: MESSAGES,
 	globalMessageStore: require("utils/translations"),
@@ -610,6 +610,7 @@ var BaseEditableListView = BaseListView.extend({
 		message = (message!=null)? message: this.get_translation("saving");
 		var self = this;
 	    var promise = new Promise(function(resolve, reject){
+	    	if(beforeSave){ beforeSave(); }
 	    	if(onerror) {
 	    		self.collection.save().then(resolve).catch(function(error) {
 					onerror(error);
@@ -617,9 +618,6 @@ var BaseEditableListView = BaseListView.extend({
 				});
 	    	} else {
 	    		self.display_load(message, function(load_resolve, load_reject){
-					if(beforeSave){
-						beforeSave();
-					}
 					self.collection.save().then(function(collection){
 						resolve(collection);
 						load_resolve(true);

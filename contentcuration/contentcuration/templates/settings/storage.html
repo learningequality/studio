@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+{% extends "settings/settings.html" %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block settingscontent %}
+
+<h4>{% trans "Storage" %}</h4>
+<p>{% trans "Check your storage usage and request more if needed." %}</p>
+<hr/>
+<div class="container-fluid">
+	<h5>{% trans "Storage Used" %} ({{percent_used}}%)</h5>
+	<div class="progress">
+		<div class="progress-bar" role="progressbar" aria-valuenow="{{percent_used}}" aria-valuemin="0" aria-valuemax="100" style="width: {{percent_used}}%;">
+		{{used}} / {{total}}MB
+		</div>
+	</div>
+	<br/>
+	<div class="panel panel-default">
+		<div class="panel-heading">{% trans "Usage" %} ({{available}}MB {% trans "Available" %})</div>
+		<ul class="list-group">
+			{% for item in breakdown %}
+				<li class="list-group-item">{{item.name}} - {{item.percent}}% ({{item.size}}MB)</li>
+			{% empty %}<i>You don't have any files uploaded</i>
+			{% endfor %}
+		</ul>
+	</div>
+	<!-- <form method="post" action="{% url 'storage_settings' %}">
+		<div id="form-wrapper">
+			{% csrf_token %}
+			<div class="input-group settings_field">
+			  <span class="input-group-addon">{% trans "Current Password" %}</span>
+			  {{ form.old_password }}
+			</div>
+		</div>
+	</form> -->
+</div>
+<script>
+	$(".setting_input").on("keydown", function(event){
+		$("#save").attr("disabled", false)
+	});
+</script>
+{% endblock settingscontent %}

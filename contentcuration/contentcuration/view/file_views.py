@@ -51,7 +51,6 @@ def file_create(request):
         author = preferences.get('author') or ""
         license = License.objects.filter(license_name=preferences.get('license')).first()  # Use filter/first in case preference hasn't been set
         license_id = license.pk if license else settings.DEFAULT_LICENSE
-        import pdb; pdb.set_trace()
         new_node = ContentNode(
             title=original_filename,
             kind=kind,

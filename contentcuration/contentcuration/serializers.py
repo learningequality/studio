@@ -120,7 +120,7 @@ class FileListSerializer(serializers.ListSerializer):
         if update_files:
             with transaction.atomic():
                 for file_id, data in update_files.items():
-                    file_obj = File.objects.get_or_create(pk=file_id)
+                    file_obj, _new = File.objects.get_or_create(pk=file_id)
 
                     # potential optimization opportunity
                     for attr, value in data.items():

@@ -13,7 +13,7 @@ from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, Multipl
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.db import IntegrityError, connections, models, connection
-from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
+from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField, F
 from django.db.utils import ConnectionDoesNotExist
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
@@ -104,7 +104,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return True
 
     def get_available_space(self):
-        return max(self.disk_space - self.get_space_used(), 0)
+        return float(max(self.disk_space - self.get_space_used(), 0))
 
     def get_space_used(self):
         active_trees = Channel.objects.values_list('main_tree__tree_id', flat=True)
@@ -113,20 +113,23 @@ class User(AbstractBaseUser, PermissionsMixin):
                             .values('checksum', 'file_size')\
                             .distinct()\
                             .aggregate(total_used=Sum('file_size'))
-        return files['total_used'] or 0
+        return float(files['total_used'] or 0)
 
     def get_space_used_by_kind(self):
         active_trees = Channel.objects.values_list('main_tree__tree_id', flat=True)
-        import pdb; pdb.set_trace()
         files = self.files.select_related('contentnode').select_related('assessment_item')\
                             .filter(Q(contentnode__tree_id__in=active_trees) | Q(assessment_item__contentnode__tree_id__in=active_trees))\
-                            .distinct('checksum')\
-                            .values('contentnode__kind_id', 'assessment_item__contentnode__kind_id')\
+                            .values('checksum', 'file_size', 'preset__kind_id')\
                             .distinct()\
-                            .annotate(total_used=Sum('file_size'))\
-                            .order_by('total_used')
+                            .values('preset__kind_id')\
+                            .annotate(space=Sum('file_size'))\
+                            .order_by()
 
-        return files['total_used'] or 0
+        kind_dict = {}
+        for item in files:
+            key = item['preset__kind_id']
+            kind_dict[key] = item['space']
+        return kind_dict
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
