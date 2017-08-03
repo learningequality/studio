@@ -131,6 +131,7 @@ class FileListSerializer(serializers.ListSerializer):
                         file_obj.file_on_disk = DjFile(open(file_path, 'rb'))
                     else:
                         raise OSError("Error: file {} was not found".format(str(file_obj)))
+                    file_obj.uploaded_by = file_obj.uploaded_by or user
                     file_obj.save()
                     ret.append(file_obj)
         return ret
@@ -726,10 +727,19 @@ class SimplifiedChannelListSerializer(serializers.ModelSerializer):
 class AdminUserListSerializer(serializers.ModelSerializer):
     editable_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
     view_only_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
+    mb_space = serializers.SerializerMethodField('calculate_space')
+    used_space = serializers.SerializerMethodField('calculate_used_space')
+
+    def calculate_space(self, user):
+        return user.disk_space / 1000000
+
+    def calculate_used_space(self, user):
+        return user.get_space_used()
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels', 'is_admin', 'date_joined', 'is_active')
+        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels',
+                'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'used_space')
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')

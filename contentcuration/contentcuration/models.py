@@ -104,13 +104,29 @@ class User(AbstractBaseUser, PermissionsMixin):
         return True
 
     def get_available_space(self):
+        return max(self.disk_space - self.get_space_used(), 0)
+
+    def get_space_used(self):
         active_trees = Channel.objects.values_list('main_tree__tree_id', flat=True)
         files = self.files.select_related('contentnode').select_related('assessment_item')\
                             .filter(Q(contentnode__tree_id__in=active_trees) | Q(assessment_item__contentnode__tree_id__in=active_trees))\
                             .values('checksum', 'file_size')\
                             .distinct()\
                             .aggregate(total_used=Sum('file_size'))
-        return max(self.disk_space - (files['total_used'] or 0), 0)
+        return files['total_used'] or 0
+
+    def get_space_used_by_kind(self):
+        active_trees = Channel.objects.values_list('main_tree__tree_id', flat=True)
+        import pdb; pdb.set_trace()
+        files = self.files.select_related('contentnode').select_related('assessment_item')\
+                            .filter(Q(contentnode__tree_id__in=active_trees) | Q(assessment_item__contentnode__tree_id__in=active_trees))\
+                            .distinct('checksum')\
+                            .values('contentnode__kind_id', 'assessment_item__contentnode__kind_id')\
+                            .distinct()\
+                            .annotate(total_used=Sum('file_size'))\
+                            .order_by('total_used')
+
+        return files['total_used'] or 0
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
