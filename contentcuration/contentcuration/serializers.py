@@ -605,8 +605,7 @@ class ChannelSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
-            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences',
-            'secret_tokens', 'primary_token')
+            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences', 'primary_token')
 
 
 class AccessibleChannelListSerializer(serializers.ModelSerializer):
@@ -665,7 +664,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'is_bookmarked', 'modified',
-                  'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'preferences', 'secret_tokens', 'primary_token')
+                  'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'preferences', 'primary_token')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -720,8 +719,7 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree',
-                  'description', 'count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url',
-                  'secret_tokens', 'primary_token')
+                  'description', 'count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token')
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
     class Meta:

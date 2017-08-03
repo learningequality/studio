@@ -267,7 +267,7 @@ var BaseWorkspaceView = BaseView.extend({
 				var new_channel = new Models.ChannelCollection()
 				new_channel.reset(channel.toJSON());
 				var staticModal = require('edit_channel/information/views');
-				new staticModal.PublishedModalView({primary_token: window.current_channel.attributes.primary_token});
+				new staticModal.PublishedModalView({primary_token: window.current_channel.get("primary_token")});
 			}
 		});
 	},
