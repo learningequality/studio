@@ -521,7 +521,8 @@ var UserTab = BaseAdminTab.extend({
         "keyup .search_input" : "apply_search",
         "paste .search_input" : "apply_search",
         "change .select_all" : "check_all",
-        "click #email_selected" : "email_selected"
+        "click #email_selected" : "email_selected",
+        "change .size_limit" : "set_user_space"
     },
     get_dynamic_filters: function() {
         var filter = [{
@@ -606,7 +607,8 @@ var UserItem = BaseAdminItem.extend({
         "click .email_button" : "send_email",
         "click .activate_button": "activate_user",
         "click .delete_button": "delete_user",
-        "click .deactivate_button": "deactivate_user"
+        "click .deactivate_button": "deactivate_user",
+        "change .size_limit": "set_user_space"
     },
     set_attributes: function() {
         this.model.set("editable_channels", _.sortBy(this.model.get("editable_channels"), "name"));
@@ -650,6 +652,14 @@ var UserItem = BaseAdminItem.extend({
             });
           }
         }, null);
+    },
+    set_user_space: function() {
+        var self = this;
+        var model = this.model;
+        var size = self.$(".size_limit").val() || this.model.get("disk_space");
+        _.defer(function(){
+            model.save({"disk_space": Number(size) * 1000000}); // Need to convert to bytes
+        }, 1000)
     }
 });
 
