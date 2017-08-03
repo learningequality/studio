@@ -22,6 +22,10 @@ function escape_str(text){
   return text.replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/\&/g, "&amp;").replace(/\"/g, "&quot;");
 }
 
+function unescape(text){
+  return text.replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
+}
+
 var namespace = "constants";
 
 var messages = {
@@ -299,5 +303,6 @@ module.exports = {
   format_size : format_size,
   escape_str:escape_str,
   format_count: format_count,
-  translate: translate
+  translate: translate,
+  unescape: unescape
 }
