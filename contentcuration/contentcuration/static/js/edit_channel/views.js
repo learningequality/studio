@@ -609,7 +609,7 @@ var BaseEditableListView = BaseListView.extend({
 	save:function(message, beforeSave, onerror){
 		message = (message!=null)? message: this.get_translation("saving");
 		var self = this;
-	    var promise = new Promise(function(resolve, reject){
+	    return new Promise(function(resolve, reject){
 	    	if(beforeSave){ beforeSave(); }
 	    	if(onerror) {
 	    		self.collection.save().then(resolve).catch(function(error) {
@@ -625,8 +625,7 @@ var BaseEditableListView = BaseListView.extend({
 			    });
 	    	}
 
-	    })
-	  	return promise;
+	    });
 	},
 	delete_items_permanently:function(message){
 		message = (message!=null)? message: this.get_translation("deleting");

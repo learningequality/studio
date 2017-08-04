@@ -73,7 +73,7 @@ class FileListSerializer(serializers.ListSerializer):
                     'language_id': item.get('language')['id'] if item.get('language') else None
                 })
 
-                if not user.files.filter(checksum__in=item.get('checksum')).exists():
+                if not user.files.filter(checksum=item.get('checksum')).exists():
                     total_size = total_size + (item.get('file_size') or 0)
 
                 # User should not be able to change files without a display

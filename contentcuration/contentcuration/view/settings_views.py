@@ -1,7 +1,7 @@
 import json
 import math
 from django.shortcuts import render, redirect
-from django.conf import settings
+from django.conf import settings as ccsettings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views
 from django.utils.translation import ugettext as _
@@ -128,5 +128,6 @@ def storage_settings(request):
                                                     "used": "%.2f" % (float(storage_used) / 1000000),
                                                     "total": "%.2f" % (float(request.user.disk_space) / 1000000),
                                                     "available": "%.2f" % (request.user.get_available_space() / 1000000),
-                                                    "breakdown": breakdown
+                                                    "breakdown": breakdown,
+                                                    "request_email": ccsettings.SPACE_REQUEST_EMAIL,
                                                 })
