@@ -79,13 +79,13 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
                 picture : thumbnail_src,
                 selector: this.get_selector(),
                 show_generate: this.model.get('kind') != undefined,
-                show_crop: this.image_url != this.default_url,
-                cropping: this.cropping
+                not_default: thumbnail_src != this.default_url,
+                cropping: this.cropping,
             }, {
                 data: this.get_intl_data()
             }));
             if(!this.cropping) {
-                _.defer(this.create_dropzone);
+                _.defer(this.create_dropzone, 1000);
             }
         }else{
             this.$el.html(this.preview_template({

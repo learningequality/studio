@@ -139,7 +139,6 @@ class ProfileSettingsForm(UserChangeForm):
         if 'last_name' not in self.cleaned_data:
             self.errors['last_name'] = self.error_class()
             self.add_error('last_name', _('Last name is required.'))
-
         return self.cleaned_data
 
     def save(self, user):

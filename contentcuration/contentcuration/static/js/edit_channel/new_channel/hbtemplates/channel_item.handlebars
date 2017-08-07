@@ -13,9 +13,9 @@
 		<p id="channel_name_error">{{formatMessage (intlGet 'messages.channel_name_error')}}</p>
 		<input type="text" id="new_channel_name" placeholder="{{formatMessage (intlGet 'messages.name_placeholder')}}" value="{{channel.name}}" maxlength="200" class="tab_item first_focus_item"></input>
 		<textarea id="new_channel_description" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" value="{{channel.description}}"  maxlength="400" class="tab_item">{{channel.description}}</textarea>
-		<a class="delete_channel">{{formatMessage (intlGet 'messages.delete_channel')}}</a>
+		{{#if new}}<br><br>{{else}}<a class="delete_channel">{{formatMessage (intlGet 'messages.delete_channel')}}</a>{{/if}}
 		<div class="channel_options">
-			<button class="save_channel btn pull-right tab_item">{{formatMessage (intlGet 'messages.save_channel')}}</button>
+			<button class="save_channel btn pull-right tab_item uppercase">{{#if new}}{{formatMessage (intlGet 'messages.create')}}{{else}}{{formatMessage (intlGet 'messages.save_channel')}}{{/if}}</button>
 			<button class="channel_toggle action-text pull-right tab_item uppercase">{{formatMessage (intlGet 'messages.cancel')}}</button>
 		</div>
 	{{else}}
@@ -43,7 +43,7 @@
 			<p id="channel_description" class="wordwrap" title="{{channel.description}}">{{channel.description}}</p>
 		</div>
 		<div class="container-fluid updated_time">
-			{{formatMessage (intlGet 'messages.last_updated') date=(formatRelative modified)}}
+			{{formatMessage (intlGet 'messages.last_updated') updated=(formatRelative modified)}}
 		</div>
 	{{/if}}
 </div>

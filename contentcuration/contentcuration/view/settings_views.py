@@ -14,6 +14,8 @@ from contentcuration.api import check_supported_browsers
 def settings(request):
     if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
         return redirect(reverse_lazy('unsupported_browser'))
+    if not request.user.is_authenticated():
+        return redirect('accounts/login')
     return redirect('settings/profile')
 
 
@@ -24,6 +26,11 @@ class ProfileView(FormView):
     success_url = reverse_lazy('profile_settings')
     form_class = ProfileSettingsForm
     template_name = 'settings/profile.html'
+
+    def get(self, request, *args, **kwargs):
+        if not self.request.user.is_authenticated():
+            return redirect('/accounts/login')
+        return super(ProfileView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(ProfileView, self).get_context_data(**kwargs)
@@ -36,6 +43,7 @@ class ProfileView(FormView):
         return initial
 
     def form_valid(self, form):
+        form.save(self.request.user)
         context = self.get_context_data(form=form)
         context.update({'success': True})
         return self.render_to_response(context)
@@ -55,12 +63,18 @@ class PreferencesView(FormView):
     form_class = PreferencesSettingsForm
     template_name = 'settings/preferences.html'
 
+    def get(self, request, *args, **kwargs):
+        if not self.request.user.is_authenticated():
+            return redirect('/accounts/login')
+        return super(PreferencesView, self).get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(PreferencesView, self).get_context_data(**kwargs)
         context.update({"page": "preferences", "success": False})
         return context
 
     def get_initial(self):
+
         initial = self.initial.copy()
         initial.update(json.loads(self.request.user.preferences))
         initial.update({
@@ -71,6 +85,7 @@ class PreferencesView(FormView):
         return initial
 
     def form_valid(self, form):
+        form.save(self.request.user)
         context = self.get_context_data(form=form)
         context.update({'success': True})
         return self.render_to_response(context)
@@ -84,6 +99,8 @@ class PreferencesView(FormView):
 
 @login_required
 def account_settings(request):
+    if not request.user.is_authenticated():
+        return redirect('/accounts/login')
     return views.password_change(
         request,
         template_name='settings/account.html',
@@ -106,6 +123,8 @@ def account_settings_success(request):
 
 @login_required
 def tokens_settings(request):
+    if not request.user.is_authenticated():
+        return redirect('/accounts/login')
     user_token, isNew = Token.objects.get_or_create(user=request.user)
     return render(request, 'settings/tokens.html', {"current_user": request.user,
                                                     "page": "tokens",
