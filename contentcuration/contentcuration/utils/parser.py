@@ -18,17 +18,26 @@ EXPONENT: [DECIMAL | INTEGER]e+{0,1}[INTEGER]
 
 """
 import re
+from django.utils.translation import get_language
+
+LANGUAGE = get_language()
+
+SEP = r','
+POINT = r'\.'
+if LANGUAGE.startswith("es"):
+    SEP = r'\.'
+    POINT = r','
 
 SIGN = r'-?'
 DIGIT = r'[0-9]'
 NON_ZERO_DIGIT = r'[1-9]'
 UNFORMATTED_INT = re.compile("{digit}*".format(digit=DIGIT))
-FORMATTED_INT = re.compile("{digit}{{1,3}}(?:,{digit}{{3}})+".format(digit=DIGIT))
+FORMATTED_INT = re.compile("{digit}{{1,3}}(?:{sep}{digit}{{3}})+".format(digit=DIGIT, sep=SEP))
 INTEGER = re.compile("({sign}(?:{formatted}|{unformatted}))".format(sign=SIGN, formatted=FORMATTED_INT.pattern, unformatted=UNFORMATTED_INT.pattern))
-NON_ZERO_INT = re.compile("({sign}{non_zero}(?:{digit}{{0,2}}(?:,{digit}{{3}})+|{unformatted})?)".format(sign=SIGN, non_zero=NON_ZERO_DIGIT, digit=DIGIT, unformatted=UNFORMATTED_INT.pattern))
+DECIMAL = re.compile("({integer}{point}{unformatted})".format(integer=INTEGER.pattern, unformatted=UNFORMATTED_INT.pattern, point=POINT))
+NON_ZERO_INT = re.compile("({sign}{non_zero}(?:{digit}{{0,2}}(?:{sep}{digit}{{3}})+|{unformatted})?)".format(sign=SIGN, non_zero=NON_ZERO_DIGIT, digit=DIGIT, unformatted=UNFORMATTED_INT.pattern, sep=SEP))
 FRACTION = re.compile("({integer}/{non_zero})".format(integer=INTEGER.pattern, non_zero=NON_ZERO_INT.pattern))
 MIXED_NUMBER = re.compile("({integer}) +({fraction})".format(integer=INTEGER.pattern, fraction=FRACTION.pattern))
-DECIMAL = re.compile("({integer}\.{unformatted})".format(integer=INTEGER.pattern, unformatted=UNFORMATTED_INT.pattern))
 VALID_NUMBER = re.compile("({decimal}|{mixed_number}|{fraction}|{integer})".format(decimal=DECIMAL.pattern, mixed_number=MIXED_NUMBER.pattern, fraction=FRACTION.pattern, integer=INTEGER.pattern))
 PERCENTAGE = re.compile("({num})%".format(num=VALID_NUMBER.pattern))
 EXPONENT = re.compile("((?:{decimal}|{integer})e\+?{integer})".format(decimal=DECIMAL.pattern, integer=INTEGER.pattern))
@@ -44,11 +53,11 @@ def parse_valid_number(text):
 
 def parse_integer(text):
     match = INTEGER.search(text)
-    return match and float(match.group(1).replace(',', ''))
+    return match and float(to_en(match.group(1)))
 
 def parse_decimal(text):
     match = DECIMAL.search(text)
-    return match and float(match.group(1).replace(',', ''))
+    return match and float(to_en(match.group(1)))
 
 def parse_fraction(text):
     match = FRACTION.search(text)
@@ -72,4 +81,7 @@ def parse_exponent(text):
         val1 = extract_value(match.group(2) or match.group(4))
         val2 = extract_value(match.group(5))
         eval_str = val1 and val2 and "{int}e{exp}".format(int=val1, exp=int(val2))
-    return eval_str and eval(eval_str)
+    return eval_str and eval(to_en(eval_str))
+
+def to_en(text):
+    return text.replace(SEP, '').replace(POINT, '.')

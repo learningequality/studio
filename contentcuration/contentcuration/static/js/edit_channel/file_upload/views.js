@@ -40,7 +40,10 @@ var MESSAGES = {
     "processing_error": "Error processing request.",
     "upload_error": "Error Uploading File",
     "not_available": "Not Available",
-}
+    "cancel_upload": "Cancel upload",
+    "cancel_confirm": "Are you sure you want to cancel this upload?",
+    "remove_file": "Remove file"
+};
 
 
 var FileModalView = BaseViews.BaseModalView.extend({
@@ -264,8 +267,12 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
                 },
                 dictInvalidFileType: this.get_translation("file_not_supported"),
                 dictFileTooBig: this.get_translation("max_size_exceeded"),
-                dictResponseError: this.get_translation("processing_error")
+                dictResponseError: this.get_translation("processing_error"),
+                dictCancelUpload: this.get_translation("cancel_upload"),
+                dictCancelUploadConfirmation: this.get_translation("cancel_confirm"),
+                dictRemoveFile: this.get_translation("remove_file"),
             });
+
             this.dropzone.on("success", this.file_uploaded);
             this.dropzone.on("queuecomplete", this.all_files_uploaded);
             this.dropzone.on("addedfile", this.file_added);
@@ -647,7 +654,13 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
                     "Node" : this.node.get('id'),
                     "Preset": this.model.get("name") || this.model.id,
                     "Language": (this.file && this.file.get("language"))? this.file.get("language").id : null
-                }
+                },
+                dictInvalidFileType: this.get_translation("file_not_supported"),
+                dictFileTooBig: this.get_translation("max_size_exceeded"),
+                dictResponseError: this.get_translation("processing_error"),
+                dictCancelUpload: this.get_translation("cancel_upload"),
+                dictCancelUploadConfirmation: this.get_translation("cancel_confirm"),
+                dictRemoveFile: this.get_translation("remove_file"),
             });
             dropzone.on("success", this.file_uploaded);
 
@@ -664,7 +677,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         return preset.get("associated_mimetypes").join(",");
     },
     file_uploaded:function(file){
-        var data = JSON.parse(file.xhr.response).file
+        var data = JSON.parse(file.xhr.response).file;
         var new_file = new Models.FileModel(JSON.parse(data));
         this.set_file(new_file);
         this.set_uploading(false);
@@ -703,7 +716,6 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
             this.set_file(null);
             this.render();
         }
-
     },
     set_uploading:function(uploading){
         this.containing_list_view.set_uploading(uploading);

@@ -82,7 +82,13 @@ var MESSAGES = {
     "randomize_questions": "Randomize question order for learners",
     "questions_only": "View questions only",
     "question": "Question",
-    "hints_for_question": "Hints for Question:"
+    "hints_for_question": "Hints for Question:",
+    "Bold": "Bold",
+    "Italic": "Italic",
+    "Image": "Image",
+    "Formula": "Formula",
+    "Undo": "Undo",
+    "Redo": "Redo"
 }
 
 /*********** FORMULA ADD-IN FOR EXERCISE EDITOR ***********/
@@ -193,6 +199,27 @@ var AddFormula = function (context) {
     ]).render();
 }
 
+/*********** CUSTOM BUTTON FOR UNDO/REDO ***********/
+var UndoButton = function (context) {
+    return $.summernote.ui.button({
+        contents: '<i class="note-icon-undo"/>',
+        tooltip: 'Undo',
+        click: function () {
+            context.options.callbacks.onUndo();
+        }
+    }).render();
+}
+
+var RedoButton = function (context) {
+    return $.summernote.ui.button({
+        contents: '<i class="note-icon-redo"/>',
+        tooltip: 'Redo',
+        click: function () {
+            context.options.callbacks.onRedo();
+        }
+    }).render();
+}
+
 /*********** WRAPPER FOR SUMMERNOTE FOR OBECT-ORIENTED APPROACH ***********/
 function Summernote(element, context, options) {
     // Clear all ranges to get undo/redo to work on summernote
@@ -203,6 +230,8 @@ function Summernote(element, context, options) {
     // Configure editor
     this.element = element;             // Element to which summernote should be attached
     this.context = context;             // View in which summernote is nested
+    this.index = 0;                     // Pointer to history stack
+    this.history = [];                  // Keeps track of undo/redo (workaround summernote's undo/redo bugs)
     this.element.summernote(options);   // Initialize summernote with configuration options
 
     this.setHTML = function(content){ element.summernote('code', content); };
@@ -211,7 +240,26 @@ function Summernote(element, context, options) {
     this.getContents = function(){ return element.summernote('code'); };
     this.enable = function(){ element.summernote('enable'); };
     this.disable = function(){ element.summernote('disable'); };
-    this.togglePlaceholder = function(show){ context.$('.note-placeholder').css('display', (show) ? 'inline' : 'none'); }
+    this.togglePlaceholder = function(show){ context.$('.note-placeholder').css('display', (show) ? 'inline' : 'none'); };
+    this.commit = function() {
+        var entry = this.getContents();
+        if(this.history[this.index] !== entry){
+            this.history = this.history.slice(0, this.index + 1).concat(entry);
+            this.index = this.history.length - 1;
+        }
+    };
+    this.undo = function() {
+        this.index = Math.max(this.index - 1, 0);
+        this.setHTML(this.history[this.index]);
+    };
+    this.redo = function() {
+        this.index = Math.min(this.index + 1, this.history.length - 1);
+        this.setHTML(this.history[this.index]);
+    };
+    this.push = function() {
+        this.history = [this.getContents()];
+        this.index = 0;
+    };
 }
 
 /*********** TEXT EDITOR FOR QUESTIONS, ANSWERS, AND HINTS ***********/
@@ -225,7 +273,7 @@ var EditorView = BaseViews.BaseView.extend({
 
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
-        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key",
+        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key", "undo", "redo",
                "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content", "check_key");
         this.edit_key = options.edit_key;
         this.editing = false;
@@ -245,6 +293,12 @@ var EditorView = BaseViews.BaseView.extend({
             if (!this.setting_model) this.render_editor();
         } else { this.render_content(); }
         this.setting_model = false;
+    },
+    undo: function() {
+        this.editor.undo();
+    },
+    redo: function() {
+        this.editor.redo();
     },
     render_content: function() {
         var self = this;
@@ -273,7 +327,10 @@ var EditorView = BaseViews.BaseView.extend({
             self.editor ? self.editor.setHTML(html) : self.$el.html(html);
             self.toggle_loading(false);
             self.render_toolbar();
-            if(self.editor) self.editor.focus();
+            if(self.editor){
+                self.editor.push();
+                self.editor.focus();
+            }
         });
     },
     render_toolbar:function(){
@@ -290,6 +347,7 @@ var EditorView = BaseViews.BaseView.extend({
 
     /*********** EDITOR METHODS ***********/
     activate_editor: function() {
+        var self = this;
         var selector = this.cid + "_editor";
         this.$el.html(this.edit_template({selector: selector}, {
             data: this.get_intl_data()
@@ -298,11 +356,13 @@ var EditorView = BaseViews.BaseView.extend({
             toolbar: [
                 ['style', ['bold', 'italic']],
                 ['insert', ['customupload', 'customformula']],
-                ['controls', ['undo', 'redo']]
+                ['controls', ['customundo', 'customredo']]
             ],
             buttons: {
                 customupload: UploadImage,
-                customformula: AddFormula
+                customformula: AddFormula,
+                customundo: UndoButton,
+                customredo: RedoButton
             },
             placeholder: this.get_translation(this.edit_key + "_placeholder"),
             disableResizeEditor: true,
@@ -314,7 +374,14 @@ var EditorView = BaseViews.BaseView.extend({
                 onPaste: this.paste_content,
                 onImageUpload: this.add_image,
                 onAddFormula: this.add_formula,
-                onKeydown: this.process_key
+                onKeydown: this.process_key,
+                onUndo: this.undo,
+                onRedo: this.redo,
+                onInit : function(){
+                    $('.note-editor .note-btn').each(function() {
+                        $(this).attr("data-original-title", self.get_translation($(this).data("original-title")));
+                    });
+                }
             }
         });
         $('.dropdown-toggle').dropdown();
@@ -339,6 +406,7 @@ var EditorView = BaseViews.BaseView.extend({
         this.setting_model = true;
         this.markdown = this.convert_html_to_markdown(contents);
         this.model.set(this.edit_key, this.markdown);
+        this.editor.commit();
     },
     validate: function(){
         this.$(".note-error").css("display", (this.markdown.trim())? "none" : "inline-block");
@@ -559,7 +627,8 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     validate:function(){ return true; },
     set_invalid:function(invalid){
         this.$(this.additem_el).prop("disabled", invalid);
-        (invalid)? this.$(this.additem_el).addClass("disabled") : this.$(this.additem_el).removeClass("disabled");
+        (invalid)? this.$(this.additem_el).addClass("disabled").attr("disabled", "disabled") :
+                    this.$(this.additem_el).removeClass("disabled").removeAttr("disabled");
         this.$(this.additem_el).prop('title', (invalid)? this.get_translation("blank_item_detected") : this.get_translation("add"));
     },
 
@@ -895,7 +964,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
                             return value !== 0 && !value;
                         })
                         .each( function(a){
-                            var value = numParser.extract_value(a.get('answer'));
+                            var value = numParser.parse(a.get('answer'));
                             a.set({'correct': true, 'answer': value && value.toString()});
                         } ).value());
                     self.model.set('answers', newCollection);
@@ -1046,7 +1115,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         this.set_toolbar_closed();
         if(this.model.get("type") === "input_question"){
             this.model.get('answers').each( function(answer){
-                var value = numParser.extract_value(answer.get('answer'));
+                var value = numParser.parse(answer.get('answer'));
                 answer.set('answer', value.toString());
             });
         }
@@ -1153,7 +1222,8 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
             input_answer: this.numbers_only(),
             single_selection: this.is_single_correct(),
             groupName: this.assessment_item.cid,
-            allow_edit: !this.isdisplay && this.assessment_item.get("type") !== "true_false",
+            allow_edit: !this.isdisplay,
+            is_true_false: this.assessment_item.get("type") === "true_false",
             allow_toggle: !this.isdisplay
         }, {
             data: this.get_intl_data()
@@ -1312,7 +1382,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
     validate:function(){
         var invalid = this.collection.findWhere({hint: ""});
         this.modal_view.$(".hint_prompt, .error-list").css("display", (invalid)? "block" : "none");
-        this.set_invalid(this.collection.findWhere({hint: ""}));
+        this.set_invalid(invalid);
     }
 });
 

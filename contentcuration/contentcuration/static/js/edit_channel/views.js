@@ -70,7 +70,6 @@ var MESSAGES = {
 var BaseView = Backbone.View.extend({
 	default_item: ".default-item",
 	name: NAMESPACE,
-	locales: [window.languageCode],
 	locale: navigator.language || navigator.browserLanguage,
 	$trs: MESSAGES,
 	globalMessageStore: require("utils/translations"),
@@ -84,9 +83,10 @@ var BaseView = Backbone.View.extend({
 					.value();
 	},
 	get_intl_data: function(){
+		var language = window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
 		return {
 			intl: {
-				locales: this.locales,
+				locales: [(language && language.id) || "en-US"],
 				messages: this.get_translation_library()
 			}
 		}

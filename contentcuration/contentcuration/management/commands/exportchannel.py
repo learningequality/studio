@@ -68,7 +68,7 @@ class Command(BaseCommand):
                 map_prerequisites(channel.main_tree)
                 save_export_database(channel_id)
                 increment_channel_version(channel)
-                mark_all_nodes_as_changed(channel)
+                # mark_all_nodes_as_changed(channel)
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -132,10 +132,7 @@ def map_content_nodes(root_node, default_language):
                     children = (node.children.all())
                     node_queue.extend(children)
 
-                    kolibrinode = create_bare_contentnode(node)
-
-                    # Set language for recursive language setting, but don't save
-                    node.language = node.language or (node.parent and node.parent.language) or default_language
+                    kolibrinode = create_bare_contentnode(node, default_language)
 
                     if node.kind.kind == content_kinds.EXERCISE:
                         exercise_data = process_assessment_metadata(node, kolibrinode)
@@ -145,13 +142,17 @@ def map_content_nodes(root_node, default_language):
                     map_tags_to_node(kolibrinode, node)
 
 
-def create_bare_contentnode(ccnode):
+def create_bare_contentnode(ccnode, default_language):
     logging.debug("Creating a Kolibri node for instance id {}".format(
         ccnode.node_id))
 
     kolibri_license = None
     if ccnode.license is not None:
         kolibri_license = create_kolibri_license_object(ccnode)[0]
+
+    language = None
+    if ccnode.language or default_language:
+        language, _new = get_or_create_language(ccnode.language or default_language)
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
@@ -166,6 +167,7 @@ def create_bare_contentnode(ccnode):
             'license': kolibri_license,
             'available': ccnode.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists(),  # Hide empty topics
             'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
+            'lang': language
         }
     )
 
@@ -182,6 +184,14 @@ def create_bare_contentnode(ccnode):
 
     return kolibrinode
 
+def get_or_create_language(language):
+    return kolibrimodels.Language.objects.get_or_create(
+        id=language.pk,
+        lang_code=language.lang_code,
+        lang_subcode=language.lang_subcode,
+        lang_name= language.lang_name if hasattr(language, 'lang_name') else language.readable_name,
+    )
+
 def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None, uploader=None):
     thumbnail_data = ast.literal_eval(thumbnail_string)
     if thumbnail_data.get('base64'):
@@ -196,13 +206,9 @@ def create_associated_file_objects(kolibrinode, ccnode):
     for ccfilemodel in ccnode.files.exclude(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
-        language = ccfilemodel.language or ccnode.language
-        if language:
-            kolibrimodels.Language.objects.get_or_create(
-                id=language.pk,
-                lang_code=language.lang_code,
-                lang_subcode=language.lang_subcode
-            )
+        if ccfilemodel.language:
+            get_or_create_language(ccfilemodel.language)
+
         if preset.thumbnail and ccnode.thumbnail_encoding:
             ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, uploader=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
 
@@ -215,7 +221,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
-            lang_id=language.pk,
+            lang_id=ccfilemodel.language and ccfilemodel.language.pk,
             thumbnail=preset.thumbnail,
             priority=preset.order,
         )
