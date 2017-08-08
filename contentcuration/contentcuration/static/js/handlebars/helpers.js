@@ -49,7 +49,7 @@ Handlebars.registerHelper('markdown', function(markdown) {
         if(groups[3]) {img.height = groups[3];}
       }
   });
-  return el.innerHTML;
+  return stringHelper.unescape(el.innerHTML);
 });
 
 // Replace newline characters with \n

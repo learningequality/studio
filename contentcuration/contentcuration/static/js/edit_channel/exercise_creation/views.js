@@ -302,7 +302,8 @@ var EditorView = BaseViews.BaseView.extend({
     },
     render_content: function() {
         var self = this;
-        if(this.model.get(this.edit_key) && this.model.get(this.edit_key).trim() !==""){
+        var value = this.model.get(this.edit_key)
+        if((value || value == 0) && this.model.get(this.edit_key).trim() !==""){
             this.toggle_loading(true);
             this.parse_content(this.model.get(this.edit_key)).then(function(result){
                 self.$el.html(self.view_template({content: result}, {
@@ -542,7 +543,7 @@ var EditorView = BaseViews.BaseView.extend({
         });
 
         // Render content to markdown (use custom fiters for images and italics)
-        return toMarkdown(contents,{
+        contents = toMarkdown(contents,{
             converters: [
                 {
                     filter: 'img',
@@ -571,6 +572,7 @@ var EditorView = BaseViews.BaseView.extend({
                 }
             ]
         });
+        return stringHelper.unescape(contents);
     }
 });
 
@@ -957,7 +959,10 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
                 [this.get_translation("change")]: function(){
                     var newCollection = self.model.get('answers');
                     newCollection.reset(self.model.get('answers').chain()
-                        .reject( function(a){return !numParser.extract_value(a.get('answer'));} )
+                        .reject( function(a){
+                            var value = numParser.extract_value(a.get('answer'));
+                            return value !== 0 && !value;
+                        })
                         .each( function(a){
                             var value = numParser.parse(a.get('answer'));
                             a.set({'correct': true, 'answer': value && value.toString()});
@@ -1111,7 +1116,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         if(this.model.get("type") === "input_question"){
             this.model.get('answers').each( function(answer){
                 var value = numParser.parse(answer.get('answer'));
-                answer.set('answer', (value)? value.toString() : "");
+                answer.set('answer', value.toString());
             });
         }
         this.editor_view.deactivate_editor();
