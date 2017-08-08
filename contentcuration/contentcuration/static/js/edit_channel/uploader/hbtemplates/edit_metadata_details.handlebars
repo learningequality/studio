@@ -12,6 +12,9 @@
 		<h4>{{formatMessage (intlGet 'messages.title')}}</h4>
 		<p class="detail_field wordwrap">{{#if node.title}}{{node.title}}{{else}}<span class="default_detail_field">---</span>{{/if}}</p>
 	{{/if}}
+		<h4>{{formatMessage (intlGet 'messages.language')}}</h4>
+		<p class="wordwrap">{{language}}</p>
+		<br/>
 	{{#if is_exercise}}
 		<h4>{{formatMessage (intlGet 'messages.mastery_criteria')}} <span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="mastery_about"></span></h4>
 		<p class="detail_field" id="mastery_detail_field">{{#if mastery}}{{#translate mastery}}{{/translate}}{{else}}<span class="default_detail_field">---</span>{{/if}}</p>

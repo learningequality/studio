@@ -1,6 +1,7 @@
 var Handlebars = require("hbsfy/runtime");
-var HandlebarsIntl = require('handlebars-intl');
+global.HandlebarsIntl = require('handlebars-intl');
 HandlebarsIntl.registerWith(Handlebars);
+require("./locales/es.js");
 var _ = require("underscore");
 var marked = require("marked");
 var stringHelper = require("edit_channel/utils/string_helper");
@@ -48,7 +49,7 @@ Handlebars.registerHelper('markdown', function(markdown) {
         if(groups[3]) {img.height = groups[3];}
       }
   });
-  return el.innerHTML;
+  return stringHelper.unescape(el.innerHTML);
 });
 
 // Replace newline characters with \n

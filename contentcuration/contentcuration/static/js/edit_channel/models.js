@@ -242,7 +242,7 @@ var ContentNodeModel = BaseModel.extend({
                 url: window.Urls.generate_thumbnail(),
                 data:  JSON.stringify({"node_id": self.id}),
                 success: function(result) {
-                    file = JSON.parse(result).file
+                    var file = JSON.parse(result).file
                     resolve(new FileModel(JSON.parse(file)));
                 },
                 error:reject
@@ -335,8 +335,8 @@ var ContentNodeCollection = BaseCollection.extend({
                     item.set('contentnode', node.id);
                     if(item.get('type') === 'input_question'){
                         item.get('answers').each( function(a){
-                            var value = numParser.extract_value(a.get('answer'))
-                            a.set('answer', (value)? value.toString() : "");
+                            var value = numParser.parse(a.get('answer'))
+                            a.set('answer', value.toString());
                         });
                     }
                 })

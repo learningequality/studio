@@ -18,7 +18,6 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
-
 def base(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
         return redirect(reverse_lazy('unsupported_browser'))
@@ -112,10 +111,13 @@ def channel_list(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
         return redirect(reverse_lazy('unsupported_browser'))
 
+    languages = get_or_set_cached_constants(Language, LanguageSerializer)
+
     return render(request, 'channel_list.html', {"channel_name": False,
                                                  "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
                                                  "user_preferences": request.user.preferences,
-                                                 "messages": get_messages()
+                                                 "langs_list": languages,
+                                                 "messages": get_messages(),
                                                 })
 
 

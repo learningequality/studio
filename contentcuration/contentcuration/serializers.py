@@ -30,7 +30,7 @@ class LanguageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Language
-        fields = ('lang_code', 'lang_subcode', 'id', 'readable_name', 'ietf_name')
+        fields = ('lang_code', 'lang_subcode', 'id', 'readable_name', 'ietf_name', 'native_name')
 
 
 class FileFormatSerializer(serializers.ModelSerializer):
@@ -525,7 +525,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
-        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license',
+        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license','language',
                   'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id')
@@ -545,8 +545,8 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
-        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'node_id',
-                  'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
+        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
+                  'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding')
 
@@ -558,9 +558,9 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
         model = ContentNode
         fields = (
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
-            'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors',
+            'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
-            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding',
+            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata')
 
@@ -600,7 +600,7 @@ class ChannelSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
-            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences')
+            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences', 'language')
 
 
 class AccessibleChannelListSerializer(serializers.ModelSerializer):
@@ -638,7 +638,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
         return channel.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
 
     def get_resource_count(self, channel):
-        return channel.main_tree.get_descendant_count()
+        return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
 
     def check_published(self, channel):
         return channel.main_tree.published
@@ -653,14 +653,14 @@ class ChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'is_bookmarked', 'modified',
+        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'is_bookmarked', 'modified', 'language',
                   'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'preferences')
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id', 'is_staff')
+        fields = ('email', 'first_name', 'last_name', 'id')
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
