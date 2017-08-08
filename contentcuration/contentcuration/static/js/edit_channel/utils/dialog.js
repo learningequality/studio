@@ -16,7 +16,7 @@ function dialog(title, submessage, actions, onclose){
     autoOpen: false,
     resizable: false,
     height: "auto",
-    width: 500,
+    width: (window.languageCode.startsWith("es"))? 500 : 400, // Spanish translations tend to be longer
     modal: false,
     buttons: actions,
     close:function(){
