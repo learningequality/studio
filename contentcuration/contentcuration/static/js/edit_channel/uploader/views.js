@@ -43,7 +43,7 @@ var MESSAGES = {
     "title_error": "Title cannot be blank.",
     "title_placeholder": "Enter a title...",
     "source": "Source:",
-    "readonly": "[READ-ONLY] Source:",
+    "readonly": "READ-ONLY Source:",
     "permissions_vary": "Permissions Vary",
     "description": "Description",
     "chars_left": "{data, plural,\n =1 {# character}\n other {# characters}} left",

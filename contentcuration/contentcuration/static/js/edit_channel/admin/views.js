@@ -39,6 +39,7 @@ var AdminView = BaseViews.BaseView.extend({
 var BaseAdminTab = BaseViews.BaseListView.extend({
     search_selector: "",
     tab_count_selector: "",
+    item_name: "",
     filters: [],
     sort_filters: [],
     extra_filters: [],
@@ -48,6 +49,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         this.collection = options.collection;
         this.extra_filters = this.get_dynamic_filters();
         this.count = this.collection.length;
+        this.total_count = this.collection.length;
         this.render();
         this.listenTo(this.collection, "remove", this.handle_removed);
     },
@@ -62,13 +64,15 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     },
     update_count: function(count){
         this.count = count;
-        $(this.tab_count_selector).text(count);
+        $(this.tab_count_selector).text(this.total_count);
+        this.$(".viewing_count").text("Displaying " + count + " of " + this.total_count + " " + this.item_name + "(s)...");
     },
     render: function() {
         this.$el.html(this.template({
             filters: this.filters,
             sort_filters: this.sort_filters,
-            extra_filters: this.extra_filters
+            extra_filters: this.extra_filters,
+            total: this.total_count
         }));
         this.apply_filter();
     },
@@ -176,6 +180,7 @@ var ChannelTab = BaseAdminTab.extend({
     template: require("./hbtemplates/channel_tab.handlebars"),
     search_selector: "#admin_channel_search",
     tab_count_selector: "#channel_count",
+    item_name: "channel",
     filters: [
         {
             key: "all",
@@ -452,6 +457,7 @@ var UserTab = BaseAdminTab.extend({
     selected_users: [],
     search_selector: "#admin_user_search",
     tab_count_selector: "#user_count",
+    item_name: "user",
     filters: [
         {
             key: "all",

@@ -16,7 +16,7 @@ function dialog(title, submessage, actions, onclose){
     autoOpen: false,
     resizable: false,
     height: "auto",
-    width: 400,
+    width: 500,
     modal: false,
     buttons: actions,
     close:function(){

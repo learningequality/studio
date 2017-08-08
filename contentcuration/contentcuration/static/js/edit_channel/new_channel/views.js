@@ -43,9 +43,10 @@ var MESSAGES = {
 	"star_channel": "Star Channel",
 	"unstar_channel": "Remove Star",
 	"viewonly": "View-Only",
-	"last_updated": "Updated {date}",
+	"last_updated": "Updated {updated}",
 	"starred_channel": "Star Added!",
-	"unstarred_channel": "Star Removed"
+	"unstarred_channel": "Star Removed",
+	"create": "Create"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -232,10 +233,13 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.thumbnail = this.original_thumbnail;
 		this.originalData = (this.model)? this.model.toJSON() : null;
 		this.can_edit = this.model.get("editors").indexOf(window.current_user.id) >= 0;
-		this.render();
 		this.dropzone = null;
 		this.isNew = false;
 		this.thumbnail_success = true;
+		this.render();
+	},
+	get_post_translations: function(){
+		return {};
 	},
 
 	set_is_new:function(isNew){
@@ -244,6 +248,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.$(".save_channel").attr("disabled", "disabled");
 			this.$(".save_channel").prop("disabled", true);
 			this.$(".save_channel").css("cursor", "not-allowed");
+			this.render();
 		}
 	},
 	render: function() {
@@ -255,7 +260,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			resource_count: this.model.get("count"),
 			channel_link : this.model.get("id"),
 			picture : (this.thumbnail_encoding && this.thumbnail_encoding.base64) || this.thumbnail_url,
-			modified: this.model.get("modified")
+			modified: this.model.get("modified"),
+			new: this.isNew
 		}, {
 			data: this.get_intl_data()
 		}));
