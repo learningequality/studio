@@ -22,6 +22,7 @@ var MESSAGES = {
     "use": "USE",
     "image_error": "Image Error",
     "file_error_text": "Error uploading file: connection interrupted",
+    "unable_to_generate": "Unable to generate thumbnail for this item",
     "removing_image": "Removing Image",
     "removing_image_text": "Are you sure you want to remove this image?",
     "alt_prompt": "Enter text to display if image fails to load",
@@ -304,7 +305,7 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
             self.enable_generate();
         }).catch(function(error){
             self.$("#thumbnail_area").removeClass('loading').addClass('error');
-            self.$("#generate_thumbnail_error").text(error.responseText);
+            self.$("#generate_thumbnail_error").text(self.get_translation("unable_to_generate"));
             self.enable_generate();
         });
     },

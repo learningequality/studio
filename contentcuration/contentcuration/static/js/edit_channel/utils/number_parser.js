@@ -19,24 +19,34 @@ EXPONENT: [DECIMAL | INTEGER]e+{0,1}[INTEGER]
 TODO: Add log and pi?
 
 ****************/
+var SEP = /,/g;
+var POINT = /\./g;
+if (window.languageCode.startsWith("es")) {
+  SEP = /\./g;
+  POINT = /,/g;
+}
 
-const LINE = /^(.*)$/g;
-const SIGN = /-?/;
-const DIGIT = /[0-9]/;
-const NON_ZERO_DIGIT = /[1-9]/;
-const UNFORMATTED_INT = new RegExp(DIGIT.source + "*");
-const FORMATTED_INT = new RegExp(DIGIT.source + "{1,3}(?:," + DIGIT.source + "{3})+");
-const INTEGER = new RegExp("(" + SIGN.source + "(?:" + FORMATTED_INT.source + "|" + UNFORMATTED_INT.source + "))");
-const NON_ZERO_INT = new RegExp("(" + SIGN.source + NON_ZERO_DIGIT.source + "(?:" + DIGIT.source + "{0,2}(?:," + DIGIT.source + "{3})+|" + UNFORMATTED_INT.source + ")?)");
-const FRACTION = new RegExp(INTEGER.source + "/" + NON_ZERO_INT.source);
-const MIXED_NUMBER = new RegExp("(" + INTEGER.source + ") +(" + FRACTION.source + ")");
-const DECIMAL = new RegExp(INTEGER.source + "\\." + UNFORMATTED_INT.source);
-const PERCENTAGE = new RegExp("(" + DECIMAL.source + "|" + MIXED_NUMBER.source + "|" + FRACTION.source + "|" + INTEGER.source + ")%");
-const EXPONENT = new RegExp("(" + DECIMAL.source + "|" + INTEGER.source + ")e\\+?(" + INTEGER.source + ")");
+var LINE = /^(.*)$/g;
+var SIGN = /-?/;
+var DIGIT = /[0-9]/;
+var NON_ZERO_DIGIT = /[1-9]/;
+var UNFORMATTED_INT = new RegExp(DIGIT.source + "*");
+var FORMATTED_INT = new RegExp(DIGIT.source + "{1,3}(?:" + SEP.source + DIGIT.source + "{3})+");
+var INTEGER = new RegExp("(" + SIGN.source + "(?:" + FORMATTED_INT.source + "|" + UNFORMATTED_INT.source + "))");
+var NON_ZERO_INT = new RegExp("(" + SIGN.source + NON_ZERO_DIGIT.source + "(?:" + DIGIT.source + "{0,2}(?:" + SEP.source + DIGIT.source + "{3})+|" + UNFORMATTED_INT.source + ")?)");
+var FRACTION = new RegExp(INTEGER.source + "/" + NON_ZERO_INT.source);
+var MIXED_NUMBER = new RegExp("(" + INTEGER.source + ") +(" + FRACTION.source + ")");
+var DECIMAL = new RegExp(INTEGER.source + POINT.source + UNFORMATTED_INT.source);
+var PERCENTAGE = new RegExp("(" + DECIMAL.source + "|" + MIXED_NUMBER.source + "|" + FRACTION.source + "|" + INTEGER.source + ")%");
+var EXPONENT = new RegExp("(" + DECIMAL.source + "|" + INTEGER.source + ")e\\+?(" + INTEGER.source + ")");
 
+function parse(text) {
+  var num = extract_value(text);
+  return num && num.toString().replace(".", POINT.source);
+}
 
 function extract_value(text){
-  return parse_valid_number(text);
+  return parse_valid_number(text)
 }
 
 function parse_valid_number(text){
@@ -59,13 +69,13 @@ function parse_fraction(text){
 
 function parse_integer(text){
   var match = INTEGER.exec(text);
-  var number = match && Number.parseInt(match[1].replace(',', ''));
+  var number = match && Number.parseInt(to_en(match[1]));
   return match && (isNaN(number))? null : number;
 }
 
 function parse_decimal(text){
   var match = DECIMAL.exec(text);
-  return match && Number.parseFloat(match[0].replace(',', ''));
+  return match && Number.parseFloat(to_en(match[0]));
 }
 
 function parse_percentage(text){
@@ -77,7 +87,7 @@ function parse_exponent(text){
   var match = EXPONENT.exec(text);
   var val1 = match && extract_value(match[1])
   var val2 = match && extract_value(match[4])
-  return val1 && val2 && eval(val1 + "e" + val2);
+  return val1 && val2 && eval(to_en(val1) + "e" + to_en(val2));
 }
 
 function test_valid_number(text){
@@ -108,7 +118,13 @@ function test_exponent(text){
   return EXPONENT.test(text);
 }
 
+function to_en(text){
+  return text.replace(SEP, '').replace(POINT, '.');
+}
+
+
 module.exports = {
+  parse: parse,
   extract_value : extract_value,
   test_valid_number : test_valid_number
 }

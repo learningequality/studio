@@ -82,7 +82,13 @@ var MESSAGES = {
     "randomize_questions": "Randomize question order for learners",
     "questions_only": "View questions only",
     "question": "Question",
-    "hints_for_question": "Hints for Question:"
+    "hints_for_question": "Hints for Question:",
+    "Bold": "Bold",
+    "Italic": "Italic",
+    "Image": "Image",
+    "Formula": "Formula",
+    "Undo": "Undo",
+    "Redo": "Redo"
 }
 
 /*********** FORMULA ADD-IN FOR EXERCISE EDITOR ***********/
@@ -289,6 +295,7 @@ var EditorView = BaseViews.BaseView.extend({
 
     /*********** EDITOR METHODS ***********/
     activate_editor: function() {
+        var self = this;
         var selector = this.cid + "_editor";
         this.$el.html(this.edit_template({selector: selector}, {
             data: this.get_intl_data()
@@ -313,7 +320,13 @@ var EditorView = BaseViews.BaseView.extend({
                 onPaste: this.paste_content,
                 onImageUpload: this.add_image,
                 onAddFormula: this.add_formula,
-                onKeydown: this.process_key
+                onKeydown: this.process_key,
+                onInit : function(){
+                    $('.note-editor [data-name="ul"]').tooltip('disable');
+                    $('.note-editor .note-btn').each(function() {
+                        $(this).attr("data-original-title", self.get_translation($(this).data("original-title")));
+                    });
+                }
             }
         });
         $('.dropdown-toggle').dropdown();
@@ -557,7 +570,8 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     validate:function(){ return true; },
     set_invalid:function(invalid){
         this.$(this.additem_el).prop("disabled", invalid);
-        (invalid)? this.$(this.additem_el).addClass("disabled") : this.$(this.additem_el).removeClass("disabled");
+        (invalid)? this.$(this.additem_el).addClass("disabled").attr("disabled", "disabled") :
+                    this.$(this.additem_el).removeClass("disabled").removeAttr("disabled");
         this.$(this.additem_el).prop('title', (invalid)? this.get_translation("blank_item_detected") : this.get_translation("add"));
     },
 
@@ -890,7 +904,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
                     newCollection.reset(self.model.get('answers').chain()
                         .reject( function(a){return !numParser.extract_value(a.get('answer'));} )
                         .each( function(a){
-                            var value = numParser.extract_value(a.get('answer'));
+                            var value = numParser.parse(a.get('answer'));
                             a.set({'correct': true, 'answer': value && value.toString()});
                         } ).value());
                     self.model.set('answers', newCollection);
@@ -1041,7 +1055,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         this.set_toolbar_closed();
         if(this.model.get("type") === "input_question"){
             this.model.get('answers').each( function(answer){
-                var value = numParser.extract_value(answer.get('answer'));
+                var value = numParser.parse(answer.get('answer'));
                 answer.set('answer', (value)? value.toString() : "");
             });
         }
@@ -1148,7 +1162,8 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
             input_answer: this.numbers_only(),
             single_selection: this.is_single_correct(),
             groupName: this.assessment_item.cid,
-            allow_edit: !this.isdisplay && this.assessment_item.get("type") !== "true_false",
+            allow_edit: !this.isdisplay,
+            is_true_false: this.assessment_item.get("type") === "true_false",
             allow_toggle: !this.isdisplay
         }, {
             data: this.get_intl_data()
@@ -1307,7 +1322,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
     validate:function(){
         var invalid = this.collection.findWhere({hint: ""});
         this.modal_view.$(".hint_prompt, .error-list").css("display", (invalid)? "block" : "none");
-        this.set_invalid(this.collection.findWhere({hint: ""}));
+        this.set_invalid(invalid);
     }
 });
 

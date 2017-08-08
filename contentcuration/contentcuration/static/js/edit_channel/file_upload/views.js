@@ -663,10 +663,10 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         return preset.get("associated_mimetypes").join(",");
     },
     file_uploaded:function(file){
-        var data = JSON.parse(file.xhr.response).file
-        var new_file = new Models.FileModel(JSON.parse(data));
-        this.set_file(new_file);
-        this.set_uploading(false);
+        // var data = JSON.parse(file.xhr.response).file
+        // var new_file = new Models.FileModel(JSON.parse(data));
+        // this.set_file(new_file);
+        // this.set_uploading(false);
     },
     set_file:function(file){
         var originalFile = this.file;

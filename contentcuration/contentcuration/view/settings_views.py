@@ -78,7 +78,6 @@ class PreferencesView(FormView):
         initial = self.initial.copy()
         initial.update(json.loads(self.request.user.preferences))
         initial.update({
-            'author': initial.get('author') or self.request.user.get_full_name(),
             'm_value': initial.get('m_value') or 1,
             'n_value': initial.get('n_value') or 1,
         })
