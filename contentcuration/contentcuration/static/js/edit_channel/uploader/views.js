@@ -56,6 +56,8 @@ var MESSAGES = {
     "author_placeholder": "Enter author name...",
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
+    "same_as_channel": "Same as Channel",
+    "same_as_topic": "Same as Topic"
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -288,7 +290,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     if(this.edit_list){
       this.edit_list.adjust_list_height();
     }
-    this.set_indices();
+    _.defer(this.set_indices);
   },
   set_editor_focus: function(){
     if(this.editor_view){
@@ -416,7 +418,8 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     shared_author:null,
     all_files:false,
     all_exercises: false,
-    shared_exercise_data:{mastery_model: 0, m: null, n: null, randomize: null}
+    shared_exercise_data:{mastery_model: 0, m: null, n: null, randomize: null},
+    shared_language:0
   },
   list_selector: "#uploaded_list",
   default_item: "#uploaded_list .default-item",
@@ -530,6 +533,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.shared_license_description = view.model.get('license_description');
       this.shared_data.all_files = view.model.get("kind") !== "topic";
       this.shared_data.all_exercises = view.model.get("kind") === "exercise";
+      this.shared_data.shared_language = view.model.get("language");
       if(view.model.get("extra_fields")){
         this.shared_data.shared_exercise_data = view.model.get("extra_fields");
       }
@@ -541,6 +545,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.shared_license_description = (this.shared_data.shared_license_description === view.model.get("license_description"))? this.shared_data.shared_license_description : null;
       this.shared_data.all_files = this.shared_data.all_files && view.model.get("kind")  !== "topic";
       this.shared_data.all_exercises = this.shared_data.all_exercises && view.model.get("kind")  === "exercise";
+
+      var language = view.model.get("language");
+      this.shared_data.shared_language = (this.shared_data.shared_language === language || null)? this.shared_data.shared_language : 0;
 
       if(this.shared_data.all_exercises){
         if(view.model.get("extra_fields")){
@@ -590,6 +597,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
+    var all_top_level = _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
 
     if(this.allow_edit){
       this.$el.html(this.template({
@@ -607,11 +615,14 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         is_exercise: this.shared_data && this.shared_data.all_exercises,
         m_value: this.m_value,
         n_value: this.n_value,
-        license_description: this.shared_data && this.shared_data.shared_license_description
+        license_description: this.shared_data && this.shared_data.shared_license_description,
+        languages: window.languages.toJSON(),
+        language_default: this.get_language(null, all_top_level)
       }, {
         data: this.get_intl_data()
       }));
       this.update_count();
+      this.load_language();
       if(this.shared_data){
         (!alloriginal)? $("#license_select").text(stringHelper.translate(original_source_license)) : $("#license_select").val(this.shared_data.shared_license);
         // Set exercise fields according to shared exercise data
@@ -635,7 +646,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         selected_count: this.selected_items.length,
         has_files: has_files,
         is_exercise: this.shared_data && this.shared_data.all_exercises,
-        license_description: this.shared_data && this.shared_data.shared_license_description
+        license_description: this.shared_data && this.shared_data.shared_license_description,
+        language: this.shared_data && this.get_language(this.shared_data.shared_language, all_top_level),
       }, {
         data: this.get_intl_data()
       }));
@@ -664,9 +676,14 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   get_mastery_string: function(){
     if (this.shared_data.shared_exercise_data.mastery_model === "m_of_n"){
-      return this.m_value + " of " + this.n_value
+      return this.m_value + " " + this.get_translation("of") + " " + this.n_value;
     }
-    return stringHelper.translate(this.shared_data.shared_exercise_data.mastery_model)
+    return stringHelper.translate(this.shared_data.shared_exercise_data.mastery_model);
+  },
+  get_language: function(language, all_top_level){
+    if (language === 0){ return "---"; }
+    else if(!language) { return (all_top_level)? this.get_translation("same_as_channel") : this.get_translation("same_as_topic"); }
+    return window.languages.findWhere({id: language}).get("readable_name");
   },
   set_initial_focus:function(){
     var element = null;
@@ -739,7 +756,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     'change #m_value': 'set_mastery',
     'change #n_value': 'set_mastery',
     "click #mastery_about": "load_mastery",
-    "focus .input-tab-control": "loop_focus"
+    "focus .input-tab-control": "loop_focus",
+    "change #select_language": "set_language"
   },
   load_tags:function(){
     this.$("#tag_area").html(this.tags_template({
@@ -761,6 +779,12 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   load_mastery:function(){
     new Info.MasteryModalView();
+  },
+  load_language: function(){
+    var language = this.shared_data && this.shared_data.shared_language;
+    if(language===0) { this.$("#select_language").val(0); }
+    else if (!language) { this.$("#select_language").val("inherit"); }
+    else { this.$("#select_language").val(language); }
   },
   update_count:function(){
     if(this.selected_individual()){
@@ -876,6 +900,14 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.selected_items.forEach(function(view){
         view.set_mastery(mastery_model, self.m_value, self.n_value);
     });
+  },
+  set_language:function(){
+    var language = this.$("#select_language").val();
+    language = (language === "inherit")? null : language;
+    var self = this;
+    this.selected_items.forEach(function(view){
+        view.set_language(language);
+    });
   }
 });
 
@@ -985,6 +1017,10 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     current_data['m'] = m_value;
     current_data['n'] = n_value;
     this.set({'extra_fields': current_data});
+    this.set_edited(true);
+  },
+  set_language: function(language){
+    this.set({"language": language});
     this.set_edited(true);
   },
   set_random:function(randomize){

@@ -10,6 +10,12 @@
 		{{/if}}
 	</div>
 	{{#if edit}}
+		<div class="language-wrapper pull-right">
+			<select id="select_language" class="tab_item">
+	            <option disabled selected value=0>{{formatMessage (intlGet 'messages.select_language')}}</option>
+	            {{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
+	        </select>
+        </div>
 		<p id="channel_name_error">{{formatMessage (intlGet 'messages.channel_name_error')}}</p>
 		<input type="text" id="new_channel_name" placeholder="{{formatMessage (intlGet 'messages.name_placeholder')}}" value="{{channel.name}}" maxlength="200" class="tab_item first_focus_item"></input>
 		<textarea id="new_channel_description" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" value="{{channel.description}}"  maxlength="400" class="tab_item">{{channel.description}}</textarea>
@@ -20,6 +26,7 @@
 		</div>
 	{{else}}
 		<span class="channel_metadata">
+			{{#if language}}<span class="uppercase">{{language.id}}</span>&nbsp;|&nbsp;{{/if}}
 			<span class="resource_count">{{formatMessage (intlGet 'messages.resource_count') count=resource_count}}</span>
 			&nbsp;&nbsp;{{formatMessage (intlGet 'messages.id')}}
 			{{#if channel.published}}
@@ -47,4 +54,4 @@
 		</div>
 	{{/if}}
 </div>
-<div class="input-tab-control tab_item" data-next="#new_channel_name"></div>
+<div class="input-tab-control tab_item" data-next="#select_language"></div>

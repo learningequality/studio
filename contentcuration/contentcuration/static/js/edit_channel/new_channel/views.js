@@ -261,6 +261,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			channel_link : this.model.get("id"),
 			picture : (this.thumbnail_encoding && this.thumbnail_encoding.base64) || this.thumbnail_url,
 			modified: this.model.get("modified"),
+			languages: window.languages.toJSON(),
+			language: window.languages.findWhere({id: this.model.get("language")}),
 			new: this.isNew
 		}, {
 			data: this.get_intl_data()
@@ -354,6 +356,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.containing_list_view.set_editing(true);
 		this.edit = true;
 		this.render();
+		this.$("#select_language").val(this.model.get("language") || 0);
 	},
 	star_channel: function(){
 		var self = this;
@@ -389,7 +392,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.remove();
 		}else{
 			var self = this;
-			dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning"), {
+			dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning", this.model.get("name")), {
 				[this.get_translation("cancel")]:function(){},
 				[this.get_translation("delete_channel")]: function(){
 					self.save({"deleted":true}, self.get_translation("deleting_channel")).then(function(){
@@ -423,6 +426,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.set_is_new(false);
 			var title = this.$el.find("#new_channel_name").val().trim();
 			var description = this.$el.find("#new_channel_description").val();
+			var language = window.languages.findWhere({id: this.$el.find("#select_language").val()});
 			var data = {
 				name: title,
 				description: description,
@@ -430,7 +434,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				thumbnail_encoding: this.thumbnail_encoding,
 				editors: this.model.get('editors'),
 				pending_editors: this.model.get('pending_editors'),
-				preferences: JSON.stringify(this.model.get('preferences') || window.user_preferences)
+				preferences: JSON.stringify(this.model.get('preferences') || window.user_preferences),
+				language: this.$el.find("#select_language").val()
 			};
 			this.original_thumbnail = this.thumbnail;
 			this.original_thumbnail_url = this.thumbnail_url;

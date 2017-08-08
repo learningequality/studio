@@ -63,6 +63,8 @@ var MESSAGES = {
 	"related_content": "RELATED CONTENT DETECTED",
 	"related_content_warning": "Any content associated with {data, plural,\n =1 {this item}\n other {these items}} " +
         "will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content. Are you sure you want to continue?",
+    "language": "Language",
+    "select_language": "Select a Language"
 }
 
 var BaseView = Backbone.View.extend({

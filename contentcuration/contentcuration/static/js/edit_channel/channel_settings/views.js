@@ -73,7 +73,8 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         this.$el.html(this.template({
             channel: this.model.toJSON(),
             licenses: window.licenses.toJSON(),
-            preferences: this.model.get("preferences")
+            preferences: this.model.get("preferences"),
+            languages: window.languages.toJSON()
         },  {
             data: this.get_intl_data()
         }));
@@ -81,6 +82,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         $("#mastery_model_select").val(this.model.get("preferences").mastery_model);
         $("#custom_license_description").css("display", (this.get_license_name()==="Special Permissions")? "block" : "none");
         $("#mastery_custom_criterion").css("visibility", ($("#mastery_model_select").val()==="m_of_n")? "visible" : "hidden");
+        $("#select_language").val(this.model.get("language") || 0);
         this.image_upload = new Images.ThumbnailUploadView({
             model: this.model,
             el: this.$("#channel_thumbnail"),
@@ -121,6 +123,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         preferences.auto_derive_audio_thumbnail = $("#auto_audio_thumbnail").is(":checked");
         preferences.auto_derive_document_thumbnail = $("#auto_document_thumbnail").is(":checked");
         preferences.auto_derive_html5_thumbnail = $("#auto_html5_thumbnail").is(":checked");
+        var language = $("#select_language").val();
         var self = this;
         $("#settings_submit").html(this.get_translation("saving"))
                             .attr("disabled", "disabled")
@@ -129,7 +132,8 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
             "name": $("#input_title").val().trim(),
             "description": $("#input_description").val(),
             "thumbnail": this.model.get("thumbnail"),
-            "preferences": JSON.stringify(preferences)
+            "preferences": JSON.stringify(preferences),
+            "language": (language===0)? null : language
         }).then(function(data){
             self.onsave(data);
             $("#settings_submit").html(self.get_translation("saved"));

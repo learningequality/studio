@@ -116,8 +116,8 @@ def channel_list(request):
     return render(request, 'channel_list.html', {"channel_name": False,
                                                  "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
                                                  "user_preferences": request.user.preferences,
-                                                 "messages": get_messages(),
                                                  "langs_list": languages,
+                                                 "messages": get_messages(),
                                                 })
 
 
