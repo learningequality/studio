@@ -199,6 +199,27 @@ var AddFormula = function (context) {
     ]).render();
 }
 
+/*********** CUSTOM BUTTON FOR UNDO/REDO ***********/
+var UndoButton = function (context) {
+    return $.summernote.ui.button({
+        contents: '<i class="note-icon-undo"/>',
+        tooltip: 'Undo',
+        click: function () {
+            context.options.callbacks.onUndo();
+        }
+    }).render();
+}
+
+var RedoButton = function (context) {
+    return $.summernote.ui.button({
+        contents: '<i class="note-icon-redo"/>',
+        tooltip: 'Redo',
+        click: function () {
+            context.options.callbacks.onRedo();
+        }
+    }).render();
+}
+
 /*********** WRAPPER FOR SUMMERNOTE FOR OBECT-ORIENTED APPROACH ***********/
 function Summernote(element, context, options) {
     // Clear all ranges to get undo/redo to work on summernote
@@ -209,6 +230,8 @@ function Summernote(element, context, options) {
     // Configure editor
     this.element = element;             // Element to which summernote should be attached
     this.context = context;             // View in which summernote is nested
+    this.index = 0;                     // Pointer to history stack
+    this.history = [];                  // Keeps track of undo/redo (workaround summernote's undo/redo bugs)
     this.element.summernote(options);   // Initialize summernote with configuration options
 
     this.setHTML = function(content){ element.summernote('code', content); };
@@ -217,7 +240,26 @@ function Summernote(element, context, options) {
     this.getContents = function(){ return element.summernote('code'); };
     this.enable = function(){ element.summernote('enable'); };
     this.disable = function(){ element.summernote('disable'); };
-    this.togglePlaceholder = function(show){ context.$('.note-placeholder').css('display', (show) ? 'inline' : 'none'); }
+    this.togglePlaceholder = function(show){ context.$('.note-placeholder').css('display', (show) ? 'inline' : 'none'); };
+    this.commit = function() {
+        var entry = this.getContents();
+        if(this.history[this.index] !== entry){
+            this.history = this.history.slice(0, this.index + 1).concat(entry);
+            this.index = this.history.length - 1;
+        }
+    };
+    this.undo = function() {
+        this.index = Math.max(this.index - 1, 0);
+        this.setHTML(this.history[this.index]);
+    };
+    this.redo = function() {
+        this.index = Math.min(this.index + 1, this.history.length - 1);
+        this.setHTML(this.history[this.index]);
+    };
+    this.push = function() {
+        this.history = [this.getContents()];
+        this.index = 0;
+    };
 }
 
 /*********** TEXT EDITOR FOR QUESTIONS, ANSWERS, AND HINTS ***********/
@@ -231,7 +273,7 @@ var EditorView = BaseViews.BaseView.extend({
 
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
-        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key",
+        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key", "undo", "redo",
                "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content", "check_key");
         this.edit_key = options.edit_key;
         this.editing = false;
@@ -251,6 +293,12 @@ var EditorView = BaseViews.BaseView.extend({
             if (!this.setting_model) this.render_editor();
         } else { this.render_content(); }
         this.setting_model = false;
+    },
+    undo: function() {
+        this.editor.undo();
+    },
+    redo: function() {
+        this.editor.redo();
     },
     render_content: function() {
         var self = this;
@@ -278,7 +326,10 @@ var EditorView = BaseViews.BaseView.extend({
             self.editor ? self.editor.setHTML(html) : self.$el.html(html);
             self.toggle_loading(false);
             self.render_toolbar();
-            if(self.editor) self.editor.focus();
+            if(self.editor){
+                self.editor.push();
+                self.editor.focus();
+            }
         });
     },
     render_toolbar:function(){
@@ -304,11 +355,13 @@ var EditorView = BaseViews.BaseView.extend({
             toolbar: [
                 ['style', ['bold', 'italic']],
                 ['insert', ['customupload', 'customformula']],
-                ['controls', ['undo', 'redo']]
+                ['controls', ['customundo', 'customredo']]
             ],
             buttons: {
                 customupload: UploadImage,
-                customformula: AddFormula
+                customformula: AddFormula,
+                customundo: UndoButton,
+                customredo: RedoButton
             },
             placeholder: this.get_translation(this.edit_key + "_placeholder"),
             disableResizeEditor: true,
@@ -321,8 +374,9 @@ var EditorView = BaseViews.BaseView.extend({
                 onImageUpload: this.add_image,
                 onAddFormula: this.add_formula,
                 onKeydown: this.process_key,
+                onUndo: this.undo,
+                onRedo: this.redo,
                 onInit : function(){
-                    $('.note-editor [data-name="ul"]').tooltip('disable');
                     $('.note-editor .note-btn').each(function() {
                         $(this).attr("data-original-title", self.get_translation($(this).data("original-title")));
                     });
@@ -351,6 +405,7 @@ var EditorView = BaseViews.BaseView.extend({
         this.setting_model = true;
         this.markdown = this.convert_html_to_markdown(contents);
         this.model.set(this.edit_key, this.markdown);
+        this.editor.commit();
     },
     validate: function(){
         this.$(".note-error").css("display", (this.markdown.trim())? "none" : "inline-block");
