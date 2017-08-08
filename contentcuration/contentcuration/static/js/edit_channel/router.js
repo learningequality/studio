@@ -20,7 +20,7 @@ var ChannelEditRouter  = Backbone.Router.extend({
 		this.formatpresets = new Models.FormatPresetCollection(window.presets);
 		this.contentkinds = new Models.ContentKindCollection(window.kinds);
 		this.languages = new Models.LanguageCollection(window.langs);
-  },
+	},
 
   routes: {
 		"": "navigate_channel_home",

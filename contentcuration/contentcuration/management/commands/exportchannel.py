@@ -347,7 +347,8 @@ def write_assessment_item(assessment_item, zf):
     else:
         raise TypeError("Unrecognized question type on item {}".format(assessment_item.assessment_id))
 
-    question, question_images = process_image_strings(assessment_item.question)
+    question = process_formulas(assessment_item.question)
+    question, question_images = process_image_strings(question)
 
     answer_data = json.loads(assessment_item.answers)
     for answer in answer_data:
@@ -355,6 +356,7 @@ def write_assessment_item(assessment_item, zf):
             answer['answer'] = extract_value(answer['answer'])
         else:
             answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
+            answer['answer'] = process_formulas(answer['answer'])
             # In case perseus doesn't support =wxh syntax, use below code
             # answer['answer'], answer_images = process_image_strings(answer['answer'])
             # answer.update({'images': answer_images})
@@ -363,6 +365,7 @@ def write_assessment_item(assessment_item, zf):
 
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
+        hint['hint'] = process_formulas(hint['hint'])
         hint['hint'], hint_images = process_image_strings(hint['hint'])
         hint.update({'images': hint_images})
 
@@ -378,6 +381,11 @@ def write_assessment_item(assessment_item, zf):
 
     result = render_to_string(template, context).encode('utf-8', "ignore")
     write_to_zipfile("{0}.json".format(assessment_item.assessment_id), result, zf)
+
+def process_formulas(content):
+    for match in re.finditer(ur'\$(\$.+\$)\$', content):
+        content = content.replace(match.group(0), match.group(1))
+    return content
 
 
 def process_image_strings(content):

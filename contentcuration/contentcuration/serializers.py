@@ -638,7 +638,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
         return channel.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
 
     def get_resource_count(self, channel):
-        return channel.main_tree.get_descendant_count()
+        return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
 
     def check_published(self, channel):
         return channel.main_tree.published
@@ -660,7 +660,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id', 'is_staff')
+        fields = ('email', 'first_name', 'last_name', 'id')
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
