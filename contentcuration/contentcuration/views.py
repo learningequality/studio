@@ -143,15 +143,15 @@ def get_user_channel_lists(request):
     edit_channels = request.user.editable_channels.select_related('main_tree').prefetch_related('editors')\
                     .exclude(deleted=True)\
                     .annotate(is_bookmarked=Case(When(id__in=bookmarked, then=Value(1)),default=Value(0),output_field=IntegerField()))\
-                    .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'preferences')
+                    .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
     view_channels = request.user.view_only_channels.select_related('main_tree').prefetch_related('editors')\
                     .exclude(deleted=True)\
                     .annotate(is_bookmarked=Case(When(id__in=bookmarked, then=Value(1)),default=Value(0),output_field=IntegerField()))\
-                    .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'preferences')
+                    .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
     public_channels = Channel.objects.filter(public=True).select_related('main_tree').prefetch_related('editors')\
                     .exclude(deleted=True)\
                     .annotate(is_bookmarked=Case(When(id__in=bookmarked, then=Value(1)),default=Value(0),output_field=IntegerField()))\
-                    .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'preferences')
+                    .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
     return HttpResponse(json.dumps({
             "edit": JSONRenderer().render(AltChannelListSerializer(edit_channels, many=True).data),
             "viewonly": JSONRenderer().render(AltChannelListSerializer(view_channels, many=True).data),
