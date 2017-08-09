@@ -135,8 +135,6 @@ def get_user_channels(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_channel_lists(request):
-    # channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers').prefetch_related('bookmarked_by').exclude(deleted=True)
-                          # .filter(Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))
     bookmarked_channels = request.user.bookmarked_channels.select_related('main_tree').exclude(deleted=True)
     bookmarked = bookmarked_channels.values_list('id', flat=True)
 
