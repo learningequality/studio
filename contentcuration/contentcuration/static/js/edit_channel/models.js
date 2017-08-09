@@ -108,7 +108,7 @@ var UserModel = BaseModel.extend({
         return new Promise(function(resolve, reject){
             $.ajax({
                 method:"GET",
-                url: window.Urls.get_user_channels(),
+                url: window.Urls.get_user_channel_lists(),
                 error: reject,
                 success: function(data) {
                     var collections = JSON.parse(data);
