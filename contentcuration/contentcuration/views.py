@@ -135,8 +135,8 @@ def get_user_channels(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_bookmarked_channels(request):
-    bookmarked_channels = request.user.bookmarked_channels,exclude(deleted=True)\
-                            .select_related('main_tree').exclude(deleted=True)\
+    bookmarked_channels = request.user.bookmarked_channels.exclude(deleted=True)\
+                            .select_related('main_tree').prefetch_related('editors')\
                             .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
     return HttpResponse(JSONRenderer().render(AltChannelListSerializer(bookmarked_channels, many=True).data))
 
