@@ -433,7 +433,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				thumbnail : this.thumbnail,
 				thumbnail_encoding: this.thumbnail_encoding,
 				editors: this.model.get('editors'),
-				pending_editors: this.model.get('pending_editors'),
 				preferences: JSON.stringify(this.model.get('preferences') || window.user_preferences),
 				language: this.$el.find("#select_language").val()
 			};
