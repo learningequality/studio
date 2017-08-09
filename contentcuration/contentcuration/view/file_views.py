@@ -88,14 +88,17 @@ def file_create(request):
             file_object.preset = presets.filter(supplementary=False).first()
         file_object.save()
 
+        thumbnail = None
         try:
             if preferences.get('auto_derive_video_thumbnail') and new_node.kind_id == content_kinds.VIDEO \
                     or preferences.get('auto_derive_audio_thumbnail') and new_node.kind_id == content_kinds.AUDIO \
                     or preferences.get('auto_derive_html5_thumbnail') and new_node.kind_id == content_kinds.HTML5 \
                     or preferences.get('auto_derive_document_thumbnail') and new_node.kind_id == content_kinds.DOCUMENT:
-                generate_thumbnail_from_node(new_node, set_node=True)
+                thumbnail = generate_thumbnail_from_node(new_node, set_node=True)
+                request.user.check_space(thumbnail.file_size, thumbnail.checksum)
         except Exception:
-            pass
+            if thumbnail:
+                thumbnail.delete()
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -113,7 +116,14 @@ def generate_thumbnail(request):
         data = json.loads(request.body)
         node = ContentNode.objects.get(pk=data["node_id"])
 
+
         thumbnail_object = generate_thumbnail_from_node(node)
+        try:
+            request.user.check_space(thumbnail_object.file_size, thumbnail_object.checksum)
+        except Exception as e:
+            if thumbnail_object:
+                thumbnail_object.delete()
+            raise e
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -127,7 +137,7 @@ def thumbnail_upload(request):
     if request.method == 'POST':
         fobj = request.FILES.values()[0]
         checksum = get_hash(DjFile(fobj))
-        request.user.check_space(size, checksum)
+        request.user.check_space(fobj._size, checksum)
 
         formatted_filename = write_file_to_storage(fobj)
 
@@ -142,7 +152,11 @@ def thumbnail_upload(request):
 @permission_classes((IsAuthenticated,))
 def image_upload(request):
     if request.method == 'POST':
-        name, ext = os.path.splitext(request.FILES.values()[0]._name)  # gets file extension without leading period
+        fobj = request.FILES.values()[0]
+        name, ext = os.path.splitext(fobj._name)  # gets file extension without leading period
+        checksum = get_hash(DjFile(fobj))
+        request.user.check_space(fobj._size, checksum)
+
         file_object = File(
             contentnode_id=request.META.get('HTTP_NODE'),
             original_filename=name,
@@ -162,11 +176,14 @@ def image_upload(request):
 @permission_classes((IsAuthenticated,))
 def exercise_image_upload(request):
     if request.method == 'POST':
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:]  # gets file extension without leading period
+        fobj = request.FILES.values()[0]
+        name, ext = os.path.splitext(fobj._name)
+        checksum = get_hash(DjFile(fobj))
+        request.user.check_space(fobj._size, checksum)
         file_object = File(
             preset_id=format_presets.EXERCISE_IMAGE,
             file_on_disk=DjFile(request.FILES.values()[0]),
-            file_format_id=ext.lower(),
+            file_format_id=ext[1:].lower(),
             uploaded_by=request.user,
         )
         file_object.save()

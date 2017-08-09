@@ -216,10 +216,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         }
     },
     image_failed:function(data, error, xhr){
-        if(xhr && xhr.status === 403){ // Catch errors thrown by server
-            error = this.get_translation("no_space");
-        }
-        this.image_error = error;
+        this.image_error = (xhr && xhr.status === 403) ? this.get_translation("no_space") : error;
     },
     image_added:function(thumbnail){
         this.image_error = this.get_translation("file_error_text");
@@ -309,7 +306,7 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
             self.enable_generate();
         }).catch(function(error){
             self.$("#thumbnail_area").removeClass('loading').addClass('error');
-            self.$("#generate_thumbnail_error").text(self.get_translation("unable_to_generate"));
+            self.$("#generate_thumbnail_error").text((error.status === 403) ? self.get_translation("no_space") : self.get_translation("unable_to_generate"));
             self.enable_generate();
         });
     },
@@ -412,8 +409,8 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
         this.file = null;
         _.defer(this.render_dropzone);
     },
-    file_failed:function(data, error){
-        this.file_error = error;
+    file_failed:function(data, error, xhr){
+        this.file_error = (xhr && xhr.status === 403) ? this.get_translation("no_space") : error;
     },
     file_complete:function(){
         if(this.file_error){

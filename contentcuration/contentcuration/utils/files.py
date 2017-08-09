@@ -77,7 +77,7 @@ def create_tiled_image_wrapper(files, preset_id, node=None):
     with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
         tempf.close()
         create_tiled_image(files, tempf.name)
-        user = len(files) > 0 and files[0].uploaded_by
+        user = (len(files) > 0 and not isinstance(files[0], basestring) and files[0].uploaded_by) or None
         with open(tempf.name, 'rb') as tf:
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=user)
 
