@@ -66,15 +66,11 @@ class FileListSerializer(serializers.ListSerializer):
         update_files = {}
         user = self.context['request'].user
         with transaction.atomic():
-            total_size = 0
             for item in validated_data:
                 item.update({
                     'preset_id': item['preset']['id'],
                     'language_id': item.get('language')['id'] if item.get('language') else None
                 })
-
-                if not user.files.filter(checksum=item.get('checksum')).exists():
-                    total_size = total_size + (item.get('file_size') or 0)
 
                 # User should not be able to change files without a display
                 if item['preset']['display']:
@@ -85,10 +81,6 @@ class FileListSerializer(serializers.ListSerializer):
                         ret.append(File.objects.create(**item))
                 item.pop('preset', None)
                 item.pop('language', None)
-
-        space = user.get_available_space()
-        if space < total_size:
-            raise PermissionDenied(_("Out of file storage ({}MB left). Request more storage under Settings > Account.").format(math.floor(space/1000000)))
 
         files_to_delete = []
         nodes_to_parse = []
@@ -702,10 +694,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CurrentUserSerializer(serializers.ModelSerializer):
     clipboard_tree = RootNodeSerializer(read_only=True)
+    available_space = serializers.SerializerMethodField('calculate_space')
+
+    def calculate_space(self, user):
+        return user.get_available_space()
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id', 'clipboard_tree')
+        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id', 'clipboard_tree', 'available_space')
 
 
 class UserChannelListSerializer(serializers.ModelSerializer):

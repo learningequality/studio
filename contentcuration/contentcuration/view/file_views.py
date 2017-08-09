@@ -5,7 +5,7 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import write_file_to_storage
+from contentcuration.api import write_file_to_storage, get_hash
 from contentcuration.utils.files import generate_thumbnail_from_node
 from contentcuration.models import File, FormatPreset, ContentNode, License, generate_storage_url
 from contentcuration.serializers import FileSerializer, ContentNodeEditSerializer
@@ -23,9 +23,14 @@ def file_upload(request):
         # Implement logic for switching out files without saving it yet
         filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
+        contentfile = DjFile(request.FILES.values()[0])
+        checksum = get_hash(contentfile)
+        request.user.check_space(size, checksum)
+
         file_object = File(
             file_size=size,
-            file_on_disk=DjFile(request.FILES.values()[0]),
+            file_on_disk=contentfile,
+            checksum=checksum,
             file_format_id=ext[1:].lower(),
             original_filename=request.FILES.values()[0]._name,
             preset_id=request.META.get('HTTP_PRESET'),
@@ -33,6 +38,7 @@ def file_upload(request):
             uploaded_by=request.user,
         )
         file_object.save()
+
         return HttpResponse(json.dumps({
             "success": True,
             "filename": str(file_object),
@@ -45,6 +51,10 @@ def file_create(request):
     if request.method == 'POST':
         original_filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
+        contentfile = DjFile(request.FILES.values()[0])
+        checksum = get_hash(contentfile)
+        request.user.check_space(size, checksum)
+
         presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
         kind = presets.first().kind
         preferences = json.loads(request.META.get('HTTP_PREFERENCES'))
@@ -62,7 +72,8 @@ def file_create(request):
             new_node.license_description = preferences.get('license_description')
         new_node.save()
         file_object = File(
-            file_on_disk=DjFile(request.FILES.values()[0]),
+            file_on_disk=contentfile,
+            checksum=checksum,
             file_format_id=ext[1:].lower(),
             original_filename=request.FILES.values()[0]._name,
             contentnode=new_node,
@@ -70,11 +81,11 @@ def file_create(request):
             uploaded_by=request.user,
         )
         file_object.save()
+
         if kind.pk == content_kinds.VIDEO:
             file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))
         elif presets.filter(supplementary=False).count() == 1:
             file_object.preset = presets.filter(supplementary=False).first()
-
         file_object.save()
 
         try:
@@ -115,6 +126,9 @@ def generate_thumbnail(request):
 def thumbnail_upload(request):
     if request.method == 'POST':
         fobj = request.FILES.values()[0]
+        checksum = get_hash(DjFile(fobj))
+        request.user.check_space(size, checksum)
+
         formatted_filename = write_file_to_storage(fobj)
 
         return HttpResponse(json.dumps({

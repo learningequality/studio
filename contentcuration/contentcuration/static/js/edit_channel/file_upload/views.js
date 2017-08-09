@@ -42,7 +42,9 @@ var MESSAGES = {
     "not_available": "Not Available",
     "cancel_upload": "Cancel upload",
     "cancel_confirm": "Are you sure you want to cancel this upload?",
-    "remove_file": "Remove file"
+    "remove_file": "Remove file",
+    "no_space": "Not enough space. Check your storage under Settings page.",
+    "out_of_storage": "Out of Storage!"
 };
 
 
@@ -270,7 +272,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
                 dictResponseError: this.get_translation("processing_error"),
                 dictCancelUpload: this.get_translation("cancel_upload"),
                 dictCancelUploadConfirmation: this.get_translation("cancel_confirm"),
-                dictRemoveFile: this.get_translation("remove_file"),
+                dictRemoveFile: this.get_translation("remove_file")
             });
 
             this.dropzone.on("success", this.file_uploaded);
@@ -298,7 +300,10 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         this.uploads_in_progress --;
         this.update_count();
     },
-    file_failed:function(file, error){
+    file_failed:function(file, error, xhr){
+        if(xhr && xhr.status === 403){ // Catch errors thrown by server
+            this.$(".error").html(this.get_translation("no_space"));
+        }
         this.uploads_in_progress --;
         $(file.previewTemplate).find(".dropzone_remove").css("display", "inline-block");
         if (this.views.length === 0) {
@@ -698,9 +703,15 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     file_removed: function(file) {
         this.$(".add_format_button").css("display", "inline");
     },
-    file_failed:function(file, error){
+    file_failed:function(file, error, xhr){
         var self = this;
-        dialog.alert(this.get_translation("upload_error"), error, function(){
+        var title = this.get_translation("upload_error");
+        var message = error;
+        if(xhr && xhr.status === 403){ // Catch errors thrown by server
+            title = this.get_translation("out_of_storage");
+            message = this.get_translation("no_space");
+        }
+        dialog.alert(title, message, function(){
             self.render();
             self.set_uploading(false);
             self.containing_list_view.update_metadata();

@@ -1,6 +1,7 @@
 import functools
 import hashlib
 import json
+import math
 import logging
 import uuid
 
@@ -103,11 +104,22 @@ class User(AbstractBaseUser, PermissionsMixin):
             raise PermissionDenied("Cannot view content")
         return True
 
+    def check_space(self, size, checksum):
+        if checksum in self.files.values_list('checksum', flat=True):
+            return True
+
+        space = self.get_available_space()
+        if space < size:
+            raise PermissionDenied(_("Not enough space. Check your storage under Settings page."))
+
     def get_available_space(self):
         return float(max(self.disk_space - self.get_space_used(), 0))
 
+    def get_user_active_trees(self):
+        return Channel.objects.prefetch_related('editors').filter(editors=self, deleted=False).values_list('main_tree__tree_id', flat=True)
+
     def get_space_used(self):
-        active_trees = Channel.objects.values_list('main_tree__tree_id', flat=True)
+        active_trees = self.get_user_active_trees()
         files = self.files.select_related('contentnode').select_related('assessment_item')\
                             .filter(Q(contentnode__tree_id__in=active_trees) | Q(assessment_item__contentnode__tree_id__in=active_trees))\
                             .values('checksum', 'file_size')\
@@ -116,7 +128,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return float(files['total_used'] or 0)
 
     def get_space_used_by_kind(self):
-        active_trees = Channel.objects.values_list('main_tree__tree_id', flat=True)
+        active_trees = self.get_user_active_trees()
         files = self.files.select_related('contentnode').select_related('assessment_item')\
                             .filter(Q(contentnode__tree_id__in=active_trees) | Q(assessment_item__contentnode__tree_id__in=active_trees))\
                             .values('checksum', 'file_size', 'preset__kind_id')\
@@ -692,8 +704,10 @@ class File(models.Model):
                     md5.update(chunk)
 
                 self.checksum = md5.hexdigest()
+            if not self.file_size:
                 self.file_size = self.file_on_disk.size
-                self.extension = os.path.splitext(self.file_on_disk.name)[1]
+            if not self.file_format:
+                self.file_format_id = os.path.splitext(self.file_on_disk.name)[1]
         super(File, self).save(*args, **kwargs)
 
 

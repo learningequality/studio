@@ -14,7 +14,6 @@ from django.utils.translation import ugettext as _
 from le_utils.constants import format_presets, content_kinds
 import contentcuration.models as models
 
-
 def check_supported_browsers(user_agent_string):
     if not user_agent_string:
         return False
@@ -62,6 +61,12 @@ def write_raw_content_to_storage(contents, ext=None):
         destf.write(contents)
 
     return filename, full_filename, file_path
+
+def get_hash(fobj):
+    md5 = hashlib.md5()
+    for chunk in fobj.chunks():
+        md5.update(chunk)
+    return md5.hexdigest()
 
 
 def recurse(node, level=0):

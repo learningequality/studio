@@ -31,6 +31,7 @@ var MESSAGES = {
     "generate": "Generate",
     "generate_thumbnail_text": "Click 'Generate' to create a thumbnail",
     "recenter_thumbnail": "Recenter/Crop",
+    "no_space": "Not enough space. Check your storage under Settings page.",
 }
 
 var ThumbnailUploadView = BaseViews.BaseView.extend({
@@ -214,7 +215,10 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             this.dropzone.on("error", this.image_failed);
         }
     },
-    image_failed:function(data, error){
+    image_failed:function(data, error, xhr){
+        if(xhr && xhr.status === 403){ // Catch errors thrown by server
+            error = this.get_translation("no_space");
+        }
         this.image_error = error;
     },
     image_added:function(thumbnail){

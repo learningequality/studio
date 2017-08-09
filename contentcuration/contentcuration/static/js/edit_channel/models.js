@@ -900,7 +900,6 @@ var FileCollection = BaseCollection.extend({
             Backbone.sync("update", self, {
                 url: self.model.prototype.urlRoot(),
                 success:function(data){
-                    console.log(data)
                     resolve(new FileCollection(data));
                 },
                 error:reject
