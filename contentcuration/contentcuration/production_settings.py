@@ -11,22 +11,6 @@ SITE_ID = int(os.getenv("SITE_ID"))
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
-if os.getenv("USE_DATADOG"):
-    INSTALLED_APPS = (
-        "ddtrace.contrib.django",
-    ) + INSTALLED_APPS
-
-    MIDDLEWARE_CLASSES = (
-        'ddtrace.contrib.django.TraceMiddleware',
-    ) + MIDDLEWARE_CLASSES
-
-    DATADOG_TRACE = {
-        'DEFAULT_SERVICE': 'contentworkshop',
-        'AGENT_PORT': int(os.getenv("DATADOG_STATSD_PORT") or 8126),
-        'AGENT_HOSTNAME': os.getenv("DATADOG_STATSD_HOSTNAME"),
-        'TAGS': {'env': 'production'},
-    }
-
 DATABASES = {
     'default': {
         'ENGINE':
@@ -47,3 +31,5 @@ DATABASES = {
 # email settings
 EMAIL_BACKEND = "postmark.backends.PostmarkBackend"
 POSTMARK_API_KEY = os.getenv("EMAIL_CREDENTIALS_POSTMARK_API_KEY")
+
+LANGUAGE_CODE = os.getenv("LANGUAGE_CODE") or "en"

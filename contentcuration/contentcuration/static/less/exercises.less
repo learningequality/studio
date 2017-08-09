@@ -89,8 +89,8 @@
     display: -webkit-flex;
     -webkit-flex-flow: row;
     .assessment_item_error{ color:@gray-400; }
-    .toolbar{ display:none; }
-    &:hover .toolbar{ display:block; }
+    .toolbar{ visibility:hidden; }
+    &:hover .toolbar{ visibility:visible; }
     .remove_area, .main_edit_area {
         display:inline-block;
         vertical-align: top;
@@ -325,6 +325,7 @@
                 margin-right:10px;
                 .option:hover{color: @blue-500;}
             }
+            .hide_remove .delete{ display: none !important; }
             .closed_toolbar{.option{margin-left:5px;} .delete{margin-left: 10px;}}
             .open_toolbar{.option{margin-bottom:10px;}.delete{margin-bottom: 20px;}}
             .move_option{ display:none; }

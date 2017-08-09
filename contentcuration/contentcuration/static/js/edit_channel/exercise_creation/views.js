@@ -10,7 +10,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var FileUploader = require('edit_channel/file_upload/views');
+var ImageUploader = require('edit_channel/image/views');
 var UndoManager = require("backbone-undo");
 require("summernote");
 require("../../utils/mathquill.min.js");
@@ -33,9 +33,69 @@ if (navigator.userAgent.indexOf('Chrome') > -1 || navigator.userAgent.indexOf("S
     require("mathml.less"); // Windows and Safari don't support mathml natively, so add it accordingly
 }
 
+/* TRANSLATIONS */
+var NAMESPACE = "exerciseCreation";
+var MESSAGES = {
+    "question_placeholder": "Enter Question...",
+    "answer_placeholder": "Enter Answer...",
+    "hint_placeholder": "Enter Hint...",
+    "blank_item_detected": "Blank item detected. Resolve to continue",
+    "add_question_prompt": "Click '+ QUESTION' to begin...",
+    "no_questions_found": "No questions associated with this exercise",
+    "no_answers_found": "No answers provided.",
+    "no_hints_found": "No hints provided.",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "change": "Change",
+    "deleting_question": "Deleting Question",
+    "deleting_question_text": "Are you sure you want to delete this question?",
+    "changing_question_type": "Changing Question Type",
+    "changing_single_selection": "Switching to single selection will set only one answer as correct. Continue?",
+    "changing_true_false": "Switching to true or false will remove any current answers. Continue?",
+    "changing_numeric_input": "Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?",
+    "true": "True",
+    "false": "False",
+    "error_blank_question": "Question cannot be blank",
+    "error_blank_answer": "Answers cannot be blank",
+    "error_blank_hint": "Hints cannot be blank",
+    "error_non_numeric": "Answers must be numeric",
+    "error_no_answers": "Question must have one or more answers",
+    "error_no_correct_answers": "Question must have at least one correct answer",
+    "error_no_correct_answer": "Question must have one correct answer",
+    "generating": "Generating...",
+    "formulas": "Formulas",
+    "lines": "Lines",
+    "accepted_answers": "Accepted Answer(s)",
+    "correct_header": "Correct?",
+    "answers": "Answers",
+    "numeric_help_text": "NOTE: Equivalent formats are treated as the same value (1 1/2 = 3/2 = 1.5)",
+    "answer": "Answer",
+    "move_up": "Move Up",
+    "move_down": "Move Down",
+    "hint": "Hint",
+    "hints": "Hints",
+    "randomize_answers": "Randomize answer order for learners",
+    "submit": "Submit Changes",
+    "cancel_changes": "Cancel Changes",
+    "hint_error_prompt": "Please fix the items below before closing",
+    "no_text": "No text provided",
+    "randomize_questions": "Randomize question order for learners",
+    "questions_only": "View questions only",
+    "question": "Question",
+    "hints_for_question": "Hints for Question:",
+    "Bold": "Bold",
+    "Italic": "Italic",
+    "Image": "Image",
+    "Formula": "Formula",
+    "Undo": "Undo",
+    "Redo": "Redo"
+}
+
 /*********** FORMULA ADD-IN FOR EXERCISE EDITOR ***********/
-var AddFormulaView = Backbone.View.extend({
+var AddFormulaView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/add_formula.handlebars"),
+    name: NAMESPACE,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         _.bindAll(this, 'add_formula', 'add_character', 'add_format', 'activate_mq');
@@ -53,7 +113,9 @@ var AddFormulaView = Backbone.View.extend({
 
     /*********** LOAD METHODS ***********/
     render: function() {
-        this.$el.html(this.template({selector: this.selector, characters: CHARACTERS}));
+        this.$el.html(this.template({selector: this.selector, characters: CHARACTERS}, {
+            data: this.get_intl_data()
+        }));
         this.$('[data-toggle="popover"]').popover({html: true, content: this.$("#characters_" + this.selector)});
     },
     activate_mq: function(){
@@ -113,7 +175,7 @@ var UploadImage = function (context) {
         contents: '<i class="note-icon-picture"/>',
         tooltip: 'Image',
         click: function () {
-            var view = new FileUploader.ImageUploadView({
+            var view = new ImageUploader.ImageUploadView({
                 callback: context.options.callbacks.onImageUpload,
                 preset_id: 'exercise_image'
             });
@@ -137,6 +199,27 @@ var AddFormula = function (context) {
     ]).render();
 }
 
+/*********** CUSTOM BUTTON FOR UNDO/REDO ***********/
+var UndoButton = function (context) {
+    return $.summernote.ui.button({
+        contents: '<i class="note-icon-undo"/>',
+        tooltip: 'Undo',
+        click: function () {
+            context.options.callbacks.onUndo();
+        }
+    }).render();
+}
+
+var RedoButton = function (context) {
+    return $.summernote.ui.button({
+        contents: '<i class="note-icon-redo"/>',
+        tooltip: 'Redo',
+        click: function () {
+            context.options.callbacks.onRedo();
+        }
+    }).render();
+}
+
 /*********** WRAPPER FOR SUMMERNOTE FOR OBECT-ORIENTED APPROACH ***********/
 function Summernote(element, context, options) {
     // Clear all ranges to get undo/redo to work on summernote
@@ -147,6 +230,8 @@ function Summernote(element, context, options) {
     // Configure editor
     this.element = element;             // Element to which summernote should be attached
     this.context = context;             // View in which summernote is nested
+    this.index = 0;                     // Pointer to history stack
+    this.history = [];                  // Keeps track of undo/redo (workaround summernote's undo/redo bugs)
     this.element.summernote(options);   // Initialize summernote with configuration options
 
     this.setHTML = function(content){ element.summernote('code', content); };
@@ -155,19 +240,40 @@ function Summernote(element, context, options) {
     this.getContents = function(){ return element.summernote('code'); };
     this.enable = function(){ element.summernote('enable'); };
     this.disable = function(){ element.summernote('disable'); };
-    this.togglePlaceholder = function(show){ context.$('.note-placeholder').css('display', (show) ? 'inline' : 'none'); }
+    this.togglePlaceholder = function(show){ context.$('.note-placeholder').css('display', (show) ? 'inline' : 'none'); };
+    this.commit = function() {
+        var entry = this.getContents();
+        if(this.history[this.index] !== entry){
+            this.history = this.history.slice(0, this.index + 1).concat(entry);
+            this.index = this.history.length - 1;
+        }
+    };
+    this.undo = function() {
+        this.index = Math.max(this.index - 1, 0);
+        this.setHTML(this.history[this.index]);
+    };
+    this.redo = function() {
+        this.index = Math.min(this.index + 1, this.history.length - 1);
+        this.setHTML(this.history[this.index]);
+    };
+    this.push = function() {
+        this.history = [this.getContents()];
+        this.index = 0;
+    };
 }
 
 /*********** TEXT EDITOR FOR QUESTIONS, ANSWERS, AND HINTS ***********/
-var EditorView = Backbone.View.extend({
+var EditorView = BaseViews.BaseView.extend({
     tagName: "div",
     edit_template: require("./hbtemplates/editor.handlebars"),
     view_template: require("./hbtemplates/editor_view.handlebars"),
     default_template: require("./hbtemplates/editor_view_default.handlebars"),
+    name: NAMESPACE,
+    $trs: MESSAGES,
 
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
-        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key",
+        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key", "undo", "redo",
                "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content", "check_key");
         this.edit_key = options.edit_key;
         this.editing = false;
@@ -188,27 +294,43 @@ var EditorView = Backbone.View.extend({
         } else { this.render_content(); }
         this.setting_model = false;
     },
+    undo: function() {
+        this.editor.undo();
+    },
+    redo: function() {
+        this.editor.redo();
+    },
     render_content: function() {
         var self = this;
-        if(this.model.get(this.edit_key) && this.model.get(this.edit_key).trim() !==""){
+        var value = this.model.get(this.edit_key)
+        if((value || value == 0) && this.model.get(this.edit_key).trim() !==""){
             this.toggle_loading(true);
             this.parse_content(this.model.get(this.edit_key)).then(function(result){
-                self.$el.html(self.view_template({content: result}));
+                self.$el.html(self.view_template({content: result}, {
+                    data: self.get_intl_data()
+                }));
                 self.toggle_loading(false);
             });
         }else{
-            this.$el.html(this.default_template({ source_url: this.model.get('source_url') }));
+            this.$el.html(this.default_template({ source_url: this.model.get('source_url') }, {
+                data: this.get_intl_data()
+            }));
         }
     },
     render_editor: function() {
         var self = this;
         this.toggle_loading(true);
         this.parse_content(this.model.get(this.edit_key)).then(function(result){
-            var html = self.view_template({content: result});
+            var html = self.view_template({content: result}, {
+                data: self.get_intl_data()
+            });
             self.editor ? self.editor.setHTML(html) : self.$el.html(html);
             self.toggle_loading(false);
             self.render_toolbar();
-            if(self.editor) self.editor.focus();
+            if(self.editor){
+                self.editor.push();
+                self.editor.focus();
+            }
         });
     },
     render_toolbar:function(){
@@ -225,19 +347,24 @@ var EditorView = Backbone.View.extend({
 
     /*********** EDITOR METHODS ***********/
     activate_editor: function() {
+        var self = this;
         var selector = this.cid + "_editor";
-        this.$el.html(this.edit_template({selector: selector}));
+        this.$el.html(this.edit_template({selector: selector}, {
+            data: this.get_intl_data()
+        }));
         this.editor = new Summernote(this.$("#" + selector), this, {
             toolbar: [
                 ['style', ['bold', 'italic']],
                 ['insert', ['customupload', 'customformula']],
-                ['controls', ['undo', 'redo']]
+                ['controls', ['customundo', 'customredo']]
             ],
             buttons: {
                 customupload: UploadImage,
-                customformula: AddFormula
+                customformula: AddFormula,
+                customundo: UndoButton,
+                customredo: RedoButton
             },
-            placeholder: 'Enter ' + this.edit_key + "...",
+            placeholder: this.get_translation(this.edit_key + "_placeholder"),
             disableResizeEditor: true,
             disableDragAndDrop: true,
             shortcuts: false,
@@ -247,7 +374,14 @@ var EditorView = Backbone.View.extend({
                 onPaste: this.paste_content,
                 onImageUpload: this.add_image,
                 onAddFormula: this.add_formula,
-                onKeydown: this.process_key
+                onKeydown: this.process_key,
+                onUndo: this.undo,
+                onRedo: this.redo,
+                onInit : function(){
+                    $('.note-editor .note-btn').each(function() {
+                        $(this).attr("data-original-title", self.get_translation($(this).data("original-title")));
+                    });
+                }
             }
         });
         $('.dropdown-toggle').dropdown();
@@ -272,6 +406,7 @@ var EditorView = Backbone.View.extend({
         this.setting_model = true;
         this.markdown = this.convert_html_to_markdown(contents);
         this.model.set(this.edit_key, this.markdown);
+        this.editor.commit();
     },
     validate: function(){
         this.$(".note-error").css("display", (this.markdown.trim())? "none" : "inline-block");
@@ -408,7 +543,7 @@ var EditorView = Backbone.View.extend({
         });
 
         // Render content to markdown (use custom fiters for images and italics)
-        return toMarkdown(contents,{
+        contents = toMarkdown(contents,{
             converters: [
                 {
                     filter: 'img',
@@ -437,6 +572,7 @@ var EditorView = Backbone.View.extend({
                 }
             ]
         });
+        return stringHelper.unescape(contents);
     }
 });
 
@@ -444,6 +580,8 @@ var EditorView = Backbone.View.extend({
 var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     template: null,
     additem_el: null,
+    name: NAMESPACE,
+    $trs: MESSAGES,
     get_default_attributes: function(){ return {}; }, // Default attributes to use when adding to list
     get_next_order: function(){
         if(this.collection.length > 0){
@@ -489,8 +627,9 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     validate:function(){ return true; },
     set_invalid:function(invalid){
         this.$(this.additem_el).prop("disabled", invalid);
-        (invalid)? this.$(this.additem_el).addClass("disabled") : this.$(this.additem_el).removeClass("disabled");
-        this.$(this.additem_el).prop('title', (invalid)? 'Blank item detected. Resolve to continue': "Add");
+        (invalid)? this.$(this.additem_el).addClass("disabled").attr("disabled", "disabled") :
+                    this.$(this.additem_el).removeClass("disabled").removeAttr("disabled");
+        this.$(this.additem_el).prop('title', (invalid)? this.get_translation("blank_item_detected") : this.get_translation("add"));
     },
 
     /*********** RENDERING METHODS ***********/
@@ -514,6 +653,8 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
     undo: null,                     // Keep track of changes so user can cancel all changes
     open: false,                    // Determines if editor is open
     error_template: require("./hbtemplates/assessment_item_errors.handlebars"),
+    name: NAMESPACE,
+    $trs: MESSAGES,
     numbers_only: function() {return false;},
 
     /*********** EDITOR METHODS ***********/
@@ -558,10 +699,14 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
         }
     },
     set_toolbar_open: function() {
-        this.$(this.toolbar_el).html(this.open_toolbar_template({model: this.model.attributes, undo: this.undo}));
+        this.$(this.toolbar_el).html(this.open_toolbar_template({model: this.model.attributes, undo: this.undo}, {
+            data: this.get_intl_data()
+        }));
     },
     set_toolbar_closed: function() {
-        this.$(this.toolbar_el).html(this.closed_toolbar_template({model: this.model.attributes}));
+        this.$(this.toolbar_el).html(this.closed_toolbar_template({model: this.model.attributes}, {
+            data: this.get_intl_data()
+        }));
     },
 
     /*********** CONTENT PROCESSING METHODS ***********/
@@ -619,8 +764,10 @@ var ExerciseView = ExerciseEditableListView.extend({
             node: this.model.toJSON(),
             is_random: this.model.get('extra_fields').randomize,
             allow_edit: this.allow_edit
+        }, {
+            data: this.get_intl_data()
         }));
-        this.load_content(this.collection.where({'deleted': false}), (this.allow_edit)? "Click '+ QUESTION' to begin..." : "No questions associated with this exercise");
+        this.load_content(this.collection.where({'deleted': false}), (this.allow_edit)? this.get_translation("add_question_prompt") : this.get_translation("no_questions_found"));
     },
     create_new_view:function(model){
         var new_exercise_item = null;
@@ -686,6 +833,8 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
             hint_count: this.model.get('hints').length,
             isdisplay:this.isdisplay,
             cid: this.cid
+        }, {
+            data: this.get_intl_data()
         }));
         this.render_editor();
         this.$(".question_type_select").val(this.model.get("type")); // Set dropdown to current type
@@ -759,9 +908,9 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     delete: function(event) {
         this.stop_events(event); // Don't activate editor on deleting question
         var self = this;
-        dialog.dialog("Deleting Question", "Are you sure you want to delete this question?", {
-            "CANCEL":function(){},
-            "DELETE": function(){
+        dialog.dialog(this.get_translation("deleting_question"), this.get_translation("deleting_question_text"), {
+            [this.get_translation("cancel")]:function(){},
+            [this.get_translation("delete")]: function(){
                 self.model.set('deleted', true);
                 self.propagate_changes();
                 self.containing_list_view.views.splice(self, 1);
@@ -779,9 +928,9 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
             if(!this.model.get('answers').length){
                 this.set_true_false();
             } else{
-                dialog.dialog("Changing Question Type", "Switching to single selection will set only one answer as correct. Continue?", {
-                    "CANCEL":function(){},
-                    "CHANGE": function(){
+                dialog.dialog(this.get_translation("changing_question_type"), this.get_translation("changing_true_false"), {
+                    [this.get_translation("cancel")]:function(){},
+                    [this.get_translation("change")]: function(){
                         self.set_true_false();
                     },
                 }, function(){ self.commit_type_change(self.model.get('type')); });
@@ -790,9 +939,9 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
 
         // Single selection questions will set only one answer as being correct
         else if(new_type === "single_selection" && this.model.get("answers").where({'correct': true}).length > 1){
-            dialog.dialog("Changing Question Type", "Switching to true or false will remove any current answers. Continue?", {
-                "CANCEL":function(){},
-                "CHANGE": function(){
+            dialog.dialog(this.get_translation("changing_question_type"), this.get_translation("changing_single_selection"), {
+                [this.get_translation("cancel")]:function(){},
+                [this.get_translation("change")]: function(){
                     var correct_answer_set = false;
                     self.model.get('answers').forEach(function(item){
                         if(correct_answer_set) item.set('correct', false);
@@ -805,14 +954,17 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
 
         // Input questions will set all answers as being correct and remove non-numeric answers
         else if(new_type === "input_question" && this.model.get("answers").some(function(a){ return a.get('correct') || numParser.test_valid_number(a.get('answer')); })){
-            dialog.dialog("Changing Question Type", "Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?", {
-                "CANCEL":function(){},
-                "CHANGE": function(){
+            dialog.dialog(this.get_translation("changing_question_type"), this.get_translation("changing_numeric_input"), {
+                [this.get_translation("cancel")]:function(){},
+                [this.get_translation("change")]: function(){
                     var newCollection = self.model.get('answers');
                     newCollection.reset(self.model.get('answers').chain()
-                        .reject( function(a){return !numParser.extract_value(a.get('answer'));} )
-                        .each( function(a){
+                        .reject( function(a){
                             var value = numParser.extract_value(a.get('answer'));
+                            return value !== 0 && !value;
+                        })
+                        .each( function(a){
+                            var value = numParser.parse(a.get('answer'));
                             a.set({'correct': true, 'answer': value && value.toString()});
                         } ).value());
                     self.model.set('answers', newCollection);
@@ -827,7 +979,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
     },
     set_true_false: function(){
         var trueFalseCollection = this.model.get('answers');
-        trueFalseCollection.reset([{answer: "True", correct: true, order: 1}, {answer: "False", correct: false, order: 2}]);
+        trueFalseCollection.reset([{answer: this.get_translation("true"), correct: true, order: 1}, {answer: this.get_translation("false"), correct: false, order: 2}]);
         this.model.set("answers", trueFalseCollection);
         this.commit_type_change("true_false");
     },
@@ -864,38 +1016,38 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         if(this.model.get("type") === 'perseus_question') return true;
 
         // Make sure questions aren't blank
-        if(!this.model.get(this.content_field)) this.errors.push({error: "Question cannot be blank"});
+        if(!this.model.get(this.content_field)) this.errors.push({error: this.get_translation("error_blank_question")});
 
         // Make sure answers aren't blank
-        if(this.model.get('answers').findWhere({'answer': ""})) this.errors.push({error: "Answers cannot be blank"});
+        if(this.model.get('answers').findWhere({'answer': ""})) this.errors.push({error: this.get_translation("error_blank_answer")});
 
         // Make sure hints aren't blank
-        if(this.model.get('hints').findWhere({'hint': ""})) this.errors.push({error: "Hints cannot be blank"});
+        if(this.model.get('hints').findWhere({'hint': ""})) this.errors.push({error: this.get_translation("error_blank_hint")});
 
         // Make sure different question types have valid answers
         if(this.model.get("type") === "input_question"){
             // Answers must be numeric for input questions
             if(_.some(this.model.get('answers'), function(a){return a && !NUM_REGEX.test(a.get('answer'));})){
-                this.errors.push({error: "Answers must be numeric"});
+                this.errors.push({error: this.get_translation("error_non_numeric")});
             }
 
             // Input answers must have at least one answer
             else if(this.model.get('answers').length === 0){
-                this.errors.push({error: "Question must have one or more answers"});
+                this.errors.push({error: this.get_translation("error_no_answers")});
             }
         }
 
         // Multiple selection questions must have at least one correct answer
         else if(this.model.get('type') === 'multiple_selection'){
             if(this.model.get('answers').where({'correct': true}).length === 0){
-                this.errors.push({error: "Question must have at least one correct answer"});
+                this.errors.push({error: this.get_translation("error_no_correct_answers")});
             }
         }
 
         // Single selection questions must have one correct answer
         else if(this.model.get('type') === 'single_selection'){
             if(this.model.get('answers').where({'correct': true}).length !== 1){
-                this.errors.push({error: "Question must have one correct answer"});
+                this.errors.push({error: this.get_translation("error_no_correct_answer")});
             }
         }
         this.$(".error-list").html(this.error_template({errors: this.errors}));
@@ -963,8 +1115,8 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         this.set_toolbar_closed();
         if(this.model.get("type") === "input_question"){
             this.model.get('answers').each( function(answer){
-                var value = numParser.extract_value(answer.get('answer'));
-                answer.set('answer', (value)? value.toString() : "");
+                var value = numParser.parse(answer.get('answer'));
+                answer.set('answer', value.toString());
             });
         }
         this.editor_view.deactivate_editor();
@@ -1013,8 +1165,10 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
             input_answer: this.assessment_item.get("type") === "input_question",
             isdisplay: this.isdisplay,
             true_false: this.assessment_item.get("type") === "true_false"
+        }, {
+            data: this.get_intl_data()
         }));
-        this.load_content(this.collection, "No answers provided.");
+        this.load_content(this.collection, this.get_translation("no_answers_found"));
         this.$(".addanswer").on('click', this.add_item);
     },
     create_new_view: function(model) {
@@ -1068,8 +1222,11 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
             input_answer: this.numbers_only(),
             single_selection: this.is_single_correct(),
             groupName: this.assessment_item.cid,
-            allow_edit: !this.isdisplay && this.assessment_item.get("type") !== "true_false",
+            allow_edit: !this.isdisplay,
+            is_true_false: this.assessment_item.get("type") === "true_false",
             allow_toggle: !this.isdisplay
+        }, {
+            data: this.get_intl_data()
         }));
         this.render_editor();
         _.defer(this.set_editor);
@@ -1090,22 +1247,26 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
     },
     set_correct:function(is_correct){
         this.model.set("correct", is_correct);
-        this.$(".correct").attr('title', (is_correct)? "Correct" : "Incorrect");
+        this.$(".correct").attr('title', (is_correct)? this.get_translation("correct") : this.get_translation("incorrect"));
         this.propagate_changes();
         (is_correct)? this.$(".answer_item").addClass('is_correct') : this.$(".answer_item").removeClass('is_correct');
     }
 });
 
 /*********** QUESTION DISPLAY FOR HINT MODAL ***********/
-var HintQuestionDisplayView = Backbone.View.extend({
+var HintQuestionDisplayView = BaseViews.BaseView.extend({
     className:"assessment_li",
     template: require("./hbtemplates/assessment_item_display.handlebars"),
+    name: NAMESPACE,
+    $trs: MESSAGES,
 
     initialize: function(options) {
         this.render();
     },
     render: function() {
-        this.$el.html(this.template({model: this.model.toJSON()}));
+        this.$el.html(this.template({model: this.model.toJSON()}, {
+            data: this.get_intl_data()
+        }));
         var editor_view = new EditorView({
             model: this.model,
             edit_key: "question",
@@ -1118,17 +1279,25 @@ var HintQuestionDisplayView = Backbone.View.extend({
 var HintModalView = BaseViews.BaseModalView.extend({
     error_template: require("./hbtemplates/assessment_item_errors.handlebars"),
     template: require("./hbtemplates/assessment_item_hint_modal.handlebars"),
+    className: "hint_modal_wrapper",
+    name: NAMESPACE,
+    $trs: MESSAGES,
 
     initialize: function(options) {
-        _.bindAll(this, "closing_hints", "show", "closed_hints");
+        _.bindAll(this, "closing_hints", "show", "closed_hints", "init_focus", "loop_focus");
         this.assessment_item = options.assessment_item;
         this.isdisplay = options.isdisplay;
         this.onupdate = options.onupdate;
         this.container = options.container;
         this.render();
     },
+    events: {
+        "focus .input-tab-control": "loop_focus"
+    },
     render: function() {
-        this.$el.html(this.template({isdisplay: this.isdisplay}));
+        this.$el.html(this.template({isdisplay: this.isdisplay}, {
+            data: this.get_intl_data()
+        }));
         if(!this.isdisplay){
             var question_preview = new HintQuestionDisplayView({
                 model: this.assessment_item,
@@ -1148,6 +1317,11 @@ var HintModalView = BaseViews.BaseModalView.extend({
         this.$(".hints").append(this.hint_editor.el);
         this.$(".hint_modal").on("hide.bs.modal", this.closing_hints);
         this.$(".hint_modal").on("hidden.bs.modal", this.closed_hints);
+        this.$(".hint_modal").on("shown.bs.modal", this.init_focus);
+    },
+    init_focus: function(){
+        this.set_indices();
+        this.set_initial_focus();
     },
     show: function(){
         this.$(".hint_modal").modal({show: true});
@@ -1189,8 +1363,10 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
     },
     render: function() {
         this.views = [];
-        this.$el.html(this.template({isdisplay: this.isdisplay}));
-        this.load_content(this.collection, "No hints provided.");
+        this.$el.html(this.template({isdisplay: this.isdisplay}, {
+            data: this.get_intl_data()
+        }));
+        this.load_content(this.collection, this.get_translation("no_hints_found"));
         this.validate();
     },
     create_new_view: function(model) {
@@ -1206,7 +1382,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
     validate:function(){
         var invalid = this.collection.findWhere({hint: ""});
         this.modal_view.$(".hint_prompt, .error-list").css("display", (invalid)? "block" : "none");
-        this.set_invalid(this.collection.findWhere({hint: ""}));
+        this.set_invalid(invalid);
     }
 });
 
@@ -1237,7 +1413,9 @@ var AssessmentItemHintView = ExerciseEditableItemView.extend({
         'click .item_move_down': 'move_down'
     },
     render: function() {
-        this.$el.html(this.template({hint: this.model.toJSON(), allow_toggle: !this.isdisplay}));
+        this.$el.html(this.template({hint: this.model.toJSON(), allow_toggle: !this.isdisplay}, {
+            data: this.get_intl_data()
+        }));
         this.render_editor();
     }
 });

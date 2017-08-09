@@ -18,9 +18,12 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
+from django.views.i18n import javascript_catalog
+from django.conf.urls.i18n import i18n_patterns
+from django.utils.translation import ugettext_lazy as _
+from django.db.models import Q
 from rest_framework import routers, viewsets
-from rest_framework.permissions import AllowAny
-from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, Exercise, AssessmentItem, ContentKind, Language, User, Invitation
+from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, AssessmentItem, ContentKind, Language, User, Invitation
 import contentcuration.serializers as serializers
 import contentcuration.views as views
 import contentcuration.view.registration_views as registration_views
@@ -29,65 +32,120 @@ import contentcuration.view.internal_views as internal_views
 import contentcuration.view.zip_views as zip_views
 import contentcuration.view.file_views as file_views
 import contentcuration.view.node_views as node_views
-from rest_framework.authtoken import views as auth_view
-from contentcuration import api
+import contentcuration.view.admin_views as admin_views
+import django_js_reverse.views as django_js_reverse_views
+import django.views as django_views
 
 from rest_framework_bulk.routes import BulkRouter
 from rest_framework_bulk.generics import BulkModelViewSet
 
+def get_channel_tree_ids(user):
+    channels = Channel.objects.select_related('trash_tree').select_related('main_tree').filter(Q(editors=user) | Q(viewers=user) | Q(public=True))
+    trash_tree_ids = channels.values_list('trash_tree__tree_id', flat=True).distinct()
+    main_tree_ids = channels.values_list('main_tree__tree_id', flat=True).distinct()
+    return [user.clipboard_tree.tree_id] + list(trash_tree_ids) + list(main_tree_ids)
+
 class LicenseViewSet(viewsets.ModelViewSet):
     queryset = License.objects.all()
+
     serializer_class = serializers.LicenseSerializer
+
 
 class LanguageViewSet(viewsets.ModelViewSet):
     queryset = Language.objects.all()
+
     serializer_class = serializers.LanguageSerializer
+
 
 class ChannelViewSet(viewsets.ModelViewSet):
     queryset = Channel.objects.all()
     serializer_class = serializers.ChannelSerializer
 
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return Channel.objects.all()
+        return Channel.objects.filter(Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True)).distinct()
+
 class FileViewSet(BulkModelViewSet):
     queryset = File.objects.all()
     serializer_class = serializers.FileSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return File.objects.all()
+        tree_ids = get_channel_tree_ids(self.request.user)
+        return File.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
 
 class FileFormatViewSet(viewsets.ModelViewSet):
     queryset = FileFormat.objects.all()
     serializer_class = serializers.FileFormatSerializer
 
+
 class FormatPresetViewSet(viewsets.ModelViewSet):
     queryset = FormatPreset.objects.all()
     serializer_class = serializers.FormatPresetSerializer
 
+
 class ContentKindViewSet(viewsets.ModelViewSet):
     queryset = ContentKind.objects.all()
     serializer_class = serializers.ContentKindSerializer
+
 
 class ContentNodeViewSet(BulkModelViewSet):
     queryset = ContentNode.objects.all()
     serializer_class = serializers.ContentNodeCompleteSerializer
 
     def get_queryset(self):
-        queryset = ContentNode.objects.all()
+        if self.request.user.is_admin:
+            return ContentNode.objects.all()
+
         # Set up eager loading to avoid N+1 selects
-        queryset = self.get_serializer_class().setup_eager_loading(queryset)
-        return queryset
+        tree_ids = get_channel_tree_ids(self.request.user)
+        return ContentNode.objects.prefetch_related('children').prefetch_related('files').prefetch_related('assessment_items').filter(tree_id__in=tree_ids).distinct()
+
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = ContentTag.objects.all()
+
     serializer_class = serializers.TagSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return ContentTag.objects.all()
+        return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True)).distinct()
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
+
     serializer_class = serializers.UserSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return User.objects.all()
+        channel_list = list(self.request.user.editable_channels.values_list('pk', flat=True))
+        channel_list.extend(list(self.request.user.view_only_channels.values_list('pk', flat=True)))
+        return User.objects.filter(Q(pk=self.request.user.pk) | Q(editable_channels__pk__in=channel_list) | Q(view_only_channels__pk__in=channel_list)).distinct()
 
 class InvitationViewSet(viewsets.ModelViewSet):
     queryset = Invitation.objects.all()
+
     serializer_class = serializers.InvitationSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return Invitation.objects.all()
+        return Invitation.objects.filter(Q(invited=self.request.user) | Q(sender=self.request.user)).distinct()
 
 class AssessmentItemViewSet(BulkModelViewSet):
     queryset = AssessmentItem.objects.all()
+
     serializer_class = serializers.AssessmentItemSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return AssessmentItem.objects.all()
+        tree_ids = get_channel_tree_ids(self.request.user)
+        return AssessmentItem.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
@@ -115,20 +173,26 @@ urlpatterns = [
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^(?P<channel_id>[^/]+)/edit', views.redirect_to_channel_edit, name='redirect_to_channel_edit'),
     url(r'^(?P<channel_id>[^/]+)/view', views.redirect_to_channel_view, name='redirect_to_channel_view'),
-    url(r'^channels/(?P<channel_id>[^/]+)/?$', views.redirect_to_channel, name='redirect_to_channel'),
-    url(r'^channels/(?P<channel_id>[^/]+)/edit', views.channel, name='channel'),
-    url(r'^channels/(?P<channel_id>[^/]+)/view', views.channel_view_only, name='channel_view_only'),
-    url(r'^channels/(?P<channel_id>[^/]+)/staging', views.channel_staging, name='channel_staging'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/?$', views.redirect_to_channel, name='redirect_to_channel'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/edit', views.channel, name='channel'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/view', views.channel_view_only, name='channel_view_only'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/staging', views.channel_staging, name='channel_staging'),
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
     url(r'^staging_not_found/$', views.staging_not_found, name='staging_not_found'),
     url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
     url(r'^get_user_channels/$', views.get_user_channels, name='get_user_channels'),
+    url(r'^get_user_channel_lists/$', views.get_user_channel_lists, name='get_user_channel_lists'),
     url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
     url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
+    url(r'^api/search/', include('search.urls'), name='search'),
+    url(r'^api/public/channel/(?P<channel_id>[^/]+)', views.get_channel_name_by_id, name='get_channel_name_by_id'),
+    url(r'^api/public/public_channels', views.get_public_channels, name='get_public_channels'),
+    url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
+    url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
 ]
 
 # Add node api enpoints
@@ -140,6 +204,11 @@ urlpatterns += [
     url(r'^api/get_nodes_by_ids_simplified$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
     url(r'^api/get_nodes_by_ids_complete$', node_views.get_nodes_by_ids_complete, name='get_nodes_by_ids_complete'),
     url(r'^api/create_new_node$', node_views.create_new_node, name='create_new_node'),
+    url(r'^api/get_node_diff$', node_views.get_node_diff, name='get_node_diff'),
+    url(r'^api/internal/sync_nodes$', node_views.sync_nodes, name='sync_nodes'),
+    url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
+    url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
+    url(r'^api/get_node_path$', node_views.get_node_path, name='get_node_path'),
 ]
 
 # Add file api enpoints
@@ -156,7 +225,12 @@ urlpatterns += [
 # Add account/registration endpoints
 urlpatterns += [
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
-    url(r'^accounts/password/reset/$',registration_views.custom_password_reset,{'post_reset_redirect': reverse_lazy('auth_password_reset_done'),'email_template_name':'registration/password_reset_email.txt'}, name='auth_password_reset'), # Add 'html_email_template_name': 'registration/password_reset_email.html' to dict for html
+    url(
+        r'^accounts/password/reset/$',
+        registration_views.custom_password_reset,
+        {'post_reset_redirect': reverse_lazy('auth_password_reset_done'), 'email_template_name': 'registration/password_reset_email.txt'},
+        name='auth_password_reset'
+    ),  # Add 'html_email_template_name': 'registration/password_reset_email.html' to dict for html
     url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
@@ -194,13 +268,34 @@ urlpatterns += [
     url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
 ]
 
-urlpatterns += [url(r'^jsreverse/$', 'django_js_reverse.views.urls_js', name='js_reverse')]
+# Add admin endpoints
+urlpatterns += [
+    url(r'^channels/administration/', admin_views.administration, name='administration'),
+    url(r'^api/make_editor/$', admin_views.make_editor, name='make_editor'),
+    url(r'^api/remove_editor/$', admin_views.remove_editor, name='remove_editor'),
+    url(r'^api/send_custom_email/$', admin_views.send_custom_email, name='send_custom_email'),
+    url(r'^api/get_all_channels/$', admin_views.get_all_channels, name='get_all_channels'),
+    url(r'^api/get_all_users/$', admin_views.get_all_users, name='get_all_users'),
+    url(r'^api/get_channel_kind_count/(?P<channel_id>[^/]+)$', admin_views.get_channel_kind_count, name='get_channel_kind_count'),
+]
+
+urlpatterns += [url(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]
+
+# I18N Endpoints
+js_info_dict = {
+    'packages': ('your.app.package',),
+}
+
+urlpatterns += [
+    url(r'^jsi18n/$', javascript_catalog, js_info_dict, name='javascript-catalog'),
+    url(r'^i18n/', include('django.conf.urls.i18n')),
+]
 
 if settings.DEBUG:
     # static files (images, css, javascript, etc.)
     urlpatterns += [
-        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STORAGE_ROOT}),
-        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.DB_ROOT})
+        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.STORAGE_ROOT}),
+        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.DB_ROOT})
     ]
 
     import debug_toolbar

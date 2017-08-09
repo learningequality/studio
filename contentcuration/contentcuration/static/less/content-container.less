@@ -33,6 +33,12 @@
 			color:@blue-500;
 		}
 	}
+	#channel_settings{
+		padding: 5px 10px;
+	    margin-left: 10px;
+	    font-size: 14pt;
+	    &:hover{color:@blue-500;}
+	}
 	.channel_edit_label{
 	    padding: 5px 20px;
 	    font-size: 15pt;
@@ -96,6 +102,7 @@
 		#channel-publish-button, #channel-activate-button{
 			margin: 0 40px 0 0;
 			.action-button;
+			border: none;
 		}
 		#channel-activate-button{ background-color: #2A982A; &:hover{background-color: #67D267;}}
 		#publish-id{
@@ -114,22 +121,20 @@
 	}
 }
 
-#publish-get-id-modal .publish-id-text{
-	width:400px;
-}
-
 #button_bar {
 	width:100vw;
 	background-color:@blue-100;
 	margin:0;
 	padding: 13px 0 0 30px;
 	.nav-button-container {
-		width: 50px;
+		min-width: 50px;
 		text-align: center;
 		.inline-block;
-		margin-right: 35px;
+		margin: 0px 15px;
+		&:first-child{ margin-left: 0px; }
 		.nav-button {
-			width: 100%;
+			width: 50px;
+			margin: 0px auto;
 			height: 40px;
 			background: @body-background;
 			border-radius: 2px;
@@ -150,6 +155,7 @@
 	.hide-details-container {
 		position: relative;
 		bottom: 22px;
+		margin-left: 15px;
 		.inline-block;
 		input {
 			width: 20px;
@@ -494,9 +500,6 @@
 				padding:5px;
 				font-size: 12pt;
 				border-radius:3px;
-				&:hover {
-					color: white;
-				}
 			}
 			.add_content_dropdown{
 				font-size:12pt;
@@ -592,9 +595,11 @@
 
 #stats_modal{
 	@border-emphasis: 2px solid @blue-500;
+	.modal-dialog { width: 750px; }
 	.modal-content-default{
 		display:block;
 		#stats_table{
+			margin-bottom: 30px;
 			.table-header{
 				font-weight:bold;
 				background-color: @blue-200;
@@ -608,6 +613,11 @@
 			}
 			.table-row{
 				border-bottom: 1px solid @gray-300;
+				display: -webkit-box;
+				display: -webkit-flex;
+				display: -ms-flexbox;
+				display: flex;
+				flex-wrap: wrap;
 				&:last-child{
 					border: none;
 					.table-cell:last-child{border-bottom: @border-emphasis}
@@ -616,6 +626,8 @@
 				.table-cell{
 					padding: 7px;
 					cursor: default;
+					display: flex;
+  					flex-direction: column;
 					.positive{ color: green; font-weight: bold; }
 					.negative{ color: red; font-weight: bold; }
 					&:last-child{border-left: @border-emphasis; border-right: @border-emphasis;}

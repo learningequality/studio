@@ -8,6 +8,8 @@
 
 	<script>
 		var user = JSON.parse("{{ current_user|escapejs }}");
+		var user_preferences = JSON.parse("{{ user_preferences|escapejs }}");
+		var langs = JSON.parse("{{ langs_list|escapejs }}");
 	</script>
 	<script type="text/javascript">
 		var bundle = require("channel_edit");

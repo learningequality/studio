@@ -1,0 +1,57 @@
+<div class="input-tab-control tab_item" data-next=".save_channel"></div>
+<div class="channel-container-wrapper {{#unless edit}}open_channel{{/unless}}">
+	<div class="profile pull-left text-center">
+		{{#if edit}}
+			<div class="new_channel_pic"></div>
+		{{else}}
+			{{#if picture}}
+				<img class="channel_pic" alt="{{channel.name}} logo" src="{{picture}}"/>
+			{{/if}}
+		{{/if}}
+	</div>
+	{{#if edit}}
+		<div class="language-wrapper pull-right">
+			<select id="select_language" class="tab_item">
+	            <option disabled selected value=0>{{formatMessage (intlGet 'messages.select_language')}}</option>
+	            {{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
+	        </select>
+        </div>
+		<p id="channel_name_error">{{formatMessage (intlGet 'messages.channel_name_error')}}</p>
+		<input type="text" id="new_channel_name" placeholder="{{formatMessage (intlGet 'messages.name_placeholder')}}" value="{{channel.name}}" maxlength="200" class="tab_item first_focus_item"></input>
+		<textarea id="new_channel_description" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" value="{{channel.description}}"  maxlength="400" class="tab_item">{{channel.description}}</textarea>
+		{{#if new}}<br><br>{{else}}<a class="delete_channel">{{formatMessage (intlGet 'messages.delete_channel')}}</a>{{/if}}
+		<div class="channel_options">
+			<button class="save_channel btn pull-right tab_item uppercase">{{#if new}}{{formatMessage (intlGet 'messages.create')}}{{else}}{{formatMessage (intlGet 'messages.save_channel')}}{{/if}}</button>
+			<button class="channel_toggle action-text pull-right tab_item uppercase">{{formatMessage (intlGet 'messages.cancel')}}</button>
+		</div>
+	{{else}}
+		<span class="channel_metadata">
+			{{#if language}}<span class="uppercase">{{language.id}}</span>&nbsp;|&nbsp;{{/if}}
+			<span class="resource_count">{{formatMessage (intlGet 'messages.resource_count') count=resource_count}}</span>
+			&nbsp;&nbsp;{{formatMessage (intlGet 'messages.id')}}
+			{{#if channel.published}}
+				<input type="text" class="copy-id-text text-center" value="{{channel.id}}" readonly size='30'/>
+				<span class="glyphicon glyphicon-copy copy-id-btn" aria-hidden="true" title="{{formatMessage (intlGet 'messages.copy_id')}}"></span>
+			{{else}}<em>({{formatMessage (intlGet 'messages.unpublished')}})</em>
+			{{/if}}
+		</span>
+		<h4>
+			{{#if channel.is_bookmarked}}
+				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.unstar_channel')}}" class="glyphicon glyphicon-star disable-on-edit pull-right channel_option_icon star_option unstar_channel" aria-hidden="true"></span>
+			{{else}}
+				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.star_channel')}}" class="glyphicon glyphicon-star-empty disable-on-edit pull-right channel_option_icon star_option star_channel" aria-hidden="true"></span>
+			{{/if}}
+			{{#if can_edit}}
+				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.edit_channel')}}" class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right channel_option_icon"></span>
+			{{/if}}
+			<p class="truncate channel_name" title="{{channel.name}}">{{channel.name}}</p>
+		</h4>
+		<div class="description">
+			<p id="channel_description" class="wordwrap" title="{{channel.description}}">{{channel.description}}</p>
+		</div>
+		<div class="container-fluid updated_time">
+			{{formatMessage (intlGet 'messages.last_updated') updated=(formatRelative modified)}}
+		</div>
+	{{/if}}
+</div>
+<div class="input-tab-control tab_item" data-next="#select_language"></div>

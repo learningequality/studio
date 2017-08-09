@@ -1,6 +1,7 @@
 var Models = require("edit_channel/models");
 var template = require("edit_channel/utils/hbtemplates/dialog.handlebars");
-var _ = require('underscore')
+var _ = require('underscore');
+var stringHelper = require("edit_channel/utils/string_helper");
 
 function dialog(title, submessage, actions, onclose){
   if(!$("#dialog-box").length){
@@ -15,7 +16,7 @@ function dialog(title, submessage, actions, onclose){
     autoOpen: false,
     resizable: false,
     height: "auto",
-    width: 400,
+    width: (window.languageCode.startsWith("es"))? 500 : 400, // Spanish translations tend to be longer
     modal: false,
     buttons: actions,
     close:function(){
@@ -67,7 +68,7 @@ function dialog(title, submessage, actions, onclose){
 function alert(title, message, callback){
   callback = callback || function(){};
   dialog(title, message, {
-      "OK":function(){}
+      [stringHelper.translate("ok")]:function(){}
   }, callback);
 }
 

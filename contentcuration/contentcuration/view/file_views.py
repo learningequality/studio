@@ -2,21 +2,24 @@ import json
 import logging
 import os
 from django.http import HttpResponse, HttpResponseBadRequest
-from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from django.core.urlresolvers import reverse_lazy
 from django.core.files import File as DjFile
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage
 from contentcuration.utils.files import generate_thumbnail_from_node
-from contentcuration.models import File, FormatPreset, ContentNode, License, generate_file_on_disk_name, generate_storage_url
+from contentcuration.models import File, FormatPreset, ContentNode, License, generate_storage_url
 from contentcuration.serializers import FileSerializer, ContentNodeEditSerializer
-from le_utils.constants import format_presets, content_kinds, file_formats, exercises, licenses
+from le_utils.constants import format_presets, content_kinds, exercises, licenses
 from pressurecooker.videos import guess_video_preset_by_resolution
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import authentication_classes, permission_classes
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def file_upload(request):
     if request.method == 'POST':
-        #Implement logic for switching out files without saving it yet
+        # Implement logic for switching out files without saving it yet
         filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
         file_object = File(
@@ -34,15 +37,17 @@ def file_upload(request):
             "file": JSONRenderer().render(FileSerializer(file_object).data)
         }))
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def file_create(request):
     if request.method == 'POST':
         original_filename, ext = os.path.splitext(request.FILES.values()[0]._name)
         size = request.FILES.values()[0]._size
         presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
         kind = presets.first().kind
-        preferences = json.loads(request.user.preferences)
+        preferences = json.loads(request.META.get('HTTP_PREFERENCES'))
         author = preferences.get('author') or ""
-        license = License.objects.filter(license_name=preferences.get('license')).first() # Use filter/first in case preference hasn't been set
+        license = License.objects.filter(license_name=preferences.get('license')).first()  # Use filter/first in case preference hasn't been set
         license_id = license.pk if license else settings.DEFAULT_LICENSE
         new_node = ContentNode(title=original_filename, kind=kind, license_id=license_id, author=author, copyright_holder=preferences.get('copyright_holder'))
         if license.license_name == licenses.SPECIAL_PERMISSIONS:
@@ -59,9 +64,9 @@ def file_create(request):
 
         try:
             if preferences.get('auto_derive_video_thumbnail') and new_node.kind_id == content_kinds.VIDEO \
-                or preferences.get('auto_derive_audio_thumbnail') and new_node.kind_id == content_kinds.AUDIO \
-                or preferences.get('auto_derive_html5_thumbnail') and new_node.kind_id == content_kinds.HTML5 \
-                or preferences.get('auto_derive_document_thumbnail') and new_node.kind_id == content_kinds.DOCUMENT:
+                    or preferences.get('auto_derive_audio_thumbnail') and new_node.kind_id == content_kinds.AUDIO \
+                    or preferences.get('auto_derive_html5_thumbnail') and new_node.kind_id == content_kinds.HTML5 \
+                    or preferences.get('auto_derive_document_thumbnail') and new_node.kind_id == content_kinds.DOCUMENT:
                 generate_thumbnail_from_node(new_node, set_node=True)
         except Exception:
             pass
@@ -71,6 +76,8 @@ def file_create(request):
             "node": JSONRenderer().render(ContentNodeEditSerializer(new_node).data)
         }))
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def generate_thumbnail(request):
     logging.debug("Entering the generate_thumbnail endpoint")
 
@@ -88,6 +95,8 @@ def generate_thumbnail(request):
             "path": generate_storage_url(str(thumbnail_object)),
         }))
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def thumbnail_upload(request):
     if request.method == 'POST':
         fobj = request.FILES.values()[0]
@@ -96,14 +105,22 @@ def thumbnail_upload(request):
         return HttpResponse(json.dumps({
             "success": True,
             "formatted_filename": formatted_filename,
-            "file":  None,
+            "file": None,
             "path": generate_storage_url(formatted_filename),
         }))
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def image_upload(request):
     if request.method == 'POST':
-        name, ext = os.path.splitext(request.FILES.values()[0]._name) # gets file extension without leading period
-        file_object = File(contentnode_id=request.META.get('HTTP_NODE'),original_filename=name, preset_id=request.META.get('HTTP_PRESET'), file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext[1:])
+        name, ext = os.path.splitext(request.FILES.values()[0]._name)  # gets file extension without leading period
+        file_object = File(
+            contentnode_id=request.META.get('HTTP_NODE'),
+            original_filename=name,
+            preset_id=request.META.get('HTTP_PRESET'),
+            file_on_disk=DjFile(request.FILES.values()[0]),
+            file_format_id=ext[1:].lower()
+        )
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,
@@ -111,10 +128,12 @@ def image_upload(request):
             "path": generate_storage_url(str(file_object)),
         }))
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 def exercise_image_upload(request):
     if request.method == 'POST':
-        ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:] # gets file extension without leading period
-        file_object = File(preset_id=format_presets.EXERCISE_IMAGE, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext)
+        ext = os.path.splitext(request.FILES.values()[0]._name)[1][1:]  # gets file extension without leading period
+        file_object = File(preset_id=format_presets.EXERCISE_IMAGE, file_on_disk=DjFile(request.FILES.values()[0]), file_format_id=ext.lower())
         file_object.save()
         return HttpResponse(json.dumps({
             "success": True,

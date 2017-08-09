@@ -6,12 +6,23 @@ var Models = require("./../models");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var dialog = require("edit_channel/utils/dialog");
 
+var NAMESPACE = "queue";
+var MESSAGES = {
+    "clipboard_label": "CLIPBOARD",
+    "import": "Import from Channels",
+    "create_exercise": "Create Exercise",
+    "upload_files": "Upload Files",
+    "add_topics": "Add Topics",
+}
+
 /* Loaded when user clicks clipboard button below navigation bar */
 var Queue = BaseViews.BaseWorkspaceView.extend({
 	template: require("./hbtemplates/queue.handlebars"),
 	clipboard_queue:null,
 	trash_queue:null,
 	clipboard_selector: "#clipboard-queue",
+	name: NAMESPACE,
+    $trs: MESSAGES,
 
 	initialize: function(options) {
 		_.bindAll(this, 'toggle_queue', 'open_queue', 'close_queue');
@@ -22,7 +33,9 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 		window.workspace_manager.set_queue_view(this);
 	},
 	render: function() {
-		this.$el.html(this.template());
+		this.$el.html(this.template(null,  {
+            data: this.get_intl_data()
+        }));
 		this.clipboard_queue = new ClipboardList({
 			collection: this.collection,
 			model: this.clipboard_root,
@@ -63,6 +76,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 
 
 var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
+	isclipboard: true,
 	template: require("./hbtemplates/queue_list.handlebars"),
 	selectedClass: "queue-selected",
 	default_item: ".queue-list-wrapper >.content-list >.default-item, >.content-list >.default-item",
@@ -71,6 +85,8 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	tab_selector: "#switch_to_queue",
 	list_wrapper_selector: "#clipboard-queue",
 	item_class_selector: ".queue-item",
+	name: NAMESPACE,
+    $trs: MESSAGES,
 	'id': function() {
 		return "list_" + this.model.get("id");
 	},
@@ -91,13 +107,15 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 			is_clipboard : true,
 			add_controls : this.add_controls,
 			id: this.model.id
-		}));
+		},  {
+            data: this.get_intl_data()
+        }));
 		window.workspace_manager.put_list(this.model.get("id"), this);
-		this.$(this.default_item).text("Loading...");
+		this.$(this.default_item).text(this.get_translation("loading"));
 		var self = this;
 		self.make_droppable();
 		this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
-			self.$(self.default_item).text("No items found.");
+			self.$(self.default_item).text(self.get_translation("no_items"));
 			fetchedCollection.sort_by_order();
 			self.load_content(fetchedCollection);
 			self.refresh_droppable();
@@ -123,17 +141,6 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	  		});
 		}
 	},
-	delete_items:function(){
-		var self = this;
-
-        dialog.dialog("WARNING", "Are you sure you want to delete these selected items?", {
-            "CANCEL":function(){},
-            "DELETE ITEMS": function(){
-				self.delete_selected();
-				self.$(".select_all").attr("checked", false);
-            },
-        }, null);
-	},
 	handle_if_empty:function(){
 		this.$(this.default_item).css("display", (this.model.get("children").length > 0) ? "none" : "block");
 		this.update_badge_count();
@@ -154,10 +161,10 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	delete_items:function(){
 		var self = this;
-        dialog.dialog("WARNING", "Are you sure you want to delete these selected items PERMANENTLY? Changes cannot be undone!", {
-            "CANCEL":function(){},
-            "DELETE ITEMS": function(){
-				self.delete_items_permanently("Deleting Content...");
+        dialog.dialog(this.get_translation("warning"), this.get_translation("delete_message"), {
+            [this.get_translation("cancel")]:function(){},
+            [this.get_translation("delete")]: function(){
+				self.delete_items_permanently(self.get_translation("deleting_content"));
 				self.$(".select_all").attr("checked", false);
             },
         }, null);
@@ -167,22 +174,37 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	move_items:function(){
 		this.container.move_items();
-	}
-	/* Implementation for creating copies of nodes when dropped onto clipboard */
-	// handle_drop:function(collection){
-	// 	this.$(this.default_item).css("display", "none");
-	// 	console.log(this.model)
-	// 	return collection.duplicate(this.model);
- // 	},
+	},
+	handle_drop:function(collection){
+		var self = this;
+		this.$(this.default_item).css("display", "none");
+		return new Promise(function(resolve, reject){
+			if(collection.has_related_content()){
+				dialog.dialog(self.get_translation("related_content"), self.get_translation("related_content_warning", collection.length), {
+		            [self.get_translation("cancel")]:function(){},
+		            [self.get_translation("continue")]: function(){
+	            		resolve(collection);
+		            },
+		        }, reject);
+			}else{
+				resolve(collection)
+				/* Implementation for creating copies of nodes when dropped onto clipboard */
+				// collection.duplicate(self.model).then(reject);
+			}
+		});
+  	},
 });
 
 var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
+	isclipboard: true,
 	list_selector: "#clipboard_list",
 	template: require("./hbtemplates/queue_item.handlebars"),
 	selectedClass: "queue-selected",
 	expandedClass: "glyphicon-menu-down",
 	collapsedClass: "glyphicon-menu-up",
 	className: "queue-item",
+	name: NAMESPACE,
+    $trs: MESSAGES,
 	getToggler: function () { return this.$("#menu_toggle_" + this.model.id); },
 	getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },
 	'id': function() {
@@ -212,7 +234,9 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			isfolder: this.model.get("kind") === "topic",
 			is_clipboard : true,
 			checked: this.checked
-		}));
+		},  {
+            data: this.get_intl_data()
+        }));
 		this.handle_checked();
 		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
@@ -244,17 +268,13 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	delete_content:function(){
 		var self = this;
-        dialog.dialog("WARNING", "Are you sure you want to PERMANENTLY delete " + this.model.get("title") + "? Changes cannot be undone!", {
-            "CANCEL":function(){},
-            "DELETE": function(){
+        dialog.dialog(this.get_translation("warning"), this.get_translation("delete_item_warning", this.model.get("title")), {
+            [self.get_translation("cancel")]:function(){},
+            [self.get_translation("delete")]: function(){
             	self.add_to_trash()
             }
         }, null);
-	},
-	/* Implementation for creating copies of nodes when dropped onto clipboard */
-	// handle_drop:function(collection){
-	// 	return collection.duplicate(window.workspace_manager.get_queue_view().clipboard_queue.model);
- // 	},
+	}
 });
 
 module.exports = {

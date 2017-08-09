@@ -1,16 +1,16 @@
 {% load i18n %}
 
 {% autoescape off %}
-Hello {{ user.first_name }},
+{% trans "Hello" %} {{ user.first_name }},
 
-Here is your activation link for {{ site.name }}:
+{% trans "Here is your activation link for" %} {{ site.name }}:
 
 {{ domain }}{% url 'registration_activate' activation_key %}
 
 {% blocktrans %}This link is valid for {{ expiration_days }} days.{% endblocktrans %}
 
-Thanks for using our site!
+{% trans "Thanks for using our site!" %}
 
-The Learning Equality Team
+{% trans "The Learning Equality Team" %}
 
 {% endautoescape %}

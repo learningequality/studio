@@ -1,7 +1,36 @@
 require("offline-js");
 require("../../css/offline-language-english.css");
+require("../../css/offline-language-spanish.css");
 require("../../css/offline-theme-slide.css");
 require("utils/snake");
+
+/* For debugging (comment/uncomment as needed) */
+// require("./offline-simulate-ui.min");
+// var
+// 	$online = $('.online'),
+// 	$offline = $('.offline');
+
+// Offline.on('confirmed-down', function () {
+// 	$online.fadeOut(function () {
+// 		$offline.fadeIn();
+// 	});
+// });
+
+// Offline.on('confirmed-up', function () {
+// 	$offline.fadeOut(function () {
+// 		$online.fadeIn();
+// 	});
+// });
+
+var languageMapping = {
+	"en": "english",
+	"es": "spanish",
+}
+
+function getOfflineLanguageName(code) {
+	return languageMapping[code.split("-")[0]];
+}
+
 
 var disabledOverlay = document.createElement("DIV");
 disabledOverlay.className = "fade";
@@ -15,7 +44,7 @@ $(function() {
 
 Offline.options = {
 	checks: {xhr: {url: window.Urls.health()}},
-	language: "english",
+	language: getOfflineLanguageName(window.languageCode || "en"),
 	theme: "slide",
 	// game:true //Enable to add snake game while waiting for server to reconnect
 }

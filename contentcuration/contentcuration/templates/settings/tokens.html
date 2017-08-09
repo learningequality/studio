@@ -4,17 +4,17 @@
 {% load i18n %}
 
 {% block settingscontent %}
-<h4>Access Tokens</h4>
-<p>Get tokens for authentication.</p>
+<h4>{% trans "Access Tokenss" %}</h4>
+<p>{% trans "Get tokens for authentication." %}</p>
 <hr/>
 <ul id="settings-tokens-list" class="list-group">
 	{% for token in tokens %}
-	    <li class="list-group-item token row">
-	    	<div class="col-xs-10">
-		    	<input type="text" value="{{token}}" readonly id="{{token}}_value" >
-		    </div>
-			<input type="submit" class="btn action-button copy-token col-xs-2" value="COPY" id="{{token}}"/>
-	    </li>
+		<li class="list-group-item token row">
+			<div class="col-xs-10">
+				<input type="text" value="{{token}}" readonly id="{{token}}_value" >
+			</div>
+			<input type="submit" class="btn action-button copy-token col-xs-2" value="{% trans 'COPY' %}" id="{{token}}"/>
+		</li>
 	{% endfor %}
 </ul>
 <script>
@@ -23,15 +23,15 @@
 		copy_el.focus();
 		copy_el.select();
 		try {
-	    	document.execCommand("copy");
-	    	$(event.target).val("Copied!");
-	    } catch(e) {
-	    	console.log(e)
-	        $(event.target).val("Copy Failed");
-	    }
-	    setTimeout(function(){
-	    	$(event.target).val("COPY");
-	    }, 2500);
+			document.execCommand("copy");
+			$(event.target).val("{% trans 'Copied!' %}");
+		} catch(e) {
+			console.log(e)
+			$(event.target).val("{% trans 'Copy Failed' %}");
+		}
+		setTimeout(function(){
+			$(event.target).val("{% trans 'COPY' %}");
+		}, 2500);
 	});
 </script>
 {% endblock settingscontent %}

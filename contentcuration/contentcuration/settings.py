@@ -29,7 +29,7 @@ PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates"
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2' # TODO(aron): generate secret key, secretly!
+SECRET_KEY = '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2'  # TODO(aron): generate secret key, secretly!
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
@@ -54,14 +54,15 @@ INSTALLED_APPS = (
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
+    'search'
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
-
 MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.common.BrokenLinkEmailsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -84,21 +85,14 @@ SUPPORTED_BROWSERS = [
     'Safari',
 ]
 
-#REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
- #   'DEFAULT_PERMISSION_CLASSES': [
- #     'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-  # ]
-#}
-
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
+        'contentcuration.permissions.CustomPermission',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        # 'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     )
 }
@@ -128,12 +122,8 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgres',
-    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    # },
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': 'contentcuration',                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
 
@@ -172,7 +162,7 @@ DATABASE_ROUTERS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 
 TIME_ZONE = 'UTC'
 
@@ -181,6 +171,17 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, 'locale'),
+)
+
+ugettext = lambda s: s
+LANGUAGES = (
+    ('en', ugettext('English')),
+    ('es', ugettext('Spanish')),
+    ('es-mx', ugettext('Spanish - Mexico')),
+)
 
 
 # Static files (CSS, JavaScript, Images)
@@ -196,7 +197,7 @@ LOGIN_REDIRECT_URL = '/channels/'
 
 AUTH_USER_MODEL = 'contentcuration.User'
 
-ACCOUNT_ACTIVATION_DAYS=7
+ACCOUNT_ACTIVATION_DAYS = 7
 REGISTRATION_OPEN = True
 SITE_ID = 1
 

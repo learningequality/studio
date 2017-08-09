@@ -1,0 +1,6 @@
+<input type="checkbox" class="sync_checkbox"></input>
+<div class="sync_item_wrapper" title="{{node.title}}">
+	{{#if isfolder}}<img src="/static/img/topic.png"/>
+	{{else}}<span class="glyphicon glyphicon-{{#get_icon node.kind}}{{/get_icon}}"></span>{{/if}}
+	<div class="sync_item_title truncate" title="{{node.title}}">{{node.title}}</div>
+</div>

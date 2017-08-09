@@ -1,24 +1,24 @@
 <h2 class="text-center title-bar truncate">
-	<span class="glyphicon glyphicon-menu-left back_button pull-left" aria-hidden="true"></span>
-	<span class="container-title">{{title}}</span>
+	<span class="glyphicon glyphicon-menu-left back_button pull-left" aria-hidden="true" title="{{formatMessage (intlGet 'messages.back')}}"></span>
+	<span class="container-title" title="{{title}}">{{title}}</span>
 </h2>
 <ul class="content-list list-unstyled scroll" id="container_list_{{topic.id}}">
-	<li id="default_item_{{topic.id}}" class="default-item"><h5>Loading Content...</h5></li>
+	<li id="default_item_{{topic.id}}" class="default-item"><h5>{{formatMessage (intlGet 'messages.loading_content')}}</h5></li>
 </ul>
 {{#if edit_mode}}
 	<div>
 		<div class="btn-group dropup">
-		  <button type="button" class="btn btn-default action-button add_content_button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		  <button type="button" class="btn btn-default action-button add_content_button uppercase" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 		  		<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
-				ADD
+				{{formatMessage (intlGet 'messages.add')}}
 			</button>
-		    <span class="sr-only">Toggle Dropdown</span>
+		    <span class="sr-only">{{formatMessage (intlGet 'messages.toggle_dropdown')}}</span>
 		  </button>
 		  <ul class="dropdown-menu add_content_dropdown">
-		    <li><a class="disable-on-edit create_new_button" name="{{topic.title}}">Add Topics</a></li>
-		    <li><a class="disable-on-edit upload_files_button" name="{{topic.title}}">Upload Files</a></li>
-		    <li><a class="disable-on-edit create_exercise_button" name="{{topic.title}}">Create Exercise</a></li>
-		    <li><a class="disable-on-edit import_button" name="{{topic.title}}">Import from Channel</a></li>
+		    <li><a class="disable-on-edit create_new_button" name="{{topic.title}}">{{formatMessage (intlGet 'messages.add_topics')}}</a></li>
+		    <li><a class="disable-on-edit upload_files_button" name="{{topic.title}}">{{formatMessage (intlGet 'messages.upload_files')}}</a></li>
+		    <li><a class="disable-on-edit create_exercise_button" name="{{topic.title}}">{{formatMessage (intlGet 'messages.create_exercise')}}</a></li>
+		    <li><a class="disable-on-edit import_button" name="{{topic.title}}">{{formatMessage (intlGet 'messages.import')}}</a></li>
 		  </ul>
 		</div>
 	</div>

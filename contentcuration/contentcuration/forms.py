@@ -1,14 +1,16 @@
 import json
 from contentcuration.models import User
 from django import forms
-from django.utils.translation import ugettext as _
-from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm
+from django.utils.translation import ugettext_lazy as _
 from le_utils.constants import exercises, licenses
 
 class RegistrationForm(UserCreationForm):
-    password1 = forms.CharField(widget=forms.PasswordInput, label='Password', required=True)
-    password2 = forms.CharField(widget=forms.PasswordInput, label='Password (again)', required=True)
+    first_name = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
+    first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
+    last_name = forms.CharField(widget=forms.TextInput, label=_('Last Name'), required=True)
+    password1 = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)
+    password2 = forms.CharField(widget=forms.PasswordInput, label=_('Password (again)'), required=True)
 
     class Meta:
         model = User
@@ -17,21 +19,21 @@ class RegistrationForm(UserCreationForm):
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
         if User.objects.filter(email__iexact=email, is_active=True).exists():
-            self.add_error('email', 'Email already exists.')
+            self.add_error('email', _('Email already exists.'))
         else:
             return email
 
     def clean(self):
         cleaned_data = super(RegistrationForm, self).clean()
 
-        self.check_field('email', 'Email is required.')
-        self.check_field('first_name', 'First name is required.')
-        self.check_field('last_name', 'Last name is required.')
+        self.check_field('email', _('Email is required.'))
+        self.check_field('first_name', _('First name is required.'))
+        self.check_field('last_name', _('Last name is required.'))
 
-        if self.check_field('password1', 'Password is required.'):
+        if self.check_field('password1', _('Password is required.')):
             if 'password2' not in self.cleaned_data or self.cleaned_data['password1'] != self.cleaned_data['password2']:
                 self.errors['password2'] = self.error_class()
-                self.add_error('password2', 'Passwords don\'t match.')
+                self.add_error('password2', _('Passwords don\'t match.'))
         else:
             self.errors['password2'] = self.error_class()
 
@@ -46,8 +48,10 @@ class RegistrationForm(UserCreationForm):
 
 
 class InvitationForm(UserCreationForm):
-    password1 = forms.CharField(widget=forms.PasswordInput, label='Password', required=True)
-    password2 = forms.CharField(widget=forms.PasswordInput, label='Password (again)', required=True)
+    first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
+    last_name = forms.CharField(widget=forms.TextInput, label=_('Last Name'), required=True)
+    password1 = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)
+    password2 = forms.CharField(widget=forms.PasswordInput, label=_('Password (again)'), required=True)
 
     class Meta:
         model = User
@@ -60,13 +64,13 @@ class InvitationForm(UserCreationForm):
     def clean(self):
         cleaned_data = super(InvitationForm, self).clean()
 
-        self.check_field('first_name', 'First name is required.')
-        self.check_field('last_name', 'Last name is required.')
+        self.check_field('first_name', _('First name is required.'))
+        self.check_field('last_name', _('Last name is required.'))
 
-        if self.check_field('password1', 'Password is required.'):
+        if self.check_field('password1', _('Password is required.')):
             if 'password2' not in self.cleaned_data or self.cleaned_data['password1'] != self.cleaned_data['password2']:
                 self.errors['password2'] = self.error_class()
-                self.add_error('password2', 'Passwords don\'t match.')
+                self.add_error('password2', _('Passwords don\'t match.'))
         else:
             self.errors['password2'] = self.error_class()
 
@@ -83,33 +87,34 @@ class InvitationForm(UserCreationForm):
         user.set_password(self.cleaned_data["password1"])
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
-        user.is_active=True
+        user.is_active = True
         user.save()
         return user
 
 
 class InvitationAcceptForm(AuthenticationForm):
-    user=None
-    password = forms.CharField(widget=forms.PasswordInput, label='Password', required=True)
+    user = None
+    password = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)
 
     class Meta:
         model = User
         fields = ('password',)
 
     def __init__(self, *args, **kwargs):
-        self.user =kwargs.pop('user')
+        self.user = kwargs.pop('user')
         super(InvitationAcceptForm, self).__init__(*args, **kwargs)
 
     def clean(self):
         if 'password' not in self.cleaned_data:
             self.errors['password'] = self.error_class()
-            self.add_error('password', 'Password is required.')
+            self.add_error('password', _('Password is required.'))
         elif not self.user.check_password(self.cleaned_data["password"]):
             self.errors['password'] = self.error_class()
-            self.add_error('password', 'Password is incorrect.')
+            self.add_error('password', _('Password is incorrect.'))
         else:
             self.confirm_login_allowed(self.user)
         return self.cleaned_data
+
 
 class ProfileSettingsForm(UserChangeForm):
     first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
@@ -118,7 +123,7 @@ class ProfileSettingsForm(UserChangeForm):
     class Meta:
         model = User
         fields = ('first_name', 'last_name')
-        exclude =  ('password', 'email')
+        exclude = ('password', 'email')
 
     def clean_password(self):
         pass
@@ -128,12 +133,11 @@ class ProfileSettingsForm(UserChangeForm):
 
         if 'first_name' not in self.cleaned_data:
             self.errors['first_name'] = self.error_class()
-            self.add_error('first_name', 'First name is required.')
+            self.add_error('first_name', _('First name is required.'))
 
         if 'last_name' not in self.cleaned_data:
             self.errors['last_name'] = self.error_class()
-            self.add_error('last_name', 'Last name is required.')
-
+            self.add_error('last_name', _('Last name is required.'))
         return self.cleaned_data
 
     def save(self, user):
@@ -142,20 +146,22 @@ class ProfileSettingsForm(UserChangeForm):
         user.save()
         return user
 
+MASTERY = tuple([(k, _(v)) for k,v in [t for t in exercises.MASTERY_MODELS] if k != "skill_check"])
+
 class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
-    author = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
-    copyright_holder = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
-    license_description = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
-    license = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=licenses.choices)
-    mastery_model = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=exercises.MASTERY_MODELS, label="Mastery at")
-    m_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label="M")
-    n_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label="N")
-    auto_derive_video_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Videos")
-    auto_derive_audio_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Audio")
-    auto_derive_document_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Documents")
-    auto_derive_html5_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="HTML Apps")
-    auto_randomize_questions = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label="Automatically randomize question order")
+    author = forms.CharField(required=False, label=_('Author'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    copyright_holder = forms.CharField(required=False, label=_('Copyright Holder'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    license_description = forms.CharField(required=False, label=_('License Description'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    license = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('License'), choices=licenses.choices)
+    mastery_model = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=MASTERY, label=_("Mastery at"))
+    m_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label=_("M"))
+    n_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label=_("N"))
+    auto_derive_video_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("Videos"))
+    auto_derive_audio_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("Audio"))
+    auto_derive_document_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("Documents"))
+    auto_derive_html5_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("HTML Apps"))
+    auto_randomize_questions = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}))
 
     class Meta:
         model = User
@@ -192,12 +198,12 @@ class AccountSettingsForm(PasswordChangeForm):
     def clean(self):
         cleaned_data = super(AccountSettingsForm, self).clean()
 
-        self.check_field('old_password', 'Current password is incorrect.')
+        self.check_field('old_password', _('Current password is incorrect.'))
 
-        if self.check_field('new_password1', 'New password is required.'):
+        if self.check_field('new_password1', _('New password is required.')):
             if 'new_password2' not in self.cleaned_data or self.cleaned_data['new_password1'] != self.cleaned_data['new_password2']:
                 self.errors['new_password2'] = self.error_class()
-                self.add_error('new_password2', 'New passwords don\'t match.')
+                self.add_error('new_password2', _('New passwords don\'t match.'))
         else:
             self.errors['new_password2'] = self.error_class()
 

@@ -38,12 +38,14 @@ def send_invitation_email(request):
             retrieved_user = User.objects.get_or_create(email=user_email)
             recipient = retrieved_user[0]
             channel = Channel.objects.get(id=channel_id)
-            invitation = Invitation.objects.get_or_create(invited=recipient,
-                                                          email=user_email,
-                                                          channel_id=channel_id,
-                                                          first_name=recipient.first_name if recipient.is_active else "Guest",
-                                                          last_name=recipient.last_name if recipient.is_active else " ")[
-                0]
+
+            request.user.can_view(channel_id)
+
+            invitation = Invitation.objects.get_or_create(invited = recipient,
+                                                        email = user_email,
+                                                        channel_id = channel_id,
+                                                        first_name=recipient.first_name if recipient.is_active else "Guest",
+                                                        last_name=recipient.last_name if recipient.is_active else " ")[0]
 
             # Handle these values separately as different users might invite the same user again
             invitation.share_mode = share_mode

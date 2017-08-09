@@ -26,6 +26,12 @@
 		background-color:@exporter-background-color;
 		label, #export_license_select{ font-size: 14pt; }
 		#export_totals{ margin-right:10px; }
+		.export_channel_name {
+			margin: 0px;
+			padding-bottom: 10px;
+			font-size: 15pt;
+			font-weight: bold;
+		}
 		#version_number{
 			color:gray;
 			padding-right:10px;
@@ -34,7 +40,7 @@
 			color:@gray-400;
 			font-size:10pt;
 			font-weight:normal;
-		    white-space: nowrap;
+			white-space: nowrap;
 		}
 		.toggler, .content_icon, .annotation, .export_item_title{
 			display:table-cell;
@@ -46,6 +52,15 @@
 				display:inline-block;
 				vertical-align:middle;
 			}
+		}
+		.language_label{ visibibility: visible; }
+		.select_language_prompt { visibility: hidden; }
+		.language_wrapper.prompt {
+			padding: 10px;
+		    background-color: cornsilk;
+		    margin-bottom: 15px;
+		    .select_language_prompt { visibility: visible; }
+		    .language_label{ visibibility: collapse; }
 		}
 		#export_preview{
 			margin: 10px;

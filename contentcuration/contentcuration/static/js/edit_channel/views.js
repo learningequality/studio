@@ -6,7 +6,132 @@ function get_author(){
 	return window.preferences.author || "";
 }
 
+var TABINDEX = 1;
+
+var NAMESPACE = "shared";
+var MESSAGES = {
+	"cancel": "Cancel",
+	"delete": "Delete",
+	"move": "Move",
+	"edit": "Edit",
+	"view": "View",
+	"publish": "PUBLISH",
+	"close": "CLOSE",
+	"add": "Add",
+	"remove": "Remove",
+	"deploy_option": "Deploy Channel?",
+	"view_summary": "View Summary",
+	"keep_reviewing": "Keep Reviewing",
+	"deploy": "Deploy",
+	"copy": "Copy",
+	"topic": "Topic",
+	"exercise_title": "Exercise",
+	"select_all": "Select All",
+    "preview": "Preview",
+	"deleting": "Deleting...",
+	"archiving": "Archiving Content...",
+	"moving_content": "Moving Content...",
+	"moving_to_clipboard": "Moving to Clipboard...",
+	"deleting_content": "Deleting Content...",
+	"copying_to_clipboard": "Copying to Clipboard...",
+	"loading": "Loading...",
+	"saving": "Saving...",
+	"creating": "Creating...",
+	"loading_content": "Loading Content...",
+	"no_changes_detected": "No changes detected",
+	"not_approved": "Channel not approved",
+	"no_items": "No items found",
+	"empty": "(empty)",
+	"no_preview": "No Preview Available",
+	"refresh_page": "Error with asynchronous call. Please refresh the page",
+	"call_error": "Error with asynchronous call",
+	"error_moving_content": "Error Moving Content",
+	"error": "ERROR",
+	"warning": "WARNING",
+	"deploy_stats": "Deploying this topic tree will replace the live topic tree ({data, plural,\n =1 {# topic}\n other {# topics}}, " +
+					"{data2, plural,\n =1 {# resource}\n other {# resources}}) with this staged topic tree " +
+					"({data3, plural,\n =1 {# topic}\n other {# topics}}, {data4, plural,\n =1 {# resource}\n other {# resources}}). " +
+					"Are you sure you want to deploy this updated topic tree?",
+	"delete_item_warning": "Are you sure you want to PERMANENTLY delete this item? Changes cannot be undone!",
+	"delete_message": "Are you sure you want to delete these selected items PERMANENTLY? Changes cannot be undone!",
+	"unsaved_changes": "Unsaved Changes!",
+	"unsaved_changes_text": "Exiting now will undo any new changes. Are you sure you want to exit?",
+	"count": "{data, plural,\n =0 {}\n =1 {# item selected }\n other {# items selected }}",
+    "resource_count": "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
+	"id": "ID:",
+	"continue": "Continue",
+	"related_content": "RELATED CONTENT DETECTED",
+	"related_content_warning": "Any content associated with {data, plural,\n =1 {this item}\n other {these items}} " +
+        "will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content. Are you sure you want to continue?",
+    "language": "Language",
+    "select_language": "Select a Language"
+}
+
 var BaseView = Backbone.View.extend({
+	default_item: ".default-item",
+	name: NAMESPACE,
+	locale: navigator.language || navigator.browserLanguage,
+	$trs: MESSAGES,
+	globalMessageStore: require("utils/translations"),
+	sharedTranslations: MESSAGES,
+
+	get_translation_library: function(){
+		return _.chain(this.sharedTranslations)
+					.extend(this.$trs)
+					.extend(this.globalMessageStore["shared"] || {})
+					.extend(this.globalMessageStore[this.name] || {})
+					.value();
+	},
+	get_intl_data: function(){
+		var language = window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+		return {
+			intl: {
+				locales: [(language && language.id) || "en-US"],
+				messages: this.get_translation_library()
+			}
+		}
+	},
+	get_translation: function(message_id, data, data2, data3, data4){
+		// Get dynamically generated messages
+		var messages = this.get_translation_library();
+		if (data !== undefined){
+			var template = require("edit_channel/utils/hbtemplates/intl.handlebars");
+			var div = document.createElement("DIV");
+			div.id = "intl_wrapper";
+			$(div).html(template({
+				data: data,
+				data2: data2,
+				data3: data3,
+				data4: data4,
+				message_id: message_id
+			}, {
+				data: this.get_intl_data()
+			}));
+			var contents = div.innerHTML;
+			div.remove();
+			return contents;
+		} else {
+			return messages[message_id];
+		}
+
+	},
+	loop_focus:function(event){
+		var element = $(event.target);
+		if (element.data('next')){
+			this.$(element.data('next')).focus();
+			this.$(element.data('next')).select();
+		}
+	},
+	set_initial_focus: function(){
+		$(".first_focus_item").focus();
+		$(".first_focus_item").select();
+	},
+	set_indices: function(){
+        var selector = (this.el.id)? "#" + this.el.id : "." + this.el.className;
+        $(selector + " .tab_item").each(function(){
+            $(this).attr('tabindex', TABINDEX++);
+        });
+    },
 	display_load:function(message, callback){
     	var self = this;
     	if(message.trim()!=""){
@@ -26,9 +151,9 @@ var BaseView = Backbone.View.extend({
 				}
 			}).catch(function(error){
 				if(message!=""){
-					$("#kolibri_load_text").text("Error with asynchronous call. Please refresh the page");
+					$("#kolibri_load_text").text(self.get_translation("refresh_page"));
 				}
-				console.log("Error with asynchronous call", error);
+				console.log(self.get_translation("call_error"), error);
 			});
   	}else{
   		$("#loading_modal").remove();
@@ -36,14 +161,12 @@ var BaseView = Backbone.View.extend({
   },
   	reload_ancestors:function(collection, include_collection){
   		include_collection = include_collection==null || include_collection;
-		var list_to_reload = (include_collection) ? collection.pluck("id") : [];
+		var list_to_reload = collection.chain()
+						.reduce(function(list, item){ return list.concat(item.get('ancestors'));}, [])
+						.union((include_collection) ? collection.pluck("id") : [])
+						.union((window.current_channel)? [window.current_channel.get("main_tree").id] : [])
+						.uniq().value();
 		var self = this;
-		collection.forEach(function(entry){
-      		$.merge(list_to_reload, entry.get("ancestors"));
-		});
-		if(window.current_channel.get("main_tree")){
-			list_to_reload.push(window.current_channel.get("main_tree").id)
-		}
 		this.retrieve_nodes($.unique(list_to_reload), true).then(function(fetched){
 			fetched.forEach(function(model){
 				var object = window.workspace_manager.get(model.get("id"));
@@ -80,11 +203,11 @@ var BaseView = Backbone.View.extend({
 		$("#hide-if-unpublished").css("display", (is_published) ? "inline-block" : "none");
 		if(root.get("metadata").has_changed_descendant){
 			$("#channel-publish-button").prop("disabled", false);
-			$("#channel-publish-button").text("PUBLISH");
+			$("#channel-publish-button").text(this.get_translation("publish"));
 			$("#channel-publish-button").removeClass("disabled");
 		}else{
 			$("#channel-publish-button").prop("disabled", true);
-			$("#channel-publish-button").text("No changes detected");
+			$("#channel-publish-button").text(this.get_translation("no_changes_detected"));
 			$("#channel-publish-button").addClass("disabled");
 		}
 	},
@@ -99,9 +222,10 @@ var BaseView = Backbone.View.extend({
 
 var BaseWorkspaceView = BaseView.extend({
 	lists: [],
+	isclipboard: false,
 	bind_workspace_functions:function(){
-		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move',
-			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently');
+		_.bindAll(this, 'reload_ancestors','publish' , 'edit_permissions', 'handle_published', 'handle_move', 'handle_changed_settings', 'activate_channel',
+			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently', 'sync_content');
 	},
 	publish:function(){
 		if(!$("#channel-publish-button").hasClass("disabled")){
@@ -118,19 +242,19 @@ var BaseWorkspaceView = BaseView.extend({
 		var original_topic_count = window.current_channel.get('main_tree').metadata.total_count - original_resource_count;
 		var staged_resource_count = window.current_channel.get('staging_tree').metadata.resource_count;
 		var staged_topic_count = window.current_channel.get('staging_tree').metadata.total_count - staged_resource_count;
-		dialog.dialog("Deploy Channel?", "Deploying this topic tree will replace the live topic tree (" +
-			 + original_topic_count + " topics, " + original_resource_count + " resources) with this staged topic tree (" +
-			+ staged_topic_count + " topics, " + staged_resource_count + " resources). Are you sure you want to deploy this updated topic tree?", {
-			'View Summary': function(){
+		var self = this;
+		dialog.dialog(this.get_translation("deploy_option"),
+			this.get_translation("deploy_stats", original_topic_count, original_resource_count, staged_topic_count, staged_resource_count), {
+			[self.get_translation("view_summary")]: function(){
 				var treeViews = require('edit_channel/tree_edit/views');
 				new treeViews.DiffModalView();
 			},
-			'Keep Reviewing': function(){},
-			'Deploy': function(){
+			[self.get_translation("keep_reviewing")]: function(){},
+			[self.get_translation("deploy")]: function(){
 				window.current_channel.activate_channel().then(function(){
 					window.location.href = '/channels/' + window.current_channel.id + '/edit';
 				}).catch(function(error){
-					dialog.alert("Channel not approved", error);
+					dialog.alert(self.get_translation("not_approved"), error);
 				});
 			}
 		}, null);
@@ -138,7 +262,8 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	handle_published:function(collection){
 		this.reload_ancestors(collection);
-		$("#publish-get-id-modal").modal("show");
+		var staticModal = require('edit_channel/information/views');
+		new staticModal.PublishedModalView({channel_id: window.current_channel.id});
 	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");
@@ -147,8 +272,7 @@ var BaseWorkspaceView = BaseView.extend({
 			current_user: window.current_user
 		});
 	},
-	edit_selected:function(allow_edit){
-		var UploaderViews = require("edit_channel/uploader/views");
+	edit_selected:function(allow_edit, isclipboard){
 		var list = this.get_selected();
 		var edit_collection = new Models.ContentNodeCollection();
 		/* Create list of nodes to edit */
@@ -157,23 +281,29 @@ var BaseWorkspaceView = BaseView.extend({
 			model.view = list[i];
 			edit_collection.add(model);
 		}
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var content = null;
+		var parent = null;
 		if(edit_collection.length ==1){
-			content = edit_collection.models[0];
+			parent = edit_collection.models[0];
 		}
+		this.edit_nodes(allow_edit, edit_collection, this.isclipboard, parent)
+	},
+	edit_nodes:function(allow_edit, collection, is_clipboard, parent){
+		var UploaderViews = require("edit_channel/uploader/views");
+		$("#main-content-area").append("<div id='dialog'></div>");
 
 		var metadata_view = new UploaderViews.MetadataModalView({
-			collection: edit_collection,
+			collection: collection,
 			el: $("#dialog"),
-			model: content,
+			model: parent,
 			new_content: false,
 		    onsave: this.reload_ancestors,
-		    allow_edit: allow_edit
+		    allow_edit: allow_edit,
+		    isclipboard: is_clipboard,
+		    onnew: this.add_to_clipboard
 		});
 	},
 	add_to_trash:function(collection, message){
-		message = (message!=null)? message: "Archiving Content...";
+		message = (message!=null)? message: this.get_translation("archiving");
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 			self.display_load(message, function(resolve_load, reject_load){
@@ -194,11 +324,11 @@ var BaseWorkspaceView = BaseView.extend({
 		return promise;
 	},
 	add_to_clipboard:function(collection, message){
-		message = (message!=null)? message: "Moving to Clipboard...";
+		message = (message!=null)? message: this.get_translation("moving_to_clipboard");
 		return this.move_to_queue_list(collection, window.workspace_manager.get_queue_view().clipboard_queue, message);
 	},
 	move_to_queue_list:function(collection, list_view, message){
-		message = (message!=null)? message: "Moving Content...";
+		message = (message!=null)? message: this.get_translation("moving_content");
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 			self.display_load(message, function(resolve_load, reject_load){
@@ -263,8 +393,22 @@ var BaseWorkspaceView = BaseView.extend({
 		// Recalculate counts
 		this.reload_ancestors(original_parents, true);
 	},
+	sync_content:function(){
+		var SyncView = require("edit_channel/sync/views");
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var sync = new SyncView.TempSyncModalView({
+			el: $("#dialog"),
+		    onsync: this.reload_ancestors,
+		    model: window.current_channel.get_root("main_tree")
+		});
+		// var sync = new SyncView.SyncModalView({
+		// 	el: $("#dialog"),
+		//     onsync: this.reload_ancestors,
+		//     model: window.current_channel.get_root("main_tree")
+		// });
+	},
 	delete_items_permanently:function(message, list, callback){
-		message = (message!=null)? message: "Deleting...";
+		message = (message!=null)? message: this.get_translation("deleting");
 		var self = this;
 		this.display_load(message, function(resolve_load, reject_load){
 			var promise_list = [];
@@ -297,33 +441,51 @@ var BaseWorkspaceView = BaseView.extend({
 				if(callback){
 					callback();
 				}
-				resolve_load("Success!");
+				resolve_load(true);
 			}).catch(function(error){
 				reject_load(error);
 			});
 		});
+	},
+	open_channel_settings: function(){
+		var settings = require('edit_channel/channel_settings/views');
+		new settings.SettingsModalView({
+			model: window.current_channel,
+			onsave: this.handle_changed_settings
+		});
+	},
+	handle_changed_settings: function(data){
+		$("#channel_selection_dropdown").text(data.get('name'));
+		window.workspace_manager.get_main_view().model.set('title', data.get('name'));
+		window.preferences = data.get('preferences');
 	}
 });
 
 var BaseModalView = BaseView.extend({
-  callback:null,
-  render: function(closeFunction, renderData) {
-    this.$el.html(this.template(renderData));
-    $("body").append(this.el);
-    this.$(".modal").modal({show: true});
-    this.$(".modal").on("hide.bs.modal", closeFunction);
-  },
-  close: function() {
-  	if(this.modal){
-  		this.$(".modal").modal('hide');
-  	}
-    this.remove();
-  },
-  closed_modal:function(){
-    $("body").addClass('modal-open'); //Make sure modal-open class persists
-    $('.modal-backdrop').slice(1).remove();
-    this.remove();
-  }
+    callback:null,
+    default_focus_button_selector: null,
+    render: function(closeFunction, renderData) {
+        this.$el.html(this.template(renderData, {
+			data: this.get_intl_data()
+		}));
+        $("body").append(this.el);
+        this.$(".modal").modal({show: true});
+        this.$(".modal").on("hide.bs.modal", closeFunction);
+    },
+	focus: function(){
+		this.$(this.default_focus_button_selector).focus();
+	},
+    close: function() {
+        if(this.modal){
+            this.$(".modal").modal('hide');
+        }
+        this.remove();
+    },
+    closed_modal:function(){
+        $("body").addClass('modal-open'); //Make sure modal-open class persists
+        $('.modal-backdrop').slice(1).remove();
+        this.remove();
+    }
 });
 
 var BaseListView = BaseView.extend({
@@ -352,7 +514,7 @@ var BaseListView = BaseView.extend({
 	},
 	load_content: function(collection, default_text){
 		collection = (collection)? collection : this.collection;
-		default_text = (default_text)? default_text : "No items found."
+		default_text = (default_text)? default_text : this.get_translation("no_items");
 		this.views = [];
 		var default_element = this.$(this.default_item);
 		default_element.text(default_text);
@@ -415,7 +577,7 @@ var BaseEditableListView = BaseListView.extend({
 	},
 	create_new_item: function(newModelData, appendToList, message){
 		appendToList = (appendToList)? appendToList : false;
-		message = (message!=null)? message: "Creating...";
+		message = (message!=null)? message: this.get_translation("creating");
 		var self = this;
 		var promise = new Promise(function(resolve, reject){
 			self.display_load(message, function(resolve_load, reject_load){
@@ -430,7 +592,7 @@ var BaseEditableListView = BaseListView.extend({
 						resolve_load(true);
 					},
 					error:function(obj, error){
-						console.log("ERROR:", error);
+						console.log(self.get_translation("error"), error);
 						reject(error);
 						reject_load(error);
 					}
@@ -445,7 +607,7 @@ var BaseEditableListView = BaseListView.extend({
 		});
 	},
 	save:function(message, beforeSave){
-		message = (message!=null)? message: "Saving...";
+		message = (message!=null)? message: this.get_translation("saving");
 		var self = this;
 	    var promise = new Promise(function(resolve, reject){
 	        self.display_load(message, function(load_resolve, load_reject){
@@ -463,7 +625,7 @@ var BaseEditableListView = BaseListView.extend({
 	  	return promise;
 	},
 	delete_items_permanently:function(message){
-		message = (message!=null)? message: "Deleting...";
+		message = (message!=null)? message: this.get_translation("deleting");
 		var self = this;
 		this.display_load(message, function(resolve_load, reject_load){
 			var list = self.get_selected();
@@ -488,7 +650,7 @@ var BaseEditableListView = BaseListView.extend({
 			}
 			Promise.all(promise_list).then(function(){
 				self.handle_if_empty();
-				resolve_load("Success!");
+				resolve_load(true);
 			}).catch(function(error){
 				reject_load(error);
 			});
@@ -501,7 +663,7 @@ var BaseEditableListView = BaseListView.extend({
       	// this.update_views();
 	},
 	delete_items_permanently:function(message){
-		message = (message!=null)? message: "Deleting...";
+		message = (message!=null)? message: this.get_translation("deleting");
 		var self = this;
 		this.display_load(message, function(resolve_load, reject_load){
 			var list = self.get_selected();
@@ -526,7 +688,7 @@ var BaseEditableListView = BaseListView.extend({
 			}
 			Promise.all(promise_list).then(function(){
 				self.handle_if_empty();
-				resolve_load("Success!");
+				resolve_load(true);
 			}).catch(function(error){
 				reject_load(error);
 			});
@@ -545,6 +707,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	list_selector:null,
 	default_item:null,
 	content_node_view:null,
+	isclipboard: false,
 
 	/* Functions to overwrite */
 	create_new_view:null,
@@ -580,7 +743,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				view.remove();
 			}
 		}
-		this.add_to_trash(deleteCollection, "Deleting Content...");
+		this.add_to_trash(deleteCollection, this.get_translation("deleting_content"));
 	},
 	make_droppable:function(){
 		var DragHelper = require("edit_channel/utils/drag_drop");
@@ -588,7 +751,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	},
 	refresh_droppable:function(){
 		var self = this;
-		setTimeout(function(){
+		_.defer(function(){
 			$( self.list_selector ).sortable( "enable" );
 			$( self.list_selector ).sortable( "refresh" );
 		}, 100);
@@ -631,7 +794,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						});
 					}).catch(function(error){
 				        var dialog = require("edit_channel/utils/dialog");
-				        dialog.alert("Error Moving Content", error.responseText, function(){
+				        dialog.alert(self.get_translation("error_moving_content"), error.responseText, function(){
 				        	$(".content-list").sortable( "cancel" );
 			        		$(".content-list").sortable( "enable" );
 			        		$(".content-list").sortable( "refresh" );
@@ -642,7 +805,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 							});
 				        });
 		        	});
-				});
+				}).catch(reject);
 			}
 		});
 	},
@@ -668,7 +831,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		var self = this;
 		this.collection.create_new_node({
             "kind":"topic",
-            "title": (this.model.get('parent'))? this.model.get('title') + " Topic" : "Topic",
+            "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
             "author": get_author(),
         }).then(function(new_topic){
         	var edit_collection = new Models.ContentNodeCollection([new_topic]);
@@ -682,7 +845,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	            new_topic: true,
 	            onsave: self.reload_ancestors,
 	            onnew:self.add_nodes,
-	            allow_edit: true
+	            allow_edit: true,
+	            isclipboard: self.isclipboard
 	        });
         });
 	},
@@ -700,18 +864,19 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
       parent_view: this,
       model:this.model,
       onsave: this.reload_ancestors,
-	  onnew:this.add_nodes
+	  onnew:this.add_nodes,
+	  isclipboard: this.isclipboard
   	});
   },
   add_to_clipboard:function(collection, message){
-  	message = (message!=null)? message: "Moving to Clipboard...";
+  	message = (message!=null)? message: this.get_translation("moving_to_clipboard");
   	var self = this;
 		this.container.add_to_clipboard(collection, message).then(function(){
 			self.handle_if_empty();
 		});
 	},
 	add_to_trash:function(collection, message){
-		message = (message!=null)? message: "Deleting Content...";
+		message = (message!=null)? message: this.get_translation("deleting_content");
 		var self = this;
 		this.container.add_to_trash(collection, message).then(function(){
 			self.handle_if_empty();
@@ -722,7 +887,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		var self = this;
 		this.collection.create_new_node({
             "kind":"exercise",
-            "title": (this.model.get('parent'))? this.model.get('title') + " Exercise" : "Exercise", // Avoid having exercises prefilled with 'email clipboard'
+            "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("exercise_title") : this.get_translation("exercise_title"), // Avoid having exercises prefilled with 'email clipboard'
             "author": get_author(),
             "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder,
             "license_name": window.preferences.license,
@@ -739,7 +904,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	            new_exercise: true,
 	            onsave: self.reload_ancestors,
 	            onnew:self.add_nodes,
-	            allow_edit: true
+	            allow_edit: true,
+	            isclipboard: self.isclipboard
 	        });
         });
 	}
@@ -781,15 +947,15 @@ var BaseListEditableItemView = BaseListItemView.extend({
 		this.model.set(this.originalData);
 	},
 	save:function(data, message){
-		message = (message!=null)? message: "Saving...";
+		message = (message!=null)? message: this.get_translation("saving");
 		var self = this;
-		var promise = new Promise(function(resolve, reject){
+		return new Promise(function(resolve, reject){
 			self.originalData = data;
 			if(self.model.isNew()){
 				self.containing_list_view.create_new_item(data).then(function(newView){
 					resolve(newView.model);
 				}).catch(function(error){
-					console.log("ERROR (edit_channel: save):", error);
+					console.log(self.get_translation("error"), error);
 					reject(error);
 				});
 			}else{
@@ -801,7 +967,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 							resolve_load(true);
 						},
 						error:function(obj, error){
-							console.log("ERROR:", error);
+							console.log(self.get_translation("error"), error);
 							reject(error);
 							reject_load(error);
 						}
@@ -809,10 +975,9 @@ var BaseListEditableItemView = BaseListItemView.extend({
 				});
 			}
 		});
-		return promise;
 	},
 	delete:function(destroy_model, message, callback){
-		message = (message!=null)? message: "Deleting...";
+		message = (message!=null)? message: this.get_translation("deleting");
 		var self = this;
 		if(destroy_model){
 			this.display_load(message, function(resolve_load, reject_load){
@@ -837,6 +1002,23 @@ var BaseListEditableItemView = BaseListItemView.extend({
 				});
 			});
 		}
+	},
+	destroy:function(message, callback){
+		message = (message!=null)? message: this.get_translation("deleting");
+		var self = this;
+		this.display_load(message, function(resolve_load, reject_load){
+			self.model.destroy({
+				success:function(){
+					if(callback){
+						callback();
+					}
+					resolve_load(true);
+				},
+				error:function(obj, error){
+					reject_load(error);
+				}
+			});
+		});
 	},
 	reload:function(model){
 		this.model.set(model.attributes);
@@ -896,6 +1078,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	model: null,
 	tagName: "li",
 	selectedClass: "content-selected",
+	isclipboard: false,
 
 	bind_workspace_functions:function(){
 		this.bind_node_functions();
@@ -944,7 +1127,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			content.list.add_nodes(moved);
 		}
 	},
-	open_edit:function(allow_edit){
+	open_edit:function(allow_edit, isclipboard){
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var editCollection =  new Models.ContentNodeCollection([this.model]);
@@ -955,6 +1138,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			model: this.containing_list_view.model,
 		  	onsave: this.reload_ancestors,
 		  	allow_edit: allow_edit,
+		  	isclipboard: this.isclipboard,
 		  	onnew: (!this.allow_edit)? this.containing_list_view.add_to_clipboard : null
 		});
 	},
@@ -982,16 +1166,17 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		return promise;
 	},
 	add_to_trash:function(message){
-		message=(message!=null)? message: "Deleting Content...";
+		message=(message!=null)? message: this.get_translation("deleting_content");
 		this.containing_list_view.add_to_trash(new Models.ContentNodeCollection([this.model]), message);
 		this.remove();
 	},
 	add_to_clipboard:function(message){
-		message=(message!=null)? message: "Moving to Clipboard...";
+		message=(message!=null)? message: this.get_translation("moving_to_clipboard");
 		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([this.model]),message);
 	},
 	copy_item:function(message){
-		message=(message!=null)? message: "Copying to Clipboard...";
+		console.log(this.get_translation("copying_to_clipboard"))
+		message=(message!=null)? message: this.get_translation("copying_to_clipboard");
 		var copyCollection = new Models.ContentNodeCollection();
 		copyCollection.add(this.model);
 		var self = this;
@@ -1008,7 +1193,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 
 		this.containing_list_view.collection.create_new_node({
             "kind":"topic",
-            "title": (this.model.get('parent'))? this.model.get('title') + " Topic" : "Topic",
+            "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic_title") : this.get_translation("topic_title"),
             "sort_order" : this.model.get("metadata").max_sort_order,
             "author": get_author(),
         }).then(function(new_topic){

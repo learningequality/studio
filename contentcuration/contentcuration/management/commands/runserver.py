@@ -1,19 +1,10 @@
 from __future__ import print_function
-
 import atexit
 import os
-import psutil
 import subprocess
-import sys
-import traceback
-
-from signal import SIGTERM
-
 from threading import Thread
-
 from django.contrib.staticfiles.management.commands.runserver import Command as RunserverCommand
 from django.core.management.base import CommandError
-from django.core.servers import basehttp
 
 
 class Command(RunserverCommand):

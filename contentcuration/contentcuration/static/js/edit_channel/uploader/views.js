@@ -2,19 +2,72 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
-var FileUploader = require("edit_channel/file_upload/views");
+var Related = require("edit_channel/related/views");
 var Previewer = require("edit_channel/preview/views");
 var FileUploader = require("edit_channel/file_upload/views");
 var Exercise = require("edit_channel/exercise_creation/views");
+var Info = require("edit_channel/information/views");
 var stringHelper = require("edit_channel/utils/string_helper");
 var autoCompleteHelper = require("edit_channel/utils/autocomplete");
+var dialog = require("edit_channel/utils/dialog");
 require("uploader.less");
+
+var NAMESPACE = "uploader";
+var MESSAGES = {
+    "of": "of",
+    "author": "Author",
+    "details": "Details",
+    "license": "License",
+    "questions": "Questions",
+    "tags": "Tags",
+    "copyright_holder": "Copyright Holder",
+    "prereqs": "Prerequisites",
+    "dont_save": "Don't Save",
+    "keep_open": "Keep Open",
+    "mastery_criteria": "Mastery Criteria",
+    "editing_header": "Editing Content Details",
+    "remove_tag": "Remove Tag",
+    "adding_topics": "Adding Topics to {title}",
+    "adding_exercise": "Adding Exercise to {title}",
+    "editing_content": "Editing Content",
+    "viewing_content": "Viewing Content",
+    "apply_changes": "APPLY CHANGES",
+    "save_and_close": "SAVE & CLOSE",
+    "select_prompt": "Please select an item to view.",
+    "select_to_edit": "Please select an item to edit.",
+    "selected_count": "Viewing data for {count, plural,\n =1 {# item}\n other {# items}}",
+    "editing_count": "Editing data for {count, plural,\n =1 {# item}\n other {# items}}",
+    "detected_import": "Detected items imported from another channel",
+    "detected_import_disabled": "Detected items imported from another channel - fields disabled accordingly",
+    "title": "Title",
+    "title_error": "Title cannot be blank.",
+    "title_placeholder": "Enter a title...",
+    "source": "Source:",
+    "readonly": "READ-ONLY Source:",
+    "permissions_vary": "Permissions Vary",
+    "description": "Description",
+    "chars_left": "{data, plural,\n =1 {# character}\n other {# characters}} left",
+    "too_long": "Too long - recommend removing {data, plural,\n =1 {# character}\n other {# characters}}",
+    "description_placeholder": "Enter a description of your content...",
+    "tags_text": "(press 'Enter' to add new tag)",
+    "tags_error": "Invalid characters found.",
+    "tags_placeholder": "Enter tag...",
+    "related_content_warning": "Related content will not be included in the copy of this content.",
+    "author_placeholder": "Enter author name...",
+    "license_description_placeholder": "Enter license description...",
+    "copyright_holder_placeholder": "Enter copyright holder name...",
+    "same_as_channel": "Same as Channel",
+    "same_as_topic": "Same as Topic"
+}
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
   template: require("./hbtemplates/uploader_modal.handlebars"),
+  name: NAMESPACE,
+  $trs: MESSAGES,
   initialize: function(options) {
     _.bindAll(this, "close_uploader");
     this.allow_edit = options.allow_edit;
+    this.isclipboard = options.isclipboard;
     this.render(this.close_uploader, {
       new_content: options.new_content,
       new_topic: options.new_topic,
@@ -32,27 +85,38 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       new_topic: options.new_topic,
       container:this,
       model:this.model,
-      allow_edit: this.allow_edit
+      allow_edit: this.allow_edit,
+      isclipboard: this.isclipboard
     });
+    this.$(".modal").on('shown.bs.modal', this.metadata_view.set_editor_focus);
+  },
+  events: {
+    'keydown #uploaderModal': 'handle_escape',
+  },
+  handle_escape: function(event){
+    if(event && (event.keyCode || event.which) === 27){
+      this.close_uploader();
+    }
   },
   close_uploader:function(event){
     if(!this.allow_edit || (this.metadata_view && !this.metadata_view.check_for_changes()) || !event){
       this.close();
       $(".modal-backdrop").remove();
+      window.channel_router.update_url(null, null);
     }else{
       var t = event.target;
       var self = this;
-      var dialog = require("edit_channel/utils/dialog");
-      dialog.dialog("Unsaved Changes!", "Exiting now will"
-      + " undo any new changes. Are you sure you want to exit?", {
-          "DON'T SAVE": function(){
+      dialog.dialog(this.get_translation("unsaved_changes"), this.get_translation("unsaved_changes_text"), {
+          [self.get_translation("dont_save")]: function(){
               self.metadata_view.undo_changes();
               self.close();
               $(".modal-backdrop").remove();
+              window.channel_router.update_url(null, null);
           },
-          "KEEP OPEN":function(){},
-          "SAVE & CLOSE":function(){
+          [self.get_translation("keep_open")]:function(){},
+          [self.get_translation("save_and_close")]:function(){
             self.metadata_view.save_and_finish();
+            window.channel_router.update_url(null, null);
           },
       }, null);
       self.cancel_actions(event);
@@ -62,10 +126,13 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
 
 var EditMetadataView = BaseViews.BaseEditableListView.extend({
   template : require("./hbtemplates/edit_metadata_dialog.handlebars"),
+  name: NAMESPACE,
+  $trs: MESSAGES,
 
   initialize: function(options) {
-    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'enable_submit', 'disable_submit',
-      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items');
+    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit',
+      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items',
+      'set_prerequisites', 'call_duplicate', 'update_prereq_count','loop_focus', 'set_indices', 'set_editor_focus');
     this.bind_edit_functions();
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
@@ -74,6 +141,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.new_topic = options.new_topic;
     this.onclose = options.onclose;
     this.allow_edit = options.allow_edit;
+    this.isclipboard = options.isclipboard;
     this.render();
     this.render_details();
     this.adjust_list_height();
@@ -82,13 +150,22 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     'click #metadata_details_btn' : 'render_details',
     'click #metadata_preview_btn' : 'render_preview',
     'click #metadata_questions_btn': 'render_questions',
+    'click #metadata_prerequisites_btn': 'render_prerequisites',
     'click #upload_save_button' : 'save_and_keep_open',
     'click #upload_save_finish_button' : 'save_and_finish',
+    'keypress #upload_save_finish_button': 'handle_save_and_finish_key',
     'click #copy_button': 'copy_items',
-    'click #close_uploader_button': 'close_upload'
+    'click #close_uploader_button': 'close_upload',
+    'focus .input-tab-control': 'loop_focus',
   },
   render: function() {
-    this.$el.html(this.template({allow_edit: this.allow_edit, staging: window.staging }));
+    this.$el.html(this.template({
+      allow_edit: this.allow_edit,
+      staging: window.staging,
+      isclipboard: this.isclipboard
+    }, {
+      data: this.get_intl_data()
+    }));
 
     var self = this;
     this.collection.fetch_nodes_by_ids_complete(this.collection.pluck('id'), !this.collection.has_all_data()).then(function(fetched){
@@ -106,7 +183,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.switchPanel("preview");
   },
   render_questions:function(){
-    this.switchPanel("questions")
+    this.switchPanel("questions");
+  },
+  render_prerequisites: function(){
+    this.switchPanel("prerequisites")
   },
   switchPanel:function(panel_to_show){
     this.$(".tab_button").removeClass("btn-tab-active");
@@ -122,10 +202,17 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
         $("#metadata_questions").css("display", "block");
         $("#metadata_preview").find("iframe").prop("src", "about:blank");
         break;
+      case "prerequisites":
+        $("#metadata_prerequisites_btn").addClass("btn-tab-active");
+        $("#metadata_prerequisites").css("display", "block");
+        break;
       default:
         $("#metadata_details_btn").addClass("btn-tab-active");
         $("#metadata_edit_details").css("display", "block");
         $("#metadata_preview").find("iframe").prop("src", "about:blank");
+        if (this.editor_view){
+          this.editor_view.set_initial_focus();
+        }
     }
   },
   load_list:function(){
@@ -147,6 +234,34 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   load_questions:function(view){
     view.load_question_display(this.$("#metadata_questions"));
   },
+  load_prerequisites:function(selected_items){
+    if(selected_items.length){
+      if(this.prerequisite_view){
+        this.prerequisite_view.stopListening();
+        this.prerequisite_view.undelegateEvents();
+      }
+      this.prerequisite_view = new Related.PrerequisiteView({
+        modal: false,
+        model: selected_items[0].model,
+        oncount: this.update_prereq_count,
+        onselect: this.set_prerequisites,
+        views_to_update: selected_items,
+        el: this.$("#metadata_prerequisites"),
+        allow_edit: this.allow_edit
+      });
+    }
+  },
+  update_prereq_count: function(count){
+    this.$(".prereq_badge").text(count)
+  },
+  set_prerequisites:function(prerequisite_list, selected_items){
+      var self = this;
+      selected_items.forEach(function(view){
+        // TODO: Handle prerequisites that were previously set on the node if multiple selected
+        view.set_node({'prerequisite': prerequisite_list});
+        view.set_edited(true);
+      });
+  },
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1;
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
@@ -155,6 +270,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
                     });
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
+    this.$("#metadata_prerequisites_btn").css("display", (is_individual && (has_files || is_exercise)) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
     if(!is_individual){
       this.render_details();
@@ -174,6 +290,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     if(this.edit_list){
       this.edit_list.adjust_list_height();
     }
+    _.defer(this.set_indices);
+  },
+  set_editor_focus: function(){
+    if(this.editor_view){
+      _.defer(this.editor_view.set_initial_focus);
+    }
   },
   enable_submit:function(){
       this.$("#upload_save_button, #upload_save_finish_button").removeAttr("disabled");
@@ -191,25 +313,38 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   save_and_keep_open:function(){
     var self = this;
     this.editor_view.add_tag(null);
-    this.save("Saving Content...", this.save_nodes).then(function(collection){
+    this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
       self.process_updated_collection(collection);
     });
+  },
+  handle_save_and_finish_key:function(event){
+    var code = (!event)? null : event.keyCode ? event.keyCode : event.which;
+    if(code == 13){
+      this.save_and_finish(event);
+    }
   },
   save_and_finish: function(event){
     var self = this;
     this.editor_view.add_tag(null);
-    this.save("Saving Content...", this.save_nodes).then(function(collection){
+    this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
       self.process_updated_collection(collection);
       self.onclose();
     });
   },
   copy_items: function(){
+    if(this.collection.has_related_content()){
+      dialog.alert(this.get_translation("warning"), this.get_translation("related_content_warning"), this.call_duplicate);
+    } else {
+      this.call_duplicate();
+    }
+  },
+  call_duplicate: function(){
     var self = this;
     var clipboard = window.workspace_manager.get_queue_view();
     clipboard.open_queue();
-    this.display_load("Copying Content...", function(load_resolve, load_reject){
+    this.display_load(this.get_translation("copying_to_clipboard"), function(load_resolve, load_reject){
       self.collection.duplicate(clipboard.clipboard_queue.model).then(function(collection){
-        self.onnew(collection, "Copying Content...");
+        self.onnew(collection, self.get_translation("copying_to_clipboard"));
         self.onclose();
         load_resolve(true);
       }).catch(function(error){
@@ -221,12 +356,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var sort_order = (this.model && this.new_content) ? Math.ceil(this.model.get("metadata").max_sort_order) : 0;
     var self = this;
     this.edit_list.views.forEach(function(entry){
-      var tags = [];
-      entry.tags.forEach(function(tag){
-        tags.push("{\"tag_name\" : \"" + tag.replace(/\"/g, "\\\"") + "\",\"channel\" : \"" + window.current_channel.get("id") + "\"}");
-      });
+      var tags = entry.tags.reduce(function(list, tag){
+        return list.concat(JSON.stringify({tag_name: tag, channel: window.current_channel.get("id")}));
+      }, []);
       entry.set({
-        tags: tags
+        tags: tags,
+        prerequisite: entry.model.get('prerequisite')
       });
       if(self.new_content){
         entry.set({
@@ -272,6 +407,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
 
 var EditMetadataList = BaseViews.BaseEditableListView.extend({
   template : require("./hbtemplates/edit_metadata_list.handlebars"),
+  name: NAMESPACE,
+  $trs: MESSAGES,
   selected_items: [],
   shared_data:{
     shared_tags:[],
@@ -281,7 +418,8 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     shared_author:null,
     all_files:false,
     all_exercises: false,
-    shared_exercise_data:{mastery_model: 0, m: null, n: null, randomize: null}
+    shared_exercise_data:{mastery_model: 0, m: null, n: null, randomize: null},
+    shared_language:0
   },
   list_selector: "#uploaded_list",
   default_item: "#uploaded_list .default-item",
@@ -306,6 +444,8 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     this.$el.html(this.template({
       new_topic: this.new_topic,
       show_list: this.collection.length > 1 || (this.new_content && !this.new_exercise)
+    }, {
+      data: this.get_intl_data()
     }));
     this.load_content();
   },
@@ -341,19 +481,23 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         this.selected_items.push(this.views[0]);
         this.update_shared_values(true, this.views[0]);
         this.container.load_editor(this.selected_items);
+        this.container.load_prerequisites(this.selected_items);
         this.container.load_preview(this.views[0]);
       }else{
         this.views[0].select_item();
       }
     }
   },
+  get_selected_items: function(){
+    return this.selected_items;
+  },
   add_topic:function(){
     var self = this;
     this.collection.create_new_node({
       "kind":"topic",
-      "title": "Topic",
+      "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
       "sort_order" : this.collection.length,
-      "author": window.current_user.get("first_name") + " " + window.current_user.get("last_name")
+      "author": window.preferences.author || ""
     }).then(function(new_topic){
       var new_view = self.create_new_view(new_topic);
       self.$(self.list_selector).append(new_view.el);
@@ -371,12 +515,14 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         }
     });
     this.container.load_editor(this.selected_items);
+    this.container.load_prerequisites(this.selected_items);
     if(this.selected_individual()){
       this.container.load_preview(this.selected_items[0]);
       if(this.selected_items[0].model.get("kind")==="exercise"){
         this.container.load_questions(this.selected_items[0]);
       }
     }
+    this.container.load_editor(this.selected_items);
   },
   update_shared_values:function(reset, view){
     if(reset){
@@ -387,6 +533,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.shared_license_description = view.model.get('license_description');
       this.shared_data.all_files = view.model.get("kind") !== "topic";
       this.shared_data.all_exercises = view.model.get("kind") === "exercise";
+      this.shared_data.shared_language = view.model.get("language");
       if(view.model.get("extra_fields")){
         this.shared_data.shared_exercise_data = view.model.get("extra_fields");
       }
@@ -398,6 +545,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.shared_license_description = (this.shared_data.shared_license_description === view.model.get("license_description"))? this.shared_data.shared_license_description : null;
       this.shared_data.all_files = this.shared_data.all_files && view.model.get("kind")  !== "topic";
       this.shared_data.all_exercises = this.shared_data.all_exercises && view.model.get("kind")  === "exercise";
+
+      var language = view.model.get("language");
+      this.shared_data.shared_language = (this.shared_data.shared_language === language || null)? this.shared_data.shared_language : 0;
 
       if(this.shared_data.all_exercises){
         if(view.model.get("extra_fields")){
@@ -420,12 +570,13 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   template:require("./hbtemplates/edit_metadata_editor.handlebars"),
   preview_template:require("./hbtemplates/edit_metadata_details.handlebars"),
   tags_template:require("./hbtemplates/edit_metadata_tagarea.handlebars"),
-  tag_template:require("./hbtemplates/tag_template.handlebars"),
   description_limit : 400,
   selected_items: [],
+  name: NAMESPACE,
+  $trs: MESSAGES,
 
   initialize: function(options) {
-    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'select_tag');
+    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'loop_focus', 'select_tag', 'set_initial_focus');
     this.new_content = options.new_content;
     this.selected_items = options.selected_items;
     this.shared_data = options.shared_data;
@@ -446,6 +597,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
+    var all_top_level = _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
 
     if(this.allow_edit){
       this.$el.html(this.template({
@@ -463,11 +615,16 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         is_exercise: this.shared_data && this.shared_data.all_exercises,
         m_value: this.m_value,
         n_value: this.n_value,
-        license_description: this.shared_data && this.shared_data.shared_license_description
+        license_description: this.shared_data && this.shared_data.shared_license_description,
+        languages: window.languages.toJSON(),
+        language_default: this.get_language(null, all_top_level)
+      }, {
+        data: this.get_intl_data()
       }));
       this.update_count();
+      this.load_language();
       if(this.shared_data){
-        (!alloriginal)? $("#license_select").text(original_source_license) : $("#license_select").val(this.shared_data.shared_license);
+        (!alloriginal)? $("#license_select").text(stringHelper.translate(original_source_license)) : $("#license_select").val(this.shared_data.shared_license);
         // Set exercise fields according to shared exercise data
         if(this.shared_data.all_exercises){
           this.$("#mastery_model_select").val(this.shared_data.shared_exercise_data.mastery_model);
@@ -489,14 +646,17 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         selected_count: this.selected_items.length,
         has_files: has_files,
         is_exercise: this.shared_data && this.shared_data.all_exercises,
-        license_description: this.shared_data && this.shared_data.shared_license_description
+        license_description: this.shared_data && this.shared_data.shared_license_description,
+        language: this.shared_data && this.get_language(this.shared_data.shared_language, all_top_level),
+      }, {
+        data: this.get_intl_data()
       }));
     }
     this.handle_if_individual();
     if(this.shared_data){
       this.display_license_description(this.shared_data.shared_license);
       var license_name = !alloriginal ? original_source_license : this.get_license(this.shared_data.shared_license);
-      this.$("#license_detail_field").text(license_name);
+      this.$("#license_detail_field").text(stringHelper.translate(license_name));
       if(this.shared_data && this.shared_data.all_exercises) this.$("#mastery_detail_field").text(this.get_mastery_string());
       this.load_tags();
       this.$("#tag_default_detail_field").css("display", (this.shared_data.shared_tags.length)? "none" : "block");
@@ -512,22 +672,37 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         this.$("#randomize_exercise").prop("checked", randomize);
       }
     }
+    _.defer(this.set_initial_focus, 1);
   },
   get_mastery_string: function(){
-    switch(this.shared_data.shared_exercise_data.mastery_model){
-      case "num_correct_in_a_row_2":
-        return "2 in a Row";
-      case "num_correct_in_a_row_3":
-        return "3 in a Row";
-      case "num_correct_in_a_row_5":
-        return "5 in a Row";
-      case "num_correct_in_a_row_10":
-        return "10 in a Row";
-      case "do_all":
-        return "100% Correct";
-      case "m_of_n":
-        return this.m_value + " of " + this.n_value
+    if (this.shared_data.shared_exercise_data.mastery_model === "m_of_n"){
+      return this.m_value + " " + this.get_translation("of") + " " + this.n_value;
     }
+    return stringHelper.translate(this.shared_data.shared_exercise_data.mastery_model);
+  },
+  get_language: function(language, all_top_level){
+    if (language === 0){ return "---"; }
+    else if(!language) { return (all_top_level)? this.get_translation("same_as_channel") : this.get_translation("same_as_topic"); }
+    return window.languages.findWhere({id: language}).get("readable_name");
+  },
+  set_initial_focus:function(){
+    var element = null;
+      if($("#copy_button").length > 0){
+        element = $("#copy_button");
+      } else if($("#input_title").length > 0){
+        element = $('#input_title');
+      }else if($("#author_field").length > 0){
+        element = $('#author_field');
+      }else if($("#tag_box").length > 0){
+        element = $('#tag_box');
+      } else {
+        element = $("#close_uploader_button");
+      }
+
+      if(element){
+        element.focus();
+        element.select();
+      }
   },
   get_license: function(license_id){
     if(isNaN(license_id)){ return license_id; }
@@ -539,11 +714,11 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     if(license_name==='Special Permissions'){
       this.$("#custom_license_description").css('display', 'block');
       if(this.shared_data){
-        this.$("#custom_license_description").attr('placeholder', (this.selected_individual() || this.shared_data.shared_license_description !== null) ? "Enter license description" : "---");
+        this.$("#custom_license_description").attr('placeholder', (this.selected_individual() || this.shared_data.shared_license_description !== null) ? this.get_translation("license_description_placeholder") : "---");
         if(this.all_original() && this.allow_edit){
           this.$("#custom_license_description").val(this.shared_data.shared_license_description);
         } else{
-          this.$("#custom_license_description").text(this.shared_data.shared_license_description || "Permissions vary");
+          this.$("#custom_license_description").text(this.shared_data.shared_license_description || this.get_translation("permissions_vary"));
         }
       }
     } else {
@@ -560,6 +735,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     if(this.selected_individual()){
       var view = this.selected_items[0];
       view.load_file_displays(this.$("#editmetadata_format_section"));
+      this.container.load_prerequisites([view]);
       if(view.model.get("kind")==="exercise"){
         this.container.load_questions(view);
       }
@@ -580,10 +756,14 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     'change #m_value': 'set_mastery',
     'change #n_value': 'set_mastery',
     "click #mastery_about": "load_mastery",
+    "focus .input-tab-control": "loop_focus",
+    "change #select_language": "set_language"
   },
   load_tags:function(){
     this.$("#tag_area").html(this.tags_template({
       tags:this.shared_data.shared_tags
+    }, {
+      data: this.get_intl_data()
     }));
     var self = this;
     var tags = _.reject(window.contenttags.pluck("tag_name"), function(tag){
@@ -593,12 +773,18 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   load_license:function(){
     var iscopied = this.selected_individual() && !this.selected_items[0].isoriginal
-    var license_modal = new LicenseModalView({
+    var license_modal = new Info.LicenseModalView({
       select_license : window.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()})
     });
   },
   load_mastery:function(){
-    new MasteryModalView();
+    new Info.MasteryModalView();
+  },
+  load_language: function(){
+    var language = this.shared_data && this.shared_data.shared_language;
+    if(language===0) { this.$("#select_language").val(0); }
+    else if (!language) { this.$("#select_language").val("inherit"); }
+    else { this.$("#select_language").val(language); }
   },
   update_count:function(){
     if(this.selected_individual()){
@@ -608,10 +794,10 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       }
       if(char_length < 0){
         char_length *= -1;
-        this.$("#description_counter").html("Too long - recommend removing " + char_length + ((char_length  == 1) ? " character" : " characters"));
+        this.$("#description_counter").html(this.get_translation("too_long", char_length));
         this.$("#description_counter").css("color", "red");
       }else{
-        this.$("#description_counter").html(char_length + ((char_length  == 1) ? " character left" : " characters left"));
+        this.$("#description_counter").html(this.get_translation("chars_left", char_length));
         this.$("#description_counter").css("color", "gray");
       }
 
@@ -714,12 +900,22 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.selected_items.forEach(function(view){
         view.set_mastery(mastery_model, self.m_value, self.n_value);
     });
+  },
+  set_language:function(){
+    var language = this.$("#select_language").val();
+    language = (language === "inherit")? null : language;
+    var self = this;
+    this.selected_items.forEach(function(view){
+        view.set_language(language);
+    });
   }
 });
 
 var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   template: require("./hbtemplates/uploaded_list_item.handlebars"),
   selectedClass:"current_item",
+  name: NAMESPACE,
+  $trs: MESSAGES,
   format_view:null,
   'id': function() {
       return "item_" + this.model.get("id");
@@ -750,6 +946,8 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
           node: this.model.toJSON(),
           new_topic: this.new_content && this.model.get("kind") === "topic",
           isfolder: this.model.get("kind") === "topic"
+      }, {
+        data: this.get_intl_data()
       }));
   },
   update_name:function(){
@@ -778,7 +976,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.check_item();
   },
   set_edited:function(is_edited){
-      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields");
+      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields", "prerequisite");
       // Handle unsetting node
       if(!is_edited){
           this.originalData = $.extend(true, {}, edited_data);
@@ -821,6 +1019,10 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.set({'extra_fields': current_data});
     this.set_edited(true);
   },
+  set_language: function(language){
+    this.set({"language": language});
+    this.set_edited(true);
+  },
   set_random:function(randomize){
     var current_data = this.model.get('extra_fields');
     current_data['randomize'] = randomize;
@@ -838,7 +1040,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.tags = [];
       if(this.model.get("tags")){
           var self = this;
-          fetch_tags = [];
+          var fetch_tags = [];
           this.model.get("tags").forEach(function(entry){
               fetch_tags.push((entry.id)? entry.id : entry);
           });
@@ -854,6 +1056,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       formats_el.html(this.format_view.el);
       this.format_view.create_thumbnail_view(this.container.disable_submit, this.container.enable_submit, this.container.enable_submit);
       this.listenTo(this.model, "change:files", this.handle_change);
+      this.listenTo(this.model, "change:thumbnail_encoding", this.handle_change);
   },
   load_question_display:function(formats_el){
       if(this.exercise_view){
@@ -901,41 +1104,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
         (uploading)? this.uploads_in_progress++ : this.uploads_in_progress--;
         (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
     }
-});
-
-var LicenseModalView = BaseViews.BaseModalView.extend({
-  template: require("./hbtemplates/license_modal.handlebars"),
-
-  initialize: function(options) {
-      this.modal = true;
-      this.select_license = options.select_license;
-      this.render();
-  },
-
-  render: function() {
-      this.$el.html(this.template({
-          license: this.select_license.toJSON()
-      }));
-      $("body").append(this.el);
-      this.$("#license_modal").modal({show: true});
-      this.$("#license_modal").on("hidden.bs.modal", this.closed_modal);
-  }
-});
-
-var MasteryModalView = BaseViews.BaseModalView.extend({
-  template: require("./hbtemplates/mastery_modal.handlebars"),
-
-  initialize: function(options) {
-      this.modal = true;
-      this.render();
-  },
-
-  render: function() {
-      this.$el.html(this.template());
-      $("body").append(this.el);
-      this.$("#mastery_modal").modal({show: true});
-      this.$("#mastery_modal").on("hidden.bs.modal", this.closed_modal);
-  }
 });
 
 module.exports = {

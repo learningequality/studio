@@ -4,7 +4,7 @@
 {{else}}
 	<label class="list_item_wrapper file" for="item_{{node.id}}" title="{{node.title}}">
 {{/if}}
-		<div class="options pull-right">
+		<div class="options pull-right hide_on_drag">
 			{{#if edit_mode}}
 				<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
 					<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
@@ -12,19 +12,18 @@
 				<br/>
 				{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
 			{{else}}
-				{{#if isfolder}}<span class="glyphicon glyphicon-new-window edit_item_button" aria-hidden="true" title="View topic details"></span>{{/if}}
-				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true" title="Copy"></span>
+				{{#if isfolder}}<span class="glyphicon glyphicon-new-window edit_item_button" aria-hidden="true" title="{{formatMessage (intlGet 'messages.view_topic')}}"></span>{{/if}}
+				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true" title="{{formatMessage (intlGet 'messages.copy')}}"></span>
 			{{/if}}
 		</div>
-		<h6 class="content_metadata_summary {{#unless isfolder}}open_file{{/unless}}">
+		<h6 class="content_metadata_summary hide_on_drag {{#unless isfolder}}open_file{{/unless}}">
 			<span class="metadata_to_hide">
 				{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
-				{{#if isfolder}}&nbsp;{{#format_count "Resource" node.metadata.resource_count}}{{/format_count}}{{/if}}
-				&nbsp;
+				{{#if isfolder}}&nbsp;{{formatMessage (intlGet (concat 'messages.resource_count')) count=count}}&nbsp;{{/if}}
 				{{#unless isfolder}}
 					{{#if isexercise}}
 						<span class="glyphicon glyphicon-check" aria-hidden="true"></span>
-						{{#format_count "Question" node.metadata.resource_count}}{{/format_count}}
+						{{formatMessage (intlGet (concat 'messages.question_count')) count=count}}
 					{{else}}
 						<span class="glyphicon glyphicon-file" aria-hidden="true"></span>
 						{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}
@@ -32,10 +31,12 @@
 				{{/unless}}
 				&nbsp;
 				{{#if node.changed}}
-					<em class="unpublished">{{#if node.published}}Updated{{else}}New{{/if}}</em>
+					{{#if node.published}}<em class="unpublished" title="{{formatMessage (intlGet 'messages.updated')}} {{formatRelative node.modified}}">{{formatMessage (intlGet 'messages.updated')}}</em>
+					{{else}}<em class="unpublished" title="{{formatMessage (intlGet 'messages.created')}} {{formatRelative node.modified}}">{{formatMessage (intlGet 'messages.new')}}</em>
+					{{/if}}
 				{{/if}}
 				{{#unless node.valid}}
-					<em class="invalid">Incomplete</em>
+					<em class="invalid">{{formatMessage (intlGet 'messages.incomplete')}}</em>
 				{{/unless}}
 			</span>
 		</h6>
@@ -48,13 +49,13 @@
 						<span class="{{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
 					{{/if}}
 				</div>
-				{{#if node}}{{node.title}}{{else}}<em>[Untitled]</em>{{/if}}
+				{{#if node}}{{node.title}}{{else}}<em>{{formatMessage (intlGet (concat 'messages.untitled'))}}</em>{{/if}}
 			</div>
 			<div class="description_wrapper">
 				<div class="description" title="{{node.description}}">
 					<div class="description_main wordwrap">{{description_first}}</div>
 					<div class="description_overflow wordwrap">{{description_overflow}}</div>
-					{{#if description_overflow}}<a class="toggle_description">... More</a>{{/if}}
+					{{#if description_overflow}}<a class="toggle_description">{{formatMessage (intlGet (concat 'messages.more'))}}</a>{{/if}}
 				</div>
 			</div>
 		</div>
@@ -62,19 +63,19 @@
 <div class="popover content-popover" tabindex="0" role="tooltip" id="options_{{node.id}}">
 	<div class="arrow"></div>
 	<div class="popover-content">
-		{{#if isfolder}}<div class="add_subtopic_item_button option">Add Subtopic</div>{{/if}}
-		<div class="edit_item_button option">Edit</div>
-		<div class="copy_item_button option">Copy</div>
-		<div class="move_item_button option">Move</div>
-		<div class="delete_item_button option">Delete</div>
+		{{#if isfolder}}<div class="add_subtopic_item_button option">{{formatMessage (intlGet 'messages.subtopic')}}</div>{{/if}}
+		<div class="edit_item_button option">{{formatMessage (intlGet 'messages.edit')}}</div>
+		<div class="copy_item_button option">{{formatMessage (intlGet 'messages.copy')}}</div>
+		<div class="move_item_button option">{{formatMessage (intlGet 'messages.move')}}</div>
+		<div class="delete_item_button option">{{formatMessage (intlGet 'messages.delete')}}</div>
 	</div>
 </div>
 
-<nav class="context-menu" tabindex="0">
-  	{{#if isfolder}}<div class="add_subtopic_item_button context-option">Add Subtopic</div>{{/if}}
-	<div class="edit_item_button context-option">Edit</div>
-	<div class="copy_item_button context-option">Copy</div>
-	<div class="move_item_button context-option">Move</div>
-	<div class="delete_item_button context-option">Delete</div>
+<nav class="context-menu hide_on_drag" tabindex="0">
+  	{{#if isfolder}}<div class="add_subtopic_item_button context-option">{{formatMessage (intlGet 'messages.subtopic')}}</div>{{/if}}
+	<div class="edit_item_button context-option">{{formatMessage (intlGet 'messages.edit')}}</div>
+	<div class="copy_item_button context-option">{{formatMessage (intlGet 'messages.copy')}}</div>
+	<div class="move_item_button context-option">{{formatMessage (intlGet 'messages.move')}}</div>
+	<div class="delete_item_button context-option">{{formatMessage (intlGet 'messages.delete')}}</div>
 </nav>
 </div>

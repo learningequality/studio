@@ -13,6 +13,7 @@
 .modal{
 	padding-top:20px;
 	z-index: 99999;
+	overflow-y: scroll !important;
 }
 .modal-body{ width:auto; }
 .modal-header{
@@ -118,10 +119,6 @@
 						visibility:hidden;
 					}
 				}
-				.subdirectory{
-					display:none;
-				}
-
 				.modal-item-metadata-default{
 					font-size: 10pt;
 					color:gray;
@@ -201,14 +198,17 @@ div#dropzone { min-height: 150px; }
 
 .image_preview{
 	margin-top:20px;
-	max-width:100%;
-	max-height:90%;
+	border: 1px solid @gray-400;
+	width:480px;
+    height:270px;
+    object-fit: cover;
 }
 
 .document_preview{
 	width:100% !important;
 	height:100%;
 	min-height:300px;
+	margin-top: 10px;
 }
 
 .audio_preview{
@@ -235,21 +235,27 @@ video::-webkit-media-controls-fullscreen-button { display: none; }
 }
 
 #preview_tabs_dropdown{
+	border: none;
 	margin-top:-2px;
 	margin-left:15px;
-	width:90%;
+	width:92%;
+	border-radius: 0px;
+	.preview_btn_tab{
+		width:100%;
+		padding:10px;
+		border-radius: 0px;
+		&:hover{ background-color: @gray-200; }
+	}
 }
-.preview_btn_tab{
-	font-size:10pt;
-	width:100%;
-	padding:10px;
-	&:hover{ background-color: @gray-200; }
+.btn-preview{
+	background-color: @gray-300;
+	border: none;
+	font-size:12pt;
 }
 
 .view_fullscreen{ width:100%; }
 
 .preview_format_switch{
-	font-size:11pt;
 	width:100%;
 	max-height:35px;
 }
@@ -296,39 +302,4 @@ video::-webkit-media-controls-fullscreen-button { display: none; }
 	.progress-bar-success { background: @blue-200; }
 	.upload_option{ color: @blue-200; }
 	.upload_cancel{ cursor:pointer; }
-}
-
-@default-image-width: 120px;
-.image_dropzone{
-	width:@default-image-width;
-	.dz-placeholder{
-		width:@default-image-width;
-		height:@default-image-width;
-		object-fit: cover;
-		cursor:pointer;
-		border:4px dashed @gray-400;
-		font-style:italic;
-		opacity:0.8;
-	}
-	.finished_area{
-		position:relative;
-		margin-top:-25px;
-		background-color: rgba(0,0,0,0.7);
-		padding:3px;
-		visibility:hidden;
-		.image_option{
-			color:@gray-400;
-			cursor:pointer;
-			font-size:13pt;
-			margin: 2%;
-			padding: 3%;
-			&:hover{ color:white; }
-		}
-	}
-	.dz-overlay{
-		position:absolute;
-		z-index:100;
-		width:@default-image-width;
-	}
-	&:hover .finished_area{visibility:visible;}
 }

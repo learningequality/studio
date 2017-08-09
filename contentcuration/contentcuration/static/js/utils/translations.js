@@ -1,0 +1,1 @@
+module.exports = window.ALL_MESSAGES || {}; // Set in django

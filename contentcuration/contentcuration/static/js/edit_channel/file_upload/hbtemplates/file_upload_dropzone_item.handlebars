@@ -1,9 +1,7 @@
 <div class="file_dropzone_item">
   <div class="file_dropzone_contents row">
     <div class="inline col-xs-3 preview_section text-center">
-      <object class="thumbnail_fallback" data="/static/img/loading_placeholder.png" type="image/png" width=130 height=130>
-        <img class="thumbnail_img" data-dz-thumbnail alt="No Preview Available" src="{{thumbnail}}"/>
-      </object>
+      <div class="thumbnail_img default_thumbnail_img text-center">{{formatMessage (intlGet 'messages.loading')}}</div>
     </div>
     <div class="inline col-xs-8 format_section">
         <div class="format_editor_file_name_wrapper">
