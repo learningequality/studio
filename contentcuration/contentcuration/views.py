@@ -12,7 +12,7 @@ from django.core.urlresolvers import reverse_lazy
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
 from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User
-from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, BookmarkedChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
+from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
 from contentcuration.utils.messages import get_messages
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -134,29 +134,40 @@ def get_user_channels(request):
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
-def get_user_channel_lists(request):
-    bookmarked_channels = request.user.bookmarked_channels.select_related('main_tree').exclude(deleted=True)
-    bookmarked = bookmarked_channels.values_list('id', flat=True)
+def get_user_bookmarked_channels(request):
+    bookmarked_channels = request.user.bookmarked_channels,exclude(deleted=True)\
+                            .select_related('main_tree').exclude(deleted=True)\
+                            .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
+    return HttpResponse(JSONRenderer().render(AltChannelListSerializer(bookmarked_channels, many=True).data))
 
-    edit_channels = request.user.editable_channels.select_related('main_tree').prefetch_related('editors')\
-                    .exclude(deleted=True)\
-                    .annotate(is_bookmarked=Case(When(id__in=bookmarked, then=Value(1)),default=Value(0),output_field=IntegerField()))\
+
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_user_edit_channels(request):
+    edit_channels = request.user.editable_channels.exclude(deleted=True)\
+                    .select_related('main_tree').prefetch_related('editors')\
                     .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    view_channels = request.user.view_only_channels.select_related('main_tree').prefetch_related('editors')\
+    return HttpResponse(JSONRenderer().render(AltChannelListSerializer(edit_channels, many=True).data))
+
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_user_public_channels(request):
+    channels = Channel.objects.filter(public=True)\
                     .exclude(deleted=True)\
-                    .annotate(is_bookmarked=Case(When(id__in=bookmarked, then=Value(1)),default=Value(0),output_field=IntegerField()))\
+                    .select_related('main_tree').prefetch_related('editors')\
                     .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    public_channels = Channel.objects.filter(public=True).select_related('main_tree').prefetch_related('editors')\
-                    .exclude(deleted=True)\
-                    .annotate(is_bookmarked=Case(When(id__in=bookmarked, then=Value(1)),default=Value(0),output_field=IntegerField()))\
+    return HttpResponse(JSONRenderer().render(AltChannelListSerializer(channels, many=True).data))
+
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_user_view_channels(request):
+    edit_channels = request.user.view_only_channels.exclude(deleted=True)\
+                    .select_related('main_tree').prefetch_related('editors')\
                     .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    return HttpResponse(json.dumps({
-            "edit": JSONRenderer().render(AltChannelListSerializer(edit_channels, many=True).data),
-            "viewonly": JSONRenderer().render(AltChannelListSerializer(view_channels, many=True).data),
-            "public": JSONRenderer().render(AltChannelListSerializer(public_channels, many=True).data),
-            "bookmarked": JSONRenderer().render(BookmarkedChannelListSerializer(bookmarked_channels, many=True).data),
-        })
-    )
+    return HttpResponse(JSONRenderer().render(AltChannelListSerializer(edit_channels, many=True).data))
 
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))

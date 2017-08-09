@@ -1,6 +1,4 @@
 require("offline-js");
-require("../../css/offline-language-english.css");
-require("../../css/offline-language-spanish.css");
 require("../../css/offline-theme-slide.css");
 require("utils/snake");
 
@@ -23,12 +21,24 @@ require("utils/snake");
 // });
 
 var languageMapping = {
-	"en": "english",
-	"es": "spanish",
+	"en": {
+		"language": "english",
+		"load": function() {
+			require("../../css/offline-language-english.css");
+		}
+	},
+	"es": {
+		"language": "spanish",
+		"load": function() {
+			require("../../css/offline-language-spanish.css");
+		}
+	}
 }
 
 function getOfflineLanguageName(code) {
-	return languageMapping[code.split("-")[0]];
+	var language = languageMapping[code.split("-")[0]];
+	language.load();
+	return language.language;
 }
 
 
@@ -41,10 +51,11 @@ $(function() {
 	disabledOverlay.style.display = "none";
 });
 
+var language = getOfflineLanguageName(window.languageCode || "en");
 
 Offline.options = {
 	checks: {xhr: {url: window.Urls.health()}},
-	language: getOfflineLanguageName(window.languageCode || "en"),
+	language: language, //getOfflineLanguageName(window.languageCode || "en"),
 	theme: "slide",
 	// game:true //Enable to add snake game while waiting for server to reconnect
 }

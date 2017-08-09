@@ -654,7 +654,6 @@ class ChannelListSerializer(serializers.ModelSerializer):
 
 class AltChannelListSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
-    is_bookmarked = serializers.SerializerMethodField('check_bookmarked')
     published = serializers.SerializerMethodField('check_published')
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
@@ -672,9 +671,6 @@ class AltChannelListSerializer(serializers.ModelSerializer):
     def check_published(self, channel):
         return channel.main_tree.published
 
-    def check_bookmarked(self, channel):
-        return channel.is_bookmarked == 1
-
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
             return generate_storage_url(channel.thumbnail)
@@ -682,12 +678,8 @@ class AltChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'published', 'editors', 'is_bookmarked', 'modified', 'language',
+        fields = ('id', 'created', 'name', 'published', 'editors', 'modified', 'language',
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
-
-class BookmarkedChannelListSerializer(AltChannelListSerializer):
-    def check_bookmarked(self, channel):
-        return True
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -704,9 +696,14 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 
 
 class UserChannelListSerializer(serializers.ModelSerializer):
+    bookmarks = serializers.SerializerMethodField('retrieve_bookmarks')
+
+    def retrieve_bookmarks(self, user):
+        return user.bookmarked_channels.values_list('id', flat=True)
+
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'is_active')
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks')
 
 
 class AdminChannelListSerializer(serializers.ModelSerializer):
