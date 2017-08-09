@@ -638,7 +638,6 @@ class AccessibleChannelListSerializer(serializers.ModelSerializer):
 
 class ChannelListSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
-    is_bookmarked = serializers.SerializerMethodField('check_bookmarked')
     published = serializers.SerializerMethodField('check_published')
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
@@ -656,8 +655,34 @@ class ChannelListSerializer(serializers.ModelSerializer):
     def check_published(self, channel):
         return channel.main_tree.published
 
-    def check_bookmarked(self, channel):
-        return hasattr(channel, 'is_bookmarked') and channel.is_bookmarked == 1
+    def generate_thumbnail_url(self, channel):
+        if channel.thumbnail and 'static' not in channel.thumbnail:
+            return generate_storage_url(channel.thumbnail)
+        return '/static/img/kolibri_placeholder.png'
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'modified', 'language',
+                  'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'preferences')
+
+class AltChannelListSerializer(serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+    published = serializers.SerializerMethodField('check_published')
+    count = serializers.SerializerMethodField("get_resource_count")
+    created = serializers.SerializerMethodField('get_date_created')
+    modified = serializers.SerializerMethodField('get_date_modified')
+
+    def get_date_created(self, channel):
+        return channel.main_tree.created
+
+    def get_date_modified(self, channel):
+        return channel.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
+
+    def get_resource_count(self, channel):
+        return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
+
+    def check_published(self, channel):
+        return channel.main_tree.published
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
@@ -666,9 +691,8 @@ class ChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'is_bookmarked', 'modified', 'language',
-                  'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'preferences')
-
+        fields = ('id', 'created', 'name', 'published', 'editors', 'modified', 'language',
+                  'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -685,9 +709,14 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 
 
 class UserChannelListSerializer(serializers.ModelSerializer):
+    bookmarks = serializers.SerializerMethodField('retrieve_bookmarks')
+
+    def retrieve_bookmarks(self, user):
+        return user.bookmarked_channels.values_list('id', flat=True)
+
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'is_active')
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks')
 
 
 class AdminChannelListSerializer(serializers.ModelSerializer):

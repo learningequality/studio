@@ -68,22 +68,28 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 			self.current_channel_list = new CurrentChannelList({
 				container: self,
 				el: self.$("#channel_list"),
-				collection: channels.edit
+				collection: channels
 			});
+		});
+		window.current_user.get_bookmarked_channels().then(function(channels){
 			self.starred_channel_list = new StarredChannelList({
 				container: self,
 				el: self.$("#starred_list"),
-				collection: channels.bookmarked
+				collection: channels
 			});
+		});
+		window.current_user.get_public_channels().then(function(channels){
 			self.public_channel_list = new PublicChannelList({
 				container: self,
 				el: self.$("#public_list"),
-				collection: channels.public
+				collection: channels
 			});
+		});
+		window.current_user.get_view_only_channels().then(function(channels){
 			self.viewonly_channel_list = new ViewOnlyChannelList({
 				container: self,
 				el: self.$("#viewonly_list"),
-				collection: channels.viewonly
+				collection: channels
 			});
 		});
 	},
@@ -433,7 +439,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				thumbnail : this.thumbnail,
 				thumbnail_encoding: this.thumbnail_encoding,
 				editors: this.model.get('editors'),
-				pending_editors: this.model.get('pending_editors'),
 				preferences: JSON.stringify(this.model.get('preferences') || window.user_preferences),
 				language: this.$el.find("#select_language").val()
 			};
