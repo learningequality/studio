@@ -683,7 +683,7 @@ class AltChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'editors', 'is_bookmarked', 'modified', 'language',
-                  'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding')
+                  'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
 
 class BookmarkedChannelListSerializer(AltChannelListSerializer):
     def check_bookmarked(self, channel):
