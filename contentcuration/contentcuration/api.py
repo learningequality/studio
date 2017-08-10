@@ -14,6 +14,7 @@ from django.utils.translation import ugettext as _
 from le_utils.constants import format_presets, content_kinds
 import contentcuration.models as models
 
+
 def check_supported_browsers(user_agent_string):
     if not user_agent_string:
         return False
