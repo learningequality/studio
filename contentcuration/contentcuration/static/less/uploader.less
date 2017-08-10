@@ -64,7 +64,7 @@
 		}
 		.file_editor_row{ margin:0px; }
 		#title_error{ display:none; }
-		h4 {
+		h4, #language_label {
 			font-size: 13px;
 			color: @gray-800;
 			margin-top: 5px;
@@ -88,6 +88,7 @@
 		#license_select{
 			margin-top:5px;
 			padding: 0px 2px;
+			max-width: 80%;
 		}
 		#license_about, #mastery_about{
 			font-size:14pt;
@@ -151,7 +152,7 @@
 	#preview_window{ width:100%; }
 	#uploaded_list_wrapper{
 		width: @metadata-width * 0.28;
-		min-height:@uploader-height - 150px;
+		min-height: 200px;
 		margin-bottom: 20px;
 		background-color:white;
 		overflow-y:auto;

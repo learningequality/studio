@@ -9,7 +9,7 @@
 			<div class="answer editable" data-ph="Answer"></div>
 		</div>
 		<div class="col-sm-2 answer_options">
-			{{#if allow_edit}}<div class="show_on_focus answer-toolbar pull-right"></div>{{/if}}
+			{{#if allow_edit}}<div class="show_on_focus answer-toolbar pull-right {{#if is_true_false}}hide_remove{{/if}}"></div>{{/if}}
 		</div>
 	</div>
 </div>

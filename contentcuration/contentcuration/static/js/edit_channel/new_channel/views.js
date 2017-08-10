@@ -43,9 +43,10 @@ var MESSAGES = {
 	"star_channel": "Star Channel",
 	"unstar_channel": "Remove Star",
 	"viewonly": "View-Only",
-	"last_updated": "Updated {date}",
+	"last_updated": "Updated {updated}",
 	"starred_channel": "Star Added!",
-	"unstarred_channel": "Star Removed"
+	"unstarred_channel": "Star Removed",
+	"create": "Create"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -67,22 +68,28 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 			self.current_channel_list = new CurrentChannelList({
 				container: self,
 				el: self.$("#channel_list"),
-				collection: channels.edit
+				collection: channels
 			});
+		});
+		window.current_user.get_bookmarked_channels().then(function(channels){
 			self.starred_channel_list = new StarredChannelList({
 				container: self,
 				el: self.$("#starred_list"),
-				collection: channels.bookmarked
+				collection: channels
 			});
+		});
+		window.current_user.get_public_channels().then(function(channels){
 			self.public_channel_list = new PublicChannelList({
 				container: self,
 				el: self.$("#public_list"),
-				collection: channels.public
+				collection: channels
 			});
+		});
+		window.current_user.get_view_only_channels().then(function(channels){
 			self.viewonly_channel_list = new ViewOnlyChannelList({
 				container: self,
 				el: self.$("#viewonly_list"),
-				collection: channels.viewonly
+				collection: channels
 			});
 		});
 	},
@@ -232,10 +239,13 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.thumbnail = this.original_thumbnail;
 		this.originalData = (this.model)? this.model.toJSON() : null;
 		this.can_edit = this.model.get("editors").indexOf(window.current_user.id) >= 0;
-		this.render();
 		this.dropzone = null;
 		this.isNew = false;
 		this.thumbnail_success = true;
+		this.render();
+	},
+	get_post_translations: function(){
+		return {};
 	},
 
 	set_is_new:function(isNew){
@@ -244,6 +254,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.$(".save_channel").attr("disabled", "disabled");
 			this.$(".save_channel").prop("disabled", true);
 			this.$(".save_channel").css("cursor", "not-allowed");
+			this.render();
 		}
 	},
 	render: function() {
@@ -255,7 +266,10 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			resource_count: this.model.get("count"),
 			channel_link : this.model.get("id"),
 			picture : (this.thumbnail_encoding && this.thumbnail_encoding.base64) || this.thumbnail_url,
-			modified: this.model.get("modified")
+			modified: this.model.get("modified"),
+			languages: window.languages.toJSON(),
+			language: window.languages.findWhere({id: this.model.get("language")}),
+			new: this.isNew
 		}, {
 			data: this.get_intl_data()
 		}));
@@ -348,6 +362,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.containing_list_view.set_editing(true);
 		this.edit = true;
 		this.render();
+		this.$("#select_language").val(this.model.get("language") || 0);
 	},
 	star_channel: function(){
 		var self = this;
@@ -383,7 +398,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.remove();
 		}else{
 			var self = this;
-			dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning"), {
+			dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning", this.model.get("name")), {
 				[this.get_translation("cancel")]:function(){},
 				[this.get_translation("delete_channel")]: function(){
 					self.save({"deleted":true}, self.get_translation("deleting_channel")).then(function(){
@@ -417,14 +432,15 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			this.set_is_new(false);
 			var title = this.$el.find("#new_channel_name").val().trim();
 			var description = this.$el.find("#new_channel_description").val();
+			var language = window.languages.findWhere({id: this.$el.find("#select_language").val()});
 			var data = {
 				name: title,
 				description: description,
 				thumbnail : this.thumbnail,
 				thumbnail_encoding: this.thumbnail_encoding,
 				editors: this.model.get('editors'),
-				pending_editors: this.model.get('pending_editors'),
-				preferences: JSON.stringify(this.model.get('preferences') || window.user_preferences)
+				preferences: JSON.stringify(this.model.get('preferences') || window.user_preferences),
+				language: this.$el.find("#select_language").val()
 			};
 			this.original_thumbnail = this.thumbnail;
 			this.original_thumbnail_url = this.thumbnail_url;

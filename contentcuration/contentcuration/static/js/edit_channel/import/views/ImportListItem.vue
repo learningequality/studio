@@ -24,7 +24,7 @@
       <span class="ListItem__Label__Title">
         {{ node.title }}
         <em v-if="isFolder && !isChannel && (resourceCount > 0)" class="ListItem__ChildCount">
-          {{ resourceCount | pluralize('Resource') }}
+          {{ $tr('resourceCount', {'resourceCount': resourceCount})  }}
         </em>
       </span>
 
@@ -39,7 +39,7 @@
       </template>
 
       <i v-show="(isFolder || isChannel) & isChecked" class="ListItem__Counter badge">
-        {{ $tr('importCountText', {'resourceCount': node.metadata.resource_count})  }}
+        {{ $tr('resourceCount', {'resourceCount': resourceCount})  }}
       </i>
     </label>
 

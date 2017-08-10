@@ -20,7 +20,7 @@ var ChannelEditRouter  = Backbone.Router.extend({
 		this.formatpresets = new Models.FormatPresetCollection(window.presets);
 		this.contentkinds = new Models.ContentKindCollection(window.kinds);
 		this.languages = new Models.LanguageCollection(window.langs);
-  },
+	},
 
   routes: {
 		"": "navigate_channel_home",
@@ -32,6 +32,7 @@ var ChannelEditRouter  = Backbone.Router.extend({
   },
 
 	navigate_channel_home: function() {
+		window.languages = this.languages;
 		var ChannelManageView = require("edit_channel/new_channel/views");
 		var channel_manager_view = new ChannelManageView.ChannelListPage ({
 			el: $("#channel-container"),

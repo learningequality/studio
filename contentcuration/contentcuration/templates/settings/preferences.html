@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 {% extends "settings/settings.html" %}
 {% load staticfiles %}
+{% load translation_tags %}
 {% load i18n %}
 
 {% block settingscontent %}
@@ -35,7 +36,11 @@
 			<div class="row">
 				<div class="input-group settings_field col-xs-5">
 					<span class="input-group-addon">{% trans "License" %}</span>
-					{{ form.license }}
+					<select class="form-control setting_change" id="id_license" name="license">
+						{% for x,y in form.fields.license.choices %}
+						    <option value="{{ x }}"{% if form.license.value == x %} selected{% endif %}>{{ x | get_translation }}</option>
+						{% endfor %}
+					</select>
 				</div>
 				<div class="input-group settings_field col-xs-7">
 					<span class="input-group-addon">{% trans "Copyright Holder" %}</span>
@@ -73,7 +78,11 @@
 			<div class="row">
 				<div class="input-group settings_field col-xs-6">
 					<span class="input-group-addon">{% trans "Mastery At" %}</span>
-					{{ form.mastery_model }}
+					<select class="form-control setting_change" id="id_mastery_model" name="mastery_model">
+						{% for x,y in form.fields.mastery_model.choices %}
+						    <option value="{{ x }}"{% if form.mastery_model.value == x %} selected{% endif %}>{{ x | get_translation }}</option>
+						{% endfor %}
+					</select>
 				</div>
 				<div class="col-xs-1"></div>
 				<div class="input-group settings_field  col-xs-2 mastery_criteria">

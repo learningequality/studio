@@ -108,16 +108,57 @@ var UserModel = BaseModel.extend({
         return new Promise(function(resolve, reject){
             $.ajax({
                 method:"GET",
-                url: window.Urls.get_user_channels(),
+                url: window.Urls.get_user_edit_channels(),
                 error: reject,
                 success: function(data) {
-                    var collections = JSON.parse(data);
-                    resolve({
-                        "edit": new ChannelCollection(JSON.parse(collections.edit)),
-                        "viewonly": new ChannelCollection(JSON.parse(collections.viewonly)),
-                        "public": new ChannelCollection(JSON.parse(collections.public)),
-                        "bookmarked": new ChannelCollection(JSON.parse(collections.bookmarked)),
-                    });
+                    var collection = new ChannelCollection(JSON.parse(data));
+                    collection.each(function(item) { item.set("is_bookmarked", _.contains(self.get("bookmarks"), item.id)); });
+                    resolve(collection);
+                }
+            });
+        });
+    },
+    get_view_only_channels: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_user_view_channels(),
+                error: reject,
+                success: function(data) {
+                    var collection = new ChannelCollection(JSON.parse(data));
+                    collection.each(function(item) { item.set("is_bookmarked", _.contains(self.get("bookmarks"), item.id)); });
+                    resolve(collection);
+                }
+            });
+        });
+    },
+    get_bookmarked_channels: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_user_bookmarked_channels(),
+                error: reject,
+                success: function(data) {
+                    var collection = new ChannelCollection(JSON.parse(data));
+                    collection.each(function(item) { item.set("is_bookmarked", true); });
+                    resolve(collection);
+                }
+            });
+        });
+    },
+    get_public_channels: function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_user_public_channels(),
+                error: reject,
+                success: function(data) {
+                    var collection = new ChannelCollection(JSON.parse(data));
+                    collection.each(function(item) { item.set("is_bookmarked", _.contains(self.get("bookmarks"), item.id)); });
+                    resolve(collection);
                 }
             });
         });
@@ -242,7 +283,7 @@ var ContentNodeModel = BaseModel.extend({
                 url: window.Urls.generate_thumbnail(),
                 data:  JSON.stringify({"node_id": self.id}),
                 success: function(result) {
-                    file = JSON.parse(result).file
+                    var file = JSON.parse(result).file
                     resolve(new FileModel(JSON.parse(file)));
                 },
                 error:reject
@@ -335,7 +376,7 @@ var ContentNodeCollection = BaseCollection.extend({
                     item.set('contentnode', node.id);
                     if(item.get('type') === 'input_question'){
                         item.get('answers').each( function(a){
-                            var value = numParser.extract_value(a.get('answer'))
+                            var value = numParser.parse(a.get('answer'))
                             a.set('answer', value.toString());
                         });
                     }
