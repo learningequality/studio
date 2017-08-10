@@ -39,4 +39,8 @@ vagrantdevserver:
 
 vagrantceleryworker:
 	echo "Starting up a celery worker"
+<<<<<<< HEAD
 	vagrant ssh -c 'cd /vagrant/contentcuration;celery -A contentcuration worker -l info;cd -;'
+=======
+	vagrant ssh -c 'cd /vagrant/contentcuration;DJANGO_SETTINGS_MODULE=contentcuration.dev_settings celery -A contentcuration worker -l info;cd -;'
+>>>>>>> 0ef83fd3166314270419676ad18eb6688363d8e2
