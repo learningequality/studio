@@ -112,6 +112,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         if space < size:
             raise PermissionDenied(_("Not enough space. Check your storage under Settings page."))
 
+    def check_staged_space(self, size, checksum):
+        if checksum in self.staged_files.values_list('checksum', flat=True):
+            return True
+        space = self.get_available_space()
+        if space < size:
+            raise PermissionDenied(_("Out of storage! Request more at info@learningequality.org"))
+
+    def get_available_staged_space(self):
+        space_used = self.staged_files.distinct("checksum").aggregate(size=Sum("file_size"))['size']
+        return float(max(self.disk_space - space_used, 0))
+
     def get_available_space(self):
         return float(max(self.disk_space - self.get_space_used(), 0))
 
@@ -663,6 +674,14 @@ class AssessmentItem(models.Model):
     source_url = models.CharField(max_length=400, blank=True, null=True)
     randomize = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+
+class StagedFile(models.Model):
+    """
+    Keeps track of files uploaded through Ricecooker to avoid user going over disk quota limit
+    """
+    checksum = models.CharField(max_length=400, blank=True, db_index=True)
+    file_size = models.IntegerField(blank=True, null=True)
+    uploaded_by = models.ForeignKey(User, related_name='staged_files', blank=True, null=True)
 
 
 class File(models.Model):

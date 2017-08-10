@@ -8,7 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
 from django.core.files import File as DjFile
 from django.core.management import call_command
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from le_utils.constants import content_kinds
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -16,8 +16,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
 from contentcuration import ricecooker_versions as rc
-from contentcuration.api import get_staged_diff
-from contentcuration.api import write_file_to_storage, activate_channel
+from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
 from contentcuration.models import AssessmentItem, Channel, License, File, FormatPreset, ContentNode, Language, \
     generate_file_on_disk_name
 from contentcuration.utils.logging import trace
@@ -93,7 +92,18 @@ def api_file_upload(request):
     """ Upload a file to the storage system """
     try:
         fobj = request.FILES["file"]
+        checksum, ext = fobj._name.split(".")
+        try:
+            request.user.check_staged_space(fobj._size, checksum)
+        except Exception as e:
+            return HttpResponseForbidden(str(e))
+
         formatted_filename = write_file_to_storage(fobj, check_valid=True)
+        StagedFile.objects.get_or_create(
+            checksum = checksum,
+            file_size = fobj._size,
+            uploaded_by = request.user
+        )
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -349,7 +359,6 @@ def create_channel(channel_data, user):
         source_id=channel.source_id,
         source_domain=channel.source_domain,
         extra_fields=json.dumps({'ricecooker_version': channel.ricecooker_version}),
-        languauge_id=channel.language,
     )
     channel.chef_tree.save()
     channel.save()
