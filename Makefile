@@ -37,6 +37,6 @@ vagrantdevserver:
 	echo "Server to run on 192.168.31.9:8000"
 	vagrant ssh -c 'cd /vagrant/contentcuration;python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8000;cd -;'
 
-vagrantceleryworkers:
-	echo "Starting up celery workers"
-	vagrant ssh -c 'cd /vagrant/contentcuration;'
+vagrantceleryworker:
+	echo "Starting up a celery worker"
+	vagrant ssh -c 'cd /vagrant/contentcuration;DJANGO_SETTINGS_MODULE=contentcuration.dev_settings celery -A contentcuration worker -l info;cd -;'
