@@ -201,11 +201,14 @@ def add_editor_to_channel(invitation):
     invitation.delete()
 
 
-def activate_channel(channel):
+def activate_channel(channel, user):
+    user.check_channel_space(channel)
     channel.previous_tree = channel.main_tree
     channel.main_tree = channel.staging_tree
     channel.staging_tree = None
     channel.save()
+
+    user.staged_files.all().delete()
 
 
 def get_staged_diff(channel_id):
