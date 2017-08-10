@@ -23,8 +23,9 @@ var MESSAGES = {
               "to revisit key prior concepts, which may take the form of foundational skills or " +
               "immediately relevant background information. For learners on Kolibri, these items " +
               "will appear alongside the concept for recommended viewing.",
-    "published": "Channel Successfully Published!",
-    "published_prompt": "Here is your published ID (for importing channel into Kolibri):",
+  "published": "Channel is Currently Publishing...",
+  "published_prompt": "You will get an email once the channel finishes publishing. " +
+              "Here is your published ID (for importing channel into Kolibri):"
 }
 
 var BaseInfoModalView = BaseViews.BaseModalView.extend({
