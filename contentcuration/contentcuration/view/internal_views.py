@@ -469,7 +469,7 @@ def create_root_from_file(file_name, is_published):
         source_id=node_data['source_id'],
         source_domain=node_data['source_domain'],
         extra_fields=json.dumps({'ricecooker_version': node_data['ricecooker_version']}),
-        language_id=node_data.get('language_id'),
+        language_id=node_data.get('language'),
     ), node_data
 
 
@@ -493,7 +493,7 @@ def create_node_from_file(file_name, parent_node, sort_order):
         sort_order=sort_order,
         source_id=node_data['source_id'],
         source_domain=node_data['source_domain'],
-        language_id=node_data.get('language_id'),
+        language_id=node_data.get('language'),
     )
     # Create files associated with node
     map_files_to_node(cur_node, node_data['files'])
@@ -555,7 +555,7 @@ def create_node(node_data, parent_node, sort_order):
         sort_order=sort_order,
         source_id=node_data.get('source_id'),
         source_domain=node_data.get('source_domain'),
-        language_id=node_data.get('language_id'),
+        language_id=node_data.get('language'),
     )
 
 
