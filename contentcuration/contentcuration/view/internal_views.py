@@ -334,7 +334,7 @@ def create_channel(channel_data, user):
     channel.source_id = channel_data.get('source_id')
     channel.source_domain = channel_data.get('source_domain')
     channel.ricecooker_version = channel_data.get('ricecooker_version')
-    channel.language = channel_data.get('language')
+    channel.language = channel_data.get('language_id')
 
     old_chef_tree = channel.chef_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
@@ -469,7 +469,7 @@ def create_root_from_file(file_name, is_published):
         source_id=node_data['source_id'],
         source_domain=node_data['source_domain'],
         extra_fields=json.dumps({'ricecooker_version': node_data['ricecooker_version']}),
-        language_id=node_data.get('language'),
+        language_id=node_data.get('language_id'),
     ), node_data
 
 
@@ -493,7 +493,7 @@ def create_node_from_file(file_name, parent_node, sort_order):
         sort_order=sort_order,
         source_id=node_data['source_id'],
         source_domain=node_data['source_domain'],
-        language_id=node_data.get('language'),
+        language_id=node_data.get('language_id'),
     )
     # Create files associated with node
     map_files_to_node(cur_node, node_data['files'])
@@ -555,7 +555,7 @@ def create_node(node_data, parent_node, sort_order):
         sort_order=sort_order,
         source_id=node_data.get('source_id'),
         source_domain=node_data.get('source_domain'),
-        language_id=node_data.get('language'),
+        language_id=node_data.get('language_id'),
     )
 
 
@@ -582,11 +582,11 @@ def map_files_to_node(node, data):
             raise IOError('{} not found'.format(file_path))
 
         try:
-            if file_data.get('language'):
+            if file_data.get('language_id'):
                 # TODO: Remove DB call per file?
-                file_data['language'] = Language.objects.get(pk=file_data['language'])
+                file_data['language_id'] = Language.objects.get(pk=file_data['language_id'])
         except ObjectDoesNotExist as e:
-            invalid_lang = file_data.get('language')
+            invalid_lang = file_data.get('language_id')
             logging.warning("file_data with language {} does not exist.".format(invalid_lang))
             raise ValidationError("file_data given was invalid; expected string, got {}".format(invalid_lang))
 
@@ -599,7 +599,7 @@ def map_files_to_node(node, data):
             file_size=file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
-            language_id=file_data.get('language'),
+            language_id=file_data.get('language_id'),
         )
         resource_obj.file_on_disk.name = file_path
         resource_obj.save()
