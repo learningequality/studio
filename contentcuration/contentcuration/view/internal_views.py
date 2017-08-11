@@ -349,7 +349,6 @@ def create_channel(channel_data, user):
         source_id=channel.source_id,
         source_domain=channel.source_domain,
         extra_fields=json.dumps({'ricecooker_version': channel.ricecooker_version}),
-        languauge_id=channel.language,
     )
     channel.chef_tree.save()
     channel.save()
