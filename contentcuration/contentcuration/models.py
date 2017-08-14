@@ -149,7 +149,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return float(max(self.disk_space - self.get_space_used(), 0))
 
     def get_user_active_trees(self):
-        return self.editable_channels.exclude(deleted=False)\
+        return self.editable_channels.exclude(deleted=True)\
                 .values_list('main_tree__tree_id', flat=True)
 
     def get_space_used(self):
