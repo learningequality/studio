@@ -291,6 +291,8 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'click .edit_content' : 'edit_item',
 		'change input[type=checkbox]': 'handle_checked',
 		'contextmenu .queue_item' : 'open_context_menu',
+		'click .copy_content': 'copy_content',
+		'click .move_content': 'move_content'
 	},
 	edit_item:function(event){
 		event.stopPropagation();
@@ -319,7 +321,15 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
             	self.add_to_trash()
             }
         }, null);
-	}
+	},
+	copy_content:function(event){
+		this.cancel_actions(event);
+		this.copy_item();
+	},
+	move_content:function(event){
+		this.cancel_actions(event);
+		this.open_move();
+	},
 });
 
 module.exports = {

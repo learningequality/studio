@@ -48,6 +48,7 @@ var MESSAGES = {
     "delete_warning": "Are you sure you want to delete these selected items?",
     "related_content_alert": "Related content will not be included in the copy of this content.",
     "delete_item_warning": "Are you sure you want to delete {data}?",
+    "copy_to_clipboard": "Copy to Clipboard"
 }
 
 /**

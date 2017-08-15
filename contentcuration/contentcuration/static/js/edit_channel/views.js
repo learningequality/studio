@@ -159,7 +159,7 @@ var BaseView = Backbone.View.extend({
   		$("#loading_modal").remove();
   	}
   },
-  	reload_ancestors:function(collection, include_collection){
+  	reload_ancestors:function(collection, include_collection, callback){
   		include_collection = include_collection==null || include_collection;
 		var list_to_reload = collection.chain()
 						.reduce(function(list, item){ return list.concat(item.get('ancestors'));}, [])
@@ -184,6 +184,7 @@ var BaseView = Backbone.View.extend({
 					window.current_user.set('clipboard_tree', model.toJSON());
 				}
 			});
+			callback && callback();
 		});
 	},
 	retrieve_nodes:function(ids, force_fetch){
@@ -392,8 +393,9 @@ var BaseWorkspaceView = BaseView.extend({
 
 		// Add nodes to correct place
 		var content = window.workspace_manager.get(target.id);
-		if(content && content.list)
+		if(content && content.list){
 			content.list.add_nodes(moved);
+		}
 		// Recalculate counts
 		this.reload_ancestors(original_parents, true);
 	},
@@ -666,38 +668,6 @@ var BaseEditableListView = BaseListView.extend({
       	this.handle_if_empty();
       	// this.update_views();
 	},
-	delete_items_permanently:function(message){
-		message = (message!=null)? message: this.get_translation("deleting");
-		var self = this;
-		this.display_load(message, function(resolve_load, reject_load){
-			var list = self.get_selected();
-			var promise_list = [];
-			for(var i = 0; i < list.length; i++){
-				var view = list[i];
-				if(view){
-					promise_list.push(new Promise(function(resolve, reject){
-						view.model.destroy({
-							success:function(data){
-								resolve(data);
-							},
-							error:function(obj, error){
-								reject(error);
-							}
-						});
-						self.collection.remove(view.model);
-						self.views.splice(view,1);
-						view.remove();
-					}));
-				}
-			}
-			Promise.all(promise_list).then(function(){
-				self.handle_if_empty();
-				resolve_load(true);
-			}).catch(function(error){
-				reject_load(error);
-			});
-		});
-	},
 	remove_view:function(view){
 		this.views = _.reject(this.views, function(v){ return v.cid === view.cid; })
 	}
@@ -778,12 +748,13 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 					min = _.isFinite(min)? min : 0;
 					max = _.isFinite(max)? max : min + (selected_items.length * 2);
 
-					var reload_list = [];
+					var reload_list = new Models.ContentNodeCollection();
 					var last_elem = $("#" + moved_item.id);
 					collection.forEach(function(node){
-						reload_list.push(node.get("id"));
+						// reload_list.push(node.get("id"));
 						if(node.get("parent") !== self.model.get("id")){
-							reload_list.push(node.get("parent"));
+							var new_node = self.collection.get({id: node.get("parent")}) || new Models.ContentNode({id: node.get("parent")});
+							reload_list.add(new_node);
 						}
 						var to_delete = $("#" + node.id);
 						var item_view = self.create_new_view(node);
@@ -792,15 +763,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 						to_delete.remove();
 					});
 					collection.move(self.model, max, min).then(function(savedCollection){
-						self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
-							self.container.handle_move(self.model, savedCollection, fetched);
-							// var reloadCollection = new Models.ContentNodeCollection();
-							// reloadCollection.add(fetched.models);
-							// reloadCollection.add(savedCollection.models);
-							// savedCollection.forEach(function(node){ window.workspace_manager.remove(node.id)});
-							// self.reload_ancestors(reloadCollection, true);
-							resolve(true);
-						});
+						self.reload_ancestors(reload_list, true, resolve);
 					}).catch(function(error){
 				        var dialog = require("edit_channel/utils/dialog");
 				        dialog.alert(self.get_translation("error_moving_content"), error.responseText, function(){
@@ -818,6 +781,17 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			}
 		});
 	},
+	retrieve_nodes:function(ids, force_fetch){
+		force_fetch = (force_fetch)? true:false;
+		return window.channel_router.nodeCollection.get_all_fetch(ids, force_fetch);
+	},
+
+
+
+
+
+
+
 	handle_drop:function(collection){
 		this.$(this.default_item).css("display", "none");
 		var promise = new Promise(function(resolve, reject){

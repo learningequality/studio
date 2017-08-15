@@ -14,7 +14,7 @@
 				{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
 			{{else}}
 				{{#if isfolder}}<span class="glyphicon glyphicon-new-window edit_item_button" aria-hidden="true" title="{{formatMessage (intlGet 'messages.view_topic')}}"></span>{{/if}}
-				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true" title="{{formatMessage (intlGet 'messages.copy')}}"></span>
+				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true" title="{{formatMessage (intlGet 'messages.copy_to_clipboard')}}"></span>
 			{{/if}}
 		</div>
 		<h6 class="content_metadata_summary hide_on_drag {{#unless isfolder}}open_file{{/unless}}">
@@ -66,7 +66,7 @@
 	<div class="popover-content">
 		{{#if isfolder}}<div class="add_subtopic_item_button option">{{formatMessage (intlGet 'messages.subtopic')}}</div>{{/if}}
 		<div class="edit_item_button option">{{formatMessage (intlGet 'messages.edit')}}</div>
-		<div class="copy_item_button option">{{formatMessage (intlGet 'messages.copy')}}</div>
+		<div class="copy_item_button option">{{formatMessage (intlGet 'messages.copy_to_clipboard')}}</div>
 		<div class="move_item_button option">{{formatMessage (intlGet 'messages.move')}}</div>
 		<div class="delete_item_button option">{{formatMessage (intlGet 'messages.delete')}}</div>
 	</div>
@@ -75,7 +75,7 @@
 <nav class="context-menu hide_on_drag" tabindex="0">
   	{{#if isfolder}}<div class="add_subtopic_item_button context-option">{{formatMessage (intlGet 'messages.subtopic')}}</div>{{/if}}
 	<div class="edit_item_button context-option">{{formatMessage (intlGet 'messages.edit')}}</div>
-	<div class="copy_item_button context-option">{{formatMessage (intlGet 'messages.copy')}}</div>
+	<div class="copy_item_button context-option">{{formatMessage (intlGet 'messages.copy_to_clipboard')}}</div>
 	<div class="move_item_button context-option">{{formatMessage (intlGet 'messages.move')}}</div>
 	<div class="delete_item_button context-option">{{formatMessage (intlGet 'messages.delete')}}</div>
 </nav>
