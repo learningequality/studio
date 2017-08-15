@@ -105,21 +105,16 @@ class User(AbstractBaseUser, PermissionsMixin):
         return True
 
     def check_space(self, size, checksum):
-        if checksum in self.files.values_list('checksum', flat=True):
+        active_files = self.get_user_active_files()
+        if checksum in active_files.values_list('checksum', flat=True):
             return True
 
-        space = self.get_available_space()
+        space = self.get_available_space(active_files=active_files)
         if space < size:
             raise PermissionDenied(_("Not enough space. Check your storage under Settings page."))
 
     def check_channel_space(self, channel):
-        active_trees = self.editable_channels.exclude(id=channel.id)\
-                            .filter(deleted=False)\
-                            .values_list('main_tree__tree_id', flat=True)
-        active_files = self.files.select_related('contentnode').select_related('assessment_item')\
-                            .filter(Q(contentnode__tree_id__in=active_trees) | Q(assessment_item__contentnode__tree_id__in=active_trees))\
-                            .values('checksum', 'file_size')\
-                            .distinct()
+        active_files = self.get_user_active_files()
         active_size = float(active_files.aggregate(used=Sum('file_size'))['used'] or 0)
 
         staging_tree_id = channel.staging_tree.tree_id
@@ -130,7 +125,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                             .exclude(checksum__in=active_files.values_list('checksum', flat=True))
         staged_size = float(channel_files.aggregate(used=Sum('file_size'))['used'] or 0)
 
-        if self.get_available_space() < (active_size + staged_size):
+        if self.get_available_space(active_files=active_files) < (active_size + staged_size):
             raise PermissionDenied(_("Out of storage! Request more at info@learningequality.org"))
 
 
@@ -145,20 +140,23 @@ class User(AbstractBaseUser, PermissionsMixin):
         space_used = self.staged_files.aggregate(size=Sum("file_size"))['size'] or 0
         return float(max(self.disk_space - space_used, 0))
 
-    def get_available_space(self):
-        return float(max(self.disk_space - self.get_space_used(), 0))
+    def get_available_space(self, active_files=None):
+        return float(max(self.disk_space - self.get_space_used(active_files=active_files), 0))
 
     def get_user_active_trees(self):
         return self.editable_channels.exclude(deleted=True)\
                 .values_list('main_tree__tree_id', flat=True)
 
-    def get_space_used(self):
+    def get_user_active_files(self):
         active_trees = self.get_user_active_trees()
-        files = self.files.select_related('contentnode').select_related('assessment_item')\
+        return self.files.select_related('contentnode').select_related('assessment_item')\
                             .filter(Q(contentnode__tree_id__in=active_trees) | Q(assessment_item__contentnode__tree_id__in=active_trees))\
                             .values('checksum', 'file_size')\
-                            .distinct()\
-                            .aggregate(total_used=Sum('file_size'))
+                            .distinct()
+
+    def get_space_used(self, active_files=None):
+        active_files = active_files or self.get_user_active_files()
+        files = active_files.aggregate(total_used=Sum('file_size'))
         return float(files['total_used'] or 0)
 
     def get_space_used_by_kind(self):
