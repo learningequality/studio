@@ -11,14 +11,12 @@
 
 #secondary-nav {
 	@secondary-nav-btn-color:#F2F2F2;
-	padding:0px 10px 0px 20px;
+	padding:5px 10px 5px 20px;
 	margin: 0 0 0 27px;
 	background-color:transparent;
 	border:none;
 	width:100%;
 	min-height: 0;
-
-	*{ vertical-align: middle; }
 	li {
 		font-size: @larger-body-text;
 		cursor:pointer;
@@ -33,15 +31,15 @@
 			color:@blue-500;
 		}
 	}
-	#channel_settings{
-		padding: 5px 10px;
+	#channel_settings {
 	    margin-left: 10px;
 	    font-size: 14pt;
 	    &:hover{color:@blue-500;}
 	}
+	#channel_settings, #back_to_home { padding: 10px; }
 	.channel_edit_label{
-	    padding: 5px 20px;
-	    font-size: 15pt;
+	    padding: 10px 5px;
+	    font-size: 12pt;
 	    font-weight: bold;
 	    color: @gray-500;
 	}
@@ -105,19 +103,11 @@
 			border: none;
 		}
 		#channel-activate-button{ background-color: #2A982A; &:hover{background-color: #67D267;}}
-		#publish-id{
-			font-size:12pt;
-			.glyphicon{
-				margin-right:5px;
-			}
-			#publish-copy-success{
-				display: none;
-			}
-			.publish-id-text{
-				width:320px;
-			}
+		#get_published_id {
+			.action-text;
+			font-size: 12pt;
+			padding: 5px;
 		}
-
 	}
 }
 

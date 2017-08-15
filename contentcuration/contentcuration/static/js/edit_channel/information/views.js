@@ -24,6 +24,7 @@ var MESSAGES = {
               "immediately relevant background information. For learners on Kolibri, these items " +
               "will appear alongside the concept for recommended viewing.",
     "published": "Channel Successfully Published!",
+    "channel_publish_id": "Published Channel ID",
     "published_prompt": "Here is your published ID (for importing channel into Kolibri):",
 }
 
@@ -77,7 +78,7 @@ var PrerequisiteModalView = BaseInfoModalView.extend({
 var PublishedModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/published_modal.handlebars"),
   modal_id: "#published_modal",
-  get_render_data: function() { return {channel_id: this.data.channel_id}; },
+  get_render_data: function() { return {channel_id: this.data.channel_id, published: this.data.published}; },
   events: {
     'click #modal-copy-btn' : 'copy_publish_id',
     'focus .input-tab-control': 'loop_focus'

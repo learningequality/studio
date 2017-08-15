@@ -1,3 +1,4 @@
+<div> <!-- Added to make jquery sortable more robust -->
 <input type="checkbox" id="item_{{node.id}}" class="list_item_wrapper" {{#if checked}}checked{{/if}}/>
 {{#if isfolder}}
 	<label class="list_item_wrapper folder collapsed open_folder" for="folder_{{node.id}}" title="{{node.title}}">
@@ -78,4 +79,5 @@
 	<div class="move_item_button context-option">{{formatMessage (intlGet 'messages.move')}}</div>
 	<div class="delete_item_button context-option">{{formatMessage (intlGet 'messages.delete')}}</div>
 </nav>
+</div>
 </div>

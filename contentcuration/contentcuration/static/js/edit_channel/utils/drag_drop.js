@@ -24,8 +24,8 @@ function addSortable(element, selected_class, callback){
 	   	distance:5,
 	   	cursor:"move",
 	   	cancel: '.current_topic, .default-item, #preview li',
-	   	containment: "#container-wrapper, #queue.opened",
-	   	appendTo: "#channel-edit-content-wrapper",
+	   	containment: "#channel-edit-sortable-boundary",
+	   	appendTo: "#channel-edit-sortable-boundary",
 	   	bodyClass: "dragging",
 	   	// helper:"clone",
 	    helper: function (e, item) {
@@ -39,6 +39,8 @@ function addSortable(element, selected_class, callback){
         start: function (e, ui) {
             var elements = $('.' + selectedClass + '.hidden').not('.current_topic').not('.sorting-placeholder');
             ui.item.data('items', elements);
+            window.workspace_manager.get_queue_view().close_queue();
+            $("body").addClass("dragging");
         },
         receive: function (e, ui) {
             ui.item.before(ui.item.data('items'));
@@ -47,6 +49,7 @@ function addSortable(element, selected_class, callback){
             ui.item.siblings('.' + selectedClass).removeClass('hidden');
             $("." + selectedClass + " input[type='checkbox']").prop("checked", false);
             $('.' + selectedClass).removeClass(selectedClass);
+            $("body").removeClass("dragging");
         },
         beforeStop: function(event, ui) {
             if ($(event.target).parent("#queue_content") && $("#queue").hasClass("closed")) {
@@ -108,6 +111,52 @@ function addSortable(element, selected_class, callback){
 		items : 'li',
 		cancel: '.current_topic, .default-item, #preview, #queue',
 	}).disableSelection();
+}
+
+
+function addButtonDragDrop(element, dropCallback){
+	element.$(".button_drop").droppable({
+		items : 'li',
+		revert: false,
+		revertDuration:0,
+		cursor:"move",
+		hoverClass: "drop-button-hover",
+		drop:function(event, ui){
+			var selected_items = new Models.ContentNodeCollection();
+			var current_view = window.workspace_manager.get(ui.draggable.context.id);
+			var current_node = current_view.node.model;
+			$(".content-list").sortable( "disable" );
+
+	        var appended_items = new Models.ContentNodeCollection(); //Items from another container
+	        $("#drag-list li").each(function(index, item){
+	        	var view = window.workspace_manager.get(item.id);
+	        	if(view){
+	        		var node = view.node.model;
+		        	if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
+		        		selected_items.push(current_node);
+		        	}
+		        	(current_node.get("parent") === node.get("parent")) ? selected_items.push(node) : appended_items.push(node);
+		        	$(".content-list #"  + item.id).remove();
+	        	}
+	        });
+
+	        if(!selected_items.contains(current_node)){
+        		selected_items.push(current_node);
+        	}
+        	selected_items.add(appended_items.models, {at: selected_items.length});
+        	dropCallback(selected_items).then(function(){
+        		$(ui.draggable.context).remove();
+        		$(".content-list").sortable( "enable" );
+        		$(".content-list").sortable( "refresh" );
+        	});
+		},
+		out: function(event, ui){
+			$(".sorting-placeholder").css("display", "block");
+		},
+		over: function(event, ui){
+			$(".sorting-placeholder").css("display", "none");
+		}
+	});
 }
 
 function addTopicDragDrop(element, hoverCallback, dropCallback){
@@ -181,5 +230,6 @@ function removeDragDrop(element){
 module.exports = {
 	addSortable : addSortable,
 	removeDragDrop : removeDragDrop,
-	addTopicDragDrop:addTopicDragDrop
+	addTopicDragDrop:addTopicDragDrop,
+	addButtonDragDrop: addButtonDragDrop
 }

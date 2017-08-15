@@ -263,7 +263,11 @@ var BaseWorkspaceView = BaseView.extend({
 	handle_published:function(collection){
 		this.reload_ancestors(collection);
 		var staticModal = require('edit_channel/information/views');
-		new staticModal.PublishedModalView({channel_id: window.current_channel.id});
+		new staticModal.PublishedModalView({channel_id: window.current_channel.id, published: true});
+	},
+	get_channel_id:function(collection){
+		var staticModal = require('edit_channel/information/views');
+		new staticModal.PublishedModalView({channel_id: window.current_channel.id, published: false});
 	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");
@@ -790,6 +794,11 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 					collection.move(self.model, max, min).then(function(savedCollection){
 						self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
 							self.container.handle_move(self.model, savedCollection, fetched);
+							// var reloadCollection = new Models.ContentNodeCollection();
+							// reloadCollection.add(fetched.models);
+							// reloadCollection.add(savedCollection.models);
+							// savedCollection.forEach(function(node){ window.workspace_manager.remove(node.id)});
+							// self.reload_ancestors(reloadCollection, true);
 							resolve(true);
 						});
 					}).catch(function(error){
@@ -815,7 +824,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			resolve(collection);
 		});
 		return promise;
-  },
+  	},
 	add_nodes:function(collection){
 		var self = this;
 		collection.forEach(function(entry){
@@ -1049,10 +1058,6 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 	toggle:function(event){
 		this.cancel_actions(event);
 		(this.getToggler().hasClass(this.collapsedClass)) ? this.open_folder() : this.close_folder();
-		if(this.container){
-			var containing_element = this.container.$el.find(this.list_selector);
-			containing_element.scrollLeft(containing_element.width());
-		}
 	},
 	open_folder:function(open_speed){
 		open_speed = (open_speed)? open_speed: 200;
