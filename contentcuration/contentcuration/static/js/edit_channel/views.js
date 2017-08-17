@@ -338,7 +338,7 @@ var BaseWorkspaceView = BaseView.extend({
 		var promise = new Promise(function(resolve, reject){
 			self.display_load(message, function(resolve_load, reject_load){
 				var reloadCollection = collection.clone();
-				collection.move(list_view.model, list_view.model.get("metadata").max_sort_order).then(function(){
+				collection.move(list_view.model, null, list_view.model.get("metadata").max_sort_order + 1).then(function(){
 					list_view.add_nodes(collection);
 					self.reload_ancestors(reloadCollection, false);
 					resolve(collection);
@@ -781,17 +781,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			}
 		});
 	},
-	retrieve_nodes:function(ids, force_fetch){
-		force_fetch = (force_fetch)? true:false;
-		return window.channel_router.nodeCollection.get_all_fetch(ids, force_fetch);
-	},
-
-
-
-
-
-
-
 	handle_drop:function(collection){
 		this.$(this.default_item).css("display", "none");
 		var promise = new Promise(function(resolve, reject){
@@ -1154,7 +1143,6 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([this.model]),message);
 	},
 	copy_item:function(message){
-		console.log(this.get_translation("copying_to_clipboard"))
 		message=(message!=null)? message: this.get_translation("copying_to_clipboard");
 		var copyCollection = new Models.ContentNodeCollection();
 		copyCollection.add(this.model);
