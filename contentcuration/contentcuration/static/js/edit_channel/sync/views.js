@@ -20,7 +20,7 @@ var MESSAGES = {
     "tags_text": "Replace tags with source",
     "assessment_items": "Assessment Items",
     "assessment_items_text": "Questions, answers, etc.",
-    "syncing_items": "Syncing {data, plural,\n =1 {# item}\n other {# items}...",
+    "syncing_items": "Syncing {data, plural,\n =1 {# item}\n other {# items}}...",
     "question_order": "Question Order",
     "randomized": "Randomized",
     "ordered": "Ordered",
@@ -36,8 +36,8 @@ var MESSAGES = {
     "update": "UPDATE",
     "question_deleted": "Question Deleted",
     "deleted": "Deleted",
-    "hint_count": "{count, plural,\n =1 {# hint}\n other {# hints}",
-    "answer_count": "{count, plural,\n =1 {# answer}\n other {# answers}",
+    "hint_count": "{count, plural,\n =1 {# hint}\n other {# hints}}",
+    "answer_count": "{count, plural,\n =1 {# answer}\n other {# answers}}",
     "question_modified": "Question Modified",
     "changed": "Changed",
     "answer": "Answer",
@@ -49,7 +49,7 @@ var MESSAGES = {
     "select_item_prompt": "Select an item to view updates",
     "updated_content": "Updated Content",
     "updated_content_text": "Select content to sync",
-    "preview_content_text": "Review changes made to original content"
+    "preview_content_text": "Review changes made to original content",
 }
 
 
@@ -235,6 +235,8 @@ var SyncPreviewView = BaseViews.BaseView.extend({
                 self.$el.html(self.template({
                     'node': self.model.toJSON(),
                     'diff_items': self.get_diff()
+                }, {
+                    data: self.get_intl_data()
                 }));
             });
         }
