@@ -753,7 +753,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 					collection.forEach(function(node){
 						// reload_list.push(node.get("id"));
 						if(node.get("parent") !== self.model.get("id")){
-							var new_node = self.collection.get({id: node.get("parent")}) || new Models.ContentNode({id: node.get("parent")});
+							var new_node = self.collection.get({id: node.get("parent")}) || new Models.ContentNodeModel({id: node.get("parent")});
 							reload_list.add(new_node);
 						}
 						var to_delete = $("#" + node.id);
