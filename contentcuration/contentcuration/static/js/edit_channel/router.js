@@ -103,7 +103,7 @@ var ChannelEditRouter  = Backbone.Router.extend({
 		var urlString = window.current_channel.id + "/" + window.current_page;
 		urlString += (window.topic)? "/" + window.topic : "";
 		urlString += (window.node) ? "/" + window.node : "";
-		this.navigate(urlString);
+		this.navigate(urlString, {replace: true});
 	}
 });
 
