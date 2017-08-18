@@ -34,6 +34,7 @@ var MESSAGES = {
 	"moving_to_clipboard": "Moving to Clipboard...",
 	"deleting_content": "Deleting Content...",
 	"copying_to_clipboard": "Copying to Clipboard...",
+	"making_copy": "Making a Copy...",
 	"loading": "Loading...",
 	"saving": "Saving...",
 	"creating": "Creating...",
@@ -1052,7 +1053,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		this.bind_node_functions();
 		_.bindAll(this, 'copy_item', 'open_preview', 'open_edit', 'handle_drop',
 			'handle_checked', 'add_to_clipboard', 'add_to_trash', 'make_droppable',
-			'add_nodes', 'add_topic', 'open_move', 'handle_move');
+			'add_nodes', 'add_topic', 'open_move', 'handle_move', 'make_copy');
 	},
 	make_droppable:function(){
 		// Temporarily disable dropping onto topics for now
@@ -1149,9 +1150,22 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		var self = this;
 		this.display_load(message, function(resolve, reject){
 			self.containing_list_view.copy_collection(copyCollection).then(function(collection){
-				self.containing_list_view.add_to_clipboard(collection, "");
+				self.containing_list_view.add_to_clipboard(collection, message);
 				resolve(collection);
 			}).catch(function(error){reject(error);});
+		});
+	},
+	make_copy: function(message){
+		message=(message!=null)? message: this.get_translation("making_copy");
+		var copyCollection = new Models.ContentNodeCollection();
+		copyCollection.add(this.model);
+		var self = this;
+		this.display_load(message, function(resolve, reject){
+			self.model.make_copy(self.containing_list_view.model).then(function(collection) {
+				var new_view = self.containing_list_view.create_new_view(collection.at(0));
+				self.$el.after(new_view.el);
+				self.reload_ancestors(collection, true, resolve);
+			});
 		});
 	},
 	add_topic: function(){

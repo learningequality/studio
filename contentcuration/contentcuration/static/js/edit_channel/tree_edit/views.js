@@ -48,7 +48,8 @@ var MESSAGES = {
     "delete_warning": "Are you sure you want to delete these selected items?",
     "related_content_alert": "Related content will not be included in the copy of this content.",
     "delete_item_warning": "Are you sure you want to delete {data}?",
-    "copy_to_clipboard": "Copy to Clipboard"
+    "copy_to_clipboard": "Copy to Clipboard",
+    "make_copy": "Make a Copy"
 }
 
 /**
@@ -398,7 +399,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	className: "content draggable to_publish",
 	initialize: function(options) {
 		_.bindAll(this, 'open_folder','open_node', 'copy_node' , 'delete_node', 'move_node',
-				'add_new_subtopic', 'open_context_menu', 'toggle_description');
+				'add_new_subtopic', 'open_context_menu', 'toggle_description', 'make_copy');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
@@ -473,7 +474,8 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'click .move_item_button': 'move_node',
 		'click .add_subtopic_item_button': 'add_new_subtopic',
 		'contextmenu .list_item_wrapper' : 'open_context_menu',
-		'click .toggle_description' : 'toggle_description'
+		'click .toggle_description' : 'toggle_description',
+		'click .make_copy_item_button': 'make_inline_copy'
 	},
 	toggle_description:function(event){
 		event.stopPropagation();
@@ -520,6 +522,10 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		} else {
 			this.copy_item();
 		}
+	},
+	make_inline_copy: function(event) {
+		this.cancel_actions(event);
+		this.make_copy();
 	},
 	move_node:function(event){
 		this.cancel_actions(event);

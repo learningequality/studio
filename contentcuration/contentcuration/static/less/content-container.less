@@ -499,10 +499,11 @@
 			}
 			.popover{
 				border-radius: 0;
-				margin-top: 15px;
+				margin-top: 30px;
 				.arrow{top:40% !important;}
 				.popover-content {
 					padding:0px;
+					min-width: 200px;
 					.option{
 						width:100%;
 						padding:5px 20px;
@@ -526,13 +527,21 @@
 			  background-color: white;
 			  border:1px solid @gray-200;
 			  border-width:thin;
+			  min-width: 200px;
+			  .context-header {
+			  	padding:5px 10px;
+			  	font-size: 12pt;
+			  	font-weight: bold;
+			  	background-color: @blue-100;
+			  	max-width: 200px;
+			  }
 			  .context-option{
 			  	padding:5px 10px;
 			  	font-size:12pt;
-			  }
-			  .context-option:hover{
-			  	font-weight:bold;
-			  	background-color: @gray-200;
+				&:hover{
+				  	font-weight:bold;
+				  	background-color: @gray-200;
+				}
 			  }
 			}
 			.context-menu.init, .context-menu:focus{

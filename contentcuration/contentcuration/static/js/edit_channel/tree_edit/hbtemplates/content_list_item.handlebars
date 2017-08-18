@@ -64,20 +64,23 @@
 <div class="popover content-popover" tabindex="0" role="tooltip" id="options_{{node.id}}">
 	<div class="arrow"></div>
 	<div class="popover-content">
-		{{#if isfolder}}<div class="add_subtopic_item_button option">{{formatMessage (intlGet 'messages.subtopic')}}</div>{{/if}}
-		<div class="edit_item_button option">{{formatMessage (intlGet 'messages.edit')}}</div>
-		<div class="copy_item_button option">{{formatMessage (intlGet 'messages.copy_to_clipboard')}}</div>
-		<div class="move_item_button option">{{formatMessage (intlGet 'messages.move')}}</div>
-		<div class="delete_item_button option">{{formatMessage (intlGet 'messages.delete')}}</div>
+		{{#if isfolder}}<div class="add_subtopic_item_button option" title="{{formatMessage (intlGet 'messages.subtopic')}}">{{formatMessage (intlGet 'messages.subtopic')}}</div>{{/if}}
+		<div class="edit_item_button option" title="{{formatMessage (intlGet 'messages.edit')}}">{{formatMessage (intlGet 'messages.edit')}}</div>
+		<div class="move_item_button option" title="{{formatMessage (intlGet 'messages.move')}}">{{formatMessage (intlGet 'messages.move')}}</div>
+		<div class="delete_item_button option" title="{{formatMessage (intlGet 'messages.delete')}}">{{formatMessage (intlGet 'messages.delete')}}</div>
+		<div class="make_copy_item_button option" title="{{formatMessage (intlGet 'messages.make_copy')}}">{{formatMessage (intlGet 'messages.make_copy')}}</div>
+		<div class="copy_item_button option" title="{{formatMessage (intlGet 'messages.copy_to_clipboard')}}">{{formatMessage (intlGet 'messages.copy_to_clipboard')}}</div>
 	</div>
 </div>
 
 <nav class="context-menu hide_on_drag" tabindex="0">
-  	{{#if isfolder}}<div class="add_subtopic_item_button context-option">{{formatMessage (intlGet 'messages.subtopic')}}</div>{{/if}}
-	<div class="edit_item_button context-option">{{formatMessage (intlGet 'messages.edit')}}</div>
-	<div class="copy_item_button context-option">{{formatMessage (intlGet 'messages.copy_to_clipboard')}}</div>
-	<div class="move_item_button context-option">{{formatMessage (intlGet 'messages.move')}}</div>
-	<div class="delete_item_button context-option">{{formatMessage (intlGet 'messages.delete')}}</div>
+	<div class="context-header truncate" title="{{node.title}}">{{node.title}}</div>
+  	{{#if isfolder}}<div class="add_subtopic_item_button context-option" title="{{formatMessage (intlGet 'messages.subtopic')}}">{{formatMessage (intlGet 'messages.subtopic')}}</div>{{/if}}
+	<div class="edit_item_button context-option" title="{{formatMessage (intlGet 'messages.edit')}}">{{formatMessage (intlGet 'messages.edit')}}</div>
+	<div class="move_item_button context-option" title="{{formatMessage (intlGet 'messages.move')}}">{{formatMessage (intlGet 'messages.move')}}</div>
+	<div class="delete_item_button context-option" title="{{formatMessage (intlGet 'messages.delete')}}">{{formatMessage (intlGet 'messages.delete')}}</div>
+	<div class="make_copy_item_button context-option" title="{{formatMessage (intlGet 'messages.make_copy')}}">{{formatMessage (intlGet 'messages.make_copy')}}</div>
+	<div class="copy_item_button context-option" title="{{formatMessage (intlGet 'messages.copy_to_clipboard')}}">{{formatMessage (intlGet 'messages.copy_to_clipboard')}}</div>
 </nav>
 </div>
 </div>

@@ -25,6 +25,7 @@
 		color: @queue-color;
 		background-color: transparent;
 		border-radius: 0px;
+		pointer-events: all;
 		&:hover { color: @queue-color; }
 		.badge{
 			background-color: @blue-500;
@@ -37,6 +38,7 @@
 	    position: fixed;
 	    z-index: 999;
 	    margin-top: -25px;
+	    pointer-events: none;
 	    .drop_text{
 	    	visibility: hidden;
 	    	font-size: 10pt;
@@ -111,12 +113,7 @@
 						padding-left:5px;
 						min-width:@queue-width - 32px;
 						background-color: white;
-						.popover{ visibility: collapse; }
-						&:hover {
-							&.queue-item{ background-color: @highlight-color; }
-							.popover{ visibility: visible; }
-						}
-						&.queue-item:hover
+						&.queue-item:hover { background-color: @highlight-color; }
 						&.draggable .hide_on_drag{ display: none; }
 
 						input[type=checkbox]{
@@ -133,7 +130,11 @@
 							width:@queue-width - 70px;
 							.content-item-icon{ padding-left:5px; }
 							.toggle-icon{ padding: 5px; }
-							&:hover .content-options-dropdown{ visibility:visible; }
+							&:hover {
+								.content-options-dropdown{ visibility:visible; }
+								.popover{ display: block !important; }
+							}
+							.popover{ display: none !important; }
 							.content-options-dropdown{
 								visibility:hidden;
 								margin: 15px 10px 0 0;
