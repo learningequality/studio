@@ -5,6 +5,7 @@ var Views = require("./views");
 var WorkspaceManager = require("./utils/workspace_manager");
 
 //var saveDispatcher = _.clone(Backbone.Events);
+var URL_CHAR_LIMIT = 7;
 
 var ChannelEditRouter  = Backbone.Router.extend({
   nodeCollection: new Models.ContentNodeCollection(),
@@ -101,8 +102,8 @@ var ChannelEditRouter  = Backbone.Router.extend({
 		window.topic = topic || window.topic;
 		window.node = node;
 		var urlString = window.current_channel.id + "/" + window.current_page;
-		urlString += (window.topic)? "/" + window.topic.substring(0, 7) : "";
-		urlString += (window.node) ? "/" + window.node.substring(0, 7) : "";
+		urlString += (window.topic)? "/" + window.topic.substring(0, URL_CHAR_LIMIT) : "";
+		urlString += (window.node) ? "/" + window.node.substring(0, URL_CHAR_LIMIT) : "";
 		if(replacement) {
 			document.title = replacement;
 		}
