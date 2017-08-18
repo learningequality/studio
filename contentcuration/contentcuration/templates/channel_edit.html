@@ -22,6 +22,7 @@
 			window.channel_router = new bundle.ChannelEditRouter();
 			bundle.Backbone.history.start({pushState: true, root: "{% url 'channels' %}"});
 		});
+
 	</script>
 
 	<nav class="navbar" id="secondary-nav">
@@ -68,7 +69,7 @@
 				<!--<li id="channel-publish-button" class="text-center">Unpublish Selected</li>-->
 				<li id="publish-id">
 					<span id="hide-if-unpublished">
-						{%trans "ID" %}: <input type="text" id="publish_id_text" class="publish-id-text" value="{{ channel_id }}" readonly/>
+						{%trans "ID" %}: <input type="text" id="publish_id_text" class="publish-id-text" value="{{primary_token}}" readonly/>
 						<span id="publish-id-copy" class="glyphicon glyphicon-copy copy-id-btn" aria-hidden="true" title="{%trans 'Copy ID to clipboard' %}"></span>
 					</span>
 				</li>

@@ -77,7 +77,7 @@ var PrerequisiteModalView = BaseInfoModalView.extend({
 var PublishedModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/published_modal.handlebars"),
   modal_id: "#published_modal",
-  get_render_data: function() { return {channel_id: this.data.channel_id}; },
+  get_render_data: function() { return {primary_token: this.data.primary_token}; },
   events: {
     'click #modal-copy-btn' : 'copy_publish_id',
     'focus .input-tab-control': 'loop_focus'

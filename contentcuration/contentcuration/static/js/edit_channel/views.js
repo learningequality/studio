@@ -234,6 +234,7 @@ var BaseWorkspaceView = BaseView.extend({
 				model: window.current_channel.get_root("main_tree"),
 				onpublish: this.handle_published
 			});
+
 		}
 	},
 	activate_channel: function(){
@@ -262,9 +263,17 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	handle_published:function(collection){
 		this.reload_ancestors(collection);
-		var staticModal = require('edit_channel/information/views');
-		new staticModal.PublishedModalView({channel_id: window.current_channel.id});
+		var self = this;
+		window.current_channel.fetch({
+			success: function(channel){
+				var new_channel = new Models.ChannelCollection()
+				new_channel.reset(channel.toJSON());
+				var staticModal = require('edit_channel/information/views');
+				new staticModal.PublishedModalView({primary_token: window.current_channel.get("primary_token")});
+			}
+		});
 	},
+
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");
 		var share_view = new ShareViews.ShareModalView({

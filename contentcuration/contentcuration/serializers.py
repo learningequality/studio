@@ -574,6 +574,7 @@ class ChannelSerializer(serializers.ModelSerializer):
     created = serializers.SerializerMethodField('get_date_created')
     updated = serializers.SerializerMethodField('get_date_updated')
     tags = TagSerializer(many=True, read_only=True)
+    primary_token = serializers.SerializerMethodField('get_channel_primary_token')
 
     def get_date_created(self, channel):
         return channel.main_tree.created.strftime("%X %x")
@@ -589,6 +590,10 @@ class ChannelSerializer(serializers.ModelSerializer):
     def check_for_changes(self, channel):
         return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).count() > 0
 
+    def get_channel_primary_token(self, channel):
+        if channel.secret_tokens.filter(is_primary=True).exists():
+            return channel.secret_tokens.get(is_primary=True).token
+
     @staticmethod
     def setup_eager_loading(queryset):
         """ Perform necessary eager loading of data. """
@@ -600,7 +605,8 @@ class ChannelSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
-            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences', 'language')
+            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences',
+            'language', 'primary_token')
 
 
 class AccessibleChannelListSerializer(serializers.ModelSerializer):
@@ -629,6 +635,7 @@ class ChannelListSerializer(serializers.ModelSerializer):
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
+    primary_token = serializers.SerializerMethodField('get_channel_primary_token')
 
     def get_date_created(self, channel):
         return channel.main_tree.created
@@ -647,9 +654,13 @@ class ChannelListSerializer(serializers.ModelSerializer):
             return generate_storage_url(channel.thumbnail)
         return '/static/img/kolibri_placeholder.png'
 
+    def get_channel_primary_token(self, channel):
+        if channel.secret_tokens.filter(is_primary=True).exists():
+            return channel.secret_tokens.get(is_primary=True).token
+
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'modified', 'language',
+        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'modified', 'language', 'primary_token',
                   'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'preferences')
 
 class AltChannelListSerializer(serializers.ModelSerializer):
@@ -658,6 +669,7 @@ class AltChannelListSerializer(serializers.ModelSerializer):
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
+    primary_token = serializers.SerializerMethodField('get_channel_primary_token')
 
     def get_date_created(self, channel):
         return channel.main_tree.created
@@ -676,9 +688,14 @@ class AltChannelListSerializer(serializers.ModelSerializer):
             return generate_storage_url(channel.thumbnail)
         return '/static/img/kolibri_placeholder.png'
 
+    def get_channel_primary_token(self, channel):
+        if channel.secret_tokens.filter(is_primary=True).exists():
+            return channel.secret_tokens.get(is_primary=True).token
+
+
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language',
+        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language', 'primary_token',
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
 
 class UserSerializer(serializers.ModelSerializer):
@@ -714,6 +731,7 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
     download_url = serializers.SerializerMethodField('generate_db_url')
     editors = UserChannelListSerializer(many=True, read_only=True)
     viewers = UserChannelListSerializer(many=True, read_only=True)
+    primary_token = serializers.SerializerMethodField('get_channel_primary_token')
 
     def generate_db_url(self, channel):
         return "{path}{id}.sqlite3".format(path=settings.CONTENT_DATABASE_URL, id=channel.pk)
@@ -730,10 +748,14 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
     def check_published(self, channel):
         return channel.main_tree.published
 
+    def get_channel_primary_token(self, channel):
+        if channel.secret_tokens.filter(is_primary=True).exists():
+            return channel.secret_tokens.get(is_primary=True).token
+
     class Meta:
         model = Channel
         fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree',
-                  'description', 'count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url')
+                  'description', 'count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token')
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
     class Meta:
