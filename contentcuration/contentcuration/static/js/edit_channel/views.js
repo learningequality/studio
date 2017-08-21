@@ -268,6 +268,7 @@ var BaseWorkspaceView = BaseView.extend({
 			success: function(channel){
 				var new_channel = new Models.ChannelCollection()
 				new_channel.reset(channel.toJSON());
+				$("#publish_id_text").val(window.current_channel.get('primary_token'));
 				var staticModal = require('edit_channel/information/views');
 				new staticModal.PublishedModalView({primary_token: window.current_channel.get("primary_token")});
 			}
