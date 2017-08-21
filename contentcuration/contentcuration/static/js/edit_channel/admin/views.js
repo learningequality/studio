@@ -238,6 +238,12 @@ var ChannelTab = BaseAdminTab.extend({
                 return (asc) ? item1.id.localeCompare(item2.id) : -item1.id.localeCompare(item2.id);
             }
         }, {
+            key: "priority",
+            label: "Priority",
+            filter: function(item1, asc, item2){
+                return (asc) ? -item2.get("priority") : item1.get("priority");
+            }
+        }, {
             key: "users",
             label: "# of Users",
             filter: function(item1, asc, item2){
@@ -345,7 +351,12 @@ var ChannelItem = BaseAdminItem.extend({
         "click .delete_button": "delete_channel",
         "click .join_button": "join_editors",
         "click .count_link": "load_counts",
-        "click .leave_button": "leave_editors"
+        "click .leave_button": "leave_editors",
+        "change .channel_priority": "set_priority"
+    },
+    set_priority: function() {
+        var priority = this.$(".channel_priority").val();
+        this.model.set_priority(priority);
     },
     load_counts: function(){
         if(this.counts && this.size){
