@@ -26,7 +26,7 @@ from contentcuration.statistics import record_publish_stats
 from kolibri.content.content_db_router import using_content_database, THREAD_LOCAL
 from django.db import transaction, connections
 from django.db.utils import ConnectionDoesNotExist
-from le_utils import humanhash
+from le_utils import proquint
 
 import logging as logmodule
 logmodule.basicConfig()
@@ -526,7 +526,15 @@ def get_active_content_database():
 def add_tokens_to_channel(channel):
     if not channel.secret_tokens.filter(is_primary=True).exists():
         logging.info("Generating tokens for the channel.")
-        token = humanhash.humanize(channel.id, words=5)
+        token = proquint.generate()
+
+        max_retries = 1000000
+        index = 0
+        while ccmodels.SecretToken.objects.filter(token=token).exists():
+            token = proquint.generate()
+            if index > max_retries: # Avoid infinite loops
+                raise ValueError("Cannot generate new token")
+
         tk_human = ccmodels.SecretToken.objects.create(token=token, is_primary=True)
         tk = ccmodels.SecretToken.objects.create(token=channel.id)
         channel.secret_tokens.add(tk_human, tk)

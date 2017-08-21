@@ -12,12 +12,12 @@ from django.core.urlresolvers import reverse_lazy
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
 from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User, SecretToken
-from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
+from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, PublicChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
 from contentcuration.utils.messages import get_messages
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from le_utils import humanhash
+from le_utils import proquint
 
 
 def base(request):
@@ -86,6 +86,11 @@ def channel_page(request, channel, allow_edit=False, staging=False):
     contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
     languages = get_or_set_cached_constants(Language, LanguageSerializer)
 
+    token = None
+    if channel.secret_tokens.filter(is_primary=True).exists():
+        token = channel.secret_tokens.filter(is_primary=True).first().token
+        token = token[:5] + "-" + token[5:]
+
     json_renderer = JSONRenderer()
     return render(request, 'channel_edit.html', {"allow_edit": allow_edit,
                                                  "staging": staging,
@@ -102,7 +107,7 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
                                                  "preferences": channel.preferences,
                                                  "messages": get_messages(),
-                                                 "primary_token": humanhash.humanize(channel.pk, words=5)
+                                                 "primary_token": token or channel.pk
                                                 })
 
 
@@ -306,14 +311,6 @@ def get_channel_name_by_id(request, channel_id):
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
 
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_public_channels(request):
-    """ Endpoint: /public/public_channels """
-    channels = Channel.objects.filter(public=True).values("id", "name", "description", "version")
-    return HttpResponse(json.dumps(SimplifiedChannelListSerializer(channels, many=True).data))
-
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def add_bookmark(request):
@@ -346,13 +343,44 @@ def remove_bookmark(request):
         except ObjectDoesNotExist:
             return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def set_channel_priority(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        try:
+            channel = Channel.objects.get(pk=data["channel_id"])
+            channel.priority = data["priority"]
+            channel.save()
+
+            return HttpResponse(json.dumps({"success": True}))
+        except ObjectDoesNotExist:
+            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
 @api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_public_channels(request):
+    """ Endpoint: /public/public_channels(?keyword=<keywords>language=<language>) """
+    keyword = request.query_params.get('keyword', '').strip()
+    language_id = request.query_params.get('language', '').strip()
+    channels = Channel.objects.prefetch_related('tags').filter(public=True)
+
+    if keyword != '':
+        channels = channels.filter(Q(name__icontains=keyword) | Q(description__icontains=keyword) | Q(tags__tag_name__icontains=keyword))
+
+    if language_id != '':
+        channels = channels.filter(Q(language__id__icontains=language_id))
+
+    return HttpResponse(json.dumps(PublicChannelSerializer(channels.distinct(), many=True).data))
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
 def get_channel_list_by_token(request, token):
     try:
-        token_object = SecretToken.objects.get(token=token)
+        token_object = SecretToken.objects.get(token=token.replace('-', ''))
         channel_list = token_object.channels.all()
-        channel_serializer = ChannelSerializer(channel_list, many=True)
+        channel_serializer = PublicChannelSerializer(channel_list, many=True)
         return HttpResponse(JSONRenderer().render(channel_serializer.data))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with token {} not found'.format(token))

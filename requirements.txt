@@ -18,7 +18,7 @@ djangorestframework-bulk==0.2.1
 django-email-extras==0.3.3
 https://github.com/learningequality/kolibri/releases/download/v0.6.0-alpha1/kolibri-0.6.dev020170802200342_git-py2.py3-none-any.whl
 validators
-le-utils==0.0.11
+le-utils==0.0.12
 gunicorn==19.6.0
 django-mailgun==0.9.1
 pressurecooker==0.0.15
