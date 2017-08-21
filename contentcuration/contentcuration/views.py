@@ -360,6 +360,29 @@ def set_channel_priority(request):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
+def get_public_channel_list(request):
+    try:
+        keyword = request.query_params.get('keyword', '').strip()
+        language_id = request.query_params.get('language', '').strip()
+        token = request.query_params.get('token', '').strip().replace('-', '')
+        channels = None
+
+        if token != '':
+            channels = Channel.objects.prefetch_related('secret_tokens').filter(Q(public=True) | Q(secret_tokens__contains=token))
+        else:
+            channels = Channel.objects.filter(public=True)
+
+        if keyword != '':
+            channels = channels.prefetch_related('tags').filter(Q(name__icontains=keyword) | Q(description__icontains=keyword) | Q(tags__tag_name__icontains=keyword))
+
+        if language_id != '':
+            channels = channels.select_related('language').filter(Q(language__id__icontains=language_id))
+    except ObjectDoesNotExist:
+        return HttpResponseNotFound('Channel with token {} not found'.format(token))
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
 def get_public_channels(request):
     """ Endpoint: /public/public_channels(?keyword=<keywords>language=<language>) """
     keyword = request.query_params.get('keyword', '').strip()
@@ -372,7 +395,7 @@ def get_public_channels(request):
     if language_id != '':
         channels = channels.filter(Q(language__id__icontains=language_id))
 
-    return HttpResponse(json.dumps(PublicChannelSerializer(channels.distinct(), many=True).data))
+    return HttpResponse(json.dumps(PublicChannelSerializer(channels.order_by("-priority").distinct(), many=True).data))
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
