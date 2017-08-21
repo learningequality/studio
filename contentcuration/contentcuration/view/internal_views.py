@@ -334,7 +334,7 @@ def create_channel(channel_data, user):
     channel.source_id = channel_data.get('source_id')
     channel.source_domain = channel_data.get('source_domain')
     channel.ricecooker_version = channel_data.get('ricecooker_version')
-    channel.language = channel_data.get('language')
+    channel.language_id = channel_data.get('language')
 
     old_chef_tree = channel.chef_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
