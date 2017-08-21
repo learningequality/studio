@@ -65,7 +65,7 @@ class Command(BaseCommand):
                 prepare_export_database(tempdb)
                 map_content_tags(channel)
                 map_channel_to_kolibri_channel(channel)
-                map_content_nodes(channel.main_tree,)
+                map_content_nodes(channel.main_tree, channel.language)
                 map_prerequisites(channel.main_tree)
                 save_export_database(channel_id)
                 increment_channel_version(channel)
@@ -109,7 +109,7 @@ def map_content_tags(channel):
     logging.info("Finished creating the Kolibri content tags.")
 
 
-def map_content_nodes(root_node):
+def map_content_nodes(root_node, default_language):
 
     # make sure we process nodes higher up in the tree first, or else when we
     # make mappings the parent nodes might not be there
@@ -134,7 +134,7 @@ def map_content_nodes(root_node):
                     children = (node.children.all())
                     node_queue.extend(children)
 
-                    kolibrinode = create_bare_contentnode(node)
+                    kolibrinode = create_bare_contentnode(node, default_language)
 
                     if node.kind.kind == content_kinds.EXERCISE:
                         exercise_data = process_assessment_metadata(node, kolibrinode)
@@ -144,13 +144,17 @@ def map_content_nodes(root_node):
                     map_tags_to_node(kolibrinode, node)
 
 
-def create_bare_contentnode(ccnode):
+def create_bare_contentnode(ccnode, default_language):
     logging.debug("Creating a Kolibri node for instance id {}".format(
         ccnode.node_id))
 
     kolibri_license = None
     if ccnode.license is not None:
         kolibri_license = create_kolibri_license_object(ccnode)[0]
+
+    language = None
+    if ccnode.language or default_language:
+        language, _new = get_or_create_language(ccnode.language or default_language)
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
@@ -165,6 +169,7 @@ def create_bare_contentnode(ccnode):
             'license': kolibri_license,
             'available': ccnode.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists(),  # Hide empty topics
             'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
+            'lang': language
         }
     )
 
@@ -181,6 +186,14 @@ def create_bare_contentnode(ccnode):
 
     return kolibrinode
 
+def get_or_create_language(language):
+    return kolibrimodels.Language.objects.get_or_create(
+        id=language.pk,
+        lang_code=language.lang_code,
+        lang_subcode=language.lang_subcode,
+        lang_name= language.lang_name if hasattr(language, 'lang_name') else language.readable_name,
+    )
+
 def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None):
     thumbnail_data = ast.literal_eval(thumbnail_string)
     if thumbnail_data.get('base64'):
@@ -195,12 +208,9 @@ def create_associated_file_objects(kolibrinode, ccnode):
     for ccfilemodel in ccnode.files.exclude(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
-        if ccfilemodel.language_id:
-            kolibrimodels.Language.objects.get_or_create(
-                id=str(ccfilemodel.language),
-                lang_code=ccfilemodel.language.lang_code,
-                lang_subcode=ccfilemodel.language.lang_subcode
-            )
+        if ccfilemodel.language:
+            get_or_create_language(ccfilemodel.language)
+
         if preset.thumbnail and ccnode.thumbnail_encoding:
             ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
 
@@ -213,7 +223,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
-            lang_id=str(ccfilemodel.language),
+            lang_id=ccfilemodel.language and ccfilemodel.language.pk,
             thumbnail=preset.thumbnail,
             priority=preset.order,
         )
@@ -339,7 +349,8 @@ def write_assessment_item(assessment_item, zf):
     else:
         raise TypeError("Unrecognized question type on item {}".format(assessment_item.assessment_id))
 
-    question, question_images = process_image_strings(assessment_item.question)
+    question = process_formulas(assessment_item.question)
+    question, question_images = process_image_strings(question)
 
     answer_data = json.loads(assessment_item.answers)
     for answer in answer_data:
@@ -347,6 +358,7 @@ def write_assessment_item(assessment_item, zf):
             answer['answer'] = extract_value(answer['answer'])
         else:
             answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
+            answer['answer'] = process_formulas(answer['answer'])
             # In case perseus doesn't support =wxh syntax, use below code
             # answer['answer'], answer_images = process_image_strings(answer['answer'])
             # answer.update({'images': answer_images})
@@ -355,6 +367,7 @@ def write_assessment_item(assessment_item, zf):
 
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
+        hint['hint'] = process_formulas(hint['hint'])
         hint['hint'], hint_images = process_image_strings(hint['hint'])
         hint.update({'images': hint_images})
 
@@ -370,6 +383,11 @@ def write_assessment_item(assessment_item, zf):
 
     result = render_to_string(template, context).encode('utf-8', "ignore")
     write_to_zipfile("{0}.json".format(assessment_item.assessment_id), result, zf)
+
+def process_formulas(content):
+    for match in re.finditer(ur'\$(\$.+\$)\$', content):
+        content = content.replace(match.group(0), match.group(1))
+    return content
 
 
 def process_image_strings(content):

@@ -63,12 +63,13 @@ var MESSAGES = {
 	"related_content": "RELATED CONTENT DETECTED",
 	"related_content_warning": "Any content associated with {data, plural,\n =1 {this item}\n other {these items}} " +
         "will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content. Are you sure you want to continue?",
+    "language": "Language",
+    "select_language": "Select a Language"
 }
 
 var BaseView = Backbone.View.extend({
 	default_item: ".default-item",
 	name: NAMESPACE,
-	locales: ["en-US"],
 	locale: navigator.language || navigator.browserLanguage,
 	$trs: MESSAGES,
 	globalMessageStore: require("utils/translations"),
@@ -82,9 +83,10 @@ var BaseView = Backbone.View.extend({
 					.value();
 	},
 	get_intl_data: function(){
+		var language = window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
 		return {
 			intl: {
-				locales: this.locales,
+				locales: [(language && language.id) || "en-US"],
 				messages: this.get_translation_library()
 			}
 		}

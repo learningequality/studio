@@ -138,8 +138,6 @@ var ShareView = BaseViews.BaseView.extend({
                 el: self.$("#pending_list_wrapper"),
                 model: self.model
             });
-            _.defer(self.set_indices);
-            _.defer(self.set_initial_focus, 100);
         });
     },
     send_invite:function(event){
@@ -245,7 +243,7 @@ var ShareView = BaseViews.BaseView.extend({
         var user = new Models.UserModel();
         var self = this;
         user.send_invitation_email(email, this.model, share_mode).then(function(invite){
-            this.$("#share_success").text(self.get_translation("invite_sent_to", email));
+            self.$("#share_success").text(self.get_translation("invite_sent_to", email));
             self.$("#share_invite_button").val(self.get_translation("invite"));
             self.$("#share_email_address").val("");
             self.pending_view.add_to_pending_collection(invite);

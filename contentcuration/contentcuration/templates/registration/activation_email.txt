@@ -11,6 +11,6 @@
 
 {% trans "Thanks for using our site!" %}
 
-The Learning Equality Team
+{% trans "The Learning Equality Team" %}
 
 {% endautoescape %}

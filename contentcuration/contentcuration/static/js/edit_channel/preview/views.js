@@ -123,7 +123,8 @@ var PreviewView = BaseViews.BaseView.extend({
 
         if (!this.check_fullscreen()){
             this.$("#preview_content_main").addClass('preview_on');
-            this.$(".view_fullscreen").html(this.get_translation("hide_fullscreen"));
+            this.$(".view_fullscreen").html(this.get_translation("hide_fullscreen"))
+                                        .attr("title", this.get_translation("hide_fullscreen"));
             if (elem.requestFullscreen) {
               elem.requestFullscreen();
             } else if (elem.msRequestFullscreen) {
@@ -151,7 +152,8 @@ var PreviewView = BaseViews.BaseView.extend({
     exit_fullscreen:function(){
         if (!this.check_fullscreen()){
             this.$("#preview_content_main").removeClass('preview_on');
-            this.$(".view_fullscreen").html(this.get_translation("show_fullscreen"));
+            this.$(".view_fullscreen").html(this.get_translation("show_fullscreen"))
+                                        .attr("title", this.get_translation("show_fullscreen"));
             $(document).off('webkitfullscreenchange');
             $(document).off('mozfullscreenchange');
             $(document).off('fullscreenchange');

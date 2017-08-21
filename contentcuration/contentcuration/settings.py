@@ -181,6 +181,8 @@ LANGUAGES = (
     ('en', ugettext('English')),
     ('es', ugettext('Spanish')),
     ('es-mx', ugettext('Spanish - Mexico')),
+    ('ar', ugettext('Arabic')),
+    ('en-PT', ugettext('English - Pirate')),
 )
 
 
