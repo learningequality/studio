@@ -699,13 +699,6 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
         model = Channel
         fields = ('id', 'name', 'language', 'description', 'count', 'thumbnail_url', 'version', 'kind_count', 'size', 'priority')
 
-"""
-- filter by language and paginate
-- add sort order/priority on public channels
-- search by langauge/keywords on metadata/tags
-- return: {kinds of resources}
-"""
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
