@@ -270,13 +270,13 @@ var BaseWorkspaceView = BaseView.extend({
 				new_channel.reset(channel.toJSON());
 				$("#publish_id_text").val(window.current_channel.get('primary_token'));
 				var staticModal = require('edit_channel/information/views');
-				new staticModal.PublishedModalView({primary_token: window.current_channel.get("primary_token")});
+				new staticModal.PublishedModalView({channel: window.current_channel, published: true});
 			}
 		});
 	},
 	get_channel_id:function(collection){
 		var staticModal = require('edit_channel/information/views');
-		new staticModal.PublishedModalView({channel_id: window.current_channel.id, published: false});
+		new staticModal.PublishedModalView({channel: window.current_channel, published: false});
  	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");
