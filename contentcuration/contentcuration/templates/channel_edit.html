@@ -66,12 +66,7 @@
 			{% if allow_edit %}
 			<ul class="nav navbar-nav navbar-right" id="publish">
 				<!--<li id="channel-publish-button" class="text-center">Unpublish Selected</li>-->
-				<li id="publish-id">
-					<span id="hide-if-unpublished">
-						{%trans "ID" %}: <input type="text" id="publish_id_text" class="publish-id-text" value="{{ channel_id }}" readonly/>
-						<span id="publish-id-copy" class="glyphicon glyphicon-copy copy-id-btn" aria-hidden="true" title="{%trans 'Copy ID to clipboard' %}"></span>
-					</span>
-				</li>
+				<li id="hide-if-unpublished"><a id="get_published_id">{% trans "Get ID" %}</a></li>
 				<li id="channel-publish-button" class="text-center">{%trans "PUBLISH" %}</li>
 			</ul>
 			{% endif %}
