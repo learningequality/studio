@@ -1,9 +1,11 @@
+import zlib
 from collections import OrderedDict
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
+from pressurecooker.encodings import encode_file_to_base64
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -678,9 +680,9 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     count = serializers.SerializerMethodField("get_resource_count")
-    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     kind_count = serializers.SerializerMethodField('generate_kind_count')
     size = serializers.SerializerMethodField('calculate_size')
+    thumbnail_base64 = serializers.SerializerMethodField('generate_base64')
 
     def calculate_size(self, channel):
         sizes = ContentNode.objects\
@@ -695,9 +697,17 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     def generate_kind_count(self, channel):
         return list(channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
 
+    def generate_base64(self, channel):
+        if channel.thumbnail_encoding:
+            return json.loads(channel.thumbnail_encoding.replace('u\'', '"').replace('\'', '"')).get('base64')
+        elif channel.thumbnail:
+            checksum, _ext = os.path.splitext(channel.thumbnail)
+            filepath = generate_file_on_disk_name(checksum, channel.thumbnail)
+            return encode_file_to_base64(filepath, 'data:image/png;base64,')
+
     class Meta:
         model = Channel
-        fields = ('id', 'name', 'language', 'description', 'count', 'thumbnail_url', 'version', 'kind_count', 'size', 'priority')
+        fields = ('id', 'name', 'language', 'description', 'count', 'version', 'kind_count', 'size', 'thumbnail_base64')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

@@ -377,6 +377,8 @@ def get_public_channel_list(request):
 
         if language_id != '':
             channels = channels.select_related('language').filter(Q(language__id__icontains=language_id))
+
+        return HttpResponse(json.dumps(PublicChannelSerializer(channels.order_by("-priority").distinct(), many=True).data))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with token {} not found'.format(token))
 
