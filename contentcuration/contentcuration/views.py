@@ -381,31 +381,3 @@ def get_public_channel_list(request):
         return HttpResponse(json.dumps(PublicChannelSerializer(channels.order_by("-priority").distinct(), many=True).data))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with token {} not found'.format(token))
-
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_public_channels(request):
-    """ Endpoint: /public/public_channels(?keyword=<keywords>language=<language>) """
-    keyword = request.query_params.get('keyword', '').strip()
-    language_id = request.query_params.get('language', '').strip()
-    channels = Channel.objects.prefetch_related('tags').filter(public=True)
-
-    if keyword != '':
-        channels = channels.filter(Q(name__icontains=keyword) | Q(description__icontains=keyword) | Q(tags__tag_name__icontains=keyword))
-
-    if language_id != '':
-        channels = channels.filter(Q(language__id__icontains=language_id))
-
-    return HttpResponse(json.dumps(PublicChannelSerializer(channels.order_by("-priority").distinct(), many=True).data))
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_channel_list_by_token(request, token):
-    try:
-        token_object = SecretToken.objects.get(token=token.replace('-', ''))
-        channel_list = token_object.channels.all()
-        channel_serializer = PublicChannelSerializer(channel_list, many=True)
-        return HttpResponse(JSONRenderer().render(channel_serializer.data))
-    except ObjectDoesNotExist:
-        return HttpResponseNotFound('Channel with token {} not found'.format(token))
