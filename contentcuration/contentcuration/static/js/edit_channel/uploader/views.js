@@ -285,7 +285,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       model: this.model,
       container: this,
       shared_data: (this.edit_list)? this.edit_list.shared_data : null,
-      allow_edit: this.allow_edit
+      allow_edit: this.allow_edit,
+      new_content: this.new_content,
     });
     if(this.edit_list){
       this.edit_list.adjust_list_height();
@@ -597,7 +598,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
-    var all_top_level = _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
+    var all_top_level = (this.new_content)? !this.model.get("parent") : _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
 
     if(this.allow_edit){
       this.$el.html(this.template({

@@ -80,6 +80,7 @@ class PreferencesView(FormView):
         initial.update({
             'm_value': initial.get('m_value') or 1,
             'n_value': initial.get('n_value') or 1,
+            'language': initial.get('language') or None
         })
         return initial
 
