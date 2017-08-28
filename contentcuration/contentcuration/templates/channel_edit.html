@@ -64,18 +64,11 @@
 				<li id="channel-activate-button" class="text-center">{%trans "DEPLOY CHANNEL" %}</li>
 			</ul>
 		{% else %}
-			{% if allow_edit %}
 			<ul class="nav navbar-nav navbar-right" id="publish">
 				<!--<li id="channel-publish-button" class="text-center">Unpublish Selected</li>-->
-				<li id="publish-id">
-					<span id="hide-if-unpublished">
-						{%trans "ID" %}: <input type="text" id="publish_id_text" class="publish-id-text" value="{{ channel_id }}" readonly/>
-						<span id="publish-id-copy" class="glyphicon glyphicon-copy copy-id-btn" aria-hidden="true" title="{%trans 'Copy ID to clipboard' %}"></span>
-					</span>
-				</li>
-				<li id="channel-publish-button" class="text-center">{%trans "PUBLISH" %}</li>
+				<li id="hide-if-unpublished"><a id="get_published_id">{% trans "Get ID" %}</a></li>
+				{% if allow_edit %}<li id="channel-publish-button" class="text-center">{%trans "PUBLISH" %}</li>{% endif %}
 			</ul>
-			{% endif %}
 		{% endif %}
 	</nav>
 	<div id="channel-edit-content-wrapper" {% if staging %}class="staging_channel_wrapper"{% endif %}>
