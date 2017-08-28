@@ -139,17 +139,17 @@ def get_node_path(request):
         data = json.loads(request.body)
 
         try:
-            topic = ContentNode.objects.prefetch_related('children').get(node_id=data['topic_id'], tree_id=data['tree_id'])
+            topic = ContentNode.objects.prefetch_related('children').get(node_id__startswith=data['topic_id'], tree_id=data['tree_id'])
 
             if topic.kind_id != content_kinds.TOPIC:
                 node =  ContentNode.objects.prefetch_related('files')\
                                             .prefetch_related('assessment_items')\
-                                            .prefetch_related('tags').get(node_id=data['topic_id'], tree_id=data['tree_id'])
+                                            .prefetch_related('tags').get(node_id__startswith=data['topic_id'], tree_id=data['tree_id'])
                 nodes = node.get_ancestors(ascending=True)
             else:
                 node =  data['node_id'] and ContentNode.objects.prefetch_related('files')\
                                             .prefetch_related('assessment_items')\
-                                            .prefetch_related('tags').get(node_id=data['node_id'], tree_id=data['tree_id'])
+                                            .prefetch_related('tags').get(node_id__startswith=data['node_id'], tree_id=data['tree_id'])
                 nodes = topic.get_ancestors(include_self=True, ascending=True)
 
 

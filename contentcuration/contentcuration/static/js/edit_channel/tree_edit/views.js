@@ -118,6 +118,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				if(path.node){ // Open the edit modal if a node is specified
 					var to_edit = new Models.ContentNodeCollection([path.node]);
 					self.edit_nodes(self.is_edit_page, to_edit, self.is_clipboard, path.parent);
+					document.title = path.node.get("title");
 				}
 
 				// Open containers along path
@@ -133,7 +134,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 					});
 				});
 			}).catch(function(error) {
-				window.channel_router.update_url(self.model.get("node_id"));
+				window.channel_router.update_url(self.model.get("node_id"), null, self.model.get("title"));
 				self.add_container(self.lists.length, self.model);
 			});
 		}
@@ -155,10 +156,6 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				onload: onload
 			});
 			this.lists.push(container_view);
-			var self = this;
-			_.defer(function(){
-				self.$("#container_area").width(self.$("#container_area").width() + self.lists[0].$el.width());
-			}, 400)
 
 		/* Step 3: Add container to DOM */
 			this.$("#container_area").append(container_view.el);
@@ -166,13 +163,12 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	remove_containers_from:function(index){
 		while(this.lists.length > index){
-			this.$el.find("#container_area").width(this.$el.find("#container_area").width() - this.lists[0].$el.width());
 			this.lists[this.lists.length -1].remove();
 			this.lists.splice(this.lists.length-1);
 		}
 		var closing_list = this.lists[this.lists.length-1];
 		closing_list.close_folders();
-		window.channel_router.update_url(closing_list.model.get("node_id"));
+		window.channel_router.update_url(closing_list.model.get("node_id"), null, closing_list.model.get("title"));
 		this.handle_checked();
 	},
 	handle_checked:function(){
@@ -504,13 +500,13 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			this.subcontent_view = this.containing_list_view.add_container(this);
 			this.$el.addClass(this.openedFolderClass);
 			this.containing_list_view.set_current(this.model);
-			window.channel_router.update_url(this.model.get("node_id"));
+			window.channel_router.update_url(this.model.get("node_id"), null);
 		}
 	},
 	open_node: function(event){
 		this.cancel_actions(event);
 		this.open_edit(this.edit_mode);
-		window.channel_router.update_url(null, this.model.get("node_id"));
+		window.channel_router.update_url(null, this.model.get("node_id"), this.model.get("title"));
 	},
 	copy_node:function(event){
 		this.cancel_actions(event);
