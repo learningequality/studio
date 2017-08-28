@@ -528,11 +528,12 @@ def add_tokens_to_channel(channel):
         logging.info("Generating tokens for the channel.")
         token = proquint.generate()
 
+        # Try to generate the channel token, avoiding any infinite loops if possible
         max_retries = 1000000
         index = 0
         while ccmodels.SecretToken.objects.filter(token=token).exists():
             token = proquint.generate()
-            if index > max_retries: # Avoid infinite loops
+            if index > max_retries:
                 raise ValueError("Cannot generate new token")
 
         tk_human = ccmodels.SecretToken.objects.create(token=token, is_primary=True)

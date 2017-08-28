@@ -566,6 +566,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata')
 
+""" Shared methods across channel serializers """
 class ChannelFieldMixin(object):
 
     def get_channel_primary_token(self, channel):
