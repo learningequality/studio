@@ -2,10 +2,12 @@
 	<div id="uploader-default-prompt" class="text-center container-fluid">{{formatMessage (intlGet 'messages.select_to_edit')}}</div>
 {{else}}
 	{{#unless node}}
+		{{#if error}}<div id="editor_errors" class="alert alert-danger text-center" role="alert">{{formatMessage (intlGet 'messages.invalid_items')}}</div>{{/if}}
 		<h5 id="uploader-count-message">{{formatMessage (intlGet 'messages.editing_count') count=selected_count}}</h5>
 		{{#unless isoriginal}}<p class="text-center uploader-copied-warning"><i>{{formatMessage (intlGet 'messages.detected_import_disabled')}}</i></p>{{/unless}}
 	{{/unless}}
 	{{#if node}}
+		{{#if error}}<div id="editor_errors" class="alert alert-danger text-center" role="alert">{{error}}</div>{{/if}}
 		<div id="editmetadata_format_section"></div>
 		<hr/>
 		<br/>

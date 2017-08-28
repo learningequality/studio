@@ -55,6 +55,9 @@
 		padding: 10px 0;
 		margin-bottom: 30px;
 		overflow:hidden;
+		#editor_errors, #editor_success {
+		    font-weight: bold;
+		}
 		#metadata_placeholder{
 			min-height: 300px;
 			padding-top: 15%;
@@ -201,6 +204,7 @@
 			}
 		}
 		&:hover{ background-color: #E6E6E6; }
+		&.invalid{ background-color: #FFA9A9; }
 	}
 	.edited_node h5{
 		font-weight:bold;

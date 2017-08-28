@@ -57,7 +57,10 @@ var MESSAGES = {
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
     "same_as_channel": "Same as Channel",
-    "same_as_topic": "Same as Topic"
+    "same_as_topic": "Same as Topic",
+    "invalid_items": "One or more of the selected items is invalid",
+    "license_error": "License is required",
+    "copyright_holder_error": "Copyright holder is required",
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -310,12 +313,19 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   close_upload:function(){
     this.onclose();
   },
+  validate: function() {
+    return this.edit_list && this.edit_list.validate();
+  },
   save_and_keep_open:function(){
     var self = this;
     this.editor_view.add_tag(null);
-    this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
-      self.process_updated_collection(collection);
-    });
+    if(this.validate()) {
+      this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
+        self.process_updated_collection(collection);
+      });
+    } else {
+      this.load_editor(this.edit_list.selected_items);
+    }
   },
   handle_save_and_finish_key:function(event){
     var code = (!event)? null : event.keyCode ? event.keyCode : event.which;
@@ -326,10 +336,14 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   save_and_finish: function(event){
     var self = this;
     this.editor_view.add_tag(null);
-    this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
-      self.process_updated_collection(collection);
-      self.onclose();
-    });
+    if(this.validate()) {
+      this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
+        self.process_updated_collection(collection);
+        self.onclose();
+      });
+    } else {
+      this.load_editor(this.edit_list.selected_items);
+    }
   },
   copy_items: function(){
     if(this.collection.has_related_content()){
@@ -488,6 +502,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       }
     }
   },
+  validate: function() {
+    return _.every(this.views, function(view) { return view.validate(); });
+  },
   get_selected_items: function(){
     return this.selected_items;
   },
@@ -617,7 +634,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         n_value: this.n_value,
         license_description: this.shared_data && this.shared_data.shared_license_description,
         languages: window.languages.toJSON(),
-        language_default: this.get_language(null, all_top_level)
+        language_default: this.get_language(null, all_top_level),
+        error: (this.selected_individual()) ? this.selected_items[0].error : this.container.validate()
       }, {
         data: this.get_intl_data()
       }));
@@ -844,35 +862,31 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.$("#license_about").css("display", "inline");
     this.set_selected();
     this.display_license_description($("#license_select").val());
+    this.validate();
   },
   set_selected:function(){
-    if(this.selected_individual() && this.$("#input_title").val().trim() == ""){
-      this.$("#title_error").css("display", "inline-block");
-      if(this.collection && this.collection.length === 1 && !this.new_content){
-          this.container.disable_submit();
-      }
-    }else{
-      this.$("#title_error").css("display", "none");
-      this.container.enable_submit();
-      var self = this;
-      var individual_selected = this.selected_individual();
-      var title = (individual_selected)? this.$("#input_title").val().trim() : false;
-      var description = (individual_selected)? this.$("#input_description").val().trim() : false;
-      var license = (this.$("#license_select").is(":visible") && this.$("#license_select").val()!=0)? this.$("#license_select").val() : false;
-      var copyright_holder = (this.$("#input_license_owner").is(":visible") && (individual_selected || this.$("#input_license_owner").val() !== ""))? self.$("#input_license_owner").val().trim() : false;
-      var author = (this.$("#author_field").is(":visible") && (individual_selected || this.$("#author_field").val() !== ""))? this.$("#author_field").val().trim() : false;
-      var license_description = (this.$("#custom_license_description").is(":visible") && (individual_selected || this.$("#custom_license_description").val() !== ""))? this.$("#custom_license_description").val() : false;
-      this.selected_items.forEach(function(view){
-        view.set_node({
-          title: (title===false)? view.model.get('title') : title,
-          description: (description===false)? view.model.get('description') : description,
-          license: (license===false)? view.model.get('license') : license,
-          copyright_holder: (copyright_holder===false)? view.model.get('copyright_holder') : copyright_holder,
-          author: (author===false)? view.model.get('author') : author,
-          license_description: (license_description===false)? view.model.get('license_description') : license_description
-        });
+    var self = this;
+    var individual_selected = this.selected_individual();
+    var title = (individual_selected)? this.$("#input_title").val().trim() : false;
+    var description = (individual_selected)? this.$("#input_description").val().trim() : false;
+    var license = (this.$("#license_select").is(":visible") && this.$("#license_select").val()!=0)? this.$("#license_select").val() : false;
+    var copyright_holder = (this.$("#input_license_owner").is(":visible") && (individual_selected || this.$("#input_license_owner").val() !== ""))? self.$("#input_license_owner").val().trim() : false;
+    var author = (this.$("#author_field").is(":visible") && (individual_selected || this.$("#author_field").val() !== ""))? this.$("#author_field").val().trim() : false;
+    var license_description = (this.$("#custom_license_description").is(":visible") && (individual_selected || this.$("#custom_license_description").val() !== ""))? this.$("#custom_license_description").val() : false;
+    this.selected_items.forEach(function(view){
+      view.set_node({
+        title: (title===false)? view.model.get('title') : title,
+        description: (description===false)? view.model.get('description') : description,
+        license: (license===false)? view.model.get('license') : license,
+        copyright_holder: (copyright_holder===false)? view.model.get('copyright_holder') : copyright_holder,
+        author: (author===false)? view.model.get('author') : author,
+        license_description: (license_description===false)? view.model.get('license_description') : license_description
       });
-    }
+    });
+
+    (this.container.validate()) ? this.container.enable_submit() : this.container.disable_submit();
+    console.log(this)
+    // this.render();
   },
   change_mastery_model:function(event){
     if(event.target.value === "m_of_n"){
@@ -917,6 +931,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   name: NAMESPACE,
   $trs: MESSAGES,
   format_view:null,
+  error: null,
   'id': function() {
       return "item_" + this.model.get("id");
   },
@@ -1101,9 +1116,22 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.set_edited(true);
   },
   set_uploading:function(uploading){
-        (uploading)? this.uploads_in_progress++ : this.uploads_in_progress--;
-        (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
+      (uploading)? this.uploads_in_progress++ : this.uploads_in_progress--;
+      (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
+  },
+  validate: function() {
+    var license = window.licenses.findWhere({id: this.model.get("license")});
+    this.error = null;
+    if(!this.model.get("title")) {
+      this.error = this.get_translation("title_error");
+    } else if(!license) {
+      this.error = this.get_translation("license_required");
+    } else if (this.model.get("kind") !== "topic" && license.get("requires_copyright_holder") && !this.model.get("copyright_holder")) {
+      this.error = this.get_translation("copyright_holder_error");
     }
+    (this.error)? this.$el.addClass("invalid") : this.$el.removeClass("invalid");
+    return this.error;
+  }
 });
 
 module.exports = {
