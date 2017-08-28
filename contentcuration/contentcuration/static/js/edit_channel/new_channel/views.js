@@ -199,8 +199,7 @@ var CurrentChannelList  = ChannelList.extend({
 		var data = {
 			editors: [window.current_user.id],
 			pending_editors: [],
-			language: window.user_preferences.language,
-			priority: 0
+			language: window.user_preferences.language
 		};
 		var newView = this.create_new_view(new Models.ChannelModel(data));
 		this.$(this.list_selector).prepend(newView.el);
