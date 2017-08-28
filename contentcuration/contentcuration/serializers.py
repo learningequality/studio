@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
+from le_utils.constants import licenses
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -14,11 +15,17 @@ from rest_framework_bulk import BulkSerializerMixin
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
 
+ALLOW_NULL_COPYRIGHT_HOLDER = [licenses.PUBLIC_DOMAIN]
 
 class LicenseSerializer(serializers.ModelSerializer):
+    requires_copyright_holder = serializers.SerializerMethodField('check_copyright')
+
+    def check_copyright(self, license):
+        return license.license_name not in ALLOW_NULL_COPYRIGHT_HOLDER
+
     class Meta:
         model = License
-        fields = ('license_name', 'exists', 'id', 'license_url', 'license_description')
+        fields = ('license_name', 'exists', 'id', 'license_url', 'license_description', 'requires_copyright_holder')
 
 
 class LanguageSerializer(serializers.ModelSerializer):
