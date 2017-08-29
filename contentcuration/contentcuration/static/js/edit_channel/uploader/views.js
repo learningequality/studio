@@ -290,7 +290,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       model: this.model,
       container: this,
       shared_data: (this.edit_list)? this.edit_list.shared_data : null,
-      allow_edit: this.allow_edit
+      allow_edit: this.allow_edit,
+      new_content: this.new_content
     });
     if(this.edit_list){
       this.edit_list.adjust_list_height();
