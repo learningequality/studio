@@ -169,12 +169,14 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		$(".new_channel_button").prop("title", (edit_mode_on)? this.get_translation("add_channel_disbaled_title") : this.get_translation("add_channel_title"));
 	},
 	add_channel: function(channel){
-		this.collection.add(channel);
-		var newView = this.create_new_view(channel);
-		newView.$el.css('display', 'none');
-		newView.$el.fadeIn(300);
-		this.$(this.list_selector).prepend(newView.el);
-		this.$(".default-item").css('display', 'none');
+		if(!this.collection.findWhere({id: channel.id})) {
+			this.collection.add(channel);
+			var newView = this.create_new_view(channel);
+			newView.$el.css('display', 'none');
+			newView.$el.fadeIn(300);
+			this.$(this.list_selector).prepend(newView.el);
+			this.$(".default-item").css('display', 'none');
+		}
 	},
 	remove_channel: function(channel) {
 		this.collection.remove(channel);

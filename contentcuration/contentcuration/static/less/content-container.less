@@ -108,6 +108,9 @@
 			font-size: 12pt;
 			padding: 5px;
 		}
+		li:last-child #get_published_id{
+			margin-right: 65px;
+		}
 	}
 }
 
@@ -235,7 +238,8 @@
 		cursor:pointer;
 	}
 	#container_area{
-		width:@container-last-width; /* will be added to as containers are added- extra padding for clipboard*/
+		width: max-content;
+    	padding-right: 200px;
 	}
 	#container_area_title{
 		margin-top: 0px;

@@ -272,6 +272,10 @@ var BaseWorkspaceView = BaseView.extend({
 		var staticModal = require('edit_channel/information/views');
 		new staticModal.PublishedModalView({channel_id: window.current_channel.id, published: false});
 	},
+	get_channel_id:function(collection){
+		var staticModal = require('edit_channel/information/views');
+		new staticModal.PublishedModalView({channel_id: window.current_channel.id, published: false});
+ 	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");
 		var share_view = new ShareViews.ShareModalView({
