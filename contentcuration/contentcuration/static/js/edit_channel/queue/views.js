@@ -292,7 +292,8 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'change input[type=checkbox]': 'handle_checked',
 		'contextmenu .queue_item' : 'open_context_menu',
 		'click .copy_content': 'copy_content',
-		'click .move_content': 'move_content'
+		'click .move_content': 'move_content',
+		'click .queue_item_title': 'edit_item'
 	},
 	edit_item:function(event){
 		event.stopPropagation();
@@ -324,7 +325,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	copy_content:function(event){
 		this.cancel_actions(event);
-		this.copy_item();
+		this.make_copy();
 	},
 	move_content:function(event){
 		this.cancel_actions(event);

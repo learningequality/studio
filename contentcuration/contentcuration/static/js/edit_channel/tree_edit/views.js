@@ -48,8 +48,7 @@ var MESSAGES = {
     "delete_warning": "Are you sure you want to delete these selected items?",
     "related_content_alert": "Related content will not be included in the copy of this content.",
     "delete_item_warning": "Are you sure you want to delete {data}?",
-    "copy_to_clipboard": "Copy to Clipboard",
-    "make_copy": "Make a Copy"
+    "copy_to_clipboard": "Copy to Clipboard"
 }
 
 /**
@@ -245,6 +244,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
             $(this).popover('hide');
             $(this).removeClass("active-popover");
         });
+        $('.context-menu').blur();
 	},
 	move_items:function(){
 		var list = this.get_selected(true);
