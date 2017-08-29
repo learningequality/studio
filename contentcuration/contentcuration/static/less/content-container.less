@@ -105,19 +105,14 @@
 			border: none;
 		}
 		#channel-activate-button{ background-color: #2A982A; &:hover{background-color: #67D267;}}
-		#publish-id{
-			font-size:12pt;
-			.glyphicon{
-				margin-right:5px;
-			}
-			#publish-copy-success{
-				display: none;
-			}
-			.publish-id-text{
-				width:320px;
-			}
+		#get_published_id {
+			.action-text;
+			font-size: 12pt;
+			padding: 5px;
 		}
-
+		li:last-child #get_published_id{
+			margin-right: 65px;
+		}
 	}
 }
 
@@ -245,7 +240,8 @@
 		cursor:pointer;
 	}
 	#container_area{
-		width:@container-last-width; /* will be added to as containers are added- extra padding for clipboard*/
+		width: max-content;
+    	padding-right: 200px;
 	}
 	#container_area_title{
 		margin-top: 0px;
