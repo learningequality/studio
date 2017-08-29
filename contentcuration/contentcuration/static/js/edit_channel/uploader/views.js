@@ -314,7 +314,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.onclose();
   },
   validate: function() {
-    return this.edit_list && this.edit_list.validate();
+    var isInvalid = this.edit_list && this.edit_list.validate();
+    (isInvalid) ? this.disable_submit() : this.enable_submit();
+    return isInvalid;
   },
   save_and_keep_open:function(){
     var self = this;
@@ -604,6 +606,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.render();
   },
   render: function() {
+    var isValid = this.container.validate();
     var has_files = this.selected_individual() && _.some(this.selected_items[0].model.get("files"), function(f){return f.preset.display && !f.preset.thumbnail;});
 
     // Set license, author, copyright values based on whether selected items have been copied from another source
@@ -615,6 +618,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
     var all_top_level = _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
+    console.log(this.selected_items, this.selected_individual(), this.selected_items[0])
 
     if(this.allow_edit){
       this.$el.html(this.template({
@@ -635,7 +639,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         license_description: this.shared_data && this.shared_data.shared_license_description,
         languages: window.languages.toJSON(),
         language_default: this.get_language(null, all_top_level),
-        error: (this.selected_individual()) ? this.selected_items[0].error : this.container.validate()
+        error: (this.selected_individual()) ? this.selected_items[0].error : !isValid
       }, {
         data: this.get_intl_data()
       }));
@@ -883,10 +887,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         license_description: (license_description===false)? view.model.get('license_description') : license_description
       });
     });
-
-    (this.container.validate()) ? this.container.enable_submit() : this.container.disable_submit();
-    console.log(this)
-    // this.render();
   },
   change_mastery_model:function(event){
     if(event.target.value === "m_of_n"){
@@ -1121,15 +1121,16 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   validate: function() {
     var license = window.licenses.findWhere({id: this.model.get("license")});
-    this.error = null;
+    this.error = "";
     if(!this.model.get("title")) {
-      this.error = this.get_translation("title_error");
+      this.error += this.get_translation("title_error") + "\n";
     } else if(!license) {
-      this.error = this.get_translation("license_required");
+      this.error += this.get_translation("license_required") + "\n";
     } else if (this.model.get("kind") !== "topic" && license.get("requires_copyright_holder") && !this.model.get("copyright_holder")) {
-      this.error = this.get_translation("copyright_holder_error");
+      this.error += this.get_translation("copyright_holder_error") + "\n";
     }
     (this.error)? this.$el.addClass("invalid") : this.$el.removeClass("invalid");
+    console.log(this.error)
     return this.error;
   }
 });
