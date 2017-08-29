@@ -6,6 +6,7 @@
 	cursor:pointer;
 }
 
+@invalid-color: #FFA9A9;
 
 #metadata{
 	width: 100%;
@@ -132,6 +133,7 @@
 				font-style:italic;
 			}
 		}
+		.invalid_field { background-color: @invalid-color !important; }
 	}
 	#metadata_preview{
 		display:none;
@@ -206,7 +208,11 @@
 			}
 		}
 		&:hover{ background-color: #E6E6E6; }
-		&.invalid{ background-color: #FFA9A9; }
+		&.invalid{ background-color: @invalid-color; }
+		&.current_item{
+			background-color: @gray-200 !important;
+			.remove_topic{ display:none; }
+		}
 		.invalid_title{ display: none; color: @gray-700; }
 	}
 	.edited_node h5{
@@ -216,10 +222,6 @@
 			margin-right:5px;
 			color:@blue-500;
 		}
-	}
-	.current_item{
-		background-color: @gray-200;
-		.remove_topic{ display:none; }
 	}
 	.gray-out{
 		cursor:not-allowed;

@@ -40,7 +40,7 @@ var MESSAGES = {
     "detected_import": "Detected items imported from another channel",
     "detected_import_disabled": "Detected items imported from another channel - fields disabled accordingly",
     "title": "Title",
-    "title_error": "Title cannot be blank.",
+    "title_error": "Title cannot be blank",
     "title_placeholder": "Enter a title...",
     "source": "Source:",
     "readonly": "READ-ONLY Source:",
@@ -61,7 +61,8 @@ var MESSAGES = {
     "invalid_items": "One or more of the selected items is invalid",
     "license_error": "License is required",
     "copyright_holder_error": "Copyright holder is required",
-    "no_title": "No Title"
+    "no_title": "No Title",
+    "fix_errors_prompt": "Saving disabled (invalid content detected)"
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -318,22 +319,21 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var isInvalid = this.edit_list && this.edit_list.validate();
     if(isInvalid) {
       this.disable_submit();
+      this.$(".editmetadata_save").attr("title", this.get_translation("fix_errors_prompt"));
       if(isInvalid !== 1) {
         $("#editor_errors").css("display", "block").text(isInvalid);
       }
     } else {
       this.enable_submit();
+      this.$(".editmetadata_save").attr("title", null);
       $("#editor_errors").css("display", "none");
     }
-    return isInvalid;
+    return !isInvalid;
   },
   save_and_keep_open:function(){
-    var self = this;
     this.editor_view.add_tag(null);
     if(this.validate()) {
-      this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
-        self.process_updated_collection(collection);
-      });
+      this.save(this.get_translation("saving"), this.save_nodes).then(this.process_updated_collection);
     }
   },
   handle_save_and_finish_key:function(event){
@@ -1129,11 +1129,15 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   validate: function() {
     var license = window.licenses.get({id: this.model.get("license")});
     this.error = "";
+    $(".input_listener, select").removeClass("invalid_field");
     if(!this.model.get("title")) {
+      $("#input_title").addClass("invalid_field");
       this.error = this.get_translation("title_error");
-    } else if(!license) {
+    } else if(this.isoriginal && !license) {
+      $("#license_select").addClass("invalid_field");
       this.error = this.get_translation("license_required");
-    } else if (this.model.get("kind") !== "topic" && license.get("requires_copyright_holder") && !this.model.get("copyright_holder")) {
+    } else if (this.isoriginal && this.model.get("kind") !== "topic" && license.get("requires_copyright_holder") && !this.model.get("copyright_holder")) {
+      $("#input_license_owner").addClass("invalid_field");
       this.error = this.get_translation("copyright_holder_error");
     }
     (this.error)? this.$el.addClass("invalid") : this.$el.removeClass("invalid");
