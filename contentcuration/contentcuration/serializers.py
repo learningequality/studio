@@ -489,6 +489,10 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
     def check_valid(self, node):
         if node.kind_id == content_kinds.TOPIC:
             return True
+        elif not node.license:
+            return False
+        elif node.license.license_name not in ALLOW_NULL_COPYRIGHT_HOLDER and not node.copyright_holder:
+            return False
         elif node.kind_id == content_kinds.EXERCISE:
             for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):
                 answers = json.loads(aitem.answers)
