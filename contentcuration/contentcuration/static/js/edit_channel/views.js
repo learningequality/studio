@@ -757,7 +757,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 					var reload_list = new Models.ContentNodeCollection();
 					var last_elem = $("#" + moved_item.id);
 					collection.forEach(function(node){
-						// reload_list.push(node.get("id"));
 						if(node.get("parent") !== self.model.get("id")){
 							var new_node = self.collection.get({id: node.get("parent")}) || new Models.ContentNodeModel({id: node.get("parent")});
 							reload_list.add(new_node);

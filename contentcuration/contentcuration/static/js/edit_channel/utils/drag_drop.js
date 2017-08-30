@@ -53,7 +53,6 @@ function addSortable(element, selected_class, callback){
         },
         beforeStop: function(event, ui) {
             if ($(event.target).parent("#queue_content") && $("#queue").hasClass("closed")) {
-                // $(this).sortable('cancel');
                 ui.item.siblings('.' + selectedClass).removeClass('hidden');
 	            $("." + selectedClass + " input[type='checkbox']").prop("checked", false);
 	            $('.' + selectedClass).removeClass(selectedClass);
