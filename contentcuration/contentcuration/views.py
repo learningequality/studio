@@ -3,6 +3,7 @@ import logging
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.management import call_command
@@ -107,7 +108,8 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
                                                  "preferences": channel.preferences,
                                                  "messages": get_messages(),
-                                                 "primary_token": token or channel.pk
+                                                 "primary_token": token or channel.pk,
+                                                 "title": settings.DEFAULT_TITLE,
                                                 })
 
 

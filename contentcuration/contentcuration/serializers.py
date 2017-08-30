@@ -448,7 +448,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors')
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id')
 
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
@@ -530,7 +530,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license','language',
                   'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata',
-                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id')
+                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id')
 
 
 class ContentNodeEditSerializer(ContentNodeSerializer):
@@ -550,7 +550,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
                   'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
-                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding')
+                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'tree_id')
 
 
 
@@ -564,7 +564,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
             'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
-            'files', 'valid', 'metadata')
+            'files', 'valid', 'metadata', 'tree_id')
 
 """ Shared methods across channel serializers """
 class ChannelFieldMixin(object):

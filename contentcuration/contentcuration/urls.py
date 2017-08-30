@@ -214,6 +214,7 @@ urlpatterns += [
     url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
     url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
     url(r'^api/get_node_path$', node_views.get_node_path, name='get_node_path'),
+    url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
 ]
 
 # Add file api enpoints
