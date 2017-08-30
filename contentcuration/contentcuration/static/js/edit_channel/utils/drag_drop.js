@@ -58,6 +58,13 @@ function addSortable(element, selected_class, callback){
 	            $("." + selectedClass + " input[type='checkbox']").prop("checked", false);
 	            $('.' + selectedClass).removeClass(selectedClass);
             }
+            var parent = $(ui.placeholder);
+		    if (!parent.length || !parent[0].parentNode) {
+		    	$("body").removeClass("dragging");
+		        $(".content-list").sortable( "cancel" );
+		        $(".content-list").sortable( "enable" );
+				$(".content-list").sortable( "refresh" );
+		    }
         },
 		update: function(event, ui) {
 			if($(".drop-topic-hover").length === 0){
@@ -97,6 +104,7 @@ function addSortable(element, selected_class, callback){
 						$(".content-list").sortable( "refresh" );
 		        	}).catch(function(error){
 		        		console.error(error)
+		        		$("body").removeClass("dragging");
 		        		$(".content-list").sortable( "cancel" );
 		        		$(".content-list").sortable( "enable" );
 						$(".content-list").sortable( "refresh" );
@@ -104,10 +112,7 @@ function addSortable(element, selected_class, callback){
 				}
 
 			}
-	    },
-	    over: function (e, ui) {
-		  // $(ui.sender).sortable('instance').scrollParent = $(e.target)
-		}
+	    }
 	}).droppable({
 		items : 'li',
 		cancel: '.current_topic, .default-item, #preview, #queue',
