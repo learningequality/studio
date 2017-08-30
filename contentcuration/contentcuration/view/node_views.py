@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum, F
+from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
 from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel
@@ -210,6 +211,41 @@ def duplicate_nodes(request):
 
         serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
         return HttpResponse(JSONRenderer().render(serialized))
+
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def duplicate_node_inline(request):
+    logging.debug("Entering the copy_node endpoint")
+
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+
+        try:
+
+            node = ContentNode.objects.get(pk=data["node_id"])
+            channel_id = data["channel_id"]
+            target_parent = ContentNode.objects.get(pk=data["target_parent"])
+            channel = target_parent.get_channel()
+            request.user.can_edit(channel and channel.pk)
+
+            record_node_duplication_stats([node], ContentNode.objects.get(pk=target_parent.pk),
+                                          Channel.objects.get(pk=channel_id))
+
+            new_node = None
+            with transaction.atomic():
+                with ContentNode.objects.disable_mptt_updates():
+                    sort_order = (node.sort_order + node.get_next_sibling().sort_order) / 2 if node.get_next_sibling() else node.sort_order + 1
+                    new_node = _duplicate_node_bulk(node, sort_order=sort_order, parent=target_parent, channel_id=channel_id)
+                    if not new_node.title.endswith(_(" (Copy)")):
+                        new_node.title = new_node.title + _(" (Copy)")
+                        new_node.save()
+
+            return HttpResponse(JSONRenderer().render(ContentNodeSerializer(ContentNode.objects.filter(pk=new_node.pk), many=True).data))
+
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
 def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
