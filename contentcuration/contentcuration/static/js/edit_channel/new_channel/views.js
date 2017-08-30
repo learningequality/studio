@@ -200,7 +200,8 @@ var CurrentChannelList  = ChannelList.extend({
 	new_channel: function(){
 		var data = {
 			editors: [window.current_user.id],
-			pending_editors: []
+			pending_editors: [],
+			language: window.user_preferences.language
 		};
 		var newView = this.create_new_view(new Models.ChannelModel(data));
 		this.$(this.list_selector).prepend(newView.el);
@@ -292,6 +293,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				allow_edit: true,
 				is_channel: true
 			});
+			this.$("#select_language").val(this.model.get("language") || 0);
 		}
 		this.$('[data-toggle="tooltip"]').tooltip();
 		this.set_indices();
@@ -364,7 +366,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.containing_list_view.set_editing(true);
 		this.edit = true;
 		this.render();
-		this.$("#select_language").val(this.model.get("language") || 0);
 	},
 	star_channel: function(){
 		var self = this;
