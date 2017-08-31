@@ -50,7 +50,7 @@
 			<p id="channel_description" class="wordwrap" title="{{channel.description}}">{{channel.description}}</p>
 		</div>
 		<div class="container-fluid updated_time">
-			{{formatMessage (intlGet 'messages.last_updated') updated=(formatRelative modified)}}
+			{{#if modified}}{{formatMessage (intlGet 'messages.last_updated') updated=(formatRelative modified)}}{{/if}}
 		</div>
 	{{/if}}
 </div>
