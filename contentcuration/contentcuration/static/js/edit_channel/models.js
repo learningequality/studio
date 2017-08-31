@@ -597,7 +597,7 @@ var ChannelModel = BaseModel.extend({
         published: false,
         view_only: false,
         viewers: [],
-        modified: new Date().toLocaleString()
+        modified: new Date().toLocaleString(window.languageCode)
     },
     model_name:"ChannelModel",
     get_root:function(tree_name){
