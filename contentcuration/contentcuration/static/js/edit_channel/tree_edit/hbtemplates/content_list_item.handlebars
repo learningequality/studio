@@ -31,8 +31,8 @@
 				{{/unless}}
 				&nbsp;
 				{{#if node.changed}}
-					{{#if node.published}}<em class="unpublished" title="{{formatMessage (intlGet 'messages.updated')}}">{{formatMessage (intlGet 'messages.updated')}}</em>
-					{{else}}<em class="unpublished" title="{{formatMessage (intlGet 'messages.created')}}">{{formatMessage (intlGet 'messages.new')}}</em>
+					{{#if node.published}}<em class="unpublished" title="{{formatMessage (intlGet 'messages.updated')}} {{formatRelative node.modified}}">{{formatMessage (intlGet 'messages.updated')}}</em>
+					{{else}}<em class="unpublished" title="{{formatMessage (intlGet 'messages.created')}} {{formatRelative node.modified}}">{{formatMessage (intlGet 'messages.new')}}</em>
 					{{/if}}
 				{{/if}}
 				{{#unless node.valid}}
