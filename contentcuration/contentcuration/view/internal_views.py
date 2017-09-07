@@ -35,7 +35,13 @@ VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VER
 def authenticate_user_internal(request):
     """ Verify user is valid """
     logging.debug("Logging in user")
-    return HttpResponse(json.dumps({'success': True, 'username': unicode(request.user)}))
+    return HttpResponse(json.dumps({
+        'success': True,
+        'username': unicode(request.user),
+        'first_name': request.user.first_name,
+        'last_name': request.user.last_name,
+        'is_admin': request.user.is_admin,
+    }))
 
 
 @api_view(['POST'])
@@ -185,6 +191,28 @@ def api_commit_channel(request):
 
 
 @api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def api_add_nodes_from_file(request):
+    """
+    Creates a channel based on the structure sent in the request.
+    :param request: POST request containing the tree structure of a channel.
+    :return: The channel_id of the newly created channel.
+    """
+    try:
+        fobj = request.FILES["file"]
+        data = json.loads(fobj.read())
+        content_data = data['content_data']
+        parent_id = data['root_id']
+        with ContentNode.objects.disable_mptt_updates():
+            return HttpResponse(json.dumps({
+                "success": True,
+                "root_ids": convert_data_to_nodes(content_data, parent_id)
+            }))
+    except KeyError:
+        raise ObjectDoesNotExist('Missing attribute from data: {}'.format(data))
+
+@api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_add_nodes_to_tree(request):
@@ -311,6 +339,32 @@ def get_tree_data(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def get_channel_status_bulk(request):
+    """ Create the channel node """
+    data = json.loads(request.body)
+    try:
+        statuses = {}
+        for channel_id in data['channel_ids']:
+            statuses[channel_id] = get_status(channel_id)
+
+        return HttpResponse(json.dumps({"success": True, 'statuses': statuses}))
+
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+def get_status(channel_id):
+    obj = Channel.objects.get(pk=channel_id)
+    if obj.deleted:
+        return "deleted"
+    elif obj.staging_tree:
+        return "staged"
+    elif obj.main_tree.get_descendants().filter(changed=True).exists():
+        return"unpublished"
+    return "active"
 
 """ CHANNEL CREATE FUNCTIONS """
 

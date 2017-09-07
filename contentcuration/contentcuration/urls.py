@@ -268,7 +268,9 @@ urlpatterns += [
     url(r'^api/internal/get_tree_data$', internal_views.get_tree_data, name='get_tree_data'),
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),
     url(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
+    url(r'^api/internal/api_add_nodes_from_file$', internal_views.api_add_nodes_from_file, name="api_add_nodes_from_file"),
     url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
+    url(r'^api/internal/get_channel_status_bulk$', internal_views.get_channel_status_bulk, name="get_channel_status_bulk"),
 ]
 
 # Add admin endpoints
