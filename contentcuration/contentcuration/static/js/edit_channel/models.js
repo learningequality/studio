@@ -347,6 +347,24 @@ var ContentNodeModel = BaseModel.extend({
             });
         });
         return promise;
+    },
+    make_copy: function(target_parent) {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = {"node_id": self.id,
+                        "target_parent": target_parent.get("id"),
+                        "channel_id": window.current_channel.id
+            };
+            $.ajax({
+                method:"POST",
+                url: window.Urls.duplicate_node_inline(),
+                data:  JSON.stringify(data),
+                success: function(data) {
+                    resolve(new ContentNodeCollection(JSON.parse(data)));
+                },
+                error:reject
+            });
+        });
     }
 });
 
