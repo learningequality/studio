@@ -346,7 +346,7 @@ def create_channel(channel_data, user):
     channel.source_id = channel_data.get('source_id')
     channel.source_domain = channel_data.get('source_domain')
     channel.ricecooker_version = channel_data.get('ricecooker_version')
-    channel.language = channel_data.get('language')
+    channel.language_id = channel_data.get('language')
 
     old_chef_tree = channel.chef_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
@@ -481,7 +481,7 @@ def create_root_from_file(file_name, is_published):
         source_id=node_data['source_id'],
         source_domain=node_data['source_domain'],
         extra_fields=json.dumps({'ricecooker_version': node_data['ricecooker_version']}),
-        language_id=node_data.get('language_id'),
+        language_id=node_data.get('language'),
     ), node_data
 
 
@@ -505,7 +505,7 @@ def create_node_from_file(user, file_name, parent_node, sort_order):
         sort_order=sort_order,
         source_id=node_data['source_id'],
         source_domain=node_data['source_domain'],
-        language_id=node_data.get('language_id'),
+        language_id=node_data.get('language'),
     )
     # Create files associated with node
     map_files_to_node(user, cur_node, node_data['files'])
@@ -567,7 +567,7 @@ def create_node(node_data, parent_node, sort_order):
         sort_order=sort_order,
         source_id=node_data.get('source_id'),
         source_domain=node_data.get('source_domain'),
-        language_id=node_data.get('language_id'),
+        language_id=node_data.get('language'),
     )
 
 

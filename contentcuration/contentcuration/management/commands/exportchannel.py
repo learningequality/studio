@@ -68,7 +68,7 @@ class Command(BaseCommand):
                 map_prerequisites(channel.main_tree)
                 save_export_database(channel_id)
                 increment_channel_version(channel)
-                # mark_all_nodes_as_changed(channel)
+                mark_all_nodes_as_changed(channel)
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 

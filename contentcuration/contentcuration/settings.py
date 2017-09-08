@@ -181,6 +181,8 @@ LANGUAGES = (
     ('en', ugettext('English')),
     ('es', ugettext('Spanish')),
     ('es-mx', ugettext('Spanish - Mexico')),
+    ('ar', ugettext('Arabic')),
+    ('en-PT', ugettext('English - Pirate')),
 )
 
 
@@ -216,6 +218,8 @@ DEFAULT_LICENSE = 1
 
 SERVER_EMAIL = 'curation-errors@learningequality.org'
 ADMINS = [('Errors', SERVER_EMAIL)]
+
+DEFAULT_TITLE = "Kolibri Studio"
 
 IGNORABLE_404_URLS = [
     re.compile(r'\.(php|cgi)$'),

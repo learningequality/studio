@@ -567,7 +567,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
             'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language', 'tree_id',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
-            'files', 'valid', 'metadata')
+            'files', 'valid', 'metadata', 'tree_id')
 
 
 class ChannelSerializer(serializers.ModelSerializer):
@@ -683,7 +683,7 @@ class AltChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'published', 'editors', 'modified', 'language',
+        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language',
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
 
 class UserSerializer(serializers.ModelSerializer):
@@ -771,7 +771,7 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
 
     def retrieve_channel_name(self, invitation):
-        return invitation.channel.name
+        return invitation and invitation.channel.name
 
     class Meta:
         model = Invitation

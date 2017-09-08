@@ -11,14 +11,12 @@
 
 #secondary-nav {
 	@secondary-nav-btn-color:#F2F2F2;
-	padding:0px 10px 0px 20px;
+	padding:5px 10px 5px 20px;
 	margin: 0 0 0 27px;
 	background-color:transparent;
 	border:none;
 	width:100%;
 	min-height: 0;
-
-	*{ vertical-align: middle; }
 	li {
 		font-size: @larger-body-text;
 		cursor:pointer;
@@ -33,15 +31,15 @@
 			color:@blue-500;
 		}
 	}
-	#channel_settings{
-		padding: 5px 10px;
+	#channel_settings {
 	    margin-left: 10px;
 	    font-size: 14pt;
 	    &:hover{color:@blue-500;}
 	}
+	#channel_settings, #back_to_home { padding: 10px; }
 	.channel_edit_label{
-	    padding: 5px 20px;
-	    font-size: 15pt;
+	    padding: 10px 5px;
+	    font-size: 12pt;
 	    font-weight: bold;
 	    color: @gray-500;
 	}
@@ -111,19 +109,14 @@
 				color: white !important;
 			}
 		}
-		#publish-id{
-			font-size:12pt;
-			.glyphicon{
-				margin-right:5px;
-			}
-			#publish-copy-success{
-				display: none;
-			}
-			.publish-id-text{
-				width:320px;
-			}
+		#get_published_id {
+			.action-text;
+			font-size: 12pt;
+			padding: 5px;
 		}
-
+		li:last-child #get_published_id{
+			margin-right: 65px;
+		}
 	}
 }
 
@@ -251,7 +244,8 @@
 		cursor:pointer;
 	}
 	#container_area{
-		width:@container-last-width; /* will be added to as containers are added- extra padding for clipboard*/
+		width: max-content;
+    	padding-right: 200px;
 	}
 	#container_area_title{
 		margin-top: 0px;
@@ -515,10 +509,11 @@
 			}
 			.popover{
 				border-radius: 0;
-				margin-top: 15px;
+				margin-top: 30px;
 				.arrow{top:40% !important;}
 				.popover-content {
 					padding:0px;
+					min-width: 200px;
 					.option{
 						width:100%;
 						padding:5px 20px;
@@ -542,13 +537,21 @@
 			  background-color: white;
 			  border:1px solid @gray-200;
 			  border-width:thin;
+			  min-width: 200px;
+			  .context-header {
+			  	padding:5px 10px;
+			  	font-size: 12pt;
+			  	font-weight: bold;
+			  	background-color: @blue-100;
+			  	max-width: 200px;
+			  }
 			  .context-option{
 			  	padding:5px 10px;
 			  	font-size:12pt;
-			  }
-			  .context-option:hover{
-			  	font-weight:bold;
-			  	background-color: @gray-200;
+				&:hover{
+				  	font-weight:bold;
+				  	background-color: @gray-200;
+				}
 			  }
 			}
 			.context-menu.init, .context-menu:focus{
