@@ -18,8 +18,6 @@ from contentcuration.utils.messages import get_messages
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from le_utils import proquint
-
 
 def base(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
