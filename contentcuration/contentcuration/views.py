@@ -3,6 +3,7 @@ import logging
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.management import call_command
@@ -11,21 +12,13 @@ from django.db.models import Q, Case, When, Value, IntegerField, F
 from django.core.urlresolvers import reverse_lazy
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
-<<<<<<< HEAD
 from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User, SecretToken
-from contentcuration.serializers import LanguageSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
-=======
-from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User
 from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
->>>>>>> 1bcaab9fc10fe8891c6ed4162117004e36135f50
 from contentcuration.utils.messages import get_messages
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-<<<<<<< HEAD
 from le_utils import humanhash
-=======
->>>>>>> 1bcaab9fc10fe8891c6ed4162117004e36135f50
 
 def base(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
@@ -109,7 +102,8 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
                                                  "preferences": channel.preferences,
                                                  "messages": get_messages(),
-                                                 "primary_token": humanhash.humanize(channel.pk, words=5)
+                                                 "primary_token": humanhash.humanize(channel.pk, words=5),
+                                                 "title": settings.DEFAULT_TITLE,
                                                 })
 
 

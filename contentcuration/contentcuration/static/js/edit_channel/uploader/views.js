@@ -102,7 +102,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     if(!this.allow_edit || (this.metadata_view && !this.metadata_view.check_for_changes()) || !event){
       this.close();
       $(".modal-backdrop").remove();
-      window.channel_router.update_url(null, null);
+      window.channel_router.update_url(null, null, window.title);
     }else{
       var t = event.target;
       var self = this;
@@ -111,12 +111,12 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
               self.metadata_view.undo_changes();
               self.close();
               $(".modal-backdrop").remove();
-              window.channel_router.update_url(null, null);
+              window.channel_router.update_url(null, null, window.title);
           },
           [self.get_translation("keep_open")]:function(){},
           [self.get_translation("save_and_close")]:function(){
             self.metadata_view.save_and_finish();
-            window.channel_router.update_url(null, null);
+            window.channel_router.update_url(null, null, window.title);
           },
       }, null);
       self.cancel_actions(event);
@@ -285,7 +285,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       model: this.model,
       container: this,
       shared_data: (this.edit_list)? this.edit_list.shared_data : null,
-      allow_edit: this.allow_edit
+      allow_edit: this.allow_edit,
+      new_content: this.new_content,
     });
     if(this.edit_list){
       this.edit_list.adjust_list_height();
@@ -597,7 +598,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
-    var all_top_level = _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
+    var all_top_level = (this.new_content)? !this.model.get("parent") : _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
 
     if(this.allow_edit){
       this.$el.html(this.template({
