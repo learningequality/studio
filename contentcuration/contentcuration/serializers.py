@@ -699,12 +699,14 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
         return list(channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
 
     def generate_base64(self, channel):
-        if channel.thumbnail_encoding:
-            return json.loads(channel.thumbnail_encoding.replace('u\'', '"').replace('\'', '"')).get('base64')
-        elif channel.thumbnail:
-            checksum, _ext = os.path.splitext(channel.thumbnail)
-            filepath = generate_file_on_disk_name(checksum, channel.thumbnail)
-            return encode_file_to_base64(filepath, 'data:image/png;base64,')
+        if channel.render_thumbnail:
+            if channel.thumbnail_encoding:
+                return json.loads(channel.thumbnail_encoding.replace('u\'', '"').replace('\'', '"')).get('base64')
+            elif channel.thumbnail:
+                checksum, _ext = os.path.splitext(channel.thumbnail)
+                filepath = generate_file_on_disk_name(checksum, channel.thumbnail)
+                return encode_file_to_base64(filepath, 'data:image/png;base64,')
+        return ""
 
     class Meta:
         model = Channel

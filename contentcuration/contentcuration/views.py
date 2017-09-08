@@ -365,6 +365,7 @@ def get_public_channel_list(request):
         keyword = request.query_params.get('keyword', '').strip()
         language_id = request.query_params.get('language', '').strip()
         token = request.query_params.get('token', '').strip().replace('-', '')
+        thumbnail = 1 if request.query_params.get('thumbnails') == 'true' else 0
         channels = None
 
         if token != '':
@@ -378,6 +379,10 @@ def get_public_channel_list(request):
         if language_id != '':
             channels = channels.select_related('language').filter(Q(language__id__icontains=language_id))
 
-        return HttpResponse(json.dumps(PublicChannelSerializer(channels.order_by("-priority").distinct(), many=True).data))
+
+        channel_list = channels.annotate(render_thumbnail=Value(thumbnail, output_field=IntegerField()))\
+                        .order_by("-priority")\
+                        .distinct()
+        return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with token {} not found'.format(token))
