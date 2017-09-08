@@ -193,9 +193,11 @@ urlpatterns = [
     url(r'^healthz$', views.health, name='health'),
     url(r'^api/search/', include('search.urls'), name='search'),
     url(r'^api/public/channel/(?P<channel_id>[^/]+)', views.get_channel_name_by_id, name='get_channel_name_by_id'),
-    url(r'^api/public/public_channels', views.get_public_channels, name='get_public_channels'),
+    url(r'^api/public/public_channels/$', views.get_public_channel_list, name='get_public_channel_list'),
+    url(r'^api/public/channels', views.get_public_channel_list, name='get_public_channel_list'),
     url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
     url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
+    url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
 ]
 
 # Add node api enpoints

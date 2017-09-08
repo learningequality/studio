@@ -97,7 +97,9 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		'click .new_channel_button' : 'new_channel'
 	},
 	new_channel: function(){
-		this.current_channel_list.new_channel();
+		if (this.current_channel_list.new_channel){
+			this.current_channel_list.new_channel();
+		}
 	},
 	add_channel: function(channel, category){
 		switch(category){

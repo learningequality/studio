@@ -267,8 +267,9 @@ class Channel(models.Model):
     deleted = models.BooleanField(default=False, db_index=True)
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
+    priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
     secret_tokens = models.ManyToManyField(
-        SecretToken, 
+        SecretToken,
         related_name='channels',
         verbose_name=_("secret tokens"),
         blank=True,
