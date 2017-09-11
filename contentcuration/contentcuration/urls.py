@@ -23,6 +23,7 @@ from django.conf.urls.i18n import i18n_patterns
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from rest_framework import routers, viewsets
+from contentcuration.forms import ForgotPasswordForm
 from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, AssessmentItem, ContentKind, Language, User, Invitation
 import contentcuration.serializers as serializers
 import contentcuration.views as views
@@ -232,9 +233,9 @@ urlpatterns += [
     url(
         r'^accounts/password/reset/$',
         registration_views.custom_password_reset,
-        {'post_reset_redirect': reverse_lazy('auth_password_reset_done'), 'email_template_name': 'registration/password_reset_email.txt'},
+        {'post_reset_redirect': reverse_lazy('auth_password_reset_done'), 'email_template_name': 'registration/password_reset_email.txt', 'password_reset_form': ForgotPasswordForm},
         name='auth_password_reset'
-    ),  # Add 'html_email_template_name': 'registration/password_reset_email.html' to dict for html
+    ),
     url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
@@ -270,7 +271,9 @@ urlpatterns += [
     url(r'^api/internal/get_tree_data$', internal_views.get_tree_data, name='get_tree_data'),
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),
     url(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
+    url(r'^api/internal/api_add_nodes_from_file$', internal_views.api_add_nodes_from_file, name="api_add_nodes_from_file"),
     url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
+    url(r'^api/internal/get_channel_status_bulk$', internal_views.get_channel_status_bulk, name="get_channel_status_bulk"),
 ]
 
 # Add admin endpoints
