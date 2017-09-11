@@ -1,9 +1,16 @@
 import json
 from contentcuration.models import User, Language
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm
+from django.conf import settings
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm, PasswordResetForm
+from django.contrib.sites.shortcuts import get_current_site
+from django.core import signing
+from django.contrib.auth.tokens import default_token_generator
+from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from le_utils.constants import exercises, licenses
+
+REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 
 class RegistrationForm(UserCreationForm):
     first_name = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
@@ -219,3 +226,45 @@ class AccountSettingsForm(PasswordChangeForm):
             self.add_error(field, error)
             return False
         return True
+
+
+class ForgotPasswordForm(PasswordResetForm):
+    email = forms.EmailField(label=_("Email"), max_length=254)
+
+    def save(self, request=None, extra_email_context=None, **kwargs):
+        """
+        Generate a one-use only link for resetting password and send it to the
+        user.
+        """
+        email = self.cleaned_data["email"]
+
+        users = User.objects.filter(email=email)
+        inactive_users = users.filter(is_active=False)
+        if inactive_users.exists() and inactive_users.count() == users.count(): # all matches are inactive
+            for user in inactive_users:
+                activation_key = self.get_activation_key(user)
+                context = {
+                    'activation_key': activation_key,
+                    'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+                    'site': extra_email_context.get('site'),
+                    'user': user,
+                    'domain': extra_email_context.get('domain') or domain,
+                }
+                subject = render_to_string('registration/password_reset_subject.txt', context)
+                subject = ''.join(subject.splitlines())
+                message = render_to_string('registration/activation_needed_email.txt', context)
+                user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+        else:
+            super(ForgotPasswordForm, self).save(request=request, extra_email_context=extra_email_context, **kwargs)
+
+    def get_activation_key(self, user):
+        """
+        Generate the activation key which will be emailed to the user.
+        """
+        return signing.dumps(
+            obj=getattr(user, user.USERNAME_FIELD),
+            salt=REGISTRATION_SALT
+        )
+
+
+
