@@ -3,7 +3,7 @@
 {% autoescape off %}
 {% trans "Hello" %} {{ user.first_name }},
 
-{% trans "You requested a password reset on" %}  {{ site.name }} {% trans "without activating your account first." %}
+{% blocktrans with site_name=site.name %}You requested a password reset on {{ site_name }} without activating your account first.{% endblocktrans %}
 
 {% trans "Here is a link to activate your account:" %}:
 
