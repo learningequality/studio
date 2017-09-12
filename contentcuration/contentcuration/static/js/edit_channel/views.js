@@ -40,7 +40,7 @@ var MESSAGES = {
 	"creating": "Creating...",
 	"loading_content": "Loading Content...",
 	"no_changes_detected": "No changes detected",
-	"not_approved": "Channel not approved",
+	"not_approved": "Deploy Failed",
 	"no_items": "No items found",
 	"empty": "(empty)",
 	"no_preview": "No Preview Available",
@@ -85,11 +85,13 @@ var BaseView = Backbone.View.extend({
 					.value();
 	},
 	get_intl_data: function(){
-		var language = window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
-		return {
-			intl: {
-				locales: [(language && language.id) || "en-US"],
-				messages: this.get_translation_library()
+		if(window.languages){
+			var language = window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+			return {
+				intl: {
+					locales: [(language && language.id) || "en-US"],
+					messages: this.get_translation_library()
+				}
 			}
 		}
 	},
@@ -623,23 +625,26 @@ var BaseEditableListView = BaseListView.extend({
 			entry.model.unset();
 		});
 	},
-	save:function(message, beforeSave){
+	save:function(message, beforeSave, onerror){
 		message = (message!=null)? message: this.get_translation("saving");
 		var self = this;
-	    var promise = new Promise(function(resolve, reject){
-	        self.display_load(message, function(load_resolve, load_reject){
-					if(beforeSave){
-						beforeSave();
-					}
-		      self.collection.save().then(function(collection){
-		          resolve(collection);
-		          load_resolve(true);
-		      }).catch(function(error){
-			    	load_reject(error);
+	    return new Promise(function(resolve, reject){
+	    	if(beforeSave){ beforeSave(); }
+	    	if(onerror) {
+	    		self.collection.save().then(resolve).catch(function(error) {
+					onerror(error);
+					reject(error);
+				});
+	    	} else {
+	    		self.display_load(message, function(load_resolve, load_reject){
+					self.collection.save().then(function(collection){
+						resolve(collection);
+						load_resolve(true);
+					}).catch(load_reject);
 			    });
-		    });
-	    })
-	  	return promise;
+	    	}
+
+	    });
 	},
 	delete_items_permanently:function(message){
 		message = (message!=null)? message: this.get_translation("deleting");

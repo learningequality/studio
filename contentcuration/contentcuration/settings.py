@@ -212,6 +212,7 @@ SITE_ID = 1
 # MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
+SPACE_REQUEST_EMAIL = 'info@learningequality.org'
 DEFAULT_FROM_EMAIL = 'Kolibri Content Workshop (Do Not Reply) <noreply@learningequality.org>'
 DEFAULT_LICENSE = 1
 

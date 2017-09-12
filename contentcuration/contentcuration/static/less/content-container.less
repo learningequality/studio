@@ -98,11 +98,17 @@
 			vertical-align: middle;
 		}
 		#channel-publish-button, #channel-activate-button{
-			margin: 0 40px 0 0;
 			.action-button;
+			margin: 0 40px 0 0;
 			border: none;
 		}
-		#channel-activate-button{ background-color: #2A982A; &:hover{background-color: #67D267;}}
+		#channel-activate-button{
+			background-color: #2A982A;
+			&:hover{
+				background-color: #67D267;
+				color: white !important;
+			}
+		}
 		#get_published_id {
 			.action-text;
 			font-size: 12pt;
