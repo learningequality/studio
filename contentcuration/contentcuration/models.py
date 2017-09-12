@@ -22,10 +22,10 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
+from pg_utils import DistinctSum
 from rest_framework import permissions
 from rest_framework.authtoken.models import Token
 from contentcuration.statistics import record_channel_stats
-from rest_framework import permissions
 
 
 EDIT_ACCESS = "edit"
@@ -83,7 +83,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
-    disk_space = models.IntegerField(default=500000000, help_text=_('How many bytes a user can upload'))
+    disk_space = models.IntegerField(default=524288000, help_text=_('How many bytes a user can upload'))
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -160,19 +160,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         return float(files['total_used'] or 0)
 
     def get_space_used_by_kind(self):
-        active_trees = self.get_user_active_trees()
-        files = self.files.select_related('contentnode').select_related('assessment_item')\
-                            .filter(Q(contentnode__tree_id__in=active_trees) | Q(assessment_item__contentnode__tree_id__in=active_trees))\
-                            .values('checksum', 'file_size', 'preset__kind_id')\
-                            .distinct()\
-                            .values('preset__kind_id')\
-                            .annotate(space=Sum('file_size'))\
+        active_files = self.get_user_active_files()
+        files = active_files.values('preset__kind_id')\
+                            .annotate(space=DistinctSum('file_size'))\
                             .order_by()
 
         kind_dict = {}
         for item in files:
-            key = item['preset__kind_id']
-            kind_dict[key] = item['space']
+            kind_dict[item['preset__kind_id']] = item['space']
         return kind_dict
 
     def email_user(self, subject, message, from_email=None, **kwargs):

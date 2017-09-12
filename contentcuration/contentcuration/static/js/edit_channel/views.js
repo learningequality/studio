@@ -85,11 +85,13 @@ var BaseView = Backbone.View.extend({
 					.value();
 	},
 	get_intl_data: function(){
-		var language = window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
-		return {
-			intl: {
-				locales: [(language && language.id) || "en-US"],
-				messages: this.get_translation_library()
+		if(window.languages){
+			var language = window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+			return {
+				intl: {
+					locales: [(language && language.id) || "en-US"],
+					messages: this.get_translation_library()
+				}
 			}
 		}
 	},

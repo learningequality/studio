@@ -21,7 +21,7 @@
 		<ul class="list-group">
 			{% for item in breakdown %}
 				<li class="list-group-item">{{item.name}} - {{item.percent}}% ({{item.size}}MB)</li>
-			{% empty %}<i>You don't have any files uploaded</i>
+			{% empty %}<i>{% trans "You don't have any files uploaded" %}</i>
 			{% endfor %}
 		</ul>
 	</div>

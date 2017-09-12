@@ -137,15 +137,15 @@ def storage_settings(request):
     storage_percent = (min(storage_used / float(request.user.disk_space), 1) * 100)
     breakdown = [{
                     "name": k.capitalize(),
-                    "size":"%.2f" % (float(v)/1000000),
+                    "size":"%.2f" % (float(v)/1048576),
                     "percent": "%.2f" % (min(float(v) / float(request.user.disk_space), 1) * 100)
                 } for k,v in request.user.get_space_used_by_kind().items()]
     return render(request, 'settings/storage.html', {"current_user": request.user,
                                                     "page": "storage",
                                                     "percent_used": "%.2f" % storage_percent,
-                                                    "used": "%.2f" % (float(storage_used) / 1000000),
-                                                    "total": "%.2f" % (float(request.user.disk_space) / 1000000),
-                                                    "available": "%.2f" % (request.user.get_available_space() / 1000000),
+                                                    "used": "%.2f" % (float(storage_used) / 1048576),
+                                                    "total": "%.2f" % (float(request.user.disk_space) / 1048576),
+                                                    "available": "%.2f" % (request.user.get_available_space() / 1048576),
                                                     "breakdown": breakdown,
                                                     "request_email": ccsettings.SPACE_REQUEST_EMAIL,
                                                 })

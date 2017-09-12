@@ -664,7 +664,7 @@ var UserItem = BaseAdminItem.extend({
         var model = this.model;
         var size = self.$(".size_limit").val() || this.model.get("disk_space");
         _.defer(function(){
-            model.save({"disk_space": Number(size) * 1000000}); // Need to convert to bytes
+            model.save({"disk_space": Number(size) * 1048576}); // Need to convert to bytes
         }, 1000)
     }
 });

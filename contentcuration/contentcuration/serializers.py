@@ -756,7 +756,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     used_space = serializers.SerializerMethodField('calculate_used_space')
 
     def calculate_space(self, user):
-        return user.disk_space / 1000000
+        return user.disk_space / 1048576
 
     def calculate_used_space(self, user):
         return user.get_space_used()
