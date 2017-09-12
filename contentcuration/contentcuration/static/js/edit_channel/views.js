@@ -40,7 +40,7 @@ var MESSAGES = {
 	"creating": "Creating...",
 	"loading_content": "Loading Content...",
 	"no_changes_detected": "No changes detected",
-	"not_approved": "Channel not approved",
+	"not_approved": "Deploy Failed",
 	"no_items": "No items found",
 	"empty": "(empty)",
 	"no_preview": "No Preview Available",
