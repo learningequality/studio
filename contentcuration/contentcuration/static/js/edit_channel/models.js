@@ -395,7 +395,7 @@ var ContentNodeCollection = BaseCollection.extend({
                     if(item.get('type') === 'input_question'){
                         item.get('answers').each( function(a){
                             var value = numParser.parse(a.get('answer'))
-                            a.set('answer', value.toString());
+                            a.set('answer', value !== null && value.toString());
                         });
                     }
                 })
@@ -410,7 +410,7 @@ var ContentNodeCollection = BaseCollection.extend({
                         saveReject(error);
                     }
                 });
-            });
+            }).catch(saveReject);
         });
     },
     has_prerequisites: function(){

@@ -1,18 +1,18 @@
 import json
 import logging
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.management import call_command
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Q, Case, When, Value, IntegerField, F
 from django.core.urlresolvers import reverse_lazy
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
-from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User
+from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User, StagedFile
 from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
 from contentcuration.utils.messages import get_messages
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -287,7 +287,10 @@ def activate_channel_endpoint(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         channel = Channel.objects.get(pk=data['channel_id'])
-        activate_channel(channel)
+        try:
+            activate_channel(channel, request.user)
+        except PermissionDenied as e:
+            return HttpResponseForbidden(str(e))
 
         return HttpResponse(json.dumps({"success": True}))
 

@@ -253,6 +253,7 @@ urlpatterns += [
     url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
     url(r'^settings/account/success', settings_views.account_settings_success, name='account_settings_success'),
     url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
+    url(r'^settings/storage', settings_views.storage_settings, name='storage_settings'),
 ]
 
 # Add internal endpoints
