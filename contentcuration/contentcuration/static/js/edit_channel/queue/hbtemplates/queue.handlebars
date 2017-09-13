@@ -1,10 +1,14 @@
 <div id="queue" class="closed">
-	<a class="btn btn-default queue-button pull-left">
-		{{formatMessage (intlGet 'messages.clipboard_label')}}
-		<br/>
-		<span class="badge queue-badge">{{formatMessage (intlGet 'messages.loading')}}</span>
-	</a>
+	<div class="button_drop">
+		<button type="button" class="btn queue-button dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			{{formatMessage (intlGet 'messages.clipboard_label')}}
+			<span class="badge queue-badge">{{formatMessage (intlGet 'messages.loading')}}</span>
+			<span class="caret"></span>
+		</button>
+		<i class="drop_text">{{formatMessage (intlGet 'messages.drop_text')}}</i>
+	</div>
 	<div id="main-queue">
 		<div id="clipboard-queue" class="queue-interior"></div>
 	</div>
+	<div id="queue-back"></div>
 </div>

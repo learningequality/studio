@@ -1,16 +1,34 @@
+<div> <!-- Added to make jquery sortable more robust -->
 <input type="checkbox" id="queue_file_{{node.id}}" {{#if checked}}checked{{/if}}></input>
 <label for="queue_file_{{node.id}}" class="queue_item tog_folder">
 	<div class="queue-options pull-right">
-		<span class="edit_content glyphicon glyphicon-pencil" aria-hidden="true" title="{{formatMessage (intlGet 'messages.edit')}}"></span>
-		<span class="delete_content glyphicon glyphicon-trash" aria-hidden="true" title="{{formatMessage (intlGet 'messages.delete')}}"></span>
+		<a class="btn content-options-dropdown" role="button" rel="popover">
+			<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
+		</a>
 	</div>
-	{{#unless isfolder}}<span class="content-item-icon {{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>{{/unless}}
-	<div class="queue_item_title title truncate" title="{{node.title}}">{{node.title}}</div>
-	{{#if isfolder}}<div class="badge clipboard-topic-count">{{node.metadata.resource_count}}</div>{{/if}}
+	<div class="queue_item_title title truncate" title="{{node.title}}">{{#unless isfolder}}<span class="content-item-icon {{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>&nbsp;{{/unless}}{{node.title}}</div>
 	{{#if isfolder}}
-		{{#if node.children}}<span id="menu_toggle_{{node.id}}" class="glyphicon glyphicon-menu-up toggle-icon"></span>
-		{{else}}{{formatMessage (intlGet 'messages.empty')}}{{/if}}
+		<div class="badge clipboard-topic-count">{{node.metadata.resource_count}}</div>
+		<span id="menu_toggle_{{node.id}}" class="glyphicon glyphicon-menu-up toggle-icon"></span>
 	{{/if}}
 </label>
 
 {{#if isfolder}}<div id="{{node.id}}_sub" class="subdirectory wrapper"></div>{{/if}}
+
+<div class="popover content-popover" tabindex="0" role="tooltip" id="queue_option_{{node.id}}">
+	<div class="arrow"></div>
+	<div class="popover-content">
+		<div class="edit_content option">{{formatMessage (intlGet 'messages.edit')}}</div>
+		<div class="copy_content option">{{formatMessage (intlGet 'messages.make_copy')}}</div>
+		<div class="move_content option">{{formatMessage (intlGet 'messages.move')}}</div>
+		<div class="delete_content option">{{formatMessage (intlGet 'messages.delete')}}</div>
+	</div>
+</div>
+
+<nav class="context-menu hide_on_drag" tabindex="0">
+	<div class="edit_content context-option">{{formatMessage (intlGet 'messages.edit')}}</div>
+	<div class="copy_content context-option">{{formatMessage (intlGet 'messages.make_copy')}}</div>
+	<div class="move_content context-option">{{formatMessage (intlGet 'messages.move')}}</div>
+	<div class="delete_content context-option">{{formatMessage (intlGet 'messages.delete')}}</div>
+</nav>
+</div>

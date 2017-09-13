@@ -3,7 +3,7 @@
 {% autoescape off %}
 {% trans "Hello" %} {{ user.first_name }},
 
-{% trans "Here is your activation link for" %} {{ site.name }}:
+{% blocktrans with site_name=site.name %}Here is your activation link for {{ site_name }}:{% endblocktrans %}
 
 {{ domain }}{% url 'registration_activate' activation_key %}
 

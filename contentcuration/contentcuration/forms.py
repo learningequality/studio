@@ -1,9 +1,16 @@
 import json
-from contentcuration.models import User
+from contentcuration.models import User, Language
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm
+from django.conf import settings
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm, PasswordResetForm
+from django.contrib.sites.shortcuts import get_current_site
+from django.core import signing
+from django.contrib.auth.tokens import default_token_generator
+from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from le_utils.constants import exercises, licenses
+
+REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 
 class RegistrationForm(UserCreationForm):
     first_name = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
@@ -147,12 +154,15 @@ class ProfileSettingsForm(UserChangeForm):
         return user
 
 MASTERY = tuple([(k, _(v)) for k,v in [t for t in exercises.MASTERY_MODELS] if k != "skill_check"])
+LANGUAGES = [(l['id'], _(l['readable_name'])) for l in Language.objects.values('id', 'readable_name').order_by('readable_name')]
+LANGUAGES.insert(0, (None, _("Select a language"))) # Add default option if no language is selected
 
 class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
     author = forms.CharField(required=False, label=_('Author'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     copyright_holder = forms.CharField(required=False, label=_('Copyright Holder'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     license_description = forms.CharField(required=False, label=_('License Description'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    language = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('Language'), choices=LANGUAGES)
     license = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('License'), choices=licenses.choices)
     mastery_model = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=MASTERY, label=_("Mastery at"))
     m_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label=_("M"))
@@ -165,7 +175,7 @@ class PreferencesSettingsForm(forms.Form):
 
     class Meta:
         model = User
-        fields = ('author', 'copyright_holder', 'license', 'license_description', 'mastery_model', 'm_value', 'n_value', 'auto_derive_video_thumbnail', 'auto_randomize_questions')
+        fields = ('author', 'copyright_holder', 'license', 'license_description', 'language', 'mastery_model', 'm_value', 'n_value', 'auto_derive_video_thumbnail', 'auto_randomize_questions')
 
     def save(self, user):
         user.preferences = json.dumps({
@@ -181,6 +191,7 @@ class PreferencesSettingsForm(forms.Form):
             'auto_derive_html5_thumbnail': self.cleaned_data["auto_derive_html5_thumbnail"],
             'm_value': self.cleaned_data["m_value"],
             'n_value': self.cleaned_data["n_value"],
+            'language': self.cleaned_data['language'],
         })
         user.save()
         return user
@@ -215,3 +226,45 @@ class AccountSettingsForm(PasswordChangeForm):
             self.add_error(field, error)
             return False
         return True
+
+
+class ForgotPasswordForm(PasswordResetForm):
+    email = forms.EmailField(label=_("Email"), max_length=254)
+
+    def save(self, request=None, extra_email_context=None, **kwargs):
+        """
+        Generate a one-use only link for resetting password and send it to the
+        user.
+        """
+        email = self.cleaned_data["email"]
+
+        users = User.objects.filter(email=email)
+        inactive_users = users.filter(is_active=False)
+        if inactive_users.exists() and inactive_users.count() == users.count(): # all matches are inactive
+            for user in inactive_users:
+                activation_key = self.get_activation_key(user)
+                context = {
+                    'activation_key': activation_key,
+                    'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+                    'site': extra_email_context.get('site'),
+                    'user': user,
+                    'domain': extra_email_context.get('domain') or domain,
+                }
+                subject = render_to_string('registration/password_reset_subject.txt', context)
+                subject = ''.join(subject.splitlines())
+                message = render_to_string('registration/activation_needed_email.txt', context)
+                user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+        else:
+            super(ForgotPasswordForm, self).save(request=request, extra_email_context=extra_email_context, **kwargs)
+
+    def get_activation_key(self, user):
+        """
+        Generate the activation key which will be emailed to the user.
+        """
+        return signing.dumps(
+            obj=getattr(user, user.USERNAME_FIELD),
+            salt=REGISTRATION_SALT
+        )
+
+
+

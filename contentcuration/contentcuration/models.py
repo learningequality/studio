@@ -1,6 +1,7 @@
 import functools
 import hashlib
 import json
+import math
 import logging
 import uuid
 
@@ -13,7 +14,7 @@ from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, Multipl
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.db import IntegrityError, connections, models, connection
-from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField
+from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField, F
 from django.db.utils import ConnectionDoesNotExist
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
@@ -21,10 +22,10 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
+from pg_utils import DistinctSum
 from rest_framework import permissions
 from rest_framework.authtoken.models import Token
 from contentcuration.statistics import record_channel_stats
-from rest_framework import permissions
 
 
 EDIT_ACCESS = "edit"
@@ -82,6 +83,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
+    disk_space = models.IntegerField(default=524288000, help_text=_('How many bytes a user can upload'))
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -101,6 +103,72 @@ class User(AbstractBaseUser, PermissionsMixin):
         if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists() and not channel.viewers.filter(pk=self.pk).exists():
             raise PermissionDenied("Cannot view content")
         return True
+
+    def check_space(self, size, checksum):
+        active_files = self.get_user_active_files()
+        if checksum in active_files.values_list('checksum', flat=True):
+            return True
+
+        space = self.get_available_space(active_files=active_files)
+        if space < size:
+            raise PermissionDenied(_("Not enough space. Check your storage under Settings page."))
+
+    def check_channel_space(self, channel):
+        active_files = self.get_user_active_files()
+        active_size = float(active_files.aggregate(used=Sum('file_size'))['used'] or 0)
+
+        staging_tree_id = channel.staging_tree.tree_id
+        channel_files = self.files.select_related('contentnode').select_related('assessment_item')\
+                            .filter(Q(contentnode__tree_id=staging_tree_id) | Q(assessment_item__contentnode__tree_id=staging_tree_id))\
+                            .values('checksum', 'file_size')\
+                            .distinct()\
+                            .exclude(checksum__in=active_files.values_list('checksum', flat=True))
+        staged_size = float(channel_files.aggregate(used=Sum('file_size'))['used'] or 0)
+
+        if self.get_available_space(active_files=active_files) < (active_size + staged_size):
+            raise PermissionDenied(_("Out of storage! Request more at info@learningequality.org"))
+
+
+    def check_staged_space(self, size, checksum):
+        if checksum in self.staged_files.values_list('checksum', flat=True):
+            return True
+        space = self.get_available_staged_space()
+        if space < size:
+            raise PermissionDenied(_("Out of storage! Request more at info@learningequality.org"))
+
+    def get_available_staged_space(self):
+        space_used = self.staged_files.aggregate(size=Sum("file_size"))['size'] or 0
+        return float(max(self.disk_space - space_used, 0))
+
+    def get_available_space(self, active_files=None):
+        return float(max(self.disk_space - self.get_space_used(active_files=active_files), 0))
+
+    def get_user_active_trees(self):
+        return self.editable_channels.exclude(deleted=True)\
+                .values_list('main_tree__tree_id', flat=True)
+
+    def get_user_active_files(self):
+        active_trees = self.get_user_active_trees()
+        return self.files.select_related('contentnode').select_related('assessment_item')\
+                            .filter(Q(contentnode__tree_id__in=active_trees) | Q(assessment_item__contentnode__tree_id__in=active_trees))\
+                            .values('checksum', 'file_size')\
+                            .distinct()
+
+    def get_space_used(self, active_files=None):
+        active_files = active_files or self.get_user_active_files()
+        files = active_files.aggregate(total_used=Sum('file_size'))
+        return float(files['total_used'] or 0)
+
+    def get_space_used_by_kind(self):
+        active_files = self.get_user_active_files()
+        files = active_files.values('preset__kind_id')\
+                            .annotate(space=DistinctSum('file_size'))\
+                            .order_by()
+
+        kind_dict = {}
+        for item in files:
+            kind_dict[item['preset__kind_id']] = item['space']
+        return kind_dict
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
@@ -623,6 +691,14 @@ class AssessmentItem(models.Model):
     randomize = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
 
+class StagedFile(models.Model):
+    """
+    Keeps track of files uploaded through Ricecooker to avoid user going over disk quota limit
+    """
+    checksum = models.CharField(max_length=400, blank=True, db_index=True)
+    file_size = models.IntegerField(blank=True, null=True)
+    uploaded_by = models.ForeignKey(User, related_name='staged_files', blank=True, null=True)
+
 
 class File(models.Model):
     """
@@ -641,6 +717,7 @@ class File(models.Model):
     language = models.ForeignKey(Language, related_name='files', blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
+    uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True)
 
     class Admin:
         pass
@@ -662,8 +739,10 @@ class File(models.Model):
                     md5.update(chunk)
 
                 self.checksum = md5.hexdigest()
+            if not self.file_size:
                 self.file_size = self.file_on_disk.size
-                self.extension = os.path.splitext(self.file_on_disk.name)[1]
+            if not self.file_format:
+                self.file_format_id = os.path.splitext(self.file_on_disk.name)[1]
         super(File, self).save(*args, **kwargs)
 
 
