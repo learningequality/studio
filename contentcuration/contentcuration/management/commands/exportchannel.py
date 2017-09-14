@@ -46,13 +46,13 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('channel_id', type=str)
         parser.add_argument('--force', action='store_true', dest='force', default=False)
-        parser.add_argument('--user', dest='user', default=None)
+        parser.add_argument('--user_id', dest='user_id', default=None)
 
     def handle(self, *args, **options):
         # license_id = options['license_id']
         channel_id = options['channel_id']
         force = options['force']
-        user = options['user']
+        user_id = options['user_id']
 
         # license = ccmodels.License.objects.get(pk=license_id)
         try:
@@ -66,7 +66,7 @@ class Command(BaseCommand):
                 prepare_export_database(tempdb)
                 map_content_tags(channel)
                 map_channel_to_kolibri_channel(channel)
-                map_content_nodes(channel.main_tree, channel.language, user=user)
+                map_content_nodes(channel.main_tree, channel.language, user_id=user_id)
                 map_prerequisites(channel.main_tree)
                 save_export_database(channel_id)
                 increment_channel_version(channel)
@@ -109,7 +109,7 @@ def map_content_tags(channel):
     logging.info("Finished creating the Kolibri content tags.")
 
 
-def map_content_nodes(root_node, default_language, user=None):
+def map_content_nodes(root_node, default_language, user_id=None):
 
     # make sure we process nodes higher up in the tree first, or else when we
     # make mappings the parent nodes might not be there
@@ -139,7 +139,7 @@ def map_content_nodes(root_node, default_language, user=None):
                     if node.kind.kind == content_kinds.EXERCISE:
                         exercise_data = process_assessment_metadata(node, kolibrinode)
                         if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
-                            create_perseus_exercise(node, kolibrinode, exercise_data, user=user)
+                            create_perseus_exercise(node, kolibrinode, exercise_data, user_id=user_id)
                     create_associated_file_objects(kolibrinode, node)
                     map_tags_to_node(kolibrinode, node)
 
@@ -229,7 +229,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
         )
 
 
-def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user=None):
+def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename = "{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
@@ -246,7 +246,7 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user=None):
             preset_id=format_presets.EXERCISE,
             original_filename=filename,
             file_size=file_size,
-            uploaded_by_id=user,
+            uploaded_by_id=user_id,
         )
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
