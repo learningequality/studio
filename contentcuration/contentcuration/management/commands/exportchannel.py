@@ -138,8 +138,8 @@ def map_content_nodes(root_node, default_language, user=None):
 
                     if node.kind.kind == content_kinds.EXERCISE:
                         exercise_data = process_assessment_metadata(node, kolibrinode)
-                        # if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
-                        create_perseus_exercise(node, kolibrinode, exercise_data, user=user)
+                        if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
+                            create_perseus_exercise(node, kolibrinode, exercise_data, user=user)
                     create_associated_file_objects(kolibrinode, node)
                     map_tags_to_node(kolibrinode, node)
 
