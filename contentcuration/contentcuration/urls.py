@@ -213,6 +213,7 @@ urlpatterns += [
     url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
     url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
     url(r'^api/get_node_path$', node_views.get_node_path, name='get_node_path'),
+    url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
 ]
 
 # Add file api enpoints
@@ -252,6 +253,7 @@ urlpatterns += [
     url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
     url(r'^settings/account/success', settings_views.account_settings_success, name='account_settings_success'),
     url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
+    url(r'^settings/storage', settings_views.storage_settings, name='storage_settings'),
 ]
 
 # Add internal endpoints

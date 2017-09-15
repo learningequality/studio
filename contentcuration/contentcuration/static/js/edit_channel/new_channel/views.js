@@ -169,12 +169,14 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		$(".new_channel_button").prop("title", (edit_mode_on)? this.get_translation("add_channel_disbaled_title") : this.get_translation("add_channel_title"));
 	},
 	add_channel: function(channel){
-		this.collection.add(channel);
-		var newView = this.create_new_view(channel);
-		newView.$el.css('display', 'none');
-		newView.$el.fadeIn(300);
-		this.$(this.list_selector).prepend(newView.el);
-		this.$(".default-item").css('display', 'none');
+		if(!this.collection.findWhere({id: channel.id})) {
+			this.collection.add(channel);
+			var newView = this.create_new_view(channel);
+			newView.$el.css('display', 'none');
+			newView.$el.fadeIn(300);
+			this.$(this.list_selector).prepend(newView.el);
+			this.$(".default-item").css('display', 'none');
+		}
 	},
 	remove_channel: function(channel) {
 		this.collection.remove(channel);
@@ -198,7 +200,8 @@ var CurrentChannelList  = ChannelList.extend({
 	new_channel: function(){
 		var data = {
 			editors: [window.current_user.id],
-			pending_editors: []
+			pending_editors: [],
+			language: window.user_preferences.language
 		};
 		var newView = this.create_new_view(new Models.ChannelModel(data));
 		this.$(this.list_selector).prepend(newView.el);
@@ -290,6 +293,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 				allow_edit: true,
 				is_channel: true
 			});
+			this.$("#select_language").val(this.model.get("language") || 0);
 		}
 		this.$('[data-toggle="tooltip"]').tooltip();
 		this.set_indices();
@@ -362,7 +366,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.containing_list_view.set_editing(true);
 		this.edit = true;
 		this.render();
-		this.$("#select_language").val(this.model.get("language") || 0);
 	},
 	star_channel: function(){
 		var self = this;

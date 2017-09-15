@@ -62,6 +62,12 @@ def write_raw_content_to_storage(contents, ext=None):
 
     return filename, full_filename, file_path
 
+def get_hash(fobj):
+    md5 = hashlib.md5()
+    for chunk in fobj.chunks():
+        md5.update(chunk)
+    return md5.hexdigest()
+
 
 def recurse(node, level=0):
     print ('\t' * level), node.id, node.lft, node.rght, node.title
@@ -195,11 +201,14 @@ def add_editor_to_channel(invitation):
     invitation.delete()
 
 
-def activate_channel(channel):
+def activate_channel(channel, user):
+    user.check_channel_space(channel)
     channel.previous_tree = channel.main_tree
     channel.main_tree = channel.staging_tree
     channel.staging_tree = None
     channel.save()
+
+    user.staged_files.all().delete()
 
 
 def get_staged_diff(channel_id):

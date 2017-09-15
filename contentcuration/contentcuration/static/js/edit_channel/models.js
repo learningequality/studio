@@ -347,6 +347,24 @@ var ContentNodeModel = BaseModel.extend({
             });
         });
         return promise;
+    },
+    make_copy: function(target_parent) {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = {"node_id": self.id,
+                        "target_parent": target_parent.get("id"),
+                        "channel_id": window.current_channel.id
+            };
+            $.ajax({
+                method:"POST",
+                url: window.Urls.duplicate_node_inline(),
+                data:  JSON.stringify(data),
+                success: function(data) {
+                    resolve(new ContentNodeCollection(JSON.parse(data)));
+                },
+                error:reject
+            });
+        });
     }
 });
 
@@ -377,7 +395,7 @@ var ContentNodeCollection = BaseCollection.extend({
                     if(item.get('type') === 'input_question'){
                         item.get('answers').each( function(a){
                             var value = numParser.parse(a.get('answer'))
-                            a.set('answer', value.toString());
+                            a.set('answer', value !== null && value.toString());
                         });
                     }
                 })
@@ -392,7 +410,7 @@ var ContentNodeCollection = BaseCollection.extend({
                         saveReject(error);
                     }
                 });
-            });
+            }).catch(saveReject);
         });
     },
     has_prerequisites: function(){
