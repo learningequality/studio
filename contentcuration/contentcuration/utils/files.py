@@ -46,10 +46,12 @@ def extract_thumbnail_wrapper(file_object, node=None, preset_id=None):
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
 
 
-def compress_video_wrapper(file_object):
+def compress_video_wrapper(file_object, ffmpeg_settings=None):
+    ffmpeg_settings = ffmpeg_settings or {}
+
     with tempfile.NamedTemporaryFile(suffix=".{}".format(file_formats.MP4)) as tempf:
         tempf.close()
-        compress_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
+        compress_video(str(file_object.file_on_disk), tempf.name, overwrite=True, **ffmpeg_settings)
         filename = write_file_to_storage(open(tempf.name, 'rb'), name=tempf.name)
         checksum, ext = os.path.splitext(filename)
         file_location = generate_file_on_disk_name(checksum, filename)
