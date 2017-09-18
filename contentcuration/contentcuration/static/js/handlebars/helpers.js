@@ -39,6 +39,15 @@ Handlebars.registerHelper('url', function(url_name) {
 Handlebars.registerHelper('markdown', function(markdown) {
   markdown = markdown || "";
   markdown = markdown.toString().replace(/\n(\n)/g, "$1<br />");
+
+  // Escape underscores to allow "blanks"
+  var matches = markdown.match(/([_]{3,})/g);
+  if(matches){
+    matches.forEach(function(match){
+      markdown = markdown.replace(match, match.replace(/_/g, "\\_"));
+    });
+  }
+
   var el = document.createElement( 'body' );
   el.innerHTML = marked(markdown);
   _.each(el.getElementsByTagName( 'img' ), function(img){

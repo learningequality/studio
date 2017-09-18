@@ -358,8 +358,8 @@ def write_assessment_item(assessment_item, zf):
             answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
             answer['answer'] = process_formulas(answer['answer'])
             # In case perseus doesn't support =wxh syntax, use below code
-            # answer['answer'], answer_images = process_image_strings(answer['answer'])
-            # answer.update({'images': answer_images})
+            answer['answer'], answer_images = process_image_strings(answer['answer'])
+            answer.update({'images': answer_images})
 
     answer_data = list(filter(lambda a: a['answer'] or a['answer'] == 0, answer_data)) # Filter out empty answers, but not 0
 

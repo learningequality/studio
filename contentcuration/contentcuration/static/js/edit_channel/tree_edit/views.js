@@ -48,6 +48,7 @@ var MESSAGES = {
     "delete_warning": "Are you sure you want to delete these selected items?",
     "related_content_alert": "Related content will not be included in the copy of this content.",
     "delete_item_warning": "Are you sure you want to delete {data}?",
+    "select_content_prompt": "Must select content first",
     "copy_to_clipboard": "Copy to Clipboard"
 }
 
@@ -176,6 +177,14 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		var checked_count = this.$el.find(".content input[type=checkbox]:checked").length;
 		this.$(".disable-none-selected").prop("disabled", checked_count === 0);
 		(checked_count > 0)? this.$("#disable-none-selected-wrapper").removeClass("disabled-wrapper") : this.$("#disable-none-selected-wrapper").addClass("disabled-wrapper");
+		var self = this;
+		this.$(".disable-none-selected").each(function(index, el) {
+			if (checked_count > 0) {
+				$(el).attr("title", $(el).data("title"));
+			} else {
+				$(el).data("title", $(el).attr("title")).attr("title", self.get_translation("select_content_prompt"));
+			}
+		});
 	},
 	toggle_details:function(event){
 		this.$("#container_area").toggleClass("hidden_details");
