@@ -1,4 +1,4 @@
-<div class="col-xs-4">
+<div class="col-xs-3">
 	<input type="checkbox" class="user_select_checkbox" id="admin_user_check_{{id}}"/>
 	<label for="admin_user_check_{{id}}" class="full_name">
 		{{#if is_active}}
@@ -11,10 +11,13 @@
 		{{/if}}
 	</label>
 </div>
-<div class="col-xs-3">
+<div class="col-xs-2">
 	<a class="email_user">
 		<div class="user_name truncate">{{ email }}</div>
 	</a>
+</div>
+<div class="col-xs-2 text-center">
+	<input type="number" class="size_limit" min=0 value="{{mb_space}}"/> MB
 </div>
 <div class="col-xs-2 text-center">
 	{{#if editable_channels}}
