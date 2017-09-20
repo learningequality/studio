@@ -87,7 +87,9 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	edit_content:function(){ this.edit_selected(this.is_edit_page)},
 	render: function() {
-		var show_invite = !this.staging && (this.is_edit_page || _.contains(window.current_channel.get('viewers'), window.current_user.id));
+		var show_invite = window.current_channel.get('is_admin') || (!this.staging &&
+							(_.contains(window.current_channel.get('editors'), window.current_user.id) ||
+							_.contains(window.current_channel.get('viewers'), window.current_user.id)));
 		this.$el.html(this.template({
 			edit: this.is_edit_page,
 			channel : window.current_channel.toJSON(),
