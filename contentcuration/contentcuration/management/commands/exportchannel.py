@@ -393,7 +393,7 @@ def process_formulas(content):
 def process_image_strings(content):
     image_list = []
     content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
-    for match in re.finditer(ur'!\[(?:.*)]\((.+)\)', content):
+    for match in re.finditer(ur'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
         img_match = re.search(ur'(.+/images/.+)\s=([0-9\.]+)x([0-9\.]+)*', match.group(1))
         if img_match:
             image_list.append({
@@ -402,6 +402,7 @@ def process_image_strings(content):
                 'height': float(img_match.group(3)) if img_match.group(3) else None
             })
             content = content.replace(match.group(1), img_match.group(1))
+
     return content, image_list
 
 def map_prerequisites(root_node):
