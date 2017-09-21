@@ -324,6 +324,7 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
 
             for item in ccnode.assessment_items.all().order_by('order'):
                 write_assessment_item(item, zf)
+
         finally:
             zf.close()
 
