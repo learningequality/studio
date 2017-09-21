@@ -324,7 +324,6 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
 
             for item in ccnode.assessment_items.all().order_by('order'):
                 write_assessment_item(item, zf)
-
         finally:
             zf.close()
 
@@ -350,7 +349,7 @@ def write_assessment_item(assessment_item, zf):
         raise TypeError("Unrecognized question type on item {}".format(assessment_item.assessment_id))
 
     question = process_formulas(assessment_item.question)
-    question, question_images = process_image_strings(question)
+    question, question_images = process_image_strings(question, zf)
 
     answer_data = json.loads(assessment_item.answers)
     for answer in answer_data:
@@ -360,7 +359,7 @@ def write_assessment_item(assessment_item, zf):
             answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
             answer['answer'] = process_formulas(answer['answer'])
             # In case perseus doesn't support =wxh syntax, use below code
-            answer['answer'], answer_images = process_image_strings(answer['answer'])
+            answer['answer'], answer_images = process_image_strings(answer['answer'], zf)
             answer.update({'images': answer_images})
 
     answer_data = list(filter(lambda a: a['answer'] or a['answer'] == 0, answer_data)) # Filter out empty answers, but not 0
@@ -368,7 +367,7 @@ def write_assessment_item(assessment_item, zf):
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
         hint['hint'] = process_formulas(hint['hint'])
-        hint['hint'], hint_images = process_image_strings(hint['hint'])
+        hint['hint'], hint_images = process_image_strings(hint['hint'], zf)
         hint.update({'images': hint_images})
 
     context = {
@@ -390,17 +389,25 @@ def process_formulas(content):
     return content
 
 
-def process_image_strings(content):
+def process_image_strings(content, zf):
     image_list = []
     content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
     for match in re.finditer(ur'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
-        img_match = re.search(ur'(.+/images/.+)\s=([0-9\.]+)x([0-9\.]+)*', match.group(1))
+        img_match = re.search(ur'(.+/images/.+)(?:\s=([0-9\.]+)x([0-9\.]+))*', match.group(1))
         if img_match:
-            image_list.append({
-                'name': img_match.group(1),
-                'width': float(img_match.group(2)),
-                'height': float(img_match.group(3)) if img_match.group(3) else None
-            })
+            # Add any image files that haven't been written to the zipfile
+            filename = img_match.group(1).split('/')[-1]
+            checksum, ext = os.path.splitext(filename)
+            image_name = "images/{}.{}".format(checksum, ext[1:])
+            if image_name not in zf.namelist():
+                with open(ccmodels.generate_file_on_disk_name(checksum, filename), 'rb') as imgfile:
+                    write_to_zipfile(image_name, imgfile.read(), zf)
+
+            # Add resizing data
+            image_data = {'name': img_match.group(1)}
+            img_match.group(2) and image_data.update({'width': float(img_match.group(2))})
+            img_match.group(3) and image_data.update({'height': float(img_match.group(3))})
+            image_list.append(image_data)
             content = content.replace(match.group(1), img_match.group(1))
 
     return content, image_list
