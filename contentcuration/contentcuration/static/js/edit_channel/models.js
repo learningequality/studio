@@ -1051,6 +1051,7 @@ var AssessmentItemModel = BaseModel.extend({
             attributes.files = _.chain(attributes.answers.models)
                                 .map(function(item) { return item.get('files'); })
                                 .flatten()
+                                .filter(function(item){ return item; })
                                 .union(attributes.files)
                                 .value();
             attributes.answers = JSON.stringify(attributes.answers.toJSON());
@@ -1060,6 +1061,7 @@ var AssessmentItemModel = BaseModel.extend({
             attributes.files = _.chain(attributes.hints.models)
                                 .map(function(item) { return item.get('files'); })
                                 .flatten()
+                                .filter(function(item){ return item; })
                                 .union(attributes.files)
                                 .value();
             attributes.hints = JSON.stringify(attributes.hints.toJSON());
