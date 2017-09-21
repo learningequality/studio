@@ -11,7 +11,8 @@ var MESSAGES = {
     "hide_fullscreen": "Hide Fullscreen",
     "select_file": "Select a format to preview.",
     "preview_exercise": "Preview this exercise on the source website",
-    "video_error": "Your browser does not support the video tag."
+    "video_error": "Your browser does not support the video tag.",
+    "image_error": "Image failed to load"
 }
 
 var PreviewModalView = BaseViews.BaseModalView.extend({
