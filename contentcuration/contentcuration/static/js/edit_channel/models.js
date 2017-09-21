@@ -1047,9 +1047,21 @@ var AssessmentItemModel = BaseModel.extend({
     toJSON: function() {
         var attributes = _.clone(this.attributes);
         if (typeof attributes.answers !== "string") {
+            // Add answer images to the files list
+            attributes.files = _.chain(attributes.answers.models)
+                                .map(function(item) { return item.get('files'); })
+                                .flatten()
+                                .union(attributes.files)
+                                .value();
             attributes.answers = JSON.stringify(attributes.answers.toJSON());
         }
         if (typeof attributes.hints !== "string") {
+            // Add hint images to the files list
+            attributes.files = _.chain(attributes.hints.models)
+                                .map(function(item) { return item.get('files'); })
+                                .flatten()
+                                .union(attributes.files)
+                                .value();
             attributes.hints = JSON.stringify(attributes.hints.toJSON());
         }
         return attributes;
