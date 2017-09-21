@@ -1175,7 +1175,6 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([this.model]),message);
 	},
 	copy_item:function(message){
-		console.log(this.get_translation("copying_to_clipboard"))
 		message=(message!=null)? message: this.get_translation("copying_to_clipboard");
 		var copyCollection = new Models.ContentNodeCollection();
 		copyCollection.add(this.model);

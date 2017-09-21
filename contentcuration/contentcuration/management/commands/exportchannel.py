@@ -405,10 +405,11 @@ def process_image_strings(content, zf):
                     write_to_zipfile(image_name, imgfile.read(), zf)
 
             # Add resizing data
-            image_data = {'name': img_match.group(1)}
-            img_match.group(2) and image_data.update({'width': float(img_match.group(2))})
-            img_match.group(3) and image_data.update({'height': float(img_match.group(3))})
-            image_list.append(image_data)
+            if img_match.group(2) and img_match.group(3):
+                image_data = {'name': img_match.group(1)}
+                image_data.update({'width': float(img_match.group(2))})
+                image_data.update({'height': float(img_match.group(3))})
+                image_list.append(image_data)
             content = content.replace(match.group(1), img_match.group(1))
 
     return content, image_list
