@@ -394,7 +394,7 @@ def process_image_strings(content, zf):
     image_list = []
     content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
     for match in re.finditer(ur'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
-        img_match = re.search(ur'(.+/images/.+)(?:\s=([0-9\.]+)x([0-9\.]+))*', match.group(1))
+        img_match = re.search(ur'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', match.group(1))
         if img_match:
             # Add any image files that haven't been written to the zipfile
             filename = img_match.group(1).split('/')[-1]
