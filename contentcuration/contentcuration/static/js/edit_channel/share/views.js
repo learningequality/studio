@@ -102,14 +102,14 @@ var ShareView = BaseViews.BaseView.extend({
         }));
     },
     show_list: function(){
-        return _.find(window.current_channel.get("editors"), function(u){
+        return window.current_user.get('is_admin') || _.find(window.current_channel.get("editors"), function(u){
             return u === window.current_user.id
         });
     },
     get_share_modes: function(){
         if (!this.share_modes){
             var user_is_editor = _.find(window.current_channel.get("editors"), function(u){return u === window.current_user.id});
-            if(user_is_editor){
+            if(window.current_user.get('is_admin') || user_is_editor){
                 this.share_modes = EDITOR_SHARE_MODES;
             }else{
                 this.share_modes = VIEWER_SHARE_MODES;

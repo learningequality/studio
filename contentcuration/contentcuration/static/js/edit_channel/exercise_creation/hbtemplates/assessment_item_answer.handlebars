@@ -1,4 +1,4 @@
-<div class="answer_item {{#if allow_edit}}toggle_answer{{/if}} {{#if answer.correct}}is_correct{{/if}}">
+<div class="answer_item {{#if allow_edit}}{{#unless is_true_false}}toggle_answer{{/unless}}{{/if}} {{#if answer.correct}}is_correct{{/if}}">
 	<div class="row">
 		{{#unless input_answer}}
 		<div class="col-sm-1 text-center">
