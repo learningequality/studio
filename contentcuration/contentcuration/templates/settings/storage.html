@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+{% extends "settings/settings.html" %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block settingscontent %}
+
+<h4>{% trans "Storage" %}</h4>
+<p>{% trans "Check your storage usage and request more if needed." %}</p>
+<hr/>
+<div class="container-fluid">
+	<h5>{% trans "Storage Used" %} ({{percent_used}}%)</h5>
+	<div class="progress">
+		<div class="progress-bar" role="progressbar" aria-valuenow="{{percent_used}}" aria-valuemin="0" aria-valuemax="100" style="width: {{percent_used}}%;">
+		{{used}}/{{total}}MB
+		</div>
+	</div>
+	<br/>
+	<div class="panel panel-default">
+		<div class="panel-heading usage_header"><b class="pull-right">{{available}}MB {% trans "Available" %}</b>{% trans "Usage" %}</div>
+		<ul class="list-group">
+			{% for item in breakdown %}
+				<li class="list-group-item">{{item.name}} - {{item.percent}}% ({{item.size}}MB)</li>
+			{% empty %}<i>{% trans "You don't have any files uploaded" %}</i>
+			{% endfor %}
+		</ul>
+	</div>
+	<p><i>* {% trans "If you need more space, please reach out to us at" %} <b><a id="email_link" href="mailto:{{request_email}}?Subject=Content%20Curation%20Storage%20Request">{{request_email}}</a></b></i></p>
+</div>
+{% endblock settingscontent %}
