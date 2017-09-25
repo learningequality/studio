@@ -1,10 +1,12 @@
+import math
 from collections import OrderedDict
 from django.core.cache import cache
-from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
 from le_utils.constants import licenses
+from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -69,6 +71,7 @@ class FileListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
         ret = []
         update_files = {}
+        user = self.context['request'].user
         with transaction.atomic():
             for item in validated_data:
                 item.update({
@@ -116,7 +119,8 @@ class FileListSerializer(serializers.ListSerializer):
         if update_files:
             with transaction.atomic():
                 for file_id, data in update_files.items():
-                    file_obj, is_new = File.objects.get_or_create(pk=file_id)
+                    file_obj, _new = File.objects.get_or_create(pk=file_id)
+
                     # potential optimization opportunity
                     for attr, value in data.items():
                         if attr != "preset" and attr != "language":
@@ -126,6 +130,7 @@ class FileListSerializer(serializers.ListSerializer):
                         file_obj.file_on_disk = DjFile(open(file_path, 'rb'))
                     else:
                         raise OSError("Error: file {} was not found".format(str(file_obj)))
+                    file_obj.uploaded_by = file_obj.uploaded_by or user
                     file_obj.save()
                     ret.append(file_obj)
         return ret
@@ -559,8 +564,8 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
                   'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
-                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors',
-                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'tree_id')
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
+                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding')
 
 
 
@@ -572,7 +577,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
             'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
-            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language',
+            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language', 'tree_id',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata', 'tree_id')
 
@@ -696,15 +701,19 @@ class AltChannelListSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id')
+        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active')
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
     clipboard_tree = RootNodeSerializer(read_only=True)
+    available_space = serializers.SerializerMethodField('calculate_space')
+
+    def calculate_space(self, user):
+        return user.get_available_space()
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id', 'clipboard_tree')
+        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id', 'clipboard_tree', 'available_space')
 
 
 class UserChannelListSerializer(serializers.ModelSerializer):
@@ -755,10 +764,19 @@ class SimplifiedChannelListSerializer(serializers.ModelSerializer):
 class AdminUserListSerializer(serializers.ModelSerializer):
     editable_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
     view_only_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
+    mb_space = serializers.SerializerMethodField('calculate_space')
+    used_space = serializers.SerializerMethodField('calculate_used_space')
+
+    def calculate_space(self, user):
+        return user.disk_space / 1048576
+
+    def calculate_used_space(self, user):
+        return user.get_space_used()
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels', 'is_admin', 'date_joined', 'is_active')
+        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels',
+                'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'used_space')
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')

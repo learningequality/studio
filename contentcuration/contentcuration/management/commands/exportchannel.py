@@ -192,14 +192,14 @@ def get_or_create_language(language):
         lang_name= language.lang_name if hasattr(language, 'lang_name') else language.readable_name,
     )
 
-def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None):
+def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None, uploader=None):
     thumbnail_data = ast.literal_eval(thumbnail_string)
     if thumbnail_data.get('base64'):
         with tempfile.NamedTemporaryFile(suffix=".{}".format(file_format_id), delete=False) as tempf:
             tempf.close()
             write_base64_to_file(thumbnail_data['base64'], tempf.name)
             with open(tempf.name, 'rb') as tf:
-                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id)
+                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploader=uploader)
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating File objects for Node {}".format(kolibrinode.id))
@@ -210,7 +210,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             get_or_create_language(ccfilemodel.language)
 
         if preset.thumbnail and ccnode.thumbnail_encoding:
-            ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
+            ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, uploader=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
 
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
@@ -358,8 +358,8 @@ def write_assessment_item(assessment_item, zf):
             answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
             answer['answer'] = process_formulas(answer['answer'])
             # In case perseus doesn't support =wxh syntax, use below code
-            # answer['answer'], answer_images = process_image_strings(answer['answer'])
-            # answer.update({'images': answer_images})
+            answer['answer'], answer_images = process_image_strings(answer['answer'])
+            answer.update({'images': answer_images})
 
     answer_data = list(filter(lambda a: a['answer'] or a['answer'] == 0, answer_data)) # Filter out empty answers, but not 0
 

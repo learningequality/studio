@@ -1,8 +1,10 @@
 import json
+import math
 from django.shortcuts import render, redirect
-from django.conf import settings
+from django.conf import settings as ccsettings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views
+from django.utils.translation import ugettext as _
 from django.views.generic.edit import FormView
 from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, PreferencesSettingsForm
 from rest_framework.authtoken.models import Token
@@ -128,3 +130,22 @@ def tokens_settings(request):
     return render(request, 'settings/tokens.html', {"current_user": request.user,
                                                     "page": "tokens",
                                                     "tokens": [str(user_token)]})
+
+@login_required
+def storage_settings(request):
+    storage_used = request.user.get_space_used()
+    storage_percent = (min(storage_used / float(request.user.disk_space), 1) * 100)
+    breakdown = [{
+                    "name": k.capitalize(),
+                    "size":"%.2f" % (float(v)/1048576),
+                    "percent": "%.2f" % (min(float(v) / float(request.user.disk_space), 1) * 100)
+                } for k,v in request.user.get_space_used_by_kind().items()]
+    return render(request, 'settings/storage.html', {"current_user": request.user,
+                                                    "page": "storage",
+                                                    "percent_used": "%.2f" % storage_percent,
+                                                    "used": "%.2f" % (float(storage_used) / 1048576),
+                                                    "total": "%.2f" % (float(request.user.disk_space) / 1048576),
+                                                    "available": "%.2f" % (request.user.get_available_space() / 1048576),
+                                                    "breakdown": breakdown,
+                                                    "request_email": ccsettings.SPACE_REQUEST_EMAIL,
+                                                })

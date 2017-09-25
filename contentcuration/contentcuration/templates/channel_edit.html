@@ -25,9 +25,16 @@
 		});
 	</script>
 
+	<div id="channel-edit-sortable-boundary">
+
 	<nav class="navbar" id="secondary-nav">
 		<ul class="nav navbar-nav navbar-left">
-			<li><a href="/channels"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
+			<li><a href="/channels" id="back_to_home"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
+			{% if not allow_edit %}<li class="channel_edit_label">{% if is_public %}{%trans "Public Channel" %}{% else %}{%trans "Viewing" %}{% endif %}</li>{% endif %}
+			{% if allow_edit %}
+				{% if staging %}<li class="channel_edit_label">{%trans "Reviewing" %}</li>
+				{% else %}<li class="channel_edit_label">{%trans "Editing" %}</li>{% endif %}
+			{% endif %}
 			 <li class="dropdown" id="channel_select_dd_wrapper">
 				<a href="#" id="channel_selection_dropdown" class="dropdown-toggle truncate" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
 					{%if channel_name %}{{channel_name}}
@@ -50,31 +57,22 @@
 					{% endfor %}
 				</ul>
 			</li>
-			{% if not allow_edit %}<li class="channel_edit_label">{% if is_public %}{%trans "PUBLIC" %}{% else %}{%trans "VIEW-ONLY" %}{% endif %}</li>{% endif %}
-			{% if allow_edit %}
-				{% if staging %}<li class="channel_edit_label">{%trans "STAGING VERSION" %}</li>
-				{% else %}
-					<li id="channel_settings" title="{%trans 'Open channel settings' %}"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></li>
-					<li class="channel_edit_label">{%trans "EDITING" %}</li>
-				{% endif %}
+			{% if not staging and allow_edit %}
+				<li id="channel_settings" title="{%trans 'Open channel settings' %}"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></li>
 			{% endif %}
+			<li id="queue-area" class="container-fluid"></li>
 		</ul>
+		<ul class="nav navbar-nav navbar-right" id="publish">
 		{% if staging %}
-			<ul class="nav navbar-nav navbar-right" id="publish">
-				<li id="channel-activate-button" class="text-center">{%trans "DEPLOY CHANNEL" %}</li>
-			</ul>
+			<li id="channel-activate-button" class="text-center">{%trans "DEPLOY CHANNEL" %}</li>
 		{% else %}
-			<ul class="nav navbar-nav navbar-right" id="publish">
-				<!--<li id="channel-publish-button" class="text-center">Unpublish Selected</li>-->
-				<li id="hide-if-unpublished"><a id="get_published_id">{% trans "Get ID" %}</a></li>
-				{% if allow_edit %}<li id="channel-publish-button" class="text-center">{%trans "PUBLISH" %}</li>{% endif %}
-			</ul>
+			<li id="hide-if-unpublished"><a id="get_published_id">{% trans "Show ID" %}</a></li>
+			{% if allow_edit %}<li id="channel-publish-button" class="text-center">{%trans "PUBLISH" %}</li>{% endif %}
 		{% endif %}
+		</ul>
 	</nav>
 	<div id="channel-edit-content-wrapper" {% if staging %}class="staging_channel_wrapper"{% endif %}>
-		<div id="channel-edit-sortable-boundary">
-			<div id="main-content-area" ></div>
-			<div id="queue-area" class="container pull-right"></div>
-		</div>
+		<div id="main-content-area" ></div>
+	</div>
 	</div>
 {% endblock content %}

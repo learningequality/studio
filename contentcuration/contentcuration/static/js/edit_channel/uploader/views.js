@@ -62,7 +62,12 @@ var MESSAGES = {
     "license_error": "License is required",
     "copyright_holder_error": "Copyright holder is required",
     "no_title": "No Title",
-    "fix_errors_prompt": "Saving disabled (invalid content detected)"
+    "fix_errors_prompt": "Saving disabled (invalid content detected)",
+    "error_saving": "Save Failed",
+    "out_of_space": "Out of Disk Space",
+    "out_of_space_text": "You don't have enough space to save these files. Request more space under the Settings > Account page.",
+    "open_settings": "Open Settings",
+    "ok": "OK"
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -136,7 +141,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
 
   initialize: function(options) {
     _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit',
-      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items',
+      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items', 'save_error',
       'set_prerequisites', 'call_duplicate', 'update_prereq_count','loop_focus', 'set_indices', 'set_editor_focus', 'validate');
     this.bind_edit_functions();
     this.new_content = options.new_content;
@@ -291,7 +296,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       container: this,
       shared_data: (this.edit_list)? this.edit_list.shared_data : null,
       allow_edit: this.allow_edit,
-      new_content: this.new_content
+      new_content: this.new_content,
     });
     if(this.edit_list){
       this.edit_list.adjust_list_height();
@@ -334,7 +339,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   save_and_keep_open:function(){
     this.editor_view.add_tag(null);
     if(this.validate()) {
-      this.save(this.get_translation("saving"), this.save_nodes).then(this.process_updated_collection);
+      this.save(this.get_translation("saving"), this.save_nodes, this.save_error).then(function(collection){
+        self.process_updated_collection(collection);
+      });
     }
   },
   handle_save_and_finish_key:function(event){
@@ -347,10 +354,23 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var self = this;
     this.editor_view.add_tag(null);
     if(this.validate()) {
-      this.save(this.get_translation("saving"), this.save_nodes).then(function(collection){
+      this.save(this.get_translation("saving"), this.save_nodes, this.save_error).then(function(collection){
         self.process_updated_collection(collection);
         self.onclose();
       });
+    }
+  },
+  save_error: function(error){
+    if(error.status===403) {
+      dialog.dialog(this.get_translation("out_of_space"), this.get_translation("out_of_space_text"), {
+        [this.get_translation("open_settings")]: function() {
+          var tab = window.open(window.Urls.account_settings(), "_blank");
+          tab.focus();
+        },
+        [this.get_translation("ok")]: function(){}
+      })
+    } else {
+      dialog.alert(this.get_translation("error_saving"), error.responseText);
     }
   },
   copy_items: function(){
@@ -388,7 +408,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       if(self.new_content){
         entry.set({
           parent:self.model.id,
-          sort_order:++sort_order
+          sort_order:++sort_order,
+          tree_id: self.model.get("tree_id")
         });
       }
     });
@@ -623,7 +644,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
-    var all_top_level = _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
+    var all_top_level = (this.new_content)? !this.model.get("parent") : _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
 
     if(this.allow_edit){
       this.$el.html(this.template({
