@@ -32,7 +32,7 @@ EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
 
 DEFAULT_USER_PREFERENCES = json.dumps({
-    'license': licenses.CC_BY,
+    'license': None,
     'language': None,
     'author': None,
     'copyright_holder': None,
@@ -470,7 +470,7 @@ class ContentNode(MPTTModel, models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes', db_index=True)
-    license = models.ForeignKey('License', null=True, default=settings.DEFAULT_LICENSE)
+    license = models.ForeignKey('License', null=True, blank=True)
     license_description = models.CharField(max_length=400, null=True, blank=True)
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of',
                                           through='PrerequisiteContentRelationship', symmetrical=False, blank=True)

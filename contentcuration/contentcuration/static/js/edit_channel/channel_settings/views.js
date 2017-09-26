@@ -30,6 +30,7 @@ var MESSAGES = {
     "author_placeholder": "Enter author name...",
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
+    "no_license": "No license selected"
 }
 
 var SettingsModalView = BaseViews.BaseModalView.extend({
@@ -105,10 +106,11 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         this.set_initial_focus();
     },
     get_license_id: function(license_name){
-        return window.licenses.findWhere({license_name: license_name}).id;
+        return (license_name)? window.licenses.findWhere({license_name: license_name}).id : 0;
     },
     get_license_name: function(){
-        return window.licenses.get($("#license_select").val()).get("license_name");
+        var el = $("#license_select");
+        return el.val()!=0 && window.licenses.get(el.val()).get("license_name");
     },
     submit_changes:function(){
         var preferences = this.model.get("preferences");

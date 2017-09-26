@@ -1,5 +1,6 @@
 import math
 from collections import OrderedDict
+from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
 from django.core.files import File as DjFile
@@ -17,13 +18,11 @@ from rest_framework_bulk import BulkSerializerMixin
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
 
-ALLOW_NULL_COPYRIGHT_HOLDER = [licenses.PUBLIC_DOMAIN]
-
 class LicenseSerializer(serializers.ModelSerializer):
     requires_copyright_holder = serializers.SerializerMethodField('check_copyright')
 
     def check_copyright(self, license):
-        return license.license_name not in ALLOW_NULL_COPYRIGHT_HOLDER
+        return license.license_name not in settings.ALLOW_NULL_COPYRIGHT_HOLDER
 
     class Meta:
         model = License
@@ -497,7 +496,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
             return True
         elif isoriginal and not node.license:
             return False
-        elif isoriginal and node.license.license_name not in ALLOW_NULL_COPYRIGHT_HOLDER and not node.copyright_holder:
+        elif isoriginal and node.license.license_name not in settings.ALLOW_NULL_COPYRIGHT_HOLDER and not node.copyright_holder:
             return False
         elif node.kind_id == content_kinds.EXERCISE:
             for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):

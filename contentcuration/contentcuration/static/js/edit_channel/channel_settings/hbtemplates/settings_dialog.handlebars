@@ -23,6 +23,7 @@
             <div class="content_nodes_only col-sm-6">
                 <h4>{{formatMessage (intlGet 'messages.license')}}</h4>
                 <select id="license_select" class="input_listener tab_item">
+                    <option value=0>{{formatMessage (intlGet 'messages.no_license')}}</option>
                     {{#each licenses}}
                         <option value={{id}}>{{#translate license_name}}{{/translate}}</option>
                     {{/each}}

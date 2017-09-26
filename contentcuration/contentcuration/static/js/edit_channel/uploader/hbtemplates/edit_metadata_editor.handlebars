@@ -61,8 +61,10 @@
 		        <textarea id="custom_license_description" class="input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.license_description_placeholder')}}"></textarea>
 			</div>
 			<div class="content_nodes_only col-sm-6">
-				<h4>{{formatMessage (intlGet 'messages.copyright_holder')}}</h4>
-				<input type="text" id="input_license_owner" class="license_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.copyright_holder_placeholder')}}" maxlength="200" value="{{copyright_owner}}"/>
+				<div id="copyright_holder_wrapper">
+					<h4>{{formatMessage (intlGet 'messages.copyright_holder')}} <label class="required">*</label></h4>
+					<input type="text" id="input_license_owner" class="license_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.copyright_holder_placeholder')}}" maxlength="200" value="{{copyright_owner}}"/>
+				</div>
 			</div>
 		</div>
 		{{/if}}

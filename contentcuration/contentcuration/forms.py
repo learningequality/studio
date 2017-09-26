@@ -156,6 +156,7 @@ class ProfileSettingsForm(UserChangeForm):
 MASTERY = tuple([(k, _(v)) for k,v in [t for t in exercises.MASTERY_MODELS] if k != "skill_check"])
 LANGUAGES = [(l['id'], _(l['readable_name'])) for l in Language.objects.values('id', 'readable_name').order_by('readable_name')]
 LANGUAGES.insert(0, (None, _("Select a language"))) # Add default option if no language is selected
+LICENSES = ((None, _("Select a license")),) + licenses.choices
 
 class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
@@ -163,7 +164,7 @@ class PreferencesSettingsForm(forms.Form):
     copyright_holder = forms.CharField(required=False, label=_('Copyright Holder'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     license_description = forms.CharField(required=False, label=_('License Description'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     language = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('Language'), choices=LANGUAGES)
-    license = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('License'), choices=licenses.choices)
+    license = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('License'), choices=LICENSES)
     mastery_model = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=MASTERY, label=_("Mastery at"))
     m_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label=_("M"))
     n_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label=_("N"))

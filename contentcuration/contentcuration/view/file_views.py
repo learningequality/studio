@@ -68,7 +68,7 @@ def file_create(request):
             author=author,
             copyright_holder=preferences.get('copyright_holder'),
         )
-        if license.license_name == licenses.SPECIAL_PERMISSIONS:
+        if license and license.license_name == licenses.SPECIAL_PERMISSIONS:
             new_node.license_description = preferences.get('license_description')
         new_node.save()
         file_object = File(

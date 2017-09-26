@@ -15,6 +15,8 @@ import os
 import re
 import logging
 
+from le_utils.constants import licenses
+
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -220,6 +222,8 @@ SERVER_EMAIL = 'curation-errors@learningequality.org'
 ADMINS = [('Errors', SERVER_EMAIL)]
 
 DEFAULT_TITLE = "Kolibri Studio"
+
+ALLOW_NULL_COPYRIGHT_HOLDER = [licenses.PUBLIC_DOMAIN]
 
 IGNORABLE_404_URLS = [
     re.compile(r'\.(php|cgi)$'),

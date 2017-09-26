@@ -760,7 +760,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     return window.licenses.get({id: license_id}).get('license_name');
   },
   display_license_description: function(license_id){
-    var license_name = license_id > 0 && window.licenses.get({id: license_id}).get('license_name')
+    var licecnse = license_id > 0 && window.licenses.get({id: license_id});
+    var license_name = license_id > 0 && licecnse.get('license_name')
     if(license_name==='Special Permissions'){
       this.$("#custom_license_description").css('display', 'block');
       if(this.shared_data){
@@ -774,6 +775,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     } else {
       this.$("#custom_license_description").css('display', 'none');
     }
+
+    this.$("#copyright_holder_wrapper").css("display", licecnse && license.get("requires_copyright_holder")? "block" : "none");
   },
   all_original: function(){
     return this.selected_items.every(function(item){ return item.isoriginal; });
@@ -894,6 +897,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.$("#license_about").css("display", "inline");
     this.set_selected();
     this.display_license_description($("#license_select").val());
+  },
+  toggle_license_description: function() {
+    var license = window.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()})
   },
   set_selected:function(){
     var self = this;
