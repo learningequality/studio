@@ -10,46 +10,46 @@
 		<div id="disable-none-selected-wrapper">
 			{{#if edit}}
 				<div class="nav-button-container">
-					<div class="nav-button edit_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-pencil"></span></div>
-					<a class="nav-label edit_button disable-on-edit disable-none-selected">{{formatMessage (intlGet 'messages.edit')}}</a>
+					<div class="nav-button edit_button disable-on-edit disable-none-selected" title="{{formatMessage (intlGet 'messages.edit')}}"><span class="glyphicon glyphicon-pencil"></span></div>
+					<a class="nav-label edit_button disable-on-edit disable-none-selected" title="{{formatMessage (intlGet 'messages.edit')}}">{{formatMessage (intlGet 'messages.edit')}}</a>
 				</div>
 			{{else}}
 				<div class="nav-button-container">
-					<div class="nav-button edit_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-new-window"></span></div>
-					<a class="nav-label edit_button disable-on-edit disable-none-selected">{{formatMessage (intlGet 'messages.view')}}</a>
+					<div class="nav-button edit_button disable-on-edit disable-none-selected" title="{{formatMessage (intlGet 'messages.view')}}"><span class="glyphicon glyphicon-new-window"></span></div>
+					<a class="nav-label edit_button disable-on-edit disable-none-selected" title="{{formatMessage (intlGet 'messages.view')}}">{{formatMessage (intlGet 'messages.view')}}</a>
 				</div>
 			{{/if}}
 			{{#unless staging}}
 				<div class="nav-button-container">
-					<div class="nav-button copy_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-duplicate"></span></div>
-					<a class="nav-label copy_button disable-on-edit disable-none-selected">{{formatMessage (intlGet 'messages.copy')}}</a>
+					<div class="nav-button copy_button disable-on-edit disable-none-selected" title="{{formatMessage (intlGet 'messages.copy')}}"><span class="glyphicon glyphicon-duplicate"></span></div>
+					<a class="nav-label copy_button disable-on-edit disable-none-selected" title="{{formatMessage (intlGet 'messages.copy')}}">{{formatMessage (intlGet 'messages.copy')}}</a>
 				</div>
 			{{/unless}}
 			{{#if edit}}
 				<div class="nav-button-container">
-					<div class="nav-button move_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-move"></span></div>
-					<a class="nav-label move_button disable-on-edit disable-none-selected">{{formatMessage (intlGet 'messages.move')}}</a>
+					<div class="nav-button move_button disable-on-edit disable-none-selected" title="{{formatMessage (intlGet 'messages.move')}}"><span class="glyphicon glyphicon-move"></span></div>
+					<a class="nav-label move_button disable-on-edit disable-none-selected" title="{{formatMessage (intlGet 'messages.move')}}">{{formatMessage (intlGet 'messages.move')}}</a>
 				</div>
 				<div class="nav-button-container">
-					<div class="nav-button delete_button disable-on-edit disable-none-selected"><span class="glyphicon glyphicon-remove"></span></div>
-					<a class="nav-label delete_button disable-on-edit disable-none-selected">{{formatMessage (intlGet 'messages.delete')}}</a>
+					<div class="nav-button delete_button disable-on-edit disable-none-selected" title="{{formatMessage (intlGet 'messages.delete')}}"><span class="glyphicon glyphicon-remove"></span></div>
+					<a class="nav-label delete_button disable-on-edit disable-none-selected" title="{{formatMessage (intlGet 'messages.delete')}}">{{formatMessage (intlGet 'messages.delete')}}</a>
 				</div>
 			{{/if}}
 		</div>
 		{{#if edit}}
 			<div class="nav-button-container button_drop">
-				<div class="nav-button archive_button disable-on-edit"><span class="glyphicon glyphicon-trash"></span></div>
-				<a class="nav-label archive_button disable-on-edit">{{formatMessage (intlGet 'messages.trash')}}</a>
+				<div class="nav-button archive_button disable-on-edit" title="{{formatMessage (intlGet 'messages.trash')}}"><span class="glyphicon glyphicon-trash"></span></div>
+				<a class="nav-label archive_button disable-on-edit" title="{{formatMessage (intlGet 'messages.trash')}}">{{formatMessage (intlGet 'messages.trash')}}</a>
 			</div>
 			<div class="nav-button-container" title="{{formatMessage (intlGet 'messages.sync_title')}}">
-				<div class="nav-button sync_button disable-on-edit"><span class="glyphicon glyphicon-refresh"></span></div>
-				<a class="nav-label sync_button disable-on-edit">{{formatMessage (intlGet 'messages.sync')}}</a>
+				<div class="nav-button sync_button disable-on-edit" title="{{formatMessage (intlGet 'messages.sync')}}"><span class="glyphicon glyphicon-refresh"></span></div>
+				<a class="nav-label sync_button disable-on-edit" title="{{formatMessage (intlGet 'messages.sync')}}">{{formatMessage (intlGet 'messages.sync')}}</a>
 			</div>
 		{{/if}}
 		{{#if show_invite}}
 		<div class="nav-button-container">
-			<div class="nav-button permissions_button disable-on-edit"><span class="glyphicon glyphicon-user"></span></div>
-			<a class="nav-label permissions_button disable-on-edit">{{formatMessage (intlGet 'messages.invite')}}</a>
+			<div class="nav-button permissions_button disable-on-edit" title="{{formatMessage (intlGet 'messages.invite')}}"><span class="glyphicon glyphicon-user"></span></div>
+			<a class="nav-label permissions_button disable-on-edit" title="{{formatMessage (intlGet 'messages.invite')}}">{{formatMessage (intlGet 'messages.invite')}}</a>
 		</div>
 		{{/if}}
 		{{#if channel.ricecooker_version}}
@@ -57,8 +57,8 @@
 				{{#unless staging}}
 					{{#if channel.staging_tree}}<a href="/channels/{{channel.id}}/staging">{{/if}}
 					<div class="nav-button-container" {{#unless channel.staging_tree}}title="{{formatMessage (intlGet 'messages.no_updates')}}" disabled{{/unless}}>
-						<div class="nav-button review_button disable-on-edit {{#unless channel.staging_tree}}disabled{{/unless}}"><span class="glyphicon glyphicon-ok-circle"></span></div>
-						<a class="nav-label review_button disable-on-edit {{#unless channel.staging_tree}}disabled{{/unless}}">{{formatMessage (intlGet 'messages.review')}}</a>
+						<div class="nav-button review_button disable-on-edit {{#unless channel.staging_tree}}disabled{{/unless}}" title="{{formatMessage (intlGet 'messages.review')}}"><span class="glyphicon glyphicon-ok-circle"></span></div>
+						<a class="nav-label review_button disable-on-edit {{#unless channel.staging_tree}}disabled{{/unless}}" title="{{formatMessage (intlGet 'messages.review')}}">{{formatMessage (intlGet 'messages.review')}}</a>
 					</div>
 					{{#if channel.staging_tree}}</a>{{/if}}
 				{{/unless}}
