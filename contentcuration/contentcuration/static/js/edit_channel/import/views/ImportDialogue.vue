@@ -114,7 +114,7 @@ module.exports = {
         }
         return `${stringHelper.format_size(this.importSizeInBytes)}`;
       },
-    },
+    }
   ),
   watch: {
     currentImportPage(newVal, oldVal) {
@@ -146,7 +146,7 @@ module.exports = {
           this.updateImportStatus('import_confirmed');
         }
       }
-    },
+    }
   ),
   filters: {
     pluralize,

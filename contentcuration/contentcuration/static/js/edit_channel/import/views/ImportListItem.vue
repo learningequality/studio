@@ -185,7 +185,7 @@ module.exports = {
           this.removeItemFromImportList(this.node.id);
         }
       },
-    },
+    }
   ),
   filters: {
     pluralize,

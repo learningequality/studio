@@ -53,7 +53,7 @@ module.exports = {
           return 'SearchResults'
         }
       }
-    },
+    }
   ),
   methods: Object.assign(
     mapActions('import', ['loadChannels']),
@@ -69,7 +69,7 @@ module.exports = {
       closeModal() {
         $(this.$refs.topmodal).modal('hide');
       },
-    },
+    }
   ),
 }
 
