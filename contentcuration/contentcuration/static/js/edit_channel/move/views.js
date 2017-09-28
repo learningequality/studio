@@ -77,15 +77,18 @@ var MoveView = BaseViews.BaseListView.extend({
     },
     load_target_list:function(){
         var fetched = new Models.ContentNodeCollection();
+
         // Add main tree root
         var main_node = this.model.clone();
         main_node.set({'title': window.current_channel.get("name")});
         fetched.add(main_node);
 
-        // Add clipboard node
-        var clipboard_node = window.current_user.get_clipboard().clone();
-        clipboard_node.set({'title': this.get_translation("my_clipboard")});
-        fetched.add(clipboard_node);
+        if(!window.staging) {
+            // Add clipboard node
+            var clipboard_node = window.current_user.get_clipboard().clone();
+            clipboard_node.set({'title': this.get_translation("my_clipboard")});
+            fetched.add(clipboard_node);
+        }
 
         this.targetList = new MoveList({
             model: null,
