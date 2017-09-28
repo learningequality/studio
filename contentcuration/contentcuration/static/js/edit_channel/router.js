@@ -88,7 +88,7 @@ var ChannelEditRouter  = Backbone.Router.extend({
 			is_clipboard : data.is_clipboard || false,
 			staging: window.staging
 		});
-		if(!window.is_staging){
+		if(!window.staging){
 			var QueueView = require("edit_channel/queue/views");
 			var queue = new QueueView.Queue({
 		 		el: $("#queue-area"),
