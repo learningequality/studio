@@ -76,7 +76,7 @@ var ChannelEditRouter  = Backbone.Router.extend({
 
 		data.topic = data.topic || window.current_channel.get((data.is_staging)? "staging_tree" : "main_tree").node_id;
 		window.current_page = data.page;
-		this.update_url(data.topic, data.node, window.title);
+		this.update_url(data.topic, data.node);
 
 		var EditViews = require("edit_channel/tree_edit/views");
 		var edit_page_view = new EditViews.TreeEditView({

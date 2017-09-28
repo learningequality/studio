@@ -25,7 +25,13 @@ var MESSAGES = {
               "will appear alongside the concept for recommended viewing.",
     "published": "Channel Successfully Published!",
     "channel_publish_id": "Published Channel ID",
-    "published_prompt": "Here is your published ID (for importing channel into Kolibri):",
+    "published_prompt": "Copy this channel ID into Kolibri version 0.6.0 and below:",
+    "published_token_prompt": "Copy this channel token into Kolibri version 0.7.0 and above:",
+    "channel_publish_token": "Published Channel Token",
+    "newer_version": "Have a newer version of Kolibri?",
+    "older_version": "Have an older version of Kolibri?",
+    "get_token": "Get Channel Token",
+    "get_id": "Get Channel ID"
 }
 
 var BaseInfoModalView = BaseViews.BaseModalView.extend({
@@ -36,7 +42,7 @@ var BaseInfoModalView = BaseViews.BaseModalView.extend({
   $trs: MESSAGES,
   get_render_data: function(){ return {}; },
   initialize: function(options) {
-      _.bindAll(this, 'loop_focus', 'set_indices', "init_focus");
+      _.bindAll(this, 'loop_focus', 'set_indices', "init_focus", "closed_modal");
       this.modal = true;
       this.data = options;
       this.render();
@@ -77,11 +83,24 @@ var PrerequisiteModalView = BaseInfoModalView.extend({
 
 var PublishedModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/published_modal.handlebars"),
+  publish_template: require("./hbtemplates/published.handlebars"),
   modal_id: "#published_modal",
-  get_render_data: function() { return {channel_id: this.data.channel_id, published: this.data.published}; },
+  get_id: false,
+  render: function() {
+      BaseInfoModalView.prototype.render.call(this);
+      this.render_id();
+  },
+  get_render_data: function() {
+    return {
+      get_id: this.get_id,
+      channel: this.data.channel.toJSON(),
+      published: this.data.published
+    };
+  },
   events: {
     'click #modal-copy-btn' : 'copy_publish_id',
-    'focus .input-tab-control': 'loop_focus'
+    'focus .input-tab-control': 'loop_focus',
+    'click .toggle_id': 'toggle_id'
   },
   copy_publish_id: function(){
     this.$("#modal-copy-text").focus();
@@ -98,6 +117,16 @@ var PublishedModalView = BaseInfoModalView.extend({
         $("#modal-copy-btn").text(self.get_translation("copy").toUpperCase());
         self.set_initial_focus();
       }, 2500);
+  },
+  toggle_id: function() {
+    this.get_id = !this.get_id;
+    this.render_id();
+  },
+  render_id: function() {
+    this.$(".modal-content").html(this.publish_template(this.get_render_data(), {
+      data: this.get_intl_data()
+    }));
+    this.init_focus();
   }
 });
 

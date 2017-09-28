@@ -239,6 +239,7 @@ var BaseWorkspaceView = BaseView.extend({
 				model: window.current_channel.get_root("main_tree"),
 				onpublish: this.handle_published
 			});
+
 		}
 	},
 	activate_channel: function(){
@@ -267,16 +268,20 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	handle_published:function(collection){
 		this.reload_ancestors(collection);
-		var staticModal = require('edit_channel/information/views');
-		new staticModal.PublishedModalView({channel_id: window.current_channel.id, published: true});
+		var self = this;
+		window.current_channel.fetch({
+			success: function(channel){
+				var new_channel = new Models.ChannelCollection()
+				new_channel.reset(channel.toJSON());
+				$("#publish_id_text").val(window.current_channel.get('primary_token'));
+				var staticModal = require('edit_channel/information/views');
+				new staticModal.PublishedModalView({channel: window.current_channel, published: true});
+			}
+		});
 	},
 	get_channel_id:function(collection){
 		var staticModal = require('edit_channel/information/views');
-		new staticModal.PublishedModalView({channel_id: window.current_channel.id, published: false});
-	},
-	get_channel_id:function(collection){
-		var staticModal = require('edit_channel/information/views');
-		new staticModal.PublishedModalView({channel_id: window.current_channel.id, published: false});
+		new staticModal.PublishedModalView({channel: window.current_channel, published: false});
  	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");
@@ -647,25 +652,17 @@ var BaseEditableListView = BaseListView.extend({
 		this.display_load(message, function(resolve_load, reject_load){
 			var list = self.get_selected();
 			var promise_list = [];
+			var deleteCollection = new Models.ContentNodeCollection();
 			for(var i = 0; i < list.length; i++){
 				var view = list[i];
 				if(view){
-					promise_list.push(new Promise(function(resolve, reject){
-						view.model.destroy({
-							success:function(data){
-								resolve(data);
-							},
-							error:function(obj, error){
-								reject(error);
-							}
-						});
-						self.collection.remove(view.model);
-						self.views.splice(view,1);
-						view.remove();
-					}));
+					deleteCollection.add(view.model);
+					self.collection.remove(view.model);
+					self.views.splice(view,1);
+					view.remove();
 				}
 			}
-			Promise.all(promise_list).then(function(){
+			deleteCollection.delete().then(function() {
 				self.handle_if_empty();
 				resolve_load(true);
 			}).catch(function(error){

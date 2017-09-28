@@ -10,7 +10,7 @@ from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum, F
 from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
-from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel
+from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel, PrerequisiteContentRelationship
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
@@ -174,6 +174,29 @@ def get_nodes_by_ids_complete(request):
         nodes = ContentNode.objects.prefetch_related('children').prefetch_related('files')\
                            .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
         return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
+
+
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def delete_nodes(request):
+    logging.debug("Entering the copy_node endpoint")
+
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    else:
+        data = json.loads(request.body)
+
+        try:
+            nodes = data["nodes"]
+            channel_id = data["channel_id"]
+            request.user.can_edit(channel_id)
+            ContentNode.objects.filter(pk__in=nodes).delete()
+
+        except KeyError:
+            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+        return HttpResponse(json.dumps({'success': True}))
+
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -403,6 +426,10 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
     node.sort_order = sort_order or node.sort_order
     node.changed = True
     descendants = node.get_descendants(include_self=True)
+
+    if node.tree_id != parent.tree_id:
+        PrerequisiteContentRelationship.objects.filter(Q(target_node_id=node.pk) | Q(prerequisite_id=node.pk)).delete()
+
     node.save()
 
     for tag in ContentTag.objects.filter(tagged_content__in=descendants).distinct():

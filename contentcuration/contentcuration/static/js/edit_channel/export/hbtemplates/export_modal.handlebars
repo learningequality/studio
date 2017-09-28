@@ -9,8 +9,7 @@
             <div class="modal-body">
                 <div id="export_area">
                     <h3 class="export_channel_name truncate" title="{{channel.name}}">{{channel.name}}</h3>
-                    <em >{{formatMessage (intlGet 'messages.id')}} {{channel.id}}</em>
-                    <em class="pull-right" id="version_number">{{formatMessage (intlGet 'messages.current_version')}} {{version}}</em>
+                    <em id="version_number">{{formatMessage (intlGet 'messages.current_version')}} {{version}}</em>
                     <hr/>
                     <div class="language_wrapper container-fluid">
                         <select id="select_language" class="tab_item pull-right">
