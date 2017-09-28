@@ -97,7 +97,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			channel : window.current_channel.toJSON(),
 			is_clipboard : this.is_clipboard,
 			staging: this.staging,
-			view_only: _.contains(window.current_channel.get('viewers'), window.current_user.id),
+			view_only: !_.contains(window.current_channel.get('editors'), window.current_user.id),
 			show_invite: show_invite
 		}, {
 			data: this.get_intl_data()
