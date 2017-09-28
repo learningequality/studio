@@ -216,6 +216,7 @@ urlpatterns += [
     url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
     url(r'^api/get_node_path$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
+    url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
 ]
 
 # Add file api enpoints

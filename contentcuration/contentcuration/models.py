@@ -14,7 +14,7 @@ from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, Multipl
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.db import IntegrityError, connections, models, connection
-from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField, F
+from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField, F, FloatField
 from django.db.utils import ConnectionDoesNotExist
 from django.utils.translation import ugettext as _
 from django.dispatch import receiver
@@ -83,7 +83,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
-    disk_space = models.IntegerField(default=524288000, help_text=_('How many bytes a user can upload'))
+    disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
 
     objects = UserManager()
     USERNAME_FIELD = 'email'

@@ -586,6 +586,21 @@ var ContentNodeCollection = BaseCollection.extend({
             });
         });
     },
+    delete:function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = {"nodes": self.pluck('id'),
+                        "channel_id": window.current_channel.id
+            };
+            $.ajax({
+                method:"POST",
+                url: window.Urls.delete_nodes(),
+                data:  JSON.stringify(data),
+                success: resolve,
+                error: reject
+            });
+        });
+    },
     sync_nodes: function(models){
         var self = this;
         return new Promise(function(resolve, reject){

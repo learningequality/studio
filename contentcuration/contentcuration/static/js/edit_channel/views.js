@@ -652,25 +652,17 @@ var BaseEditableListView = BaseListView.extend({
 		this.display_load(message, function(resolve_load, reject_load){
 			var list = self.get_selected();
 			var promise_list = [];
+			var deleteCollection = new Models.ContentNodeCollection();
 			for(var i = 0; i < list.length; i++){
 				var view = list[i];
 				if(view){
-					promise_list.push(new Promise(function(resolve, reject){
-						view.model.destroy({
-							success:function(data){
-								resolve(data);
-							},
-							error:function(obj, error){
-								reject(error);
-							}
-						});
-						self.collection.remove(view.model);
-						self.views.splice(view,1);
-						view.remove();
-					}));
+					deleteCollection.add(view.model);
+					self.collection.remove(view.model);
+					self.views.splice(view,1);
+					view.remove();
 				}
 			}
-			Promise.all(promise_list).then(function(){
+			deleteCollection.delete().then(function() {
 				self.handle_if_empty();
 				resolve_load(true);
 			}).catch(function(error){
