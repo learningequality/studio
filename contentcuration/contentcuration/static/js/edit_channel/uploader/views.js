@@ -60,10 +60,12 @@ var MESSAGES = {
     "same_as_topic": "Same as Topic",
     "invalid_items": "One or more of the selected items is invalid",
     "license_error": "License is required",
+    "special_permission_error": "Special permissions license must have a description",
     "copyright_holder_error": "Copyright holder is required",
     "no_title": "No Title",
     "fix_errors_prompt": "Saving disabled (invalid content detected)",
     "error_saving": "Save Failed",
+    "save_failed": "There was a problem saving your content.",
     "out_of_space": "Out of Disk Space",
     "out_of_space_text": "You don't have enough space to save these files. Request more space under the Settings > Account page.",
     "open_settings": "Open Settings",
@@ -338,6 +340,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   save_and_keep_open:function(){
     this.editor_view.add_tag(null);
+    var self = this;
     if(this.validate()) {
       this.save(this.get_translation("saving"), this.save_nodes, this.save_error).then(function(collection){
         self.process_updated_collection(collection);
@@ -370,7 +373,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
         [this.get_translation("ok")]: function(){}
       })
     } else {
-      dialog.alert(this.get_translation("error_saving"), error.responseText);
+      dialog.alert(this.get_translation("error_saving"), error.responseText || this.get_translation("save_failed"));
     }
   },
   copy_items: function(){
@@ -631,6 +634,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.allow_edit = options.allow_edit;
     this.m_value = (this.shared_data && this.shared_data.shared_exercise_data && this.shared_data.shared_exercise_data.m) ? this.shared_data.shared_exercise_data.m : 1;
     this.n_value = (this.shared_data && this.shared_data.shared_exercise_data && this.shared_data.shared_exercise_data.n) ? this.shared_data.shared_exercise_data.n : 1;
+    this.first_rendered = this.new_content;
     this.render();
   },
   render: function() {
@@ -683,7 +687,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
           this.$("#randomize_exercise").prop("checked", randomize);
         }
       }
-      if(!this.new_content) {
+      if(!this.first_rendered) {
         _.defer(this.container.validate);
       }
     }else{
@@ -1164,13 +1168,15 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.error = this.get_translation("title_error");
     } else if(this.isoriginal && !license) {
       $("#license_select").addClass("invalid_field");
-      this.error = this.get_translation("license_required");
+      this.error = this.get_translation("license_error");
     } else if (this.isoriginal && this.model.get("kind") !== "topic" && license.get("requires_copyright_holder") && !this.model.get("copyright_holder")) {
       $("#input_license_owner").addClass("invalid_field");
       this.error = this.get_translation("copyright_holder_error");
+    } else if (this.isoriginal && license.get('license_name') === 'Special Permissions' && !this.model.get('license_description')) {
+      $("#custom_license_description").addClass("invalid_field");
+      this.error = this.get_translation("special_permission_error");
     }
     (this.error)? this.$el.addClass("invalid") : this.$el.removeClass("invalid");
-    console.log(this.error)
     return this.error;
   }
 });

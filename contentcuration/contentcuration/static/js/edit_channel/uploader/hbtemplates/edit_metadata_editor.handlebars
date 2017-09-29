@@ -1,7 +1,7 @@
+<div id="editor_errors" class="alert alert-danger text-center" role="alert"></div>
 {{#if none_selected}}
 	<div id="uploader-default-prompt" class="text-center container-fluid">{{formatMessage (intlGet 'messages.select_to_edit')}}</div>
 {{else}}
-	<div id="editor_errors" class="alert alert-danger text-center" role="alert"></div>
 	{{#unless node}}
 		<h5 id="uploader-count-message">{{formatMessage (intlGet 'messages.editing_count') count=selected_count}}</h5>
 		{{#unless isoriginal}}<p class="text-center uploader-copied-warning"><i>{{formatMessage (intlGet 'messages.detected_import_disabled')}}</i></p>{{/unless}}
