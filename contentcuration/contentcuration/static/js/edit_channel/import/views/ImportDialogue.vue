@@ -36,13 +36,10 @@
         class="action-button pull-right modal-main-action-button"
         id="import_content_submit"
         @click="handleClickImport"
-        :disabled="!importIsEnabled"
+        v-if="importIsEnabled"
       >
-        <span v-if="!importIsEnabled">
-          {{ $tr('selectContentPrompt')  }}
-        </span>
-        <span v-else class="uppercase">
-          {{ $tr('importButtonLabel')  }}
+        <span class="uppercase">
+          {{ submitButtonLabel }}
         </span>
       </button>
       <span id="import_file_metadata" class="pull-right">
@@ -65,12 +62,13 @@ const  { pluralize } = require('./filters');
 module.exports = {
   name: 'ImportDialogue',
   $trs: {
-    'searchButtonLabel': "Search",
-    'cancelButtonLabel': "Cancel",
-    'selectContentPrompt': "Select content to import...",
-    'importButtonLabel': "Import",
-    'importCountText': "{topicCount, plural, =1 {# Topic} other {# Topics}}, {resourceCount, plural, =1 {# Resource} other {# Resources}}",
-    'searchPrompt': "What are you looking for?"
+    cancelButtonLabel: 'Cancel',
+    continue: 'Continue',
+    import: 'Import',
+    importCountText: '{topicCount, plural, =1 {# Topic} other {# Topics}}, {resourceCount, plural, =1 {# Resource} other {# Resources}}',
+    searchButtonLabel: 'Search',
+    searchPrompt: 'What are you looking for?',
+    selectContentPrompt: 'Select content to import...',
   },
   components: {
     ImportChannelList: require('./ImportChannelList.vue'),
@@ -102,6 +100,12 @@ module.exports = {
       resourceCount() {
         return this.importedItemCounts.resources;
       },
+      submitButtonLabel() {
+        if (this.currentImportPage === 'import_preview') {
+          return this.$tr('import');
+        }
+        return this.$tr('continue');
+      }
     }
   ),
   watch: {
