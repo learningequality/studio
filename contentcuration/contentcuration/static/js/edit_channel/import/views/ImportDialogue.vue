@@ -2,7 +2,7 @@
 
   <div>
     <!-- SEARCH FORM -->
-    <div>
+    <div v-if="!isImportPreview">
       <form @submit="submitSearch" :disabled="!searchTermIsValid" class="SearchForm">
         <input
           class="search-input"
@@ -42,7 +42,7 @@
           {{ submitButtonLabel }}
         </span>
       </button>
-      <span id="import_file_metadata" class="pull-right">
+      <span v-show="!isImportPreview" id="import_file_metadata" class="pull-right">
         <span id="import_file_count">
           {{ $tr('importCountText', {'topicCount': topicCount, 'resourceCount': resourceCount})  }}
         </span>
@@ -100,12 +100,15 @@ module.exports = {
       resourceCount() {
         return this.importedItemCounts.resources;
       },
+      isImportPreview() {
+        return this.currentImportPage === 'import_preview';
+      },
       submitButtonLabel() {
-        if (this.currentImportPage === 'import_preview') {
+        if (this.isImportPreview) {
           return this.$tr('import');
         }
         return this.$tr('continue');
-      }
+      },
     }
   ),
   watch: {
