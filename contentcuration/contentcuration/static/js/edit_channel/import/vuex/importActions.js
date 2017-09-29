@@ -21,7 +21,6 @@ exports.calculateImportSize = function(context) {
 exports.addItemToImportList = function(context, contentNode) {
   if (!_.contains(context.getters.itemsToImportIds), contentNode.id) {
     context.commit('ADD_ITEM_TO_IMPORT_LIST', contentNode)
-    return context.dispatch('calculateImportSize');
   }
 }
 
@@ -29,7 +28,6 @@ exports.addItemToImportList = function(context, contentNode) {
 exports.removeItemFromImportList = function(context, id) {
   if (_.contains(context.getters.itemsToImportIds), id) {
     context.commit('REMOVE_ITEM_FROM_IMPORT_LIST', id);
-    return context.dispatch('calculateImportSize');
   }
 }
 
