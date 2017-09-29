@@ -130,6 +130,7 @@ module.exports = {
     }),
     mapActions('import', [
       'goToSearchResults',
+      'goToImportPreview',
     ]),
     {
       submitSearch() {
@@ -139,12 +140,13 @@ module.exports = {
       },
       handleClickImport() {
         // Check to see if imports have related content
-        if (hasRelatedContent(this.itemsToImport)) {
-          this.updateImportStatus('show_warning');
-        } else {
-          // Triggers import action from ImportModal BB View
-          this.updateImportStatus('import_confirmed');
-        }
+        this.goToImportPreview();
+        // if (hasRelatedContent(this.itemsToImport)) {
+        //   this.updateImportStatus('show_warning');
+        // } else {
+        //   // Triggers import action from ImportModal BB View
+        //   this.updateImportStatus('import_confirmed');
+        // }
       }
     }
   ),

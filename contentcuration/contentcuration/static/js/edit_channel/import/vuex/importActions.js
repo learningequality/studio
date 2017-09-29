@@ -71,3 +71,9 @@ exports.goToSearchResults = function(context, payload) {
     },
   })
 }
+
+exports.goToImportPreview = function(context) {
+  context.commit('UPDATE_PAGE_STATE', {
+    pageType: 'import_preview',
+  });
+}

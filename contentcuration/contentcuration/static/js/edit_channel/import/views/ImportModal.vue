@@ -7,7 +7,7 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
-          <h4 class="modal-title">{{ $tr('importHeader') }}</h4>
+          <h4 class="modal-title">{{ modalTitle }}</h4>
         </div>
         <div class="modal-body">
           <ImportDialogue>
@@ -25,14 +25,22 @@
 
 const { mapGetters, mapActions } = require('vuex');
 
+const pageNameToComponentMap = {
+  import_preview: 'ImportPreview',
+  search_results: 'SearchResults',
+  tree_view: 'ImportChannelList',
+};
+
 module.exports = {
   name: 'ImportModal',
   $trs: {
-    'importHeader': "Import from Other Channels"
+    importHeader: 'Import from Other Channels',
+    importPreviewHeader: 'Review selections for import',
   },
   components: {
-    ImportDialogue: require('./ImportDialogue.vue'),
     ImportChannelList: require('./ImportChannelList.vue'),
+    ImportDialogue: require('./ImportDialogue.vue'),
+    ImportPreview: require('./ImportPreview.vue'),
     SearchResults: require('./SearchResults.vue'),
   },
   mounted() {
@@ -45,14 +53,15 @@ module.exports = {
       channels: 'import/channels',
     }),
     {
-      pageType: function() {
-        const pageType = this.currentImportPage;
-        if (pageType === 'tree_view') {
-          return 'ImportChannelList';
-        } else if (pageType === 'search_results') {
-          return 'SearchResults'
+      pageType() {
+        return pageNameToComponentMap[this.currentImportPage];
+      },
+      modalTitle() {
+        if (this.currentImportPage === 'import_preview') {
+          return this.$tr('importPreviewHeader');
         }
-      }
+        return this.$tr('importHeader');
+      },
     }
   ),
   methods: Object.assign(
