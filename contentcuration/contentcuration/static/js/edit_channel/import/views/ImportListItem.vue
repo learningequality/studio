@@ -1,7 +1,7 @@
 <template>
 
   <li class="ListItem" :class="importListItemClass">
-    <template v-if="!isChannel">
+    <template v-if="!isChannel && !readOnly">
       <input
         type="checkbox"
         class="ListItem__Checkbox"
@@ -24,7 +24,7 @@
       <span class="ListItem__Label__Title">
         {{ node.title }}
         <em v-if="isFolder && !isChannel && (resourceCount > 0)" class="ListItem__ChildCount">
-          {{ $tr('resourceCount', {'resourceCount': resourceCount})  }}
+          {{ $tr('resourceCount', {'resourceCount': resourceCount}) }}
         </em>
       </span>
 
@@ -34,12 +34,12 @@
         </template>
 
         <em v-else class="ListItem__ChildCount">
-          {{ $tr('empty')  }}
+          {{ $tr('empty') }}
         </em>
       </template>
 
       <i v-show="(isFolder || isChannel) & isChecked" class="ListItem__Counter badge">
-        {{ $tr('resourceCount', {'resourceCount': resourceCount})  }}
+        {{ $tr('resourceCount', {'resourceCount': resourceCount}) }}
       </i>
     </label>
 
@@ -47,7 +47,7 @@
     <!-- TODO re-insert smooth transition -->
       <div v-show="isExpanded ">
         <em v-show="isLoading" class="default-item">
-          {{ $tr('loading')  }}
+          {{ $tr('loading') }}
         </em>
         <ul class="ListItem__SubList">
           <transition-group name="fade">
@@ -87,6 +87,10 @@ module.exports = {
   props: {
     isChannel: RequiredBoolean,
     isFolder: RequiredBoolean,
+    readOnly: {
+      type: Boolean,
+      default: false,
+    },
     isRoot: {
       type: Boolean,
       default: false,
