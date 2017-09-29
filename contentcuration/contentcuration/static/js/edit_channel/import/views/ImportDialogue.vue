@@ -49,9 +49,6 @@
         <span id="import_file_count">
           {{ $tr('importCountText', {'topicCount': topicCount, 'resourceCount': resourceCount})  }}
         </span>
-        <em id="import_file_size">
-          ({{ importFileSizeInWords }})
-        </em>
       </span>
     </div>
   </div>
@@ -61,8 +58,7 @@
 
 <script>
 
-const stringHelper = require('../../utils/string_helper');
-const { hasRelatedContent } = require('../util');
+// const { hasRelatedContent } = require('../util');
 const { mapGetters, mapState, mapActions, mapMutations } = require('vuex');
 const  { pluralize } = require('./filters');
 
@@ -74,7 +70,6 @@ module.exports = {
     'selectContentPrompt': "Select content to import...",
     'importButtonLabel': "Import",
     'importCountText': "{topicCount, plural, =1 {# Topic} other {# Topics}}, {resourceCount, plural, =1 {# Resource} other {# Resources}}",
-    'calculatingSizeText': "Calculating Size...",
     'searchPrompt': "What are you looking for?"
   },
   components: {
@@ -88,7 +83,6 @@ module.exports = {
   computed: Object.assign(
     mapState('import', [
       'itemsToImport',
-      'importSizeInBytes',
     ]),
     mapGetters('import', [
       'importedItemCounts',
@@ -107,12 +101,6 @@ module.exports = {
       },
       resourceCount() {
         return this.importedItemCounts.resources;
-      },
-      importFileSizeInWords() {
-        if (this.importSizeInBytes < 0) {
-          return this.$tr('calculatingSizeText');
-        }
-        return `${stringHelper.format_size(this.importSizeInBytes)}`;
       },
     }
   ),
