@@ -7,7 +7,7 @@
 
     <div>
       <div class="resources-msg">
-        N Total Resources Selected (M MB)
+        {{ $tr('resourcesSize', { resources: importedItemCounts.resources, fileSize: importFileSizeInWords }) }}
       </div>
       <div class="resources-list">
         <ul class="list-unstyled">
@@ -29,27 +29,41 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapState, mapActions, mapGetters } from 'vuex';
   import ImportListItem from './ImportListItem.vue';
+  import stringHelper from '../../utils/string_helper';
 
   export default {
     name: 'ImportPreview',
     components: {
       ImportListItem,
     },
-    computed: mapState('import', [
-      'itemsToImport',
-    ]),
-    methods: {
-
+    computed: Object.assign(
+      mapState('import', [
+        'itemsToImport',
+        'importSizeInBytes',
+      ]),
+      mapGetters('import', ['importedItemCounts']),
+      {
+        importFileSizeInWords() {
+          if (this.importSizeInBytes < 0) {
+            return this.$tr('calculatingSizeText');
+          }
+          return `${stringHelper.format_size(this.importSizeInBytes)}`;
+        },
+      }
+    ),
+    mounted() {
+      this.calculateImportSize();
     },
-    vuex: {
-      getters: {
-
-      },
-      actions: {
-
-      },
+    methods: Object.assign(
+      mapActions('import', ['calculateImportSize']),
+      {
+      }
+    ),
+    $trs: {
+      'calculatingSizeText': 'Calculating Size...',
+      'resourcesSize': '{ resources } Total resources selected ({ fileSize })',
     },
   }
 
@@ -57,5 +71,10 @@
 
 
 <style lang="less" scoped>
+
+  .resources-msg {
+    font-weight: bold;
+    font-size: 1.25em;
+  }
 
 </style>
