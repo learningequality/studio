@@ -24,11 +24,12 @@
 <script>
 
 import { mapGetters, mapActions } from 'vuex';
+import { PageTypes } from '../constants';
 
 const pageNameToComponentMap = {
-  import_preview: 'ImportPreview',
-  search_results: 'SearchResults',
-  tree_view: 'ImportChannelList',
+  [PageTypes.IMPORT_PREVIEW]: 'ImportPreview',
+  [PageTypes.SEARCH_RESULTS]: 'SearchResults',
+  [PageTypes.TREE_VIEW]: 'ImportChannelList',
 };
 
 module.exports = {
@@ -57,7 +58,7 @@ module.exports = {
         return pageNameToComponentMap[this.currentImportPage];
       },
       modalTitle() {
-        if (this.currentImportPage === 'import_preview') {
+        if (this.currentImportPage === PageTypes.IMPORT_PREVIEW) {
           return this.$tr('importPreviewHeader');
         }
         return this.$tr('importHeader');

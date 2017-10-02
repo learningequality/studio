@@ -58,6 +58,7 @@
 import { hasRelatedContent } from '../util';
 import { mapGetters, mapState, mapActions, mapMutations } from 'vuex';
 import  { pluralize } from './filters';
+import { PageTypes } from '../constants';
 
 export default {
   name: 'ImportDialogue',
@@ -101,7 +102,7 @@ export default {
         return this.importedItemCounts.resources;
       },
       isImportPreview() {
-        return this.currentImportPage === 'import_preview';
+        return this.currentImportPage === PageTypes.IMPORT_PREVIEW;
       },
       submitButtonLabel() {
         if (this.isImportPreview) {
@@ -114,7 +115,7 @@ export default {
   watch: {
     currentImportPage(newVal, oldVal) {
       // HACK to clear out search terms when user clicks 'back' on results
-      if (newVal === 'tree_view' && oldVal === 'search_results') {
+      if (newVal === PageTypes.TREE_VIEW && oldVal === PageTypes.SEARCH_RESULTS) {
         this.searchTerm = '';
       }
     }
@@ -134,10 +135,10 @@ export default {
         this.goToSearchResults({ searchTerm: this.searchTerm });
       },
       handleClickNext() {
-        if (this.currentImportPage === 'search_results' || this.currentImportPage === 'tree_view') {
+        if (this.currentImportPage === PageTypes.SEARCH_RESULTS || this.currentImportPage === PageTypes.TREE_VIEW) {
           return this.goToImportPreview();
         }
-        if (this.currentImportPage === 'import_preview') {
+        if (this.currentImportPage === PageTypes.IMPORT_PREVIEW) {
           // Check to see if imports have related content
           if (hasRelatedContent(this.itemsToImport)) {
             return this.updateImportStatus('show_warning');

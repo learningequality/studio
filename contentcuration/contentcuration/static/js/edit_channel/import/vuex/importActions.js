@@ -2,6 +2,7 @@ var _ = require('underscore');
 var utils = require('./importUtils');
 var createContentNodeCollection = utils.createContentNodeCollection;
 var fetchImportableChannels = utils.fetchImportableChannels;
+var { PageTypes } = require('../constants');
 
 // Sends a request to `get_total_size` endpoint and updates store with result
 exports.calculateImportSize = function(context) {
@@ -54,16 +55,16 @@ exports.copyImportListToChannel = function(context, payload) {
 }
 
 exports.goToPreviousPage = function(context) {
-  if (context.getters.currentImportPage === 'search_results') {
-    context.commit('UPDATE_PAGE_STATE', { pageType: 'tree_view' });
+  if (context.getters.currentImportPage === PageTypes.SEARCH_RESULTS) {
+    context.commit('UPDATE_PAGE_STATE', { pageType: PageTypes.TREE_VIEW });
   }
-  if (context.getters.currentImportPage === 'import_preview') {
+  if (context.getters.currentImportPage === PageTypes.IMPORT_PREVIEW) {
     const { previousState } = context.state.pageState.data;
     const payload = {
       pageType: previousState.pageType,
       data: {},
     };
-    if (previousState.pageType === 'search_results') {
+    if (previousState.pageType === PageTypes.SEARCH_RESULTS) {
       payload.data.searchTerm = previousState.searchTerm;
     }
     context.commit('UPDATE_PAGE_STATE', payload);
@@ -74,7 +75,7 @@ exports.goToPreviousPage = function(context) {
 exports.goToSearchResults = function(context, payload) {
   context.commit('RESET_IMPORT_STATE');
   context.commit('UPDATE_PAGE_STATE', {
-    pageType: 'search_results',
+    pageType: PageTypes.SEARCH_RESULTS,
     data: {
       searchTerm: payload.searchTerm,
     },
@@ -83,7 +84,7 @@ exports.goToSearchResults = function(context, payload) {
 
 exports.goToImportPreview = function(context) {
   context.commit('UPDATE_PAGE_STATE', {
-    pageType: 'import_preview',
+    pageType: PageTypes.IMPORT_PREVIEW,
     data: {
       previousState: {
         pageType: context.state.pageState.pageType,
