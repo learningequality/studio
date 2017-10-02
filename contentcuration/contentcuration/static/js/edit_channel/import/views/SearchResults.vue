@@ -3,22 +3,22 @@
   <div class="SearchResults">
     <div>
       <p v-show="!resultsLoading" class="TopResults wordwrap">
-        {{ $tr('showingResultsText', {currentSearchTerm: currentSearchTerm})  }}
+        {{ $tr('showingResultsText', {currentSearchTerm: currentSearchTerm}) }}
       </p>
       <button @click="goToPreviousPage()" class="button-reset BackButton">
-        {{ $tr('backToBrowseButton')  }}
+        {{ $tr('backToBrowseButton') }}
       </button>
     </div>
 
     <!-- ITEM RESULTS -->
     <div class="Results">
-      <h1 class="Results__Header">{{ $tr('resourcesLabel')  }}</h1>
+      <h1 class="Results__Header">{{ $tr('resourcesLabel') }}</h1>
       <span v-if="resultsLoading" class="LoadingMsg wordwrap">
-        {{ $tr('loadingResultsText', {currentSearchTerm: currentSearchTerm})  }}
+        {{ $tr('loadingResultsText', {currentSearchTerm: currentSearchTerm}) }}
       </span>
       <template v-else>
         <div v-show="itemResults.length === 0" class="wordwrap">
-          {{ $tr('noContentFoundText', {currentSearchTerm: currentSearchTerm})  }}
+          {{ $tr('noContentFoundText', {currentSearchTerm: currentSearchTerm}) }}
         </div>
         <ul class="list-unstyled Results__List">
           <ImportListItem
@@ -37,13 +37,13 @@
 
     <!-- TOPIC RESULTS -->
     <div class="Results">
-      <h1 class="Results__Header">{{ $tr('topicsLabel')  }}</h1>
+      <h1 class="Results__Header">{{ $tr('topicsLabel') }}</h1>
       <span v-if="resultsLoading" class="LoadingMsg wordwrap">
-        {{ $tr('loadingResultsText', {currentSearchTerm: currentSearchTerm})  }}
+        {{ $tr('loadingResultsText', {currentSearchTerm: currentSearchTerm}) }}
       </span>
       <template v-else>
         <div v-show="topicResults.length === 0" class="wordwrap">
-          {{ $tr('noTopicsText', {currentSearchTerm: currentSearchTerm})  }}
+          {{ $tr('noTopicsText', {currentSearchTerm: currentSearchTerm}) }}
         </div>
         <ul class="list-unstyled Results__List">
           <ImportListItem

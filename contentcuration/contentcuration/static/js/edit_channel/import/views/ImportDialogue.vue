@@ -16,7 +16,7 @@
           @click.prevent="submitSearch"
           :disabled="!searchTermIsValid"
         >
-          {{ $tr('searchButtonLabel')  }}
+          {{ $tr('searchButtonLabel') }}
         </button>
       </form>
     </div>
@@ -30,7 +30,7 @@
 
     <div id="import_bottom_container" class="modal-bottom-content-default">
       <a class="action-text uppercase" data-dismiss="modal">
-        <span>{{ $tr('cancelButtonLabel')  }}</span>
+        <span>{{ $tr('cancelButtonLabel') }}</span>
       </a>
       <button
         class="action-button pull-right modal-main-action-button"
@@ -44,7 +44,7 @@
       </button>
       <span v-show="!isImportPreview" id="import_file_metadata" class="pull-right">
         <span id="import_file_count">
-          {{ $tr('importCountText', {'topicCount': topicCount, 'resourceCount': resourceCount})  }}
+          {{ $tr('importCountText', {'topicCount': topicCount, 'resourceCount': resourceCount}) }}
         </span>
       </span>
     </div>
