@@ -71,14 +71,15 @@
 
 <script>
 
-const _ = require('underscore');
-const RequiredBoolean = { type: Boolean, required: true };
-const stringHelper = require('../../utils/string_helper');
-const { fetchContentNodesById, getIconClassForKind } = require('../util');
-const { mapActions } = require('vuex');
-const { pluralize } = require('./filters');
+import _ from 'underscore';
+import stringHelper from '../../utils/string_helper';
+import { fetchContentNodesById, getIconClassForKind } from '../util';
+import { mapActions } from 'vuex';
+import { pluralize } from './filters';
 
-module.exports = {
+const RequiredBoolean = { type: Boolean, required: true };
+
+export default {
   name: 'ImportListItem',
   $trs: {
     'loading': "Loading",

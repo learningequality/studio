@@ -66,10 +66,10 @@
 
 <script>
 
-const { mapGetters, mapActions } = require('vuex');
-const { fetchSearchResults } = require('../util');
+import { mapGetters, mapActions } from 'vuex';
+import { fetchSearchResults } from '../util';
 
-module.exports = {
+export default {
   name: 'SearchResults',
   $trs: {
     'showingResultsText': "Showing top results for \"{currentSearchTerm}\"",

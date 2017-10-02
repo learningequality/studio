@@ -55,11 +55,11 @@
 
 <script>
 
-const { hasRelatedContent } = require('../util');
-const { mapGetters, mapState, mapActions, mapMutations } = require('vuex');
-const  { pluralize } = require('./filters');
+import { hasRelatedContent } from '../util';
+import { mapGetters, mapState, mapActions, mapMutations } from 'vuex';
+import  { pluralize } from './filters';
 
-module.exports = {
+export default {
   name: 'ImportDialogue',
   $trs: {
     cancelButtonLabel: 'Cancel',

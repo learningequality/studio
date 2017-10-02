@@ -23,7 +23,7 @@
 
 <script>
 
-const { mapGetters, mapActions } = require('vuex');
+import { mapGetters, mapActions } from 'vuex';
 
 const pageNameToComponentMap = {
   import_preview: 'ImportPreview',

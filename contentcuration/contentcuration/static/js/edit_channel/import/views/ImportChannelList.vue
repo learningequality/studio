@@ -26,9 +26,9 @@
 
 <script>
 
-const { mapState } = require('vuex');
+import { mapState } from 'vuex';
 
-module.exports = {
+export default {
   name: 'ImportChannelList',
   $trs: {
     'channelLoadingText': "Channels are loading...",
