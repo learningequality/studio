@@ -59,6 +59,7 @@
               :isFolder="file.kind ==='topic'"
               :isChannel="false"
               :parentIsChecked="isChecked"
+              :readOnly="readOnly"
             />
           </transition-group>
         </ul>
