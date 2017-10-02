@@ -35,7 +35,7 @@
       <button
         class="action-button pull-right modal-main-action-button"
         id="import_content_submit"
-        @click="handleClickImport"
+        @click="handleClickNext"
         v-if="importIsEnabled"
       >
         <span class="uppercase">
@@ -133,7 +133,7 @@ module.exports = {
         if (this.currentSearchTerm === this.searchTerm) return;
         this.goToSearchResults({ searchTerm: this.searchTerm });
       },
-      handleClickImport() {
+      handleClickNext() {
         // Check to see if imports have related content
         this.goToImportPreview();
         // if (hasRelatedContent(this.itemsToImport)) {

@@ -1,9 +1,10 @@
 <template>
 
-  <div>
-    <button>
-      Back
+  <div class="ImportPreview">
+    <button @click="goToPreviousPage()" class="BackButton button-reset">
+      {{ $tr('back') }}
     </button>
+    <span>({{ $tr('backWarning') }})</span>
 
     <div>
       <div class="resources-msg">
@@ -57,13 +58,18 @@
       this.calculateImportSize();
     },
     methods: Object.assign(
-      mapActions('import', ['calculateImportSize']),
+      mapActions('import', [
+        'calculateImportSize',
+        'goToPreviousPage',
+      ]),
       {
       }
     ),
     $trs: {
-      'calculatingSizeText': 'Calculating Size...',
-      'resourcesSize': '{ resources } Total resources selected ({ fileSize })',
+      calculatingSizeText: 'Calculating Size...',
+      resourcesSize: '{ resources } Total resources selected ({ fileSize })',
+      back: 'Back',
+      backWarning: 'Note: Your previous selections will be lost.'
     },
   }
 
@@ -72,8 +78,26 @@
 
 <style lang="less" scoped>
 
+  .ImportPreview {
+    padding: 1.5em;
+  }
+
   .resources-msg {
     font-weight: bold;
+    font-size: 1.25em;
+    margin-bottom: 1em;
+  }
+
+  .button-reset {
+    -webkit-appearance: none;
+    border: none;
+    background: none;
+  }
+
+  .BackButton {
+    color: #2196F3;
+    text-decoration: underline;
+    margin-bottom: 1em;
     font-size: 1.25em;
   }
 

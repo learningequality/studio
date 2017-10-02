@@ -57,6 +57,17 @@ exports.goToPreviousPage = function(context) {
   if (context.getters.currentImportPage === 'search_results') {
     context.commit('UPDATE_PAGE_STATE', { pageType: 'tree_view' });
   }
+  if (context.getters.currentImportPage === 'import_preview') {
+    const { previousState } = context.state.pageState.data;
+    const payload = {
+      pageType: previousState.pageType,
+      data: {},
+    };
+    if (previousState.pageType === 'search_results') {
+      payload.data.searchTerm = previousState.searchTerm;
+    }
+    context.commit('UPDATE_PAGE_STATE', payload);
+  }
   context.commit('RESET_IMPORT_STATE');
 }
 
@@ -73,5 +84,11 @@ exports.goToSearchResults = function(context, payload) {
 exports.goToImportPreview = function(context) {
   context.commit('UPDATE_PAGE_STATE', {
     pageType: 'import_preview',
+    data: {
+      previousState: {
+        pageType: context.state.pageState.pageType,
+        searchTerm: context.state.pageState.data.searchTerm,
+      },
+    },
   });
 }
