@@ -55,7 +55,7 @@
 
 <script>
 
-// const { hasRelatedContent } = require('../util');
+const { hasRelatedContent } = require('../util');
 const { mapGetters, mapState, mapActions, mapMutations } = require('vuex');
 const  { pluralize } = require('./filters');
 
@@ -134,14 +134,18 @@ module.exports = {
         this.goToSearchResults({ searchTerm: this.searchTerm });
       },
       handleClickNext() {
-        // Check to see if imports have related content
-        this.goToImportPreview();
-        // if (hasRelatedContent(this.itemsToImport)) {
-        //   this.updateImportStatus('show_warning');
-        // } else {
-        //   // Triggers import action from ImportModal BB View
-        //   this.updateImportStatus('import_confirmed');
-        // }
+        if (this.currentImportPage === 'search_results' || this.currentImportPage === 'tree_view') {
+          return this.goToImportPreview();
+        }
+        if (this.currentImportPage === 'import_preview') {
+          // Check to see if imports have related content
+          if (hasRelatedContent(this.itemsToImport)) {
+            return this.updateImportStatus('show_warning');
+          } else {
+            // Triggers import action from ImportModal BB View
+            return this.updateImportStatus('import_confirmed');
+          }
+        }
       }
     }
   ),
