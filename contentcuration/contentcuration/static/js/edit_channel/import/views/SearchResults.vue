@@ -68,6 +68,7 @@
 
 import { mapGetters, mapActions } from 'vuex';
 import { fetchSearchResults } from '../util';
+import ImportListItem from './ImportListItem.vue';
 
 export default {
   name: 'SearchResults',
@@ -81,7 +82,7 @@ export default {
     'noTopicsText': "No topics matching \"{ currentSearchTerm }\""
   },
   components: {
-    ImportListItem: require('./ImportListItem.vue'),
+    ImportListItem,
   },
   data() {
     return {

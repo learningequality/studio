@@ -59,6 +59,7 @@ import { hasRelatedContent } from '../util';
 import { mapGetters, mapState, mapActions, mapMutations } from 'vuex';
 import  { pluralize } from './filters';
 import { PageTypes } from '../constants';
+import ImportChannelList from './ImportChannelList.vue';
 
 export default {
   name: 'ImportDialogue',
@@ -72,7 +73,7 @@ export default {
     selectContentPrompt: 'Select content to import...',
   },
   components: {
-    ImportChannelList: require('./ImportChannelList.vue'),
+    ImportChannelList,
   },
   data() {
     return {

@@ -25,6 +25,10 @@
 
 import { mapGetters, mapActions } from 'vuex';
 import { PageTypes } from '../constants';
+import ImportChannelList from './ImportChannelList.vue';
+import ImportDialogue from './ImportDialogue.vue';
+import ImportPreview from './ImportPreview.vue';
+import SearchResults from './SearchResults.vue';
 
 const pageNameToComponentMap = {
   [PageTypes.IMPORT_PREVIEW]: 'ImportPreview',
@@ -39,10 +43,10 @@ module.exports = {
     importPreviewHeader: 'Review selections for import',
   },
   components: {
-    ImportChannelList: require('./ImportChannelList.vue'),
-    ImportDialogue: require('./ImportDialogue.vue'),
-    ImportPreview: require('./ImportPreview.vue'),
-    SearchResults: require('./SearchResults.vue'),
+    ImportChannelList,
+    ImportDialogue,
+    ImportPreview,
+    SearchResults,
   },
   mounted() {
     this.openModal();

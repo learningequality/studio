@@ -27,6 +27,7 @@
 <script>
 
 import { mapState } from 'vuex';
+import ImportListItem from './ImportListItem.vue';
 
 export default {
   name: 'ImportChannelList',
@@ -35,7 +36,7 @@ export default {
     'noChannelsText': "No channels available to import from"
   },
   components: {
-    ImportListItem: require('./ImportListItem.vue'),
+    ImportListItem,
   },
   computed: mapState('import', [
     'channels',
