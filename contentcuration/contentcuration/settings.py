@@ -223,8 +223,6 @@ ADMINS = [('Errors', SERVER_EMAIL)]
 
 DEFAULT_TITLE = "Kolibri Studio"
 
-ALLOW_NULL_COPYRIGHT_HOLDER = [licenses.PUBLIC_DOMAIN]
-
 IGNORABLE_404_URLS = [
     re.compile(r'\.(php|cgi)$'),
     re.compile(r'^/phpmyadmin/'),

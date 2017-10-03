@@ -430,6 +430,7 @@ class License(models.Model):
     license_name = models.CharField(max_length=50)
     license_url = models.URLField(blank=True)
     license_description = models.TextField(blank=True)
+    copyright_holder_required = models.BooleanField(default=True)
     exists = models.BooleanField(
         default=False,
         verbose_name=_("license exists"),
@@ -495,6 +496,7 @@ class ContentNode(MPTTModel, models.Model):
     extra_fields = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"),
                               null=True)
+    freeze_authoring_data = models.BooleanField(default=True)
 
     objects = TreeManager()
 
@@ -504,6 +506,7 @@ class ContentNode(MPTTModel, models.Model):
         if not self.parent and self.kind_id != content_kinds.TOPIC:
             return self
         return super(ContentNode, self).get_root()
+
 
     def __init__(self, *args, **kwargs):
         super(ContentNode, self).__init__(*args, **kwargs)
@@ -580,7 +583,7 @@ class ContentNode(MPTTModel, models.Model):
         try:
             root = self.get_root()
             return root.channel_main.first() or root.channel_chef.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
-        except ObjectDoesNotExist, MultipleObjectsReturned:
+        except (ObjectDoesNotExist, MultipleObjectsReturned, AttributeError):
             return None
 
     def save(self, *args, **kwargs):

@@ -19,14 +19,10 @@ from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
 
 class LicenseSerializer(serializers.ModelSerializer):
-    requires_copyright_holder = serializers.SerializerMethodField('check_copyright')
-
-    def check_copyright(self, license):
-        return license.license_name not in settings.ALLOW_NULL_COPYRIGHT_HOLDER
 
     class Meta:
         model = License
-        fields = ('license_name', 'exists', 'id', 'license_url', 'license_description', 'requires_copyright_holder')
+        fields = ('license_name', 'exists', 'id', 'license_url', 'license_description', 'copyright_holder_required')
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -496,7 +492,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
             return True
         elif isoriginal and not node.license:
             return False
-        elif isoriginal and node.license.license_name not in settings.ALLOW_NULL_COPYRIGHT_HOLDER and not node.copyright_holder:
+        elif isoriginal and node.license.copyright_holder_required and not node.copyright_holder:
             return False
         elif isoriginal and node.license.license_name == licenses.SPECIAL_PERMISSIONS and not node.license_description:
             return False

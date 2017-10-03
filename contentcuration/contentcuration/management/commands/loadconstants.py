@@ -123,6 +123,7 @@ LICENSES = [
             "exists": True,
             "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
             "license_description": "Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights.",
+            "copyright_holder_required": False,
         },
     },
     {

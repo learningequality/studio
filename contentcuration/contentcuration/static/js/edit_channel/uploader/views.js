@@ -727,6 +727,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         this.$("#randomize_exercise").prop("checked", randomize);
       }
     }
+    this.first_rendered = true;
     _.defer(this.set_initial_focus, 1);
   },
   get_mastery_string: function(){
@@ -781,7 +782,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       this.$("#custom_license_description").css('display', 'none');
     }
 
-    this.$("#copyright_holder_wrapper").css("display", license && license.get("requires_copyright_holder")? "block" : "none");
+    this.$("#copyright_holder_wrapper").css("display", license && license.get("copyright_holder_required")? "block" : "none");
   },
   all_original: function(){
     return this.selected_items.every(function(item){ return item.isoriginal; });
@@ -1014,8 +1015,11 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       'click .upload_item_checkbox': 'check_item',
       'click .uploaded_list_item' : 'select_item',
   },
-  remove_topic: function(){
+  remove_topic: function(event){
+      event.stopImmediatePropagation();
+      this.cancel_actions(event);
       this.delete(true, "");
+      this.remove();
   },
   check_item:function(){
       this.handle_checked();
@@ -1169,7 +1173,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     } else if(this.isoriginal && !license) {
       $("#license_select").addClass("invalid_field");
       this.error = this.get_translation("license_error");
-    } else if (this.isoriginal && this.model.get("kind") !== "topic" && license.get("requires_copyright_holder") && !this.model.get("copyright_holder")) {
+    } else if (this.isoriginal && this.model.get("kind") !== "topic" && license.get("copyright_holder_required") && !this.model.get("copyright_holder")) {
       $("#input_license_owner").addClass("invalid_field");
       this.error = this.get_translation("copyright_holder_error");
     } else if (this.isoriginal && license.get('license_name') === 'Special Permissions' && !this.model.get('license_description')) {
