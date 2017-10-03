@@ -26,11 +26,11 @@
 		</div>
 	{{else}}
 		<span class="channel_metadata">
-			{{#if language}}<span class="uppercase">{{language.id}}</span>&nbsp;|&nbsp;{{/if}}
+			{{#if language}}<div class="channel_language truncate" title="{{language.attributes.readable_name}}">{{language.attributes.readable_name}}</div>&nbsp;|&nbsp;{{/if}}
 			<span class="resource_count">{{formatMessage (intlGet 'messages.resource_count') count=resource_count}}</span>
-			&nbsp;&nbsp;{{formatMessage (intlGet 'messages.id')}}
+			&nbsp;|&nbsp;{{formatMessage (intlGet 'messages.id')}}
 			{{#if channel.published}}
-				<input type="text" class="copy-id-text text-center" value="{{channel.id}}" readonly size='30'/>
+				<input type="text" class="copy-id-text text-center" value="{{channel.primary_token}}" readonly size='30'/>
 				<span class="glyphicon glyphicon-copy copy-id-btn" aria-hidden="true" title="{{formatMessage (intlGet 'messages.copy_id')}}"></span>
 			{{else}}<em>({{formatMessage (intlGet 'messages.unpublished')}})</em>
 			{{/if}}

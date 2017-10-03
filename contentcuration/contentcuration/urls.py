@@ -194,9 +194,11 @@ urlpatterns = [
     url(r'^healthz$', views.health, name='health'),
     url(r'^api/search/', include('search.urls'), name='search'),
     url(r'^api/public/channel/(?P<channel_id>[^/]+)', views.get_channel_name_by_id, name='get_channel_name_by_id'),
-    url(r'^api/public/public_channels', views.get_public_channels, name='get_public_channels'),
+    url(r'^api/public/public_channels/$', views.get_public_channel_list, name='get_public_channel_list'),
+    url(r'^api/public/channels', views.get_public_channel_list, name='get_public_channel_list'),
     url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
     url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
+    url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
 ]
 
 # Add node api enpoints
@@ -214,6 +216,7 @@ urlpatterns += [
     url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
     url(r'^api/get_node_path$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
+    url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
 ]
 
 # Add file api enpoints

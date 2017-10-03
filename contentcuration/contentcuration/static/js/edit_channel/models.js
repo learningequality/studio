@@ -586,6 +586,21 @@ var ContentNodeCollection = BaseCollection.extend({
             });
         });
     },
+    delete:function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = {"nodes": self.pluck('id'),
+                        "channel_id": window.current_channel.id
+            };
+            $.ajax({
+                method:"POST",
+                url: window.Urls.delete_nodes(),
+                data:  JSON.stringify(data),
+                success: resolve,
+                error: reject
+            });
+        });
+    },
     sync_nodes: function(models){
         var self = this;
         return new Promise(function(resolve, reject){
@@ -821,6 +836,21 @@ var ChannelModel = BaseModel.extend({
                 }
             });
         });
+    },
+    set_priority: function(priority) {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "priority": priority
+                }),
+                url: window.Urls.set_channel_priority(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
     }
 });
 
@@ -829,7 +859,7 @@ var ChannelCollection = BaseCollection.extend({
     list_name:"channel-list",
     model_name:"ChannelCollection",
     comparator:function(channel){
-        return -new Date(channel.get('created'));
+        return (channel.get("public"))? -channel.get('priority') : -new Date(channel.get('created'));
     },
     get_all_channels: function(){
         var self = this;

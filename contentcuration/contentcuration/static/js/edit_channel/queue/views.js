@@ -319,7 +319,10 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         dialog.dialog(this.get_translation("warning"), this.get_translation("delete_item_warning", this.model.get("title")), {
             [self.get_translation("cancel")]:function(){},
             [self.get_translation("delete")]: function(){
-            	self.add_to_trash()
+            	self.remove();
+            	self.destroy(null, function(){
+            		self.reload_ancestors(new Models.ContentNodeCollection([self.model]), false);
+            	});
             }
         }, null);
 	},

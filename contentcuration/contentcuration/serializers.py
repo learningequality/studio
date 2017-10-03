@@ -1,3 +1,4 @@
+import zlib
 import math
 from collections import OrderedDict
 from django.conf import settings
@@ -578,22 +579,15 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata', 'tree_id')
 
+""" Shared methods across channel serializers """
+class ChannelFieldMixin(object):
 
-class ChannelSerializer(serializers.ModelSerializer):
-    has_changed = serializers.SerializerMethodField('check_for_changes')
-    main_tree = RootNodeSerializer(read_only=True)
-    staging_tree = RootNodeSerializer(read_only=True)
-    trash_tree = RootNodeSerializer(read_only=True)
-    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
-    created = serializers.SerializerMethodField('get_date_created')
-    updated = serializers.SerializerMethodField('get_date_updated')
-    tags = TagSerializer(many=True, read_only=True)
-
-    def get_date_created(self, channel):
-        return channel.main_tree.created.strftime("%X %x")
-
-    def get_date_updated(self, channel):
-        return channel.staging_tree.created.strftime("%X %x") if channel.staging_tree else None
+    def get_channel_primary_token(self, channel):
+        if channel.secret_tokens.filter(is_primary=True).exists():
+            token = channel.secret_tokens.filter(is_primary=True).first().token
+            return token[:5] + '-' + token[5:]
+        else:
+            return channel.pk
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
@@ -602,6 +596,41 @@ class ChannelSerializer(serializers.ModelSerializer):
 
     def check_for_changes(self, channel):
         return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).count() > 0
+
+    def get_resource_count(self, channel):
+        return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
+
+    def get_date_created(self, channel):
+        return channel.main_tree.created
+
+    def get_date_modified(self, channel):
+        return channel.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
+
+    def check_published(self, channel):
+        return channel.main_tree.published
+
+    def generate_thumbnail_url(self, channel):
+        if channel.thumbnail and 'static' not in channel.thumbnail:
+            return generate_storage_url(channel.thumbnail)
+        return '/static/img/kolibri_placeholder.png'
+
+
+class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+    has_changed = serializers.SerializerMethodField('check_for_changes')
+    main_tree = RootNodeSerializer(read_only=True)
+    staging_tree = RootNodeSerializer(read_only=True)
+    trash_tree = RootNodeSerializer(read_only=True)
+    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+    created = serializers.SerializerMethodField('get_date_created')
+    updated = serializers.SerializerMethodField('get_date_updated')
+    tags = TagSerializer(many=True, read_only=True)
+    primary_token = serializers.SerializerMethodField('get_channel_primary_token')
+
+    def get_date_created(self, channel):
+        return channel.main_tree.created.strftime("%X %x")
+
+    def get_date_updated(self, channel):
+        return channel.staging_tree.created.strftime("%X %x") if channel.staging_tree else None
 
     @staticmethod
     def setup_eager_loading(queryset):
@@ -614,47 +643,31 @@ class ChannelSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
-            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences', 'language')
+            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences',
+            'language', 'primary_token', 'priority')
 
 
-class AccessibleChannelListSerializer(serializers.ModelSerializer):
+class AccessibleChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     size = serializers.SerializerMethodField("get_resource_size")
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
     main_tree = RootNodeSerializer(read_only=True)
 
-    def get_date_created(self, channel):
-        return channel.main_tree.created
-
     def get_resource_size(self, channel):
         return channel.get_resource_size()
-
-    def get_resource_count(self, channel):
-        return channel.main_tree.get_descendant_count()
 
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'size', 'count', 'version', 'deleted', 'main_tree')
 
 
-class ChannelListSerializer(serializers.ModelSerializer):
+class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
-
-    def get_date_created(self, channel):
-        return channel.main_tree.created
-
-    def get_date_modified(self, channel):
-        return channel.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
-
-    def get_resource_count(self, channel):
-        return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
-
-    def check_published(self, channel):
-        return channel.main_tree.published
+    primary_token = serializers.SerializerMethodField('get_channel_primary_token')
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
@@ -663,37 +676,54 @@ class ChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'modified', 'language',
+        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'modified', 'language', 'primary_token', 'priority',
                   'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'preferences')
 
-class AltChannelListSerializer(serializers.ModelSerializer):
+class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
-
-    def get_date_created(self, channel):
-        return channel.main_tree.created
-
-    def get_date_modified(self, channel):
-        return channel.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
-
-    def get_resource_count(self, channel):
-        return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
-
-    def check_published(self, channel):
-        return channel.main_tree.published
-
-    def generate_thumbnail_url(self, channel):
-        if channel.thumbnail and 'static' not in channel.thumbnail:
-            return generate_storage_url(channel.thumbnail)
-        return '/static/img/kolibri_placeholder.png'
+    primary_token = serializers.SerializerMethodField('get_channel_primary_token')
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language',
+        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language', 'primary_token', 'priority',
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
+
+class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+    count = serializers.SerializerMethodField("get_resource_count")
+    kind_count = serializers.SerializerMethodField('generate_kind_count')
+    size = serializers.SerializerMethodField('calculate_size')
+    thumbnail_base64 = serializers.SerializerMethodField('generate_base64')
+
+    def calculate_size(self, channel):
+        sizes = ContentNode.objects\
+            .prefetch_related('assessment_items')\
+            .prefetch_related('files')\
+            .filter(tree_id=channel.main_tree.tree_id)\
+            .values('files__checksum', 'assessment_items__files__checksum', 'files__file_size', 'assessment_items__files__file_size')\
+            .distinct()\
+            .aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
+        return (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0)
+
+    def generate_kind_count(self, channel):
+        return list(channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
+
+    def generate_base64(self, channel):
+        if channel.render_thumbnail:
+            if channel.thumbnail_encoding:
+                return json.loads(channel.thumbnail_encoding.replace('u\'', '"').replace('\'', '"')).get('base64')
+            elif channel.thumbnail:
+                checksum, _ext = os.path.splitext(channel.thumbnail)
+                filepath = generate_file_on_disk_name(checksum, channel.thumbnail)
+                return encode_file_to_base64(filepath, 'data:image/png;base64,')
+        return ""
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'name', 'language', 'description', 'count', 'version', 'kind_count', 'size', 'thumbnail_base64')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -724,7 +754,7 @@ class UserChannelListSerializer(serializers.ModelSerializer):
         fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks')
 
 
-class AdminChannelListSerializer(serializers.ModelSerializer):
+class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     published = serializers.SerializerMethodField('check_published')
     count = serializers.SerializerMethodField("compute_item_count")
     created = serializers.SerializerMethodField('get_date_created')
@@ -732,26 +762,18 @@ class AdminChannelListSerializer(serializers.ModelSerializer):
     download_url = serializers.SerializerMethodField('generate_db_url')
     editors = UserChannelListSerializer(many=True, read_only=True)
     viewers = UserChannelListSerializer(many=True, read_only=True)
+    primary_token = serializers.SerializerMethodField('get_channel_primary_token')
 
     def generate_db_url(self, channel):
         return "{path}{id}.sqlite3".format(path=settings.CONTENT_DATABASE_URL, id=channel.pk)
 
-    def get_date_created(self, channel):
-        return channel.main_tree.created
-
-    def get_date_modified(self, channel):
-        return channel.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
-
     def compute_item_count(self, channel):
         return channel.main_tree.get_descendant_count()
 
-    def check_published(self, channel):
-        return channel.main_tree.published
-
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree',
-                  'description', 'count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url')
+        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree', 'description', 'count',
+                  'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token', 'priority')
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
     class Meta:
