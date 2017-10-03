@@ -979,8 +979,11 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       'click .upload_item_checkbox': 'check_item',
       'click .uploaded_list_item' : 'select_item',
   },
-  remove_topic: function(){
+  remove_topic: function(event){
+      event.stopImmediatePropagation();
+      this.cancel_actions(event);
       this.delete(true, "");
+      this.remove();
   },
   check_item:function(){
       this.handle_checked();
