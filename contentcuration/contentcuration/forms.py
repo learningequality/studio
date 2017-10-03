@@ -153,9 +153,18 @@ class ProfileSettingsForm(UserChangeForm):
         user.save()
         return user
 
-MASTERY = tuple([(k, _(v)) for k,v in [t for t in exercises.MASTERY_MODELS] if k != "skill_check"])
-LANGUAGES = [(l['id'], _(l['readable_name'])) for l in Language.objects.values('id', 'readable_name').order_by('readable_name')]
-LANGUAGES.insert(0, (None, _("Select a language"))) # Add default option if no language is selected
+MASTERY = ()
+LANGUAGES = ()
+LICENSES = ()
+
+# Need to add this to allow migrate command (compiles forms.py before files are written)
+try:
+    MASTERY = tuple([(k, _(v)) for k,v in [t for t in exercises.MASTERY_MODELS] if k != "skill_check"])
+    LANGUAGES = [(l['id'], _(l['readable_name'])) for l in Language.objects.values('id', 'readable_name').order_by('readable_name')]
+    LANGUAGES.insert(0, (None, _("Select a language"))) # Add default option if no language is selected
+    LICENSES = ((None, _("Select a license")),) + licenses.choices
+except Exception:
+    pass
 
 class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
