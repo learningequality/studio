@@ -47,11 +47,15 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('channel_id', type=str)
         parser.add_argument('--force', action='store_true', dest='force', default=False)
+        parser.add_argument('--user_id', dest='user_id', default=None)
+        parser.add_argument('--force-exercises', action='store_true', dest='force-exercises', default=False)
 
     def handle(self, *args, **options):
         # license_id = options['license_id']
         channel_id = options['channel_id']
         force = options['force']
+        user_id = options['user_id']
+        force_exercises = options['force-exercises']
 
         # license = ccmodels.License.objects.get(pk=license_id)
         try:
@@ -65,7 +69,7 @@ class Command(BaseCommand):
                 prepare_export_database(tempdb)
                 map_content_tags(channel)
                 map_channel_to_kolibri_channel(channel)
-                map_content_nodes(channel.main_tree, channel.language)
+                map_content_nodes(channel.main_tree, channel.language, user_id=user_id, force_exercises=force_exercises)
                 map_prerequisites(channel.main_tree)
                 save_export_database(channel_id)
                 increment_channel_version(channel)
@@ -109,7 +113,7 @@ def map_content_tags(channel):
     logging.info("Finished creating the Kolibri content tags.")
 
 
-def map_content_nodes(root_node, default_language):
+def map_content_nodes(root_node, default_language, user_id=None, force_exercises=False):
 
     # make sure we process nodes higher up in the tree first, or else when we
     # make mappings the parent nodes might not be there
@@ -138,8 +142,8 @@ def map_content_nodes(root_node, default_language):
 
                     if node.kind.kind == content_kinds.EXERCISE:
                         exercise_data = process_assessment_metadata(node, kolibrinode)
-                        if node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
-                            create_perseus_exercise(node, kolibrinode, exercise_data)
+                        if force_exercises or node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
+                            create_perseus_exercise(node, kolibrinode, exercise_data, user_id=user_id)
                     create_associated_file_objects(kolibrinode, node)
                     map_tags_to_node(kolibrinode, node)
 
@@ -229,7 +233,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
         )
 
 
-def create_perseus_exercise(ccnode, kolibrinode, exercise_data):
+def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename = "{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
@@ -246,6 +250,7 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data):
             preset_id=format_presets.EXERCISE,
             original_filename=filename,
             file_size=file_size,
+            uploaded_by_id=user_id,
         )
         logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
 
@@ -350,7 +355,7 @@ def write_assessment_item(assessment_item, zf):
         raise TypeError("Unrecognized question type on item {}".format(assessment_item.assessment_id))
 
     question = process_formulas(assessment_item.question)
-    question, question_images = process_image_strings(question)
+    question, question_images = process_image_strings(question, zf)
 
     answer_data = json.loads(assessment_item.answers)
     for answer in answer_data:
@@ -360,7 +365,7 @@ def write_assessment_item(assessment_item, zf):
             answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
             answer['answer'] = process_formulas(answer['answer'])
             # In case perseus doesn't support =wxh syntax, use below code
-            answer['answer'], answer_images = process_image_strings(answer['answer'])
+            answer['answer'], answer_images = process_image_strings(answer['answer'], zf)
             answer.update({'images': answer_images})
 
     answer_data = list(filter(lambda a: a['answer'] or a['answer'] == 0, answer_data)) # Filter out empty answers, but not 0
@@ -368,7 +373,7 @@ def write_assessment_item(assessment_item, zf):
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
         hint['hint'] = process_formulas(hint['hint'])
-        hint['hint'], hint_images = process_image_strings(hint['hint'])
+        hint['hint'], hint_images = process_image_strings(hint['hint'], zf)
         hint.update({'images': hint_images})
 
     context = {
@@ -390,18 +395,28 @@ def process_formulas(content):
     return content
 
 
-def process_image_strings(content):
+def process_image_strings(content, zf):
     image_list = []
     content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
-    for match in re.finditer(ur'!\[(?:.*)]\((.+)\)', content):
-        img_match = re.search(ur'(.+/images/.+)\s=([0-9\.]+)x([0-9\.]+)*', match.group(1))
+    for match in re.finditer(ur'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
+        img_match = re.search(ur'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', match.group(1))
         if img_match:
-            image_list.append({
-                'name': img_match.group(1),
-                'width': float(img_match.group(2)),
-                'height': float(img_match.group(3)) if img_match.group(3) else None
-            })
+            # Add any image files that haven't been written to the zipfile
+            filename = img_match.group(1).split('/')[-1]
+            checksum, ext = os.path.splitext(filename)
+            image_name = "images/{}.{}".format(checksum, ext[1:])
+            if image_name not in zf.namelist():
+                with open(ccmodels.generate_file_on_disk_name(checksum, filename), 'rb') as imgfile:
+                    write_to_zipfile(image_name, imgfile.read(), zf)
+
+            # Add resizing data
+            if img_match.group(2) and img_match.group(3):
+                image_data = {'name': img_match.group(1)}
+                image_data.update({'width': float(img_match.group(2))})
+                image_data.update({'height': float(img_match.group(3))})
+                image_list.append(image_data)
             content = content.replace(match.group(1), img_match.group(1))
+
     return content, image_list
 
 def map_prerequisites(root_node):

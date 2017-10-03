@@ -15,7 +15,13 @@
                     "choices": [{% for answer in answers %}
                         {
                             "correct": {% if answer.correct %}true{% else %}false{% endif %},
-                            "content": "{{ answer.answer | jsonify   }}"
+                            "content": "{{ answer.answer | jsonify   }}",
+                            "images":{{% for image in answer.images %}
+                                "{{ image.name }}": {
+                                    "width": {{ image.width }},
+                                    "height": {{ image.height }}
+                                }{% if forloop.last %}{% else %},{% endif %}
+                            {% endfor %}}
                         }{% if forloop.last %}{% else %},{% endif %}
                     {% endfor %}],
                     "randomize": {% if randomize %}true{% else %}false{% endif %},

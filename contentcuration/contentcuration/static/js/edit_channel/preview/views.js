@@ -11,7 +11,8 @@ var MESSAGES = {
     "hide_fullscreen": "Hide Fullscreen",
     "select_file": "Select a format to preview.",
     "preview_exercise": "Preview this exercise on the source website",
-    "video_error": "Your browser does not support the video tag."
+    "video_error": "Your browser does not support the video tag.",
+    "image_error": "Image failed to load"
 }
 
 var PreviewModalView = BaseViews.BaseModalView.extend({
@@ -87,7 +88,10 @@ var PreviewView = BaseViews.BaseView.extend({
         var selected_preview = _.find(this.model.get('files'), function(file){return file.preset.id === event.target.getAttribute('value');});
         this.current_preview = selected_preview;
         this.render_preview();
-        this.$("iframe").prop("src", function(){return $(this).data("src");});
+        var self = this;
+        _.defer(function() {
+            self.$("iframe").prop("src", function(){return $(this).data("src");});
+        });
     },
     switch_preview:function(model){
         // called from outside sources
