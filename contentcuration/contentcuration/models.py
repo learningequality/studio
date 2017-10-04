@@ -447,6 +447,7 @@ class License(models.Model):
     license_url = models.URLField(blank=True)
     license_description = models.TextField(blank=True)
     copyright_holder_required = models.BooleanField(default=True)
+    is_custom = models.BooleanField(default=False)
     exists = models.BooleanField(
         default=False,
         verbose_name=_("license exists"),
@@ -522,7 +523,6 @@ class ContentNode(MPTTModel, models.Model):
         if not self.parent and self.kind_id != content_kinds.TOPIC:
             return self
         return super(ContentNode, self).get_root()
-
 
     def __init__(self, *args, **kwargs):
         super(ContentNode, self).__init__(*args, **kwargs)

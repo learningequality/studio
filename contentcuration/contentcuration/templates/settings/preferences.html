@@ -38,7 +38,7 @@
 					<span class="input-group-addon">{% trans "License" %}</span>
 					<select class="form-control setting_change" id="id_license" name="license">
 						{% for x,y in form.fields.license.choices %}
-						    <option value="{{ x }}"{% if form.license.value == x %} selected{% endif %}>{% if x %}{{ x | get_translation }}{% else %}{% trans "Select a license" %}{% endif %}</option>
+						    <option value="{{ x }}"{% if form.license.value == x %} selected{% endif %}>{% if x %}{{ x | get_translation }}{% else %}{% trans "No license selected" %}{% endif %}</option>
 						{% endfor %}
 					</select>
 				</div>

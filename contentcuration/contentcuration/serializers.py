@@ -20,10 +20,9 @@ from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
 
 class LicenseSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = License
-        fields = ('license_name', 'exists', 'id', 'license_url', 'license_description', 'copyright_holder_required')
+        fields = ('license_name', 'exists', 'id', 'license_url', 'license_description', 'copyright_holder_required', 'is_custom')
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -495,7 +494,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
             return False
         elif isoriginal and node.license.copyright_holder_required and not node.copyright_holder:
             return False
-        elif isoriginal and node.license.license_name == licenses.SPECIAL_PERMISSIONS and not node.license_description:
+        elif isoriginal and node.license.is_custom and not node.license_description:
             return False
         elif node.kind_id == content_kinds.EXERCISE:
             for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):

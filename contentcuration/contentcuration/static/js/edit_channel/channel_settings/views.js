@@ -82,7 +82,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         }));
         $("#license_select").val(this.get_license_id(this.model.get("preferences").license));
         $("#mastery_model_select").val(this.model.get("preferences").mastery_model);
-        $("#custom_license_description").css("display", (this.get_license_name()==="Special Permissions")? "block" : "none");
+        $("#custom_license_description").css("display", (this.check_custom_license())? "block" : "none");
         $("#mastery_custom_criterion").css("visibility", ($("#mastery_model_select").val()==="m_of_n")? "visible" : "hidden");
         $("#select_language").val(this.model.get("language") || 0);
     },
@@ -115,6 +115,10 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
     get_license_name: function(){
         var el = $("#license_select");
         return el.val()!=0 && window.licenses.get(el.val()).get("license_name");
+    },
+    check_custom_license: function(){
+        var el = $("#license_select");
+        return el.val()!=0 && window.licenses.get(el.val()).get("is_custom");
     },
     submit_changes:function(){
         var preferences = this.model.get("preferences");
@@ -150,7 +154,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         });
     },
     register_changes:function(){
-        $("#custom_license_description").css("display", (this.get_license_name()==="Special Permissions")? "block" : "none");
+        $("#custom_license_description").css("display", (this.check_custom_license())? "block" : "none");
         $("#mastery_custom_criterion").css("visibility", ($("#mastery_model_select").val()==="m_of_n")? "visible" : "hidden");
         if(Number($("#m_value").val()) > Number($("#n_value").val())) {
             $("#n_value").val($("#m_value").val());

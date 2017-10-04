@@ -15,8 +15,6 @@ import os
 import re
 import logging
 
-from le_utils.constants import licenses
-
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
