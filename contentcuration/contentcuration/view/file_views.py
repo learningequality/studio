@@ -179,12 +179,10 @@ def exercise_image_upload(request):
         fobj = request.FILES.values()[0]
         name, ext = os.path.splitext(fobj._name)
         checksum = get_hash(DjFile(fobj))
-        request.user.check_space(fobj._size, checksum)
         file_object = File(
             preset_id=format_presets.EXERCISE_IMAGE,
             file_on_disk=DjFile(request.FILES.values()[0]),
             file_format_id=ext[1:].lower(),
-            uploaded_by=request.user,
         )
         file_object.save()
         return HttpResponse(json.dumps({

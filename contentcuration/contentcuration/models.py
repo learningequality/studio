@@ -118,8 +118,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         active_size = float(active_files.aggregate(used=Sum('file_size'))['used'] or 0)
 
         staging_tree_id = channel.staging_tree.tree_id
-        channel_files = self.files.select_related('contentnode').select_related('assessment_item')\
-                            .filter(Q(contentnode__tree_id=staging_tree_id) | Q(assessment_item__contentnode__tree_id=staging_tree_id))\
+        channel_files = self.files.select_related('contentnode')\
+                            .filter(contentnode__tree_id=staging_tree_id)\
                             .values('checksum', 'file_size')\
                             .distinct()\
                             .exclude(checksum__in=active_files.values_list('checksum', flat=True))

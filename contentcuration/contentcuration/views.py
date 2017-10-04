@@ -255,7 +255,7 @@ def publish_channel(request):
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        call_command("exportchannel", channel_id)
+        call_command("exportchannel", channel_id, user_id=request.user.pk)
         return HttpResponse(json.dumps({
             "success": True,
             "channel": channel_id
