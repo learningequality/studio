@@ -69,7 +69,7 @@ var MESSAGES = {
     "out_of_space": "Out of Disk Space",
     "out_of_space_text": "You don't have enough space to save these files. Request more space under the Settings > Account page.",
     "open_settings": "Open Settings",
-    "ok": "OK"
+    "ok": "OK",
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -831,10 +831,12 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     autoCompleteHelper.addAutocomplete($( "#tag_box" ), tags, this.select_tag, "#tag_area_wrapper");
   },
   load_license:function(){
-    var iscopied = this.selected_individual() && !this.selected_items[0].isoriginal
-    var license_modal = new Info.LicenseModalView({
-      select_license : window.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()})
-    });
+    if (this.selected_items.length){
+      var license_modal = new Info.LicenseModalView({
+        select_license : window.licenses.get({id: this.selected_items[0].model.get("license")})
+      });
+    }
+
   },
   load_mastery:function(){
     new Info.MasteryModalView();
@@ -993,7 +995,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.set_edited(this.new_content);
       this.load_tags();
       this.uploads_in_progress = 0;
-      this.isoriginal = !this.model.get("original_channel") || this.model.get("original_channel").id == window.current_channel.id;
+      this.isoriginal = !this.model.get("freeze_authoring_data");
       this.listenTo(this.model, "change:title", this.update_name);
   },
   render: function() {

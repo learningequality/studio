@@ -512,7 +512,7 @@ class ContentNode(MPTTModel, models.Model):
     extra_fields = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"),
                               null=True)
-    freeze_authoring_data = models.BooleanField(default=True)
+    freeze_authoring_data = models.BooleanField(default=False)
 
     objects = TreeManager()
 
