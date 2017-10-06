@@ -6,8 +6,8 @@ from django.core.exceptions import ValidationError as DjangoValidationError, Per
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
-from pressurecooker.encodings import encode_file_to_base64
 from django.utils.translation import ugettext as _
+from itertools import chain
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -688,12 +688,25 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     count = serializers.SerializerMethodField("get_resource_count")
     kind_count = serializers.SerializerMethodField('generate_kind_count')
     size = serializers.SerializerMethodField('calculate_size')
-    thumbnail_base64 = serializers.SerializerMethodField('generate_base64')
+    included_languages = serializers.SerializerMethodField('get_languages')
+    matching_tokens = serializers.SerializerMethodField('match_tokens')
+
+    def match_tokens(self, channel):
+        tokens = json.loads(channel.tokens)
+        return list(channel.secret_tokens.filter(token__in=tokens).values_list('token', flat=True))
+
+    def get_languages(self, channel):
+        published_nodes = channel.main_tree.get_descendants().filter(published=True)
+        node_languages = published_nodes.exclude(language=None).values_list('language', flat=True)
+        file_languages = published_nodes.values_list('files__language', flat=True)
+        language_list = list(set(chain(node_languages, file_languages)))
+        return [x for x in language_list if x is not None]
 
     def calculate_size(self, channel):
         sizes = ContentNode.objects\
             .prefetch_related('assessment_items')\
             .prefetch_related('files')\
+            .filter(published=True)\
             .filter(tree_id=channel.main_tree.tree_id)\
             .values('files__checksum', 'assessment_items__files__checksum', 'files__file_size', 'assessment_items__files__file_size')\
             .distinct()\
@@ -701,21 +714,12 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
         return (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0)
 
     def generate_kind_count(self, channel):
-        return list(channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
-
-    def generate_base64(self, channel):
-        if channel.render_thumbnail:
-            if channel.thumbnail_encoding:
-                return json.loads(channel.thumbnail_encoding.replace('u\'', '"').replace('\'', '"')).get('base64')
-            elif channel.thumbnail:
-                checksum, _ext = os.path.splitext(channel.thumbnail)
-                filepath = generate_file_on_disk_name(checksum, channel.thumbnail)
-                return encode_file_to_base64(filepath, 'data:image/png;base64,')
-        return ""
+        return list(channel.main_tree.get_descendants().filter(published=True).values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
 
     class Meta:
         model = Channel
-        fields = ('id', 'name', 'language', 'description', 'count', 'version', 'kind_count', 'size', 'thumbnail_base64')
+        fields = ('id', 'name', 'language', 'included_languages', 'description', 'count', 'version',
+                  'kind_count', 'size', 'date_published', 'icon_encoding', 'matching_tokens', 'public')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
