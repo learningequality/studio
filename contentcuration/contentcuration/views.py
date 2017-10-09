@@ -32,7 +32,7 @@ def health(request):
     return HttpResponse(Channel.objects.first().name)
 
 def stealth(request):
-    return HttpResponse("500")
+    return HttpResponse("<3")
 
 def unsupported_browser(request):
     return render(request, 'unsupported_browser.html')
