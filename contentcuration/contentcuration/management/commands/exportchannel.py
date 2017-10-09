@@ -300,7 +300,6 @@ def process_assessment_metadata(ccnode, kolibrinode):
 
     return exercise_data
 
-
 def create_perseus_zip(ccnode, exercise_data, write_to_path):
     with zipfile.ZipFile(write_to_path, "w") as zf:
         try:
