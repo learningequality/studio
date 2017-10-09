@@ -685,7 +685,7 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    resource_count = serializers.SerializerMethodField("get_resource_count")
+    total_resource_count = serializers.SerializerMethodField("get_resource_count")
     kind_count = serializers.SerializerMethodField('generate_kind_count')
     size = serializers.SerializerMethodField('calculate_size')
     included_languages = serializers.SerializerMethodField('get_languages')
@@ -718,7 +718,7 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'name', 'language', 'included_languages', 'description', 'resource_count', 'version',
+        fields = ('id', 'name', 'language', 'included_languages', 'description', 'total_resource_count', 'version',
                   'kind_count', 'size', 'date_published', 'icon_encoding', 'matching_tokens', 'public')
 
 class UserSerializer(serializers.ModelSerializer):
