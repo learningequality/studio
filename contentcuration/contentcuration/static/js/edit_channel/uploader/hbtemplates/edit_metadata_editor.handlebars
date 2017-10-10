@@ -1,3 +1,4 @@
+<div id="editor_errors" class="alert alert-danger text-center" role="alert"></div>
 {{#if none_selected}}
 	<div id="uploader-default-prompt" class="text-center container-fluid">{{formatMessage (intlGet 'messages.select_to_edit')}}</div>
 {{else}}
@@ -10,6 +11,7 @@
 		<hr/>
 		<br/>
 	{{/if}}
+	<div class="container-fluid">
 	<div class="pull-right">
 		<label id="language_label">{{formatMessage (intlGet 'messages.language')}}</label>
 		<select id="select_language" class="tab_item">
@@ -17,6 +19,7 @@
 			<option disabled value=0>---</option>
 			{{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
 		</select>
+	</div>
 	</div>
 	{{#if node}}
 		<h4>{{formatMessage (intlGet 'messages.title')}}<label class="required">*<span id="title_error">{{formatMessage (intlGet 'messages.title_error')}}</span></label></h4>
@@ -27,7 +30,7 @@
 		<select id="mastery_model_select" class="tab_item">
 			<option disabled value=0>---</option>
 			<option value="num_correct_in_a_row_2" selected>{{#translate "num_correct_in_a_row_2"}}{{/translate}}</option>
-			<option value="num_correct_in_a_row_3" selected>{{#translate "num_correct_in_a_row_3"}}{{/translate}}</option>
+			<option value="num_correct_in_a_row_3">{{#translate "num_correct_in_a_row_3"}}{{/translate}}</option>
 			<option value="num_correct_in_a_row_5">{{#translate "num_correct_in_a_row_5"}}{{/translate}}</option>
 			<option value="num_correct_in_a_row_10">{{#translate "num_correct_in_a_row_10"}}{{/translate}}</option>
 			<option value="do_all">{{#translate "do_all"}}{{/translate}}</option>
@@ -42,6 +45,7 @@
 		<br/>
 		<br/>
 	{{/if}}
+	<hr/>
 	{{#if isoriginal}}
 		{{#unless node}}<div class="input-tab-control tab_item" data-next="#author_field"></div>{{/unless}}
 		<h4>{{formatMessage (intlGet 'messages.author')}}</h4>
@@ -60,14 +64,15 @@
 		        <textarea id="custom_license_description" class="input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.license_description_placeholder')}}"></textarea>
 			</div>
 			<div class="content_nodes_only col-sm-6">
-				<h4>{{formatMessage (intlGet 'messages.copyright_holder')}}</h4>
-				<input type="text" id="input_license_owner" class="license_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.copyright_holder_placeholder')}}" maxlength="200" value="{{copyright_owner}}"/>
+				<div id="copyright_holder_wrapper">
+					<h4>{{formatMessage (intlGet 'messages.copyright_holder')}} <label class="required">*</label></h4>
+					<input type="text" id="input_license_owner" class="license_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.copyright_holder_placeholder')}}" maxlength="200" value="{{copyright_owner}}"/>
+				</div>
 			</div>
 		</div>
 		{{/if}}
 	{{else}}
 		{{#if node}}
-		<hr/>
 		<p class="uploader-copied-warning">{{formatMessage (intlGet 'messages.readonly')}} <b>{{node.original_channel.name}}</b></p>
 		{{/if}}
 		<div class="row">
@@ -88,9 +93,9 @@
 				<p class="upload_input">{{copyright_owner}}</p>
 			</div>
 		</div>
-		<hr/>
-		<br/>
 	{{/if}}
+	<hr/>
+	<br/>
 	{{#if node}}
 		<h4>{{formatMessage (intlGet 'messages.description')}} {{#if node}}<i id="description_counter" class="pull-right">{{formatMessage (intlGet 'messages.chars_left') data=word_limit}}</i>{{/if}}</h4>
 		<textarea id="input_description" class="upload_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" value='{{node.description}}'>{{node.description}}</textarea>

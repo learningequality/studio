@@ -89,7 +89,7 @@ class Command(BaseCommand):
 
 
 def create_kolibri_license_object(ccnode):
-    use_license_description = ccnode.license.license_name != licenses.SPECIAL_PERMISSIONS
+    use_license_description = not ccnode.license.is_custom
     return kolibrimodels.License.objects.get_or_create(
         license_name=ccnode.license.license_name,
         license_description=ccnode.license.license_description if use_license_description else ccnode.license_description
@@ -303,7 +303,6 @@ def process_assessment_metadata(ccnode, kolibrinode):
     )
 
     return exercise_data
-
 
 def create_perseus_zip(ccnode, exercise_data, write_to_path):
     with zipfile.ZipFile(write_to_path, "w") as zf:

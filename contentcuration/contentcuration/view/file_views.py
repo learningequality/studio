@@ -60,7 +60,7 @@ def file_create(request):
         preferences = json.loads(request.META.get('HTTP_PREFERENCES'))
         author = preferences.get('author') or ""
         license = License.objects.filter(license_name=preferences.get('license')).first()  # Use filter/first in case preference hasn't been set
-        license_id = license.pk if license else settings.DEFAULT_LICENSE
+        license_id = license.pk if license else None
         new_node = ContentNode(
             title=original_filename,
             kind=kind,
@@ -68,7 +68,7 @@ def file_create(request):
             author=author,
             copyright_holder=preferences.get('copyright_holder'),
         )
-        if license.license_name == licenses.SPECIAL_PERMISSIONS:
+        if license and license.is_custom:
             new_node.license_description = preferences.get('license_description')
         new_node.save()
         file_object = File(

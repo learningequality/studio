@@ -23,6 +23,7 @@
             <div class="content_nodes_only col-sm-6">
                 <h4>{{formatMessage (intlGet 'messages.license')}}</h4>
                 <select id="license_select" class="input_listener tab_item">
+                    <option value=0>{{formatMessage (intlGet 'messages.no_license')}}</option>
                     {{#each licenses}}
                         <option value={{id}}>{{#translate license_name}}{{/translate}}</option>
                     {{/each}}
@@ -50,12 +51,16 @@
                 <input type="number" class="input_listener tab_item" id="n_value" min="1" max="20" value="{{preferences.n_value}}" maxlength="2" size="2"/>
             </span>
         </div>
+        <div>
+            <input id="auto_randomize_questions" class="input_listener tab_item" type="checkbox" {{#if preferences.auto_randomize_questions}}checked{{/if}}/>
+            <label for="auto_randomize_questions">&nbsp;{{formatMessage (intlGet 'messages.randomize_question_order')}}</label>
+        </div>
         <br/>
         <h4>{{formatMessage (intlGet 'messages.auto_thumbnail')}}</h4>
-        <input type="checkbox" class="input_listener tab_item" id="auto_video_thumbnail" {{#if preferences.auto_derive_video_thumbnail}}checked{{/if}}><label for="auto_video_thumbnail">{{formatMessage (intlGet 'messages.videos')}}</label>
-        <input type="checkbox" class="input_listener tab_item" id="auto_audio_thumbnail" {{#if preferences.auto_derive_audio_thumbnail}}checked{{/if}}><label for="auto_audio_thumbnail">{{formatMessage (intlGet 'messages.audio')}}</label>
-        <input type="checkbox" class="input_listener tab_item" id="auto_html5_thumbnail" {{#if preferences.auto_derive_html5_thumbnail}}checked{{/if}}><label for="auto_html5_thumbnail">{{formatMessage (intlGet 'messages.html')}}</label>
-        <input type="checkbox" class="input_listener tab_item" id="auto_document_thumbnail" {{#if preferences.auto_derive_document_thumbnail}}checked{{/if}}><label for="auto_document_thumbnail">{{formatMessage (intlGet 'messages.documents')}}</label>
+        <input type="checkbox" class="input_listener tab_item thumbnail_option" id="auto_video_thumbnail" {{#if preferences.auto_derive_video_thumbnail}}checked{{/if}}><label for="auto_video_thumbnail">{{formatMessage (intlGet 'messages.videos')}}</label>
+        <input type="checkbox" class="input_listener tab_item thumbnail_option" id="auto_audio_thumbnail" {{#if preferences.auto_derive_audio_thumbnail}}checked{{/if}}><label for="auto_audio_thumbnail">{{formatMessage (intlGet 'messages.audio')}}</label>
+        <input type="checkbox" class="input_listener tab_item thumbnail_option" id="auto_html5_thumbnail" {{#if preferences.auto_derive_html5_thumbnail}}checked{{/if}}><label for="auto_html5_thumbnail">{{formatMessage (intlGet 'messages.html')}}</label>
+        <input type="checkbox" class="input_listener tab_item thumbnail_option" id="auto_document_thumbnail" {{#if preferences.auto_derive_document_thumbnail}}checked{{/if}}><label for="auto_document_thumbnail">{{formatMessage (intlGet 'messages.documents')}}</label>
     </div>
 </div>
 <div class="modal-bottom-content-default">
