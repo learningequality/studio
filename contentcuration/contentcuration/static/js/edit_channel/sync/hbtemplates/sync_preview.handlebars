@@ -73,14 +73,14 @@
 						<ul class="list-unstyled">
 							{{#each current}}
 								<li class="list_subitem file_subitem original" data-model='{{#to_json this}}{{/to_json}}' data-current=1 title="{{formatMessage (intlGet 'messages.deleted')}}" id="file_{{id}}">
-									<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{#translate id}}{{/translate}}
+									<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{#translate preset.id}}{{/translate}}
 									<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
 									<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
 								</li>
 							{{/each}}
 							{{#each source}}
 								<li class="list_subitem file_subitem updated" data-model='{{#to_json this}}{{/to_json}}' data-current=0 title="{{formatMessage (intlGet 'messages.added')}}" id="file_{{id}}">
-									<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{#translate id}}{{/translate}}
+									<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{#translate preset.id}}{{/translate}}
 									<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
 									<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
 								</li>
