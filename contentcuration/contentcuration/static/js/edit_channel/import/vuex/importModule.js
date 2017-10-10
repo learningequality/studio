@@ -1,6 +1,7 @@
 var mutations = require('./importMutations');
 var actions = require('./importActions');
 var getters = require('./importGetters');
+var { PageTypes } = require('../constants');
 
 module.exports = {
   namespaced: true,
@@ -15,7 +16,7 @@ module.exports = {
     channelsAreLoading: false,
     channels: [],
     pageState: {
-      pageType: 'tree_view',
+      pageType: PageTypes.TREE_VIEW,
       data: {},
     }
   },

@@ -2,7 +2,7 @@
 
   <div>
     <!-- SEARCH FORM -->
-    <div>
+    <div v-if="!isImportPreview">
       <form @submit="submitSearch" :disabled="!searchTermIsValid" class="SearchForm">
         <input
           class="search-input"
@@ -16,7 +16,7 @@
           @click.prevent="submitSearch"
           :disabled="!searchTermIsValid"
         >
-          {{ $tr('searchButtonLabel')  }}
+          {{ $tr('searchButtonLabel') }}
         </button>
       </form>
     </div>
@@ -30,28 +30,22 @@
 
     <div id="import_bottom_container" class="modal-bottom-content-default">
       <a class="action-text uppercase" data-dismiss="modal">
-        <span>{{ $tr('cancelButtonLabel')  }}</span>
+        <span>{{ $tr('cancelButtonLabel') }}</span>
       </a>
       <button
         class="action-button pull-right modal-main-action-button"
         id="import_content_submit"
-        @click="handleClickImport"
-        :disabled="!importIsEnabled"
+        @click="handleClickNext"
+        v-if="importIsEnabled"
       >
-        <span v-if="!importIsEnabled">
-          {{ $tr('selectContentPrompt')  }}
-        </span>
-        <span v-else class="uppercase">
-          {{ $tr('importButtonLabel')  }}
+        <span class="uppercase">
+          {{ submitButtonLabel }}
         </span>
       </button>
-      <span id="import_file_metadata" class="pull-right">
+      <span v-show="!isImportPreview" id="import_file_metadata" class="pull-right">
         <span id="import_file_count">
-          {{ $tr('importCountText', {'topicCount': topicCount, 'resourceCount': resourceCount})  }}
+          {{ $tr('importCountText', {'topicCount': topicCount, 'resourceCount': resourceCount}) }}
         </span>
-        <em id="import_file_size">
-          ({{ importFileSizeInWords }})
-        </em>
       </span>
     </div>
   </div>
@@ -61,24 +55,25 @@
 
 <script>
 
-const stringHelper = require('../../utils/string_helper');
-const { hasRelatedContent } = require('../util');
-const { mapGetters, mapState, mapActions, mapMutations } = require('vuex');
-const  { pluralize } = require('./filters');
+import { hasRelatedContent } from '../util';
+import { mapGetters, mapState, mapActions, mapMutations } from 'vuex';
+import  { pluralize } from './filters';
+import { PageTypes } from '../constants';
+import ImportChannelList from './ImportChannelList.vue';
 
-module.exports = {
+export default {
   name: 'ImportDialogue',
   $trs: {
-    'searchButtonLabel': "Search",
-    'cancelButtonLabel': "Cancel",
-    'selectContentPrompt': "Select content to import...",
-    'importButtonLabel': "Import",
-    'importCountText': "{topicCount, plural, =1 {# Topic} other {# Topics}}, {resourceCount, plural, =1 {# Resource} other {# Resources}}",
-    'calculatingSizeText': "Calculating Size...",
-    'searchPrompt': "What are you looking for?"
+    cancelButtonLabel: 'Cancel',
+    continue: 'Continue',
+    import: 'Import',
+    importCountText: '{topicCount, plural, =1 {# Topic} other {# Topics}}, {resourceCount, plural, =1 {# Resource} other {# Resources}}',
+    searchButtonLabel: 'Search',
+    searchPrompt: 'What are you looking for?',
+    selectContentPrompt: 'Select content to import...',
   },
   components: {
-    ImportChannelList: require('./ImportChannelList.vue'),
+    ImportChannelList,
   },
   data() {
     return {
@@ -88,7 +83,6 @@ module.exports = {
   computed: Object.assign(
     mapState('import', [
       'itemsToImport',
-      'importSizeInBytes',
     ]),
     mapGetters('import', [
       'importedItemCounts',
@@ -108,18 +102,21 @@ module.exports = {
       resourceCount() {
         return this.importedItemCounts.resources;
       },
-      importFileSizeInWords() {
-        if (this.importSizeInBytes < 0) {
-          return this.$tr('calculatingSizeText');
-        }
-        return `${stringHelper.format_size(this.importSizeInBytes)}`;
+      isImportPreview() {
+        return this.currentImportPage === PageTypes.IMPORT_PREVIEW;
       },
-    },
+      submitButtonLabel() {
+        if (this.isImportPreview) {
+          return this.$tr('import');
+        }
+        return this.$tr('continue');
+      },
+    }
   ),
   watch: {
     currentImportPage(newVal, oldVal) {
       // HACK to clear out search terms when user clicks 'back' on results
-      if (newVal === 'tree_view' && oldVal === 'search_results') {
+      if (newVal === PageTypes.TREE_VIEW && oldVal === PageTypes.SEARCH_RESULTS) {
         this.searchTerm = '';
       }
     }
@@ -130,6 +127,7 @@ module.exports = {
     }),
     mapActions('import', [
       'goToSearchResults',
+      'goToImportPreview',
     ]),
     {
       submitSearch() {
@@ -137,16 +135,21 @@ module.exports = {
         if (this.currentSearchTerm === this.searchTerm) return;
         this.goToSearchResults({ searchTerm: this.searchTerm });
       },
-      handleClickImport() {
-        // Check to see if imports have related content
-        if (hasRelatedContent(this.itemsToImport)) {
-          this.updateImportStatus('show_warning');
-        } else {
-          // Triggers import action from ImportModal BB View
-          this.updateImportStatus('import_confirmed');
+      handleClickNext() {
+        if (this.currentImportPage === PageTypes.SEARCH_RESULTS || this.currentImportPage === PageTypes.TREE_VIEW) {
+          return this.goToImportPreview();
+        }
+        if (this.currentImportPage === PageTypes.IMPORT_PREVIEW) {
+          // Check to see if imports have related content
+          if (hasRelatedContent(this.itemsToImport)) {
+            return this.updateImportStatus('show_warning');
+          } else {
+            // Triggers import action from ImportModal BB View
+            return this.updateImportStatus('import_confirmed');
+          }
         }
       }
-    },
+    }
   ),
   filters: {
     pluralize,
