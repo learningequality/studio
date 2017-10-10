@@ -11,9 +11,8 @@ from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponse
 from django.utils.translation import ugettext as _
-from le_utils.constants import format_presets, content_kinds
+from le_utils.constants import format_presets, content_kinds, file_formats
 import contentcuration.models as models
-
 
 def check_supported_browsers(user_agent_string):
     if not user_agent_string:
@@ -62,6 +61,12 @@ def write_raw_content_to_storage(contents, ext=None):
         destf.write(contents)
 
     return filename, full_filename, file_path
+
+def get_hash(fobj):
+    md5 = hashlib.md5()
+    for chunk in fobj.chunks():
+        md5.update(chunk)
+    return md5.hexdigest()
 
 
 def recurse(node, level=0):
@@ -196,11 +201,14 @@ def add_editor_to_channel(invitation):
     invitation.delete()
 
 
-def activate_channel(channel):
+def activate_channel(channel, user):
+    user.check_channel_space(channel)
     channel.previous_tree = channel.main_tree
     channel.main_tree = channel.staging_tree
     channel.staging_tree = None
     channel.save()
+
+    user.staged_files.all().delete()
 
 
 def get_staged_diff(channel_id):
@@ -276,3 +284,29 @@ def get_staged_diff(channel_id):
     })
 
     return stats
+
+def compress_nodes(ids, ffmpeg_settings=None, overwrite=False):
+    from contentcuration.utils.files import compress_video_wrapper
+
+    for node in models.ContentNode.objects.filter(pk__in=ids):
+        if node.kind_id == content_kinds.VIDEO:
+            logging.debug("Compressing {}...".format(node.title))
+            uncompressed_file = node.files.filter(preset_id=format_presets.VIDEO_HIGH_RES).first()\
+                                or node.files.filter(preset_id=format_presets.VIDEO_LOW_RES).first()
+            if uncompressed_file:
+                compressed_file = compress_video_wrapper(uncompressed_file, ffmpeg_settings=ffmpeg_settings)
+                logging.debug("   Compressed file {} to {}".format(str(uncompressed_file), str(compressed_file)))
+
+                compressed_file.contentnode = node
+                compressed_file.save()
+
+                if overwrite:
+                    uncompressed_file.delete()
+                else:
+                    uncompressed_file.preset_id = format_presets.VIDEO_HIGH_RES
+                    uncompressed_file.save()
+
+        elif node.kind_id == content_kinds.TOPIC:
+            compress_nodes(node.children.values_list('pk', flat=True), ffmpeg_settings=ffmpeg_settings, overwrite=overwrite)
+
+    logging.debug("COMPRESSION COMPLETE")
