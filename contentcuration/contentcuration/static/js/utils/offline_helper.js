@@ -54,7 +54,7 @@ $(function() {
 var language = getOfflineLanguageName(window.languageCode || "en");
 
 Offline.options = {
-	checks: {xhr: {url: window.Urls.health()}},
+	checks: {xhr: {url: window.Urls.stealth()}},
 	language: language, //getOfflineLanguageName(window.languageCode || "en"),
 	theme: "slide",
 	// game:true //Enable to add snake game while waiting for server to reconnect

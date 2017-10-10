@@ -8,8 +8,9 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db.models import Q, Case, When, Value, IntegerField, F
+from django.db.models import Q, Case, When, Value, IntegerField, F, TextField
 from django.core.urlresolvers import reverse_lazy
+from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
 from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User, SecretToken, StagedFile
@@ -29,8 +30,10 @@ def base(request):
 
 
 def health(request):
-    return HttpResponse("500")
+    return HttpResponse(Channel.objects.first().name)
 
+def stealth(request):
+    return HttpResponse("<3")
 
 def unsupported_browser(request):
     return render(request, 'unsupported_browser.html')
@@ -361,31 +364,40 @@ def set_channel_priority(request):
         except ObjectDoesNotExist:
             return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
+
+def _get_channel_list(params, token=None):
+    keyword = params.get('keyword', '').strip()
+    language_id = params.get('language', '').strip()
+    token_list = params.get('tokens', '').strip().replace('-', '').split(',')
+    thumbnail = 1 if params.get('thumbnails') == 'true' else 0
+
+    channels = None
+    if token:
+        channels = Channel.objects.prefetch_related('secret_tokens').filter(secret_tokens__token=token)
+    else:
+        channels = Channel.objects.prefetch_related('secret_tokens').filter(Q(public=True) | Q(secret_tokens__token__in=token_list))
+
+    if keyword != '':
+        channels = channels.prefetch_related('tags').filter(Q(name__icontains=keyword) | Q(description__icontains=keyword) | Q(tags__tag_name__icontains=keyword))
+
+    if language_id != '':
+        matching_tree_ids = ContentNode.objects.prefetch_related('files').filter(Q(language__id__icontains=language_id) | Q(files__language__id__icontains=language_id)).values_list('tree_id', flat=True)
+        channels = channels.select_related('language').filter(Q(language__id__icontains=language_id) | Q(main_tree__tree_id__in=matching_tree_ids))
+
+    return channels.annotate(tokens=Value(json.dumps(token_list), output_field=TextField()))\
+                    .order_by("-priority")\
+                    .distinct()
+
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def get_public_channel_list(request):
-    try:
-        keyword = request.query_params.get('keyword', '').strip()
-        language_id = request.query_params.get('language', '').strip()
-        token = request.query_params.get('token', '').strip().replace('-', '')
-        thumbnail = 1 if request.query_params.get('thumbnails') == 'true' else 0
-        channels = None
+    channel_list = _get_channel_list(request.query_params)
+    return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
 
-        if token != '':
-            channels = Channel.objects.prefetch_related('secret_tokens').filter(Q(public=True) | Q(secret_tokens__contains=token))
-        else:
-            channels = Channel.objects.filter(public=True)
-
-        if keyword != '':
-            channels = channels.prefetch_related('tags').filter(Q(name__icontains=keyword) | Q(description__icontains=keyword) | Q(tags__tag_name__icontains=keyword))
-
-        if language_id != '':
-            channels = channels.select_related('language').filter(Q(language__id__icontains=language_id))
-
-
-        channel_list = channels.annotate(render_thumbnail=Value(thumbnail, output_field=IntegerField()))\
-                        .order_by("-priority")\
-                        .distinct()
-        return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
-    except ObjectDoesNotExist:
-        return HttpResponseNotFound('Channel with token {} not found'.format(token))
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_public_channel_list_by_token(request, token):
+    channel_list = _get_channel_list(request.query_params, token=token.strip().replace('-', ''))
+    if not channel_list.exists():
+        return HttpResponseNotFound(_("No channel matching {} found").format(token))
+    return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))

@@ -306,6 +306,7 @@ class Channel(models.Model):
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True, null=True)
     thumbnail_encoding = models.TextField(blank=True, null=True)
+    icon_encoding = models.TextField(blank=True, null=True)
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='editable_channels',
@@ -336,6 +337,7 @@ class Channel(models.Model):
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
+    last_published = models.DateTimeField(blank=True, null=True)
     secret_tokens = models.ManyToManyField(
         SecretToken,
         related_name='channels',
