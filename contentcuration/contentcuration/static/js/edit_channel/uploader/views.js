@@ -324,6 +324,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.onclose();
   },
   validate: function() {
+    this.render_details();
     var isInvalid = this.edit_list && this.edit_list.validate();
     if(isInvalid) {
       this.disable_submit();
