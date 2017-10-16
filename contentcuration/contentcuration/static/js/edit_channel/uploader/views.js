@@ -69,7 +69,7 @@ var MESSAGES = {
     "out_of_space": "Out of Disk Space",
     "out_of_space_text": "You don't have enough space to save these files. Request more space under the Settings > Account page.",
     "open_settings": "Open Settings",
-    "ok": "OK",
+    "ok": "OK"
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -324,6 +324,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.onclose();
   },
   validate: function() {
+    this.render_details();
     var isInvalid = this.edit_list && this.edit_list.validate();
     if(isInvalid) {
       this.disable_submit();

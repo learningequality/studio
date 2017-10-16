@@ -1,7 +1,7 @@
 <template>
 
   <li class="ListItem" :class="importListItemClass">
-    <template v-if="!isChannel">
+    <template v-if="!isChannel && !readOnly">
       <input
         type="checkbox"
         class="ListItem__Checkbox"
@@ -24,7 +24,7 @@
       <span class="ListItem__Label__Title">
         {{ node.title }}
         <em v-if="isFolder && !isChannel && (resourceCount > 0)" class="ListItem__ChildCount">
-          {{ $tr('resourceCount', {'resourceCount': resourceCount})  }}
+          {{ $tr('resourceCount', {'resourceCount': resourceCount}) }}
         </em>
       </span>
 
@@ -34,12 +34,12 @@
         </template>
 
         <em v-else class="ListItem__ChildCount">
-          {{ $tr('empty')  }}
+          {{ $tr('empty') }}
         </em>
       </template>
 
       <i v-show="(isFolder || isChannel) & isChecked" class="ListItem__Counter badge">
-        {{ $tr('resourceCount', {'resourceCount': resourceCount})  }}
+        {{ $tr('resourceCount', {'resourceCount': resourceCount}) }}
       </i>
     </label>
 
@@ -47,7 +47,7 @@
     <!-- TODO re-insert smooth transition -->
       <div v-show="isExpanded ">
         <em v-show="isLoading" class="default-item">
-          {{ $tr('loading')  }}
+          {{ $tr('loading') }}
         </em>
         <ul class="ListItem__SubList">
           <transition-group name="fade">
@@ -59,6 +59,7 @@
               :isFolder="file.kind ==='topic'"
               :isChannel="false"
               :parentIsChecked="isChecked"
+              :readOnly="readOnly"
             />
           </transition-group>
         </ul>
@@ -70,14 +71,15 @@
 
 <script>
 
-const _ = require('underscore');
-const RequiredBoolean = { type: Boolean, required: true };
-const stringHelper = require('../../utils/string_helper');
-const { fetchContentNodesById, getIconClassForKind } = require('../util');
-const { mapActions } = require('vuex');
-const { pluralize } = require('./filters');
+import _ from 'underscore';
+import stringHelper from '../../utils/string_helper';
+import { fetchContentNodesById, getIconClassForKind } from '../util';
+import { mapActions } from 'vuex';
+import { pluralize } from './filters';
 
-module.exports = {
+const RequiredBoolean = { type: Boolean, required: true };
+
+export default {
   name: 'ImportListItem',
   $trs: {
     'loading': "Loading",
@@ -87,6 +89,10 @@ module.exports = {
   props: {
     isChannel: RequiredBoolean,
     isFolder: RequiredBoolean,
+    readOnly: {
+      type: Boolean,
+      default: false,
+    },
     isRoot: {
       type: Boolean,
       default: false,
@@ -185,7 +191,7 @@ module.exports = {
           this.removeItemFromImportList(this.node.id);
         }
       },
-    },
+    }
   ),
   filters: {
     pluralize,
