@@ -630,19 +630,20 @@ var BaseEditableListView = BaseListView.extend({
 		var self = this;
 	    return new Promise(function(resolve, reject){
 	    	if(beforeSave){ beforeSave(); }
-	    	if(onerror) {
-	    		self.collection.save().then(resolve).catch(function(error) {
-					onerror(error);
+	    	self.display_load(message, function(load_resolve, load_reject){
+	    		self.collection.save().then(function(data){
+	    			resolve(data);
+	    			load_resolve(true);
+	    		}).catch(function(error) {
+	    			if(onerror) {
+	    				onerror(error);
+	    				load_resolve(true);
+	    			} else {
+	    				load_reject(error);
+	    			}
 					reject(error);
 				});
-	    	} else {
-	    		self.display_load(message, function(load_resolve, load_reject){
-					self.collection.save().then(function(collection){
-						resolve(collection);
-						load_resolve(true);
-					}).catch(load_reject);
-			    });
-	    	}
+	    	});
 
 	    });
 	},

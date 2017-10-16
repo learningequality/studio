@@ -189,15 +189,19 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
   },
   render_details:function(){
+    this.is_details = true;
     this.switchPanel("details");
   },
   render_preview:function(){
+    this.is_details = false;
     this.switchPanel("preview");
   },
   render_questions:function(){
+    this.is_details = false;
     this.switchPanel("questions");
   },
   render_prerequisites: function(){
+    this.is_details = false;
     this.switchPanel("prerequisites")
   },
   switchPanel:function(panel_to_show){
@@ -324,7 +328,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.onclose();
   },
   validate: function() {
-    this.render_details();
+    if(!this.is_details){
+      this.render_details();
+    }
     var isInvalid = this.edit_list && this.edit_list.validate();
     if(isInvalid) {
       this.disable_submit();
@@ -650,7 +656,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
     var all_top_level = (this.new_content)? !this.model.get("parent") : _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
-
     if(this.allow_edit){
       !this.new_content && this.container.validate();
       this.$el.html(this.template({
@@ -781,7 +786,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     } else {
       this.$("#custom_license_description").css('display', 'none');
     }
-
     this.$("#copyright_holder_wrapper").css("display", license && license.get("copyright_holder_required")? "block" : "none");
   },
   all_original: function(){
