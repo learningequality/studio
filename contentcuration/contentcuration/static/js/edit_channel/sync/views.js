@@ -20,7 +20,7 @@ var MESSAGES = {
     "tags_text": "Replace tags with source",
     "assessment_items": "Assessment Items",
     "assessment_items_text": "Questions, answers, etc.",
-    "syncing_items": "Syncing {data, plural,\n =1 {# item}\n other {# items}...",
+    "syncing_items": "Syncing {data, plural,\n =1 {# item}\n other {# items}}...",
     "question_order": "Question Order",
     "randomized": "Randomized",
     "ordered": "Ordered",
@@ -36,8 +36,8 @@ var MESSAGES = {
     "update": "UPDATE",
     "question_deleted": "Question Deleted",
     "deleted": "Deleted",
-    "hint_count": "{count, plural,\n =1 {# hint}\n other {# hints}",
-    "answer_count": "{count, plural,\n =1 {# answer}\n other {# answers}",
+    "hint_count": "{count, plural,\n =1 {# hint}\n other {# hints}}",
+    "answer_count": "{count, plural,\n =1 {# answer}\n other {# answers}}",
     "question_modified": "Question Modified",
     "changed": "Changed",
     "answer": "Answer",
@@ -49,7 +49,11 @@ var MESSAGES = {
     "select_item_prompt": "Select an item to view updates",
     "updated_content": "Updated Content",
     "updated_content_text": "Select content to sync",
-    "preview_content_text": "Review changes made to original content"
+    "preview_content_text": "Review changes made to original content",
+    "preview_exercise": "Preview this exercise on the source website",
+    "video_error": "Your browser does not support the video tag.",
+    "image_error": "Image failed to load"
+
 }
 
 
@@ -235,6 +239,8 @@ var SyncPreviewView = BaseViews.BaseView.extend({
                 self.$el.html(self.template({
                     'node': self.model.toJSON(),
                     'diff_items': self.get_diff()
+                }, {
+                    data: self.get_intl_data()
                 }));
             });
         }
@@ -253,6 +259,7 @@ var SyncPreviewView = BaseViews.BaseView.extend({
             file = _.find(file_to_parse, function(f){ return !f.preset.supplementary; });
         }
         new SyncPreviewFileView({
+            node: this.model,
             model: file,
             subtitles: subtitles
         });
@@ -491,12 +498,13 @@ var SyncPreviewFileView = SyncPreviewModalView.extend({
     initialize: function(options) {
         _.bindAll(this, 'create_preview');
         this.subtitles = options.subtitles;
+        this.node = options.node;
         this.render();
         _.defer(this.create_preview);
     },
     create_preview: function(){
         var previewer = require('edit_channel/preview/views');
-        previewer.render_preview(this.$("#preview_window"), this.model, this.subtitles);
+        previewer.render_preview(this.$("#preview_window"), this.model, this.subtitles, true, this.node.get('thumbnail_encoding') && this.node.get("thumbnail_encoding").base64, this.get_intl_data());
         if(this.subtitles.length){
             this.$("#preview_window video").get(0).textTracks[0].mode = "showing";
         }
