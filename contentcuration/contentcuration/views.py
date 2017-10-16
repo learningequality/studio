@@ -401,3 +401,12 @@ def get_public_channel_list_by_token(request, token):
     if not channel_list.exists():
         return HttpResponseNotFound(_("No channel matching {} found").format(token))
     return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_public_channel_version(request, channel_id):
+    channel = Channel.objects.filter(pk=channel_id).first()
+    if not channel:
+        return HttpResponseNotFound(_("No channel matching {} found").format(token))
+    return HttpResponse(json.dumps({'name': channel.name, 'version': channel.version}))
+
