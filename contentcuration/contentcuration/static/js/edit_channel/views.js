@@ -415,16 +415,16 @@ var BaseWorkspaceView = BaseView.extend({
 	sync_content:function(){
 		var SyncView = require("edit_channel/sync/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
-		var sync = new SyncView.TempSyncModalView({
-			el: $("#dialog"),
-		    onsync: this.reload_ancestors,
-		    model: window.current_channel.get_root("main_tree")
-		});
-		// var sync = new SyncView.SyncModalView({
+		// var sync = new SyncView.TempSyncModalView({
 		// 	el: $("#dialog"),
 		//     onsync: this.reload_ancestors,
 		//     model: window.current_channel.get_root("main_tree")
 		// });
+		var sync = new SyncView.SyncModalView({
+			el: $("#dialog"),
+		    onsync: this.reload_ancestors,
+		    model: window.current_channel.get_root("main_tree")
+		});
 	},
 	delete_items_permanently:function(message, list, callback){
 		message = (message!=null)? message: this.get_translation("deleting");
@@ -870,7 +870,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
             "author": get_author(),
             "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder,
             "license_name": window.preferences.license,
-            "license_description": (window.preferences.license_description && window.preferences.license==="Special Permissions") ? window.preferences.license_description : ""
+            "license_description": window.preferences.license_description || ""
         }).then(function(new_exercise){
         	var edit_collection = new Models.ContentNodeCollection([new_exercise]);
 	        $("#main-content-area").append("<div id='dialog'></div>");

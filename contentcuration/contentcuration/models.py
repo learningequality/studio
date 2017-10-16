@@ -32,7 +32,7 @@ EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
 
 DEFAULT_USER_PREFERENCES = json.dumps({
-    'license': licenses.CC_BY,
+    'license': None,
     'language': None,
     'author': None,
     'copyright_holder': None,
@@ -306,6 +306,7 @@ class Channel(models.Model):
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True, null=True)
     thumbnail_encoding = models.TextField(blank=True, null=True)
+    icon_encoding = models.TextField(blank=True, null=True)
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='editable_channels',
@@ -336,6 +337,7 @@ class Channel(models.Model):
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
+    last_published = models.DateTimeField(blank=True, null=True)
     secret_tokens = models.ManyToManyField(
         SecretToken,
         related_name='channels',
@@ -446,6 +448,8 @@ class License(models.Model):
     license_name = models.CharField(max_length=50)
     license_url = models.URLField(blank=True)
     license_description = models.TextField(blank=True)
+    copyright_holder_required = models.BooleanField(default=True)
+    is_custom = models.BooleanField(default=False)
     exists = models.BooleanField(
         default=False,
         verbose_name=_("license exists"),
@@ -486,7 +490,7 @@ class ContentNode(MPTTModel, models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes', db_index=True)
-    license = models.ForeignKey('License', null=True, default=settings.DEFAULT_LICENSE)
+    license = models.ForeignKey('License', null=True, blank=True)
     license_description = models.CharField(max_length=400, null=True, blank=True)
     prerequisite = models.ManyToManyField('self', related_name='is_prerequisite_of',
                                           through='PrerequisiteContentRelationship', symmetrical=False, blank=True)
@@ -511,6 +515,7 @@ class ContentNode(MPTTModel, models.Model):
     extra_fields = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"),
                               null=True)
+    freeze_authoring_data = models.BooleanField(default=False)
 
     objects = TreeManager()
 
@@ -596,7 +601,7 @@ class ContentNode(MPTTModel, models.Model):
         try:
             root = self.get_root()
             return root.channel_main.first() or root.channel_chef.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
-        except ObjectDoesNotExist, MultipleObjectsReturned:
+        except (ObjectDoesNotExist, MultipleObjectsReturned, AttributeError):
             return None
 
     def save(self, *args, **kwargs):

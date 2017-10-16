@@ -8,6 +8,7 @@ var ImportModal = Vue.extend(ImportModalComponent);
 var store = require('./vuex/store');
 var vueIntl = require("vue-intl");
 var translations = require("utils/translations");
+var { PageTypes } = require('./constants');
 
 
 // Flatten translation dictionary
@@ -113,7 +114,7 @@ var ImportModalView = BaseViews.BaseView.extend({
     },
 
     _resetPageState: function() {
-        store.commit('import/UPDATE_PAGE_STATE', { pageType: 'tree_view' });
+        store.commit('import/UPDATE_PAGE_STATE', { pageType: PageTypes.TREE_VIEW });
         store.commit('import/RESET_IMPORT_STATE');
     },
 

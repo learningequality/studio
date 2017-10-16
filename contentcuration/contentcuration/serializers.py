@@ -1,13 +1,15 @@
 import zlib
 import math
 from collections import OrderedDict
+from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
-from pressurecooker.encodings import encode_file_to_base64
+from le_utils.constants import licenses
 from django.utils.translation import ugettext as _
+from itertools import chain
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -18,11 +20,10 @@ from rest_framework_bulk import BulkSerializerMixin
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
 
-
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = License
-        fields = ('license_name', 'exists', 'id', 'license_url', 'license_description')
+        fields = ('license_name', 'exists', 'id', 'license_url', 'license_description', 'copyright_holder_required', 'is_custom')
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -487,8 +488,15 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         return node.get_associated_presets()
 
     def check_valid(self, node):
+        isoriginal = node.node_id == node.original_source_node_id
         if node.kind_id == content_kinds.TOPIC:
             return True
+        elif isoriginal and not node.license:
+            return False
+        elif isoriginal and node.license.copyright_holder_required and not node.copyright_holder:
+            return False
+        elif isoriginal and node.license.is_custom and not node.license_description:
+            return False
         elif node.kind_id == content_kinds.EXERCISE:
             for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):
                 answers = json.loads(aitem.answers)
@@ -555,8 +563,8 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
                   'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
-                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding')
-
+                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding',
+                  'freeze_authoring_data')
 
 
 class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
@@ -569,7 +577,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
             'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language', 'tree_id',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
-            'files', 'valid', 'metadata', 'tree_id')
+            'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data')
 
 """ Shared methods across channel serializers """
 class ChannelFieldMixin(object):
@@ -685,15 +693,28 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    count = serializers.SerializerMethodField("get_resource_count")
+    total_resource_count = serializers.SerializerMethodField("get_resource_count")
     kind_count = serializers.SerializerMethodField('generate_kind_count')
     size = serializers.SerializerMethodField('calculate_size')
-    thumbnail_base64 = serializers.SerializerMethodField('generate_base64')
+    included_languages = serializers.SerializerMethodField('get_languages')
+    matching_tokens = serializers.SerializerMethodField('match_tokens')
+
+    def match_tokens(self, channel):
+        tokens = json.loads(channel.tokens)
+        return list(channel.secret_tokens.filter(token__in=tokens).values_list('token', flat=True))
+
+    def get_languages(self, channel):
+        published_nodes = channel.main_tree.get_descendants().filter(published=True)
+        node_languages = published_nodes.exclude(language=None).values_list('language', flat=True)
+        file_languages = published_nodes.values_list('files__language', flat=True)
+        language_list = list(set(chain(node_languages, file_languages)))
+        return [x for x in language_list if x is not None]
 
     def calculate_size(self, channel):
         sizes = ContentNode.objects\
             .prefetch_related('assessment_items')\
             .prefetch_related('files')\
+            .filter(published=True)\
             .filter(tree_id=channel.main_tree.tree_id)\
             .values('files__checksum', 'assessment_items__files__checksum', 'files__file_size', 'assessment_items__files__file_size')\
             .distinct()\
@@ -701,21 +722,12 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
         return (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0)
 
     def generate_kind_count(self, channel):
-        return list(channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
-
-    def generate_base64(self, channel):
-        if channel.render_thumbnail:
-            if channel.thumbnail_encoding:
-                return json.loads(channel.thumbnail_encoding.replace('u\'', '"').replace('\'', '"')).get('base64')
-            elif channel.thumbnail:
-                checksum, _ext = os.path.splitext(channel.thumbnail)
-                filepath = generate_file_on_disk_name(checksum, channel.thumbnail)
-                return encode_file_to_base64(filepath, 'data:image/png;base64,')
-        return ""
+        return list(channel.main_tree.get_descendants().filter(published=True).values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
 
     class Meta:
         model = Channel
-        fields = ('id', 'name', 'language', 'description', 'count', 'version', 'kind_count', 'size', 'thumbnail_base64')
+        fields = ('id', 'name', 'language', 'included_languages', 'description', 'total_resource_count', 'version',
+                  'kind_count', 'size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

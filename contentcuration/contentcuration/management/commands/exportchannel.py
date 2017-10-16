@@ -1,5 +1,6 @@
 import ast
 import collections
+import datetime
 import os
 import zipfile
 import shutil
@@ -27,7 +28,8 @@ from kolibri.content.content_db_router import using_content_database, THREAD_LOC
 from django.db import transaction, connections
 from django.db.utils import ConnectionDoesNotExist
 from le_utils import proquint
-
+from PIL import Image
+from resizeimage import resizeimage
 import logging as logmodule
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
@@ -35,6 +37,7 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 
 PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
+THUMBNAIL_DIMENSION = 128
 
 
 class EarlyExit(BaseException):
@@ -86,7 +89,7 @@ class Command(BaseCommand):
 
 
 def create_kolibri_license_object(ccnode):
-    use_license_description = ccnode.license.license_name != licenses.SPECIAL_PERMISSIONS
+    use_license_description = not ccnode.license.is_custom
     return kolibrimodels.License.objects.get_or_create(
         license_name=ccnode.license.license_name,
         license_description=ccnode.license.license_description if use_license_description else ccnode.license_description
@@ -95,6 +98,7 @@ def create_kolibri_license_object(ccnode):
 
 def increment_channel_version(channel):
     channel.version += 1
+    channel.last_published = datetime.datetime.now()
     channel.save()
 
 
@@ -300,7 +304,6 @@ def process_assessment_metadata(ccnode, kolibrinode):
 
     return exercise_data
 
-
 def create_perseus_zip(ccnode, exercise_data, write_to_path):
     with zipfile.ZipFile(write_to_path, "w") as zf:
         try:
@@ -427,12 +430,14 @@ def map_prerequisites(root_node):
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")
+    channel.icon_encoding = convert_channel_thumbnail(channel)
+    channel.save()
     kolibri_channel = kolibrimodels.ChannelMetadata.objects.create(
         id=channel.id,
         name=channel.name,
         description=channel.description,
         version=channel.version,
-        thumbnail=convert_channel_thumbnail(channel),
+        thumbnail=channel.icon_encoding,
         root_pk=channel.main_tree.node_id,
     )
     logging.info("Generated the channel metadata.")
@@ -454,10 +459,15 @@ def convert_channel_thumbnail(channel):
         if thumbnail_data.get("base64"):
             return thumbnail_data["base64"]
 
-    with open(ccmodels.generate_file_on_disk_name(channel.thumbnail.split('.')[0], channel.thumbnail), 'rb') as file_obj:
-        encoding = base64.b64encode(file_obj.read()).decode('utf-8')
+    checksum, ext = os.path.splitext(channel.thumbnail)
+    with open(ccmodels.generate_file_on_disk_name(checksum, channel.thumbnail), 'rb') as file_obj:
+        with Image.open(file_obj) as image, tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tempf:
+            cover = resizeimage.resize_cover(image, [THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION])
+            cover.save(tempf.name, image.format)
+            encoding = base64.b64encode(tempf.read()).decode('utf-8')
+            tempname = tempf.name
+        os.unlink(tempname)
     return "data:image/png;base64," + encoding
-
 
 def map_tags_to_node(kolibrinode, ccnode):
     """ map_tags_to_node: assigns tags to nodes (creates fk relationship)

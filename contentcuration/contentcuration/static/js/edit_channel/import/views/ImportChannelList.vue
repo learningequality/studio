@@ -26,16 +26,17 @@
 
 <script>
 
-const { mapState } = require('vuex');
+import { mapState } from 'vuex';
+import ImportListItem from './ImportListItem.vue';
 
-module.exports = {
+export default {
   name: 'ImportChannelList',
   $trs: {
     'channelLoadingText': "Channels are loading...",
     'noChannelsText': "No channels available to import from"
   },
   components: {
-    ImportListItem: require('./ImportListItem.vue'),
+    ImportListItem,
   },
   computed: mapState('import', [
     'channels',

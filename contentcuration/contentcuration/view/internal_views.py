@@ -622,6 +622,7 @@ def create_node(node_data, parent_node, sort_order):
         source_id=node_data.get('source_id'),
         source_domain=node_data.get('source_domain'),
         language_id=node_data.get('language'),
+        freeze_authoring_data=True,
     )
 
 
