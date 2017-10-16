@@ -1,11 +1,13 @@
 import zlib
 import math
 from collections import OrderedDict
+from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
+from le_utils.constants import licenses
 from django.utils.translation import ugettext as _
 from itertools import chain
 from rest_framework import serializers
@@ -18,11 +20,10 @@ from rest_framework_bulk import BulkSerializerMixin
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
 
-
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = License
-        fields = ('license_name', 'exists', 'id', 'license_url', 'license_description')
+        fields = ('license_name', 'exists', 'id', 'license_url', 'license_description', 'copyright_holder_required', 'is_custom')
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -487,8 +488,15 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         return node.get_associated_presets()
 
     def check_valid(self, node):
+        isoriginal = node.node_id == node.original_source_node_id
         if node.kind_id == content_kinds.TOPIC:
             return True
+        elif isoriginal and not node.license:
+            return False
+        elif isoriginal and node.license.copyright_holder_required and not node.copyright_holder:
+            return False
+        elif isoriginal and node.license.is_custom and not node.license_description:
+            return False
         elif node.kind_id == content_kinds.EXERCISE:
             for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):
                 answers = json.loads(aitem.answers)
@@ -555,8 +563,8 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
                   'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
-                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding')
-
+                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding',
+                  'freeze_authoring_data')
 
 
 class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
@@ -569,7 +577,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
             'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language', 'tree_id',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
-            'files', 'valid', 'metadata', 'tree_id')
+            'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data')
 
 """ Shared methods across channel serializers """
 class ChannelFieldMixin(object):
@@ -719,7 +727,7 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'name', 'language', 'included_languages', 'description', 'total_resource_count', 'version',
-                  'kind_count', 'size', 'date_published', 'icon_encoding', 'matching_tokens', 'public')
+                  'kind_count', 'size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

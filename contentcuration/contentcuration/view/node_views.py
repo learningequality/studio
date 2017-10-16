@@ -226,7 +226,7 @@ def duplicate_nodes(request):
             with transaction.atomic():
                 with ContentNode.objects.disable_mptt_updates():
                     for node_data in nodes:
-                        new_node = _duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id)
+                        new_node = _duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id, user=request.user)
                         new_nodes.append(new_node.pk)
                         sort_order += 1
 
@@ -261,7 +261,7 @@ def duplicate_node_inline(request):
             with transaction.atomic():
                 with ContentNode.objects.disable_mptt_updates():
                     sort_order = (node.sort_order + node.get_next_sibling().sort_order) / 2 if node.get_next_sibling() else node.sort_order + 1
-                    new_node = _duplicate_node_bulk(node, sort_order=sort_order, parent=target_parent, channel_id=channel_id)
+                    new_node = _duplicate_node_bulk(node, sort_order=sort_order, parent=target_parent, channel_id=channel_id, user=request.user)
                     if not new_node.title.endswith(_(" (Copy)")):
                         new_node.title = new_node.title + _(" (Copy)")
                         new_node.save()
@@ -272,7 +272,7 @@ def duplicate_node_inline(request):
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
-def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
+def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
@@ -285,7 +285,7 @@ def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
     }
 
     # perform the actual recursive node cloning
-    new_node = _duplicate_node_bulk_recursive(node=node, sort_order=sort_order, parent=parent, channel_id=channel_id, to_create=to_create)
+    new_node = _duplicate_node_bulk_recursive(node=node, sort_order=sort_order, parent=parent, channel_id=channel_id, to_create=to_create, user=user)
 
     # create nodes, one level at a time, starting from the top of the tree (so that we have IDs to pass as "parent" for next level down)
     for node_level in to_create["nodes"]:
@@ -322,7 +322,7 @@ def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None):
     return new_node
 
 
-def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0):
+def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0, user=None):
 
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
@@ -341,6 +341,7 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     new_node.source_channel_id = node.get_channel().id if node.get_channel() else None
     new_node.node_id = uuid.uuid4().hex
     new_node.source_node_id = node.node_id
+    new_node.freeze_authoring_data = not Channel.objects.filter(pk=node.original_channel_id, editors=user).exists()
 
     # There might be some legacy nodes that don't have these, so ensure they are added
     if not new_node.original_channel_id or not new_node.original_source_node_id:

@@ -68,7 +68,11 @@ var BaseInfoModalView = BaseViews.BaseModalView.extend({
 var LicenseModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/license_modal.handlebars"),
   modal_id: "#license_modal",
-  get_render_data: function(){ return { license: this.data.select_license.toJSON() }; }
+  get_render_data: function(){ return {
+    license: this.data.select_license.toJSON(),
+    is_cc: this.data.select_license.get('license_url').includes('creativecommons.org'),
+    locale: window.languageCode && window.languageCode.split('-')[0] || 'en'
+  }; }
 });
 
 var MasteryModalView = BaseInfoModalView.extend({

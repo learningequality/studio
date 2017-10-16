@@ -11,7 +11,7 @@
             </div>
             <div class="container-fluid">
                 <div class="input-tab-control tab_item" data-next="#license_close_button"></div>
-    			{{#if license.license_url}}<button target="_blank" href="{{license.license_url}}" class="action-text tab_item first_focus_item" id="learn_more_button">{{formatMessage (intlGet 'messages.learn_more')}}</button>{{/if}}
+    			{{#if license.license_url}}<a target="_blank" href="{{license.license_url}}{{#if is_cc}}deed.{{locale}}{{/if}}" class="action-text tab_item first_focus_item" id="learn_more_button">{{formatMessage (intlGet 'messages.learn_more')}}</a>{{/if}}
     			<button class="action-button pull-right tab_item" data-dismiss="modal" id="license_close_button">{{formatMessage (intlGet 'messages.close')}}</button>
                 <div class="input-tab-control tab_item" data-next="#learn_more_button"></div>
             </div>
