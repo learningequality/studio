@@ -8,7 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
 from django.core.files import File as DjFile
 from django.core.management import call_command
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseServerError
 from le_utils.constants import content_kinds
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -74,22 +74,25 @@ def check_version(request):
 @permission_classes((IsAuthenticated,))
 def file_diff(request):
     """ Determine which files don't exist on server """
-    logging.debug("Entering the file_diff endpoint")
-    data = json.loads(request.body)
-    to_return = []
+    try:
+        logging.debug("Entering the file_diff endpoint")
+        data = json.loads(request.body)
+        to_return = []
 
-    # Might want to use this once assumption that file exists is true (save on performance)
-    # in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
-    # for f in list(set(data) - set(in_db_list)):
+        # Might want to use this once assumption that file exists is true (save on performance)
+        # in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
+        # for f in list(set(data) - set(in_db_list)):
 
-    # Add files that don't exist in storage
-    for f in data:
-        file_path = generate_file_on_disk_name(os.path.splitext(f)[0], f)
-        # Add file if it doesn't already exist
-        if not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
-            to_return.append(f)
+        # Add files that don't exist in storage
+        for f in data:
+            file_path = generate_file_on_disk_name(os.path.splitext(f)[0], f)
+            # Add file if it doesn't already exist
+            if not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
+                to_return.append(f)
 
-    return HttpResponse(json.dumps(to_return))
+        return HttpResponse(json.dumps(to_return))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
@@ -106,6 +109,8 @@ def api_file_upload(request):
         }))
     except KeyError:
         raise SuspiciousOperation("Invalid file upload request")
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
@@ -133,6 +138,8 @@ def api_channel_structure_upload(request):
         }))
     except KeyError:
         raise ObjectDoesNotExist('Missing attribute from data: {}'.format(data))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -152,6 +159,8 @@ def api_create_channel_endpoint(request):
         }))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
@@ -188,6 +197,8 @@ def api_commit_channel(request):
         }))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
@@ -211,6 +222,8 @@ def api_add_nodes_from_file(request):
             }))
     except KeyError:
         raise ObjectDoesNotExist('Missing attribute from data: {}'.format(data))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -228,6 +241,8 @@ def api_add_nodes_to_tree(request):
             }))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
@@ -239,33 +254,40 @@ def api_publish_channel(request):
 
     try:
         channel_id = data["channel_id"]
+        call_command("exportchannel", channel_id)
+
+        return HttpResponse(json.dumps({
+            "success": True,
+            "channel": channel_id
+        }))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-    call_command("exportchannel", channel_id)
-
-    return HttpResponse(json.dumps({
-        "success": True,
-        "channel": channel_id
-    }))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def get_staged_diff_internal(request):
-    return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
+    try:
+        return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def activate_channel_internal(request):
-    data = json.loads(request.body)
-    channel = Channel.objects.get(pk=data['channel_id'])
-    activate_channel(channel)
+    try:
+        data = json.loads(request.body)
+        channel = Channel.objects.get(pk=data['channel_id'])
+        activate_channel(channel)
 
-    return HttpResponse(json.dumps({"success": True}))
+        return HttpResponse(json.dumps({"success": True}))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
@@ -320,6 +342,8 @@ def compare_trees(request):
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
@@ -338,6 +362,8 @@ def get_tree_data(request):
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
@@ -355,6 +381,8 @@ def get_channel_status_bulk(request):
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 def get_status(channel_id):
     obj = Channel.objects.get(pk=channel_id)
