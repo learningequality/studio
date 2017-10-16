@@ -341,7 +341,7 @@ var ChannelItem = BaseAdminItem.extend({
     set_attributes: function() {
         this.model.set("can_edit", _.find(this.model.get("editors"), function(editor) { return editor.id === window.current_user.id; }));
         this.model.set("editors", _.sortBy(this.model.get("editors"), "first_name"));
-        this.model.set("viewers", _.sortBy(this.model.get("editors"), "first_name"));
+        this.model.set("viewers", _.sortBy(this.model.get("viewers"), "first_name"));
     },
     events: {
         "click .copy_id": "copy_id",
