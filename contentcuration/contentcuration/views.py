@@ -398,8 +398,8 @@ def get_public_channel_list(request):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def get_public_channel_list_by_identifier(request, identifier):
-    channel_list = _get_channel_list(request.query_params, id=identifier.strip().replace('-', ''))
+def get_public_channel_lookup(request, identifier):
+    channel_list = _get_channel_list(request.query_params, identifier=identifier.strip().replace('-', ''))
     if not channel_list.exists():
         return HttpResponseNotFound(_("No channel matching {} found").format(identifier))
     return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
