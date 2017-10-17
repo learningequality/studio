@@ -408,5 +408,5 @@ def get_public_channel_version(request, channel_id):
     channel = Channel.objects.filter(pk=channel_id).first()
     if not channel:
         return HttpResponseNotFound(_("No channel matching {} found").format(token))
-    return HttpResponse(json.dumps({'name': channel.name, 'version': channel.version}))
+    return HttpResponse(json.dumps({'name': channel.name, 'version': channel.version, 'size': channel.get_resource_size()}))
 
