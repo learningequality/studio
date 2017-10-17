@@ -375,6 +375,8 @@ def _get_channel_list(params, token=None):
     channels = None
     if token:
         channels = Channel.objects.prefetch_related('secret_tokens').filter(secret_tokens__token=token)
+        if not channels.exists():
+            channels = Channel.objects.filter(pk=token)
     else:
         channels = Channel.objects.prefetch_related('secret_tokens').filter(Q(public=True) | Q(secret_tokens__token__in=token_list))
 
@@ -397,23 +399,8 @@ def get_public_channel_list(request):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def get_public_channel_list_by_token(request, token):
-    channel_list = _get_channel_list(request.query_params, token=token.strip().replace('-', ''))
+def get_public_channel_list_by_identifier(request, id):
+    channel_list = _get_channel_list(request.query_params, token=id.strip().replace('-', ''))
     if not channel_list.exists():
         return HttpResponseNotFound(_("No channel matching {} found").format(token))
     return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_public_channel_version(request, channel_id):
-    channel = Channel.objects.filter(pk=channel_id).first()
-    if not channel:
-        return HttpResponseNotFound(_("No channel matching {} found").format(token))
-    resource_count = channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
-    return HttpResponse(json.dumps({
-        'name': channel.name,
-        'version': channel.version,
-        'size': channel.get_resource_size(),
-        'count': resource_count
-    }))
-

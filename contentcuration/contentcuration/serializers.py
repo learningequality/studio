@@ -600,6 +600,9 @@ class ChannelFieldMixin(object):
     def get_resource_count(self, channel):
         return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
 
+    def get_published_resource_count(self, channel):
+        return channel.main_tree.get_descendants().filter(published=True).exclude(kind_id=content_kinds.TOPIC).count()
+
     def get_date_created(self, channel):
         return channel.main_tree.created
 
@@ -693,14 +696,14 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    total_resource_count = serializers.SerializerMethodField("get_resource_count")
+    total_resource_count = serializers.SerializerMethodField("get_published_resource_count")
     kind_count = serializers.SerializerMethodField('generate_kind_count')
     size = serializers.SerializerMethodField('calculate_size')
     included_languages = serializers.SerializerMethodField('get_languages')
     matching_tokens = serializers.SerializerMethodField('match_tokens')
 
     def match_tokens(self, channel):
-        tokens = json.loads(channel.tokens)
+        tokens = json.loads(channel.tokens) if hasattr(channel, 'tokens') else []
         return list(channel.secret_tokens.filter(token__in=tokens).values_list('token', flat=True))
 
     def get_languages(self, channel):
