@@ -13,6 +13,8 @@ var MESSAGES = {
     "create_exercise": "Create Exercise",
     "upload_files": "Upload Files",
     "add_topics": "Add Topics",
+    "clipboard_empty": "This is your clipboard. Use this space to save and send content to other channels",
+    "drop_text": "Drop here to add to clipboard"
 }
 
 /* Loaded when user clicks clipboard button below navigation bar */
@@ -25,7 +27,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
     $trs: MESSAGES,
 
 	initialize: function(options) {
-		_.bindAll(this, 'toggle_queue', 'open_queue', 'close_queue');
+		_.bindAll(this, 'toggle_queue', 'open_queue', 'close_queue', 'add_to_clipboard');
 		this.clipboard_root = options.clipboard_root;
 		this.trash_root = options.trash_root;
 		this.collection = options.collection;
@@ -45,9 +47,11 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 			content_node_view:null
 		});
 		this.handle_checked();
+		DragHelper.addButtonDragDrop(this, this.add_to_clipboard);
 	},
 	events: {
-		'click .queue-button' : 'toggle_queue'
+		'click .queue-button' : 'toggle_queue',
+		"click #queue-back": "close_queue"
 	},
 	toggle_queue: function(){
 		(this.$("#queue").hasClass("closed")) ? this.open_queue() : this.close_queue();
@@ -71,6 +75,9 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 			move_collection.add(model);
 		}
 		this.move_content(move_collection);
+	},
+	close_all_popups: function() {
+		window.workspace_manager.get_main_view().close_all_popups();
 	}
 });
 
@@ -115,9 +122,9 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		var self = this;
 		self.make_droppable();
 		this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
-			self.$(self.default_item).text(self.get_translation("no_items"));
 			fetchedCollection.sort_by_order();
 			self.load_content(fetchedCollection);
+			self.$(self.default_item).text((self.add_controls)? self.get_translation("clipboard_empty") : self.get_translation("no_items"));
 			self.refresh_droppable();
 		});
 	},
@@ -193,6 +200,9 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 			}
 		});
   	},
+  	close_all_popups: function() {
+  		this.container.close_all_popups();
+  	}
 });
 
 var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
@@ -216,7 +226,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.$el.find(">label .badge").text(this.model.get("metadata").resource_count);
 	},
 	handle_checked:function(){
-		this.checked = this.$el.find(">input[type=checkbox]").is(":checked");
+		this.checked = this.$el.find("div>input[type=checkbox]").is(":checked");
 		(this.checked)? this.$el.addClass(this.selectedClass) : this.$el.removeClass(this.selectedClass);
 		this.container.handle_checked();
 	},
@@ -240,12 +250,50 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.handle_checked();
 		window.workspace_manager.put_node(this.model.get("id"), this);
 		this.make_droppable();
+		this.create_popover();
+	},
+	create_popover:function(){
+		var self = this;
+		this.$(".content-options-dropdown").popover({
+			animation:false,
+			trigger:"manual",
+			html: true,
+			selector: '[rel="popover"]',
+			content: function () {
+		        return $("#queue_option_" + self.model.get("id")).html();
+		    }
+		}).click(function(event){
+			self.containing_list_view.close_all_popups();
+			if(!$(this).hasClass("active-popover")){
+				$(this).popover('show');
+	        	$(this).addClass("active-popover");
+			}
+	        event.preventDefault();
+	        event.stopPropagation();
+		});
+	},
+	open_context_menu:function(event){
+		if( event.button == 2 ) {
+			this.cancel_actions(event);
+			var contextmenu = this.$(".context-menu");
+			contextmenu.addClass("init");
+			contextmenu.offset({
+				left: event.pageX + 5,
+				top: event.pageY + 5,
+			});
+			contextmenu.focus();
+			contextmenu.removeClass("init");
+		}
 	},
 	events: {
 		'click .delete_content' : 'delete_content',
 		'click .tog_folder' : 'toggle',
 		'click .edit_content' : 'edit_item',
-		'change input[type=checkbox]': 'handle_checked'
+		'change input[type=checkbox]': 'handle_checked',
+		'contextmenu .queue_item' : 'open_context_menu',
+		'click .copy_content': 'copy_content',
+		'click .move_content': 'move_content',
+		'click .queue_item_title': 'edit_item'
 	},
 	edit_item:function(event){
 		event.stopPropagation();
@@ -271,10 +319,21 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         dialog.dialog(this.get_translation("warning"), this.get_translation("delete_item_warning", this.model.get("title")), {
             [self.get_translation("cancel")]:function(){},
             [self.get_translation("delete")]: function(){
-            	self.add_to_trash()
+            	self.remove();
+            	self.destroy(null, function(){
+            		self.reload_ancestors(new Models.ContentNodeCollection([self.model]), false);
+            	});
             }
         }, null);
-	}
+	},
+	copy_content:function(event){
+		this.cancel_actions(event);
+		this.make_copy();
+	},
+	move_content:function(event){
+		this.cancel_actions(event);
+		this.open_move();
+	},
 });
 
 module.exports = {

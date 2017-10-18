@@ -30,6 +30,8 @@ var MESSAGES = {
     "author_placeholder": "Enter author name...",
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
+    "no_license": "No license selected",
+    "randomize_question_order": "Automatically randomize question order",
 }
 
 var SettingsModalView = BaseViews.BaseModalView.extend({
@@ -46,7 +48,7 @@ var SettingsModalView = BaseViews.BaseModalView.extend({
             model: this.model,
             onsave: options.onsave
         });
-        this.$("#channel_settings_modal").on("shown.bs.modal", this.settings_view.init_focus);
+        this.$("#channel_settings_modal").on("shown.bs.modal", this.settings_view.create_initial);
     }
 });
 
@@ -56,7 +58,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
     name: NAMESPACE,
     $trs: MESSAGES,
     initialize: function(options) {
-        _.bindAll(this, "set_thumbnail", "reset_thumbnail", "remove_thumbnail", "init_focus");
+        _.bindAll(this, "set_thumbnail", "reset_thumbnail", "remove_thumbnail", "init_focus", "create_initial");
         this.modal = options.modal;
         this.onsave = options.onsave;
         this.thumbnail_url = this.model.get("thumbnail_url");
@@ -80,9 +82,11 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         }));
         $("#license_select").val(this.get_license_id(this.model.get("preferences").license));
         $("#mastery_model_select").val(this.model.get("preferences").mastery_model);
-        $("#custom_license_description").css("display", (this.get_license_name()==="Special Permissions")? "block" : "none");
+        $("#custom_license_description").css("display", (this.check_custom_license())? "block" : "none");
         $("#mastery_custom_criterion").css("visibility", ($("#mastery_model_select").val()==="m_of_n")? "visible" : "hidden");
         $("#select_language").val(this.model.get("language") || 0);
+    },
+    create_initial: function() {
         this.image_upload = new Images.ThumbnailUploadView({
             model: this.model,
             el: this.$("#channel_thumbnail"),
@@ -99,16 +103,22 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
             allow_edit: true,
             is_channel: true
         });
+        this.init_focus();
     },
     init_focus: function(){
         this.set_indices();
         this.set_initial_focus();
     },
     get_license_id: function(license_name){
-        return window.licenses.findWhere({license_name: license_name}).id;
+        return (license_name && license_name != "None")? window.licenses.findWhere({license_name: license_name}).id : 0;
     },
     get_license_name: function(){
-        return window.licenses.get($("#license_select").val()).get("license_name");
+        var el = $("#license_select");
+        return el.val()!=0 && window.licenses.get(el.val()).get("license_name");
+    },
+    check_custom_license: function(){
+        var el = $("#license_select");
+        return el.val()!=0 && window.licenses.get(el.val()).get("is_custom");
     },
     submit_changes:function(){
         var preferences = this.model.get("preferences");
@@ -119,6 +129,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         preferences.mastery_model = $("#mastery_model_select").val();
         preferences.m_value = $("#m_value").val();
         preferences.n_value = $("#n_value").val();
+        preferences.auto_randomize_questions = $("#auto_randomize_questions").is(":checked");
         preferences.auto_derive_video_thumbnail = $("#auto_video_thumbnail").is(":checked");
         preferences.auto_derive_audio_thumbnail = $("#auto_audio_thumbnail").is(":checked");
         preferences.auto_derive_document_thumbnail = $("#auto_document_thumbnail").is(":checked");
@@ -143,7 +154,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         });
     },
     register_changes:function(){
-        $("#custom_license_description").css("display", (this.get_license_name()==="Special Permissions")? "block" : "none");
+        $("#custom_license_description").css("display", (this.check_custom_license())? "block" : "none");
         $("#mastery_custom_criterion").css("visibility", ($("#mastery_model_select").val()==="m_of_n")? "visible" : "hidden");
         if(Number($("#m_value").val()) > Number($("#n_value").val())) {
             $("#n_value").val($("#m_value").val());

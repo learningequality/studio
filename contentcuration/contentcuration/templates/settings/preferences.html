@@ -38,7 +38,7 @@
 					<span class="input-group-addon">{% trans "License" %}</span>
 					<select class="form-control setting_change" id="id_license" name="license">
 						{% for x,y in form.fields.license.choices %}
-						    <option value="{{ x }}"{% if form.license.value == x %} selected{% endif %}>{{ x | get_translation }}</option>
+						    <option value="{{ x }}"{% if form.license.value == x %} selected{% endif %}>{% if x %}{{ x | get_translation }}{% else %}{% trans "No license selected" %}{% endif %}</option>
 						{% endfor %}
 					</select>
 				</div>
@@ -51,6 +51,12 @@
 				<div class="input-group settings_field col-xs-12">
 					<span class="input-group-addon">{% trans "License Description" %}</span>
 					{{ form.license_description }}
+				</div>
+			</div>
+			<div class="row" id="language_input">
+				<div class="input-group settings_field col-xs-12">
+					<span class="input-group-addon">{% trans "Language" %}</span>
+					{{ form.language }}
 				</div>
 			</div>
 			<br>
@@ -116,7 +122,7 @@
 	}
 	$(".setting_input").on("keyup", registerChange);
 	$(".setting_change").on("change", registerChange);
-
+	$('#id_language option').each(function() { $(this).attr("disabled", !$(this).val()); });
 	$(".mastery_criteria").css('display', ($("#id_mastery_model").val()==="m_of_n")? "inline-table" : "none");
 	$("#license_description_input").css('display', ($("#id_license").val()==="Special Permissions")? "block" : "none");
 </script>

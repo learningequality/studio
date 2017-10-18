@@ -347,6 +347,24 @@ var ContentNodeModel = BaseModel.extend({
             });
         });
         return promise;
+    },
+    make_copy: function(target_parent) {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = {"node_id": self.id,
+                        "target_parent": target_parent.get("id"),
+                        "channel_id": window.current_channel.id
+            };
+            $.ajax({
+                method:"POST",
+                url: window.Urls.duplicate_node_inline(),
+                data:  JSON.stringify(data),
+                success: function(data) {
+                    resolve(new ContentNodeCollection(JSON.parse(data)));
+                },
+                error:reject
+            });
+        });
     }
 });
 
@@ -377,7 +395,7 @@ var ContentNodeCollection = BaseCollection.extend({
                     if(item.get('type') === 'input_question'){
                         item.get('answers').each( function(a){
                             var value = numParser.parse(a.get('answer'))
-                            a.set('answer', value.toString());
+                            a.set('answer', value !== null && value.toString());
                         });
                     }
                 })
@@ -392,7 +410,7 @@ var ContentNodeCollection = BaseCollection.extend({
                         saveReject(error);
                     }
                 });
-            });
+            }).catch(saveReject);
         });
     },
     has_prerequisites: function(){
@@ -565,6 +583,21 @@ var ContentNodeCollection = BaseCollection.extend({
                 success: function(moved) {
                     resolve(new ContentNodeCollection(JSON.parse(moved)));
                 }
+            });
+        });
+    },
+    delete:function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var data = {"nodes": self.pluck('id'),
+                        "channel_id": window.current_channel.id
+            };
+            $.ajax({
+                method:"POST",
+                url: window.Urls.delete_nodes(),
+                data:  JSON.stringify(data),
+                success: resolve,
+                error: reject
             });
         });
     },
@@ -803,6 +836,21 @@ var ChannelModel = BaseModel.extend({
                 }
             });
         });
+    },
+    set_priority: function(priority) {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"POST",
+                data: JSON.stringify({
+                    "channel_id": self.id,
+                    "priority": priority
+                }),
+                url: window.Urls.set_channel_priority(),
+                success: resolve,
+                error:function(error){reject(error.responseText);}
+            });
+        });
     }
 });
 
@@ -811,7 +859,7 @@ var ChannelCollection = BaseCollection.extend({
     list_name:"channel-list",
     model_name:"ChannelCollection",
     comparator:function(channel){
-        return -new Date(channel.get('created'));
+        return (channel.get("public"))? -channel.get('priority') : -new Date(channel.get('created'));
     },
     get_all_channels: function(){
         var self = this;

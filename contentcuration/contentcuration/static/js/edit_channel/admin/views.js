@@ -238,6 +238,12 @@ var ChannelTab = BaseAdminTab.extend({
                 return (asc) ? item1.id.localeCompare(item2.id) : -item1.id.localeCompare(item2.id);
             }
         }, {
+            key: "priority",
+            label: "Priority",
+            filter: function(item1, asc, item2){
+                return (asc) ? -item2.get("priority") : item1.get("priority");
+            }
+        }, {
             key: "users",
             label: "# of Users",
             filter: function(item1, asc, item2){
@@ -335,7 +341,7 @@ var ChannelItem = BaseAdminItem.extend({
     set_attributes: function() {
         this.model.set("can_edit", _.find(this.model.get("editors"), function(editor) { return editor.id === window.current_user.id; }));
         this.model.set("editors", _.sortBy(this.model.get("editors"), "first_name"));
-        this.model.set("viewers", _.sortBy(this.model.get("editors"), "first_name"));
+        this.model.set("viewers", _.sortBy(this.model.get("viewers"), "first_name"));
     },
     events: {
         "click .copy_id": "copy_id",
@@ -345,7 +351,12 @@ var ChannelItem = BaseAdminItem.extend({
         "click .delete_button": "delete_channel",
         "click .join_button": "join_editors",
         "click .count_link": "load_counts",
-        "click .leave_button": "leave_editors"
+        "click .leave_button": "leave_editors",
+        "change .channel_priority": "set_priority"
+    },
+    set_priority: function() {
+        var priority = this.$(".channel_priority").val();
+        this.model.set_priority(priority);
     },
     load_counts: function(){
         if(this.counts && this.size){
@@ -527,7 +538,8 @@ var UserTab = BaseAdminTab.extend({
         "keyup .search_input" : "apply_search",
         "paste .search_input" : "apply_search",
         "change .select_all" : "check_all",
-        "click #email_selected" : "email_selected"
+        "click #email_selected" : "email_selected",
+        "change .size_limit" : "set_user_space"
     },
     get_dynamic_filters: function() {
         var filter = [{
@@ -612,7 +624,8 @@ var UserItem = BaseAdminItem.extend({
         "click .email_button" : "send_email",
         "click .activate_button": "activate_user",
         "click .delete_button": "delete_user",
-        "click .deactivate_button": "deactivate_user"
+        "click .deactivate_button": "deactivate_user",
+        "change .size_limit": "set_user_space"
     },
     set_attributes: function() {
         this.model.set("editable_channels", _.sortBy(this.model.get("editable_channels"), "name"));
@@ -656,6 +669,14 @@ var UserItem = BaseAdminItem.extend({
             });
           }
         }, null);
+    },
+    set_user_space: function() {
+        var self = this;
+        var model = this.model;
+        var size = self.$(".size_limit").val() || this.model.get("disk_space");
+        _.defer(function(){
+            model.save({"disk_space": Number(size) * 1048576}); // Need to convert to bytes
+        }, 1000)
     }
 });
 

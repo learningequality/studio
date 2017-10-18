@@ -4,7 +4,7 @@ import mimetypes
 import os
 import re
 import zipfile
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseNotFound
 from django.http.response import FileResponse, HttpResponseNotModified
 from django.utils.http import http_date
 from django.views.generic.base import View
@@ -43,7 +43,7 @@ class ZipContentView(View):
 
         # if the zipfile does not exist on disk, return a 404
         if not os.path.exists(zipped_path):
-            raise Http404('"%(filename)s" does not exist locally' % {'filename': zipped_path})
+            return HttpResponseNotFound('"%(filename)s" does not exist locally' % {'filename': zipped_path})
 
         # if client has a cached version, use that (we can safely assume nothing has changed, due to MD5)
         if request.META.get('HTTP_IF_MODIFIED_SINCE'):
@@ -59,7 +59,7 @@ class ZipContentView(View):
             try:
                 info = zf.getinfo(embedded_filepath)
             except KeyError:
-                raise Http404('"{}" does not exist inside "{}"'.format(embedded_filepath, zipped_filename))
+                return HttpResponseNotFound('"{}" does not exist inside "{}"'.format(embedded_filepath, zipped_filename))
 
             # try to guess the MIME type of the embedded file being referenced
             content_type = mimetypes.guess_type(embedded_filepath)[0] or 'application/octet-stream'

@@ -10,7 +10,7 @@ migrate:
 	python contentcuration/manage.py migrate
 
 ensurecrowdinclient:
-        ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
+  ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
 
 makemessages:
 	# generate frontend messages
@@ -19,7 +19,7 @@ makemessages:
 	python contentcuration/manage.py makemessages
 
 uploadmessages: ensurecrowdinclient
-	java -jar crowdin-cli.jar upload sources
+	java -jar /contentcuration/crowdin-cli.jar upload sources
 
 # we need to depend on makemessages, since CrowdIn requires the en folder to be populated
 # in order for it to properly extract strings
@@ -28,7 +28,6 @@ downloadmessages: ensurecrowdinclient makemessages
 
 compilemessages:
 	python contentcuration/manage.py compilemessages
-
 
 devserver:
 	cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8000

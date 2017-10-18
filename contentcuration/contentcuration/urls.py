@@ -192,11 +192,15 @@ urlpatterns = [
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
+    url(r'^stealthz$', views.stealth, name='stealth'),
     url(r'^api/search/', include('search.urls'), name='search'),
     url(r'^api/public/channel/(?P<channel_id>[^/]+)', views.get_channel_name_by_id, name='get_channel_name_by_id'),
-    url(r'^api/public/public_channels', views.get_public_channels, name='get_public_channels'),
+    url(r'^api/public/channels$', views.get_public_channel_list, name='get_public_channel_list'),
+    url(r'^api/public/channels/bytoken/(?P<token>[^/]+)', views.get_public_channel_list_by_token, name='get_public_channel_list_by_token'),
+    url(r'^api/public/channel_version/(?P<channel_id>[^/]+)', views.get_public_channel_version, name='get_public_channel_version'),
     url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
     url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
+    url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
 ]
 
 # Add node api enpoints
@@ -213,6 +217,8 @@ urlpatterns += [
     url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
     url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
     url(r'^api/get_node_path$', node_views.get_node_path, name='get_node_path'),
+    url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
+    url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
 ]
 
 # Add file api enpoints
@@ -252,6 +258,7 @@ urlpatterns += [
     url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
     url(r'^settings/account/success', settings_views.account_settings_success, name='account_settings_success'),
     url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
+    url(r'^settings/storage', settings_views.storage_settings, name='storage_settings'),
 ]
 
 # Add internal endpoints

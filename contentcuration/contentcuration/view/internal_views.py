@@ -4,11 +4,11 @@ from collections import namedtuple
 from distutils.version import LooseVersion
 
 import os
-from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
+from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation, PermissionDenied
 from django.core.files import File as DjFile
 from django.core.management import call_command
 from django.db import transaction
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseServerError, HttpResponseForbidden
 from le_utils.constants import content_kinds
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -16,10 +16,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
 from contentcuration import ricecooker_versions as rc
-from contentcuration.api import get_staged_diff
-from contentcuration.api import write_file_to_storage, activate_channel
-from contentcuration.models import AssessmentItem, Channel, License, File, FormatPreset, ContentNode, Language, \
-    generate_file_on_disk_name
+from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
+from contentcuration.models import AssessmentItem, Channel, License, File, FormatPreset, ContentNode, Language, StagedFile, generate_file_on_disk_name
 from contentcuration.utils.logging import trace
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
@@ -102,7 +100,18 @@ def api_file_upload(request):
     """ Upload a file to the storage system """
     try:
         fobj = request.FILES["file"]
+        checksum, ext = fobj._name.split(".")
+        try:
+            request.user.check_staged_space(fobj._size, checksum)
+        except Exception as e:
+            return HttpResponseForbidden(str(e))
+
         formatted_filename = write_file_to_storage(fobj, check_valid=True)
+        StagedFile.objects.get_or_create(
+            checksum = checksum,
+            file_size = fobj._size,
+            uploaded_by = request.user
+        )
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -130,7 +139,7 @@ def api_channel_structure_upload(request):
         new_channel = create_channel_from_structure(channel_id, channel_structure, request.user)
 
         if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
-            activate_channel(new_channel)
+            activate_channel(new_channel, request.user)
 
         return HttpResponse(json.dumps({
             'success': True,
@@ -189,7 +198,10 @@ def api_commit_channel(request):
             old_staging.delete()
 
         if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
-            activate_channel(obj)
+            try:
+                activate_channel(obj, request.user)
+            except PermissionDenied as e:
+                return HttpResponseForbidden(str(e))
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -237,7 +249,7 @@ def api_add_nodes_to_tree(request):
         with ContentNode.objects.disable_mptt_updates():
             return HttpResponse(json.dumps({
                 "success": True,
-                "root_ids": convert_data_to_nodes(content_data, parent_id)
+                "root_ids": convert_data_to_nodes(request.user, content_data, parent_id)
             }))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -254,7 +266,7 @@ def api_publish_channel(request):
 
     try:
         channel_id = data["channel_id"]
-        call_command("exportchannel", channel_id)
+        call_command("exportchannel", channel_id, user_id=request.user.pk)
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -283,8 +295,7 @@ def activate_channel_internal(request):
     try:
         data = json.loads(request.body)
         channel = Channel.objects.get(pk=data['channel_id'])
-        activate_channel(channel)
-
+        activate_channel(channel, request.user)
         return HttpResponse(json.dumps({"success": True}))
     except Exception as e:
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -443,7 +454,7 @@ def create_channel(channel_data, user):
 
 
 @trace
-def convert_data_to_nodes(content_data, parent_node):
+def convert_data_to_nodes(user, content_data, parent_node):
     """ Parse dict and create nodes accordingly """
     try:
         root_mapping = {}
@@ -458,10 +469,10 @@ def convert_data_to_nodes(content_data, parent_node):
                     new_node = create_node(node_data, parent_node, sort_order)
 
                     # Create files associated with node
-                    map_files_to_node(new_node, node_data['files'])
+                    map_files_to_node(user, new_node, node_data['files'])
 
                     # Create questions associated with node
-                    create_exercises(new_node, node_data['questions'])
+                    create_exercises(user, new_node, node_data['questions'])
                     sort_order += 1
 
                     # Track mapping between newly created node and node id
@@ -492,7 +503,7 @@ def create_channel_from_structure(channel_id, channel_structure_dict, user):
 
     is_published = channel.main_tree is not None and channel.main_tree.published
     old_staging = channel.staging_tree
-    channel.staging_tree, channel_data = create_tree_from_structure(channel_structure_dict.items()[0], is_published)
+    channel.staging_tree, channel_data = create_tree_from_structure(user, channel_structure_dict.items()[0], is_published)
 
     channel.name = channel_data['name']
     channel.description = channel_data['description']
@@ -512,7 +523,7 @@ def create_channel_from_structure(channel_id, channel_structure_dict, user):
     return channel  # Return new channel
 
 
-def create_tree_from_structure(root_node_pair, is_published):
+def create_tree_from_structure(user, root_node_pair, is_published):
     file_name = root_node_pair[0]
     children = root_node_pair[1][1]
 
@@ -521,19 +532,19 @@ def create_tree_from_structure(root_node_pair, is_published):
     with transaction.atomic():
         with ContentNode.objects.disable_mptt_updates():
             for child_node_pair in children.items():
-                fill_tree_from_structure(child_node_pair, root_node)
+                fill_tree_from_structure(user, child_node_pair, root_node)
                 child_sort_order += 1
     ContentNode.objects.partial_rebuild(root_node.tree_id)
 
     return root_node, root_data
 
 
-def fill_tree_from_structure(cur_node_pair, parent_node):
+def fill_tree_from_structure(user, cur_node_pair, parent_node):
     file_name = cur_node_pair[0]
     sort_order = cur_node_pair[1][0]
     children = cur_node_pair[1][1]
 
-    cur_node = create_node_from_file(file_name, parent_node, sort_order)
+    cur_node = create_node_from_file(user, file_name, parent_node, sort_order)
     for child_node_pair in children.items():
         fill_tree_from_structure(child_node_pair, cur_node)
 
@@ -556,7 +567,7 @@ def create_root_from_file(file_name, is_published):
 
 
 @trace
-def create_node_from_file(file_name, parent_node, sort_order):
+def create_node_from_file(user, file_name, parent_node, sort_order):
     node_data = get_node_data_from_file(file_name)
 
     cur_node = ContentNode.objects.create(
@@ -578,7 +589,7 @@ def create_node_from_file(file_name, parent_node, sort_order):
         language_id=node_data.get('language'),
     )
     # Create files associated with node
-    map_files_to_node(cur_node, node_data['files'])
+    map_files_to_node(user, cur_node, node_data['files'])
 
     # Create questions associated with node
     create_exercises(cur_node, node_data['questions'])
@@ -638,10 +649,11 @@ def create_node(node_data, parent_node, sort_order):
         source_id=node_data.get('source_id'),
         source_domain=node_data.get('source_domain'),
         language_id=node_data.get('language'),
+        freeze_authoring_data=True,
     )
 
 
-def map_files_to_node(node, data):
+def map_files_to_node(user, node, data):
     """ Generate files that reference the content node """
 
     # filter for file data that's not empty;
@@ -661,7 +673,7 @@ def map_files_to_node(node, data):
 
         file_path = generate_file_on_disk_name(file_name_parts[0], file_data['filename'])
         if not os.path.isfile(file_path):
-            raise IOError('{} not found'.format(file_path))
+            return IOError('{} not found'.format(file_path))
 
         try:
             if file_data.get('language'):
@@ -670,7 +682,7 @@ def map_files_to_node(node, data):
         except ObjectDoesNotExist as e:
             invalid_lang = file_data.get('language')
             logging.warning("file_data with language {} does not exist.".format(invalid_lang))
-            raise ValidationError("file_data given was invalid; expected string, got {}".format(invalid_lang))
+            return ValidationError("file_data given was invalid; expected string, got {}".format(invalid_lang))
 
         resource_obj = File(
             checksum=file_name_parts[0],
@@ -682,18 +694,19 @@ def map_files_to_node(node, data):
             file_on_disk=DjFile(open(file_path, 'rb')),
             preset=kind_preset,
             language_id=file_data.get('language'),
+            uploaded_by=user,
         )
         resource_obj.file_on_disk.name = file_path
         resource_obj.save()
 
 
-def map_files_to_assessment_item(question, data):
+def map_files_to_assessment_item(user, question, data):
     """ Generate files that reference the content node's assessment items """
     for file_data in data:
         file_name_parts = file_data['filename'].split(".")
         file_path = generate_file_on_disk_name(file_name_parts[0], file_data['filename'])
         if not os.path.isfile(file_path):
-            raise IOError('{} not found'.format(file_path))
+            return IOError('{} not found'.format(file_path))
 
         resource_obj = File(
             checksum=file_name_parts[0],
@@ -704,12 +717,13 @@ def map_files_to_assessment_item(question, data):
             file_size=file_data['size'],
             file_on_disk=DjFile(open(file_path, 'rb')),
             preset_id=file_data['preset'],
+            uploaded_by=user,
         )
         resource_obj.file_on_disk.name = file_path
         resource_obj.save()
 
 
-def create_exercises(node, data):
+def create_exercises(user, node, data):
     """ Generate exercise from data """
     with transaction.atomic():
         order = 0
@@ -729,4 +743,4 @@ def create_exercises(node, data):
             )
             order += 1
             question_obj.save()
-            map_files_to_assessment_item(question_obj, question['files'])
+            map_files_to_assessment_item(user, question_obj, question['files'])

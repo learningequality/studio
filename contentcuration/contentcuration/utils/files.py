@@ -11,7 +11,7 @@ from pressurecooker.videos import extract_thumbnail_from_video, compress_video
 from pressurecooker.images import create_tiled_image, create_image_from_pdf_page, create_waveform_image
 
 
-def create_file_from_contents(contents, ext=None, node=None, preset_id=None):
+def create_file_from_contents(contents, ext=None, node=None, preset_id=None, uploaded_by=None):
     checksum, filename, path = write_raw_content_to_storage(contents, ext=ext)
     with open(path, 'rb') as new_file:
         return File.objects.create(
@@ -20,7 +20,8 @@ def create_file_from_contents(contents, ext=None, node=None, preset_id=None):
             file_size=os.path.getsize(path),
             checksum=checksum,
             preset_id=preset_id,
-            contentnode=node
+            contentnode=node,
+            uploaded_by=uploaded_by
         )
 
 
@@ -43,7 +44,7 @@ def extract_thumbnail_wrapper(file_object, node=None, preset_id=None):
         tempf.close()
         extract_thumbnail_from_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
         with open(tempf.name, 'rb') as tf:
-            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
+            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=file_object.uploaded_by)
 
 
 def compress_video_wrapper(file_object, ffmpeg_settings=None):
@@ -78,8 +79,9 @@ def create_tiled_image_wrapper(files, preset_id, node=None):
     with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
         tempf.close()
         create_tiled_image(files, tempf.name)
+        user = (len(files) > 0 and not isinstance(files[0], basestring) and files[0].uploaded_by) or None
         with open(tempf.name, 'rb') as tf:
-            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
+            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=user)
 
 
 def get_image_from_exercise(file_ids, node=None, preset_id=None):
@@ -95,7 +97,7 @@ def get_image_from_htmlnode(htmlfile, node=None, preset_id=None):
             image_name = random.choice(names)
             _, ext = os.path.splitext(image_name)
             with zf.open(image_name) as image:
-                return create_file_from_contents(image.read(), ext=ext[1:], node=node, preset_id=preset_id)
+                return create_file_from_contents(image.read(), ext=ext[1:], node=node, preset_id=preset_id, uploaded_by=htmlfile.uploaded_by)
 
 
 def get_image_from_pdf(document, node=None, preset_id=None):
@@ -106,7 +108,7 @@ def get_image_from_pdf(document, node=None, preset_id=None):
         create_image_from_pdf_page(document.file_on_disk.name, tempf.name)
 
         with open(tempf.name, 'rb') as tf:
-            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
+            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=document.uploaded_by)
 
 
 def get_image_from_audio(audio, node=None, preset_id=None, max_num_of_points=None):
@@ -116,7 +118,7 @@ def get_image_from_audio(audio, node=None, preset_id=None, max_num_of_points=Non
         tempf.close()
         create_waveform_image(audio.file_on_disk.name, tempf.name, max_num_of_points=max_num_of_points, colormap_options=cmap_options)
         with open(tempf.name, 'rb') as tf:
-            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id)
+            return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=audio.uploaded_by)
 
 
 def generate_thumbnail_from_node(node, set_node=None):
