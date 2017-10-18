@@ -10,7 +10,7 @@ migrate:
 	python contentcuration/manage.py migrate
 
 ensurecrowdinclient:
-        ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar > crowdin-cli.jar
+        curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar > crowdin-cli.jar
 
 makemessages:
 	# generate frontend messages
