@@ -15,6 +15,9 @@ RUN mkdir -p contentcuration/static/js/bundles #
 RUN yarn install
 RUN node build.js
 
+# Download the crowdin-cli.jar file
+RUN curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
+
 EXPOSE 8000
 
 ENTRYPOINT ["make", "prodserver"]
