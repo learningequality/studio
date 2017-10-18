@@ -23,7 +23,7 @@ uploadmessages: ensurecrowdinclient
 
 # we need to depend on makemessages, since CrowdIn requires the en folder to be populated
 # in order for it to properly extract strings
-downloadmessages: makemessages
+downloadmessages: ensurecrowdinclient makemessages
 	java -jar crowdin-cli.jar download
 
 compilemessages:
