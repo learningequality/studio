@@ -100,7 +100,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       allow_edit: this.allow_edit,
       isclipboard: this.isclipboard
     });
-    this.$(".modal").on('shown.bs.modal', this.metadata_view.set_editor_focus);
+    this.$(".modal").on('shown.bs.modal', this.metadata_view.init_editor);
   },
   events: {
     'keydown #uploaderModal': 'handle_escape',
@@ -144,7 +144,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   initialize: function(options) {
     _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit',
       'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items', 'save_error',
-      'set_prerequisites', 'call_duplicate', 'update_prereq_count','loop_focus', 'set_indices', 'set_editor_focus', 'validate');
+      'set_prerequisites', 'call_duplicate', 'update_prereq_count','loop_focus', 'set_indices', 'set_editor_focus', 'validate', 'init_editor');
     this.bind_edit_functions();
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
@@ -308,6 +308,12 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       this.edit_list.adjust_list_height();
     }
     _.defer(this.set_indices);
+  },
+  init_editor: function() {
+    if(this.editor_view){
+      this.editor_view.handle_if_individual();
+      _.defer(this.editor_view.set_initial_focus);
+    }
   },
   set_editor_focus: function(){
     if(this.editor_view){
@@ -797,7 +803,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   handle_if_individual:function(){
     if(this.selected_individual()){
       var view = this.selected_items[0];
-      view.load_file_displays(this.$("#editmetadata_format_section"));
+      var self = this;
+      view.load_file_displays(self.$("#editmetadata_format_section"));
       this.container.load_prerequisites([view]);
       if(view.model.get("kind")==="exercise"){
         this.container.load_questions(view);
