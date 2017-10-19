@@ -1,7 +1,7 @@
-prodserver: collectstatic ensurecrowdinclient downloadmessages compilemessages
+prodserver: collectstatic ensurecrowdinclient downloadmessages compilemessages migrate
 	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=500 --error-logfile=/var/log/gunicorn-error.log --workers=3 --bind=0.0.0.0:8000 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
 
-collectstatic:
+collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
 	python contentcuration/manage.py collectstatic_js_reverse
 	python contentcuration/manage.py loadconstants
@@ -10,7 +10,7 @@ migrate:
 	python contentcuration/manage.py migrate
 
 ensurecrowdinclient:
-	ls -l crowdin-cli.jar || curl -L https://crowdin.com/downloads/crowdin-cli.jar > crowdin-cli.jar # make sure we have the official crowdin cli client
+  ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
 
 makemessages:
 	# generate frontend messages
@@ -19,16 +19,15 @@ makemessages:
 	python contentcuration/manage.py makemessages
 
 uploadmessages: ensurecrowdinclient
-	java -jar crowdin-cli.jar upload sources
+	java -jar /contentcuration/crowdin-cli.jar upload sources
 
 # we need to depend on makemessages, since CrowdIn requires the en folder to be populated
 # in order for it to properly extract strings
-downloadmessages: makemessages
+downloadmessages: ensurecrowdinclient makemessages
 	java -jar crowdin-cli.jar download
 
 compilemessages:
 	python contentcuration/manage.py compilemessages
-
 
 devserver:
 	cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8000
