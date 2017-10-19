@@ -454,7 +454,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id')
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language')
 
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
@@ -575,7 +575,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
             'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
-            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language',
+            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data')
 
@@ -599,6 +599,9 @@ class ChannelFieldMixin(object):
 
     def get_resource_count(self, channel):
         return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
+
+    def get_published_resource_count(self, channel):
+        return channel.main_tree.get_descendants().filter(published=True).exclude(kind_id=content_kinds.TOPIC).count()
 
     def get_date_created(self, channel):
         return channel.main_tree.created
@@ -693,14 +696,14 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    total_resource_count = serializers.SerializerMethodField("get_resource_count")
+    total_resource_count = serializers.SerializerMethodField("get_published_resource_count")
     kind_count = serializers.SerializerMethodField('generate_kind_count')
     size = serializers.SerializerMethodField('calculate_size')
     included_languages = serializers.SerializerMethodField('get_languages')
     matching_tokens = serializers.SerializerMethodField('match_tokens')
 
     def match_tokens(self, channel):
-        tokens = json.loads(channel.tokens)
+        tokens = json.loads(channel.tokens) if hasattr(channel, 'tokens') else []
         return list(channel.secret_tokens.filter(token__in=tokens).values_list('token', flat=True))
 
     def get_languages(self, channel):

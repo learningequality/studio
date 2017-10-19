@@ -365,15 +365,17 @@ def set_channel_priority(request):
             return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
 
-def _get_channel_list(params, token=None):
+def _get_channel_list(params, identifier=None):
     keyword = params.get('keyword', '').strip()
     language_id = params.get('language', '').strip()
     token_list = params.get('tokens', '').strip().replace('-', '').split(',')
     thumbnail = 1 if params.get('thumbnails') == 'true' else 0
 
     channels = None
-    if token:
-        channels = Channel.objects.prefetch_related('secret_tokens').filter(secret_tokens__token=token)
+    if identifier:
+        channels = Channel.objects.prefetch_related('secret_tokens').filter(secret_tokens__token=identifier)
+        if not channels.exists():
+            channels = Channel.objects.filter(pk=identifier)
     else:
         channels = Channel.objects.prefetch_related('secret_tokens').filter(Q(public=True) | Q(secret_tokens__token__in=token_list))
 
@@ -396,17 +398,8 @@ def get_public_channel_list(request):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def get_public_channel_list_by_token(request, token):
-    channel_list = _get_channel_list(request.query_params, token=token.strip().replace('-', ''))
+def get_public_channel_lookup(request, identifier):
+    channel_list = _get_channel_list(request.query_params, identifier=identifier.strip().replace('-', ''))
     if not channel_list.exists():
-        return HttpResponseNotFound(_("No channel matching {} found").format(token))
+        return HttpResponseNotFound(_("No channel matching {} found").format(identifier))
     return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_public_channel_version(request, channel_id):
-    channel = Channel.objects.filter(pk=channel_id).first()
-    if not channel:
-        return HttpResponseNotFound(_("No channel matching {} found").format(token))
-    return HttpResponse(json.dumps({'name': channel.name, 'version': channel.version}))
-

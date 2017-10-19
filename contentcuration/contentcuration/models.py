@@ -361,7 +361,7 @@ class Channel(models.Model):
             return cached_data
         tree_id = self.main_tree.tree_id
         files = File.objects.select_related('contentnode', 'assessment_item')\
-            .filter(Q(contentnode__tree_id=tree_id) | Q(assessment_item__contentnode__tree_id=tree_id))\
+            .filter(contentnode__tree_id=tree_id)\
             .values('checksum', 'file_size')\
             .distinct()\
             .aggregate(resource_size=Sum('file_size'))
