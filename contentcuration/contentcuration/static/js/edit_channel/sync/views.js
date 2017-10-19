@@ -36,8 +36,6 @@ var MESSAGES = {
     "update": "UPDATE",
     "question_deleted": "Question Deleted",
     "deleted": "Deleted",
-    "hint_count": "{count, plural,\n =1 {# hint}\n other {# hints}}",
-    "answer_count": "{count, plural,\n =1 {# answer}\n other {# answers}}",
     "question_modified": "Question Modified",
     "changed": "Changed",
     "answer": "Answer",
@@ -52,8 +50,11 @@ var MESSAGES = {
     "preview_content_text": "Review changes made to original content",
     "preview_exercise": "Preview this exercise on the source website",
     "video_error": "Your browser does not support the video tag.",
-    "image_error": "Image failed to load"
-
+    "image_error": "Image failed to load",
+    "ans_hint_count": "({data, plural,\n =1 {# answer}\n other {# answers}}, {data2, plural,\n =1 {# hint}\n other {# hints}})",
+    "license": "License",
+    "language": "Language",
+    "same_as_topic": "Same as Topic"
 }
 
 
@@ -284,13 +285,15 @@ var SyncPreviewView = BaseViews.BaseView.extend({
             diff = (this.generate_metadata_diff());              // Get diff on metadata
             diff.push(this.generate_tag_diff());                 // Get diff on tags
             diff.push(this.generate_file_diff());                // Get diff on files
-            diff.push(this.generate_assessment_item_diff());     // Get diff on assessment items
+            if(this.model.get('kind') == 'exercise'){
+                diff.push(this.generate_assessment_item_diff());     // Get diff on assessment items
+            }
         }
         return _.reject(diff, function(item) { return !item; });
     },
     generate_metadata_diff: function(){
         var self = this;
-        var fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields'];
+        var fields_to_check = ['title', 'description', 'license', 'language', 'license_description', 'copyright_holder', 'author', 'extra_fields'];
         return _.chain(fields_to_check).filter(function(f) { return self.compare_field(f); })
             .reduce(function(a, f) { return a.concat(self.generate_diff_item(f)); }, []).value();
     },
@@ -306,6 +309,14 @@ var SyncPreviewView = BaseViews.BaseView.extend({
                     "field" : this.get_translation("license"),
                     "current": stringHelper.translate(window.licenses.get(this.model.get(field)).get('license_name')),
                     "source": stringHelper.translate(window.licenses.get(this.changed.get(field)).get('license_name'))
+                }
+            case "language":
+                var current_lang = (this.model.get(field))? window.languages.get(this.model.get(field)).get('native_name') : this.get_translation("same_as_topic");
+                var source_lang = (this.changed.get(field))? window.languages.get(this.changed.get(field)).get('native_name') : this.get_translation("same_as_topic");
+                return {
+                    "field" : this.get_translation("language"),
+                    "current": current_lang.charAt(0).toUpperCase() + current_lang.slice(1),
+                    "source": source_lang.charAt(0).toUpperCase() + source_lang.slice(1)
                 }
             case "extra_fields":
                 if(this.model.get('kind') === 'exercise'){
@@ -423,12 +434,15 @@ var SyncPreviewView = BaseViews.BaseView.extend({
         });
     },
     generate_question_object: function(question){
+        var hints = JSON.parse(question.hints) || [];
+        var answers = JSON.parse(question.answers) || [];
         return {
             "id": question.assessment_id,
             "model": question,
             "question": question.question || (question.raw_data && "Perseus Question"),
-            "answers": JSON.parse(question.answers) || [],
-            "hints": JSON.parse(question.hints) || []
+            "answers": answers,
+            "hints": hints,
+            "ans_hint_count": this.get_translation("ans_hint_count", answers.length, hints.length)
         }
     },
     generate_question_comparison: function(q1, q2){
