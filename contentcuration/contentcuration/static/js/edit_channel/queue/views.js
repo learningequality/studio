@@ -222,11 +222,11 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	reload:function(model){
 		this.model.set(model.attributes);
-		this.$el.find(">label .title").text(this.model.get("title"));
-		this.$el.find(">label .badge").text(this.model.get("metadata").resource_count);
+		this.$el.find(">div>label .title").text(this.model.get("title"));
+		this.$el.find(">div>label .badge").text(this.model.get("metadata").resource_count);
 	},
 	handle_checked:function(){
-		this.checked = this.$el.find("div>input[type=checkbox]").is(":checked");
+		this.checked = this.$el.find(">div>input[type=checkbox]").is(":checked");
 		(this.checked)? this.$el.addClass(this.selectedClass) : this.$el.removeClass(this.selectedClass);
 		this.container.handle_checked();
 	},
