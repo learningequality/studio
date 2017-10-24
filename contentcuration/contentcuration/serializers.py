@@ -600,9 +600,6 @@ class ChannelFieldMixin(object):
     def get_resource_count(self, channel):
         return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
 
-    def get_published_resource_count(self, channel):
-        return channel.main_tree.get_descendants().filter(published=True).exclude(kind_id=content_kinds.TOPIC).count()
-
     def get_date_created(self, channel):
         return channel.main_tree.created
 
@@ -696,41 +693,20 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    total_resource_count = serializers.SerializerMethodField("get_published_resource_count")
     kind_count = serializers.SerializerMethodField('generate_kind_count')
-    size = serializers.SerializerMethodField('calculate_size')
-    included_languages = serializers.SerializerMethodField('get_languages')
     matching_tokens = serializers.SerializerMethodField('match_tokens')
 
     def match_tokens(self, channel):
         tokens = json.loads(channel.tokens) if hasattr(channel, 'tokens') else []
         return list(channel.secret_tokens.filter(token__in=tokens).values_list('token', flat=True))
 
-    def get_languages(self, channel):
-        published_nodes = channel.main_tree.get_descendants().filter(published=True)
-        node_languages = published_nodes.exclude(language=None).values_list('language', flat=True)
-        file_languages = published_nodes.values_list('files__language', flat=True)
-        language_list = list(set(chain(node_languages, file_languages)))
-        return [x for x in language_list if x is not None]
-
-    def calculate_size(self, channel):
-        sizes = ContentNode.objects\
-            .prefetch_related('assessment_items')\
-            .prefetch_related('files')\
-            .filter(published=True)\
-            .filter(tree_id=channel.main_tree.tree_id)\
-            .values('files__checksum', 'assessment_items__files__checksum', 'files__file_size', 'assessment_items__files__file_size')\
-            .distinct()\
-            .aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
-        return (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0)
-
     def generate_kind_count(self, channel):
-        return list(channel.main_tree.get_descendants().filter(published=True).values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
+        return channel.published_kind_count and json.loads(channel.published_kind_count)
 
     class Meta:
         model = Channel
         fields = ('id', 'name', 'language', 'included_languages', 'description', 'total_resource_count', 'version',
-                  'kind_count', 'size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
+                  'kind_count', 'published_size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

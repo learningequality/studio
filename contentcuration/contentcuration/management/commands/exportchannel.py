@@ -14,13 +14,14 @@ from django.conf import settings
 from django.core.files import File
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
-from django.db.models import Q
+from django.db.models import Q, Count, Sum
 from django.template.loader import render_to_string
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 from pressurecooker.encodings import write_base64_to_file
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration import models as ccmodels
 from contentcuration.utils.parser import extract_value
+from itertools import chain
 from kolibri.content import models as kolibrimodels
 from kolibri.content.utils.search import fuzz
 from contentcuration.statistics import record_publish_stats
@@ -78,6 +79,7 @@ class Command(BaseCommand):
                 increment_channel_version(channel)
                 mark_all_nodes_as_changed(channel)
                 add_tokens_to_channel(channel)
+                fill_published_fields(channel)
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -564,3 +566,18 @@ def add_tokens_to_channel(channel):
         tk_human = ccmodels.SecretToken.objects.create(token=token, is_primary=True)
         tk = ccmodels.SecretToken.objects.create(token=channel.id)
         channel.secret_tokens.add(tk_human, tk)
+
+def fill_published_fields(channel):
+    published_nodes = channel.main_tree.get_descendants().filter(published=True).prefetch_related('files')
+    channel.total_resource_count = published_nodes.exclude(kind_id=content_kinds.TOPIC).count()
+    channel.published_kind_count = json.dumps(list(published_nodes.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')))
+    channel.published_size = published_nodes.values('files__checksum', 'files__file_size').distinct().aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+
+    node_languages = published_nodes.exclude(language=None).values_list('language', flat=True)
+    file_languages = published_nodes.values_list('files__language', flat=True)
+    language_list = list(set(chain(node_languages, file_languages)))
+
+    for lang in language_list:
+        if lang:
+            channel.included_languages.add(lang)
+    channel.save()
