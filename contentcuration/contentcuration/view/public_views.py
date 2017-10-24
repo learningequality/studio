@@ -59,7 +59,7 @@ def get_public_channel_lookup(request, version, identifier):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def get_channel_name_by_id(request, version, channel_id):
+def get_channel_name_by_id(request, channel_id):
     """ Endpoint: /public/channels/<channel_id> """
     channel = Channel.objects.filter(pk=channel_id).first()
     if not channel:
