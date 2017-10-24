@@ -459,7 +459,7 @@ var ShareCurrentItem = ShareItem.extend({
         _.bindAll(this, 'remove_editor');
         this.bind_edit_functions();
         this.containing_list_view = options.containing_list_view;
-        if(this.model.get("viewers").indexOf(this.model.get("id")) >= 0){
+        if(this.model.get("viewers") && this.model.get("viewers").indexOf(this.model.get("id")) >= 0){
             this.share_mode = "view";
         }
         this.render();
