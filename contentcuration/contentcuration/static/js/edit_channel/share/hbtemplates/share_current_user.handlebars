@@ -1,0 +1,7 @@
+{{#if user.is_admin}}
+	{{#if can_edit}}<span class="leave_editors glyphicon glyphicon-log-out" title="{{formatMessage (intlGet 'messages.leave')}}"></span>
+	{{else}}<span class="join_editors glyphicon glyphicon-log-in" title="{{formatMessage (intlGet 'messages.join')}}"></span>
+	{{/if}}
+{{else}}
+	<span class="pending_indicator"><strong>{{formatMessage (intlGet 'messages.you')}}</strong></span>
+{{/if}}
