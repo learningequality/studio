@@ -16,6 +16,7 @@ from django.template.loader import render_to_string
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers
 from contentcuration.models import Channel, User, Invitation, ContentNode
+from contentcuration.utils.messages import get_messages
 from contentcuration.serializers import AdminChannelListSerializer, AdminUserListSerializer, CurrentUserSerializer
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -63,6 +64,7 @@ def administration(request):
                                                  "current_user": JSONRenderer().render(CurrentUserSerializer(request.user).data),
                                                  "default_sender": settings.DEFAULT_FROM_EMAIL,
                                                  "placeholders": json.dumps(EMAIL_PLACEHOLDERS, ensure_ascii=False),
+                                                 "messages": get_messages(),
                                                 })
 
 @login_required
