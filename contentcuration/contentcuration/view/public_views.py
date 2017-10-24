@@ -7,6 +7,12 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 
+def _get_channel_list(version, params, identifier=None):
+    if version == "v1":
+        return _get_channel_list_v1(params, identifier=identifier)
+    else:
+        raise LookupError()
+
 def _get_channel_list_v1(params, identifier=None):
     keyword = params.get('keyword', '').strip()
     language_id = params.get('language', '').strip()
@@ -36,22 +42,20 @@ def _get_channel_list_v1(params, identifier=None):
 @permission_classes((AllowAny,))
 def get_public_channel_list(request, version):
     """ Endpoint: /public/<version>/channels/?=<query params> """
-    channel_list = []
-    if version.lower() == "v1":
-        channel_list = _get_channel_list_v1(request.query_params)
-    else:
-        return HttpResponseNotFound(_("Version {} is not available").format(version))
+    try:
+        channel_list = _get_channel_list(version, request.query_params)
+    except LookupError:
+        return HttpResponseNotFound(_("Api endpoint {} is not available").format(version))
     return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def get_public_channel_lookup(request, version, identifier):
     """ Endpoint: /public/<version>/channels/lookup/<identifier> """
-    channel_list = []
-    if version.lower() == "v1":
-        channel_list = _get_channel_list_v1(request.query_params, identifier=identifier.strip().replace('-', ''))
-    else:
-        return HttpResponseNotFound(_("Version {} is not available").format(version))
+    try:
+        channel_list = _get_channel_list(version, request.query_params, identifier=identifier.strip().replace('-', ''))
+    except LookupError:
+        return HttpResponseNotFound(_("Api endpoint {} is not available").format(version))
 
     if not channel_list.exists():
         return HttpResponseNotFound(_("No channel matching {} found").format(identifier))
