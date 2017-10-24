@@ -306,7 +306,6 @@ class Channel(models.Model):
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True, null=True)
     thumbnail_encoding = models.TextField(blank=True, null=True)
-    icon_encoding = models.TextField(blank=True, null=True)
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='editable_channels',
@@ -349,6 +348,18 @@ class Channel(models.Model):
     source_id = models.CharField(max_length=200, blank=True, null=True)
     source_domain = models.CharField(max_length=300, blank=True, null=True)
     ricecooker_version = models.CharField(max_length=100, blank=True, null=True)
+
+    # Fields to calculate when channel is published
+    icon_encoding = models.TextField(blank=True, null=True)
+    total_resource_count = models.IntegerField(default=0)
+    published_kind_count = models.TextField(blank=True, null=True)
+    published_size = models.FloatField(default=0)
+    included_languages = models.ManyToManyField(
+        "Language",
+        related_name='channels',
+        verbose_name=_("languages"),
+        blank=True,
+    )
 
     def resource_size_key(self):
         return "{}_resource_size".format(self.pk)
