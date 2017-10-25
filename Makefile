@@ -7,7 +7,7 @@ collectstatic: migrate
 	python contentcuration/manage.py loadconstants
 
 migrate:
-	python contentcuration/manage.py migrate
+	python contentcuration/manage.py migrate || true
 
 ensurecrowdinclient:
   ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
