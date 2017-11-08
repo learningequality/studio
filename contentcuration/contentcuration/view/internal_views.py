@@ -376,6 +376,23 @@ def get_tree_data(request):
     except Exception as e:
         return HttpResponseServerError(content=str(e), reason=str(e))
 
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def get_node_tree_data(request):
+    """ Create the channel node """
+    data = json.loads(request.body)
+    try:
+        obj = Channel.objects.get(pk=data['channel_id'])
+        root = obj.staging_tree or obj.main_tree
+        node = root.get_descendants().filter(node_id=data['node_id']).first() if data.get('node_id') else root
+
+        return HttpResponse(json.dumps({"success": True, 'tree': node.get_node_tree_data(), 'staged': obj.staging_tree != None}))
+
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))

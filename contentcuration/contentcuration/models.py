@@ -556,20 +556,46 @@ class ContentNode(MPTTModel, models.Model):
             return {
                 "title": self.title,
                 "kind": self.kind_id,
-                "children": [c.get_tree_data() for c in self.children.all()]
+                "children": [c.get_tree_data() for c in self.children.all()],
+                "node_id": self.node_id,
             }
         elif self.kind_id == content_kinds.EXERCISE:
             return {
                 "title": self.title,
                 "kind": self.kind_id,
-                "count": self.assessment_items.count()
+                "count": self.assessment_items.count(),
+                "node_id": self.node_id,
             }
         else:
             return {
                 "title": self.title,
                 "kind": self.kind_id,
-                "file_size": self.files.values('file_size').aggregate(size=Sum('file_size'))['size']
+                "file_size": self.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
+                "node_id": self.node_id,
             }
+
+    def get_node_tree_data(self):
+        nodes = []
+        for child in self.children.all():
+            if child.kind_id == content_kinds.TOPIC:
+                nodes.append({
+                    "title": child.title,
+                    "kind": child.kind_id,
+                    "node_id": child.node_id,
+                })
+            elif child.kind_id == content_kinds.EXERCISE:
+                nodes.append({
+                    "title": child.title,
+                    "kind": child.kind_id,
+                    "count": child.assessment_items.count(),
+                })
+            else:
+                nodes.append({
+                "title": child.title,
+                "kind": child.kind_id,
+                "file_size": child.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
+            })
+        return nodes
 
     def get_original_node(self):
         original_node = self.original_node or self
