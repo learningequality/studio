@@ -34,6 +34,7 @@ import contentcuration.view.zip_views as zip_views
 import contentcuration.view.file_views as file_views
 import contentcuration.view.node_views as node_views
 import contentcuration.view.admin_views as admin_views
+import contentcuration.view.public_views as public_views
 import django_js_reverse.views as django_js_reverse_views
 import django.views as django_views
 
@@ -194,13 +195,16 @@ urlpatterns = [
     url(r'^healthz$', views.health, name='health'),
     url(r'^stealthz$', views.stealth, name='stealth'),
     url(r'^api/search/', include('search.urls'), name='search'),
-    url(r'^api/public/channel/(?P<channel_id>[^/]+)', views.get_channel_name_by_id, name='get_channel_name_by_id'),
-    url(r'^api/public/channels$', views.get_public_channel_list, name='get_public_channel_list'),
-    url(r'^api/public/channels/bytoken/(?P<token>[^/]+)', views.get_public_channel_list_by_token, name='get_public_channel_list_by_token'),
-    url(r'^api/public/channel_version/(?P<channel_id>[^/]+)', views.get_public_channel_version, name='get_public_channel_version'),
     url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
     url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
+]
+
+# Add public api endpoints
+urlpatterns += [
+    url(r'^api/public/channel/(?P<channel_id>[^/]+)', public_views.get_channel_name_by_id, name='get_channel_name_by_id'),
+    url(r'^api/public/(?P<version>[^/]+)/channels$', public_views.get_public_channel_list, name='get_public_channel_list'),
+    url(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
 ]
 
 # Add node api enpoints
@@ -274,6 +278,7 @@ urlpatterns += [
     url(r'^api/internal/check_user_is_editor$', internal_views.check_user_is_editor, name='check_user_is_editor'),
     url(r'^api/internal/compare_trees$', internal_views.compare_trees, name='compare_trees'),
     url(r'^api/internal/get_tree_data$', internal_views.get_tree_data, name='get_tree_data'),
+    url(r'^api/internal/get_node_tree_data$', internal_views.get_node_tree_data, name='get_node_tree_data'),
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),
     url(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
     url(r'^api/internal/api_add_nodes_from_file$', internal_views.api_add_nodes_from_file, name="api_add_nodes_from_file"),

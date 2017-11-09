@@ -307,16 +307,6 @@ def get_staged_diff_endpoint(request):
         return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
 
 
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_channel_name_by_id(request, channel_id):
-    """ Endpoint: /public/channel/<channel_id> """
-    try:
-        channel = Channel.objects.get(pk=channel_id)
-        return HttpResponse(json.dumps({"name": channel.name, "description": channel.description, "version": channel.version}))
-    except ObjectDoesNotExist:
-        return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
-
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def add_bookmark(request):
@@ -363,50 +353,3 @@ def set_channel_priority(request):
             return HttpResponse(json.dumps({"success": True}))
         except ObjectDoesNotExist:
             return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
-
-
-def _get_channel_list(params, token=None):
-    keyword = params.get('keyword', '').strip()
-    language_id = params.get('language', '').strip()
-    token_list = params.get('tokens', '').strip().replace('-', '').split(',')
-    thumbnail = 1 if params.get('thumbnails') == 'true' else 0
-
-    channels = None
-    if token:
-        channels = Channel.objects.prefetch_related('secret_tokens').filter(secret_tokens__token=token)
-    else:
-        channels = Channel.objects.prefetch_related('secret_tokens').filter(Q(public=True) | Q(secret_tokens__token__in=token_list))
-
-    if keyword != '':
-        channels = channels.prefetch_related('tags').filter(Q(name__icontains=keyword) | Q(description__icontains=keyword) | Q(tags__tag_name__icontains=keyword))
-
-    if language_id != '':
-        matching_tree_ids = ContentNode.objects.prefetch_related('files').filter(Q(language__id__icontains=language_id) | Q(files__language__id__icontains=language_id)).values_list('tree_id', flat=True)
-        channels = channels.select_related('language').filter(Q(language__id__icontains=language_id) | Q(main_tree__tree_id__in=matching_tree_ids))
-
-    return channels.annotate(tokens=Value(json.dumps(token_list), output_field=TextField()))\
-                    .order_by("-priority")\
-                    .distinct()
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_public_channel_list(request):
-    channel_list = _get_channel_list(request.query_params)
-    return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_public_channel_list_by_token(request, token):
-    channel_list = _get_channel_list(request.query_params, token=token.strip().replace('-', ''))
-    if not channel_list.exists():
-        return HttpResponseNotFound(_("No channel matching {} found").format(token))
-    return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_public_channel_version(request, channel_id):
-    channel = Channel.objects.filter(pk=channel_id).first()
-    if not channel:
-        return HttpResponseNotFound(_("No channel matching {} found").format(token))
-    return HttpResponse(json.dumps({'name': channel.name, 'version': channel.version}))
-

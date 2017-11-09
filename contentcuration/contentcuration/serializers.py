@@ -454,7 +454,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id')
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language')
 
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
@@ -575,7 +575,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
             'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
-            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'language',
+            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data')
 
@@ -693,41 +693,20 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    total_resource_count = serializers.SerializerMethodField("get_resource_count")
     kind_count = serializers.SerializerMethodField('generate_kind_count')
-    size = serializers.SerializerMethodField('calculate_size')
-    included_languages = serializers.SerializerMethodField('get_languages')
     matching_tokens = serializers.SerializerMethodField('match_tokens')
 
     def match_tokens(self, channel):
-        tokens = json.loads(channel.tokens)
+        tokens = json.loads(channel.tokens) if hasattr(channel, 'tokens') else []
         return list(channel.secret_tokens.filter(token__in=tokens).values_list('token', flat=True))
 
-    def get_languages(self, channel):
-        published_nodes = channel.main_tree.get_descendants().filter(published=True)
-        node_languages = published_nodes.exclude(language=None).values_list('language', flat=True)
-        file_languages = published_nodes.values_list('files__language', flat=True)
-        language_list = list(set(chain(node_languages, file_languages)))
-        return [x for x in language_list if x is not None]
-
-    def calculate_size(self, channel):
-        sizes = ContentNode.objects\
-            .prefetch_related('assessment_items')\
-            .prefetch_related('files')\
-            .filter(published=True)\
-            .filter(tree_id=channel.main_tree.tree_id)\
-            .values('files__checksum', 'assessment_items__files__checksum', 'files__file_size', 'assessment_items__files__file_size')\
-            .distinct()\
-            .aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
-        return (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0)
-
     def generate_kind_count(self, channel):
-        return list(channel.main_tree.get_descendants().filter(published=True).values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
+        return channel.published_kind_count and json.loads(channel.published_kind_count)
 
     class Meta:
         model = Channel
         fields = ('id', 'name', 'language', 'included_languages', 'description', 'total_resource_count', 'version',
-                  'kind_count', 'size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
+                  'kind_count', 'published_size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

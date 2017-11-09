@@ -32,7 +32,7 @@ def get_node_diff(request):
         channel_id = json.loads(request.body)['channel_id']
         original = []   # Currently imported nodes
         changed = []    # Nodes from original node
-        fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields']
+        fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields', 'language']
         assessment_fields_to_check = ['type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize']
 
 

@@ -1,13 +1,13 @@
 prodserver: migrate collectstatic ensurecrowdinclient downloadmessages compilemessages
 	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=500 --error-logfile=/var/log/gunicorn-error.log --workers=3 --bind=0.0.0.0:8000 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
 
-collectstatic:
+collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
 	python contentcuration/manage.py collectstatic_js_reverse
 	python contentcuration/manage.py loadconstants
 
 migrate:
-	python contentcuration/manage.py migrate
+	python contentcuration/manage.py migrate || true
 
 ensurecrowdinclient:
   ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar

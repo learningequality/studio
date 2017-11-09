@@ -85,13 +85,11 @@ var BaseView = Backbone.View.extend({
 					.value();
 	},
 	get_intl_data: function(){
-		if(window.languages){
-			var language = window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
-			return {
-				intl: {
-					locales: [(language && language.id) || "en-US"],
-					messages: this.get_translation_library()
-				}
+		var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+		return {
+			intl: {
+				locales: [(language && language.id) || "en-US"],
+				messages: this.get_translation_library()
 			}
 		}
 	},
@@ -415,16 +413,16 @@ var BaseWorkspaceView = BaseView.extend({
 	sync_content:function(){
 		var SyncView = require("edit_channel/sync/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
-		// var sync = new SyncView.TempSyncModalView({
-		// 	el: $("#dialog"),
-		//     onsync: this.reload_ancestors,
-		//     model: window.current_channel.get_root("main_tree")
-		// });
-		var sync = new SyncView.SyncModalView({
+		var sync = new SyncView.TempSyncModalView({
 			el: $("#dialog"),
 		    onsync: this.reload_ancestors,
 		    model: window.current_channel.get_root("main_tree")
 		});
+		// var sync = new SyncView.SyncModalView({
+		// 	el: $("#dialog"),
+		//     onsync: this.reload_ancestors,
+		//     model: window.current_channel.get_root("main_tree")
+		// });
 	},
 	delete_items_permanently:function(message, list, callback){
 		message = (message!=null)? message: this.get_translation("deleting");
