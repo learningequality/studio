@@ -472,6 +472,10 @@ var UserTab = BaseAdminTab.extend({
             key: "admins",
             label: "Admins",
             filter: function(item){ return item.get("is_admin"); }
+        }, {
+            key: "is_chef",
+            label: "Sushi Chefs",
+            filter: function(item){ return item.get("is_chef"); }
         }
     ],
     sort_filters: [
