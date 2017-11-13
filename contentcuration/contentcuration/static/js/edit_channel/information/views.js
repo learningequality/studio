@@ -89,7 +89,7 @@ var PublishedModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/published_modal.handlebars"),
   publish_template: require("./hbtemplates/published.handlebars"),
   modal_id: "#published_modal",
-  get_id: false,
+  get_id: true,
   render: function() {
       BaseInfoModalView.prototype.render.call(this);
       this.render_id();
