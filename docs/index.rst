@@ -1,5 +1,5 @@
-Kolibri Studio Guide
-====================
+Kolibri Studio User Guide
+=========================
 
 .. toctree::
    :maxdepth: 2
