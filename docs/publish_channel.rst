@@ -7,13 +7,13 @@ You must publish the content channel each time you add new learning resources, u
 
 To publish a content channel, follow these steps.
 
-1. Click **PUBLISH** button in the upper right corner of the channel content page.
+#. Click **PUBLISH** button in the upper right corner of the channel content page.
    
    .. note:: If there are no changes in the channel content, **No changes detected** will be displayed instead of the **PUBLISH** button.
 
-2. Review the list of content that is going to be published.
-3. Check if the channel language is correctly set in the drop-down menu.
-4. Click **PUBLISH** button in the lower right corner of the dialog.
+#. Review the list of content that is going to be published.
+#. Check if the channel language is correctly set in the drop-down menu.
+#. Click **PUBLISH** button in the lower right corner of the dialog.
 
    .. figure:: img/publish-channel.png
       :alt: Publish channel dialog.

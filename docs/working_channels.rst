@@ -29,16 +29,18 @@ Each channel pane page displays some basic information about the channel:
 
       Details in the channel pane.
 
-1.  Channel name
-2.  Channel description
-3.  Thumbnail image (optional)
-4.  Channel language
-5.  Number of resources (exercises, videos, audio or document files)
-6.  Channel ID/token - `32 digit unique identifier <https://en.wikipedia.org/wiki/Universally_unique_identifier>`_ for each channel used for downloading and sharing content channels
-7.  Copy the channel ID/token to the computer's clipboard (clipboard icon)
-8.  Edit channel information button (pencil icon)
-9.  Star indicator
-10. Latest update indicator
+#.  Channel name
+#.  Channel description
+#.  Thumbnail image (optional)
+#.  Channel language
+#.  Number of resources (exercises, videos, audio or document files)
+#.  Channel ID/token - `32 digit unique identifier <https://en.wikipedia.org/wiki/Universally_unique_identifier>`_ for each channel used for downloading and sharing content channels
+#.  Copy the channel ID/token to the computer's clipboard (clipboard icon)
+#.  Edit channel information button (pencil icon)
+#.  Star indicator
+#. Latest update indicator
+
+.. note:: The term **Channel ID** is valid for Kolibri versions up to 0.6, while from Kolibri version 0.7 we will start using exclusively the term **token** to uniquely designate each channel.
 
 .. tip:: Click the Kolibri icon in the upper left corner to return to **My Channels** page from any other section of the Kolibri Studio site.
 
@@ -52,20 +54,16 @@ Create a New Channel
 To create a new content channel, follow these steps.
 
 #. Click **+ Channel** button.
-   
 #. Name the new channel and add a description.
-
 #. Select the channel language from the dropdown selector.
-
-#. Click on the default channel Kolibri image and upload an image for the thumbnail if desired (optional).
+#. Click on the default channel image (Kolibri logo), and upload an image for the thumbnail if desired (optional).
    
    .. figure:: img/add-thumb.png
       :alt: Change content channel thumbnail.
 
       Change content channel thumbnail.
 
-
-#. Click **CREATE** to finish creating the channel, and the channel will be available in the **My Channels** list.
+#. Click **CREATE** to finish creating the channel, and the channel will be available in your **My Channels** list.
 
 Now that you have created the content channel, :ref:`proceed to add and organize content in the channel <add_content>`
 
@@ -91,11 +89,11 @@ Delete Channel
 
 To permanently delete the channel follow these steps.
 
-1. Click on the pencil icon in the right upper corner of the channel pane.
+#. Click on the pencil icon in the right upper corner of the channel pane.
 
-2. Click the **DELETE CHANNEL** link under the description field. 
+#. Click the **DELETE CHANNEL** link under the description field. 
 
-3. Read the browser warning message and click **OK** to confirm the deletion, or **Cancel** to exit without deleting.
+#. Read the browser warning message and click **OK** to confirm the deletion, or **CANCEL** to exit without deleting.
 
    .. figure:: img/delete-channel.png
       :alt: Warning alert while deleting channel.

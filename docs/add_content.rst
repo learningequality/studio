@@ -5,6 +5,8 @@ Add Content to Channels
 
 Before you start building content channels in Kolibri Studio, you should dedicate some time to plan the channel structure and how should the topics be organized - by subject, source, learner's age, etc. Use the checklist in the :ref:`Appendix <appendix>` to help you plan. 
 
+``TODO - cross-link with relevant documents from the EdToolkit.``
+
 Structure of Content Channels
 =============================
 
@@ -23,7 +25,7 @@ Content channel aligned to a specific state curriculum might instead be structur
 Channel Topic Tree
 ******************
 
-Inside each content channel the individual learning resources (exercises, videos, audio or document files) are organized in groups of related resources in a structure called a channel topic tree, similar to how files are organized in folders on a computer.
+Inside each content channel the individual learning resources (exercises, videos, audio or document files) are organized in groups of related resources in a structure called a **channel topic tree**, similar to how files are organized in folders on a computer.
 
 Think of the topics as folders that can contain other sub-folders (sub-topics) or files (learning resources) directly. A folder in the topic tree can contain both individual resources and sub-folders.
 
@@ -32,7 +34,7 @@ Think of the topics as folders that can contain other sub-folders (sub-topics) o
 
       Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
 
-There is no inherent restriction on the depth of topic trees or the number of resources that you can place in a channel. However, you should take into consideration the intended learning pathway and user experience for when the channel will be imported in Kolibri, and try to build your topic tree so that learners do not need to click through long series of subfolders to arrive to the desired learning resource.
+There is no inherent restriction on the depth of topic trees or the number of resources that you can place in a channel. However, you should take into consideration the intended learning pathway and user experience once channel is imported in Kolibri, and try to build your topic tree so that learners do not need to click through long series of subfolders to arrive to the desired learning resource.
 
 .. _edit_content_tools:
 
@@ -44,7 +46,7 @@ Edit Channel Content Tools
 
       Edit Channel Content Tools
 
-1. Channel Content Toolbar contains:
+#. Channel Content Toolbar contains:
 
    a. :ref:`Edit selected content details <edit_content>`
    b. :ref:`Copy selected content into clipboard <copy_content>`
@@ -52,15 +54,15 @@ Edit Channel Content Tools
    d. :ref:`Delete selected content <delete_content>`
    e. :ref:`Sync imported content <sync>`
    f. :ref:`Invite collaborators <invite_collaborators>`
-   g. Hide details for all content topics
+   g. Hide details for all content topics (when checked, only topic titles will be displayed)
 
-2. Return to **My Channels** page
-3. Channel selector dropdown menu
-4. Channel ID/token number
-5. Indicator for changes in channel pending to be published
-6. :ref:`Clipboard <clipboard>` pull-out button (with the indicator of available content items)
-7. Topic container pane
-8. Button to :ref:`add topics <add_topics>`, :ref:`upload content <upload>`, and :ref:`create exercises <exercises>`.
+#. Return to **My Channels** page
+#. Channel selector dropdown menu
+#. Channel ID/token number
+#. Indicator for changes in channel pending to be published
+#. :ref:`Clipboard <clipboard>` button (with the indicator of available content items)
+#. Topic container pane
+#. Button to :ref:`add topics <add_topics>`, :ref:`upload content <upload>`, and :ref:`create exercises <exercises>`.
 
 .. _add_topics:
 
@@ -69,29 +71,26 @@ Add Topics to Channel
 
 To create a new topic in a content channel, follow these steps.
 
-1. Click **+ ADD** button.
-
-2. Select **Add Topics** option.
+#. Click **+ ADD** button.
+#. Select **Add Topics** option.
 
    .. figure:: img/add-topics.png
          :alt: Add Topics
 
          Add Topics
 
-3. Complete the topic information and metadata.
+#. Complete the topic information and metadata, and click **APPLY CHANGES** button.
 
-4. Click **APPLY CHANGES** button.
+   .. tip:: Use the checkboxes on the left to select topics, edit and change details or metadata, or ``X`` buttons to delete topics in this same window, and remember to click the **APPLY CHANGES** afterward.
 
-5. Click **+ TOPIC** button on the right side to add more topics.
-
-6. Click **SAVE & FINISH** to save changes and return to the previous page.
-
-.. tip:: Use the checkboxes on the left to select topics, edit and change details or metadata, or ``X`` buttons to delete topics in this same window, and remember to click the **APPLY CHANGES** afterward.
+#. Click **+ ADD TOPIC** button on the left side to add more topics.
 
    .. figure:: img/edit-topics.png
       :alt: Edit topic details and add metadata.
 
       Edit topic details and add metadata.
+
+#. Click **SAVE & FINISH** to save changes and return to the previous page.
 
 
 Add Subtopics
@@ -139,16 +138,16 @@ Currently allowed file formats for individual learning resources are:
 
 To upload individual learning resources into your content channel, follow these steps.
 
-1. Click **+ ADD** button.
+#. Click **+ ADD** button.
 
-2. Select **Upload Files** option.
+#. Select **Upload Files** option.
 
    .. figure:: img/upload-files.png
          :alt: Upload Files option.
 
          Upload Files option.
 
-3. Click **ADD FILES** button or drag and drop the files inside the window.
+#. Click **ADD FILES** button or drag and drop the files inside the window.
 
    .. figure:: img/add-more-files.png
          :alt: Add individual learning resources to content channel.
@@ -157,31 +156,30 @@ To upload individual learning resources into your content channel, follow these 
 
    .. note:: There is no general ideal size for each individual upload, and upload times and ideal number of content items per upload will largely depend on the available Internet connection.
 
-4. While uploading files, the system extracts some file information like filenames and thumbnails for videos. Once the upload is finished, you can change the name of the file, add lower/higher resolution option, and captions for videos:
+#. While uploading files, the system extracts some file information like filenames and thumbnails for videos. Once the upload is finished, you can change the name of the file, add lower/higher resolution option, and captions for videos:
 
    .. figure:: img/edit-upload.png
          :alt: Change or add file details.
 
          Change or add file details.
 
-5. You can also delete extracted thumbnails, generate them from content, or upload your own:
+#. You can also delete extracted thumbnails, generate them from content, or upload your own:
 
    .. figure:: img/generate-thumbnails.jpg
          :alt: Generate thumbnails from content.
 
          Generate thumbnails from content.
 
-6. Click **EDIT METADATA** button to proceed.
+#. Click **EDIT METADATA** button to proceed.
 
    .. tip:: Adding the **appropriate metadata** to each content item, and following the **consistent style for filenames and tags** will impact the search functionality, and you should keep it in mind in order to ensure the findability of the learning resources included in your channels. 
 
-7. Select each file on the right side to edit the respective metadata. 
+#. Select each file on the right side to edit the respective metadata. 
 
    .. figure:: img/edit-metadata.png
          :alt: Add metadata to files.
 
          Add metadata to files.
-
 
    .. tip:: Tags used previously will appear below the field when you start typing, so you can easily select and reuse them when appropriate.
 
@@ -194,10 +192,8 @@ To upload individual learning resources into your content channel, follow these 
 
                Add Special Permissions license.
 
-
-8. Click **APPLY CHANGES** button to save the intermediate changes.
-
-9. Click **SAVE & FINISH** to return to the main channel content page.
+#. Click **APPLY CHANGES** button to save the intermediate changes.
+#. Click **SAVE & FINISH** to return to the main channel content page.
 
 .. _video:
 
@@ -206,7 +202,7 @@ Video files
 
 .. tip:: **Recommendations for upload of video files**
 
-         There is no limit to video resolution or file size set by Kolibri Studio platform itself. However, keep in mind that the total channel size will impact the experience of the Kolibri administrator who will have to import and update it on the local Kolibri installation, and the size of the individual videos will impact the experience of the learners viewing it using Kolibri. Therefore, prefer smaller and low resolution video files.  
+         There is no limit to video resolution or file size set by Kolibri Studio platform itself. However, keep in mind that the total channel size will impact the experience of the Kolibri administrator who will have to import and update it on the local Kolibri installation, and the size of the individual videos will impact the experience of the learners viewing it using Kolibri. Therefore, **prefer smaller and low resolution video files**.  
 
 Additionally, you can add subtitles to videos, set the language, and preview them prior to publishing.
 
@@ -231,7 +227,7 @@ HTML5 Applications
 
 Kolibri Studio supports a special **HTML5 App** content format, which allows for rich, dynamic content such as games, interactive documents, and simulations. The format consists of a **ZIP** file containing HTML5 resources such as HTML, CSS, and JS files. These resources will be rendered within an *inline frame* in the Kolibri application.
 
-.. tip:: **Guidelines for HTML5 apps**
+.. tip:: **Guidelines for structure of the HTML5 apps**
 
    * There must be an **index.html** file at the top level within the ZIP file.
    * All resources referenced from HTML pages must be relative, pointing to files within the ZIP file — not online sources.
@@ -273,41 +269,39 @@ Kolibri marks an exercise as completed when learners meet the mastery criteria. 
 
 To create an exercise, follow these steps.
 
-1. Click **+ ADD** button.
-
-2. Select **Create Exercise** option.
+#. Click **+ ADD** button.
+#. Select **Create Exercise** option.
 
    .. figure:: img/create-exercise.png
          :alt: Select Create Exercise option.
 
          Select Create Exercise option.
 
-
-3. Edit the exercises in the **Details** tab to:
+#. Edit the exercise in the **Details** tab to:
 
    a. Add/Change the thumbnail 
    b. Set the exercise title 
    c. Select the mastery criteria 
    d. Fill in the copyright information and add tags
 
-      .. figure:: img/create-exercise-detail.png
-            :alt: Exercise Details tab options.
+   .. figure:: img/create-exercise-detail.png
+         :alt: Options in the exercise Details tab.
 
-            Exercise Details tab options.
+         Options in the exercise Details tab.
 
-4. Use the **Questions** tab to:
+#. Use the **Questions** tab to:
 
    a. Select the answer type (single/multiple, true/false or numeric input)
    b. Provide answers for each question 
    c. Provide hints for each question
    d. Randomize answer order
 
-      .. figure:: img/edit-content-questions.png
-            :alt: Exercise Questions tab options.
+   .. figure:: img/edit-content-questions.png
+         :alt: Exercise Questions tab options.
 
-            Exercise Questions tab options.
+         Exercise Questions tab options.
 
-5. Click the **+ QUESTION** button to add a new question to the exercise. Question editor field offers similar options as a basic text editor. You can format the text to be bold, add image files, undo and redo actions.
+#. Click the **+ QUESTION** button to add a new question to the exercise. Question editor field offers similar options as a basic text editor. You can format the text to be bold, add image files, undo and redo actions.
 
    .. figure:: img/question-editor.png
          :alt: Question field editor.
@@ -316,7 +310,7 @@ To create an exercise, follow these steps.
 
    .. tip:: You can resize images by selecting them and dragging the corners to achieve the desired size.
 
-6. Click the **+ ANSWER** button to add answer(s) to the question. Answer editor field offers the same formatting options as the Question editor. 
+#. Click the **+ ANSWER** button to add answer(s) to the question. Answer editor field offers the same formatting options as the Question editor. 
 
    .. figure:: img/answer-editor.png
          :alt: Answer field editor.
@@ -328,17 +322,14 @@ To create an exercise, follow these steps.
 
    .. warning:: Remember to activate the radio button for the correct answer (outlined in the image above).
 
+#. Click **HINTS** to open the Hint editor window.
 
-7. Click **HINTS** to open the Hint editor window.
-
-
-8. Click **+ HINT** button to add hints for the question. Hint editor field offers the same formatting options as the Question and Answer editors.
+#. Click **+ HINT** to add hints for the question. Hint editor field offers the same formatting options as the Question and Answer editors.
 
    .. figure:: img/hint-editor.png
          :alt: Hint editor field.
 
          Hint editor field.
-
 
    Keep clicking the **+ HINT** button to add as many hints as you want for the question.
 
@@ -349,16 +340,15 @@ To create an exercise, follow these steps.
 
          Reorder questions and hints.
 
-
-9. Use the **Prerequisite** tab to recommend the required exercises that the learner needs to finish prior to the current one:
+#. Use the **Prerequisite** tab to recommend the required videos and/or exercises that the learner should finish prior to the current one:
 
    .. figure:: img/edit-content-prerequisites.png
          :alt: Add Prerequisites for the current exercise.
 
          Add Prerequisites for the current exercise.
 
-
-10. Click **SAVE & CLOSE** when you finish editing to return to the topic view.
+#. Click **APPLY CHANGES** button to save the intermediate changes.
+#. Click **SAVE & CLOSE** when you finish editing to return to the topic view.
 
    .. figure:: img/final-question.png
          :alt: Review final question display.
@@ -372,32 +362,39 @@ Import Content from Other Channels
 
 To import content from other channels, either those previously published or those that are publicly available, follow these steps.
 
-1. Click **+ ADD** button.
-
-2. Select **Import from Channel** option. 
+#. Click **+ ADD** button.
+#. Select **Import from Channels** option. 
 
    .. figure:: img/import-from-channels.png
          :alt: Import content from other channels.
 
          Import content from other channels.
 
-3. Select the content you want from **Import from Other Channels** dialog. This window will display all the channels that you can import content from. You can select the whole topics or individual resources to import. The total size and number of the resources you are importing is displayed in the summary at the bottom of the dialog.
+#. Select the content you want from **Import from Other Channels** dialog. This window will display all the channels that you can import content from. You can select the whole topics or individual resources to import. The total size and number of the resources you are importing is displayed in the summary at the bottom of the dialog.
 
-
-4. Use the **Search** field to look for a specific topic or resource among the available channels.
+#. Use the **Search** field to look for a specific topic or resource among the available channels.
 
    .. figure:: img/import-search.png
       :alt: Import Content from Channels with Search option.
 
       Import Content from Channels with Search option.
 
-5. Click **IMPORT** when you are done to return to the main channel content page.
+#. Click **CONTINUE** to review the selected resources.
 
-.. warning:: The server’s capacity per import is currently approximately 100 content items. When importing over 100 content items, you will need to import in multiple chunks. The number highlighted in blue next to each checked section indicates the number of content items in that section.
+   .. figure:: img/review-import.png
+      :alt: Review the number and size of the selected resources.
 
-.. tip:: Remember to :ref:`publish the channel <publish_channel>` each time you make changes or updates to channel content.
-   
-   If you encounter ``Asynchronous sync...`` error while importing, reload the page and reduce the number of items to import.
+      Review the number and size of the selected resources.
+
+   .. tip:: Ypu can use the **Back** link to return to the full resources list, but you will loose the current selection.
+
+#. Click **IMPORT** when you are done to return to the main channel content page.
+
+   .. warning:: The server’s capacity per import is currently approximately 100 content items. When importing over 100 content items, you will need to import in multiple chunks. The number highlighted in blue next to each checked section indicates the number of content items in that section.
+
+   .. tip:: Remember to :ref:`publish the channel <publish_channel>` each time you make changes or updates to channel content.
+      
+      If you encounter ``Asynchronous sync...`` error while importing, reload the page and reduce the number of items to import.
 
 .. _clipboard:
 
@@ -406,18 +403,16 @@ Use the Clipboard to Import Content
 
 Another option for copying content between channels is to use the **Clipboard**.
 
-   .. figure:: img/clipboard.png
-      :alt: Tools and indicators in the clipboard tab.
+.. figure:: img/clipboard.png
+   :alt: Tools and indicators in the clipboard tab.
 
-      Tools and indicators in the clipboard tab.
+   Tools and indicators in the clipboard tab.
 
 
-1. Pull-out button to open the **Clipboard** (with indicator of numbers of content items inside).
-2. **Clipboard** content tab.
-3. **Trash** content tab (items previously deleted from  the Clipboard).
-4. Buttons to add, edit and delete content items directly inside.
-5. Indicators of number of content items inside each topic.
-6. Edit details or delete the selected content item from inside in the **Clipboard**.
+#. Open the **Clipboard** button (indicator displays the number of content items inside).
+#. Buttons to edit, move and delete content items directly inside the clipboard.
+#. Indicators for number of content items inside each topic.
+#. Hover and click the ``···`` to access the edit/move/delete menu for the selected content item.
 
 .. _copy_content:
 
@@ -426,19 +421,13 @@ To import content into clipboard, follow these steps.
 
 1. Open the channel that contains topics or content items you wish to import.
 2. Select the topics or content items to copy.
-3. Use the **Copy** button from the Edit Channel Content Toolbar.
-
-**OR**
-
-1. Open the clipboard with the pull-out button.
-2. Click **ADD** button.
-3. Select whether to **Add Topics**, **Upload Files** or **Import from Channel** directly into **Clipboard**.
+3. Use the **Copy** button from the :ref:`Edit Channel Content Toolbar <edit_content>`.
 
 To import content from clipboard, follow these steps.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Open the destination channel.
-2. Open the clipboard with the pull-out button.
+2. Open the clipboard.
 3. Drag and drop any topic or individual content items into the appropriate topic or subtopic of the destination channel.
 
 .. _sync:
@@ -448,9 +437,9 @@ Syncing Imported Content
 
 Content imported from other channels can change over time. Use the **Syncing content** option to update any imported content with their original source content. Content features that can be updated include resource files (videos, assessment items, tags, title and description details, etc.). To sync imported content follow these steps.
 
-1. Click the **SYNC** button in the Edit Channel Content Toolbar (inline link).
+1. Click the **SYNC** button in the :ref:`Edit Channel Content Toolbar <edit_content>`.
 2. Select which fields you want to sync.
-3. Click the **SYNC** button to proceed, or CANCEL to exit without syncing.
+3. Click the **SYNC** button to proceed, or **CANCEL** to exit without syncing.
 
    .. figure:: img/sync-content.png
       :alt: Sync imported content to keep it up-to-date.

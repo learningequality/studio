@@ -75,6 +75,4 @@ Make Content Channels Available for Import into Kolibri
 Import Content Channels into Kolibri
 ************************************
 
-Follow the instructions to import content channels into Kolibri.
-
-``TODO - cross link with the Kolibri docs.``
+Follow the instructions to `import content channels into Kolibri <http://kolibri.readthedocs.io/en/develop/user/manage.html#import-content-channel-to-kolibri>`_.
