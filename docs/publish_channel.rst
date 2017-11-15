@@ -28,6 +28,6 @@ confirmation message will appear:
 
       Confirmation message after the channel is published.
 
-Now you can share the published channel with administrators at your facilities or the whole world: just copy the channel ID/token (use the button **COPY** in the above window), and send it to them by email.
+Now you can share the published channel with administrators at your facilities or the whole world: just copy the channel ID/token (use the button **COPY** in the above message), and send it to them by email.
 
 .. tip:: Remember to re-publish the channel each time you make changes or updates to content items. The channel ID/token remains the same but administrators will need to import it again into Kolibri, in order to make the changes and the new content available on the devices in their facilities.

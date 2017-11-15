@@ -5,23 +5,21 @@ Add Content to Channels
 
 Before you start building content channels in Kolibri Studio, you should dedicate some time to plan the channel structure and how should the topics be organized - by subject, source, learner's age, etc. Use the checklist in the :ref:`Appendix <appendix>` to help you plan. 
 
-``TODO - cross-link with relevant documents from the EdToolkit.``
+.. TODO - cross-link with relevant documents from the EdToolkit.
 
 Structure of Content Channels
 =============================
 
 Content Channel is a collection of content and `metadata <https://en.wikipedia.org/wiki/Metadata>`_ organized into a topic tree structure. For example, the Khan Academy channel has 4 levels of nested topics:
 
-**Domain > Subject > Topic > Tutorial**
-
-(e.g. "Math" > “Arithmetic” > “Fractions” > “Comparing fractions”)
-
+| **Domain > Subject > Topic > Tutorial**
+| *e.g. Math > Arithmetic > Fractions > Comparing fractions*
+|
 Content channel aligned to a specific state curriculum might instead be structured as:
 
-**Grade > Subject > Unit**
-
-(e.g. "Fifth Standard" > “Math” > “Unit 5”)
-
+| **Grade > Subject > Unit**
+| *e.g. Fifth Standard > Math > Unit 5*
+|
 Channel Topic Tree
 ******************
 
@@ -48,21 +46,21 @@ Edit Channel Content Tools
 
 #. Channel Content Toolbar contains:
 
-   a. :ref:`Edit selected content details <edit_content>`
-   b. :ref:`Copy selected content into clipboard <copy_content>`
-   c. :ref:`Move selected content items from one topic to another <move_content>`
-   d. :ref:`Delete selected content <delete_content>`
-   e. :ref:`Sync imported content <sync>`
-   f. :ref:`Invite collaborators <invite_collaborators>`
+   a. :ref:`Edit selected content details <edit_content>` ( |pencil| icon)
+   b. :ref:`Copy selected content into clipboard <copy_content>` (|copy| icon)
+   c. :ref:`Move selected content items from one topic to another <move_content>` (|move| icon)
+   d. :ref:`Delete selected content <delete_content>` (|trash| icon)
+   e. :ref:`Sync imported content <sync>` (|sync| icon)
+   f. :ref:`Invite collaborators <invite_collaborators>` (|user| icon)
    g. Hide details for all content topics (when checked, only topic titles will be displayed)
 
-#. Return to **My Channels** page
+#. Return to **My Channels** page (|home| icon)
 #. Channel selector dropdown menu
 #. Channel ID/token number
 #. Indicator for changes in channel pending to be published
 #. :ref:`Clipboard <clipboard>` button (with the indicator of available content items)
 #. Topic container pane
-#. Button to :ref:`add topics <add_topics>`, :ref:`upload content <upload>`, and :ref:`create exercises <exercises>`.
+#. |plus-c| **ADD** button to :ref:`add topics <add_topics>`, :ref:`upload content <upload>`, and :ref:`create exercises <exercises>`.
 
 .. _add_topics:
 
@@ -71,7 +69,7 @@ Add Topics to Channel
 
 To create a new topic in a content channel, follow these steps.
 
-#. Click **+ ADD** button.
+#. Click |plus-c| **ADD** button.
 #. Select **Add Topics** option.
 
    .. figure:: img/add-topics.png
@@ -81,9 +79,9 @@ To create a new topic in a content channel, follow these steps.
 
 #. Complete the topic information and metadata, and click **APPLY CHANGES** button.
 
-   .. tip:: Use the checkboxes on the left to select topics, edit and change details or metadata, or ``X`` buttons to delete topics in this same window, and remember to click the **APPLY CHANGES** afterward.
+   .. tip:: Use the checkboxes on the left to select topics, edit and change details or metadata, or |close| buttons to delete topics in this same window, and remember to click the **APPLY CHANGES** afterward.
 
-#. Click **+ ADD TOPIC** button on the left side to add more topics.
+#. Click |plus-c| **ADD TOPIC** button on the left side to add more topics.
 
    .. figure:: img/edit-topics.png
       :alt: Edit topic details and add metadata.
@@ -98,11 +96,11 @@ Add Subtopics
 
 To add further subtopics to any of the topics or subtopics you created you can either:
 
-* Click **+ ADD** button at the bottom, and select **Add Topics** option.
+* Click |plus-c| **ADD** button at the bottom, and select **Add Topics** option.
 
 **OR**
 
-* Hover over the topic, click the ``···`` for more options and select **Add Subtopic**.
+* Hover over the topic, click the |ellipsis| button for more options and select **Add Subtopic**.
 
    .. figure:: img/add-subtopics.png
       :alt: Add subtopics to channel topics.
@@ -138,7 +136,7 @@ Currently allowed file formats for individual learning resources are:
 
 To upload individual learning resources into your content channel, follow these steps.
 
-#. Click **+ ADD** button.
+#. Click |plus-c| **ADD** button.
 
 #. Select **Upload Files** option.
 
@@ -269,7 +267,7 @@ Kolibri marks an exercise as completed when learners meet the mastery criteria. 
 
 To create an exercise, follow these steps.
 
-#. Click **+ ADD** button.
+#. Click |plus-c| **ADD** button.
 #. Select **Create Exercise** option.
 
    .. figure:: img/create-exercise.png
@@ -301,7 +299,7 @@ To create an exercise, follow these steps.
 
          Exercise Questions tab options.
 
-#. Click the **+ QUESTION** button to add a new question to the exercise. Question editor field offers similar options as a basic text editor. You can format the text to be bold, add image files, undo and redo actions.
+#. Click the |plus| **QUESTION** button to add a new question to the exercise. Question editor field offers similar options as a basic text editor. You can format the text to be bold, add image files, undo and redo actions.
 
    .. figure:: img/question-editor.png
          :alt: Question field editor.
@@ -310,7 +308,7 @@ To create an exercise, follow these steps.
 
    .. tip:: You can resize images by selecting them and dragging the corners to achieve the desired size.
 
-#. Click the **+ ANSWER** button to add answer(s) to the question. Answer editor field offers the same formatting options as the Question editor. 
+#. Click the |plus| **ANSWER** button to add answer(s) to the question. Answer editor field offers the same formatting options as the Question editor. 
 
    .. figure:: img/answer-editor.png
          :alt: Answer field editor.
@@ -318,22 +316,22 @@ To create an exercise, follow these steps.
          Answer field editor.
 
 
-   Keep clicking the **+ ANSWER** button to add as many answers as you want for the single and multiple selection types of questions.
+   Keep clicking the |plus| **ANSWER** button to add as many answers as you want for the single and multiple selection types of questions.
 
    .. warning:: Remember to activate the radio button for the correct answer (outlined in the image above).
 
-#. Click **HINTS** to open the Hint editor window.
+#. Click **HINTS** |external| to open the Hint editor window.
 
-#. Click **+ HINT** to add hints for the question. Hint editor field offers the same formatting options as the Question and Answer editors.
+#. Click |plus| **HINT** to add hints for the question. Hint editor field offers the same formatting options as the Question and Answer editors.
 
    .. figure:: img/hint-editor.png
          :alt: Hint editor field.
 
          Hint editor field.
 
-   Keep clicking the **+ HINT** button to add as many hints as you want for the question.
+   Keep clicking the |plus| **HINT** button to add as many hints as you want for the question.
 
-   .. tip:: You can delete and reorder answers and hints with the icons in the upper right corner.
+   .. tip:: You can delete and reorder answers and hints with the |sort| |close| icons in the upper right corner.
 
    .. figure:: img/reorder-answers.png
          :alt: Reorder questions and hints.
@@ -362,7 +360,7 @@ Import Content from Other Channels
 
 To import content from other channels, either those previously published or those that are publicly available, follow these steps.
 
-#. Click **+ ADD** button.
+#. Click |plus-c| **ADD** button.
 #. Select **Import from Channels** option. 
 
    .. figure:: img/import-from-channels.png
@@ -410,9 +408,9 @@ Another option for copying content between channels is to use the **Clipboard**.
 
 
 #. Open the **Clipboard** button (indicator displays the number of content items inside).
-#. Buttons to edit, move and delete content items directly inside the clipboard.
+#. Buttons to edit, move and delete content items from the clipboard.
 #. Indicators for number of content items inside each topic.
-#. Hover and click the ``···`` to access the edit/move/delete menu for the selected content item.
+#. Hover and click the |ellipsis| to access the menu to edit/move/delete the selected content item.
 
 .. _copy_content:
 
@@ -421,7 +419,7 @@ To import content into clipboard, follow these steps.
 
 1. Open the channel that contains topics or content items you wish to import.
 2. Select the topics or content items to copy.
-3. Use the **Copy** button from the :ref:`Edit Channel Content Toolbar <edit_content>`.
+3. Use the |copy| button from the :ref:`Edit Channel Content Toolbar <edit_content>`.
 
 To import content from clipboard, follow these steps.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -437,7 +435,7 @@ Syncing Imported Content
 
 Content imported from other channels can change over time. Use the **Syncing content** option to update any imported content with their original source content. Content features that can be updated include resource files (videos, assessment items, tags, title and description details, etc.). To sync imported content follow these steps.
 
-1. Click the **SYNC** button in the :ref:`Edit Channel Content Toolbar <edit_content>`.
+1. Click the |sync| button in the :ref:`Edit Channel Content Toolbar <edit_content>`.
 2. Select which fields you want to sync.
 3. Click the **SYNC** button to proceed, or **CANCEL** to exit without syncing.
 

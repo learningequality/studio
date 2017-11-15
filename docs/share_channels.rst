@@ -12,7 +12,7 @@ To allow others to view or edit your own content channels, or those that you can
 
 1. Open the channel that you want to share.
 
-2. Click **Invite** button from the :ref:`Edit Channel Content Toolbar <edit_content>`.
+2. Click **Invite** button (|user| icon) from the :ref:`Edit Channel Content Toolbar <edit_content>`.
 
 3. Type the email of the person you want to invite.
 
@@ -35,7 +35,7 @@ When you invite collaborators to view or edit channels, they will be notified on
    
    * Invite others to view them.
    * Import content from them in their own channels.
-   * Download the content items directly on their own devices.
+   * Download the content items directly on their own devices (|download| icon).
 
    .. figure:: img/download-content.png
       :alt: Download content from view-only channels.
@@ -48,7 +48,7 @@ Make Content Channels Available for Import into Kolibri
 
 **Channel ID/token** number is all you need to share the published channel with administrators at your facilities, or anybody in case you are releasing the channel as publicly available. There are 3 places where you can find and copy the channel ID/token:
 
--  Channel pane in the My Channels page
+-  Channel pane in the **My Channels** page
 
    .. figure:: img/channelID2.png
          :alt: Channel ID/token number in the My Channels page.

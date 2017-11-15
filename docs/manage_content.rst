@@ -12,13 +12,17 @@ Edit Content Details
 
 To edit details for each topic/subtopic or individual resource, follow these steps.
 
-#. Click any topic/subtopic or individual resource that you want to edit.
-#. Hover the topic, click the ``···`` for more options and select **Edit**.
-   
+#. Use the checkbox to select the topic/subtopic or individual resource that you want to edit.
+#. Click the |pencil| button from the :ref:`Edit Channel Content Toolbar <edit_content>`.
+
+   **OR** 
+
+   * Hover the topic, click the |ellipsis| for more options and select **Edit**.
+   |
    **OR** 
    
-   Right-click the topic itself and select **Edit**.
-
+   * Right-click the topic itself and select **Edit**.
+   |
 #. Make the necessary changes in the **Editing Content** window:
 
    a. Edit the general data (title, description, license, metadata, etc.) for the content item in the **Details** tab.
@@ -64,8 +68,8 @@ Move Content
 
 To move content items from one topic/subtopic to another, follow these steps.
 
-#. Select the checkbox of the topics, subtopic or a content item you want to move.
-#. Click the **Move** button in the :ref:`Edit Channel Content Toolbar <edit_content>`.
+#. Use the checkbox to select the topic/subtopic or individual resource you want to move.
+#. Click the |move| button in the :ref:`Edit Channel Content Toolbar <edit_content>`.
 
    .. figure:: img/move-content.png
       :alt: Move content from one topic/subtopic to another.
@@ -74,7 +78,7 @@ To move content items from one topic/subtopic to another, follow these steps.
 
    **OR**
 
-   -  Hover the topic itself, click the ``···`` for more options and select **Move**.
+   -  Hover the topic itself, click the |ellipsis| for more options and select **Move**.
 
       .. figure:: img/move-content-hover.png
          :alt: Hover and move content from one topic/subtopic to another.
@@ -101,12 +105,12 @@ Delete and Restore Content
 
 To delete topic, subtopic or a content item from the channel, follow these steps.
 
-#. Select the checkbox of the topics, subtopic or a content item you want to delete.
-#. Click the **Delete** button in the :ref:`Edit Channel Content Toolbar <edit_content>`.
+#. Use the checkbox to select the topic/subtopic or individual resource you want to delete.
+#. Click the |trash| button in the :ref:`Edit Channel Content Toolbar <edit_content>`.
 
 **OR**
 
--  Hover the topic itself, click the ``···`` for more options and select **Delete**.
+-  Hover the topic itself, click the |ellipsis| for more options and select **Delete**.
 
    .. figure:: img/delete-content.png
          :alt: Delete content.
@@ -115,7 +119,7 @@ To delete topic, subtopic or a content item from the channel, follow these steps
 
 To restore deleted topic, subtopic or a content item, follow these steps.
 
-#. Click the **Trash** button in the :ref:`Edit Channel Content Toolbar <edit_content>`.
+#. Click the |trash| button in the :ref:`Edit Channel Content Toolbar <edit_content>`.
 #. Select the checkbox of the topics, subtopic or a content item you want to restore from the **Managing deleted content from...** window.
 
    .. figure:: img/restore-deleted.png

@@ -34,7 +34,7 @@ Kolibri application can serve content from several publicly available content ch
 
       Some publicly available learning content that may be included in Kolibri.
 
-``TODO - cross-link document with channels recommendation and feature details.``
+.. TODO - cross-link document with channels recommendation and feature details.
 
 `Khan Academy <https://www.khanacademy.org/>`_ - One of the most popular channels. Developed originally in US, focus is on primary and secondary maths. Additional selected topics in science, history and business.
 
