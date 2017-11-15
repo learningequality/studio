@@ -27,10 +27,10 @@ Inside each content channel the individual learning resources (exercises, videos
 
 Think of the topics as folders that can contain other sub-folders (sub-topics) or files (learning resources) directly. A folder in the topic tree can contain both individual resources and sub-folders.
 
-   .. figure:: img/cc-topic-subtopic-resources.png
-      :alt: Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
+.. figure:: img/cc-topic-subtopic-resources.png
+   :alt: Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
 
-      Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
+   Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
 
 There is no inherent restriction on the depth of topic trees or the number of resources that you can place in a channel. However, you should take into consideration the intended learning pathway and user experience once channel is imported in Kolibri, and try to build your topic tree so that learners do not need to click through long series of subfolders to arrive to the desired learning resource.
 
@@ -39,19 +39,19 @@ There is no inherent restriction on the depth of topic trees or the number of re
 Edit Channel Content Tools
 ==========================
 
-   .. figure:: img/edit-channel-content-tools.png
-      :alt: Edit Channel Content Tools
+.. figure:: img/edit-channel-content-tools.png
+   :alt: Edit Channel Content Tools
 
-      Edit Channel Content Tools
+   Edit Channel Content Tools
 
 #. Channel Content Toolbar contains:
 
    a. :ref:`Edit selected content details <edit_content>` ( |pencil| icon)
-   b. :ref:`Copy selected content into clipboard <copy_content>` (|copy| icon)
-   c. :ref:`Move selected content items from one topic to another <move_content>` (|move| icon)
-   d. :ref:`Delete selected content <delete_content>` (|trash| icon)
-   e. :ref:`Sync imported content <sync>` (|sync| icon)
-   f. :ref:`Invite collaborators <invite_collaborators>` (|user| icon)
+   b. :ref:`Copy selected content into clipboard <copy_content>` ( |copy| icon)
+   c. :ref:`Move selected content items from one topic to another <move_content>` ( |move| icon)
+   d. :ref:`Delete selected content <delete_content>` ( |trash| icon)
+   e. :ref:`Sync imported content <sync>` ( |sync| icon)
+   f. :ref:`Invite collaborators <invite_collaborators>` ( |user| icon)
    g. Hide details for all content topics (when checked, only topic titles will be displayed)
 
 #. Return to **My Channels** page (|home| icon)

@@ -18,18 +18,17 @@ To allow others to view or edit your own content channels, or those that you can
 
 Select **Can view** or **Can edit** level of permission to grant them.
 
-   .. figure:: img/share-access-channel.png
-         :alt: Send email invite to collaborators.
+.. figure:: img/share-access-channel.png
+      :alt: Send email invite to collaborators.
 
-         Send email invite to collaborators.
-
+      Send email invite to collaborators.
 
 When you invite collaborators to view or edit channels, they will be notified on their **My Channels** home page, where they can accept or reject the pending invitations. They will also receive an email allowing them to accept/reject the pending invitations.
 
-   .. figure:: img/pending-invitations.png
-      :alt: Accept or reject the pending invitations
+.. figure:: img/pending-invitations.png
+   :alt: Accept or reject the pending invitations
 
-      Accept or reject the pending invitations
+   Accept or reject the pending invitations
 
 .. note:: When you invite collaborators to view your channels, they will also be able to:
    

@@ -35,7 +35,7 @@ Each channel pane page displays some basic information about the channel:
 #.  Channel language
 #.  Number of resources (exercises, videos, audio or document files)
 #.  Channel ID/token - `32 digit unique identifier <https://en.wikipedia.org/wiki/Universally_unique_identifier>`_ for each channel used for downloading and sharing content channels
-#.  Copy the channel ID/token to the computer's clipboard (|copy-c| icon)
+#.  Copy the channel ID/token to the computer's clipboard ( |copy-c| icon)
 #.  Edit channel information button ( |pencil| icon)
 #.  Star channel button (|star-o| icon)
 #.  Latest update indicator

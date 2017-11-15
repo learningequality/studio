@@ -151,7 +151,7 @@ rst_prolog = """
 .. |plus-c| replace:: :raw-html:`<span class="fa fa-plus-circle" aria-hidden="true"></span><span class="visuallyhidden">Plus</span>`
 .. |home| replace:: :raw-html:`<span class="fa fa-home" aria-hidden="true"></span><span class="visuallyhidden">Home</span>`
 .. |close| replace:: :raw-html:`<span class="fa fa-close" aria-hidden="true"></span><span class="visuallyhidden">Close</span>`
-.. |ellipsis| replace:: :raw-html:`<span class="fa fa-ellipsis-h" aria-hidden="true"></span><span class="visuallyhidden">Ellipsis</span>`
+.. |ellipsis| replace:: :raw-html:`<span class="fa fa-ellipsis-h fa-lg fa-border" aria-hidden="true"></span><span class="visuallyhidden">Ellipsis</span>`
 .. |download| replace:: :raw-html:`<span class="fa fa-download" aria-hidden="true"></span><span class="visuallyhidden">Download</span>`
 .. |user| replace:: :raw-html:`<span class="fa fa-user" aria-hidden="true"></span><span class="visuallyhidden">User</span>`
 .. |external| replace:: :raw-html:`<span class="fa fa-external-link" aria-hidden="true"></span>`
