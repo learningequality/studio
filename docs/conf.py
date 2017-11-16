@@ -87,8 +87,8 @@ html_theme = 'default'
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 
-if on_rtd:
-    os.system("sphinx-apidoc --doc-project='Python Reference' -f -o . ../kolibri ../kolibri/test ../kolibri/deployment/ ../kolibri/dist/")
+#if on_rtd:
+#    os.system("sphinx-apidoc --doc-project='Python Reference' -f -o . ../kolibri ../kolibri/test ../kolibri/deployment/ ../kolibri/dist/")
 
 if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
@@ -106,13 +106,15 @@ html_logo = 'logo.png'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_build/_static']
+html_static_path = ['_static']
 
-html_context = {
-    'css_files': [
-        '_static/css/theme_overrides.css',  # override wide tables in RTD theme
-        ],
-     }
+# Approach for custom stylesheet:
+# adapted from: http://rackerlabs.github.io/docs-rackspace/tools/rtd-tables.html
+# and https://github.com/altair-viz/altair/pull/418/files
+# https://github.com/rtfd/sphinx_rtd_theme/issues/117
+def setup(app):
+    # Add our custom CSS overrides
+    app.add_stylesheet('theme_overrides.css')
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
