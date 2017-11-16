@@ -30,7 +30,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         this.render(this.close, {
             channel: window.current_channel.toJSON(),
             licenses: window.licenses.toJSON(),
-            version: window.current_channel.get("version") + 1,
+            version: window.current_channel.get("version"),
             node: this.model.toJSON(),
             resource_count: this.model.get("metadata").resource_count,
             languages: window.languages.toJSON()
