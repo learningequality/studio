@@ -438,7 +438,7 @@ def map_channel_to_kolibri_channel(channel):
         id=channel.id,
         name=channel.name,
         description=channel.description,
-        version=channel.version,
+        version=channel.version + 1, # Need to save as version being published, not current version
         thumbnail=channel.icon_encoding,
         root_pk=channel.main_tree.node_id,
     )
