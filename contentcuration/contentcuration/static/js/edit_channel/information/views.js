@@ -31,7 +31,8 @@ var MESSAGES = {
     "newer_version": "Have a newer version of Kolibri?",
     "older_version": "Have an older version of Kolibri?",
     "get_token": "Get Channel Token",
-    "get_id": "Get Channel ID"
+    "get_id": "Get Channel ID",
+    "published_version": "Published Version:"
 }
 
 var BaseInfoModalView = BaseViews.BaseModalView.extend({
