@@ -30,3 +30,7 @@ ddtrace==0.8.0
 jsonfield==2.0.1
 newrelic==2.86.3.70
 python-resize-image==1.1.11
+sphinx==1.6.4
+sphinx-autobuild==0.7.1
+sphinx_rtd_theme
+sphinx-intl
