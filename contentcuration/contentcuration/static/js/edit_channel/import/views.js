@@ -83,6 +83,8 @@ var ImportModalView = BaseViews.BaseView.extend({
           return this._showWarning();
         case 'success':
           return this._finishImport();
+        case 'failure':
+          return this.trigger('finish_import', true);
         default:
           return;
       }
@@ -128,10 +130,14 @@ var ImportModalView = BaseViews.BaseView.extend({
 
     _startImport: function() {
         var self = this;
-        function onFinishImport(resolve) {
-            self.once('finish_import', function() {
+        function onFinishImport(resolve, reject) {
+            self.once('finish_import', function(failed = false) {
                 self.ImportModal.closeModal();
-                resolve(true);
+                if (failed) {
+                    reject();
+                } else {
+                  resolve(true);
+                }
             });
         }
         this.listView.display_load(this.get_translation("importing_content"), onFinishImport);
