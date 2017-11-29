@@ -20,6 +20,9 @@
     {{#if get_id}}{{formatMessage (intlGet 'messages.newer_version')}}{{else}}{{formatMessage (intlGet 'messages.older_version')}}{{/if}}
     <button class="btn action-text tab_item toggle_id">{{#if get_id}}{{formatMessage (intlGet 'messages.get_token')}}{{else}}{{formatMessage (intlGet 'messages.get_id')}}{{/if}}</button>
     </p>
+    <div class="container-fluid" id="published_footer">
+      <span>{{formatMessage (intlGet 'messages.published_version')}} {{channel.version}}</span>
+    </div>
   </div>
 </div>
 <div class="input-tab-control tab_item" data-next=".close"></div>
