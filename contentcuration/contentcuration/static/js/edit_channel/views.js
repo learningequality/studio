@@ -364,7 +364,8 @@ var BaseWorkspaceView = BaseView.extend({
 		// Use for loop to break if needed
 		for(var i = 0; i < this.lists.length; ++i){
 			selected_list = $.merge(selected_list, this.lists[i].get_selected());
-			if(exclude_descendants && selected_list.length > 0){
+			var open_topic = this.lists[i].get_opened_topic();
+			if(exclude_descendants && (!open_topic || open_topic.checked) && selected_list.length > 0){
 				break;
 			}
 		}
@@ -528,6 +529,9 @@ var BaseListView = BaseView.extend({
 	},
 	update_views:function(){
 		this.retrieve_nodes(this.model.get("children"), true).then(this.load_content);
+	},
+	get_opened_topic:function() {
+		return null; // Overload in subclasses
 	},
 	load_content: function(collection, default_text){
 		collection = (collection)? collection : this.collection;

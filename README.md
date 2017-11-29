@@ -1,4 +1,4 @@
-## LE Content Workshop
+## LE Kolibri Studio
 
 Django app for the Content Curation project.
 

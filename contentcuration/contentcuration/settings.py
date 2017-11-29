@@ -213,7 +213,7 @@ SITE_ID = 1
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
 SPACE_REQUEST_EMAIL = 'content@learningequality.org'
-DEFAULT_FROM_EMAIL = 'Kolibri Content Workshop (Do Not Reply) <noreply@learningequality.org>'
+DEFAULT_FROM_EMAIL = 'Kolibri Studio <noreply@learningequality.org>'
 DEFAULT_LICENSE = 1
 
 SERVER_EMAIL = 'curation-errors@learningequality.org'

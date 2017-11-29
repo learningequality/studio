@@ -51,6 +51,10 @@ exports.copyImportListToChannel = function(context, payload) {
   .then(function onSuccess(collection) {
     context.commit('UPDATE_IMPORT_STATUS', 'success');
     payload.onConfirmImport(collection);
+  })
+  .catch(function onFailure(error) {
+    console.error(error);
+    context.commit('UPDATE_IMPORT_STATUS', 'failure');
   });
 }
 
