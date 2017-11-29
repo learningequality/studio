@@ -131,9 +131,9 @@ var ImportModalView = BaseViews.BaseView.extend({
     _startImport: function() {
         var self = this;
         function onFinishImport(resolve, reject) {
-            self.once('finish_import', function(failed = false) {
+            self.once('finish_import', function(importFailed) {
                 self.ImportModal.closeModal();
-                if (failed) {
+                if (importFailed) {
                     reject();
                 } else {
                   resolve(true);
@@ -144,7 +144,7 @@ var ImportModalView = BaseViews.BaseView.extend({
     },
 
     _finishImport: function() {
-      this.trigger('finish_import');
+      this.trigger('finish_import', false);
     }
 });
 
