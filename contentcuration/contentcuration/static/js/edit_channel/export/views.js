@@ -62,7 +62,9 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             this.$("#select_language").focus();
         } else {
             this.$(".language_wrapper").removeClass("prompt");
-            this.$("#publish_btn").removeClass("disabled").removeAttr("disabled");
+            this.$("#publish_btn").removeClass("disabled")
+                                .removeAttr("disabled")
+                                .removeAttr("title");
             this.set_initial_focus();
         }
     },
