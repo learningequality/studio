@@ -6,9 +6,11 @@ var vueify = require('vueify');
 var babelify = require('babelify');
 var fs = require('fs');
 var _ = require('underscore');
+var envify = require('envify/custom');
 
 var watch = (process.argv.indexOf('--watch') > -1) || (process.argv.indexOf('-w') > -1);
 var debug = (process.argv.indexOf('--debug') > -1) || (process.argv.indexOf('-d') > -1);
+var prod = (process.argv.indexOf('--prod') > -1);
 var staticfiles = (process.argv.indexOf('--staticfiles') > -1) || (process.argv.indexOf('-s') > -1);
 
 var infoLog = function(msg) {
@@ -105,6 +107,13 @@ b.transform(lessify,
   { // less options
     global: true,
   }
+);
+
+b.transform(
+  envify({
+    NODE_ENV: prod ? 'production' : 'development',
+  }),
+  { global: true }
 );
 
 if (watch) {
