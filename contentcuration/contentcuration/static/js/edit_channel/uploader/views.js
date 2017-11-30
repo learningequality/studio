@@ -22,8 +22,8 @@ var MESSAGES = {
     "tags": "Tags",
     "copyright_holder": "Copyright Holder",
     "prereqs": "Prerequisites",
-    "dont_save": "Don't Save",
-    "keep_open": "Keep Open",
+    "dont_save": "Discard Changes",
+    "keep_open": "Keep Editing",
     "mastery_criteria": "Mastery Criteria",
     "editing_header": "Editing Content Details",
     "remove_tag": "Remove Tag",
@@ -31,7 +31,7 @@ var MESSAGES = {
     "adding_exercise": "Adding Exercise to {title}",
     "editing_content": "Editing Content",
     "viewing_content": "Viewing Content",
-    "apply_changes": "APPLY CHANGES",
+    "save": "SAVE",
     "save_and_close": "SAVE & CLOSE",
     "select_prompt": "Please select an item to view.",
     "select_to_edit": "Please select an item to edit.",
@@ -126,7 +126,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
               window.channel_router.update_url(null, null, window.title);
           },
           [self.get_translation("keep_open")]:function(){},
-          [self.get_translation("save_and_close")]:function(){
+          [self.get_translation("save")]:function(){
             self.metadata_view.save_and_finish();
             window.channel_router.update_url(null, null, window.title);
           },
