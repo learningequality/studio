@@ -15,7 +15,8 @@ var MESSAGES = {
     "publishing": "Publishing...",
     "channel_language": "Channel language required",
     "select_a_language": "Select a language...",
-    "language_label": "Channel Language"
+    "language_label": "Channel Language",
+    "invalid_channel_prompt": "Please address the issues listed above before publishing..."
 }
 
 
@@ -57,13 +58,11 @@ var ExportModalView = BaseViews.BaseModalView.extend({
             this.$(".language_wrapper").addClass("prompt");
             this.$("#publish_btn").addClass("disabled")
                                 .attr("disabled", "disabled")
-                                .text(this.get_translation("select_a_language"));
+                                .attr("title", this.get_translation("invalid_channel_prompt"));
             this.$("#select_language").focus();
         } else {
             this.$(".language_wrapper").removeClass("prompt");
-            this.$("#publish_btn").removeClass("disabled")
-                                .removeAttr("disabled")
-                                .text(this.get_translation("publish").toUpperCase());
+            this.$("#publish_btn").removeClass("disabled").removeAttr("disabled");
             this.set_initial_focus();
         }
     },
