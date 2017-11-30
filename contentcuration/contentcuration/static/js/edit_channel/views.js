@@ -66,7 +66,8 @@ var MESSAGES = {
         "will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content. Are you sure you want to continue?",
     "language": "Language",
     "select_language": "Select a Language",
-    "make_copy": "Make a Copy"
+    "make_copy": "Make a Copy",
+    "publish_title_prompt": "Make this channel available for download into Kolibri"
 }
 
 var BaseView = Backbone.View.extend({
@@ -205,13 +206,13 @@ var BaseView = Backbone.View.extend({
 		var is_published = root.get("published");
 		$("#hide-if-unpublished").css("display", (is_published) ? "inline-block" : "none");
 		if(root.get("metadata").has_changed_descendant){
-			$("#channel-publish-button").prop("disabled", false);
-			$("#channel-publish-button").text(this.get_translation("publish"));
-			$("#channel-publish-button").removeClass("disabled");
+			$("#channel-publish-button").removeAttr("disabled")
+										.attr("title", this.get_translation("publish_title_prompt"))
+										.removeClass("disabled");
 		}else{
-			$("#channel-publish-button").prop("disabled", true);
-			$("#channel-publish-button").text(this.get_translation("no_changes_detected"));
-			$("#channel-publish-button").addClass("disabled");
+			$("#channel-publish-button").attr("disabled", "disabled")
+										.attr("title", this.get_translation("no_changes_detected"))
+										.addClass("disabled");
 		}
 	},
 	cancel_actions:function(event){
@@ -231,14 +232,11 @@ var BaseWorkspaceView = BaseView.extend({
 			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently', 'sync_content');
 	},
 	publish:function(){
-		if(!$("#channel-publish-button").hasClass("disabled")){
-			var Exporter = require("edit_channel/export/views");
-			var exporter = new Exporter.ExportModalView({
-				model: window.current_channel.get_root("main_tree"),
-				onpublish: this.handle_published
-			});
-
-		}
+		var Exporter = require("edit_channel/export/views");
+		var exporter = new Exporter.ExportModalView({
+			model: window.current_channel.get_root("main_tree"),
+			onpublish: this.handle_published
+		});
 	},
 	activate_channel: function(){
 		var dialog = require("edit_channel/utils/dialog");
