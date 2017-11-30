@@ -24,6 +24,7 @@ def check_supported_browsers(user_agent_string):
 
 
 def write_file_to_storage(fobj, check_valid=False, name=None):
+    fobj.seek(0) # Make sure reading file from beginning
     # Check that hash is valid
     checksum = hashlib.md5()
     for chunk in iter(lambda: fobj.read(4096), b""):
@@ -66,6 +67,7 @@ def get_hash(fobj):
     md5 = hashlib.md5()
     for chunk in fobj.chunks():
         md5.update(chunk)
+    fobj.seek(0)
     return md5.hexdigest()
 
 
