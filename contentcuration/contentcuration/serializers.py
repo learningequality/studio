@@ -543,7 +543,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license','language',
                   'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata',
-                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id')
+                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'freeze_authoring_data')
 
 
 class ContentNodeEditSerializer(ContentNodeSerializer):
