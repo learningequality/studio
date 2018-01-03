@@ -1183,13 +1183,13 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     if(!this.model.get("title")) {
       $("#input_title").addClass("invalid_field");
       this.error = this.get_translation("title_error");
-    } else if(this.isoriginal && !license) {
+    } else if(this.isoriginal && !this.model.get("kind") === "topic" && !license) {
       $("#license_select").addClass("invalid_field");
       this.error = this.get_translation("license_error");
     } else if (this.isoriginal && this.model.get("kind") !== "topic" && license.get("copyright_holder_required") && !this.model.get("copyright_holder")) {
       $("#input_license_owner").addClass("invalid_field");
       this.error = this.get_translation("copyright_holder_error");
-    } else if (this.isoriginal && license.get('is_custom') && !this.model.get('license_description')) {
+    } else if (this.isoriginal && license && license.get('is_custom') && !this.model.get('license_description')) {
       $("#custom_license_description").addClass("invalid_field");
       this.error = this.get_translation("special_permission_error");
     }
