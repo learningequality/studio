@@ -422,9 +422,11 @@ class Channel(models.Model):
         super(Channel, self).save(*args, **kwargs)
 
         if original_channel and not self.main_tree.changed:
-            fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'language', 'thumbnail_encoding']
+            fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'language', 'thumbnail_encoding', 'deleted']
             self.main_tree.changed = any([f for f in fields_to_check if getattr(self, f) != getattr(original_channel, f)])
             self.main_tree.save()
+
+        # TODO: delete db if channel has been deleted
 
     class Meta:
         verbose_name = _("Channel")
