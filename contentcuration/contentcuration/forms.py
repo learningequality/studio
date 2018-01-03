@@ -251,18 +251,29 @@ class ForgotPasswordForm(PasswordResetForm):
         inactive_users = users.filter(is_active=False)
         if inactive_users.exists() and inactive_users.count() == users.count(): # all matches are inactive
             for user in inactive_users:
-                activation_key = self.get_activation_key(user)
-                context = {
-                    'activation_key': activation_key,
-                    'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
-                    'site': extra_email_context.get('site'),
-                    'user': user,
-                    'domain': extra_email_context.get('domain') or domain,
-                }
-                subject = render_to_string('registration/password_reset_subject.txt', context)
-                subject = ''.join(subject.splitlines())
-                message = render_to_string('registration/activation_needed_email.txt', context)
-                user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+                if not user.password:
+                    context = {
+                        'site': extra_email_context.get('site'),
+                        'user': user,
+                        'domain': extra_email_context.get('domain') or domain,
+                    }
+                    subject = render_to_string('registration/password_reset_subject.txt', context)
+                    subject = ''.join(subject.splitlines())
+                    message = render_to_string('registration/registration_needed_email.txt', context)
+                    user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+                else:
+                    activation_key = self.get_activation_key(user)
+                    context = {
+                        'activation_key': activation_key,
+                        'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+                        'site': extra_email_context.get('site'),
+                        'user': user,
+                        'domain': extra_email_context.get('domain') or domain,
+                    }
+                    subject = render_to_string('registration/password_reset_subject.txt', context)
+                    subject = ''.join(subject.splitlines())
+                    message = render_to_string('registration/activation_needed_email.txt', context)
+                    user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
         else:
             super(ForgotPasswordForm, self).save(request=request, extra_email_context=extra_email_context, **kwargs)
 
