@@ -44,6 +44,7 @@ var MESSAGES = {
     "title_placeholder": "Enter a title...",
     "source": "Source:",
     "readonly": "READ-ONLY Source:",
+    "readonly_text": "READ-ONLY: content has been imported with view-only permission",
     "permissions_vary": "Permissions Vary",
     "description": "Description",
     "chars_left": "{data, plural,\n =1 {# character}\n other {# characters}} left",
@@ -69,7 +70,8 @@ var MESSAGES = {
     "out_of_space": "Out of Disk Space",
     "out_of_space_text": "You don't have enough space to save these files. Request more space under the Settings > Account page.",
     "open_settings": "Open Settings",
-    "ok": "OK"
+    "ok": "OK",
+    "imported_from": "Imported from:"
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -681,7 +683,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         n_value: this.n_value,
         license_description: this.shared_data && this.shared_data.shared_license_description,
         languages: window.languages.toJSON(),
-        language_default: this.get_language(null, all_top_level)
+        language_default: this.get_language(null, all_top_level),
+        channel_id: window.current_channel.id
       }, {
         data: this.get_intl_data()
       }));
