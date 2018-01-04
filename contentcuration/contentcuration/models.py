@@ -424,7 +424,6 @@ class Channel(models.Model):
         if original_channel and not self.main_tree.changed:
             fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'language', 'thumbnail_encoding', 'deleted']
             self.main_tree.changed = any([f for f in fields_to_check if getattr(self, f) != getattr(original_channel, f)])
-            self.main_tree.save()
 
             # Delete db if channel has been deleted and mark as unpublished
             if not original_channel.deleted and self.deleted:
@@ -432,7 +431,7 @@ class Channel(models.Model):
                 if os.path.isfile(channel_db_url):
                     os.unlink(channel_db_url)
                     self.main_tree.published = False
-                    self.main_tree.save()
+            self.main_tree.save()
 
     class Meta:
         verbose_name = _("Channel")
