@@ -6,6 +6,7 @@
 	cursor:pointer;
 }
 
+@invalid-color: #FFA9A9;
 
 #metadata{
 	width: 100%;
@@ -55,6 +56,11 @@
 		padding: 10px 0;
 		margin-bottom: 30px;
 		overflow:hidden;
+		#editor_errors {
+		    font-weight: bold;
+		    padding: 5px;
+		    display: none;
+		}
 		#metadata_placeholder{
 			min-height: 300px;
 			padding-top: 15%;
@@ -85,6 +91,17 @@
 				max-width: 40px;
 			}
 		}
+		#freeze_authoring_data{
+			width: 15px;
+			height: 15px;
+			margin-right: 10px;
+			+ label {
+				width: 250px;
+				vertical-align: middle;
+				font-weight: normal;
+				font-size: 10pt;
+			}
+		}
 		#license_select{
 			margin-top:5px;
 			padding: 0px 2px;
@@ -110,6 +127,7 @@
 			width:100%;
 			.input-form;
 		}
+		select{ margin-bottom: 25px; }
 		#description_counter{
 			color:gray;
 			font-style:italic;
@@ -127,6 +145,7 @@
 				font-style:italic;
 			}
 		}
+		.invalid_field { background-color: @invalid-color !important; }
 	}
 	#metadata_preview{
 		display:none;
@@ -201,6 +220,12 @@
 			}
 		}
 		&:hover{ background-color: #E6E6E6; }
+		&.invalid{ background-color: @invalid-color; }
+		&.current_item{
+			background-color: @gray-200 !important;
+			.remove_topic{ display:none; }
+		}
+		.invalid_title{ display: none; color: @gray-700; }
 	}
 	.edited_node h5{
 		font-weight:bold;
@@ -209,10 +234,6 @@
 			margin-right:5px;
 			color:@blue-500;
 		}
-	}
-	.current_item{
-		background-color: @gray-200;
-		.remove_topic{ display:none; }
 	}
 	.gray-out{
 		cursor:not-allowed;

@@ -238,6 +238,12 @@ var ChannelTab = BaseAdminTab.extend({
                 return (asc) ? item1.id.localeCompare(item2.id) : -item1.id.localeCompare(item2.id);
             }
         }, {
+            key: "priority",
+            label: "Priority",
+            filter: function(item1, asc, item2){
+                return (asc) ? -item2.get("priority") : item1.get("priority");
+            }
+        }, {
             key: "users",
             label: "# of Users",
             filter: function(item1, asc, item2){
@@ -333,9 +339,10 @@ var ChannelItem = BaseAdminItem.extend({
     className: "data_row row",
     tagName:"div",
     set_attributes: function() {
+        _.bindAll(this, 'add_editor', 'remove_editor');
         this.model.set("can_edit", _.find(this.model.get("editors"), function(editor) { return editor.id === window.current_user.id; }));
         this.model.set("editors", _.sortBy(this.model.get("editors"), "first_name"));
-        this.model.set("viewers", _.sortBy(this.model.get("editors"), "first_name"));
+        this.model.set("viewers", _.sortBy(this.model.get("viewers"), "first_name"));
     },
     events: {
         "click .copy_id": "copy_id",
@@ -343,9 +350,13 @@ var ChannelItem = BaseAdminItem.extend({
         "click .private_button": "make_public",
         "click .public_button": "make_private",
         "click .delete_button": "delete_channel",
-        "click .join_button": "join_editors",
         "click .count_link": "load_counts",
-        "click .leave_button": "leave_editors"
+        "change .channel_priority": "set_priority",
+        "click .invite_button": "open_sharing"
+    },
+    set_priority: function() {
+        var priority = this.$(".channel_priority").val();
+        this.model.set_priority(priority);
     },
     load_counts: function(){
         if(this.counts && this.size){
@@ -358,6 +369,24 @@ var ChannelItem = BaseAdminItem.extend({
                 self.$(".counts_popover").html(self.count_template({counts: self.counts, size: self.size}));
             });
         }
+    },
+    open_sharing:function(){
+        var ShareViews = require("edit_channel/share/views");
+        var share_view = new ShareViews.ShareModalView({
+            model:this.model,
+            current_user: window.current_user,
+            allow_leave: true,
+            onjoin: this.add_editor,
+            onleave: this.remove_editor
+        });
+    },
+    add_editor: function(editor){
+        this.model.set("editors", this.model.get("editors").concat(editor.toJSON()));
+        this.render();
+    },
+    remove_editor: function(editor){
+        this.model.set("editors", _.reject(this.model.get("editors"), function(user) { return user.id === editor.id }));
+        this.render();
     },
     copy_id: function(){
         this.$(".channel_id").focus();
@@ -416,39 +445,6 @@ var ChannelItem = BaseAdminItem.extend({
             });
           }
         }, null);
-    },
-    join_editors: function(){
-        var self = this;
-        dialog.dialog("Joining Channel", "By joining this channel, you will be listed as an editor and have access to it in your channel list. Continue?", {
-          "CANCEL":function(){},
-          "JOIN": function(){
-                self.$(".join_button").attr("disabled", "disabled").addClass("disabled");
-                self.model.add_editor(window.current_user.id).then(function(){
-                    self.model.set("can_edit", true);
-                    self.model.set("editors", self.model.get("editors").concat(window.current_user.toJSON()));
-                    self.render();
-                }).catch(function(error){
-                    dialog.alert("Action Failed", "Failed to join editors (" + error.responseText + ")");
-                });
-          }
-        }, null);
-    },
-    leave_editors: function(){
-        var self = this;
-        dialog.dialog("Leaving Channel", "Leaving this channel will remove it from your channel list. "+
-                    "However, you will still be able to edit and join it as an administrator. Continue?", {
-          "CANCEL":function(){},
-          "LEAVE": function(){
-                self.$(".leave_button").attr("disabled", "disabled").addClass("disabled");
-                self.model.remove_editor(window.current_user.id).then(function(){
-                    self.model.set("can_edit", false);
-                    self.model.set("editors", _.reject(self.model.get("editors"), function(user) { return user.id === window.current_user.id }));
-                    self.render();
-                }).catch(function(error){
-                    dialog.alert("Action Failed", "Failed to leave channel (" + error.responseText + ")");
-                });
-          }
-        }, null);
     }
 });
 
@@ -476,6 +472,10 @@ var UserTab = BaseAdminTab.extend({
             key: "admins",
             label: "Admins",
             filter: function(item){ return item.get("is_admin"); }
+        }, {
+            key: "is_chef",
+            label: "Sushi Chefs",
+            filter: function(item){ return item.get("is_chef"); }
         }
     ],
     sort_filters: [

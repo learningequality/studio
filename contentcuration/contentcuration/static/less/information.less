@@ -2,7 +2,7 @@
 @import "modal-styles.less";
 
 .information_modal{
-	@license-modal-height: 400px;
+	@license-modal-height: 200px;
 	@license-modal-width: 600px;
 	padding:10px 5px;
 	overflow-y:auto;
@@ -60,12 +60,20 @@
 		}
 		.published_wrapper{
 			min-height: 85px;
-			margin-top: 5px;
+			margin-bottom: 0px;
+			padding: 0px;
 			.publish_id_wrapper{
 				margin-top: 15px;
 				.publish-id-text{
 					width:400px;
+					padding: 5px;
+					margin-top: 2px;
 				}
+			}
+			#published_footer {
+				color: @gray-500;
+			    font-size: 10pt;
+			    text-align: right;
 			}
 		}
 	}

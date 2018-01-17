@@ -20,13 +20,13 @@ TODO: Add log and pi?
 
 ****************/
 var SEP = /,/g;
-var POINT = /\./g;
+var POINT = /\./;
 if (window.languageCode.startsWith("es")) {
   SEP = /\./g;
-  POINT = /,/g;
+  POINT = /,/;
 }
 
-var LINE = /^(.*)$/g;
+var LINE = /^(.*)$/;
 var SIGN = /-?/;
 var DIGIT = /[0-9]/;
 var NON_ZERO_DIGIT = /[1-9]/;
@@ -41,8 +41,8 @@ var PERCENTAGE = new RegExp("(" + DECIMAL.source + "|" + MIXED_NUMBER.source + "
 var EXPONENT = new RegExp("(" + DECIMAL.source + "|" + INTEGER.source + ")e\\+?(" + INTEGER.source + ")");
 
 function parse(text) {
-  var num = extract_value(text);
-  return num && num.toString().replace(".", POINT.source);
+  var num = extract_value(text.replace('\\', '')); // need to remove slashes for escaped characters to get regexps working
+  return num && num.toString().replace(".", POINT.source).replace('\\', '');
 }
 
 function extract_value(text){
@@ -121,7 +121,6 @@ function test_exponent(text){
 function to_en(text){
   return text.replace(SEP, '').replace(POINT, '.');
 }
-
 
 module.exports = {
   parse: parse,

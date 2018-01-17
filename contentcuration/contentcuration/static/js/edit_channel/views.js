@@ -66,7 +66,8 @@ var MESSAGES = {
         "will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content. Are you sure you want to continue?",
     "language": "Language",
     "select_language": "Select a Language",
-    "make_copy": "Make a Copy"
+    "make_copy": "Make a Copy",
+    "publish_title_prompt": "Make this channel available for download into Kolibri"
 }
 
 var BaseView = Backbone.View.extend({
@@ -85,13 +86,11 @@ var BaseView = Backbone.View.extend({
 					.value();
 	},
 	get_intl_data: function(){
-		if(window.languages){
-			var language = window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
-			return {
-				intl: {
-					locales: [(language && language.id) || "en-US"],
-					messages: this.get_translation_library()
-				}
+		var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+		return {
+			intl: {
+				locales: [(language && language.id) || "en-US"],
+				messages: this.get_translation_library()
 			}
 		}
 	},
@@ -207,13 +206,13 @@ var BaseView = Backbone.View.extend({
 		var is_published = root.get("published");
 		$("#hide-if-unpublished").css("display", (is_published) ? "inline-block" : "none");
 		if(root.get("metadata").has_changed_descendant){
-			$("#channel-publish-button").prop("disabled", false);
-			$("#channel-publish-button").text(this.get_translation("publish"));
-			$("#channel-publish-button").removeClass("disabled");
+			$("#channel-publish-button").removeAttr("disabled")
+										.attr("title", this.get_translation("publish_title_prompt"))
+										.removeClass("disabled");
 		}else{
-			$("#channel-publish-button").prop("disabled", true);
-			$("#channel-publish-button").text(this.get_translation("no_changes_detected"));
-			$("#channel-publish-button").addClass("disabled");
+			$("#channel-publish-button").attr("disabled", "disabled")
+										.attr("title", this.get_translation("no_changes_detected"))
+										.addClass("disabled");
 		}
 	},
 	cancel_actions:function(event){
@@ -233,13 +232,11 @@ var BaseWorkspaceView = BaseView.extend({
 			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently', 'sync_content');
 	},
 	publish:function(){
-		if(!$("#channel-publish-button").hasClass("disabled")){
-			var Exporter = require("edit_channel/export/views");
-			var exporter = new Exporter.ExportModalView({
-				model: window.current_channel.get_root("main_tree"),
-				onpublish: this.handle_published
-			});
-		}
+		var Exporter = require("edit_channel/export/views");
+		var exporter = new Exporter.ExportModalView({
+			model: window.current_channel.get_root("main_tree"),
+			onpublish: this.handle_published
+		});
 	},
 	activate_channel: function(){
 		var dialog = require("edit_channel/utils/dialog");
@@ -267,16 +264,20 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	handle_published:function(collection){
 		this.reload_ancestors(collection);
-		var staticModal = require('edit_channel/information/views');
-		new staticModal.PublishedModalView({channel_id: window.current_channel.id, published: true});
+		var self = this;
+		window.current_channel.fetch({
+			success: function(channel){
+				var new_channel = new Models.ChannelCollection()
+				new_channel.reset(channel.toJSON());
+				$("#publish_id_text").val(window.current_channel.get('primary_token'));
+				var staticModal = require('edit_channel/information/views');
+				new staticModal.PublishedModalView({channel: window.current_channel, published: true});
+			}
+		});
 	},
 	get_channel_id:function(collection){
 		var staticModal = require('edit_channel/information/views');
-		new staticModal.PublishedModalView({channel_id: window.current_channel.id, published: false});
-	},
-	get_channel_id:function(collection){
-		var staticModal = require('edit_channel/information/views');
-		new staticModal.PublishedModalView({channel_id: window.current_channel.id, published: false});
+		new staticModal.PublishedModalView({channel: window.current_channel, published: false});
  	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");
@@ -361,7 +362,8 @@ var BaseWorkspaceView = BaseView.extend({
 		// Use for loop to break if needed
 		for(var i = 0; i < this.lists.length; ++i){
 			selected_list = $.merge(selected_list, this.lists[i].get_selected());
-			if(exclude_descendants && selected_list.length > 0){
+			var open_topic = this.lists[i].get_opened_topic();
+			if(exclude_descendants && (!open_topic || open_topic.checked) && selected_list.length > 0){
 				break;
 			}
 		}
@@ -526,6 +528,9 @@ var BaseListView = BaseView.extend({
 	update_views:function(){
 		this.retrieve_nodes(this.model.get("children"), true).then(this.load_content);
 	},
+	get_opened_topic:function() {
+		return null; // Overload in subclasses
+	},
 	load_content: function(collection, default_text){
 		collection = (collection)? collection : this.collection;
 		default_text = (default_text)? default_text : this.get_translation("no_items");
@@ -625,19 +630,20 @@ var BaseEditableListView = BaseListView.extend({
 		var self = this;
 	    return new Promise(function(resolve, reject){
 	    	if(beforeSave){ beforeSave(); }
-	    	if(onerror) {
-	    		self.collection.save().then(resolve).catch(function(error) {
-					onerror(error);
+	    	self.display_load(message, function(load_resolve, load_reject){
+	    		self.collection.save().then(function(data){
+	    			resolve(data);
+	    			load_resolve(true);
+	    		}).catch(function(error) {
+	    			if(onerror) {
+	    				onerror(error);
+	    				load_resolve(true);
+	    			} else {
+	    				load_reject(error);
+	    			}
 					reject(error);
 				});
-	    	} else {
-	    		self.display_load(message, function(load_resolve, load_reject){
-					self.collection.save().then(function(collection){
-						resolve(collection);
-						load_resolve(true);
-					}).catch(load_reject);
-			    });
-	    	}
+	    	});
 
 	    });
 	},
@@ -647,25 +653,17 @@ var BaseEditableListView = BaseListView.extend({
 		this.display_load(message, function(resolve_load, reject_load){
 			var list = self.get_selected();
 			var promise_list = [];
+			var deleteCollection = new Models.ContentNodeCollection();
 			for(var i = 0; i < list.length; i++){
 				var view = list[i];
 				if(view){
-					promise_list.push(new Promise(function(resolve, reject){
-						view.model.destroy({
-							success:function(data){
-								resolve(data);
-							},
-							error:function(obj, error){
-								reject(error);
-							}
-						});
-						self.collection.remove(view.model);
-						self.views.splice(view,1);
-						view.remove();
-					}));
+					deleteCollection.add(view.model);
+					self.collection.remove(view.model);
+					self.views.splice(view,1);
+					view.remove();
 				}
 			}
-			Promise.all(promise_list).then(function(){
+			deleteCollection.delete().then(function() {
 				self.handle_if_empty();
 				resolve_load(true);
 			}).catch(function(error){
@@ -873,7 +871,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
             "author": get_author(),
             "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder,
             "license_name": window.preferences.license,
-            "license_description": (window.preferences.license_description && window.preferences.license==="Special Permissions") ? window.preferences.license_description : ""
+            "license_description": window.preferences.license_description || ""
         }).then(function(new_exercise){
         	var edit_collection = new Models.ContentNodeCollection([new_exercise]);
 	        $("#main-content-area").append("<div id='dialog'></div>");

@@ -43,7 +43,15 @@ var MESSAGES = {
     "uninvite": "UNINVITE",
     "send": "SEND",
     "removing_editor": "Removing Editor",
-    "removing_prompt": "Are you sure you want to remove {data} from the list?"
+    "removing_prompt": "Are you sure you want to remove {data} from the list?",
+    "joining_channel": "Joining Channel",
+    "join_prompt": "By joining this channel, you will be listed as an editor and have access to it in your channel list. Continue?",
+    "failed_join": "Failed to join editors",
+    "join": "Join Channel",
+    "leaving_channel": "Leaving Channel",
+    "leave_prompt": "Leaving this channel will remove it from your channel list. Continue?",
+    "failed_leave": "Failed to leave editors",
+    "leave": "Leave Channel"
 }
 
 var ShareModalView = BaseViews.BaseModalView.extend({
@@ -60,7 +68,10 @@ var ShareModalView = BaseViews.BaseModalView.extend({
             el: this.$(".modal-body"),
             container: this,
             model: this.model,
-            current_user: options.current_user
+            current_user: options.current_user,
+            allow_leave: options.allow_leave,
+            onjoin: options.onjoin,
+            onleave: options.onleave
         });
         this.$(".modal").on("shown.bs.modal", this.share_view.set_initial_focus);
     }
@@ -68,15 +79,21 @@ var ShareModalView = BaseViews.BaseModalView.extend({
 
 var ShareView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/share_dialog.handlebars"),
+    current_user_template: require("./hbtemplates/share_current_user.handlebars"),
     name: NAMESPACE,
     $trs: MESSAGES,
 
     initialize: function(options) {
-        _.bindAll(this, "send_invite", 'loop_focus', 'set_initial_focus', 'set_indices');
+        _.bindAll(this, "send_invite", 'loop_focus', 'set_initial_focus', 'set_indices', 'render_user');
         this.container = options.container;
         this.current_user = options.current_user;
         this.originalData = this.model.toJSON();
         this.show_list = this.show_list();
+        this.can_edit = options.allow_leave && _.find(this.model.get("editors"), function(u){
+            return u === window.current_user.id || u.id === window.current_user.id;
+        });
+        this.onjoin = options.onjoin;
+        this.onleave = options.onleave;
         this.render();
         var self = this;
         Promise.all([this.fetch_model(this.model), this.fetch_model(this.current_user)]).then(function(data){
@@ -86,9 +103,10 @@ var ShareView = BaseViews.BaseView.extend({
     events:{
         'keypress #share_email_address' : 'send_invite',
         "click #share_invite_button" : "send_invite",
-        'focus .input-tab-control': "loop_focus"
+        'focus .input-tab-control': "loop_focus",
+        'click .leave_editors': 'leave_editors',
+        'click .join_editors': 'join_editors'
     },
-
     render: function() {
         var share_modes = this.get_share_modes();
         this.$el.html(this.template({
@@ -100,16 +118,27 @@ var ShareView = BaseViews.BaseView.extend({
         }, {
             data: this.get_intl_data()
         }));
+        this.render_user();
+    },
+    render_user:function(){
+        if(this.$("#share_current_user_actions")){
+            this.$("#share_current_user_actions").html(this.current_user_template({
+                user: this.current_user.toJSON(),
+                can_edit: this.can_edit
+            }, {
+                data: this.get_intl_data()
+            }));
+        }
     },
     show_list: function(){
-        return _.find(window.current_channel.get("editors"), function(u){
+        return window.current_user.get('is_admin') || _.find(this.model.get("editors"), function(u){
             return u === window.current_user.id
         });
     },
     get_share_modes: function(){
         if (!this.share_modes){
-            var user_is_editor = _.find(window.current_channel.get("editors"), function(u){return u === window.current_user.id});
-            if(user_is_editor){
+            var user_is_editor = _.find(this.model.get("editors"), function(u){return u === window.current_user.id});
+            if(window.current_user.get('is_admin') || user_is_editor){
                 this.share_modes = EDITOR_SHARE_MODES;
             }else{
                 this.share_modes = VIEWER_SHARE_MODES;
@@ -192,7 +221,7 @@ var ShareView = BaseViews.BaseView.extend({
         var result = this.collection.findWhere({"email": email});
         var self = this;
         if(result){
-            if (share_mode === "edit" && window.current_channel.get("viewers").indexOf(result.id) >= 0){
+            if (share_mode === "edit" && this.model.get("viewers").indexOf(result.id) >= 0){
                 dialog.dialog(this.get_translation("granting_permissions"), this.get_translation("grant_edit_prompt"),{
                     [self.get_translation("no")]:function(){},
                     [self.get_translation("yes")]: function(){
@@ -251,6 +280,38 @@ var ShareView = BaseViews.BaseView.extend({
             self.$("#share_success").text("");
             self.$("#share_error").text(self.get_translation("invite_failed"));
         });
+    },
+    join_editors: function(){
+        var self = this;
+        dialog.dialog(this.get_translation("joining_channel"), this.get_translation("join_prompt"), {
+          [this.get_translation("cancel")]:function(){},
+          [this.get_translation("join")]: function(){
+                self.$(".join_button").attr("disabled", "disabled").addClass("disabled");
+                self.model.add_editor(window.current_user.id).then(function(){
+                    self.can_edit = true;
+                    self.onjoin && self.onjoin(window.current_user);
+                    self.render_user();
+                }).catch(function(error){
+                    dialog.alert(self.get_translation("failed_join"), error.responseText);
+                });
+          }
+        }, null);
+    },
+    leave_editors: function(){
+        var self = this;
+        dialog.dialog(this.get_translation("leaving_channel"), this.get_translation("leave_prompt"), {
+          [this.get_translation("cancel")]:function(){},
+          [this.get_translation("leave")]: function(){
+                self.$(".leave_button").attr("disabled", "disabled").addClass("disabled");
+                self.model.remove_editor(window.current_user.id).then(function(){
+                    self.can_edit = false;
+                    self.onleave && self.onleave(window.current_user);
+                    self.render_user();
+                }).catch(function(error){
+                    dialog.alert(self.get_translation("leaving_channel"), error.responseText);
+                });
+          }
+        }, null);
     }
 });
 
@@ -398,7 +459,7 @@ var ShareCurrentItem = ShareItem.extend({
         _.bindAll(this, 'remove_editor');
         this.bind_edit_functions();
         this.containing_list_view = options.containing_list_view;
-        if(window.current_channel.get("viewers").indexOf(this.model.get("id")) >= 0){
+        if(this.model.get("viewers") && this.model.get("viewers").indexOf(this.model.get("id")) >= 0){
             this.share_mode = "view";
         }
         this.render();

@@ -7,12 +7,13 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db.models import Q, Case, When, Value, IntegerField, F
+from django.db.models import Q, Case, When, Value, IntegerField, F, TextField
 from django.core.urlresolvers import reverse_lazy
+from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
-from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User, StagedFile
-from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
+from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User, SecretToken, StagedFile
+from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, PublicChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
 from contentcuration.tasks import exportchannel_task
 from contentcuration.utils.messages import get_messages
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
@@ -29,8 +30,10 @@ def base(request):
 
 
 def health(request):
-    return HttpResponse("500")
+    return HttpResponse(Channel.objects.first().name)
 
+def stealth(request):
+    return HttpResponse("<3")
 
 def unsupported_browser(request):
     return render(request, 'unsupported_browser.html')
@@ -85,8 +88,12 @@ def channel_page(request, channel, allow_edit=False, staging=False):
     contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
     languages = get_or_set_cached_constants(Language, LanguageSerializer)
 
-    json_renderer = JSONRenderer()
+    token = None
+    if channel.secret_tokens.filter(is_primary=True).exists():
+        token = channel.secret_tokens.filter(is_primary=True).first().token
+        token = token[:5] + "-" + token[5:]
 
+    json_renderer = JSONRenderer()
     return render(request, 'channel_edit.html', {"allow_edit": allow_edit,
                                                  "staging": staging,
                                                  "is_public": channel.public,
@@ -102,6 +109,7 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
                                                  "preferences": channel.preferences,
                                                  "messages": get_messages(),
+                                                 "primary_token": token or channel.pk,
                                                  "title": settings.DEFAULT_TITLE,
                                                 })
 
@@ -250,8 +258,7 @@ def publish_channel(request):
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        exportchannel_task.delay(channel_id)
-
+        exportchannel_task.delay(channel_id, user_id=request.user.pk)
         return HttpResponse(json.dumps({
             "success": True,
             "channel": channel_id
@@ -300,23 +307,6 @@ def get_staged_diff_endpoint(request):
         return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
 
 
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_channel_name_by_id(request, channel_id):
-    """ Endpoint: /public/channel/<channel_id> """
-    try:
-        channel = Channel.objects.get(pk=channel_id)
-        return HttpResponse(json.dumps({"name": channel.name, "description": channel.description, "version": channel.version}))
-    except ObjectDoesNotExist:
-        return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_public_channels(request):
-    """ Endpoint: /public/public_channels """
-    channels = Channel.objects.filter(public=True).values("id", "name", "description", "version")
-    return HttpResponse(json.dumps(SimplifiedChannelListSerializer(channels, many=True).data))
-
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def add_bookmark(request):
@@ -349,3 +339,17 @@ def remove_bookmark(request):
         except ObjectDoesNotExist:
             return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def set_channel_priority(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        try:
+            channel = Channel.objects.get(pk=data["channel_id"])
+            channel.priority = data["priority"]
+            channel.save()
+
+            return HttpResponse(json.dumps({"success": True}))
+        except ObjectDoesNotExist:
+            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))

@@ -13,7 +13,10 @@ RUN npm install -g yarn
 # generate the node bundles
 RUN mkdir -p contentcuration/static/js/bundles #
 RUN yarn install
-RUN node build.js
+RUN node build.js --prod
+
+# Download the crowdin-cli.jar file
+RUN curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
 
 EXPOSE 8000
 

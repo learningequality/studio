@@ -7,7 +7,7 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
-          <h4 class="modal-title">{{ $tr('importHeader') }}</h4>
+          <h4 class="modal-title">{{ modalTitle }}</h4>
         </div>
         <div class="modal-body">
           <ImportDialogue>
@@ -23,17 +23,30 @@
 
 <script>
 
-const { mapGetters, mapActions } = require('vuex');
+import { mapGetters, mapActions } from 'vuex';
+import { PageTypes } from '../constants';
+import ImportChannelList from './ImportChannelList.vue';
+import ImportDialogue from './ImportDialogue.vue';
+import ImportPreview from './ImportPreview.vue';
+import SearchResults from './SearchResults.vue';
+
+const pageNameToComponentMap = {
+  [PageTypes.IMPORT_PREVIEW]: 'ImportPreview',
+  [PageTypes.SEARCH_RESULTS]: 'SearchResults',
+  [PageTypes.TREE_VIEW]: 'ImportChannelList',
+};
 
 module.exports = {
   name: 'ImportModal',
   $trs: {
-    'importHeader': "Import from Other Channels"
+    importHeader: 'Import from Other Channels',
+    importPreviewHeader: 'Review selections for import',
   },
   components: {
-    ImportDialogue: require('./ImportDialogue.vue'),
-    ImportChannelList: require('./ImportChannelList.vue'),
-    SearchResults: require('./SearchResults.vue'),
+    ImportChannelList,
+    ImportDialogue,
+    ImportPreview,
+    SearchResults,
   },
   mounted() {
     this.openModal();
@@ -45,15 +58,16 @@ module.exports = {
       channels: 'import/channels',
     }),
     {
-      pageType: function() {
-        const pageType = this.currentImportPage;
-        if (pageType === 'tree_view') {
-          return 'ImportChannelList';
-        } else if (pageType === 'search_results') {
-          return 'SearchResults'
+      pageType() {
+        return pageNameToComponentMap[this.currentImportPage];
+      },
+      modalTitle() {
+        if (this.currentImportPage === PageTypes.IMPORT_PREVIEW) {
+          return this.$tr('importPreviewHeader');
         }
-      }
-    },
+        return this.$tr('importHeader');
+      },
+    }
   ),
   methods: Object.assign(
     mapActions('import', ['loadChannels']),
@@ -69,7 +83,7 @@ module.exports = {
       closeModal() {
         $(this.$refs.topmodal).modal('hide');
       },
-    },
+    }
   ),
 }
 

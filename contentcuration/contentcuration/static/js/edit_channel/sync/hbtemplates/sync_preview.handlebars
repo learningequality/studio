@@ -1,6 +1,6 @@
 <div id="sync_preview_diff">
 {{#if node}}
-	<div id="sync_original_channel_header" class="truncate">{{formatMessage (intlGet 'messages.source')}}<b>{{node.original_channel.name}}</b></div>
+	<div id="sync_original_channel_header" class="truncate">Source: <b>{{node.original_channel.name}}</b></div>
 	<div class="row item item_header">
 		<div class="col-xs-2">{{formatMessage (intlGet 'messages.field')}}</div>
 		<div class="col-xs-10">{{formatMessage (intlGet 'messages.update')}}</div>
@@ -14,7 +14,7 @@
 						<div class="list_subitem original">
 							<div class="preview glyphicon glyphicon-new-window pull-right grayed" aria-hidden="true"></div>
 							<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{#parse_question question}}{{/parse_question}}
-							<em class="file_size">&nbsp;({{formatMessage (intlGet 'messages.answer_count') count=answers.length}}, {{formatMessage (intlGet 'messages.hint_count') count=hints.length}})</em>
+							<em class="file_size">&nbsp;{{ans_hint_count}}</em>
 						</div>
 					</div>
 				</div>
@@ -60,7 +60,7 @@
 						<div class="list_subitem updated">
 							<div class="preview glyphicon glyphicon-new-window pull-right grayed" aria-hidden="true"></div>
 							<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{#parse_question question}}{{/parse_question}}
-							<em class="file_size">&nbsp;({{formatMessage (intlGet 'messages.answer_count') count=answers.length}}, {{formatMessage (intlGet 'messages.hint_count') count=hints.length}})</em>
+							<em class="file_size">&nbsp;{{ans_hint_count}}</em>
 						</div>
 					</div>
 				</div>
@@ -73,14 +73,14 @@
 						<ul class="list-unstyled">
 							{{#each current}}
 								<li class="list_subitem file_subitem original" data-model='{{#to_json this}}{{/to_json}}' data-current=1 title="{{formatMessage (intlGet 'messages.deleted')}}" id="file_{{id}}">
-									<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{#translate id}}{{/translate}}
+									<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{#translate preset.id}}{{/translate}}
 									<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
 									<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
 								</li>
 							{{/each}}
 							{{#each source}}
 								<li class="list_subitem file_subitem updated" data-model='{{#to_json this}}{{/to_json}}' data-current=0 title="{{formatMessage (intlGet 'messages.added')}}" id="file_{{id}}">
-									<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{#translate id}}{{/translate}}
+									<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{#translate preset.id}}{{/translate}}
 									<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
 									<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
 								</li>

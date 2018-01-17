@@ -89,7 +89,9 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	edit_content:function(){ this.edit_selected(this.is_edit_page)},
 	render: function() {
-		var show_invite = !this.staging && (_.contains(window.current_channel.get('editors'), window.current_user.id) || _.contains(window.current_channel.get('viewers'), window.current_user.id));
+		var show_invite = window.current_user.get('is_admin') || (!this.staging &&
+							(_.contains(window.current_channel.get('editors'), window.current_user.id) ||
+							_.contains(window.current_channel.get('viewers'), window.current_user.id)));
 		this.$el.html(this.template({
 			edit: this.is_edit_page,
 			channel : window.current_channel.toJSON(),
@@ -131,7 +133,15 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 						if(view) {
 							view.$el.addClass(view.openedFolderClass);
 							list.set_current(view.model);
-							view.content_node_view = list;
+
+							// Set subcontent_view of node to be child list
+							var opened_list = _.find(self.lists, function(l) { return l.$el.attr('id') === "list_" + view.model.id});
+							view.subcontent_view = opened_list;
+
+							// Set content_node_view of list to be parent node
+							if (opened_list) {
+								opened_list.content_node_view = view;
+							}
 						}
 					});
 				});
@@ -206,9 +216,9 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				/* Create list of nodes to delete */
 				var opened = _.find(list, function(list){return list.$el.hasClass(list.openedFolderClass);});
 				if(opened){
-					opened.subcontent_view.close_container()
+					opened.subcontent_view.close_container();
 				}
-				_.each(list, function(list){ list.remove(); })
+				_.each(list, function(list){ list.remove(); });
 				self.add_to_trash(deleteCollection, self.get_translation("deleting_content"));
             },
         }, null);
@@ -383,6 +393,9 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	close_all_popups:function(){
 		this.container.close_all_popups();
+	},
+	get_opened_topic: function() {
+		return _.find(this.views, function(v){return v.$el.hasClass(v.openedFolderClass);});
 	}
 });
 

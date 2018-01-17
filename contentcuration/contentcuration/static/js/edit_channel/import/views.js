@@ -8,6 +8,7 @@ var ImportModal = Vue.extend(ImportModalComponent);
 var store = require('./vuex/store');
 var vueIntl = require("vue-intl");
 var translations = require("utils/translations");
+var { PageTypes } = require('./constants');
 
 
 // Flatten translation dictionary
@@ -82,6 +83,8 @@ var ImportModalView = BaseViews.BaseView.extend({
           return this._showWarning();
         case 'success':
           return this._finishImport();
+        case 'failure':
+          return this.trigger('finish_import', true);
         default:
           return;
       }
@@ -113,7 +116,7 @@ var ImportModalView = BaseViews.BaseView.extend({
     },
 
     _resetPageState: function() {
-        store.commit('import/UPDATE_PAGE_STATE', { pageType: 'tree_view' });
+        store.commit('import/UPDATE_PAGE_STATE', { pageType: PageTypes.TREE_VIEW });
         store.commit('import/RESET_IMPORT_STATE');
     },
 
@@ -127,17 +130,21 @@ var ImportModalView = BaseViews.BaseView.extend({
 
     _startImport: function() {
         var self = this;
-        function onFinishImport(resolve) {
-            self.once('finish_import', function() {
+        function onFinishImport(resolve, reject) {
+            self.once('finish_import', function(importFailed) {
                 self.ImportModal.closeModal();
-                resolve(true);
+                if (importFailed) {
+                    reject();
+                } else {
+                  resolve(true);
+                }
             });
         }
         this.listView.display_load(this.get_translation("importing_content"), onFinishImport);
     },
 
     _finishImport: function() {
-      this.trigger('finish_import');
+      this.trigger('finish_import', false);
     }
 });
 

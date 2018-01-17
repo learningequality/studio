@@ -60,7 +60,7 @@ def file_create(request):
         preferences = json.loads(request.META.get('HTTP_PREFERENCES'))
         author = preferences.get('author') or ""
         license = License.objects.filter(license_name=preferences.get('license')).first()  # Use filter/first in case preference hasn't been set
-        license_id = license.pk if license else settings.DEFAULT_LICENSE
+        license_id = license.pk if license else None
         new_node = ContentNode(
             title=original_filename,
             kind=kind,
@@ -68,7 +68,7 @@ def file_create(request):
             author=author,
             copyright_holder=preferences.get('copyright_holder'),
         )
-        if license.license_name == licenses.SPECIAL_PERMISSIONS:
+        if license and license.is_custom:
             new_node.license_description = preferences.get('license_description')
         new_node.save()
         file_object = File(
@@ -179,12 +179,10 @@ def exercise_image_upload(request):
         fobj = request.FILES.values()[0]
         name, ext = os.path.splitext(fobj._name)
         checksum = get_hash(DjFile(fobj))
-        request.user.check_space(fobj._size, checksum)
         file_object = File(
             preset_id=format_presets.EXERCISE_IMAGE,
             file_on_disk=DjFile(request.FILES.values()[0]),
             file_format_id=ext[1:].lower(),
-            uploaded_by=request.user,
         )
         file_object.save()
         return HttpResponse(json.dumps({

@@ -34,6 +34,7 @@ import contentcuration.view.zip_views as zip_views
 import contentcuration.view.file_views as file_views
 import contentcuration.view.node_views as node_views
 import contentcuration.view.admin_views as admin_views
+import contentcuration.view.public_views as public_views
 import django_js_reverse.views as django_js_reverse_views
 import django.views as django_views
 
@@ -192,11 +193,18 @@ urlpatterns = [
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
+    url(r'^stealthz$', views.stealth, name='stealth'),
     url(r'^api/search/', include('search.urls'), name='search'),
-    url(r'^api/public/channel/(?P<channel_id>[^/]+)', views.get_channel_name_by_id, name='get_channel_name_by_id'),
-    url(r'^api/public/public_channels', views.get_public_channels, name='get_public_channels'),
     url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
     url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
+    url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
+]
+
+# Add public api endpoints
+urlpatterns += [
+    url(r'^api/public/channel/(?P<channel_id>[^/]+)', public_views.get_channel_name_by_id, name='get_channel_name_by_id'),
+    url(r'^api/public/(?P<version>[^/]+)/channels$', public_views.get_public_channel_list, name='get_public_channel_list'),
+    url(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
 ]
 
 # Add node api enpoints
@@ -214,6 +222,7 @@ urlpatterns += [
     url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
     url(r'^api/get_node_path$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
+    url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
 ]
 
 # Add file api enpoints
@@ -269,6 +278,7 @@ urlpatterns += [
     url(r'^api/internal/check_user_is_editor$', internal_views.check_user_is_editor, name='check_user_is_editor'),
     url(r'^api/internal/compare_trees$', internal_views.compare_trees, name='compare_trees'),
     url(r'^api/internal/get_tree_data$', internal_views.get_tree_data, name='get_tree_data'),
+    url(r'^api/internal/get_node_tree_data$', internal_views.get_node_tree_data, name='get_node_tree_data'),
     url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),
     url(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
     url(r'^api/internal/api_add_nodes_from_file$', internal_views.api_add_nodes_from_file, name="api_add_nodes_from_file"),

@@ -2,6 +2,7 @@ var _ = require('underscore');
 var utils = require('./importUtils');
 var createContentNodeCollection = utils.createContentNodeCollection;
 var fetchImportableChannels = utils.fetchImportableChannels;
+var { PageTypes } = require('../constants');
 
 // Sends a request to `get_total_size` endpoint and updates store with result
 exports.calculateImportSize = function(context) {
@@ -21,7 +22,6 @@ exports.calculateImportSize = function(context) {
 exports.addItemToImportList = function(context, contentNode) {
   if (!_.contains(context.getters.itemsToImportIds), contentNode.id) {
     context.commit('ADD_ITEM_TO_IMPORT_LIST', contentNode)
-    return context.dispatch('calculateImportSize');
   }
 }
 
@@ -29,7 +29,6 @@ exports.addItemToImportList = function(context, contentNode) {
 exports.removeItemFromImportList = function(context, id) {
   if (_.contains(context.getters.itemsToImportIds), id) {
     context.commit('REMOVE_ITEM_FROM_IMPORT_LIST', id);
-    return context.dispatch('calculateImportSize');
   }
 }
 
@@ -52,12 +51,27 @@ exports.copyImportListToChannel = function(context, payload) {
   .then(function onSuccess(collection) {
     context.commit('UPDATE_IMPORT_STATUS', 'success');
     payload.onConfirmImport(collection);
+  })
+  .catch(function onFailure(error) {
+    console.error(error);
+    context.commit('UPDATE_IMPORT_STATUS', 'failure');
   });
 }
 
 exports.goToPreviousPage = function(context) {
-  if (context.getters.currentImportPage === 'search_results') {
-    context.commit('UPDATE_PAGE_STATE', { pageType: 'tree_view' });
+  if (context.getters.currentImportPage === PageTypes.SEARCH_RESULTS) {
+    context.commit('UPDATE_PAGE_STATE', { pageType: PageTypes.TREE_VIEW });
+  }
+  if (context.getters.currentImportPage === PageTypes.IMPORT_PREVIEW) {
+    const { previousState } = context.state.pageState.data;
+    const payload = {
+      pageType: previousState.pageType,
+      data: {},
+    };
+    if (previousState.pageType === PageTypes.SEARCH_RESULTS) {
+      payload.data.searchTerm = previousState.searchTerm;
+    }
+    context.commit('UPDATE_PAGE_STATE', payload);
   }
   context.commit('RESET_IMPORT_STATE');
 }
@@ -65,9 +79,21 @@ exports.goToPreviousPage = function(context) {
 exports.goToSearchResults = function(context, payload) {
   context.commit('RESET_IMPORT_STATE');
   context.commit('UPDATE_PAGE_STATE', {
-    pageType: 'search_results',
+    pageType: PageTypes.SEARCH_RESULTS,
     data: {
       searchTerm: payload.searchTerm,
     },
   })
+}
+
+exports.goToImportPreview = function(context) {
+  context.commit('UPDATE_PAGE_STATE', {
+    pageType: PageTypes.IMPORT_PREVIEW,
+    data: {
+      previousState: {
+        pageType: context.state.pageState.pageType,
+        searchTerm: context.state.pageState.data.searchTerm,
+      },
+    },
+  });
 }
