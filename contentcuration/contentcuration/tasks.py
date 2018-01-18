@@ -9,5 +9,5 @@ logger = get_task_logger(__name__)
 
 # runs the management command 'exportchannel' async through celery
 @task(name='exportchannel_task')
-def exportchannel_task(channel_id):
-    call_command('exportchannel', channel_id, email=True)
+def exportchannel_task(channel_id, user_id):
+    call_command('exportchannel', channel_id, email=True, user_id=user_id)
