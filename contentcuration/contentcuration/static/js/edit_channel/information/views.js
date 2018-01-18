@@ -23,9 +23,10 @@ var MESSAGES = {
               "to revisit key prior concepts, which may take the form of foundational skills or " +
               "immediately relevant background information. For learners on Kolibri, these items " +
               "will appear alongside the concept for recommended viewing.",
-    "published": "Channel Successfully Published!",
+    "published": "Your Channel is Currently Publishing...",
     "channel_publish_id": "Published Channel ID",
-    "published_prompt": "Copy this channel ID into Kolibri version 0.6.0 and below:",
+    "published_prompt": "You will get an email once the channel finishes publishing. " + 
+              "Copy this channel ID into Kolibri version 0.6.0 and below:",
     "published_token_prompt": "Copy this channel token into Kolibri version 0.7.0 and above:",
     "channel_publish_token": "Published Channel Token",
     "newer_version": "Have a newer version of Kolibri?",
@@ -34,6 +35,7 @@ var MESSAGES = {
     "get_id": "Get Channel ID",
     "published_version": "Published Version:"
 }
+
 
 var BaseInfoModalView = BaseViews.BaseModalView.extend({
   template: require("./hbtemplates/license_modal.handlebars"),

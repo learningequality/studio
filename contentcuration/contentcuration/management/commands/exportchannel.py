@@ -12,6 +12,7 @@ import uuid
 import base64
 from django.conf import settings
 from django.core.files import File
+from django.core.mail import send_mass_mail
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db.models import Q, Count, Sum
@@ -54,10 +55,14 @@ class Command(BaseCommand):
         parser.add_argument('--user_id', dest='user_id', default=None)
         parser.add_argument('--force-exercises', action='store_true', dest='force-exercises', default=False)
 
+        # optional argument to send an email to the user when done with exporting channel
+        parser.add_argument('--email', action='store_true', default=False)
+
     def handle(self, *args, **options):
         # license_id = options['license_id']
         channel_id = options['channel_id']
         force = options['force']
+        send_email = options['email']
         user_id = options['user_id']
         force_exercises = options['force-exercises']
 
@@ -85,6 +90,20 @@ class Command(BaseCommand):
 
             record_publish_stats(channel)
 
+            # send an email to the user saying their channel is finished publishing
+            if send_email:
+                MAIL_SUBJECT = 'Kolibri Content Workshop Channel Published'
+
+                MAIL_MESSAGE_EDITOR = ('A channel you are a subscribed to has finished publishing! '
+                                      'Here is the published ID (for importing channel into Kolibri):\n'
+                                      'ID: {0}').format(channel.id)
+
+                # list of emails that will be notified about the new published channel (all viewers and editors)
+                email_data_list = []
+                for user in channel.editors.all() | channel.viewers.all():
+                    email_data_list.append(tuple((MAIL_SUBJECT, MAIL_MESSAGE_EDITOR, settings.DEFAULT_FROM_EMAIL, [user.email])))
+
+                send_mass_mail(email_data_list)
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))

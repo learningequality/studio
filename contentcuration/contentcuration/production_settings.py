@@ -28,6 +28,12 @@ DATABASES = {
     }
 }
 
+# celery settings
+BROKER_URL = os.getenv("CELERY_BROKER_URL") or BROKER_URL
+CELERY_RESULT_BACKEND = (os.getenv("CELERY_RESULT_BACKEND_URL")
+                         or CELERY_RESULT_BACKEND)
+CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or CELERY_TIMEZONE
+
 # email settings
 EMAIL_BACKEND = "postmark.backends.PostmarkBackend"
 POSTMARK_API_KEY = os.getenv("EMAIL_CREDENTIALS_POSTMARK_API_KEY")

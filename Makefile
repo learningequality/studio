@@ -38,7 +38,7 @@ vagrantdevserver:
 
 vagrantceleryworkers:
 	echo "Starting up celery workers"
-	vagrant ssh -c 'cd /vagrant/contentcuration;'
+	vagrant ssh -c 'cd /vagrant/contentcuration;DJANGO_SETTINGS_MODULE=contentcuration.dev_settings celery -A contentcuration worker -l info;cd -;'
 
 # When using apidocs, this should clean out all modules
 clean-docs:
@@ -48,4 +48,3 @@ docs: clean-docs
 	# Adapt to apidocs
 	# sphinx-apidoc -d 10 -H "Python Reference" -o docs/py_modules/ kolibri kolibri/test kolibri/deployment/ kolibri/dist/
 	$(MAKE) -C docs html
-
