@@ -67,7 +67,8 @@ var MESSAGES = {
     "language": "Language",
     "select_language": "Select a Language",
     "make_copy": "Make a Copy",
-    "publish_title_prompt": "Make this channel available for download into Kolibri"
+    "publish_title_prompt": "Make this channel available for download into Kolibri",
+    "publish_in_progress": "Publishing..."
 }
 
 var BaseView = Backbone.View.extend({
@@ -204,12 +205,19 @@ var BaseView = Backbone.View.extend({
 	},
 	check_if_published:function(root){
 		var is_published = root.get("published");
+		var is_publishing = root.get("publishing");
+		console.log(root)
 		$("#hide-if-unpublished").css("display", (is_published) ? "inline-block" : "none");
-		if(root.get("metadata").has_changed_descendant){
+		if(is_publishing) {
+			$("#channel-publish-button").attr("disabled", "disabled")
+										.attr("title", this.get_translation("publish_in_progress"))
+										.addClass("disabled");
+		} else if(root.get("metadata").has_changed_descendant ){
 			$("#channel-publish-button").removeAttr("disabled")
 										.attr("title", this.get_translation("publish_title_prompt"))
 										.removeClass("disabled");
-		}else{
+			console.log("CALLED")
+		} else {
 			$("#channel-publish-button").attr("disabled", "disabled")
 										.attr("title", this.get_translation("no_changes_detected"))
 										.addClass("disabled");

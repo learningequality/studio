@@ -76,6 +76,9 @@ class Command(BaseCommand):
             fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
             with using_content_database(tempdb):
+                channel.main_tree.publishing = True
+                channel.main_tree.save()
+
                 prepare_export_database(tempdb)
                 map_channel_to_kolibri_channel(channel)
                 map_content_nodes(channel.main_tree, channel.language, user_id=user_id, force_exercises=force_exercises)
@@ -85,6 +88,11 @@ class Command(BaseCommand):
                 mark_all_nodes_as_changed(channel)
                 add_tokens_to_channel(channel)
                 fill_published_fields(channel)
+
+                channel.main_tree.publishing = False
+                channel.main_tree.changed = False
+                channel.main_tree.save()
+
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 

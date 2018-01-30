@@ -521,6 +521,7 @@ class ContentNode(MPTTModel, models.Model):
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
     published = models.BooleanField(default=False)
+    publishing = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True, db_index=True)
     extra_fields = models.TextField(blank=True, null=True)
