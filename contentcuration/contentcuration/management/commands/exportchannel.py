@@ -482,7 +482,7 @@ def map_tags_to_node(kolibrinode, ccnode):
     tags_to_add = []
 
     for tag in ccnode.tags.all():
-        tags_to_add.append(kolibrimodels.ContentTag.objects.get(pk=tag.pk))
+        tags_to_add.append(kolibrimodels.ContentTag.objects.get(tag_name=tag.tag_name))
 
     kolibrinode.tags = tags_to_add
     kolibrinode.save()
