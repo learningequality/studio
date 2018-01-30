@@ -77,7 +77,6 @@ class Command(BaseCommand):
 
             with using_content_database(tempdb):
                 prepare_export_database(tempdb)
-                map_content_tags(channel)
                 map_channel_to_kolibri_channel(channel)
                 map_content_nodes(channel.main_tree, channel.language, user_id=user_id, force_exercises=force_exercises)
                 map_prerequisites(channel.main_tree)
@@ -126,17 +125,6 @@ def increment_channel_version(channel):
 
 def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
-
-
-def map_content_tags(channel):
-    logging.debug("Creating the Kolibri content tags.")
-
-    cctags = ccmodels.ContentTag.objects.filter(
-        channel=channel).values("tag_name", "id")
-    kolibrimodels.ContentTag.objects.bulk_create(
-        [kolibrimodels.ContentTag(**vals) for vals in cctags])
-
-    logging.info("Finished creating the Kolibri content tags.")
 
 
 def map_content_nodes(root_node, default_language, user_id=None, force_exercises=False):
@@ -502,7 +490,8 @@ def map_tags_to_node(kolibrinode, ccnode):
     tags_to_add = []
 
     for tag in ccnode.tags.all():
-        tags_to_add.append(kolibrimodels.ContentTag.objects.get(pk=tag.pk))
+        t, _new = kolibrimodels.ContentTag.objects.get_or_create(pk=tag.pk, tag_name=tag.tag_name)
+        tags_to_add.append(t)
 
     kolibrinode.tags = tags_to_add
     kolibrinode.save()
