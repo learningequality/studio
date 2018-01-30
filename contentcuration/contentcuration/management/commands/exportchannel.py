@@ -2,6 +2,7 @@ import ast
 import collections
 import datetime
 import os
+import itertools
 import zipfile
 import shutil
 import tempfile
@@ -100,7 +101,7 @@ class Command(BaseCommand):
 
                 # list of emails that will be notified about the new published channel (all viewers and editors)
                 email_data_list = []
-                for user in channel.editors.all() | channel.viewers.all():
+                for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
                     email_data_list.append(tuple((MAIL_SUBJECT, MAIL_MESSAGE_EDITOR, settings.DEFAULT_FROM_EMAIL, [user.email])))
 
                 send_mass_mail(email_data_list)
