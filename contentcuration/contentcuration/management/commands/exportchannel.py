@@ -96,7 +96,8 @@ class Command(BaseCommand):
 
                 MAIL_MESSAGE_EDITOR = ('A channel you are a subscribed to has finished publishing! '
                                       'Here is the published ID (for importing channel into Kolibri):\n'
-                                      'ID: {0}').format(channel.id)
+                                       'ID: {0}\n'
+                                       'Name: {1}\n').format(channel.id, channel.name)
 
                 # list of emails that will be notified about the new published channel (all viewers and editors)
                 email_data_list = []
