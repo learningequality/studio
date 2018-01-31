@@ -18,6 +18,7 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db.models import Q, Count, Sum
 from django.template.loader import render_to_string
+from django.utils.translation import ugettext_lazy as _
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 from pressurecooker.encodings import write_base64_to_file
 from contentcuration.utils.files import create_file_from_contents
@@ -102,12 +103,14 @@ class Command(BaseCommand):
 
             # send an email to the user saying their channel is finished publishing
             if send_email:
-                MAIL_SUBJECT = 'Kolibri Content Workshop Channel Published'
+                MAIL_SUBJECT = _('Kolibri Content Workshop Channel Published')
 
-                MAIL_MESSAGE_EDITOR = ('A channel you are a subscribed to has finished publishing! '
-                                      'Here is the published ID (for importing channel into Kolibri):\n'
-                                       'ID: {0}\n'
-                                       'Name: {1}\n').format(channel.id, channel.name)
+                MAIL_MESSAGE_EDITOR = (_('%(name)s has finished publishing! '
+                    'Here is the published ID (for importing this channel into Kolibri):\n'
+                    'ID: %(id)s \nName: %(name)s \n\n\n'
+                    'You are receiving this email because you are subscribed to this channel.')
+                    % {'name': channel.name, 'id': channel.id})
+
 
                 # list of emails that will be notified about the new published channel (all viewers and editors)
                 email_data_list = []
