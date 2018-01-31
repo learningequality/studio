@@ -483,6 +483,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     valid = serializers.SerializerMethodField('check_valid')
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
+    original_channel = serializers.SerializerMethodField('retrieve_original_channel')
 
     def retrieve_associated_presets(self, node):
         return node.get_associated_presets()
@@ -537,25 +538,24 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
                 "has_changed_descendant": node.changed,
             }
 
-    class Meta:
-        list_serializer_class = CustomListSerializer
-        model = ContentNode
-        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license','language',
-                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified',
-                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata',
-                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing')
-
-
-class ContentNodeEditSerializer(ContentNodeSerializer):
-    original_channel = serializers.SerializerMethodField('retrieve_original_channel')
-    files = FileSerializer(many=True, read_only=True)
-    tags = TagSerializer(many=True)
-    assessment_items = AssessmentItemSerializer(many=True, read_only=True)
-
     def retrieve_original_channel(self, node):
         original = node.get_original_node()
         channel = original.get_channel() if original else None
         return {"id": channel.pk, "name": channel.name} if channel else None
+
+    class Meta:
+        list_serializer_class = CustomListSerializer
+        model = ContentNode
+        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license','language',
+                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
+                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'freeze_authoring_data', 'publishing')
+
+
+class ContentNodeEditSerializer(ContentNodeSerializer):
+    files = FileSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True)
+    assessment_items = AssessmentItemSerializer(many=True, read_only=True)
 
     class Meta:
         list_serializer_class = CustomListSerializer
@@ -565,7 +565,6 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding',
                   'freeze_authoring_data', 'publishing', 'original_source_node_id')
-
 
 class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
     class Meta:

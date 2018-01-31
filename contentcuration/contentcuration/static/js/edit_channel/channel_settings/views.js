@@ -148,6 +148,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         }).then(function(data){
             self.onsave(data);
             $("#settings_submit").html(self.get_translation("saved"));
+            self.check_if_published(self.model.get_root("main_tree"));
             setTimeout(function(){
                 $("#settings_submit").html(self.get_translation("no_changes_detected"));
             }, 2000);

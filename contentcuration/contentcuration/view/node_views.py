@@ -381,7 +381,7 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
 
     # recurse down the tree and clone the children
     for child in node.children.all():
-        _duplicate_node_bulk_recursive(node=child, sort_order=None, parent=new_node, channel_id=channel_id, to_create=to_create, level=level + 1)
+        _duplicate_node_bulk_recursive(node=child, sort_order=None, parent=new_node, channel_id=channel_id, to_create=to_create, level=level + 1, user=user)
 
     return new_node
 

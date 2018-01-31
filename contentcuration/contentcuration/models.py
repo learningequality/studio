@@ -421,6 +421,18 @@ class Channel(models.Model):
 
         super(Channel, self).save(*args, **kwargs)
 
+        if original_channel and not self.main_tree.changed:
+            fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'language', 'thumbnail_encoding', 'deleted']
+            self.main_tree.changed = any([f for f in fields_to_check if getattr(self, f) != getattr(original_channel, f)])
+
+            # Delete db if channel has been deleted and mark as unpublished
+            if not original_channel.deleted and self.deleted:
+                channel_db_url = os.path.join(settings.DB_ROOT, self.id) + ".sqlite3"
+                if os.path.isfile(channel_db_url):
+                    os.unlink(channel_db_url)
+                    self.main_tree.published = False
+            self.main_tree.save()
+
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")

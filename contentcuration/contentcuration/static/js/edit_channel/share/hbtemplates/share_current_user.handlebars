@@ -1,4 +1,4 @@
-{{#if user.is_admin}}
+{{#if allow_leave}}
 	{{#if can_edit}}<span class="leave_editors glyphicon glyphicon-log-out" title="{{formatMessage (intlGet 'messages.leave')}}"></span>
 	{{else}}<span class="join_editors glyphicon glyphicon-log-in" title="{{formatMessage (intlGet 'messages.join')}}"></span>
 	{{/if}}
