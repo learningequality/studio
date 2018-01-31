@@ -454,7 +454,8 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language')
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
+                  'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language')
 
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
@@ -609,6 +610,9 @@ class ChannelFieldMixin(object):
     def check_published(self, channel):
         return channel.main_tree.published
 
+    def check_publishing(self, channel):
+        return channel.main_tree.publishing
+
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
             return generate_storage_url(channel.thumbnail)
@@ -664,6 +668,7 @@ class AccessibleChannelListSerializer(ChannelFieldMixin, serializers.ModelSerial
 class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
+    publishing = serializers.SerializerMethodField('check_publishing')
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
@@ -677,11 +682,12 @@ class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'modified', 'language', 'primary_token', 'priority',
-                  'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'preferences')
+                  'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'preferences', 'publishing')
 
 class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
+    publishing = serializers.SerializerMethodField('check_publishing')
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
@@ -690,7 +696,7 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language', 'primary_token', 'priority',
-                  'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
+                  'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences', 'publishing')
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     kind_count = serializers.SerializerMethodField('generate_kind_count')
