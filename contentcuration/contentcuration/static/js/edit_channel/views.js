@@ -206,7 +206,6 @@ var BaseView = Backbone.View.extend({
 	check_if_published:function(root){
 		var is_published = root.get("published");
 		var is_publishing = root.get("publishing");
-		console.log(root)
 		$("#hide-if-unpublished").css("display", (is_published) ? "inline-block" : "none");
 		if(is_publishing) {
 			$("#channel-publish-button").attr("disabled", "disabled")
@@ -216,7 +215,6 @@ var BaseView = Backbone.View.extend({
 			$("#channel-publish-button").removeAttr("disabled")
 										.attr("title", this.get_translation("publish_title_prompt"))
 										.removeClass("disabled");
-			console.log("CALLED")
 		} else {
 			$("#channel-publish-button").attr("disabled", "disabled")
 										.attr("title", this.get_translation("no_changes_detected"))
