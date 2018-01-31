@@ -206,22 +206,23 @@ var BaseView = Backbone.View.extend({
 	check_if_published:function(root){
 		var is_published = root.get("published");
 		var is_publishing = root.get("publishing");
-		console.log(root)
 		$("#hide-if-unpublished").css("display", (is_published) ? "inline-block" : "none");
 		if(is_publishing) {
-			$("#channel-publish-button").attr("disabled", "disabled")
-										.attr("title", this.get_translation("publish_in_progress"))
-										.addClass("disabled");
+			this.set_publishing();
 		} else if(root.get("metadata").has_changed_descendant ){
 			$("#channel-publish-button").removeAttr("disabled")
 										.attr("title", this.get_translation("publish_title_prompt"))
 										.removeClass("disabled");
-			console.log("CALLED")
 		} else {
 			$("#channel-publish-button").attr("disabled", "disabled")
 										.attr("title", this.get_translation("no_changes_detected"))
 										.addClass("disabled");
 		}
+	},
+	set_publishing:function() {
+		$("#channel-publish-button").attr("disabled", "disabled")
+										.attr("title", this.get_translation("publish_in_progress"))
+										.addClass("disabled");
 	},
 	cancel_actions:function(event){
 		event.preventDefault();
@@ -271,7 +272,7 @@ var BaseWorkspaceView = BaseView.extend({
 
 	},
 	handle_published:function(collection){
-		this.reload_ancestors(collection);
+		this.set_publishing();
 		var self = this;
 		window.current_channel.fetch({
 			success: function(channel){

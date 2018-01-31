@@ -83,8 +83,10 @@ class Command(BaseCommand):
                 add_tokens_to_channel(channel)
                 fill_published_fields(channel)
 
+                # Attributes not getting set for some reason, so just save it here
                 channel.main_tree.publishing = False
                 channel.main_tree.changed = False
+                channel.main_tree.published = True
                 channel.main_tree.save()
 
                 # use SQLite backup API to put DB into archives folder.
