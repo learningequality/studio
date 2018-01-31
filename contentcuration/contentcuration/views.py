@@ -6,7 +6,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
-from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Q, Case, When, Value, IntegerField, F, TextField
 from django.core.urlresolvers import reverse_lazy
@@ -15,6 +14,7 @@ from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
 from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User, SecretToken, StagedFile
 from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, PublicChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
+from contentcuration.tasks import exportchannel_task
 from contentcuration.utils.messages import get_messages
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -258,7 +258,7 @@ def publish_channel(request):
         except KeyError:
             raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-        call_command("exportchannel", channel_id, user_id=request.user.pk)
+        exportchannel_task.delay(channel_id, user_id=request.user.pk)
         return HttpResponse(json.dumps({
             "success": True,
             "channel": channel_id
