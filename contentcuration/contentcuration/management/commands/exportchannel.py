@@ -25,7 +25,7 @@ from contentcuration.utils.files import create_file_from_contents
 from contentcuration import models as ccmodels
 from contentcuration.utils.parser import extract_value
 from itertools import chain
-from kolibri.content import models as kolibrimodels
+from kolibri_content import models as kolibrimodels
 from kolibri.content.utils.search import fuzz
 from contentcuration.statistics import record_publish_stats
 from kolibri.content.content_db_router import using_content_database, THREAD_LOCAL
