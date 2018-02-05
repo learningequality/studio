@@ -20,6 +20,8 @@ Content channel aligned to a specific state curriculum might instead be structur
 | **Grade > Subject > Unit**
 | *e.g. Fifth Standard > Math > Unit 5*
 |
+
+
 Channel Topic Tree
 ******************
 
@@ -27,10 +29,10 @@ Inside each content channel the individual learning resources (exercises, videos
 
 Think of the topics as folders that can contain other sub-folders (sub-topics) or files (learning resources) directly. A folder in the topic tree can contain both individual resources and sub-folders.
 
-.. figure:: img/cc-topic-subtopic-resources.png
-   :alt: Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
+   .. figure:: img/cc-topic-subtopic-resources.png
+      :alt: Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
 
-   Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
+      Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
 
 There is no inherent restriction on the depth of topic trees or the number of resources that you can place in a channel. However, you should take into consideration the intended learning pathway and user experience once channel is imported in Kolibri, and try to build your topic tree so that learners do not need to click through long series of subfolders to arrive to the desired learning resource.
 
@@ -39,10 +41,10 @@ There is no inherent restriction on the depth of topic trees or the number of re
 Edit Channel Content Tools
 ==========================
 
-.. figure:: img/edit-channel-content-tools.png
-   :alt: Edit Channel Content Tools
+   .. figure:: img/edit-channel-content-tools.png
+      :alt: Edit Channel Content Tools
 
-   Edit Channel Content Tools
+      Edit Channel Content Tools
 
 #. Channel Content Toolbar contains:
 
@@ -61,6 +63,7 @@ Edit Channel Content Tools
 #. :ref:`Clipboard <clipboard>` button (with the indicator of available content items)
 #. Topic container pane
 #. |plus-c| **ADD** button to :ref:`add topics <add_topics>`, :ref:`upload content <upload>`, and :ref:`create exercises <exercises>`.
+
 
 .. _add_topics:
 
