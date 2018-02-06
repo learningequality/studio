@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+{% load staticfiles %}
+{% load export_tags %}
+
+<html>
+    <head>
+        <title>Kolibri Studio Channels</title>
+        <style type="text/css">
+            body {
+                font-family: Verdana, sans-serif;
+            }
+            #letterhead img {
+                float:left;
+            }
+            #address {
+                float: right;
+                text-align: right;
+                display: inline-block;
+            }
+
+            @page {
+                size: {{ pagesize }};
+                margin: 1cm;
+                @frame footer {
+                    -pdf-frame-content: footerContent;
+                    bottom: 0cm;
+                    margin-left: 9cm;
+                    margin-right: 9cm;
+                    height: 1cm;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="letterhead">
+            <div id="address">
+                Learning Equality<br>
+                9700 Gilman Dr, PMB 323<br>
+                La Jolla, CA, USA, 92093<br>
+                info@learningequality.org<br>
+            </div>
+            <img width="200px" src="{% static 'img/leq_letterhead.png' %}">
+        </div>
+        <hr>
+        <h1>Kolibri Studio Public Channels</h1>
+        <p id="overview"><a href="http://learningequality.org/">Learning Equality</a> is a non-profit organization committed to enabling every person in the world to realize their right to a quality education by supporting the creation, adaptation, and distribution of open educational resources and creating supportive tools for innovative pedagogy. Our platform, <a href="http://learningequality.org/kolibri/">Kolibri</a>, is specially designed to provide offline access to a curated and openly licensed educational library. Here is a list of the public channels available on this library.</p>
+
+        <ul id="channel-list">
+            {% for c in channels %}
+                <li class="channel">
+                    {{c.name}}
+                </li>
+            {% endfor %}
+        </ul>
+        <div id="footerContent">
+            {%block page_foot%}
+                Page <pdf:pagenumber>
+            {%endblock%}
+        </div>
+    </body>
+</html>

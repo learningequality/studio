@@ -57,7 +57,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         "change .filter_input" : "apply_filter",
         "keyup .search_input" : "apply_search",
         "paste .search_input" : "apply_search",
-        "change .select_all" : "check_all",
+        "change .select_all" : "check_all"
     },
     handle_removed: function(){
         this.update_count(this.count - 1);
@@ -314,7 +314,7 @@ var ChannelTab = BaseAdminTab.extend({
     },
     check_search: function(item, text, re) {
         return item.get("name").match(re) || item.id.startsWith(text);
-    },
+    }
 });
 
 
