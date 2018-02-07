@@ -96,31 +96,25 @@ class Command(BaseCommand):
                 channel.main_tree.published = True
                 channel.main_tree.save()
 
+                if send_email:
+                    send_emails(channel)
+
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
             record_publish_stats(channel)
 
-            # send an email to the user saying their channel is finished publishing
-            if send_email:
-                MAIL_SUBJECT = _('Kolibri Content Workshop Channel Published')
-
-                MAIL_MESSAGE_EDITOR = (_('%(name)s has finished publishing! '
-                    'Here is the published ID (for importing this channel into Kolibri):\n'
-                    'ID: %(id)s \nName: %(name)s \n\n\n'
-                    'You are receiving this email because you are subscribed to this channel.')
-                    % {'name': channel.name, 'id': channel.id})
-
-
-                # list of emails that will be notified about the new published channel (all viewers and editors)
-                email_data_list = []
-                for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
-                    email_data_list.append(tuple((MAIL_SUBJECT, MAIL_MESSAGE_EDITOR, settings.DEFAULT_FROM_EMAIL, [user.email])))
-
-                send_mass_mail(email_data_list)
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
+
+def send_emails(channel):
+    subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Content Workshop Channel Published')})
+
+    # Email all users about updates to channel
+    for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
+        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
+        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
 
 def create_kolibri_license_object(ccnode):

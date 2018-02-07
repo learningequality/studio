@@ -1,0 +1,20 @@
+{% load i18n %}
+
+{% autoescape off %}
+{% trans "Hello" %} {{ user.first_name }},
+
+{% blocktrans with channel_name=channel.name %}{{ channel_name }} has finished publishing! Here is the published ID (for importing this channel into Kolibri):{% endblocktrans %}
+
+{% blocktrans with channel_id=channel.id %}ID: {{ channel_id }}{% endblocktrans %}
+
+{% blocktrans with channel_name=channel.name %}Name: {{ channel_name }}{% endblocktrans %}
+
+{% trans "Thanks for using our site!" %}
+
+{% trans "The Learning Equality Team" %}
+
+
+
+{% trans "You are receiving this email because you are subscribed to this channel." %}
+
+{% endautoescape %}
