@@ -164,6 +164,7 @@ def remove_editor(request):
             return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
 def sizeof_fmt(num, suffix='B'):
+    """ Format sizes """
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
@@ -171,12 +172,14 @@ def sizeof_fmt(num, suffix='B'):
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
 def get_sample_pathway(node):
+    """ Get a sample of the topic tree from the given node """
     first_node = node.children.filter(kind_id="topic").first() or node.children.first()
     if not first_node:
         return []
     return ["{} ({})".format(first_node.title, first_node.kind_id)] + get_sample_pathway(first_node)
 
 def generate_channel_list(user):
+    """ Get list of channels and extra metadata """
     channel_list = []
     channels = Channel.objects.prefetch_related('editors', 'secret_tokens')\
                               .select_related('main_tree')\
@@ -227,6 +230,7 @@ def generate_channel_list(user):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def download_channel_csv(request):
+    """ Writes list of channels to csv, which is then returned """
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
