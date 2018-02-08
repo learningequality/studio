@@ -1,3 +1,4 @@
+import csv
 import json
 import logging
 import os
@@ -10,9 +11,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
-from django.db.models import Q, Case, When, Value, IntegerField, Count, Sum
+from django.db.models import Q, Case, When, Value, IntegerField, Count, Sum, CharField
+from django.db.models.functions import Concat
 from django.core.urlresolvers import reverse_lazy
 from django.template.loader import render_to_string
+from itertools import chain
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers
 from contentcuration.models import Channel, User, Invitation, ContentNode
@@ -160,3 +163,89 @@ def remove_editor(request):
         except ObjectDoesNotExist:
             return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
+
+def get_sample_pathway(node):
+    first_node = node.children.filter(kind_id="topic").first() or node.children.first()
+    if not first_node:
+        return []
+    return ["{} ({})".format(first_node.title, first_node.kind_id)] + get_sample_pathway(first_node)
+
+def generate_channel_list(user):
+    channel_list = []
+    channels = Channel.objects.prefetch_related('editors', 'secret_tokens')\
+                              .select_related('main_tree')\
+                              .filter(Q(public=True) | Q(editors=user) | Q(viewers=user))\
+                              .order_by("name")
+    for c in channels:
+        print(c.id)
+
+
+        channel = {
+            "name": c.name,
+            "id": c.id,
+            "public": "Yes" if c.public else "No",
+            "description": c.description,
+            "language": c.language.readable_name,
+        }
+
+        # Get information related to channel
+        channel["tokens"] = ", ".join(list(c.secret_tokens.values_list('token', flat=True)))
+        channel["editors"] = ", ".join(list(c.editors.annotate(name=Concat('first_name', Value(' '), \
+                                                    'last_name', Value(' ('), 'email', Value(')'),\
+                                                    output_field=CharField()))\
+                                          .values_list('name', flat=True)))
+
+        # Get information related to nodes
+        nodes = c.main_tree.get_descendants().prefetch_related('files', 'tags', 'children', 'language')
+        channel["sample_pathway"] = " -> ".join(get_sample_pathway(c.main_tree))
+        channel["tags"] = ", ".join([t for t in nodes.values_list('tags__tag_name', flat=True).distinct() if t != None])
+
+        # Get language information
+        node_languages = nodes.exclude(language=None).values_list('language__readable_name', flat=True)
+        file_languages = nodes.values_list('files__language__readable_name', flat=True)
+        language_list = filter(lambda l: l != None and l != channel['language'], set(chain(node_languages, file_languages)))
+        channel["languages"] = ", ".join(language_list)
+
+        # Get file information
+        kind_list = nodes.values('kind_id')\
+                         .annotate(count=Count('kind_id'))\
+                         .order_by('kind_id')
+        channel["kind_counts"] = ", ".join(["{}s: {}".format(k['kind_id'].capitalize(), k['count']) for k in kind_list])
+        channel["total_size"] = sizeof_fmt(nodes.values('files__checksum', 'files__file_size')\
+                          .distinct()\
+                          .aggregate(size=Sum('files__file_size'))['size'] or 0)
+
+        channel_list.append(channel)
+
+    return channel_list
+
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAdminUser,))
+def download_channel_csv(request):
+    if not request.user.is_admin:
+        raise SuspiciousOperation("You are not authorized to access this endpoint")
+
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="channels.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Channel', 'ID', 'Public', 'Description', 'Tokens', 'Kind Counts',\
+                    'Total Size', 'Language', 'Other Languages', 'Tags', 'Editors', 'Sample Pathway'])
+
+    channels = generate_channel_list(request.user)
+
+    # Write channels to csv file
+    for c in channels:
+        writer.writerow([c['name'], c['id'], c['public'], c['description'], c['tokens'], c['kind_counts'], \
+                         c['total_size'], c['language'], c['languages'], c['tags'], c['editors'], c['sample_pathway']])
+
+    return response
