@@ -1,3 +1,4 @@
+import ast
 import csv
 import json
 import logging
@@ -11,6 +12,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
 from django.db.models import Q, Case, When, Value, IntegerField, Count, Sum, CharField
 from django.db.models.functions import Concat
@@ -170,38 +172,48 @@ def remove_editor(request):
             return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
 def sizeof_fmt(num, suffix='B'):
-    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+    """ Format sizes """
+    for unit in ['','K','M','G','T','P','E','Z']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
 def get_sample_pathway(node):
+    """ Get a sample of the topic tree from the given node """
     first_node = node.children.filter(kind_id="topic").first() or node.children.first()
     if not first_node:
         return []
     return ["{} ({})".format(first_node.title, first_node.kind_id)] + get_sample_pathway(first_node)
 
-def generate_channel_list(user):
+def pluralize_kind(kind, number):
+    return "{} {}{}".format(number, kind.replace("html5", "HTML app").capitalize(), "s" if number != 1 else "")
+
+def generate_channel_list(request, public_only=False):
+    """ Get list of channels and extra metadata """
     channel_list = []
-    channels = Channel.objects.prefetch_related('editors', 'secret_tokens')\
-                              .select_related('main_tree')\
-                              .filter(Q(public=True) | Q(editors=user) | Q(viewers=user))\
-                              .order_by("name")
+    channels = Channel.objects.prefetch_related('editors', 'secret_tokens').select_related('main_tree')
+
+    if public_only:
+        channels = channels.filter(public=True, main_tree__published=True).order_by("name")
+    else:
+        channels = channels.filter(Q(main_tree__published=True) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))).order_by("name")
+
     for c in channels:
-        print(c.id)
-
-
         channel = {
             "name": c.name,
             "id": c.id,
             "public": "Yes" if c.public else "No",
             "description": c.description,
-            "language": c.language.readable_name,
+            "language": c.language and c.language.readable_name,
+            "thumbnail": c.thumbnail,
+            "thumbnail_encoding": c.thumbnail_encoding and ast.literal_eval(c.thumbnail_encoding).get('base64'),
+            "url": "http://{}/channels/{}/edit".format(get_current_site(request), c.id)
         }
 
         # Get information related to channel
-        channel["tokens"] = ", ".join(list(c.secret_tokens.values_list('token', flat=True)))
+        tokens = list(c.secret_tokens.values_list('token', flat=True))
+        channel["tokens"] = ", ".join(["{}-{}".format(t[:5], t[5:]) for t in tokens if t != c.id])
         channel["editors"] = ", ".join(list(c.editors.annotate(name=Concat('first_name', Value(' '), \
                                                     'last_name', Value(' ('), 'email', Value(')'),\
                                                     output_field=CharField()))\
@@ -222,7 +234,7 @@ def generate_channel_list(user):
         kind_list = nodes.values('kind_id')\
                          .annotate(count=Count('kind_id'))\
                          .order_by('kind_id')
-        channel["kind_counts"] = ", ".join(["{}s: {}".format(k['kind_id'].capitalize(), k['count']) for k in kind_list])
+        channel["kind_counts"] = ", ".join([pluralize_kind(k['kind_id'], k['count']) for k in kind_list])
         channel["total_size"] = sizeof_fmt(nodes.values('files__checksum', 'files__file_size')\
                           .distinct()\
                           .aggregate(size=Sum('files__file_size'))['size'] or 0)
@@ -236,6 +248,7 @@ def generate_channel_list(user):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def download_channel_csv(request):
+    """ Writes list of channels to csv, which is then returned """
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
@@ -247,7 +260,7 @@ def download_channel_csv(request):
     writer.writerow(['Channel', 'ID', 'Public', 'Description', 'Tokens', 'Kind Counts',\
                     'Total Size', 'Language', 'Other Languages', 'Tags', 'Editors', 'Sample Pathway'])
 
-    channels = generate_channel_list(request.user)
+    channels = generate_channel_list(request)
 
     # Write channels to csv file
     for c in channels:
@@ -257,136 +270,20 @@ def download_channel_csv(request):
     return response
 
 
-from easy_pdf.views import PDFTemplateView
-
-class ChannelPDFView(PDFTemplateView):
-    template_name = "export/channels_pdf.html"
-
-    def get_context_data(self, **kwargs):
-        context = super(ChannelPDFView, self).get_context_data(**kwargs)
-        context['pagesize'] = 'A4'
-        context['channels'] = generate_channel_list(self.request.user)
-        return context
-
-def link_callback(uri, rel):
-    # use short variable names
-    sUrl = settings.STATIC_URL      # Typically /static/
-    sRoot = settings.STATIC_ROOT    # Typically /home/userX/project_static/
-    mUrl = settings.MEDIA_URL       # Typically /static/media/
-    mRoot = settings.MEDIA_ROOT     # Typically /home/userX/project_static/media/
-
-    # convert URIs to absolute system paths
-    if uri.startswith(mUrl):
-        path = os.path.join(mRoot, uri.replace(mUrl, ""))
-    elif uri.startswith(sUrl):
-        path = os.path.join(sRoot, uri.replace(sUrl, ""))
-
-    # make sure that file exists
-    if not os.path.isfile(path):
-        raise Exception(
-                'media URI must start with %s or %s' % \
-                (sUrl, mUrl))
-    return path
-
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def download_channel_pdf(request):
-    # Prepare context
-    data = {
-        'pagesize':'A4',
-        "channels": generate_channel_list(request.user)
-    }
-
-    # Render html content through html template with context
     template = get_template('export/channels_pdf.html')
-    html  = template.render(Context(data))
-
-    # Write PDF to file
-    file = open(os.path.join(settings.MEDIA_ROOT, 'report.pdf'), "w+b")
-    pisaStatus = pisa.CreatePDF(html, dest=file, link_callback = link_callback)
-
-    # Return PDF document through a Django HTTP response
-    file.seek(0)
-    pdf = file.read()
-    file.close()            # Don't forget to close the file handle
-    return HttpResponse(pdf, mimetype='application/pdf')
-
-    # context = {
-    #     'pagesize':'A4',
-    #     "channels": generate_channel_list(request.user)
-    # }
-    # links = lambda uri, rel: os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ''))
-    # html = render_to_string('export/channels_pdf.html', dict, context_instance=RequestContext(request))
-    # result = StringIO()
-    # pdf = pisa.pisaDocument(StringIO(html.encode("UTF-8")), dest=result, link_callback=links)
-    # if not pdf.err:
-    #     return HttpResponse(result.getvalue(), mimetype='application/pdf')
-    # return HttpResponse('Pisa hates you! %s' % cgi.escape(html))
-
-
-    # template = get_template('export/channels_pdf.html')
-    # context = Context({
-    #     'pagesize':'A4',
-    #     "channels": generate_channel_list(request.user)
-    # })
-    # html  = template.render(context)
-    # result = StringIO.StringIO()
-    # # links = lambda uri, rel: os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ''))
-
-    # pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("ISO-8859-1")), result, link_callback=fetch_resources)
-    # if not pdf.err:
-    #     return HttpResponse(result.getvalue(), content_type='application/pdf')
-    # return HttpResponse('Error loading pdf')
-
-    # if not request.user.is_admin:
-    #     raise SuspiciousOperation("You are not authorized to access this endpoint")
-
-    # programconfig = ProgramConfig.get_solo()
-    # programconfig.downloaded += 1
-    # programconfig.save()
-
-    # config = pdfkit.configuration(wkhtmltopdf=settings.PDF_WKHTMLTOPDF)
-
-    # content = render_to_string(
-    #     'program/item2pdf.html', {
-    #         'events': Event.objects.all(),
-    #         'abs_path': settings.PDF_ADDRESS,
-    #         'programconfig': programconfig
-    #     }
-    # )
-
-    # pdf = pdfkit.PDFKit(content, "string", configuration=config).to_pdf()
-
-    # response = HttpResponse(pdf)
-    # response['Content-Type'] = 'application/pdf'
-    # response['Content-disposition'] = 'attachment;filename='
-    # response['Content-disposition'] += programconfig.get_filename
-
-    # return response
-
-    # options = {
-    #     'page-size': 'A4',
-    #     'margin-top': '0.75in',
-    #     'margin-right': '0.75in',
-    #     'margin-bottom': '0.75in',
-    #     'margin-left': '0.75in',
-    # }
-
-    # template = get_template('export/channels_pdf.html')
-    # context = Context({
-    #     'pagesize':'A4',
-    #     "channels": generate_channel_list(request.user)
-    # })
-    # html  = template.render(context)
-    # result = BytesIO()
-    # pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
-    # if not pdf.err:
-    #      return HttpResponse(result.getvalue(), content_type='application/pdf')
-    # return HttpResponse('We had some errors<pre>%s</pre>' % escape(html))
-
-
-def download_test(request):
-    return render(request, 'export/channels_pdf.html', {
-        "channels": generate_channel_list(request.user)
+    context = Context({
+        "channels": generate_channel_list(request, public_only=True)
     })
+    html  = template.render(context)
+    result = StringIO.StringIO()
+
+    pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("ISO-8859-1")), result)
+    if not pdf.err:
+        response = HttpResponse(result.getvalue())
+        response['Content-Type'] = 'application/pdf'
+        response['Content-disposition'] = 'attachment;filename=channels.pdf'
+        return response

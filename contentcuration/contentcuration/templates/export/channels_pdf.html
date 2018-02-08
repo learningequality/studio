@@ -8,19 +8,67 @@
         <style type="text/css">
             body {
                 font-family: Verdana, sans-serif;
+                font-size: 11pt;
             }
-            #letterhead img {
+            #letterhead_img {
                 float:left;
+                display: inline-block;
             }
             #address {
                 float: right;
                 text-align: right;
                 display: inline-block;
+                width: 200px;
+                font-size: 9pt;
+            }
+            #title {
+                font-size: 26pt;
+                margin-top: 40px;
+                text-align: center;
+                font-weight: bold;
+            }
+            a {
+                color: #00AEF0;
+                font-weight: bold;
+                text-decoration: none;
+            }
+
+            #overview {
+                color: gray;
+            }
+            #channel-list {
+                padding: 30px;
+                list-style: none;
+            }
+
+            .channel {
+                padding-top: 0.3cm;
+                padding-bottom: 0.5cm;
+                border-top: 0.05cm solid #EDEDED;
+            }
+            .channel td { vertical-align: top; }
+            #letterhead td { vertical-align: bottom; }
+            .channel_title {
+                font-size: 16pt;
+                font-weight: bold;
+            }
+            .channel_thumbnail {
+                width:200px;
+                height:200px;
+                object-fit: cover;
+            }
+            .channel_id {
+                color: gray;
+                font-size: 9pt;
+            }
+
+            #footerContent {
+                font-size: 9pt;
             }
 
             @page {
-                size: {{ pagesize }};
-                margin: 1cm;
+                size: A4;
+                margin: 1.5cm;
                 @frame footer {
                     -pdf-frame-content: footerContent;
                     bottom: 0cm;
@@ -32,29 +80,53 @@
         </style>
     </head>
     <body>
-        <div id="letterhead">
-            <div id="address">
-                Learning Equality<br>
-                9700 Gilman Dr, PMB 323<br>
-                La Jolla, CA, USA, 92093<br>
-                info@learningequality.org<br>
-            </div>
-            <img width="200px" src="{% static 'img/leq_letterhead.png' %}">
-        </div>
-        <hr>
-        <h1>Kolibri Studio Public Channels</h1>
-        <p id="overview"><a href="http://learningequality.org/">Learning Equality</a> is a non-profit organization committed to enabling every person in the world to realize their right to a quality education by supporting the creation, adaptation, and distribution of open educational resources and creating supportive tools for innovative pedagogy. Our platform, <a href="http://learningequality.org/kolibri/">Kolibri</a>, is specially designed to provide offline access to a curated and openly licensed educational library. Here is a list of the public channels available on this library.</p>
-
-        <ul id="channel-list">
+        <htmlpageheader name="channelHeader" id="letterhead">
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td  width="50%">
+                            <img id="letterhead_img" width="200px" src="{{ 'leq_letterhead.png' | encode_static_base64}}">
+                        </td>
+                        <td id="address" width="50%">
+                            Learning Equality<br>
+                            9700 Gilman Dr, PMB 323<br>
+                            La Jolla, CA, USA, 92093<br>
+                            info@learningequality.org<br>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </htmlpageheader>
+        <br/>
+        <div id="title">Kolibri Studio Public Channels</div>
+        <div id="overview"><a href="http://learningequality.org/" target="_blank">Learning Equality</a> is a non-profit organization committed to enabling every person in the world to realize their right to a quality education by supporting the creation, adaptation, and distribution of open educational resources and creating supportive tools for innovative pedagogy. Our platform, <a href="http://learningequality.org/kolibri/" target="_blank">Kolibri</a>, is specially designed to provide offline access to a curated and openly licensed educational library. Here is a list of the public channels available on this library.</div>
+        <br>
+        <table width="100%">
+            <tbody>
             {% for c in channels %}
-                <li class="channel">
-                    {{c.name}}
-                </li>
+                <tr class="channel">
+                    <td  width="15%">
+                        <img class="channel_thumbnail" src="{% if c.thumbnail_encoding %}{{c.thumbnail_encoding}}{% else %}{% if c.thumbnail %}{{ c.thumbnail | encode_base64}}{% else %}{{ 'kolibri_placeholder.png' | encode_static_base64}}{% endif %}{% endif %}">
+                    </td>
+                    <td  width="5%"></td>
+                    <td width="80%">
+                        <a href="{{c.url}}" class="channel_title" target="_blank">{{c.name}}</a><br/>
+                        <span class="channel_id">ID: {{c.id}}{% if c.tokens %} | Token{{ c.tokens.length|pluralize }}: {{c.tokens}}{% endif %}</span><br/>
+                        {% if c.description %}{{c.description}}<br/><br/>{% endif %}
+                        This channel is available in <b>{{c.language}}</b> {% if c.languages %}(also includes content in {{c.languages}}){% endif %}
+                        and has a total size of <b>{{c.total_size}}</b><br/><br/>
+                        <b>Composition:</b> {{c.kind_counts}}<br/>
+                        {% if c.tags %}<b>Tags:</b> {{c.tags}}<br/>{% endif %}
+                        <b>Sample Pathway:</b> {{c.sample_pathway}}<br/><br/>
+                        <span class="channel_id">Editors: {{c.editors}}</span>
+                    </td>
+                </tr>
             {% endfor %}
-        </ul>
+            </tbody>
+        </table>
         <div id="footerContent">
             {%block page_foot%}
-                Page <pdf:pagenumber>
+                Page <b><pdf:pagenumber></b> of <b><pdf:pagecount></b>
             {%endblock%}
         </div>
     </body>

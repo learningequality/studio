@@ -1,12 +1,39 @@
+import base64
+import os
+import sys
+
+from django.conf import settings
 from django import template
 from django.template.defaultfilters import stringfilter
-import base64
+from PIL import Image
+from resizeimage import resizeimage
+
+from contentcuration.models import generate_file_on_disk_name
+
+
+import cStringIO
+
+THUMBNAIL_DIMENSION = 200
 
 register = template.Library()
-
 
 @register.filter(is_safe=True)
 @stringfilter
 def encode_base64(value):
-    with open(value, "rb") as image_file:
-        return base64.b64encode(image_file.read())
+    checksum, ext = os.path.splitext(value)
+    filepath = generate_file_on_disk_name(checksum, value)
+    buffer = cStringIO.StringIO()
+
+    with Image.open(filepath) as image:
+        img = resizeimage.resize_cover(image, [THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION])
+        img.save(buffer, image.format)
+        return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(buffer.getvalue()))
+
+@register.filter(is_safe=True)
+@stringfilter
+def encode_static_base64(value):
+    filepath = os.path.join(settings.STATIC_ROOT, 'img', value)
+
+    with open(filepath, 'rb') as image_file:
+        _, ext = os.path.splitext(value)
+        return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(image_file.read()))
