@@ -183,9 +183,6 @@ def generate_channel_list(user):
                               .filter(Q(public=True) | Q(editors=user) | Q(viewers=user))\
                               .order_by("name")
     for c in channels:
-        print(c.id)
-
-
         channel = {
             "name": c.name,
             "id": c.id,
