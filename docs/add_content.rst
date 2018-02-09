@@ -58,8 +58,8 @@ Edit Channel Content Tools
 
 #. Return to **My Channels** page (|home| icon)
 #. Channel selector dropdown menu
-#. Channel ID/token number
-#. Indicator for changes in channel pending to be published
+#. **Show ID** button to display the channel ID or token
+#. **Publish** button to save changes in channel content
 #. :ref:`Clipboard <clipboard>` button (with the indicator of available content items)
 #. Topic container pane
 #. |plus-c| **ADD** button to :ref:`add topics <add_topics>`, :ref:`upload content <upload>`, and :ref:`create exercises <exercises>`.
@@ -80,9 +80,9 @@ To create a new topic in a content channel, follow these steps.
 
          Add Topics
 
-#. Complete the topic information and metadata, and click **APPLY CHANGES** button.
+#. Complete the topic information and metadata, and click **SAVE** button.
 
-   .. tip:: Use the checkboxes on the left to select topics, edit and change details or metadata, or |close| buttons to delete topics in this same window, and remember to click the **APPLY CHANGES** afterward.
+   .. tip:: Use the checkboxes on the left to select topics, edit and change details or metadata, or |close| buttons to delete topics in this same window, and remember to click the **SAVE** afterward.
 
 #. Click |plus-c| **ADD TOPIC** button on the left side to add more topics.
 
@@ -91,7 +91,7 @@ To create a new topic in a content channel, follow these steps.
 
       Edit topic details and add metadata.
 
-#. Click **SAVE & FINISH** to save changes and return to the previous page.
+#. Click **SAVE & CLOSE** to save changes and return to the previous page.
 
 
 Add Subtopics
@@ -193,8 +193,8 @@ To upload individual learning resources into your content channel, follow these 
 
                Add Special Permissions license.
 
-#. Click **APPLY CHANGES** button to save the intermediate changes.
-#. Click **SAVE & FINISH** to return to the main channel content page.
+#. Click **SAVE** button to save the intermediate changes.
+#. Click **SAVE & CLOSE** to return to the main channel content page.
 
 .. _video:
 
@@ -348,7 +348,7 @@ To create an exercise, follow these steps.
 
          Add Prerequisites for the current exercise.
 
-#. Click **APPLY CHANGES** button to save the intermediate changes.
+#. Click **SAVE** button to save the intermediate changes.
 #. Click **SAVE & CLOSE** when you finish editing to return to the topic view.
 
    .. figure:: img/final-question.png
@@ -387,7 +387,7 @@ To import content from other channels, either those previously published or thos
 
       Review the number and size of the selected resources.
 
-   .. tip:: Ypu can use the **Back** link to return to the full resources list, but you will loose the current selection.
+   .. tip:: You can use the **Back** link to return to the full resources list, but you will loose the current selection.
 
 #. Click **IMPORT** when you are done to return to the main channel content page.
 

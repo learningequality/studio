@@ -16,12 +16,14 @@ To allow others to view or edit your own content channels, or those that you can
 
 3. Type the email of the person you want to invite.
 
-Select **Can view** or **Can edit** level of permission to grant them.
+4. Select **Can view** or **Can edit** level of permission to grant them.
 
-.. figure:: img/share-access-channel.png
-      :alt: Send email invite to collaborators.
+   .. figure:: img/share-access-channel.png
+         :alt: Send email invite to collaborators.
 
-      Send email invite to collaborators.
+         Send email invite to collaborators.
+
+5. Click **CLOSE** to send the invitation. 
 
 When you invite collaborators to view or edit channels, they will be notified on their **My Channels** home page, where they can accept or reject the pending invitations. They will also receive an email allowing them to accept/reject the pending invitations.
 
@@ -45,7 +47,7 @@ When you invite collaborators to view or edit channels, they will be notified on
 Make Content Channels Available for Import into Kolibri
 =======================================================
 
-**Channel ID/token** number is all you need to share the published channel with administrators at your facilities, or anybody in case you are releasing the channel as publicly available. There are 3 places where you can find and copy the channel ID/token:
+**Channel ID/token** number is all you need to share the published channel with administrators at your facilities, or anybody in case you are releasing the channel as publicly available. There are 2 places where you can find and copy the channel ID/token:
 
 -  Channel pane in the **My Channels** page
 
@@ -60,13 +62,6 @@ Make Content Channels Available for Import into Kolibri
          :alt: Channel ID/token/token number in the Edit Channel Content page.
 
          Channel ID/token number in the Edit Channel Content page.
-
--  Channel published confirmation message
-
-   .. figure:: img/channel-pubblished.png
-         :alt: Channel ID/token number in the confirmation message.
-
-         Channel ID/token number in the confirmation message.
 
 
 .. tip:: Use the button/icon to easily copy the channel ID/token to your computer's clipboard, and send it by email.
