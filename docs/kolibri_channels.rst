@@ -1,22 +1,5 @@
-Kolibri Studio
-##############
-
-*Select and organize the content for Kolibri*
-
-`Kolibri Studio <https://studio.learningequality.org>`_ is the tool used to organize content and build content channels for `Kolibri <https://learningequality.org/kolibri/>`_, an open-source platform specially designed to provide offline access to educational content. 
-
-Kolibri runs in a local network (LAN), and serves the connected devices (computers, tablets, etc.), but does not include any content upon installation. To be able to serve the learning content to their local users, facility administrators must import **content channels** into Kolibri.
-
-While it is possible to install **Kolibri** and import content channels without an active Internet connection, you need to to access the `Kolibri Studio <https://studio.learningequality.org>`_ online in order to start curating a new content channel, or update an existing one with new learning materials.
-
-   .. figure:: img/kolibri-studio.png
-      :alt: Kolibri and Kolibri Studio content pipeline.
-
-      Kolibri and Kolibri Studio content pipeline.
-
-
 Kolibri Content Channels
-========================
+########################
 
 The main purpose of Kolibri Studio is to allow you to build learning *packages* called **content channels** according to your needs. You can build content channels by uploading your own learning resources (exercises, videos, audio or document files), or by importing them from publicly available content channels.
 
@@ -25,7 +8,7 @@ A Kolibri **content channel** is a collection of educational resources (exercise
 Kolibri content channels can be public or private/unlisted.
 
 Public Content Channels
-***********************
+=======================
 
 Kolibri application can serve content from several publicly available content channels, which administrators may choose to import and use on devices in their facilities.
 
@@ -53,7 +36,7 @@ Learning Equality team performs regular updates of the publicly available conten
 To use a publicly available Kolibri content channel, all you need to know is the **Channel ID/token** in order to import it into the local Kolibri installation. Find the :ref:`channel ID/token above the name of the channel in Kolibri Studio <share_channels>`.
 
 Private/Unlisted Content Channels
-*********************************
+=================================
 
 **Kolibri Studio** provides the tools to build and curate your own custom content channels. As a content curator you can use parts of content from public channels and combine it with your own imported content to build custom content channels, aligned to the local curricula, or according to your specific learning needs.
 
