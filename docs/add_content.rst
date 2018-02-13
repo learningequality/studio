@@ -36,6 +36,7 @@ Think of the topics as folders that can contain other sub-folders (sub-topics) o
 
 There is no inherent restriction on the depth of topic trees or the number of resources that you can place in a channel. However, you should take into consideration the intended learning pathway and user experience once channel is imported in Kolibri, and try to build your topic tree so that learners do not need to click through long series of subfolders to arrive to the desired learning resource.
 
+
 .. _edit_content_tools:
 
 Edit Channel Content Tools
@@ -132,7 +133,8 @@ Currently allowed file formats for individual learning resources are:
 -  MP3 - audio files
 -  :ref:`PDF - document files <pdf>`
 -  :ref:`ZIP - packaged HTML5 <html5>`
--  ePUB - ebook files
+
+.. note:: Support for the **ePUB - ebook files** is in the development, and will be added soon.
 
 .. warning:: There is an initial storage limit of **500MB** for the files that you upload to Kolibri Studio. If you require more storage, please contact info@learningequality.org. You can :ref:`keep track of the used storage <settings>` in the **My Settings > Storage** page.
 
