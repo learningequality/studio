@@ -4,4 +4,5 @@ from django.apps import AppConfig
 
 
 class KolibriContentConfig(AppConfig):
-    name = 'content'
+    name = 'kolibri_content'
+    label = 'content'

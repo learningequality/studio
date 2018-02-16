@@ -18,18 +18,60 @@ from django.apps import apps
 from django.conf import settings
 from django.db import DEFAULT_DB_ALIAS, connections
 from django.db.utils import ConnectionDoesNotExist
+from django.test.utils import override_settings
 
-from kolibri_content.apps import AppConfig
-
-from .errors import ContentModelUsedOutsideDBContext
+from kolibri_content.apps import KolibriContentConfig
 
 THREAD_LOCAL = threading.local()
 
 _content_databases_with_attached_default_db = set()
 
+APP_CONFIG_LABEL = KolibriContentConfig.label
+
 
 def set_active_content_database(alias):
     setattr(THREAD_LOCAL, 'ACTIVE_CONTENT_DB_ALIAS', alias)
+
+
+def get_active_content_database(return_none_if_not_set=False):
+
+    # retrieve the temporary thread-local variable that `using_content_database` sets
+    alias = getattr(THREAD_LOCAL, 'ACTIVE_CONTENT_DB_ALIAS', None)
+
+    # if no content db alias has been activated, that's a problem
+    if not alias:
+        if return_none_if_not_set:
+            return None
+        else:
+            raise ContentModelUsedOutsideDBContext()
+
+    # retrieve the database connection to make sure it's been properly initialized
+    get_content_database_connection(alias)
+
+    return alias
+
+
+def get_content_database_connection(alias=None):
+
+    if not alias:
+        alias = get_active_content_database()
+
+    # try to connect to the content database, and if connection doesn't exist, create it
+    try:
+        connections[alias]
+    except ConnectionDoesNotExist:
+        if alias.endswith(".sqlite3"):
+            filename = alias
+        else:
+            filename = os.path.join(settings.CONTENT_DATABASE_DIR, alias + '.sqlite3')
+        if not os.path.isfile(filename):
+            raise KeyError("Content DB '%s' doesn't exist!!" % alias)
+        connections.databases[alias] = {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': filename,
+        }
+
+    return connections[alias].connection
 
 
 class ContentDBRouter(object):
@@ -37,8 +79,7 @@ class ContentDBRouter(object):
 
     def _get_db(self, model, **hints):
 
-        # if the model does not inherit from ContentDatabaseModel, leave it for the default database
-        if model._meta.app_label != AppConfig.label:
+        if model._meta.app_label != APP_CONFIG_LABEL:
             return None
 
         # if the model is already associated with a database, use that database
@@ -69,8 +110,7 @@ class ContentDBRouter(object):
 
             model = None
 
-        # allow migrations for ContentDatabaseModels on non-default DBs, and for others only on default DB
-        if model and model._meta.app_label == AppConfig.label:
+        if model and model._meta.app_label == APP_CONFIG_LABEL:
             val = db != DEFAULT_DB_ALIAS
         else:
             val = db == DEFAULT_DB_ALIAS
