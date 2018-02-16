@@ -688,9 +688,13 @@ class ContentNode(MPTTModel, models.Model):
 
         super(ContentNode, self).save(*args, **kwargs)
 
-        root = self.get_root()
-        if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
-            PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
+        try:
+            # During saving for fixtures, this fails to find the root node
+            root = self.get_root()
+            if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
+                PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
+        except ContentNode.DoesNotExist:
+            pass
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
