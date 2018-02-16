@@ -117,7 +117,7 @@ def create_content_database(channel_id, force, user_id, force_exercises):
 
         prepare_export_database(tempdb)
         map_channel_to_kolibri_channel(channel)
-        map_content_nodes(channel.main_tree, channel.language, user_id=user_id, force_exercises=force_exercises)
+        map_content_nodes(channel.main_tree, channel.language, channel.id, user_id=user_id, force_exercises=force_exercises)
         map_prerequisites(channel.main_tree)
         save_export_database(channel_id)
 

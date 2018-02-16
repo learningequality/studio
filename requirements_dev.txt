@@ -2,5 +2,3 @@ django-debug_panel
 django-debug_toolbar
 pympler
 flake8
-mock
-mixer==5.6.6
