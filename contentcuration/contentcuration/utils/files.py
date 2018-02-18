@@ -179,6 +179,7 @@ def generate_thumbnail_from_node(node, set_node=None):
         document = node.files.filter(preset_id=format_presets.DOCUMENT).first()
         if document:
             thumbnail_object = get_image_from_pdf(document, preset_id=format_presets.DOCUMENT_THUMBNAIL, node=assigned_node)
+        # TODO: add thumnail generation for EPUB files
     elif node.kind_id == content_kinds.AUDIO:
         audio = node.files.filter(preset_id=format_presets.AUDIO).first()
         if audio:
