@@ -1,6 +1,6 @@
 /* CONSTANTS */
 const CHARACTERS = require("./symbols.json");
-const MATHJAX_REGEX = /\$\$([^\$]+)\$\$/g;
+const MATHJAX_REGEX = /\$\$([^\$]+)\$\$/g;      // <-- this is not used
 const IMG_PLACEHOLDER = "${☣ CONTENTSTORAGE}/"
 const IMG_REGEX = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
 const NUM_REGEX = /[0-9\,\.\-\/\+e\s]+/g;
@@ -529,7 +529,7 @@ var EditorView = BaseViews.BaseView.extend({
     replace_mathjax_with_katex: function(content, callback){
         var matches = this.get_mathjax_strings(content);
         matches.forEach(function(match){
-            var replace_str = Katex.renderToString(match.match(/\$\$(.+)\$\$/)[1]);
+            var replace_str = Katex.renderToString(match.match(/\$\$(.+?)\$\$/)[1]);
             content = content.replace(match, replace_str);
         });
         callback(content);
