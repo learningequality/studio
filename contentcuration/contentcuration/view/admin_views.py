@@ -5,7 +5,6 @@ import logging
 import os
 import time
 import locale
-import pdfkit
 
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotFound
@@ -25,7 +24,6 @@ from contentcuration.api import check_supported_browsers
 from contentcuration.models import Channel, User, Invitation, ContentNode
 from contentcuration.utils.messages import get_messages
 from contentcuration.serializers import AdminChannelListSerializer, AdminUserListSerializer, CurrentUserSerializer
-from reportlab.pdfgen import canvas
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
