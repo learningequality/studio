@@ -137,7 +137,7 @@ export default {
 
 .Results__List {
   background-color: white;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .Results__Header {

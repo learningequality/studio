@@ -2,6 +2,7 @@ import ast
 import collections
 import datetime
 import os
+import itertools
 import zipfile
 import shutil
 import tempfile
@@ -12,10 +13,12 @@ import uuid
 import base64
 from django.conf import settings
 from django.core.files import File
+from django.core.mail import send_mass_mail
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db.models import Q, Count, Sum
 from django.template.loader import render_to_string
+from django.utils.translation import ugettext_lazy as _
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 from pressurecooker.encodings import write_base64_to_file
 from contentcuration.utils.files import create_file_from_contents
@@ -54,10 +57,14 @@ class Command(BaseCommand):
         parser.add_argument('--user_id', dest='user_id', default=None)
         parser.add_argument('--force-exercises', action='store_true', dest='force-exercises', default=False)
 
+        # optional argument to send an email to the user when done with exporting channel
+        parser.add_argument('--email', action='store_true', default=False)
+
     def handle(self, *args, **options):
         # license_id = options['license_id']
         channel_id = options['channel_id']
         force = options['force']
+        send_email = options['email']
         user_id = options['user_id']
         force_exercises = options['force-exercises']
 
@@ -70,8 +77,10 @@ class Command(BaseCommand):
             fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
             with using_content_database(tempdb):
+                channel.main_tree.publishing = True
+                channel.main_tree.save()
+
                 prepare_export_database(tempdb)
-                map_content_tags(channel)
                 map_channel_to_kolibri_channel(channel)
                 map_content_nodes(channel.main_tree, channel.language, user_id=user_id, force_exercises=force_exercises)
                 map_prerequisites(channel.main_tree)
@@ -80,6 +89,16 @@ class Command(BaseCommand):
                 mark_all_nodes_as_changed(channel)
                 add_tokens_to_channel(channel)
                 fill_published_fields(channel)
+
+                # Attributes not getting set for some reason, so just save it here
+                channel.main_tree.publishing = False
+                channel.main_tree.changed = False
+                channel.main_tree.published = True
+                channel.main_tree.save()
+
+                if send_email:
+                    send_emails(channel)
+
                 # use SQLite backup API to put DB into archives folder.
                 # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
@@ -88,6 +107,14 @@ class Command(BaseCommand):
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
+
+def send_emails(channel):
+    subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Content Workshop Channel Published')})
+
+    # Email all users about updates to channel
+    for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
+        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
+        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
 
 def create_kolibri_license_object(ccnode):
@@ -106,17 +133,6 @@ def increment_channel_version(channel):
 
 def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
-
-
-def map_content_tags(channel):
-    logging.debug("Creating the Kolibri content tags.")
-
-    cctags = ccmodels.ContentTag.objects.filter(
-        channel=channel).values("tag_name", "id")
-    kolibrimodels.ContentTag.objects.bulk_create(
-        [kolibrimodels.ContentTag(**vals) for vals in cctags])
-
-    logging.info("Finished creating the Kolibri content tags.")
 
 
 def map_content_nodes(root_node, default_language, user_id=None, force_exercises=False):
@@ -204,14 +220,14 @@ def get_or_create_language(language):
         lang_name= language.lang_name if hasattr(language, 'lang_name') else language.native_name,
     )
 
-def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None, uploader=None):
+def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
     thumbnail_data = ast.literal_eval(thumbnail_string)
     if thumbnail_data.get('base64'):
         with tempfile.NamedTemporaryFile(suffix=".{}".format(file_format_id), delete=False) as tempf:
             tempf.close()
             write_base64_to_file(thumbnail_data['base64'], tempf.name)
             with open(tempf.name, 'rb') as tf:
-                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploader=uploader)
+                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploaded_by=uploaded_by)
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating File objects for Node {}".format(kolibrinode.id))
@@ -222,7 +238,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             get_or_create_language(ccfilemodel.language)
 
         if preset.thumbnail and ccnode.thumbnail_encoding:
-            ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, uploader=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
+            ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
 
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
@@ -482,7 +498,8 @@ def map_tags_to_node(kolibrinode, ccnode):
     tags_to_add = []
 
     for tag in ccnode.tags.all():
-        tags_to_add.append(kolibrimodels.ContentTag.objects.get(pk=tag.pk))
+        t, _new = kolibrimodels.ContentTag.objects.get_or_create(pk=tag.pk, tag_name=tag.tag_name)
+        tags_to_add.append(t)
 
     kolibrinode.tags = tags_to_add
     kolibrinode.save()

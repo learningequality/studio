@@ -43,7 +43,7 @@ To edit details for each topic/subtopic or individual resource, follow these ste
 
    c. If your content item is a video file use the **Preview** tab to review it. If your content item is an exercise, you’ll be able to preview the thumbnail, if it is set in the **Details** tab.
 
-      .. figure:: img/edit-content-preview.png
+      .. figure:: img/edit-content-preview.jpg
             :alt: Preview content item resources.
 
             Preview content item resources.
@@ -57,9 +57,9 @@ To edit details for each topic/subtopic or individual resource, follow these ste
             Add and edit Prerequisites for Exercises.
 
 
-#. Click **APPLY CHANGES** button to save the intermediate changes.
+#. Click **SAVE** button to save the intermediate changes.
 
-#. Click **SAVE & FINISH** when you are done to return to the main channel content page.
+#. Click **SAVE & CLOSE** when you are done to return to the main channel content page.
 
 .. _move_content:
 

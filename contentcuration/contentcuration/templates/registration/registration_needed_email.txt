@@ -1,0 +1,16 @@
+{% load i18n %}
+
+{% autoescape off %}
+{% trans "Hello" %} {{ user.email }},
+
+{% blocktrans with site_name=site.name %}You requested a password reset on {{ site_name }} without registering first.{% endblocktrans %}
+
+{% trans "Please register by following the link below:" %}:
+
+{{ domain }}{% url 'reset_password_registration' user.id %}
+
+{% trans "Thanks for using our site!" %}
+
+{% trans "The Learning Equality Team" %}
+
+{% endautoescape %}

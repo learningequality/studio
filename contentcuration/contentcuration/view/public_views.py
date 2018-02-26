@@ -35,6 +35,7 @@ def _get_channel_list_v1(params, identifier=None):
         channels = channels.select_related('language').filter(Q(language__id__icontains=language_id) | Q(main_tree__tree_id__in=matching_tree_ids))
 
     return channels.annotate(tokens=Value(json.dumps(token_list), output_field=TextField()))\
+                    .filter(deleted=False, main_tree__published=True)\
                     .order_by("-priority")\
                     .distinct()
 

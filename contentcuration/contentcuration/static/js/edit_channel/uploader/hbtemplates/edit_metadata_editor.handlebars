@@ -11,15 +11,22 @@
 		<hr/>
 		<br/>
 	{{/if}}
-	<div class="container-fluid">
-	<div class="pull-right">
-		<label id="language_label">{{formatMessage (intlGet 'messages.language')}}</label>
-		<select id="select_language" class="tab_item">
-			<option value="inherit" selected>{{language_default}}</option>
-			<option disabled value=0>---</option>
-			{{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
-		</select>
-	</div>
+	<div class="row">
+		<div class="col-xs-6">
+			{{# if node}}{{#equal node.original_channel.id channel_id}}{{ else }}
+				<div id="imported_from_field" class="truncate">{{formatMessage (intlGet 'messages.imported_from')}} <a href="/channels/{{node.original_channel.id}}/view/{{node.original_source_node_id}}" target="_blank" title="{{node.original_channel.name}}" class="original_channel_link">{{node.original_channel.name}}</a></div>
+			{{/equal}}{{/if}}
+		</div>
+		<div class="col-xs-6">
+			<div class="pull-right">
+				<label id="language_label">{{formatMessage (intlGet 'messages.language')}}</label>
+				<select id="select_language" class="tab_item">
+					<option value="inherit" selected>{{language_default}}</option>
+					<option disabled value=0>---</option>
+					{{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
+				</select>
+			</div>
+		</div>
 	</div>
 	{{#if node}}
 		<h4>{{formatMessage (intlGet 'messages.title')}}<label class="required">*<span id="title_error">{{formatMessage (intlGet 'messages.title_error')}}</span></label></h4>
@@ -73,7 +80,7 @@
 		{{/if}}
 	{{else}}
 		{{#if node}}
-		<p class="uploader-copied-warning">{{formatMessage (intlGet 'messages.readonly')}} <b>{{node.original_channel.name}}</b></p>
+		<p class="uploader-copied-warning">{{formatMessage (intlGet 'messages.readonly_text')}}</p>
 		{{/if}}
 		<div class="row">
 			<div class="col-xs-3">

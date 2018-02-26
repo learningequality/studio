@@ -147,32 +147,42 @@ class InvitationRegisterView(FormView):
         return {'email': self.user().email}
 
     def get_success_url(self):
-        return reverse_lazy('accept_invitation', kwargs={'invitation_link': self.kwargs["invitation_link"]})
+        if self.kwargs.get("invitation_link"):
+            return reverse_lazy('accept_invitation', kwargs={'invitation_link': self.kwargs["invitation_link"]})
+        else:
+            return reverse_lazy('channels')
 
     def get_login_url(self):
-        page_name = "channel"
-        if self.invitation.share_mode == "view":
-            page_name = "channel_view_only"
-        return reverse_lazy(page_name, kwargs={'channel_id': self.invitation.channel.pk})
+        if self.invitation:
+            page_name = "channel"
+            if self.invitation.share_mode == "view":
+                page_name = "channel_view_only"
+            return reverse_lazy(page_name, kwargs={'channel_id': self.invitation.channel.pk})
+        else:
+            return reverse_lazy('channels')
 
     def dispatch(self, *args, **kwargs):
-        try:
-            self.invitation = Invitation.objects.get(id__exact=self.kwargs['invitation_link'])
-        except ObjectDoesNotExist:
-            logging.debug("No invitation found.")
-            return redirect(reverse_lazy('fail_invitation'))
-
         if not getattr(settings, 'REGISTRATION_OPEN', True):
             return redirect(self.disallowed_url)
 
-        if self.invitation.invited.is_active:
+        if self.kwargs.get("invitation_link"):
+            try:
+                self.invitation = Invitation.objects.get(id__exact=self.kwargs['invitation_link'])
+            except ObjectDoesNotExist:
+                logging.debug("No invitation found.")
+                return redirect(reverse_lazy('fail_invitation'))
+
+            if self.invitation.invited.is_active:
+                return redirect(self.get_success_url())
+        elif self.user().is_active:
             return redirect(self.get_success_url())
 
         return super(InvitationRegisterView, self).dispatch(*args, **kwargs)
 
     def form_valid(self, form):
         user = form.save(self.user())
-        add_editor_to_channel(self.invitation)
+        if self.invitation:
+            add_editor_to_channel(self.invitation)
         user_cache = authenticate(username=user.email,
                                   password=form.cleaned_data['password1'],
                                   )

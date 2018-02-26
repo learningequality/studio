@@ -67,7 +67,9 @@ var MESSAGES = {
     "language": "Language",
     "select_language": "Select a Language",
     "make_copy": "Make a Copy",
-    "publish_title_prompt": "Make this channel available for download into Kolibri"
+    "publish_title_prompt": "Make this channel available for download into Kolibri",
+    "publish_in_progress": "Your channel is currently publishing...",
+    "publishing_prompt": "You will get an email once the channel finishes publishing."
 }
 
 var BaseView = Backbone.View.extend({
@@ -204,16 +206,24 @@ var BaseView = Backbone.View.extend({
 	},
 	check_if_published:function(root){
 		var is_published = root.get("published");
+		var is_publishing = root.get("publishing");
 		$("#hide-if-unpublished").css("display", (is_published) ? "inline-block" : "none");
-		if(root.get("metadata").has_changed_descendant){
+		if(is_publishing) {
+			this.set_publishing();
+		} else if(root.get("metadata").has_changed_descendant ){
 			$("#channel-publish-button").removeAttr("disabled")
 										.attr("title", this.get_translation("publish_title_prompt"))
 										.removeClass("disabled");
-		}else{
+		} else {
 			$("#channel-publish-button").attr("disabled", "disabled")
 										.attr("title", this.get_translation("no_changes_detected"))
 										.addClass("disabled");
 		}
+	},
+	set_publishing:function() {
+		$("#channel-publish-button").attr("disabled", "disabled")
+										.attr("title", this.get_translation("publish_in_progress"))
+										.addClass("disabled");
 	},
 	cancel_actions:function(event){
 		event.preventDefault();
@@ -263,15 +273,15 @@ var BaseWorkspaceView = BaseView.extend({
 
 	},
 	handle_published:function(collection){
-		this.reload_ancestors(collection);
+		var dialog = require("edit_channel/utils/dialog");
+		this.set_publishing();
 		var self = this;
 		window.current_channel.fetch({
 			success: function(channel){
 				var new_channel = new Models.ChannelCollection()
 				new_channel.reset(channel.toJSON());
 				$("#publish_id_text").val(window.current_channel.get('primary_token'));
-				var staticModal = require('edit_channel/information/views');
-				new staticModal.PublishedModalView({channel: window.current_channel, published: true});
+				dialog.alert(self.get_translation("publish_in_progress"), self.get_translation("publishing_prompt"));
 			}
 		});
 	},
@@ -412,16 +422,16 @@ var BaseWorkspaceView = BaseView.extend({
 	sync_content:function(){
 		var SyncView = require("edit_channel/sync/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
-		var sync = new SyncView.TempSyncModalView({
-			el: $("#dialog"),
-		    onsync: this.reload_ancestors,
-		    model: window.current_channel.get_root("main_tree")
-		});
-		// var sync = new SyncView.SyncModalView({
+		// var sync = new SyncView.TempSyncModalView({
 		// 	el: $("#dialog"),
 		//     onsync: this.reload_ancestors,
 		//     model: window.current_channel.get_root("main_tree")
 		// });
+		var sync = new SyncView.SyncModalView({
+			el: $("#dialog"),
+		    onsync: this.reload_ancestors,
+		    model: window.current_channel.get_root("main_tree")
+		});
 	},
 	delete_items_permanently:function(message, list, callback){
 		message = (message!=null)? message: this.get_translation("deleting");
