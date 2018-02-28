@@ -13,7 +13,7 @@ from le_utils.constants import exercises, licenses
 REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 
 class RegistrationForm(UserCreationForm):
-    first_name = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
+    email = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
     first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
     last_name = forms.CharField(widget=forms.TextInput, label=_('Last Name'), required=True)
     password1 = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)

@@ -1,137 +1,197 @@
 @import "global-variables.less";
 
-/* LOGIN STYLING */
-#login-container{
-	@login-background: rgba(145,81,148,.6); /*#915194*/
-	@login-secondary-color: rgba(255,255,255,.85); /*#DEEDE9*/
-	@login-text-bg-color: rgba(85,170,147,.5); /*#55AA93*/
-	@login-btn-color:  #067C7B;
+html, body, .login, .login-branding, .login-content{
+	// standardizing height across the app
+	height: 100%
+}
 
-	/* Image background */
-	/*background: url('/static/img/kolibri_login.png');*/
+.content-padding-top(){
+	padding-top: 20vh;
+}
 
-	/* Gradient background */
-	background: white; /* For browsers that do not support gradients */
-    background: -webkit-linear-gradient(black, white); /* For Safari 5.1 to 6.0 */
-    background: -o-linear-gradient(black, white); /* For Opera 11.1 to 12.0 */
-    background: -moz-linear-gradient(black, white); /* For Firefox 3.6 to 15 */
-    background: linear-gradient(black, white); /* Standard syntax */
+@login-background: #80749D;
+@login-btn-color:  #68BDA2;
+@login-btn-hover-color: #76D8B9;
+@login-error-bg-color:#F7DCDC;
 
-	background-size: 100vw 100vh;
-	width:100vw;
-	height:100vh;
-	margin:0;
+// /* LOGIN STYLING */
+.login{
+	// fighting container-fluid
+	padding: 0;
 
-	#login_le{
-		margin-left:400px;
-		color:white;
-		margin-top:10px;
-		font-size:12pt;
-		text-decoration:none;
-		#le_img{
-			width:32px;
-			height:32px;
-			margin-right:5px;
+	&-branding{
+		background: @body-background;
+		.content-padding-top;
+
+		&-kolibri{
+			&-logo{
+				max-width: 300px;
+				width: 60vw;
+				margin: 0 auto;
+			}
+
+			&-title {
+				font-weight: bold;
+				font-size: 38pt;
+			}
+			&-subtitle {
+				color: gray;
+			    font-size: 20pt;
+			}
+		}
+
+		&-le-link{
+			width: 150px;
+			height: auto;
+			margin: 0 auto;
+			margin-top: 15vh;
 		}
 	}
 
-	#login_le:hover{
-		font-weight:bold;
-		#le_img{
-			width:36px;
-			height:36px;
-		}
-	}
+	.login-content{
+		.content-padding-top;
+		background-color: @login-background;
+		color: white;
+		height: max-content;
+		min-height: 100vh;
+   		padding-bottom: 50px;
 
-	#login-overlay{
-		background:@login-background;
-		height:100vh;
-		width:100vw;
-		ul{
-			list-style:none;
-		}
-
-		li{
-			color:@red-error-color;
-			font-weight:bold;
-		}
-		.required_asterisk {
-			color:@red-error-color;
+		ul {
+			list-style: none;
+			li {
+				text-align: center;
+			    background-color: @login-error-bg-color;
+			    padding: 10px;
+			    color: @red-error-color;
+			    font-size: 10pt;
+			    width: 100%;
+			    margin: 0 auto;
+			    margin-bottom: 1px;
+			}
 		}
 
-		#login-form{
-			margin-top:10%;
-			padding:30px;
-			background-color:@login-secondary-color;
-			width:600px;
-			#login-title-area{
-				margin-bottom:40px;
-				width:400px;
-				margin-left:100px;
+		.header {
+			font-weight: bold;
+			margin-bottom: 30px;
+			font-size: 20pt;
+		}
 
-				#login-image{
-					width:120px;
-					height:100px;
-					margin:0;
-					margin-right:-100px;
-					margin-top: -10px;
-					/*background-color:white;
-					border-radius:500px;*/
-					padding:10px;
-				}
-				#login-title{
-					font-size:40pt;
-					margin:0;
-				}
-				#login-subheading{
-					font-size:15pt;
-					color:gray;
-					display: block;
-					font-style:italic;
-					margin:0;
-				}
+		&-form{
+			max-width: 500px;
+    		width: 100%;
+			color: white;
+			margin: 0 auto;
+		}
+		.form-group {
+			margin-bottom: 20px;
+			.login-label {
+				text-align: left;
 			}
-			input{
-				outline-color: #55AA93;
-				border:none;
-				background-color:@login-text-bg-color;
-				padding:5px;
-				font-size:14pt;
+			input[type="text"], input[type="password"] {
+				color: black;
+				padding: 2px 5px;
+				width: 100%;
+			}
+			.login-action-text {
+			    float: right;
+			    margin-right: -15px;
+			    margin-top: 10px;
 			}
 
-			#id_last_name{
-				margin-bottom:30px;
+			&#label_id_email {
+				margin-top: 45px;
 			}
+		}
 
-			#form-wrapper{
-				text-align:right;
-				margin-right:20%;
+		.login-action-text {
+			color: white;
+			font-size: 12pt;
+		}
 
-			}
-
-			.btn-login{
-				width:50%;
-				background-color:@login-btn-color;
-				margin-bottom:10px;
-				margin-top: 20px;
-				font-size:15pt;
-				color:white;
-			}
-
-			#lost_password_prompt{
-				margin-right:-10px;
-			}
-
-			.login-action-text{
-				color:@login-btn-color;
-			}
-
-			#register_prompt{
-				font-size:14pt;
+		.btn-login{
+			width:100%;
+			background-color:@login-btn-color;
+			margin-bottom:40px;
+			margin-top: 30px;
+			font-size:14pt;
+			padding: 3px 20px;
+			color: white;
+			&:hover {
+				background-color: @login-btn-hover-color;
 			}
 		}
 	}
 }
+
+@media only screen and (max-device-width: 480px){
+	.login {
+		background: @login-background;
+		&-branding{
+			background: transparent;
+			padding-top: 30px;
+			width: 100vw !important;
+    		height: fit-content;
+
+			&-kolibri{
+				&-logo{
+					max-width: 130px;
+				}
+				&-title {
+					color: white;
+				}
+				&-subtitle {
+					color: white;
+				}
+			}
+		}
+
+		.login-content{
+			padding-top: 50px;
+			width: 100vw !important;
+		}
+	}
+}
+
+@media only screen and (max-device-width: 768px) {
+	.login {
+		&-branding{
+			width: 40vw;
+			&-kolibri{
+				&-logo{
+					max-width: 150px;
+				}
+				&-title {
+					font-size: 22pt;
+				}
+				&-subtitle {
+				    font-size: 14pt;
+				}
+			}
+
+			&-le-link{
+				display: none;
+			}
+		}
+
+		.login-content{
+			width: 60vw;
+			.form-group .login-label {
+				font-size: 10pt;
+			}
+			.header {
+				font-size: 14pt;
+			}
+			.login-action-text {
+				font-size: 10pt;
+			}
+
+			.btn-login{
+				font-size: 12pt;
+			}
+		}
+	}
+}
+
 
 .message-page{
 	@reset-btn-color:  #067C7B;
