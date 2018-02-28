@@ -19,6 +19,7 @@ from contentcuration.utils.messages import get_messages
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.response import Response
 
 def base(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
@@ -249,57 +250,62 @@ def publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-    else:
-        data = json.loads(request.body)
 
-        try:
-            channel_id = data["channel_id"]
-            request.user.can_edit(channel_id)
-        except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    data = json.loads(request.body)
 
-        exportchannel_task.delay(channel_id, user_id=request.user.pk)
-        return HttpResponse(json.dumps({
-            "success": True,
-            "channel": channel_id
-        }))
+    try:
+        channel_id = data["channel_id"]
+        request.user.can_edit(channel_id)
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+    exportchannel_task.delay(channel_id, user_id=request.user.pk)
+    return HttpResponse(json.dumps({
+        "success": True,
+        "channel": channel_id
+    }))
 
 
+@api_view(['GET'])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
-def accessible_channels(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        accessible_list = ContentNode.objects.filter(
-            pk__in=Channel.objects.select_related('main_tree')
-            .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))
-            .exclude(pk=data["channel_id"]).values_list('main_tree_id', flat=True)
-        )
-        return HttpResponse(JSONRenderer().render(RootNodeSerializer(accessible_list, many=True).data))
+def accessible_channels(request, channel_id):
+    accessible_list = ContentNode.objects.filter(
+        pk__in=Channel.objects.select_related('main_tree')
+        .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))
+        .exclude(pk=channel_id).values_list('main_tree_id', flat=True)
+    )
+
+    serializer = RootNodeSerializer(accessible_list, many=True)
+    return Response(serializer.data)
 
 
 def accept_channel_invite(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        invitation = Invitation.objects.get(pk=data['invitation_id'])
-        channel = invitation.channel
-        channel.is_view_only = invitation.share_mode == VIEW_ACCESS
-        channel_serializer = ChannelListSerializer(channel)
-        add_editor_to_channel(invitation)
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-        return HttpResponse(JSONRenderer().render(channel_serializer.data))
+    data = json.loads(request.body)
+    invitation = Invitation.objects.get(pk=data['invitation_id'])
+    channel = invitation.channel
+    channel.is_view_only = invitation.share_mode == VIEW_ACCESS
+    channel_serializer = ChannelListSerializer(channel)
+    add_editor_to_channel(invitation)
+
+    return HttpResponse(JSONRenderer().render(channel_serializer.data))
 
 
 def activate_channel_endpoint(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        channel = Channel.objects.get(pk=data['channel_id'])
-        try:
-            activate_channel(channel, request.user)
-        except PermissionDenied as e:
-            return HttpResponseForbidden(str(e))
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-        return HttpResponse(json.dumps({"success": True}))
+    data = json.loads(request.body)
+    channel = Channel.objects.get(pk=data['channel_id'])
+    try:
+        activate_channel(channel, request.user)
+    except PermissionDenied as e:
+        return HttpResponseForbidden(str(e))
+
+    return HttpResponse(json.dumps({"success": True}))
 
 
 def get_staged_diff_endpoint(request):
@@ -310,46 +316,52 @@ def get_staged_diff_endpoint(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def add_bookmark(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-        try:
-            user = User.objects.get(pk=data["user_id"])
-            channel = Channel.objects.get(pk=data["channel_id"])
-            channel.bookmarked_by.add(user)
-            channel.save()
+    data = json.loads(request.body)
 
-            return HttpResponse(json.dumps({"success": True}))
-        except ObjectDoesNotExist:
-            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+    try:
+        user = User.objects.get(pk=data["user_id"])
+        channel = Channel.objects.get(pk=data["channel_id"])
+        channel.bookmarked_by.add(user)
+        channel.save()
+
+        return HttpResponse(json.dumps({"success": True}))
+    except ObjectDoesNotExist:
+        return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def remove_bookmark(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-        try:
-            user = User.objects.get(pk=data["user_id"])
-            channel = Channel.objects.get(pk=data["channel_id"])
-            channel.bookmarked_by.remove(user)
-            channel.save()
+    data = json.loads(request.body)
 
-            return HttpResponse(json.dumps({"success": True}))
-        except ObjectDoesNotExist:
-            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+    try:
+        user = User.objects.get(pk=data["user_id"])
+        channel = Channel.objects.get(pk=data["channel_id"])
+        channel.bookmarked_by.remove(user)
+        channel.save()
+
+        return HttpResponse(json.dumps({"success": True}))
+    except ObjectDoesNotExist:
+        return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def set_channel_priority(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-        try:
-            channel = Channel.objects.get(pk=data["channel_id"])
-            channel.priority = data["priority"]
-            channel.save()
+    data = json.loads(request.body)
 
-            return HttpResponse(json.dumps({"success": True}))
-        except ObjectDoesNotExist:
-            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+    try:
+        channel = Channel.objects.get(pk=data["channel_id"])
+        channel.priority = data["priority"]
+        channel.save()
+
+        return HttpResponse(json.dumps({"success": True}))
+    except ObjectDoesNotExist:
+        return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
