@@ -424,9 +424,8 @@ var ContentNodeCollection = BaseCollection.extend({
         var self = this;
         return new Promise(function(resolve, reject){
             $.ajax({
-                method:"POST",
-                url: window.Urls.get_prerequisites(),
-                data:  JSON.stringify({"nodes": ids, "get_postrequisites": get_postrequisites}),
+                method:"GET",
+                url: window.Urls.get_prerequisites((get_postrequisites || false).toString(), ids.join(",")),
                 success: function(data) {
                     var nodes = JSON.parse(data);
                     resolve({
@@ -443,13 +442,8 @@ var ContentNodeCollection = BaseCollection.extend({
         var self = this;
         return new Promise(function(resolve, reject){
             $.ajax({
-                method:"POST",
-                url: window.Urls.get_node_path(),
-                data:  JSON.stringify({
-                    "topic_id" : topic_id,
-                    "tree_id": tree_id,
-                    "node_id": node_id
-                }),
+                method:"GET",
+                url: window.Urls.get_node_path(topic_id, tree_id, node_id),
                 success: function(result) {
                     var data = JSON.parse(result);
                     var returnCollection = new ContentNodeCollection(JSON.parse(data.path));

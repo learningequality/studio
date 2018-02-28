@@ -205,9 +205,9 @@ def generate_channel_list(request, public_only=False):
     channels = Channel.objects.prefetch_related('editors', 'secret_tokens').select_related('main_tree')
 
     if public_only:
-        channels = channels.filter(public=True, main_tree__published=True).order_by("name")
+        channels = channels.filter(public=True, main_tree__published=True, deleted=False).order_by("name")
     else:
-        channels = channels.filter(Q(main_tree__published=True) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))).order_by("name")
+        channels = channels.filter(Q(main_tree__published=True) & Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))).order_by("name")
 
     for c in channels:
         channel = {

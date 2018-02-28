@@ -92,31 +92,30 @@ def create_new_node(request):
     new_node = ContentNode.objects.create(kind_id=data.get('kind'), title=data.get('title'), author=data.get('author'), copyright_holder=data.get('copyright_holder'), license_id=license_id, license_description=data.get('license_description'))
     return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
 
-def get_prerequisites(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=data['nodes'])
+@api_view(['GET'])
+def get_prerequisites(request, get_prerequisites, ids):
+    nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=ids.split("/"))
 
-        prerequisite_mapping = {}
-        postrequisite_mapping = {}
-        prerequisite_tree_nodes = []
+    prerequisite_mapping = {}
+    postrequisite_mapping = {}
+    prerequisite_tree_nodes = []
 
-        for n in nodes:
-            prereqs, prereqmapping = n.get_prerequisites()
-            if data.get('get_postrequisites'):
-                postreqs, postreqmapping = n.get_postrequisites()
-                postrequisite_mapping.update(postreqmapping)
-                prerequisite_mapping.update(prereqmapping)
-                prerequisite_tree_nodes += prereqs + postreqs + [n]
-            else:
-                prerequisite_mapping.update({n.pk: prereqmapping})
-                prerequisite_tree_nodes += prereqs + [n]
+    for n in nodes:
+        prereqs, prereqmapping = n.get_prerequisites()
+        if get_prerequisites == "true":
+            postreqs, postreqmapping = n.get_postrequisites()
+            postrequisite_mapping.update(postreqmapping)
+            prerequisite_mapping.update(prereqmapping)
+            prerequisite_tree_nodes += prereqs + postreqs + [n]
+        else:
+            prerequisite_mapping.update({n.pk: prereqmapping})
+            prerequisite_tree_nodes += prereqs + [n]
 
-        return HttpResponse(json.dumps({
-            "prerequisite_mapping": prerequisite_mapping,
-            "postrequisite_mapping": postrequisite_mapping,
-            "prerequisite_tree_nodes" : JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data),
-        }))
+    return HttpResponse(json.dumps({
+        "prerequisite_mapping": prerequisite_mapping,
+        "postrequisite_mapping": postrequisite_mapping,
+        "prerequisite_tree_nodes" : JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data),
+    }))
 
 @api_view(['GET'])
 def get_total_size(request, ids):
@@ -136,32 +135,25 @@ def get_nodes_by_ids(request, ids):
     serializer = ContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
-def get_node_path(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
+def get_node_path(request, topic_id, tree_id, node_id):
+    try:
+        topic = ContentNode.objects.prefetch_related('children').get(node_id__startswith=topic_id, tree_id=tree_id)
 
-        try:
-            topic = ContentNode.objects.prefetch_related('children').get(node_id__startswith=data['topic_id'], tree_id=data['tree_id'])
-
-            if topic.kind_id != content_kinds.TOPIC:
-                node =  ContentNode.objects.prefetch_related('files')\
-                                            .prefetch_related('assessment_items')\
-                                            .prefetch_related('tags').get(node_id__startswith=data['topic_id'], tree_id=data['tree_id'])
-                nodes = node.get_ancestors(ascending=True)
-            else:
-                node =  data['node_id'] and ContentNode.objects.prefetch_related('files')\
-                                            .prefetch_related('assessment_items')\
-                                            .prefetch_related('tags').get(node_id__startswith=data['node_id'], tree_id=data['tree_id'])
-                nodes = topic.get_ancestors(include_self=True, ascending=True)
+        if topic.kind_id != content_kinds.TOPIC:
+            node =  ContentNode.objects.prefetch_related('files', 'assessment_items', 'tags').get(node_id__startswith=topic_id, tree_id=tree_id)
+            nodes = node.get_ancestors(ascending=True)
+        else:
+            node =  node_id and ContentNode.objects.prefetch_related('files', 'assessment_items','tags').get(node_id__startswith=node_id, tree_id=tree_id)
+            nodes = topic.get_ancestors(include_self=True, ascending=True)
 
 
-            return HttpResponse(json.dumps({
-                'path': JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data),
-                'node': node and JSONRenderer().render(ContentNodeEditSerializer(node).data),
-                'parent_node_id': topic.kind_id != content_kinds.TOPIC and node.parent and node.parent.node_id
-            }))
-        except ObjectDoesNotExist:
-            return HttpResponseNotFound("Invalid URL: the referenced content does not exist in this channel.")
+        return HttpResponse(json.dumps({
+            'path': JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data),
+            'node': node and JSONRenderer().render(ContentNodeEditSerializer(node).data),
+            'parent_node_id': topic.kind_id != content_kinds.TOPIC and node.parent and node.parent.node_id
+        }))
+    except ObjectDoesNotExist:
+        return HttpResponseNotFound("Invalid URL: the referenced content does not exist in this channel.")
 
 @api_view(['GET'])
 def get_nodes_by_ids_simplified(request, ids):
