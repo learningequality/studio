@@ -7,7 +7,7 @@ When you login to Kolibri Studio, you will be able to see Kolibri content channe
 
 #. **My Channels** tab with the list of channels you created previously, that you can update with the new materials if necessary, and publish again.
 
-#. |star| **Starred** tab with the channels that you flagged for qui.
+#. |star| **Starred** tab with the channels that you flagged for quick access.
 
 #. **Public** tab with channels that the Learning Equality team made available from publicly available source content.
 
@@ -72,7 +72,7 @@ Modify Channel Information
 
 To modify the channel name description or thumbnail follow these steps.
 
-#. Click on the |pencil| icon in the right upper corner of the channel pane.
+#. Click on the |pencil| icon in the upper right corner of the channel pane.
 
    .. figure:: img/edit-channel-details.png
       :alt: Modify content channel details.
@@ -89,7 +89,7 @@ Delete Channel
 
 To permanently delete the channel follow these steps.
 
-#. Click on the |pencil| icon in the right upper corner of the channel pane.
+#. Click on the |pencil| icon in the upper right corner of the channel pane.
 
 #. Click the **DELETE CHANNEL** link under the description field. 
 
