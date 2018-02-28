@@ -15,22 +15,20 @@ from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSe
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import authentication_classes, permission_classes
 from contentcuration.statistics import record_node_duplication_stats
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import authentication_classes, permission_classes
-
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from contentcuration.statistics import record_node_duplication_stats
+from rest_framework.response import Response
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
-def get_node_diff(request):
+def get_node_diff(request, channel_id):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-    channel_id = json.loads(request.body)['channel_id']
     original = []   # Currently imported nodes
     changed = []    # Nodes from original node
     fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields', 'language']
@@ -120,24 +118,23 @@ def get_prerequisites(request):
             "prerequisite_tree_nodes" : JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data),
         }))
 
-def get_total_size(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        sizes = ContentNode.objects.prefetch_related('assessment_items').prefetch_related('files').prefetch_related('children')\
-                           .exclude(kind_id=content_kinds.EXERCISE, published=False)\
-                           .filter(id__in=data).get_descendants(include_self=True)\
-                           .values('files__checksum', 'files__file_size')\
-                           .distinct().aggregate(resource_size=Sum('files__file_size'))
+@api_view(['GET'])
+def get_total_size(request, ids):
+    sizes = ContentNode.objects.prefetch_related('assessment_items', 'files', 'children')\
+                       .exclude(kind_id=content_kinds.EXERCISE, published=False)\
+                       .filter(id__in=ids.split(",")).get_descendants(include_self=True)\
+                       .values('files__checksum', 'files__file_size')\
+                       .distinct().aggregate(resource_size=Sum('files__file_size'))
 
-        return HttpResponse(json.dumps({'success': True, 'size': sizes['resource_size'] or 0}))
+    return HttpResponse(json.dumps({'success': True, 'size': sizes['resource_size'] or 0}))
 
-
-def get_nodes_by_ids(request):
-    if request.method == 'POST':
-        nodes = ContentNode.objects.prefetch_related('children').prefetch_related('files')\
-                           .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))\
-                           .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
-        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
+@api_view(['GET'])
+def get_nodes_by_ids(request, ids):
+    nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags')\
+                       .filter(pk__in=ids.split(","))\
+                       .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
+    serializer = ContentNodeSerializer(nodes, many=True)
+    return Response(serializer.data)
 
 def get_node_path(request):
     if request.method == 'POST':
@@ -166,17 +163,17 @@ def get_node_path(request):
         except ObjectDoesNotExist:
             return HttpResponseNotFound("Invalid URL: the referenced content does not exist in this channel.")
 
-def get_nodes_by_ids_simplified(request):
-    if request.method == 'POST':
-        nodes = ContentNode.objects.prefetch_related('children').filter(pk__in=json.loads(request.body))
-        return HttpResponse(JSONRenderer().render(SimplifiedContentNodeSerializer(nodes, many=True).data))
+@api_view(['GET'])
+def get_nodes_by_ids_simplified(request, ids):
+    nodes = ContentNode.objects.prefetch_related('children').filter(pk__in=ids.split(","))
+    serializer = SimplifiedContentNodeSerializer(nodes, many=True)
+    return Response(serializer.data)
 
-
-def get_nodes_by_ids_complete(request):
-    if request.method == 'POST':
-        nodes = ContentNode.objects.prefetch_related('children').prefetch_related('files')\
-                           .prefetch_related('assessment_items').prefetch_related('tags').filter(pk__in=json.loads(request.body))
-        return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(nodes, many=True).data))
+@api_view(['GET'])
+def get_nodes_by_ids_complete(request, ids):
+    nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags').filter(pk__in=ids.split(","))
+    serializer = ContentNodeEditSerializer(nodes, many=True)
+    return Response(serializer.data)
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))

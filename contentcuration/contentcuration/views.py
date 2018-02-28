@@ -136,11 +136,12 @@ def channel_list(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_channels(request):
-    channel_list = Channel.objects.prefetch_related('editors').prefetch_related('viewers').filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
+    channel_list = Channel.objects.prefetch_related('editors', 'viewers')\
+                    .filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
                     .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
     channel_serializer = ChannelListSerializer(channel_list, many=True)
 
-    return HttpResponse(JSONRenderer().render(channel_serializer.data))
+    return Response(channel_serializer.data)
 
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -149,7 +150,8 @@ def get_user_bookmarked_channels(request):
     bookmarked_channels = request.user.bookmarked_channels.exclude(deleted=True)\
                             .select_related('main_tree').prefetch_related('editors')\
                             .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    return HttpResponse(JSONRenderer().render(AltChannelListSerializer(bookmarked_channels, many=True).data))
+    channel_serializer = AltChannelListSerializer(bookmarked_channels, many=True)
+    return Response(channel_serializer.data)
 
 
 @api_view(['GET'])
@@ -159,7 +161,8 @@ def get_user_edit_channels(request):
     edit_channels = request.user.editable_channels.exclude(deleted=True)\
                     .select_related('main_tree').prefetch_related('editors')\
                     .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    return HttpResponse(JSONRenderer().render(AltChannelListSerializer(edit_channels, many=True).data))
+    channel_serializer = AltChannelListSerializer(edit_channels, many=True)
+    return Response(channel_serializer.data)
 
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -169,24 +172,28 @@ def get_user_public_channels(request):
                     .exclude(deleted=True)\
                     .select_related('main_tree').prefetch_related('editors')\
                     .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    return HttpResponse(JSONRenderer().render(AltChannelListSerializer(channels, many=True).data))
+    channel_serializer = AltChannelListSerializer(channels, many=True)
+    return Response(channel_serializer.data)
 
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_view_channels(request):
-    edit_channels = request.user.view_only_channels.exclude(deleted=True)\
+    view_channels = request.user.view_only_channels.exclude(deleted=True)\
                     .select_related('main_tree').prefetch_related('editors')\
                     .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    return HttpResponse(JSONRenderer().render(AltChannelListSerializer(edit_channels, many=True).data))
 
+    channel_serializer = AltChannelListSerializer(view_channels, many=True)
+    return Response(channel_serializer.data)
+
+@api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_pending_channels(request):
     pending_list = Invitation.objects.select_related('channel', 'sender').filter(invited=request.user)
     invitation_serializer = InvitationSerializer(pending_list, many=True)
 
-    return HttpResponse(JSONRenderer().render(invitation_serializer.data))
+    return Response(invitation_serializer.data)
 
 
 @login_required

@@ -29,6 +29,7 @@ from reportlab.pdfgen import canvas
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.response import Response
 
 from xhtml2pdf import pisa
 import cStringIO as StringIO
@@ -81,6 +82,7 @@ def administration(request):
                                                 })
 
 @login_required
+@api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def get_all_channels(request):
@@ -90,9 +92,10 @@ def get_all_channels(request):
     channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors', 'viewers').distinct()
     channel_serializer = AdminChannelListSerializer(channel_list, many=True)
 
-    return HttpResponse(JSONRenderer().render(channel_serializer.data))
+    return Response(channel_serializer.data)
 
 @login_required
+@api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def get_channel_kind_count(request, channel_id):
@@ -117,6 +120,7 @@ def get_channel_kind_count(request, channel_id):
 
 
 @login_required
+@api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def get_all_users(request):
@@ -126,7 +130,7 @@ def get_all_users(request):
     user_list = User.objects.prefetch_related('editable_channels').prefetch_related('view_only_channels').distinct()
     user_serializer = AdminUserListSerializer(user_list, many=True)
 
-    return HttpResponse(JSONRenderer().render(user_serializer.data))
+    return Response(user_serializer.data)
 
 
 @login_required
