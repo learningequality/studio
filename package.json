@@ -1,5 +1,5 @@
 {
-  "name": "content-curation",
+  "name": "studio",
   "version": "0.0.1",
   "description": "Application for curating topic trees of arbitrary content for use in the Kolibri Learning Management System",
   "main": "index.js",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fle-internal/content-curation.git"
+    "url": "git+https://github.com/learningequality/studio.git"
   },
   "keywords": [
     "education",
@@ -21,9 +21,9 @@
   "author": "Learning Equality",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/fle-internal/content-curation/issues"
+    "url": "https://github.com/learningequality/studio/issues"
   },
-  "homepage": "https://github.com/fle-internal/content-curation#readme",
+  "homepage": "https://github.com/learningequality/studio#readme",
   "dependencies": {
     "backbone": "^1.2.1",
     "backbone-undo": "^0.2.5",
