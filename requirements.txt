@@ -8,6 +8,7 @@ psycopg2==2.6.2
 pytest==2.9.2
 pytest-django==2.9.1
 pytest-logging
+pdfkit==0.6.1
 mixer==5.5.7
 Markdown==2.6.2
 Pillow==2.8.1
@@ -31,8 +32,11 @@ jsonfield==2.0.1
 newrelic==2.100.0.84
 celery==4.1.0
 redis==2.10.5
+reportlab==3.4.0
 python-resize-image==1.1.11
 sphinx==1.6.4
 sphinx-autobuild==0.7.1
 sphinx_rtd_theme
 sphinx-intl
+sqlalchemy==1.2.2
+xhtml2pdf==0.0.6
