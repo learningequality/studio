@@ -11,7 +11,7 @@ pytest-logging
 pdfkit==0.6.1
 mixer==5.5.7
 Markdown==2.6.2
-Pillow==2.8.1
+Pillow==5.0.0
 psutil==3.1.1
 django-js-reverse==0.6.1
 django-registration==2.1.2
