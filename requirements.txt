@@ -39,5 +39,5 @@ sphinx==1.6.4
 sphinx-autobuild==0.7.1
 sphinx_rtd_theme
 sphinx-intl
-sqlalchemy==1.2.2
-xhtml2pdf==0.2.1
+django-storages
+pathlib
