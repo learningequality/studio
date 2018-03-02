@@ -1,0 +1,12 @@
+{% load i18n %}
+
+{% autoescape off %}
+
+New user registration on Kolibri Studio:
+
+Name: {{first_name}} {{last_name}}
+Email: {{email}}
+Intended Use(s): {{use}}
+Location(s): {{location}}
+
+{% endautoescape %}

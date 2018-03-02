@@ -7,7 +7,7 @@
 {% block nav %}{% endblock nav %}
 
 {% block login %}
-<ul>
+<ul class="errors">
 	{% if form.errors %}
 	<li>{% trans "Email or password is incorrect" %}</li>
 	{% endif %}

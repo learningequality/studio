@@ -7,6 +7,7 @@ from django.contrib.auth.views import password_reset
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
 from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect
@@ -17,7 +18,7 @@ from django.views.generic.edit import FormView
 from registration.backends.hmac.views import RegistrationView
 
 from contentcuration.api import add_editor_to_channel
-from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm
+from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm, RegistrationInformationForm, USAGES
 from contentcuration.models import Channel, User, Invitation
 from contentcuration.statistics import record_user_registration_stats
 
@@ -216,10 +217,58 @@ def fail_invitation(request):
 
 
 class UserRegistrationView(RegistrationView):
+    form_class = RegistrationForm
+
+    def get_initial(self):
+        initial = self.initial.copy()
+        return {
+            'email': self.request.session.get('email', None),
+            'first_name': self.request.session.get('first_name', None),
+            'last_name': self.request.session.get('last_name', None),
+            'password1': self.request.session.get('password1', None),
+            'password2': self.request.session.get('password2', None),
+        }
+
+    def post(self, request):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            # Store information in session in case user goes back
+            self.request.session.update(form.cleaned_data)
+            return redirect(reverse_lazy('registration_information'))
+        return super(UserRegistrationView, self).post(request)
+
+class InformationRegistrationView(RegistrationView):
     email_body_template = 'registration/activation_email.txt'
     email_subject_template = 'registration/activation_email_subject.txt'
     email_html_template = 'registration/activation_email.html'
-    form_class = RegistrationForm
+    template_name = 'registration/registration_information_form.html'
+    form_class = RegistrationInformationForm
+
+    def get_form_kwargs(self):
+        kw = super(InformationRegistrationView, self).get_form_kwargs()
+        kw['request'] = self.request # the trick!
+        return kw
+
+    def get_initial(self):
+        initial = self.initial.copy()
+        return {
+            'email': self.request.session.get('email', None),
+            'first_name': self.request.session.get('first_name', None),
+            'last_name': self.request.session.get('last_name', None),
+            'password1': self.request.session.get('password1', None),
+            'password2': self.request.session.get('password2', None),
+        }
+
+    def register(self, form):
+        # Send email regarding new user information
+        subject = render_to_string('registration/custom_email_subject.txt', {"subject": "New Kolibri Studio Registration"})
+        message = render_to_string('registration/registration_information_email.txt', form.cleaned_data)
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [settings.REGISTRATION_INFORMATION_EMAIL])
+
+        # TODO: Clear session cache fields
+        import pdb; pdb.set_trace()
+
+        # return super(InformationRegistrationView, self).register(form)
 
     def send_activation_email(self, user):
         activation_key = self.get_activation_key(user)
@@ -236,7 +285,6 @@ class UserRegistrationView(RegistrationView):
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )  # html_message=message_html,)
 
         record_user_registration_stats(user)
-
 
 def custom_password_reset(request, **kwargs):
     email_context = {'site': get_current_site(request), 'domain': request.META.get('HTTP_ORIGIN') or "http://{}".format(

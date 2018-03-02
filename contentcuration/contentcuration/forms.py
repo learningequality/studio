@@ -1,3 +1,5 @@
+import gettext
+import pycountry
 import json
 from contentcuration.models import User, Language
 from django import forms
@@ -7,17 +9,25 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core import signing
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext, ugettext_lazy as _
 from le_utils.constants import exercises, licenses
 
 REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 
-class RegistrationForm(UserCreationForm):
+class ExtraFormMixin(object):
+    def check_field(self, field, error):
+        if not self.cleaned_data.get(field):
+            self.errors[field] = self.error_class()
+            self.add_error(field, error)
+            return False
+        return True
+
+class RegistrationForm(UserCreationForm, ExtraFormMixin):
     email = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
     first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
     last_name = forms.CharField(widget=forms.TextInput, label=_('Last Name'), required=True)
-    password1 = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)
-    password2 = forms.CharField(widget=forms.PasswordInput, label=_('Password (again)'), required=True)
+    password1 = forms.CharField(widget=forms.PasswordInput(render_value = True), label=_('Password'), required=True,)
+    password2 = forms.CharField(widget=forms.PasswordInput(render_value = True), label=_('Password (again)'), required=True)
 
     class Meta:
         model = User
@@ -46,12 +56,56 @@ class RegistrationForm(UserCreationForm):
 
         return self.cleaned_data
 
-    def check_field(self, field, error):
-        if field not in self.cleaned_data:
-            self.errors[field] = self.error_class()
-            self.add_error(field, error)
-            return False
-        return True
+USAGES = [
+    ('alignment', _("Alignment")),
+    ('exercise creation', _("Exercise Creation")),
+    ('organization', _("Organization")),
+    ('sequencing', _("Sequencing")),
+    ('storage', _("Storage")),
+    ('tagging', _("Tagging")),
+]
+
+
+class RegistrationInformationForm(forms.Form, ExtraFormMixin):
+    use = forms.ChoiceField(required=False, widget=forms.CheckboxSelectMultiple, label=_('How do you plan to use Kolibri Studio? (check all that apply)'), choices=USAGES)
+    other_use = forms.CharField(required=False, widget=forms.TextInput, label=_("Other"))
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super(RegistrationInformationForm, self).__init__(*args, **kwargs)
+
+        translator = gettext.translation(
+            domain='iso3166',
+            localedir=pycountry.LOCALES_DIR,
+            languages=[self.request.LANGUAGE_CODE],
+            codeset='utf-8',
+            fallback=True,
+        )
+
+        countries = [(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)]
+
+        self.fields['location'] = forms.ChoiceField(required=True, widget=forms.SelectMultiple, label=_('Where do you plan to use Kolibri? (select all that apply)'), choices=countries)
+
+    def clean(self):
+        cleaned_data = super(RegistrationInformationForm, self).clean()
+        self.errors.clear()
+
+        for field in RegistrationForm.Meta.fields:
+            self.cleaned_data.update({field: self.request.session.get(field, None)})
+
+
+        uses = self.request.POST.getlist('use')
+        if self.cleaned_data.get('other_use'):
+            uses.append(self.cleaned_data['other_use'])
+
+        self.cleaned_data["use"] = ", ".join(uses)
+        self.cleaned_data["location"] = ", ".join(self.request.POST.getlist('location'))
+
+        self.check_field('use', _('Please indicate how you intend to use Kolibri Studio'))
+        self.check_field('location', _('Please indicate where you plan to use Kolibri'))
+
+        return self.cleaned_data
+
 
 
 class InvitationForm(UserCreationForm):

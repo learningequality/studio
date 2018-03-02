@@ -3,11 +3,12 @@
 
 {% load staticfiles %}
 {% load i18n %}
+{% load translation_tags %}
 
 {% block nav %}{% endblock nav %}
 
 {% block login %}
-<ul>
+<ul class="errors">
 	{% for field in form %}
 		{% for error in field.errors %}
 			<li>{{ error|escape }}</li>
@@ -15,21 +16,24 @@
 	{% endfor %}
 </ul>
 <h2 class="header text-center">Create an Account</h2>
-<form action="{% url  'registration_register' %}" method="post" class="login-content-form text-center content-padding-top container-fluid">
+<div class="back-to-registration">
+	<a class="login-action-text" href="{% url 'registration_register' %}"><i class="glyphicon glyphicon-menu-left"></i> {% trans 'Back' %}</a>
+</div>
+<form action="{% url  'registration_information' %}" method="post" class="login-content-form text-center content-padding-top container-fluid">
 	<div id="form-wrapper">
 		{% csrf_token %}
 		{% for field in form %}
 		<div class="form-group row" id="label_{{field.auto_id }}">
 			<div class="col-xs-12 login-label">
-				{{field.label}} {% if field.field.required %}<i class="required_asterisk">*</i>{% endif %}
+				<div>{{field.label}}{% if field.field.required %}<i class="required_asterisk">*</i>{% endif %}</div>
+				{{field}}
 			</div>
-			 <div class="col-xs-12">{{field}}</div>
 		</div>
 		{% endfor %}
 	</div>
 	<div class="row">
 		<div class="col-xs-12">
-			<input class="btn btn-login" type="submit" value="{% trans 'NEXT' %}" />
+			<input class="btn btn-login" type="submit" value="{% trans 'Sign Up' %}" />
 		</div>
 	</div>
 	<div class="row">

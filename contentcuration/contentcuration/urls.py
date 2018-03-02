@@ -246,6 +246,7 @@ urlpatterns += [
         name='auth_password_reset'
     ),
     url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
+    url(r'^accounts/register-information/$', registration_views.InformationRegistrationView.as_view(), name='registration_information'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
     url(r'^accept_invitation/(?P<invitation_link>[^/]+)$', registration_views.InvitationAcceptView.as_view(), name="accept_invitation"),

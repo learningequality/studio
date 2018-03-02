@@ -56,9 +56,9 @@ html, body, .login, .login-branding, .login-content{
 		min-height: 100vh;
    		padding-bottom: 50px;
 
-		ul {
-			list-style: none;
-			li {
+   		ul {
+   			list-style: none;
+   			&.errors li {
 				text-align: center;
 			    background-color: @login-error-bg-color;
 			    padding: 10px;
@@ -68,7 +68,7 @@ html, body, .login, .login-branding, .login-content{
 			    margin: 0 auto;
 			    margin-bottom: 1px;
 			}
-		}
+   		}
 
 		.header {
 			font-weight: bold;
@@ -76,7 +76,7 @@ html, body, .login, .login-branding, .login-content{
 			font-size: 20pt;
 		}
 
-		&-form{
+		&-form, .back-to-registration{
 			max-width: 500px;
     		width: 100%;
 			color: white;
@@ -90,6 +90,7 @@ html, body, .login, .login-branding, .login-content{
 			input[type="text"], input[type="password"] {
 				color: black;
 				padding: 2px 5px;
+
 				width: 100%;
 			}
 			.login-action-text {
@@ -101,11 +102,40 @@ html, body, .login, .login-branding, .login-content{
 			&#label_id_email {
 				margin-top: 45px;
 			}
+
+			&#label_id_other_use {
+				font-weight: bold;
+				.login-label {
+					margin-top: -30px;
+					margin-bottom: 20px;
+					div {display: inline-block;}
+				}
+				input {
+					width: 60%;
+				}
+			}
+
+			#id_location {
+				width: 100%;
+				min-height: 200px;
+				option {
+					padding: 2px 5px;
+				}
+			}
 		}
 
 		.login-action-text {
 			color: white;
 			font-size: 12pt;
+		}
+
+		.back-to-registration {
+			padding-left: 15px;
+			margin-bottom: 30px;
+		}
+
+		select {
+			color: black;
 		}
 
 		.btn-login{
