@@ -17,7 +17,6 @@ REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 class ExtraFormMixin(object):
     def check_field(self, field, error):
         if not self.cleaned_data.get(field):
-            import pdb; pdb.set_trace()
             self.errors[field] = self.error_class()
             self.add_error(field, error)
             return False
@@ -38,7 +37,6 @@ class RegistrationForm(UserCreationForm, ExtraFormMixin):
         email = self.cleaned_data['email'].strip()
         if User.objects.filter(email__iexact=email, is_active=True).exists():
             self.add_error('email', _('Email already exists.'))
-            import pdb; pdb.set_trace()
         else:
             return email
 
