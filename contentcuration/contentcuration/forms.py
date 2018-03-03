@@ -17,6 +17,7 @@ REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 class ExtraFormMixin(object):
     def check_field(self, field, error):
         if not self.cleaned_data.get(field):
+            import pdb; pdb.set_trace()
             self.errors[field] = self.error_class()
             self.add_error(field, error)
             return False
@@ -37,11 +38,15 @@ class RegistrationForm(UserCreationForm, ExtraFormMixin):
         email = self.cleaned_data['email'].strip()
         if User.objects.filter(email__iexact=email, is_active=True).exists():
             self.add_error('email', _('Email already exists.'))
+            import pdb; pdb.set_trace()
         else:
             return email
 
     def clean(self):
         cleaned_data = super(RegistrationForm, self).clean()
+
+        # For some reason, email sometimes doesn't remain in cleaned data
+        self.cleaned_data['email'] = self.data.get('email')
 
         self.check_field('email', _('Email is required.'))
         self.check_field('first_name', _('First name is required.'))
@@ -57,18 +62,19 @@ class RegistrationForm(UserCreationForm, ExtraFormMixin):
         return self.cleaned_data
 
 USAGES = [
-    ('alignment', _("Alignment")),
-    ('exercise creation', _("Exercise Creation")),
-    ('organization', _("Organization")),
-    ('sequencing', _("Sequencing")),
-    ('storage', _("Storage")),
-    ('tagging', _("Tagging")),
+    ('organization', _("Organization: Re-organize existing materials (e.g. to align to a curriculum or other criteria)")),
+    ('sequencing', _("Sequencing: Arrange pieces of content into an order and assign prerequisites")),
+    ('exercise creation', _("Exercise creation: Create exercises for particular pieces of content")),
+    ('tagging', _("Tagging: Add metadata to content to make it easier to find")),
+    ('sharing', _("Sharing: Share your materials with others or publicly on Kolibri")),
+    ('storage', _("Storage: Upload and store learning materials for private or local use")),
 ]
 
 
-class RegistrationInformationForm(forms.Form, ExtraFormMixin):
+class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
     use = forms.ChoiceField(required=False, widget=forms.CheckboxSelectMultiple, label=_('How do you plan to use Kolibri Studio? (check all that apply)'), choices=USAGES)
     other_use = forms.CharField(required=False, widget=forms.TextInput, label=_("Other"))
+    storage = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 500MB")}), label=_("How much storage do you need?"))
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
@@ -88,16 +94,23 @@ class RegistrationInformationForm(forms.Form, ExtraFormMixin):
 
     def clean(self):
         cleaned_data = super(RegistrationInformationForm, self).clean()
+
+        # Lots of fields get incorrectly processed, so manually validate form
         self.errors.clear()
 
+        # Get data from cache
         for field in RegistrationForm.Meta.fields:
             self.cleaned_data.update({field: self.request.session.get(field, None)})
 
-
+        # Check uses is set, making sure space needed is indicated if storage is selected
         uses = self.request.POST.getlist('use')
         if self.cleaned_data.get('other_use'):
             uses.append(self.cleaned_data['other_use'])
 
+        if "storage" in uses:
+            self.check_field('storage', _("Please indicate how much storage you intend to use"))
+
+        # Set cleaned_data as a string (will be blank if none are selected)
         self.cleaned_data["use"] = ", ".join(uses)
         self.cleaned_data["location"] = ", ".join(self.request.POST.getlist('location'))
 
@@ -106,6 +119,9 @@ class RegistrationInformationForm(forms.Form, ExtraFormMixin):
 
         return self.cleaned_data
 
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
 
 
 class InvitationForm(UserCreationForm):

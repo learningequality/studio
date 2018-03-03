@@ -11,25 +11,58 @@
 <ul class="errors">
 	{% for field in form %}
 		{% for error in field.errors %}
-			<li>{{ error|escape }}</li>
+			<li>{{field.label}}{{ error|escape }}</li>
 		{% endfor %}
 	{% endfor %}
 </ul>
-<h2 class="header text-center">Create an Account</h2>
+<h2 class="header text-center">{% trans 'Create an Account' %}</h2>
 <div class="back-to-registration">
 	<a class="login-action-text" href="{% url 'registration_register' %}"><i class="glyphicon glyphicon-menu-left"></i> {% trans 'Back' %}</a>
 </div>
 <form action="{% url  'registration_information' %}" method="post" class="login-content-form text-center content-padding-top container-fluid">
 	<div id="form-wrapper">
 		{% csrf_token %}
-		{% for field in form %}
-		<div class="form-group row" id="label_{{field.auto_id }}">
-			<div class="col-xs-12 login-label">
-				<div>{{field.label}}{% if field.field.required %}<i class="required_asterisk">*</i>{% endif %}</div>
-				{{field}}
+		<div class="form-group row" id="use">
+			<div class="login-label col-xs-12">
+				<div>{{form.use.label}} <i class="required_asterisk">*</i></div>
+				{% for option in form.use %}
+					<label for="{{option.attrs.id}}">
+						<div class="col-xs-1 check-wrapper">
+							<input id="{{option.attrs.id}}" name="{{option.name}}" type="checkbox" value="{{option.choice_value}}" class="check_{{option.choice_value}}" {% if option.choice_value in option.value %}checked{% endif %}>
+						</div>
+						<div class="col-xs-11">{{option.choice_label}}</div>
+					</label>
+				{% endfor %}
 			</div>
 		</div>
-		{% endfor %}
+		<div class="form-group row" id="storage">
+			<div class="col-xs-12 login-label">
+				<div class="col-xs-1"></div>
+				<div class="col-xs-11 storage-wrapper">
+					{{form.storage.label}} <i class="required_asterisk">*</i> &nbsp;{{form.storage}}
+				</div>
+			</div>
+		</div>
+		<div class="form-group row" id="other_use">
+			<div class="login-label col-xs-12">
+				<div class="col-xs-1"></div>
+				<div class="col-xs-11 other_wrapper">
+					<div>{{form.other_use.label}}</div>
+					{{form.other_use}}
+				</div>
+			</div>
+		</div>
+		<div class="form-group row">
+			<div class="col-xs-12 login-label">
+				<div>{{form.location.label}} <i class="required_asterisk">*</i></div>
+				{{form.location}}
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 text-center" id="help_footer">
+			{% blocktrans %}Questions or concerns? Please email us at <a href="mailto:{{help_email}}" class="login-action-text">{{help_email}}</a>{% endblocktrans %}
+		</div>
 	</div>
 	<div class="row">
 		<div class="col-xs-12">
@@ -42,4 +75,12 @@
 		</div>
 	</div>
 </form>
+
+<script>
+	function handleStorage() {
+		($(".check_storage").prop("checked"))? $("#storage").slideDown(100) : $("#storage").slideUp(100);
+	}
+	$(".check_storage").on("change", handleStorage);
+	handleStorage();
+</script>
 {% endblock %}

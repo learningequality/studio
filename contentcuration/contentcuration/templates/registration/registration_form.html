@@ -7,7 +7,7 @@
 {% block nav %}{% endblock nav %}
 
 {% block login %}
-<ul>
+<ul class="errors">
 	{% for field in form %}
 		{% for error in field.errors %}
 			<li>{{ error|escape }}</li>

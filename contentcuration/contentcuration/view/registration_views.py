@@ -246,8 +246,13 @@ class InformationRegistrationView(RegistrationView):
 
     def get_form_kwargs(self):
         kw = super(InformationRegistrationView, self).get_form_kwargs()
-        kw['request'] = self.request # the trick!
+        kw['request'] = self.request
         return kw
+
+    def get_context_data(self, **kwargs):
+        kwargs = super(InformationRegistrationView, self).get_context_data(**kwargs)
+        kwargs.update({"help_email": settings.HELP_EMAIL})
+        return kwargs
 
     def get_initial(self):
         initial = self.initial.copy()
@@ -265,10 +270,11 @@ class InformationRegistrationView(RegistrationView):
         message = render_to_string('registration/registration_information_email.txt', form.cleaned_data)
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [settings.REGISTRATION_INFORMATION_EMAIL])
 
-        # TODO: Clear session cache fields
-        import pdb; pdb.set_trace()
+        # Clear session cached fields
+        for field in RegistrationForm.Meta.fields:
+            self.request.session[field] = ""
 
-        # return super(InformationRegistrationView, self).register(form)
+        return super(InformationRegistrationView, self).register(form)
 
     def send_activation_email(self, user):
         activation_key = self.get_activation_key(user)

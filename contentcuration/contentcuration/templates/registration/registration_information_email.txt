@@ -6,7 +6,8 @@ New user registration on Kolibri Studio:
 
 Name: {{first_name}} {{last_name}}
 Email: {{email}}
-Intended Use(s): {{use}}
+Intended Use(s): {{use}}{% if storage %}
+Storage Needed: {{storage}}{% endif %}
 Location(s): {{location}}
 
 {% endautoescape %}

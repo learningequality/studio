@@ -14,6 +14,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import os
 import re
 import logging
+import pycountry
+
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -174,6 +176,7 @@ USE_TZ = True
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
+    pycountry.LOCALES_DIR,
 )
 
 ugettext = lambda s: s
@@ -213,6 +216,8 @@ SITE_ID = 1
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
 SPACE_REQUEST_EMAIL = 'content@learningequality.org'
+REGISTRATION_INFORMATION_EMAIL = 'content@learningequality.org'
+HELP_EMAIL = 'content@learningequality.org'
 DEFAULT_FROM_EMAIL = 'Kolibri Studio <noreply@learningequality.org>'
 DEFAULT_LICENSE = 1
 

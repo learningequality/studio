@@ -21,7 +21,7 @@
 	{% endif %}
 </ul>
 
-<h2 class="header text-center">Log In</h2>
+<h2 class="header text-center">{% trans 'Log In' %}</h2>
 <form method="post" class="login-content-form text-center content-padding-top container-fluid" action="{% url 'django.contrib.auth.views.login' %}">
 	{% csrf_token %}
 	<div class="form-group row">

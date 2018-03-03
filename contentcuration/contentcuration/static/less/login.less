@@ -103,11 +103,48 @@ html, body, .login, .login-branding, .login-content{
 				margin-top: 45px;
 			}
 
-			&#label_id_other_use {
-				font-weight: bold;
+			&#use {
+				margin-bottom: 0px;
+				label {
+					font-weight: normal;
+					margin-top: 10px;
+					cursor: pointer;
+					.check-wrapper {
+						padding: 0px;
+						text-align: right;
+						input {
+							vertical-align: middle;
+						}
+					}
+				}
+			}
+
+			&#storage {
+				display: none;
+				margin-bottom: 10px;
 				.login-label {
-					margin-top: -30px;
+					margin-top: -10px;
+				}
+				.storage-wrapper {
+					padding-left: 30px;
+					font-size: 9pt;
+					input {
+						width: 80px;
+    					text-align: right;
+						color: black;
+						padding: 2px;
+					}
+				}
+			}
+
+			&#other_use {
+				font-weight: bold;
+				.other_wrapper {
+					margin-left: -30px;
+				}
+				.login-label {
 					margin-bottom: 20px;
+					font-weight: normal;
 					div {display: inline-block;}
 				}
 				input {
@@ -121,6 +158,16 @@ html, body, .login, .login-branding, .login-content{
 				option {
 					padding: 2px 5px;
 				}
+			}
+		}
+
+		#help_footer {
+			font-size: 9pt;
+			margin-bottom: 30px;
+			margin-top: 10px;
+			a {
+				font-weight: bold;
+				font-size: 9pt;
 			}
 		}
 
@@ -217,6 +264,9 @@ html, body, .login, .login-branding, .login-content{
 
 			.btn-login{
 				font-size: 12pt;
+			}
+			.storage-wrapper {
+				padding-left: 60px !important;
 			}
 		}
 	}
