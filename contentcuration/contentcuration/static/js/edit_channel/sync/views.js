@@ -524,7 +524,15 @@ var SyncPreviewFileView = SyncPreviewModalView.extend({
     },
     create_preview: function(){
         var previewer = require('edit_channel/preview/views');
-        previewer.render_preview(this.$("#preview_window"), this.model, this.subtitles, true, this.node.get('thumbnail_encoding') && this.node.get("thumbnail_encoding").base64, this.get_intl_data());
+        previewer.ItemPreviewView({
+          el: this.$("#preview_window"),
+          content_model: this.node,
+          file_model: this.model,
+          subtitles: this.subtitles,
+          force_load: true,
+          encoding: this.node.get('thumbnail_encoding') && this.node.get("thumbnail_encoding").base64,
+          intl_data: this.get_intl_data()
+        }).render();
         if(this.subtitles.length){
             this.$("#preview_window video").get(0).textTracks[0].mode = "showing";
         }
