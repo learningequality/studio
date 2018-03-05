@@ -60,18 +60,20 @@ class RegistrationForm(UserCreationForm, ExtraFormMixin):
         return self.cleaned_data
 
 USAGES = [
-    ('organization', _("Organization: Re-organize existing materials (e.g. to align to a curriculum or other criteria)")),
-    ('sequencing', _("Sequencing: Arrange pieces of content into an order and assign prerequisites")),
-    ('exercise creation', _("Exercise creation: Create exercises for particular pieces of content")),
-    ('tagging', _("Tagging: Add metadata to content to make it easier to find")),
-    ('sharing', _("Sharing: Share your materials with others or publicly on Kolibri")),
-    ('storage', _("Storage: Upload and store learning materials for private or local use")),
+    ('organization and alignment', _("Organizing or aligning existing materials")),
+    ('sequencing', _("Sequencing materials using prerequisites")),
+    ('exercise creation', _("Creating exercises")),
+    ('content discovery', _("Finding and adding additional content sources")),
+    ('tagging and metadata', _("Tagging content sources for discovery")),
+    ('sharing', _("Sharing materials publicly")),
+    ('storage', _("Storing materials for private or local use")),
 ]
 
 
 class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
     use = forms.ChoiceField(required=False, widget=forms.CheckboxSelectMultiple, label=_('How do you plan to use Kolibri Studio? (check all that apply)'), choices=USAGES)
-    other_use = forms.CharField(required=False, widget=forms.TextInput, label=_("Other"))
+    other_check = forms.BooleanField(required=False, widget=forms.CheckboxInput, label=_("Other"))
+    other_use = forms.CharField(required=False, widget=forms.TextInput)
     storage = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 500MB")}), label=_("How much storage do you need?"))
 
     def __init__(self, *args, **kwargs):
