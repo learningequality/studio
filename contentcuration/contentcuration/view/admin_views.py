@@ -5,6 +5,9 @@ import logging
 import os
 import time
 import locale
+import sys
+reload(sys)
+sys.setdefaultencoding('UTF8')
 
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotFound
@@ -184,20 +187,21 @@ def get_sample_pathway(node):
         return []
     return ["{} ({})".format(first_node.title, first_node.kind_id)] + get_sample_pathway(first_node)
 
+
 def pluralize_kind(kind, number):
     return "{} {}{}".format(number, kind.replace("html5", "HTML app").capitalize(), "s" if number != 1 else "")
 
 def generate_channel_list(request, public_only=False):
     """ Get list of channels and extra metadata """
     channel_list = []
-    channels = Channel.objects.prefetch_related('editors', 'secret_tokens').select_related('main_tree')
+    channels = Channel.objects.prefetch_related('editors', 'secret_tokens').select_related('main_tree').exclude(deleted=True)
 
     if public_only:
-        channels = channels.filter(public=True, main_tree__published=True).order_by("name")
+        channels = channels.filter(public=True, main_tree__published=True)
     else:
-        channels = channels.filter(Q(main_tree__published=True) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))).order_by("name")
+        channels = channels.filter(Q(main_tree__published=True) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))
 
-    for c in channels:
+    for c in channels.distinct().order_by("name"):
         channel = {
             "name": c.name,
             "id": c.id,
@@ -278,8 +282,7 @@ def download_channel_pdf(request):
     })
     html  = template.render(context)
     result = StringIO.StringIO()
-
-    pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("ISO-8859-1")), result)
+    pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("UTF-8")), result, encoding='UTF-8', path=settings.STATIC_ROOT)
     if not pdf.err:
         response = HttpResponse(result.getvalue())
         response['Content-Type'] = 'application/pdf'
