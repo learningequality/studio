@@ -282,8 +282,7 @@ def download_channel_pdf(request):
     })
     html  = template.render(context)
     result = StringIO.StringIO()
-
-    pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("ISO-8859-1")), result)
+    pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("UTF-8")), result, encoding='UTF-8', path=settings.STATIC_ROOT)
     if not pdf.err:
         response = HttpResponse(result.getvalue())
         response['Content-Type'] = 'application/pdf'
