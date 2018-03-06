@@ -61,18 +61,18 @@ class RegistrationForm(UserCreationForm, ExtraFormMixin):
 
 USAGES = [
     ('organization and alignment', _("Organizing or aligning existing materials")),
+    ('finding and adding content', _("Finding and adding additional content sources")),
     ('sequencing', _("Sequencing materials using prerequisites")),
     ('exercise creation', _("Creating exercises")),
-    ('content discovery', _("Finding and adding additional content sources")),
-    ('tagging and metadata', _("Tagging content sources for discovery")),
     ('sharing', _("Sharing materials publicly")),
     ('storage', _("Storing materials for private or local use")),
+    ('tagging', _("Tagging content sources for discovery")),
+    ('other', _("Other")),
 ]
 
 
 class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
     use = forms.ChoiceField(required=False, widget=forms.CheckboxSelectMultiple, label=_('How do you plan to use Kolibri Studio? (check all that apply)'), choices=USAGES)
-    other_check = forms.BooleanField(required=False, widget=forms.CheckboxInput, label=_("Other"))
     other_use = forms.CharField(required=False, widget=forms.TextInput)
     storage = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 500MB")}), label=_("How much storage do you need?"))
 
@@ -104,8 +104,10 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
 
         # Check uses is set, making sure space needed is indicated if storage is selected
         uses = self.request.POST.getlist('use')
-        if self.cleaned_data.get('other_use'):
-            uses.append(self.cleaned_data['other_use'])
+        if "other" in uses:
+            if self.check_field('other_use', _("Describe your 'other' use(s) for Kolibri Studio")):
+                uses.append(self.cleaned_data['other_use'])
+                uses.remove("other")
 
         if "storage" in uses:
             self.check_field('storage', _("Please indicate how much storage you intend to use"))
@@ -115,7 +117,7 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         self.cleaned_data["location"] = ", ".join(self.request.POST.getlist('location'))
 
         self.check_field('use', _('Please indicate how you intend to use Kolibri Studio'))
-        self.check_field('location', _('Please indicate where you plan to use Kolibri'))
+        self.check_field('location', _('Please select where you plan to use Kolibri'))
 
         return self.cleaned_data
 

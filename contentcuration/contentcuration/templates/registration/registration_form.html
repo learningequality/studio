@@ -7,35 +7,37 @@
 {% block nav %}{% endblock nav %}
 
 {% block login %}
-<ul class="errors">
-	{% for field in form %}
-		{% for error in field.errors %}
-			<li>{{ error|escape }}</li>
-		{% endfor %}
-	{% endfor %}
-</ul>
-<h2 class="header text-center">Create an Account</h2>
-<form action="{% url  'registration_register' %}" method="post" class="login-content-form text-center content-padding-top container-fluid">
-	<div id="form-wrapper">
-		{% csrf_token %}
+<div id="registration">
+	<ul class="errors">
 		{% for field in form %}
-		<div class="form-group row" id="label_{{field.auto_id }}">
-			<div class="col-xs-12 login-label">
-				{{field.label}} {% if field.field.required %}<i class="required_asterisk">*</i>{% endif %}
-			</div>
-			 <div class="col-xs-12">{{field}}</div>
-		</div>
+			{% for error in field.errors %}
+				<li>{{ error|escape }}</li>
+			{% endfor %}
 		{% endfor %}
-	</div>
-	<div class="row">
-		<div class="col-xs-12">
-			<input class="btn btn-login" type="submit" value="{% trans 'NEXT' %}" />
+	</ul>
+	<h2 class="header text-center">Create an Account</h2>
+	<form action="{% url  'registration_register' %}" method="post" class="login-content-form text-center content-padding-top container-fluid">
+		<div id="form-wrapper">
+			{% csrf_token %}
+			{% for field in form %}
+			<div class="form-group row" id="label_{{field.auto_id }}">
+				<div class="col-xs-12 login-label">
+					{{field.label}} {% if field.field.required %}<i class="required_asterisk">*</i>{% endif %}
+				</div>
+				 <div class="col-xs-12">{{field}}</div>
+			</div>
+			{% endfor %}
 		</div>
-	</div>
-	<div class="row">
-		<div class="col-xs-12">
-			<a href="{% url 'django.contrib.auth.views.login' %}" class="action-text login-action-text" id="register_prompt">{% trans "Back to Log In" %}</a>
+		<div class="row">
+			<div class="col-xs-12">
+				<input class="btn btn-login" type="submit" value="{% trans 'NEXT' %}" />
+			</div>
 		</div>
-	</div>
-</form>
+		<div class="row">
+			<div class="col-xs-12">
+				<a href="{% url 'django.contrib.auth.views.login' %}" class="action-text login-action-text" id="register_prompt">{% trans "Back to Log In" %}</a>
+			</div>
+		</div>
+	</form>
+</div>
 {% endblock %}

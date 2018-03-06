@@ -2,7 +2,7 @@
 
 html, body, .login, .login-branding, .login-content{
 	// standardizing height across the app
-	height: 100%
+	height: 100%;
 }
 
 .content-padding-top(){
@@ -48,8 +48,14 @@ html, body, .login, .login-branding, .login-content{
 		}
 	}
 
-	.login-content{
+	#login-wrapper, #registration {
 		.content-padding-top;
+	}
+	#registration-info {
+		padding-top: 5vh;
+	}
+
+	.login-content{
 		background-color: @login-background;
 		color: white;
 		height: max-content;
@@ -104,45 +110,38 @@ html, body, .login, .login-branding, .login-content{
 			}
 
 			&#use {
-				margin-bottom: 0px;
-				label {
+				margin-bottom: 30px;
+				.use-option{
 					width: 100%;
-					font-weight: normal;
 					margin-top: 10px;
-					cursor: pointer;
 					.check-wrapper {
 						padding: 0px;
 						text-align: right;
+						input {
+							vertical-align: middle;
+							cursor: pointer;
+						}
 					}
-				}
-			}
+					label {
+						font-weight: normal;
+						cursor: pointer;
+					}
+					#storage {
+						margin-top: -5px;
+						padding-left: 15px;
+						font-size: 9pt;
+						input {
+							width: 80px;
+							text-align: right;
+							color: black;
+							padding: 2px;
+						}
+					}
 
-			#storage {
-				// display: none;
-				margin-bottom: 10px;
-				padding-left: 30px;
-				font-size: 9pt;
-				input {
-					width: 80px;
-					text-align: right;
-					color: black;
-					padding: 2px;
-				}
-			}
-
-			&#other_use {
-				font-weight: bold;
-				margin-top: 10px;
-				.other_wrapper {
-					margin-left: -30px;
-				}
-				.login-label {
-					margin-bottom: 20px;
-					font-weight: normal;
-					div {display: inline-block;}
-				}
-				input {
-					width: 60%;
+					#id_other_use {
+						width: 60%;
+						margin-left: 5px;
+					}
 				}
 			}
 
@@ -258,9 +257,6 @@ html, body, .login, .login-branding, .login-content{
 
 			.btn-login{
 				font-size: 12pt;
-			}
-			.storage-wrapper {
-				padding-left: 60px !important;
 			}
 		}
 	}
