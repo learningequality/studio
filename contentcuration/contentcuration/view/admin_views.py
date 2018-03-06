@@ -224,7 +224,7 @@ def generate_channel_list(request, public_only=False):
         # Get information related to nodes
         nodes = c.main_tree.get_descendants().prefetch_related('files', 'tags', 'children', 'language')
         channel["sample_pathway"] = " -> ".join(get_sample_pathway(c.main_tree))
-        channel["tags"] = ", ".join([t for t in nodes.values_list('tags__tag_name', flat=True).distinct() if t != None])
+        channel["tags"] = ", ".join(set([t for t in nodes.values_list('tags__tag_name', flat=True).distinct() if t != None]))
 
         # Get language information
         node_languages = nodes.exclude(language=None).values_list('language__readable_name', flat=True)
