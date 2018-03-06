@@ -25,8 +25,10 @@ def encode_base64(value):
     buffer = cStringIO.StringIO()
 
     with Image.open(filepath) as image:
-        img = resizeimage.resize_cover(image, [THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION])
-        img.save(buffer, image.format)
+        width, height = image.size
+        dimension = min([THUMBNAIL_DIMENSION, width, height])
+        image.thumbnail((dimension, dimension), Image.ANTIALIAS)
+        image.save(buffer, image.format)
         return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(buffer.getvalue()))
 
 @register.filter(is_safe=True)
