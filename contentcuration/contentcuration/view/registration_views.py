@@ -2,7 +2,7 @@ import json
 import logging
 
 from django.conf import settings
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.views import password_reset
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
@@ -18,7 +18,7 @@ from django.views.generic.edit import FormView
 from registration.backends.hmac.views import RegistrationView
 
 from contentcuration.api import add_editor_to_channel
-from contentcuration.forms import InvitationForm, InvitationAcceptForm, RegistrationForm, RegistrationInformationForm, USAGES
+from contentcuration.forms import RegistrationForm, RegistrationInformationForm, USAGES
 from contentcuration.models import Channel, User, Invitation
 from contentcuration.statistics import record_user_registration_stats
 
@@ -83,139 +83,6 @@ def send_invitation_email(request):
             "share_mode": invitation.share_mode,
         }))
 
-
-class InvitationAcceptView(FormView):
-    form_class = InvitationAcceptForm
-    template_name = 'permissions/permissions_confirm.html'
-    invitation = None
-
-    def get_initial(self):
-        initial = self.initial.copy()
-        return {'userid': self.invitation.invited.pk}
-
-    def get_form_kwargs(self):
-        kwargs = super(InvitationAcceptView, self).get_form_kwargs()
-        kwargs.update({'user': self.user()})
-        return kwargs
-
-    def get_success_url(self):
-        page_name = "channel"
-        if self.invitation.share_mode == "view":
-            page_name = "channel_view_only"
-        return reverse_lazy(page_name, kwargs={'channel_id': self.invitation.channel.pk})
-
-    def dispatch(self, *args, **kwargs):
-        try:
-            self.invitation = Invitation.objects.get(id=self.kwargs['invitation_link'])
-        except ObjectDoesNotExist:
-            logging.debug("No invitation found.")
-            return redirect(reverse_lazy('fail_invitation'))
-
-        return super(InvitationAcceptView, self).dispatch(*args, **kwargs)
-
-    def user(self):
-        return self.invitation.invited
-
-    def form_valid(self, form):
-        add_editor_to_channel(self.invitation)
-
-        user_cache = authenticate(username=self.invitation.invited.email,
-                                  password=form.cleaned_data['password'],
-                                  )
-        login(self.request, user_cache)
-
-        return redirect(self.get_success_url())
-
-    def form_invalid(self, form):
-        return self.render_to_response(self.get_context_data(form=form))
-
-    def get_context_data(self, **kwargs):
-        return super(InvitationAcceptView, self).get_context_data(**kwargs)
-
-
-class InvitationRegisterView(FormView):
-    """
-    Base class for user registration views.
-    """
-    disallowed_url = 'registration_disallowed'
-    form_class = InvitationForm
-    success_url = None
-    template_name = 'permissions/permissions_register.html'
-    invitation = None
-
-    def get_initial(self):
-        initial = self.initial.copy()
-        return {'email': self.user().email}
-
-    def get_success_url(self):
-        if self.kwargs.get("invitation_link"):
-            return reverse_lazy('accept_invitation', kwargs={'invitation_link': self.kwargs["invitation_link"]})
-        else:
-            return reverse_lazy('channels')
-
-    def get_login_url(self):
-        if self.invitation:
-            page_name = "channel"
-            if self.invitation.share_mode == "view":
-                page_name = "channel_view_only"
-            return reverse_lazy(page_name, kwargs={'channel_id': self.invitation.channel.pk})
-        else:
-            return reverse_lazy('channels')
-
-    def dispatch(self, *args, **kwargs):
-        if not getattr(settings, 'REGISTRATION_OPEN', True):
-            return redirect(self.disallowed_url)
-
-        if self.kwargs.get("invitation_link"):
-            try:
-                self.invitation = Invitation.objects.get(id__exact=self.kwargs['invitation_link'])
-            except ObjectDoesNotExist:
-                logging.debug("No invitation found.")
-                return redirect(reverse_lazy('fail_invitation'))
-
-            if self.invitation.invited.is_active:
-                return redirect(self.get_success_url())
-        elif self.user().is_active:
-            return redirect(self.get_success_url())
-
-        return super(InvitationRegisterView, self).dispatch(*args, **kwargs)
-
-    def form_valid(self, form):
-        user = form.save(self.user())
-        if self.invitation:
-            add_editor_to_channel(self.invitation)
-        user_cache = authenticate(username=user.email,
-                                  password=form.cleaned_data['password1'],
-                                  )
-        login(self.request, user_cache)
-        return redirect(self.get_login_url())
-
-    def form_invalid(self, form):
-
-        return self.render_to_response(self.get_context_data(form=form))
-
-    def user(self):
-        return User.objects.get_or_create(id=self.kwargs["user_id"])[0]
-
-    def get_context_data(self, **kwargs):
-        return super(InvitationRegisterView, self).get_context_data(**kwargs)
-
-
-def decline_invitation(request, invitation_link):
-    try:
-        invitation = Invitation.objects.get(id=invitation_link)
-        invitation.delete()
-
-    except ObjectDoesNotExist:
-        logging.debug("No invitation found.")
-
-    return render(request, 'permissions/permissions_decline.html')
-
-
-def fail_invitation(request):
-    return render(request, 'permissions/permissions_fail.html')
-
-
 class UserRegistrationView(RegistrationView):
     form_class = RegistrationForm
 
@@ -228,6 +95,11 @@ class UserRegistrationView(RegistrationView):
             'password1': self.request.session.get('password1', None),
             'password2': self.request.session.get('password2', None),
         }
+
+    def get_context_data(self, **kwargs):
+        kwargs = super(UserRegistrationView, self).get_context_data(**kwargs)
+        kwargs.update({"freeze_email": self.request.session.get("freeze_email"),})
+        return kwargs
 
     def post(self, request):
         form = self.form_class(request.POST)
@@ -271,6 +143,7 @@ class InformationRegistrationView(RegistrationView):
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [settings.REGISTRATION_INFORMATION_EMAIL])
 
         # Clear session cached fields
+        self.request.session["freeze_email"] = False
         for field in RegistrationForm.Meta.fields:
             self.request.session[field] = ""
 
@@ -296,3 +169,9 @@ def custom_password_reset(request, **kwargs):
     email_context = {'site': get_current_site(request), 'domain': request.META.get('HTTP_ORIGIN') or "http://{}".format(
         request.get_host() or Site.objects.get_current().domain)}
     return password_reset(request, extra_email_context=email_context, **kwargs)
+
+def new_user_redirect(request, user_id):
+    request.session["email"] = User.objects.get(pk=user_id).email
+    request.session["freeze_email"] = True
+    logout(request)
+    return redirect(reverse_lazy("registration_register"))

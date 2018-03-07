@@ -22,23 +22,22 @@ class ExtraFormMixin(object):
             return False
         return True
 
-class RegistrationForm(UserCreationForm, ExtraFormMixin):
-    email = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
+class RegistrationForm(forms.Form, ExtraFormMixin):
     first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
     last_name = forms.CharField(widget=forms.TextInput, label=_('Last Name'), required=True)
+    email = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
     password1 = forms.CharField(widget=forms.PasswordInput(render_value = True), label=_('Password'), required=True,)
     password2 = forms.CharField(widget=forms.PasswordInput(render_value = True), label=_('Password (again)'), required=True)
-
-    class Meta:
-        model = User
-        fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
         if User.objects.filter(email__iexact=email, is_active=True).exists():
             self.add_error('email', _('Email already exists.'))
-        else:
-            return email
+        return email
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
 
     def clean(self):
         cleaned_data = super(RegistrationForm, self).clean()
@@ -92,6 +91,10 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
 
         self.fields['location'] = forms.ChoiceField(required=True, widget=forms.SelectMultiple, label=_('Where do you plan to use Kolibri? (select all that apply)'), choices=countries)
 
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip()
+        return email
+
     def clean(self):
         cleaned_data = super(RegistrationInformationForm, self).clean()
 
@@ -121,78 +124,20 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
 
         return self.cleaned_data
 
-    class Meta:
-        model = User
-        fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
+    def save(self, commit=True):
+        user, _new = User.objects.get_or_create(email=self.cleaned_data["email"])
+        user.set_password(self.cleaned_data["password1"])
+        user.first_name = self.cleaned_data["first_name"]
+        user.last_name = self.cleaned_data["last_name"]
 
+        if commit:
+            user.save()
 
-class InvitationForm(UserCreationForm):
-    first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
-    last_name = forms.CharField(widget=forms.TextInput, label=_('Last Name'), required=True)
-    password1 = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)
-    password2 = forms.CharField(widget=forms.PasswordInput, label=_('Password (again)'), required=True)
+        return user
 
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'password1', 'password2')
-
-    def clean_email(self):
-        email = self.cleaned_data['email'].strip()
-        return email
-
-    def clean(self):
-        cleaned_data = super(InvitationForm, self).clean()
-
-        self.check_field('first_name', _('First name is required.'))
-        self.check_field('last_name', _('Last name is required.'))
-
-        if self.check_field('password1', _('Password is required.')):
-            if 'password2' not in self.cleaned_data or self.cleaned_data['password1'] != self.cleaned_data['password2']:
-                self.errors['password2'] = self.error_class()
-                self.add_error('password2', _('Passwords don\'t match.'))
-        else:
-            self.errors['password2'] = self.error_class()
-
-        return self.cleaned_data
-
-    def check_field(self, field, error):
-        if field not in self.cleaned_data:
-            self.errors[field] = self.error_class()
-            self.add_error(field, error)
-            return False
-        return True
-
-    def save(self, user):
-        user.set_password(self.cleaned_data["password1"])
-        user.first_name = self.cleaned_data["first_name"]
-        user.last_name = self.cleaned_data["last_name"]
-        user.is_active = True
-        user.save()
-        return user
-
-
-class InvitationAcceptForm(AuthenticationForm):
-    user = None
-    password = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)
-
-    class Meta:
-        model = User
-        fields = ('password',)
-
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user')
-        super(InvitationAcceptForm, self).__init__(*args, **kwargs)
-
-    def clean(self):
-        if 'password' not in self.cleaned_data:
-            self.errors['password'] = self.error_class()
-            self.add_error('password', _('Password is required.'))
-        elif not self.user.check_password(self.cleaned_data["password"]):
-            self.errors['password'] = self.error_class()
-            self.add_error('password', _('Password is incorrect.'))
-        else:
-            self.confirm_login_allowed(self.user)
-        return self.cleaned_data
 
 
 class ProfileSettingsForm(UserChangeForm):

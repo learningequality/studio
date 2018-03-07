@@ -96,8 +96,11 @@ html, body, .login, .login-branding, .login-content{
 			input[type="text"], input[type="password"] {
 				color: black;
 				padding: 2px 5px;
-
 				width: 100%;
+				&:read-only {
+					background-color: @gray-300;
+					border: none;
+				}
 			}
 			.login-action-text {
 			    float: right;
