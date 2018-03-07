@@ -171,7 +171,10 @@ def custom_password_reset(request, **kwargs):
     return password_reset(request, extra_email_context=email_context, **kwargs)
 
 def new_user_redirect(request, user_id):
-    request.session["email"] = User.objects.get(pk=user_id).email
+    user = User.objects.get(pk=user_id)
+    if user.is_active:
+        return redirect(reverse_lazy("channels"))
+    request.session["email"] = user.email
     request.session["freeze_email"] = True
     logout(request)
     return redirect(reverse_lazy("registration_register"))
