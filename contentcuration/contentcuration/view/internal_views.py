@@ -18,7 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
 from contentcuration.models import AssessmentItem, Channel, License, File, FormatPreset, ContentNode, Language, StagedFile, generate_file_on_disk_name
-from contentcuration.utils.logging import trace
+from contentcuration.utils.tracing import trace
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
 VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
