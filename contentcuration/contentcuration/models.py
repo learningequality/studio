@@ -1,32 +1,37 @@
 import functools
 import hashlib
 import json
-import math
 import logging
+import math
+import shutil
 import uuid
 
 import os
+import minio
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, MultipleObjectsReturned
-from django.core.files.storage import FileSystemStorage
+from django.core.files import File as DjangoFile
+from django.core.files.storage import Storage, FileSystemStorage, default_storage
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.db import IntegrityError, connections, models, connection
 from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField, F, FloatField
 from django.db.utils import ConnectionDoesNotExist
-from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from django.utils.deconstruct import deconstructible
+from django.utils.translation import ugettext as _
+from minio.error import ResponseError, NoSuchKey
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
 from pg_utils import DistinctSum
 from rest_framework import permissions
 from rest_framework.authtoken.models import Token
-from contentcuration.statistics import record_channel_stats
 
+from contentcuration.statistics import record_channel_stats
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -215,12 +220,10 @@ class UUIDField(models.CharField):
             result = result.hex
         return result
 
-
 def file_on_disk_name(instance, filename):
     """
     Create a name spaced file path from the File obejct's checksum property.
     This path will be used to store the content copy
-
     :param instance: File (content File model)
     :param filename: str
     :return: str
@@ -238,10 +241,24 @@ def generate_file_on_disk_name(checksum, filename):
     return os.path.join(directory, h + ext.lower())
 
 
-def generate_storage_url(filename):
-    """ Returns place where file is stored """
-    h, ext = os.path.splitext(filename)
-    return "{}/{}/{}/{}".format(settings.STORAGE_URL.rstrip('/'), h[0], h[1], h + ext.lower())
+def object_storage_name(instance, filename):
+    """
+    Create a name spaced file path from the File obejct's checksum property.
+    This path will be used to store the content copy
+
+    :param instance: File (content File model)
+    :param filename: str
+    :return: str
+    """
+    return generate_object_storage_name(instance.checksum, filename)
+
+
+def generate_object_storage_name(checksum, filename):
+    """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
+    h = checksum
+    basename, ext = os.path.splitext(filename)
+    directory = os.path.join(settings.STORAGE_ROOT, h[0], h[1])
+    return os.path.join(directory, h + ext.lower())
 
 
 class FileOnDiskStorage(FileSystemStorage):
@@ -258,6 +275,90 @@ class FileOnDiskStorage(FileSystemStorage):
             logging.warn('Content copy "%s" already exists!' % name)
             return name
         return super(FileOnDiskStorage, self)._save(name, content)
+
+
+@deconstructible
+class ObjectStorage(Storage):
+    """
+    ObjectStorage stores our data in Minio, an object storage system that's Amazon S3 compatible.
+
+    Minio runs on your local machine, allowing developers to emulate S3. In production, Minio acts as a proxy
+    to a production storage system, such as Google Cloud Storage, or the real Amazon S3.
+    """
+    def __init__(self):
+        self.client = minio.Minio(
+            "localhost:9000",
+            access_key="development",
+            secret_key="development",
+            secure=False,
+        )
+        self.bucket_name = settings.S3_BUCKET_NAME
+
+
+    def _open(self, name, mode='rb'):
+        resp = self.client.fget_object(self.bucket_name, name, self.path(name))
+        logging.debug('name is _open is '.format(name))
+        file = DjangoFile(open(self.path(name)), 'wb+')
+        return file
+
+    def _save(self, name, content):
+
+        if name is None:
+            logging.warning("file name was saved without a filename!")
+        if content is None:
+            logging.warning("file name {} was saved without any content!".format(name))
+
+        if self.exists(name):
+            logging.warn('Content copy "%s" already exists!' % name)
+            return name
+
+        logging.debug('content in _save is '.format(content))
+        logging.debug('name in _save is '.format(name))
+
+        try:
+            self.client.put_object(self.bucket_name, name, content, content.size)
+        except ResponseError as e:
+            pass
+        return name
+
+    def get_available_name(self, name):
+        return name
+
+    def delete(self, name):
+        self.client.remove_objects(self.bucket_name, [name])
+
+    def exists(self, name):
+        # take out the leading slash, minio doesn't like it
+        name = os.path.relpath(name, "/")
+
+        try:
+            self.client.stat_object(self.bucket_name, name)
+            return True
+        except NoSuchKey as err:
+            logging.debug("Stat'ing object {} returned a response error; assuming it doesn't exist.".format(name))
+            logging.debug("Stat object error was {}".format(err))
+            return False
+
+    def listdir(self, path):
+        # directories, files = [], []
+        # for entry in list(self.bucket.list_blobs(prefix=path, delimiter='/')):
+        #     directories.append(entry.prefixes)
+        #     files.append(entry)
+        # return directories, files
+        # TODO(aron): figure out how to do this using the Minio client
+        raise NotImplementedError
+
+    def size(self, name):
+        resp = self.client.stat_object(self.bucket_name, name)
+        return resp.size
+
+    def url(self, name):
+
+        # take out the leading slash, minio doesn't like it
+        name = os.path.relpath(name, "/")
+
+        # get a presigned URL that will expire in 7 days
+        return self.client.presigned_get_object(self.bucket_name, name)
 
 
 class ChannelResourceSize(models.Model):
@@ -779,7 +880,7 @@ class File(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     checksum = models.CharField(max_length=400, blank=True, db_index=True)
     file_size = models.IntegerField(blank=True, null=True)
-    file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500,
+    file_on_disk = models.FileField(upload_to=object_storage_name, storage=default_storage, max_length=500,
                                     blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True, db_index=True)
     assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True, db_index=True)

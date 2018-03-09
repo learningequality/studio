@@ -39,4 +39,7 @@ sphinx-autobuild==0.7.1
 sphinx_rtd_theme
 sphinx-intl
 django-storages
+boto3==1.6.5
 pathlib
+minio==3.0.3
+xhtml2pdf==0.2.1

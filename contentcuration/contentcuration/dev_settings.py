@@ -32,7 +32,3 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.logging.LoggingPanel',
     'debug_toolbar.panels.redirects.RedirectsPanel',
 ]
-
-AWS_ACCESS_KEY_ID = "deveelopment"
-AWS_SECRET_ACCESS_KEY = "development"
-AWS_S3_ENDPOINT_URL = "http://localhost:9000"

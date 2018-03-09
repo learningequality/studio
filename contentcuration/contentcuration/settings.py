@@ -18,10 +18,10 @@ import logging
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-STORAGE_ROOT = os.path.join(BASE_DIR, "storage")
+STORAGE_ROOT = "storage"
+DB_ROOT = "databases"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
-DB_ROOT = os.path.join(BASE_DIR, "databases")
 
 PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
 
@@ -237,8 +237,10 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Africa/Nairobi'
 
-# GOOGLE CLOUD STORAGE SETTINGS
+# CLOUD STORAGE SETTINGS
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-GS_BUCKET_NAME = 'kolibri-studio-content'
-GS_PROJECT_ID = 'nanobox-194019'
-GS_CRENDENTIALS = '/app/nanobox-2e573771bb80.json'
+AWS_ACCESS_KEY_ID = "development"
+AWS_SECRET_ACCESS_KEY = "development"
+AWS_STORAGE_BUCKET_NAME = 'kolibri-studio-content'
+AWS_S3_ENDPOINT_URL = "http://localhost:9000"
+S3_BUCKET_NAME = 'kolibri-studio-content'
