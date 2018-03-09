@@ -10,7 +10,6 @@ run.config:
     - ImageMagick6-6.9.9.20
     - gettext-tools-0.19.8.1nb1
     - oracle-jdk8-8.0.151
-    - libX11-1.6.5
     - nginx
 
   cache_dirs:
@@ -24,7 +23,10 @@ run.config:
     - mkdir -p contentcuration/static/js/bundles
     - yarn install
     - node build.js --prod
-    - mkdir -p bin && curl https://dl.minio.io/server/minio/release/linux-amd64/minio > bin/minio && chmod +x bin/minio
+    - mkdir -p bin
+    - curl https://dl.minio.io/server/minio/release/linux-amd64/minio > bin/minio
+    - curl https://dl.minio.io/client/mc/release/linux-amd64/mc > bin/mc
+    - chmod +x bin/*
 
 
 data.db:
