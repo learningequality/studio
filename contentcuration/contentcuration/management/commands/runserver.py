@@ -6,6 +6,8 @@ from threading import Thread
 from django.contrib.staticfiles.management.commands.runserver import Command as RunserverCommand
 from django.core.management.base import CommandError
 
+from contentcuration.utils.minio import start_minio
+
 
 class Command(RunserverCommand):
     """
@@ -29,9 +31,7 @@ class Command(RunserverCommand):
             browserify_thread.daemon = True
             browserify_thread.start()
 
-            minio_thread = Thread(target=self.start_minio)
-            minio_thread.daemon = True
-            minio_thread.start()
+            start_minio()
 
             atexit.register(self.kill_browserify_process)
 
@@ -44,7 +44,7 @@ class Command(RunserverCommand):
             ["run_minio.py"],
             stdin=subprocess.PIPE,
         )
-        
+
 
     def kill_browserify_process(self):
         if self.browserify_process.returncode is not None:
