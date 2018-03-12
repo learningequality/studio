@@ -7,7 +7,7 @@ from django.test import Client
 from mixer.backend.django import mixer
 from contentcuration import models
 from django.conf import settings
-from contentcuration.api import get_file_diff
+from contentcuration.utils.files import get_file_diff
 from django.core.urlresolvers import reverse_lazy
 
 pytestmark = pytest.mark.django_db

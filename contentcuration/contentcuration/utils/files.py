@@ -4,8 +4,9 @@ import random
 import tempfile
 import zipfile
 from django.core.files import File as DjFile
+from django.core.files.storage import default_storage
 from contentcuration.api import write_file_to_storage, write_raw_content_to_storage
-from contentcuration.models import File, generate_file_on_disk_name
+from contentcuration.models import File, generate_file_on_disk_name, generate_object_storage_name
 from le_utils.constants import format_presets, content_kinds, file_formats
 from pressurecooker.videos import extract_thumbnail_from_video, compress_video
 from pressurecooker.images import create_tiled_image, create_image_from_pdf_page, create_waveform_image
@@ -23,6 +24,24 @@ def create_file_from_contents(contents, ext=None, node=None, preset_id=None, upl
             contentnode=node,
             uploaded_by=uploaded_by
         )
+
+
+def get_file_diff(files):
+    """Given a list of filenames as strings, find the filenames that aren't in our
+    storage, and return.
+
+    """
+
+    # Try to be storage system agnostic, in case we're using either the Object Storage,
+    # or FileSystemStorage
+    storage = default_storage
+    ret = []
+    for f in files:
+        filepath = generate_object_storage_name(os.path.splitext(f)[0], f)
+        if storage.exists(filepath) or storage.size(filepath) == 0:
+            ret.append(f)
+
+    return ret
 
 
 def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None, save=True):
