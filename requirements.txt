@@ -34,6 +34,7 @@ celery==4.1.0
 redis==2.10.5
 reportlab==3.4.0
 python-resize-image==1.1.11
+pycountry==17.5.14
 sphinx==1.6.4
 sphinx-autobuild==0.7.1
 sphinx_rtd_theme
