@@ -1,8 +1,8 @@
 {
   "name": "studio",
   "version": "0.0.1",
-  "description": "Application for curating topic trees of arbitrary content for use in the Kolibri Learning Management System",
-  "main": "index.js",
+  "private": true,
+  "description": "Frontend build tools and development utilities for Kolibri Studio",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:py": "flake8 --exit-zero",
