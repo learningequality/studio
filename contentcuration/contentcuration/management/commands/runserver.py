@@ -41,15 +41,6 @@ class Command(RunserverCommand):
 
         return super(Command, self).handle(*args, **options)
 
-    def start_minio(self):
-        self.stdout.write("Starting minio")
-
-        self.minio_process = subprocess.Popen(
-            ["run_minio.py"],
-            stdin=subprocess.PIPE,
-        )
-
-
     def kill_browserify_process(self):
         if self.browserify_process.returncode is not None:
             return
