@@ -1,15 +1,17 @@
-import zlib
 import math
+import zlib
 from collections import OrderedDict
+from itertools import chain
+
+import minio
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
-from le_utils.constants import licenses
 from django.utils.translation import ugettext as _
-from itertools import chain
+from minio.error import ResponseError
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -19,6 +21,8 @@ from rest_framework_bulk import BulkSerializerMixin
 
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
+from le_utils.constants import licenses
+
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -113,19 +117,33 @@ class FileListSerializer(serializers.ListSerializer):
             to_delete.delete()
 
         if update_files:
+            client = minio.Minio(
+                "localhost:9000",
+                access_key="development",
+                secret_key="development",
+                secure=False,
+            )
+            bucket = settings.S3_BUCKET_NAME
             with transaction.atomic():
                 for file_id, data in update_files.items():
                     file_obj, _new = File.objects.get_or_create(pk=file_id)
+                    import pdb; pdb.set_trace()
 
                     # potential optimization opportunity
                     for attr, value in data.items():
                         if attr != "preset" and attr != "language":
                             setattr(file_obj, attr, value)
                     file_path = generate_file_on_disk_name(file_obj.checksum, str(file_obj))
-                    if os.path.isfile(file_path):
-                        file_obj.file_on_disk = DjFile(open(file_path, 'rb'))
-                    else:
+                    try:
+                        obj_name = os.path.relpath(str(file_obj), file_path)
+                        client.fget_object(bucket, obj_name, file_path)
+                    except ResponseError:
+                        # file doesn't exist on object storage, raise an error
                         raise OSError("Error: file {} was not found".format(str(file_obj)))
+
+                    file = DjFile(open(file_path, 'wb+'))
+                    file_obj.file_on_disk = file
+
                     file_obj.uploaded_by = file_obj.uploaded_by or user
                     file_obj.save()
                     ret.append(file_obj)

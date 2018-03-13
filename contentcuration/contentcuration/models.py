@@ -3,35 +3,40 @@ import hashlib
 import json
 import logging
 import math
+import os
 import shutil
 import uuid
 
-import os
 import minio
+from contentcuration.statistics import record_channel_stats
+from contentcuration.utils.networking import get_local_ip_address
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, MultipleObjectsReturned
+from django.core.exceptions import (MultipleObjectsReturned,
+                                    ObjectDoesNotExist, PermissionDenied)
 from django.core.files import File as DjangoFile
-from django.core.files.storage import Storage, FileSystemStorage, default_storage
-from django.core.mail import send_mail, EmailMultiAlternatives
-from django.db import IntegrityError, connections, models, connection
-from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField, F, FloatField
+from django.core.files.storage import (FileSystemStorage, Storage,
+                                       default_storage)
+from django.core.mail import EmailMultiAlternatives, send_mail
+from django.db import IntegrityError, connection, connections, models
+from django.db.models import (Case, Count, F, FloatField, IntegerField, Max, Q,
+                              Sum, When)
 from django.db.utils import ConnectionDoesNotExist
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.deconstruct import deconstructible
 from django.utils.translation import ugettext as _
-from minio.error import ResponseError, NoSuchKey
-from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
+from le_utils.constants import (content_kinds, exercises, file_formats,
+                                format_presets, licenses)
+from minio.error import NoSuchKey, ResponseError
+from mptt.models import (MPTTModel, TreeForeignKey, TreeManager,
+                         raise_if_unsaved)
 from pg_utils import DistinctSum
 from rest_framework import permissions
 from rest_framework.authtoken.models import Token
-
-from contentcuration.statistics import record_channel_stats
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -259,6 +264,22 @@ def generate_object_storage_name(checksum, filename):
     basename, ext = os.path.splitext(filename)
     directory = os.path.join(settings.STORAGE_ROOT, h[0], h[1])
     return os.path.join(directory, h + ext.lower())
+
+
+def generate_storage_url(filename, *args):
+    host = get_local_ip_address()
+    # assume the port is 9000, the default of minio
+    port = 9000
+    path = generate_object_storage_name(os.path.splitext(filename)[0], filename)
+
+    url = "http://{host}:{port}/{bucket}/{path}".format(
+        host=host,
+        port=port,
+        bucket=settings.S3_BUCKET_NAME,
+        path=path,
+    )
+
+    return url
 
 
 class FileOnDiskStorage(FileSystemStorage):
