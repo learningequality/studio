@@ -31,11 +31,13 @@ from contentcuration.serializers import AdminChannelListSerializer, AdminUserLis
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from le_utils.constants import content_kinds
 
 from xhtml2pdf import pisa
 import cStringIO as StringIO
 from PIL import Image
 import base64
+from multiprocessing.pool import ThreadPool
 
 locale.setlocale(locale.LC_TIME, '')
 
@@ -208,16 +210,17 @@ def generate_thumbnail(channel):
             pass
 
 
-def get_channel_data(channel, site, default_thumbnail=None, include_thumbnails=False):
+def get_channel_data(channel, site, default_thumbnail=None):
     import time
     start = time.time()
+    print "Starting " + channel.name
     data = {
         "name": channel.name,
         "id": channel.id,
         "public": "Yes" if channel.public else "No",
         "description": channel.description,
         "language": channel.language and channel.language.readable_name,
-        "generated_thumbnail": include_thumbnails and generate_thumbnail(channel) or default_thumbnail,
+        "generated_thumbnail": default_thumbnail!=None and generate_thumbnail(channel) or default_thumbnail,
         "url": "http://{}/channels/{}/edit".format(site, channel.id)
     }
 
@@ -240,43 +243,40 @@ def get_channel_data(channel, site, default_thumbnail=None, include_thumbnails=F
     max_level = nodes.aggregate(max_level=Max('level'))['max_level']
     deepest_node = nodes.filter(level=max_level).first()
 
-    pathway = deepest_node.get_ancestors(include_self=True)\
-                        .exclude(pk=channel.main_tree.pk)\
-                        .annotate(name=Concat('title', Value(' ('), 'kind_id', Value(')'), output_field=CharField()))\
-                        .values_list('name', flat=True)
-    data["sample_pathway"] = " -> ".join(pathway)
+    if deepest_node:
+        pathway = deepest_node.get_ancestors(include_self=True)\
+                            .exclude(pk=channel.main_tree.pk)\
+                            .annotate(name=Concat('title', Value(' ('), 'kind_id', Value(')'), output_field=CharField()))\
+                            .values_list('name', flat=True)
+        data["sample_pathway"] = " -> ".join(pathway)
+    else:
+        data["sample_pathway"] = "Channel is empty"
 
     # Get language information
-    node_languages = nodes.exclude(language=None).values_list('language__readable_name', flat=True)
-    file_languages = File.objects.select_related('contentnode', 'language')\
-                                .exclude(language=None)\
-                                .filter(contentnode_id__in=nodes.values_list('id', flat=True))\
-                                .values_list('language__readable_name', flat=True)
-    language_list = filter(lambda l: l != None and l != data['language'], set(chain(node_languages, file_languages)))
+    node_languages = nodes.exclude(language=None).values_list('language__readable_name', flat=True).distinct()
+    file_languages = nodes.exclude(files__language=None).values_list('files__language__readable_name', flat=True)
+    language_list = list(set(chain(node_languages, file_languages)))
+    language_list = filter(lambda l: l != None and l != data['language'], language_list)
+    language_list = map(lambda l: l.replace(",", " -"), language_list)
+    language_list = sorted(map(lambda l: l.replace(",", " -"), language_list))
     data["languages"] = ", ".join(language_list)
 
-    # Get file information
+    # Get kind information
     kind_list = nodes.values('kind_id')\
                      .annotate(count=Count('kind_id'))\
                      .order_by('kind_id')
     data["kind_counts"] = ", ".join([pluralize_kind(k['kind_id'], k['count']) for k in kind_list])
-    data["total_size"] = sizeof_fmt(nodes.values('files__checksum', 'files__file_size')\
+
+    # Get file size
+    data["total_size"] = sizeof_fmt(nodes.exclude(kind_id=content_kinds.EXERCISE, published=False)\
+                        .values('files__checksum', 'files__file_size')\
                       .distinct()\
                       .aggregate(size=Sum('files__file_size'))['size'] or 0)
 
-    """
-        Just immediate data: 5s
-        With thumbnail: 11s
-        With tags/editors/tokens: 15s
-        With sample pathway: 30s
-        With node languages and kind counts: 40s
-        Without file langauges: 115s
-        Without total size: 100s
-        Total: 100s
-    """
 
 
-    print "Channel Time:", time.time() - start
+
+    print channel.name + " time:", time.time() - start
     return data
 
 class Echo:
@@ -298,7 +298,7 @@ def stream_csv_response_generator(request):
     channels = Channel.objects.prefetch_related('editors', 'secret_tokens', 'tags')\
                             .select_related('main_tree')\
                             .exclude(deleted=True)\
-                            .filter((Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))\
+                            .filter(Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))\
                             .distinct()\
                             .order_by('name')
     site = get_current_site(request)
@@ -309,8 +309,11 @@ def stream_csv_response_generator(request):
     yield writer.writerow(['Channel', 'ID', 'Public', 'Description', 'Tokens', 'Kind Counts',\
                     'Total Size', 'Language', 'Other Languages', 'Tags', 'Editors', 'Sample Pathway'])
 
-    for c in channels:
-        data = get_channel_data(c, site)
+    pool = ThreadPool(processes=channels.count())
+    threads = [pool.apply_async(get_channel_data, (c, site)) for c in channels]
+
+    for t in threads:
+        data = t.get()
         yield writer.writerow([data['name'], data['id'], data['public'], data['description'], data['tokens'],\
                     data['kind_counts'], data['total_size'], data['language'], data['languages'], \
                     data['tags'], data['editors'], data['sample_pathway']])
@@ -320,22 +323,28 @@ def stream_csv_response_generator(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def download_channel_csv(request):
+    import time
+    start = time.time()
+
     """ Writes list of channels to csv, which is then returned """
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
     response = StreamingHttpResponse( stream_csv_response_generator(request), content_type="text/csv")
     response['Content-Disposition'] = 'attachment; filename="channels.csv"'
-    return response
 
+    print "\n\n\nTotal time:", time.time() - start, "\n\n\n"
+    return response
 
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def download_channel_pdf(request):
-    print("STARTING")
+
     import time
     start = time.time()
+
+
     template = get_template('export/channels_pdf.html')
 
     channels = Channel.objects.prefetch_related('editors', 'secret_tokens', 'tags')\
@@ -347,12 +356,18 @@ def download_channel_pdf(request):
 
     default_thumbnail = get_default_thumbnail()
 
-    channels = [get_channel_data(c, site, include_thumbnails=True, default_thumbnail=default_thumbnail) for c in channels]
+    pool = ThreadPool(processes=channels.count())
+
+
+    threads = [pool.apply_async(get_channel_data, (c, site, default_thumbnail)) for c in channels]
+    channel_list = []
+    for t in threads:
+        channel_list.append(t.get())
+    # channel_list = [get_channel_data(c, site, default_thumbnail) for c in channels]
 
     context = Context({
-        "channels": channels
+        "channels": channel_list
     })
-
 
     html = template.render(context)
 
@@ -362,7 +377,9 @@ def download_channel_pdf(request):
         response = FileResponse(result.getvalue())
         response['Content-Type'] = 'application/pdf'
         response['Content-disposition'] = 'attachment;filename=channels.pdf'
+        response['Set-Cookie'] = "fileDownload=true; path=/";
 
 
-    print "\n\n\n", "Total Time: ", time.time() - start, "\n\n\n"
+    print "\n\n\nTotal time:", time.time() - start, "\n\n\n"
     return response
+

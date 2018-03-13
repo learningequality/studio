@@ -135,7 +135,7 @@
                         <a href="{{c.url}}" class="channel_title" target="_blank">{{c.name}}</a><br/>
                         <span class="channel_id">ID: {{c.id}}{% if c.tokens %} | Token{{ c.tokens.length|pluralize }}: {{c.tokens}}{% endif %}</span><br/>
                         {% if c.description %}{{c.description}}<br/><br/>{% endif %}
-                        This channel is available in <b>{{c.language}}</b> {% if c.languages %}(also includes content in {{c.languages}}){% endif %}
+                        This channel is available in <b>{{c.language}}</b> {% if c.languages %}(also includes content in {{c.languages}}) {% endif %}
                         and has a total size of <b>{{c.total_size}}</b><br/><br/>
                         <b>Composition:</b> {{c.kind_counts}}<br/>
                         {% if c.tags %}<b>Tags:</b> {{c.tags}}<br/>{% endif %}

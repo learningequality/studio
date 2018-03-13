@@ -20,16 +20,26 @@ register = template.Library()
 @register.filter(is_safe=True)
 @stringfilter
 def encode_base64(value):
-    checksum, ext = os.path.splitext(value)
-    filepath = generate_file_on_disk_name(checksum, value)
-    buffer = cStringIO.StringIO()
+    if value.startswith("data:image"):
+        return value
 
-    with Image.open(filepath) as image:
-        width, height = image.size
-        dimension = min([THUMBNAIL_DIMENSION, width, height])
-        image.thumbnail((dimension, dimension), Image.ANTIALIAS)
-        image.save(buffer, image.format)
-        return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(buffer.getvalue()))
+    try:
+        checksum, ext = os.path.splitext(value)
+        filepath = generate_file_on_disk_name(checksum, value)
+        buffer = cStringIO.StringIO()
+
+        with Image.open(filepath) as image:
+            width, height = image.size
+            dimension = min([THUMBNAIL_DIMENSION, width, height])
+            image.thumbnail((dimension, dimension), Image.ANTIALIAS)
+            image.save(buffer, image.format)
+            return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(buffer.getvalue()))
+    except IOError:
+        filepath = os.path.join(settings.STATIC_ROOT, 'img', 'kolibri_placeholder.png')
+
+        with open(filepath, 'rb') as image_file:
+            _, ext = os.path.splitext(value)
+            return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(image_file.read()))
 
 @register.filter(is_safe=True)
 @stringfilter
