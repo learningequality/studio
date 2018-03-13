@@ -29,9 +29,16 @@ DATABASES = {
 }
 
 # celery settings
-BROKER_URL = os.getenv("CELERY_BROKER_URL") or BROKER_URL
-CELERY_RESULT_BACKEND = (os.getenv("CELERY_RESULT_BACKEND_URL")
-                         or CELERY_RESULT_BACKEND)
+BROKER_URL = "redis://:{password}@{endpoint}:/{db}".format(
+    password=os.getenv("CELERY_REDIS_PASSWORD"),
+    endpoint=os.getenv("CELERY_BROKER_ENDPOINT"),
+    db=os.getenv("CELERY_REDIS_DB")
+) or BROKER_URL
+CELERY_RESULT_BACKEND = "redis://:{password}@{endpoint}:/{db}".format(
+    password=os.getenv("CELERY_REDIS_PASSWORD"),
+    endpoint=os.getenv("CELERY_RESULT_BACKEND_ENDPOINT"),
+    db=os.getenv("CELERY_REDIS_DB")
+) or CELERY_RESULT_BACKEND
 CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or CELERY_TIMEZONE
 
 # email settings
