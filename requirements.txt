@@ -41,3 +41,4 @@ sphinx_rtd_theme
 sphinx-intl
 django-storages
 pathlib
+xhtml2pdf==0.2.1
