@@ -213,7 +213,7 @@ def generate_thumbnail(channel):
 def get_channel_data(channel, site, default_thumbnail=None):
     import time
     start = time.time()
-    print "Starting " + channel.name
+    # print "Starting " + channel.name
     data = {
         "name": channel.name,
         "id": channel.id,
@@ -276,7 +276,7 @@ def get_channel_data(channel, site, default_thumbnail=None):
 
 
 
-    print channel.name + " time:", time.time() - start
+    # print channel.name + " time:", time.time() - start
     return data
 
 class Echo:
@@ -300,7 +300,7 @@ def stream_csv_response_generator(request):
                             .exclude(deleted=True)\
                             .filter(Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))\
                             .distinct()\
-                            .order_by('name')
+                            .order_by('name')[:3]
     site = get_current_site(request)
 
     pseudo_buffer = Echo()
@@ -309,7 +309,7 @@ def stream_csv_response_generator(request):
     yield writer.writerow(['Channel', 'ID', 'Public', 'Description', 'Tokens', 'Kind Counts',\
                     'Total Size', 'Language', 'Other Languages', 'Tags', 'Editors', 'Sample Pathway'])
 
-    pool = ThreadPool(processes=channels.count())
+    pool = ThreadPool(processes=3)
     threads = [pool.apply_async(get_channel_data, (c, site)) for c in channels]
 
     for t in threads:
@@ -323,9 +323,6 @@ def stream_csv_response_generator(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def download_channel_csv(request):
-    import time
-    start = time.time()
-
     """ Writes list of channels to csv, which is then returned """
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
@@ -333,7 +330,6 @@ def download_channel_csv(request):
     response = StreamingHttpResponse( stream_csv_response_generator(request), content_type="text/csv")
     response['Content-Disposition'] = 'attachment; filename="channels.csv"'
 
-    print "\n\n\nTotal time:", time.time() - start, "\n\n\n"
     return response
 
 @login_required
@@ -351,12 +347,12 @@ def download_channel_pdf(request):
                             .select_related('main_tree')\
                             .filter(public=True, deleted=False)\
                             .distinct()\
-                            .order_by('name')
+                            .order_by('name')[:3]
     site = get_current_site(request)
 
     default_thumbnail = get_default_thumbnail()
 
-    pool = ThreadPool(processes=channels.count())
+    pool = ThreadPool(processes=3)
 
 
     threads = [pool.apply_async(get_channel_data, (c, site, default_thumbnail)) for c in channels]
