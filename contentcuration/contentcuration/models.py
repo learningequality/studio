@@ -738,7 +738,7 @@ class FormatPreset(models.Model):
 
 
 class Language(models.Model):
-    id = models.CharField(max_length=7, primary_key=True)
+    id = models.CharField(max_length=14, primary_key=True)
     lang_code = models.CharField(max_length=3, db_index=True)
     lang_subcode = models.CharField(max_length=10, db_index=True, blank=True, null=True)
     readable_name = models.CharField(max_length=100, blank=True)
