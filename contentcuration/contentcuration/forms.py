@@ -129,6 +129,11 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         user.set_password(self.cleaned_data["password1"])
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
+        user.information = {
+            "uses": self.cleaned_data['use'].split(','),
+            "locations": self.cleaned_data['location'].split(','),
+            "space_needed": self.cleaned_data['storage'],
+        }
 
         if commit:
             user.save()
