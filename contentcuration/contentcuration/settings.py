@@ -54,7 +54,8 @@ INSTALLED_APPS = (
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
-    'search'
+    'search',
+    'storages'
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -241,6 +242,6 @@ CELERY_TIMEZONE = 'Africa/Nairobi'
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 AWS_ACCESS_KEY_ID = "development"
 AWS_SECRET_ACCESS_KEY = "development"
-AWS_STORAGE_BUCKET_NAME = 'kolibri-studio-content'
+AWS_STORAGE_BUCKET_NAME = 'kolibri-studio-storage'
 AWS_S3_ENDPOINT_URL = "http://localhost:9000"
-S3_BUCKET_NAME = 'kolibri-studio-content'
+AWS_AUTO_CREATE_BUCKET = True
