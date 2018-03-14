@@ -648,7 +648,7 @@ class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
             'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
             'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences',
-            'language', 'primary_token', 'priority')
+            'language', 'primary_token', 'priority', 'published_size')
 
 
 class AccessibleChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):

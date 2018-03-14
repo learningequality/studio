@@ -42,11 +42,19 @@ def send_invitation_email(request):
 
             request.user.can_view(channel_id)
 
-            invitation = Invitation.objects.get_or_create(invited = recipient,
-                                                        email = user_email,
-                                                        channel_id = channel_id,
-                                                        first_name=recipient.first_name if recipient.is_active else "Guest",
-                                                        last_name=recipient.last_name if recipient.is_active else " ")[0]
+            fields = {
+                "invited": recipient,
+                "email": user_email,
+                "channel_id": channel_id,
+                "first_name": recipient.first_name if recipient.is_active else "Guest",
+                "last_name": recipient.last_name if recipient.is_active else " "
+            }
+
+            # Need to break into two steps to avoid MultipleObjectsReturned error
+            invitation = Invitation.objects.filter(**fields).first()
+
+            if not invitation:
+                invitation = Invitation.objects.create(**fields)
 
             # Handle these values separately as different users might invite the same user again
             invitation.share_mode = share_mode
