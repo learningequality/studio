@@ -123,25 +123,21 @@ class FileListSerializer(serializers.ListSerializer):
                 secret_key="development",
                 secure=False,
             )
-            bucket = settings.S3_BUCKET_NAME
+            bucket = settings.AWS_STORAGE_BUCKET_NAME
             with transaction.atomic():
                 for file_id, data in update_files.items():
                     file_obj, _new = File.objects.get_or_create(pk=file_id)
-                    import pdb; pdb.set_trace()
 
                     # potential optimization opportunity
                     for attr, value in data.items():
                         if attr != "preset" and attr != "language":
                             setattr(file_obj, attr, value)
-                    file_path = generate_file_on_disk_name(file_obj.checksum, str(file_obj))
-                    try:
-                        obj_name = os.path.relpath(str(file_obj), file_path)
-                        client.fget_object(bucket, obj_name, file_path)
-                    except ResponseError:
-                        # file doesn't exist on object storage, raise an error
+                    file_path = generate_object_storage_name(file_obj.checksum, str(file_obj))
+
+                    if not default_storage.exists(file_path):
                         raise OSError("Error: file {} was not found".format(str(file_obj)))
 
-                    file = DjFile(open(file_path, 'wb+'))
+                    file = default_storage.open(file_path)
                     file_obj.file_on_disk = file
 
                     file_obj.uploaded_by = file_obj.uploaded_by or user
