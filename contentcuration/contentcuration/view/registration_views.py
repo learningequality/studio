@@ -173,6 +173,7 @@ class InformationRegistrationView(RegistrationView):
 
         record_user_registration_stats(user)
 
+
 def custom_password_reset(request, **kwargs):
     email_context = {'site': get_current_site(request), 'domain': request.META.get('HTTP_ORIGIN') or "http://{}".format(
         request.get_host() or Site.objects.get_current().domain)}
