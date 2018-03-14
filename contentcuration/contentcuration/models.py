@@ -275,7 +275,7 @@ def generate_storage_url(filename, *args):
     url = "http://{host}:{port}/{bucket}/{path}".format(
         host=host,
         port=port,
-        bucket=settings.S3_BUCKET_NAME,
+        bucket=settings.AWS_STORAGE_BUCKET_NAME,
         path=path,
     )
 
@@ -313,7 +313,7 @@ class ObjectStorage(Storage):
             secret_key="development",
             secure=False,
         )
-        self.bucket_name = settings.S3_BUCKET_NAME
+        self.bucket_name = settings.AWS_STORAGE_BUCKET_NAME
 
 
     def _open(self, name, mode='rb'):
