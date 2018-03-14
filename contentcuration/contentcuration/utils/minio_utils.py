@@ -8,6 +8,7 @@ from urlparse import urlparse
 import minio
 from django.conf import settings
 from minio import policy
+from minio.error import BucketAlreadyOwnedByYou, ResponseError
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def ensure_storage_bucket_public(bucket=None, will_sleep=True):
         time.sleep(5)
 
     if not bucket:
-        bucket = settings.S3_BUCKET_NAME
+        bucket = settings.AWS_STORAGE_BUCKET_NAME
 
     host = urlparse(settings.AWS_S3_ENDPOINT_URL).netloc
 
@@ -55,4 +56,14 @@ def ensure_storage_bucket_public(bucket=None, will_sleep=True):
         secure=False
     )
 
-    c.set_bucket_policy(bucket, "/", policy.Policy.READ_ONLY)
+    if not c.bucket_exists(bucket):
+        try:
+            c.make_bucket(bucket)
+        except BucketAlreadyOwnedByYou:
+            pass
+
+    try:
+        c.set_bucket_policy(bucket, "", policy.Policy.READ_ONLY)
+        logger.debug("Successfully set the bucket policy to read only!")
+    except ResponseError as e:
+        logger.warning("Error setting bucket {} to readonly: {}".format(bucket, e))
