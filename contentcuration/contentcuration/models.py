@@ -1,3 +1,4 @@
+import collections
 import functools
 import hashlib
 import json
@@ -20,6 +21,7 @@ from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
+from jsonfield import JSONField
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
 from pg_utils import DistinctSum
@@ -84,6 +86,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
+
+    information = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, null=True)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
