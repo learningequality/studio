@@ -437,6 +437,10 @@ class Channel(models.Model):
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
 
+        index_together = [
+            ["deleted", "public"]
+        ]
+
 
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)

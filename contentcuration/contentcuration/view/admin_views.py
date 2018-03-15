@@ -213,7 +213,7 @@ def generate_thumbnail(channel):
 def get_channel_data(channel, site, default_thumbnail=None):
     import time
     start = time.time()
-    # print "Starting " + channel.name
+    print "Starting " + channel.name
     data = {
         "name": channel.name,
         "id": channel.id,
@@ -276,7 +276,7 @@ def get_channel_data(channel, site, default_thumbnail=None):
 
 
 
-    # print channel.name + " time:", time.time() - start
+    print channel.name + " time:", time.time() - start
     return data
 
 class Echo:
@@ -348,6 +348,9 @@ def download_channel_pdf(request):
                             .filter(public=True, deleted=False)\
                             .distinct()\
                             .order_by('name')[:3]
+
+    print "Channel query time:", time.time() - start
+
     site = get_current_site(request)
 
     default_thumbnail = get_default_thumbnail()
