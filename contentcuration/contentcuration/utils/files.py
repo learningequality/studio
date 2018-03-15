@@ -1,15 +1,20 @@
 import copy
 import os
 import random
+import shutil
 import tempfile
 import zipfile
+
+from contentcuration.api import (write_file_to_storage,
+                                 write_raw_content_to_storage)
+from contentcuration.models import (File, generate_file_on_disk_name,
+                                    generate_object_storage_name)
 from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
-from contentcuration.api import write_file_to_storage, write_raw_content_to_storage
-from contentcuration.models import File, generate_file_on_disk_name, generate_object_storage_name
-from le_utils.constants import format_presets, content_kinds, file_formats
-from pressurecooker.videos import extract_thumbnail_from_video, compress_video
-from pressurecooker.images import create_tiled_image, create_image_from_pdf_page, create_waveform_image
+from le_utils.constants import content_kinds, file_formats, format_presets
+from pressurecooker.images import (create_image_from_pdf_page,
+                                   create_tiled_image, create_waveform_image)
+from pressurecooker.videos import compress_video, extract_thumbnail_from_video
 
 
 def create_file_from_contents(contents, ext=None, node=None, preset_id=None, uploaded_by=None):
@@ -121,10 +126,15 @@ def get_image_from_htmlnode(htmlfile, node=None, preset_id=None):
 
 def get_image_from_pdf(document, node=None, preset_id=None):
     ext = file_formats.PNG
+    orig_ext = document.file_format.extension
 
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf, tempfile.NamedTemporaryFile(suffix=".{}".format(orig_ext)) as localtempf:
+        # localtempf is where we store the file in case it's in object storage
+        shutil.copyfileobj(document.file_on_disk, localtempf)
         tempf.close()
-        create_image_from_pdf_page(document.file_on_disk.name, tempf.name)
+        localtempf.flush()
+
+        create_image_from_pdf_page(localtempf.name, tempf.name)
 
         with open(tempf.name, 'rb') as tf:
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=document.uploaded_by)
