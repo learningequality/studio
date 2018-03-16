@@ -143,9 +143,12 @@ def get_image_from_pdf(document, node=None, preset_id=None):
 def get_image_from_audio(audio, node=None, preset_id=None, max_num_of_points=None):
     ext = file_formats.PNG
     cmap_options = {'name': 'BuPu', 'vmin': 0.3, 'vmax': 0.7, 'color': 'black'}
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf, tempfile.NamedTemporaryFile(suffix=".{}".format(audio.file_format.extension)) as localtempf:
+        # localtempf is where we store the file in case it's in object storage
+        shutil.copyfileobj(audio.file_on_disk, localtempf)
         tempf.close()
-        create_waveform_image(audio.file_on_disk.name, tempf.name, max_num_of_points=max_num_of_points, colormap_options=cmap_options)
+        localtempf.flush()
+        create_waveform_image(localtempf.name, tempf.name, max_num_of_points=max_num_of_points, colormap_options=cmap_options)
         with open(tempf.name, 'rb') as tf:
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=audio.uploaded_by)
 
