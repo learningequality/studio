@@ -10,6 +10,7 @@ run.config:
     - ImageMagick6-6.9.9.20
     - gettext-tools-0.19.8.1nb1
     - oracle-jdk8-8.0.151
+    - ffmpeg3-3.4
     - nginx
 
   cache_dirs:
