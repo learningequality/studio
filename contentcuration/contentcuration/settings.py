@@ -14,6 +14,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import os
 import re
 import logging
+import pycountry
+
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -124,13 +126,13 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'contentcuration',                      # Or path to database file if using sqlite3.
+        'NAME': 'gonano',                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
 
         # For dev purposes only
-        'USER': 'learningequality',
-        'PASSWORD': 'kolibri',
-        'HOST': 'localhost',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'USER': os.getenv('DATA_DB_USER') or 'learningequality',
+        'PASSWORD': os.getenv('DATA_DB_PASS') or 'kolibri',
+        'HOST': os.getenv('DATA_DB_HOST') or 'localhost',      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': '',                      # Set to empty string for default.
     },
 }
@@ -174,6 +176,7 @@ USE_TZ = True
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
+    pycountry.LOCALES_DIR,
 )
 
 ugettext = lambda s: s
@@ -213,6 +216,8 @@ SITE_ID = 1
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
 SPACE_REQUEST_EMAIL = 'content@learningequality.org'
+REGISTRATION_INFORMATION_EMAIL = 'content@learningequality.org'
+HELP_EMAIL = 'content@learningequality.org'
 DEFAULT_FROM_EMAIL = 'Kolibri Studio <noreply@learningequality.org>'
 DEFAULT_LICENSE = 1
 
@@ -236,3 +241,9 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Africa/Nairobi'
+
+# GOOGLE CLOUD STORAGE SETTINGS
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+GS_BUCKET_NAME = 'kolibri-studio-content'
+GS_PROJECT_ID = 'nanobox-194019'
+GS_CRENDENTIALS = '/app/nanobox-2e573771bb80.json'

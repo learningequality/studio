@@ -150,4 +150,3 @@ You're all setup now, and ready to start the Studio local development server:
     python manage.py runserver --settings=contentcuration.dev_settings
 
 You should be able to login at http://127.0.0.1:8000 using `content@learningequality.org:admin123`.
-
