@@ -5,6 +5,7 @@ require("admin.less");
 var BaseViews = require("edit_channel/views");
 var dialog = require("edit_channel/utils/dialog");
 var stringHelper = require("edit_channel/utils/string_helper");
+var fileDownload = require("jquery-file-download");
 
 var AdminView = BaseViews.BaseView.extend({
     lists: [],
@@ -352,7 +353,25 @@ var ChannelItem = BaseAdminItem.extend({
         "click .delete_button": "delete_channel",
         "click .count_link": "load_counts",
         "change .channel_priority": "set_priority",
-        "click .invite_button": "open_sharing"
+        "click .invite_button": "open_sharing",
+        "click .download_csv": "download_csv"
+    },
+    download_csv: function() {
+        var self = this;
+        if(!this.$(".download_csv").hasClass("disabled")) {
+            this.$(".download_csv").attr("title", "Generating CSV...").addClass("disabled");
+            $.fileDownload(window.Urls.download_channel_content_csv(this.model.id), {
+                successCallback: function(url) {
+                    self.$(".download_csv").attr("title", "Download CSV").removeClass("disabled");
+                },
+                failCallback: function(responseHtml, url) {
+                    self.$(".download_csv").attr("title", "Download Failed");
+                    setTimeout(function() {
+                        self.$(".download_csv").attr("title", "Download CSV").removeClass("disabled");
+                    }, 2000);
+                }
+            });
+        }
     },
     set_priority: function() {
         var priority = this.$(".channel_priority").val();

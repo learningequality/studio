@@ -295,6 +295,7 @@ urlpatterns += [
     url(r'^api/get_all_users/$', admin_views.get_all_users, name='get_all_users'),
     url(r'^api/download_channel_csv/$', admin_views.download_channel_csv, name='download_channel_csv'),
     url(r'^api/download_channel_pdf/$', admin_views.download_channel_pdf, name='download_channel_pdf'),
+    url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', admin_views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/get_channel_kind_count/(?P<channel_id>[^/]+)$', admin_views.get_channel_kind_count, name='get_channel_kind_count'),
 ]
 

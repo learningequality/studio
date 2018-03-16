@@ -43,3 +43,4 @@ django-storages
 pathlib
 sqlalchemy==1.2.2
 xhtml2pdf==0.2.1
+progressbar==2.3
