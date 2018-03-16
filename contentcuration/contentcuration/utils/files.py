@@ -64,9 +64,11 @@ def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None,
 
 def extract_thumbnail_wrapper(file_object, node=None, preset_id=None):
     ext = file_formats.PNG
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf, tempfile.NamedTemporaryFile(suffix=".{}".format(file_object.file_format.extension)) as localtempf:
+        shutil.copyfileobj(file_object.file_on_disk, localtempf)
+        localtempf.flush()
         tempf.close()
-        extract_thumbnail_from_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
+        extract_thumbnail_from_video(localtempf.name, tempf.name, overwrite=True)
         with open(tempf.name, 'rb') as tf:
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=file_object.uploaded_by)
 
