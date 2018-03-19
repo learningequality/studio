@@ -1,3 +1,4 @@
+import collections
 import functools
 import hashlib
 import json
@@ -20,7 +21,8 @@ from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from jsonfield import JSONField
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
 from pg_utils import DistinctSum
 from rest_framework import permissions
@@ -84,6 +86,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
+
+    information = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, null=True)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -437,6 +441,10 @@ class Channel(models.Model):
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
 
+        index_together = [
+            ["deleted", "public"]
+        ]
+
 
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -734,11 +742,12 @@ class FormatPreset(models.Model):
 
 
 class Language(models.Model):
-    id = models.CharField(max_length=7, primary_key=True)
+    id = models.CharField(max_length=14, primary_key=True)
     lang_code = models.CharField(max_length=3, db_index=True)
-    lang_subcode = models.CharField(max_length=3, db_index=True, blank=True, null=True)
+    lang_subcode = models.CharField(max_length=10, db_index=True, blank=True, null=True)
     readable_name = models.CharField(max_length=100, blank=True)
     native_name = models.CharField(max_length=100, blank=True)
+    lang_direction = models.CharField(max_length=3, choices=languages.LANGUAGE_DIRECTIONS, default=languages.LANGUAGE_DIRECTIONS[0][0])
 
     def ietf_name(self):
         return "{code}-{subcode}".format(code=self.lang_code,

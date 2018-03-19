@@ -5,15 +5,19 @@ import logging
 import os
 import time
 import locale
+import sys
+reload(sys)
+sys.setdefaultencoding('UTF8')
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest, StreamingHttpResponse, FileResponse
+from django.views.decorators.http import condition
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
-from django.db.models import Q, Case, When, Value, IntegerField, Count, Sum, CharField
+from django.db.models import Q, Case, When, Value, IntegerField, Count, Sum, CharField, Max
 from django.db.models.functions import Concat
 from django.core.urlresolvers import reverse_lazy
 from django.template.loader import render_to_string, get_template
@@ -21,16 +25,20 @@ from django.template import Context
 from itertools import chain
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers
-from contentcuration.models import Channel, User, Invitation, ContentNode
+from contentcuration.models import Channel, User, Invitation, ContentNode, generate_file_on_disk_name, File, Language
 from contentcuration.utils.messages import get_messages
 from contentcuration.serializers import AdminChannelListSerializer, AdminUserListSerializer, CurrentUserSerializer
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
+from le_utils.constants import content_kinds
 
 from xhtml2pdf import pisa
 import cStringIO as StringIO
+from PIL import Image
+import base64
+from multiprocessing.pool import ThreadPool
 
 locale.setlocale(locale.LC_TIME, '')
 
@@ -187,72 +195,141 @@ def sizeof_fmt(num, suffix='B'):
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
-def get_sample_pathway(node):
-    """ Get a sample of the topic tree from the given node """
-    first_node = node.children.filter(kind_id="topic").first() or node.children.first()
-    if not first_node:
-        return []
-    return ["{} ({})".format(first_node.title, first_node.kind_id)] + get_sample_pathway(first_node)
-
 def pluralize_kind(kind, number):
     return "{} {}{}".format(number, kind.replace("html5", "HTML app").capitalize(), "s" if number != 1 else "")
 
-def generate_channel_list(request, public_only=False):
-    """ Get list of channels and extra metadata """
-    channel_list = []
-    channels = Channel.objects.prefetch_related('editors', 'secret_tokens').select_related('main_tree')
+def generate_thumbnail(channel):
+    THUMBNAIL_DIMENSION = 200
+    if channel.icon_encoding:
+        return channel.icon_encoding
+    elif channel.thumbnail_encoding:
+        return ast.literal_eval(channel.thumbnail_encoding).get('base64')
+    elif channel.thumbnail:
+        try:
+            checksum, ext = os.path.splitext(channel.thumbnail)
+            filepath = generate_file_on_disk_name(checksum, channel.thumbnail)
+            buffer = StringIO.StringIO()
 
-    if public_only:
-        channels = channels.filter(public=True, main_tree__published=True, deleted=False).order_by("name")
+            with Image.open(filepath) as image:
+                width, height = image.size
+                dimension = min([THUMBNAIL_DIMENSION, width, height])
+                image.thumbnail((dimension, dimension), Image.ANTIALIAS)
+                image.save(buffer, image.format)
+                return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(buffer.getvalue()))
+        except IOError:
+            pass
+
+
+def get_channel_data(channel, site, default_thumbnail=None):
+    import time
+    start = time.time()
+    print "Starting " + channel.name
+    data = {
+        "name": channel.name,
+        "id": channel.id,
+        "public": "Yes" if channel.public else "No",
+        "description": channel.description,
+        "language": channel.language and channel.language.readable_name,
+        "generated_thumbnail": default_thumbnail!=None and generate_thumbnail(channel) or default_thumbnail,
+        "url": "http://{}/channels/{}/edit".format(site, channel.id)
+    }
+
+    # Get information related to channel
+    tags = channel.secret_tokens.values_list('token', flat=True)
+    data["tokens"] = ", ".join(["{}-{}".format(t[:5], t[5:]) for t in tags if t != channel.id])
+    data["editors"] = ", ".join(list(channel.editors.annotate(name=Concat('first_name', Value(' '), \
+                                                'last_name', Value(' ('), 'email', Value(')'),\
+                                                output_field=CharField()))\
+                                      .values_list('name', flat=True)))
+    data["tags"] = ", ".join(channel.tags.exclude(tag_name=None).values_list('tag_name', flat=True).distinct())
+
+
+    # Get information related to nodes
+    nodes = channel.main_tree.get_descendants()\
+                            .select_related('parent', 'language', 'kind')\
+                            .prefetch_related('files')
+
+    # Get sample path at longest path
+    max_level = nodes.aggregate(max_level=Max('level'))['max_level']
+    deepest_node = nodes.filter(level=max_level).first()
+
+    if deepest_node:
+        pathway = deepest_node.get_ancestors(include_self=True)\
+                            .exclude(pk=channel.main_tree.pk)\
+                            .annotate(name=Concat('title', Value(' ('), 'kind_id', Value(')'), output_field=CharField()))\
+                            .values_list('name', flat=True)
+        data["sample_pathway"] = " -> ".join(pathway)
     else:
-        channels = channels.filter(Q(main_tree__published=True) & Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))).order_by("name")
+        data["sample_pathway"] = "Channel is empty"
 
-    for c in channels:
-        channel = {
-            "name": c.name,
-            "id": c.id,
-            "public": "Yes" if c.public else "No",
-            "description": c.description,
-            "language": c.language and c.language.readable_name,
-            "thumbnail": c.thumbnail,
-            "thumbnail_encoding": c.thumbnail_encoding and ast.literal_eval(c.thumbnail_encoding).get('base64'),
-            "url": "http://{}/channels/{}/edit".format(get_current_site(request), c.id)
-        }
+    # Get language information
+    node_languages = nodes.exclude(language=None).values_list('language__readable_name', flat=True).distinct()
+    file_languages = nodes.exclude(files__language=None).values_list('files__language__readable_name', flat=True)
+    language_list = list(set(chain(node_languages, file_languages)))
+    language_list = filter(lambda l: l != None and l != data['language'], language_list)
+    language_list = map(lambda l: l.replace(",", " -"), language_list)
+    language_list = sorted(map(lambda l: l.replace(",", " -"), language_list))
+    data["languages"] = ", ".join(language_list)
 
-        # Get information related to channel
-        tokens = list(c.secret_tokens.values_list('token', flat=True))
-        channel["tokens"] = ", ".join(["{}-{}".format(t[:5], t[5:]) for t in tokens if t != c.id])
-        channel["editors"] = ", ".join(list(c.editors.annotate(name=Concat('first_name', Value(' '), \
-                                                    'last_name', Value(' ('), 'email', Value(')'),\
-                                                    output_field=CharField()))\
-                                          .values_list('name', flat=True)))
+    # Get kind information
+    kind_list = nodes.values('kind_id')\
+                     .annotate(count=Count('kind_id'))\
+                     .order_by('kind_id')
+    data["kind_counts"] = ", ".join([pluralize_kind(k['kind_id'], k['count']) for k in kind_list])
 
-        # Get information related to nodes
-        nodes = c.main_tree.get_descendants().prefetch_related('files', 'tags', 'children', 'language')
-        channel["sample_pathway"] = " -> ".join(get_sample_pathway(c.main_tree))
-        channel["tags"] = ", ".join([t for t in nodes.values_list('tags__tag_name', flat=True).distinct() if t != None])
+    # Get file size
+    data["total_size"] = sizeof_fmt(nodes.exclude(kind_id=content_kinds.EXERCISE, published=False)\
+                        .values('files__checksum', 'files__file_size')\
+                      .distinct()\
+                      .aggregate(size=Sum('files__file_size'))['size'] or 0)
 
-        # Get language information
-        node_languages = nodes.exclude(language=None).values_list('language__readable_name', flat=True)
-        file_languages = nodes.values_list('files__language__readable_name', flat=True)
-        language_list = filter(lambda l: l != None and l != channel['language'], set(chain(node_languages, file_languages)))
-        channel["languages"] = ", ".join(language_list)
 
-        # Get file information
-        kind_list = nodes.values('kind_id')\
-                         .annotate(count=Count('kind_id'))\
-                         .order_by('kind_id')
-        channel["kind_counts"] = ", ".join([pluralize_kind(k['kind_id'], k['count']) for k in kind_list])
-        channel["total_size"] = sizeof_fmt(nodes.values('files__checksum', 'files__file_size')\
-                          .distinct()\
-                          .aggregate(size=Sum('files__file_size'))['size'] or 0)
 
-        channel_list.append(channel)
 
-    return channel_list
+    print channel.name + " time:", time.time() - start
+    return data
 
+class Echo:
+    """An object that implements just the write method of the file-like
+    interface.
+    """
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
+
+def get_default_thumbnail():
+    filepath = os.path.join(settings.STATIC_ROOT, 'img', 'kolibri_placeholder.png')
+    with open(filepath, 'rb') as image_file:
+        _, ext = os.path.splitext(filepath)
+        return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(image_file.read()))
+
+def stream_csv_response_generator(request):
+    """ Get list of channels and extra metadata """
+    channels = Channel.objects.prefetch_related('editors', 'secret_tokens', 'tags')\
+                            .select_related('main_tree')\
+                            .exclude(deleted=True)\
+                            .filter(Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))\
+                            .distinct()\
+                            .order_by('name')[:3]
+    site = get_current_site(request)
+
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+
+    yield writer.writerow(['Channel', 'ID', 'Public', 'Description', 'Tokens', 'Kind Counts',\
+                    'Total Size', 'Language', 'Other Languages', 'Tags', 'Editors', 'Sample Pathway'])
+
+    pool = ThreadPool(processes=3)
+    threads = [pool.apply_async(get_channel_data, (c, site)) for c in channels]
+
+    for t in threads:
+        data = t.get()
+        yield writer.writerow([data['name'], data['id'], data['public'], data['description'], data['tokens'],\
+                    data['kind_counts'], data['total_size'], data['language'], data['languages'], \
+                    data['tags'], data['editors'], data['sample_pathway']])
 
 @login_required
+@condition(etag_func=None)
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def download_channel_csv(request):
@@ -260,38 +337,58 @@ def download_channel_csv(request):
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
-    # Create the HttpResponse object with the appropriate CSV header.
-    response = HttpResponse(content_type='text/csv')
+    response = StreamingHttpResponse( stream_csv_response_generator(request), content_type="text/csv")
     response['Content-Disposition'] = 'attachment; filename="channels.csv"'
 
-    writer = csv.writer(response)
-    writer.writerow(['Channel', 'ID', 'Public', 'Description', 'Tokens', 'Kind Counts',\
-                    'Total Size', 'Language', 'Other Languages', 'Tags', 'Editors', 'Sample Pathway'])
-
-    channels = generate_channel_list(request)
-
-    # Write channels to csv file
-    for c in channels:
-        writer.writerow([c['name'], c['id'], c['public'], c['description'], c['tokens'], c['kind_counts'], \
-                         c['total_size'], c['language'], c['languages'], c['tags'], c['editors'], c['sample_pathway']])
-
     return response
-
 
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def download_channel_pdf(request):
-    template = get_template('export/channels_pdf.html')
-    context = Context({
-        "channels": generate_channel_list(request, public_only=True)
-    })
-    html  = template.render(context)
-    result = StringIO.StringIO()
 
-    pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("ISO-8859-1")), result)
+    import time
+    start = time.time()
+
+
+    template = get_template('export/channels_pdf.html')
+
+    channels = Channel.objects.prefetch_related('editors', 'secret_tokens', 'tags')\
+                            .select_related('main_tree')\
+                            .filter(public=True, deleted=False)\
+                            .distinct()\
+                            .order_by('name')[:3]
+
+    print "Channel query time:", time.time() - start
+
+    site = get_current_site(request)
+
+    default_thumbnail = get_default_thumbnail()
+
+    pool = ThreadPool(processes=3)
+
+
+    threads = [pool.apply_async(get_channel_data, (c, site, default_thumbnail)) for c in channels]
+    channel_list = []
+    for t in threads:
+        channel_list.append(t.get())
+    # channel_list = [get_channel_data(c, site, default_thumbnail) for c in channels]
+
+    context = Context({
+        "channels": channel_list
+    })
+
+    html = template.render(context)
+
+    result = StringIO.StringIO()
+    pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("UTF-8")), result, encoding='UTF-8', path=settings.STATIC_ROOT)
     if not pdf.err:
-        response = HttpResponse(result.getvalue())
+        response = FileResponse(result.getvalue())
         response['Content-Type'] = 'application/pdf'
         response['Content-disposition'] = 'attachment;filename=channels.pdf'
-        return response
+        response['Set-Cookie'] = "fileDownload=true; path=/";
+
+
+    print "\n\n\nTotal time:", time.time() - start, "\n\n\n"
+    return response
+

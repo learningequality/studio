@@ -5,15 +5,14 @@
 
 {{ sender.first_name }} {{ sender.last_name }} {% blocktrans %}has invited you to {{share_mode}} a channel at {% endblocktrans %}{{ site.name }}.
 
-{% trans "Please follow this link to accept the invitation:" %}
 {% if is_new %}
-{{ domain }}{% url 'accept_invitation_and_registration' user.id invitation_key %}
+{% trans "Please follow this link to create an account (you must be logged in to accept or decline invitations):" %}
+{{ domain }}{% url 'accept_invitation_and_registration' user.id %}
 {% else %}
-{{ domain }}{% url 'accept_invitation' invitation_key %}
+{% trans "Please log in to Kolibri Studio to accept or decline your invitation:" %}
+{{ domain }}{% url 'channels' %}
 {% endif %}
 
-{% trans "or if you'd like to decline the invitation, follow this link:" %}
-{{ domain }}{% url 'decline_invitation' invitation_key %}
 
 {% trans "Thanks for using our site!" %}
 
