@@ -10,7 +10,7 @@ reload(sys)
 sys.setdefaultencoding('UTF8')
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseNotFound, StreamingHttpResponse, FileResponse
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest, StreamingHttpResponse, FileResponse
 from django.views.decorators.http import condition
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
@@ -31,6 +31,7 @@ from contentcuration.serializers import AdminChannelListSerializer, AdminUserLis
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.response import Response
 from le_utils.constants import content_kinds
 
 from xhtml2pdf import pisa
@@ -50,21 +51,23 @@ EMAIL_PLACEHOLDERS = [
 ]
 
 def send_custom_email(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        try:
-            subject = render_to_string('registration/custom_email_subject.txt', {'subject': data["subject"]})
-            recipients = User.objects.filter(email__in=data["emails"]).distinct()
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-            for recipient in recipients:
-                text = data["message"].format(current_date=time.strftime("%A, %B %d"), current_time=time.strftime("%H:%M %Z"),**recipient.__dict__)
-                message = render_to_string('registration/custom_email.txt', {'message': text})
-                recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+    data = json.loads(request.body)
+    try:
+        subject = render_to_string('registration/custom_email_subject.txt', {'subject': data["subject"]})
+        recipients = User.objects.filter(email__in=data["emails"]).distinct()
 
-        except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        for recipient in recipients:
+            text = data["message"].format(current_date=time.strftime("%A, %B %d"), current_time=time.strftime("%H:%M %Z"),**recipient.__dict__)
+            message = render_to_string('registration/custom_email.txt', {'message': text})
+            recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
-        return HttpResponse(json.dumps({"success": True}))
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+    return HttpResponse(json.dumps({"success": True}))
 
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -85,6 +88,7 @@ def administration(request):
                                                 })
 
 @login_required
+@api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def get_all_channels(request):
@@ -94,9 +98,10 @@ def get_all_channels(request):
     channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors', 'viewers').distinct()
     channel_serializer = AdminChannelListSerializer(channel_list, many=True)
 
-    return HttpResponse(JSONRenderer().render(channel_serializer.data))
+    return Response(channel_serializer.data)
 
 @login_required
+@api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def get_channel_kind_count(request, channel_id):
@@ -121,6 +126,7 @@ def get_channel_kind_count(request, channel_id):
 
 
 @login_required
+@api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def get_all_users(request):
@@ -130,7 +136,7 @@ def get_all_users(request):
     user_list = User.objects.prefetch_related('editable_channels').prefetch_related('view_only_channels').distinct()
     user_serializer = AdminUserListSerializer(user_list, many=True)
 
-    return HttpResponse(JSONRenderer().render(user_serializer.data))
+    return Response(user_serializer.data)
 
 
 @login_required
@@ -140,22 +146,24 @@ def make_editor(request):
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
-    if request.method == 'POST':
-        data = json.loads(request.body)
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-        try:
-            user = User.objects.get(pk=data["user_id"])
-            channel = Channel.objects.get(pk=data["channel_id"])
+    data = json.loads(request.body)
 
-            channel.viewers.remove(user)                                        # Remove view-only access
-            channel.editors.add(user)                                           # Add user as an editor
-            channel.save()
+    try:
+        user = User.objects.get(pk=data["user_id"])
+        channel = Channel.objects.get(pk=data["channel_id"])
 
-            Invitation.objects.filter(invited=user, channel=channel).delete()   # Delete any invitations for this user
+        channel.viewers.remove(user)                                        # Remove view-only access
+        channel.editors.add(user)                                           # Add user as an editor
+        channel.save()
 
-            return HttpResponse(json.dumps({"success": True}))
-        except ObjectDoesNotExist:
-            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+        Invitation.objects.filter(invited=user, channel=channel).delete()   # Delete any invitations for this user
+
+        return HttpResponse(json.dumps({"success": True}))
+    except ObjectDoesNotExist:
+        return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -164,18 +172,20 @@ def remove_editor(request):
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
-    if request.method == 'POST':
-        data = json.loads(request.body)
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-        try:
-            user = User.objects.get(pk=data["user_id"])
-            channel = Channel.objects.get(pk=data["channel_id"])
-            channel.editors.remove(user)
-            channel.save()
+    data = json.loads(request.body)
 
-            return HttpResponse(json.dumps({"success": True}))
-        except ObjectDoesNotExist:
-            return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+    try:
+        user = User.objects.get(pk=data["user_id"])
+        channel = Channel.objects.get(pk=data["channel_id"])
+        channel.editors.remove(user)
+        channel.save()
+
+        return HttpResponse(json.dumps({"success": True}))
+    except ObjectDoesNotExist:
+        return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
 def sizeof_fmt(num, suffix='B'):
     """ Format sizes """

@@ -29,67 +29,67 @@ from contentcuration.statistics import record_user_registration_stats
 def send_invitation_email(request):
     if request.method != 'POST':
         raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-    else:
-        data = json.loads(request.body)
 
-        try:
-            user_email = data["user_email"]
-            channel_id = data["channel_id"]
-            share_mode = data["share_mode"]
-            retrieved_user = User.objects.get_or_create(email=user_email)
-            recipient = retrieved_user[0]
-            channel = Channel.objects.get(id=channel_id)
+    data = json.loads(request.body)
 
-            request.user.can_view(channel_id)
+    try:
+        user_email = data["user_email"]
+        channel_id = data["channel_id"]
+        share_mode = data["share_mode"]
+        retrieved_user = User.objects.get_or_create(email=user_email)
+        recipient = retrieved_user[0]
+        channel = Channel.objects.get(id=channel_id)
 
-            fields = {
-                "invited": recipient,
-                "email": user_email,
-                "channel_id": channel_id,
-                "first_name": recipient.first_name if recipient.is_active else "Guest",
-                "last_name": recipient.last_name if recipient.is_active else " "
-            }
+        request.user.can_view(channel_id)
 
-            # Need to break into two steps to avoid MultipleObjectsReturned error
-            invitation = Invitation.objects.filter(**fields).first()
+        fields = {
+            "invited": recipient,
+            "email": user_email,
+            "channel_id": channel_id,
+            "first_name": recipient.first_name if recipient.is_active else "Guest",
+            "last_name": recipient.last_name if recipient.is_active else " "
+        }
 
-            if not invitation:
-                invitation = Invitation.objects.create(**fields)
+        # Need to break into two steps to avoid MultipleObjectsReturned error
+        invitation = Invitation.objects.filter(**fields).first()
 
-            # Handle these values separately as different users might invite the same user again
-            invitation.share_mode = share_mode
-            invitation.sender = invitation.sender or request.user
-            invitation.save()
+        if not invitation:
+            invitation = Invitation.objects.create(**fields)
 
-            ctx_dict = {'sender': request.user,
-                        'site': get_current_site(request),
-                        'user': recipient,
-                        'share_mode': _(share_mode),
-                        'channel_id': channel_id,
-                        'invitation_key': invitation.id,
-                        'is_new': recipient.is_active is False,
-                        'channel': channel.name,
-                        'domain': request.META.get('HTTP_ORIGIN') or "http://{}".format(
-                            request.get_host() or Site.objects.get_current().domain),
-                        }
-            subject = render_to_string('permissions/permissions_email_subject.txt', ctx_dict)
-            message = render_to_string('permissions/permissions_email.txt', ctx_dict)
-            # message_html = render_to_string('permissions/permissions_email.html', ctx_dict)
-            recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )  # html_message=message_html,)
-            # recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL,)
-        except KeyError:
-            raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        # Handle these values separately as different users might invite the same user again
+        invitation.share_mode = share_mode
+        invitation.sender = invitation.sender or request.user
+        invitation.save()
 
-        return HttpResponse(json.dumps({
-            "id": invitation.pk,
-            "invited": invitation.invited_id,
-            "email": invitation.email,
-            "sender": invitation.sender_id,
-            "channel": invitation.channel_id,
-            "first_name": invitation.first_name,
-            "last_name": invitation.last_name,
-            "share_mode": invitation.share_mode,
-        }))
+        ctx_dict = {'sender': request.user,
+                    'site': get_current_site(request),
+                    'user': recipient,
+                    'share_mode': _(share_mode),
+                    'channel_id': channel_id,
+                    'invitation_key': invitation.id,
+                    'is_new': recipient.is_active is False,
+                    'channel': channel.name,
+                    'domain': request.META.get('HTTP_ORIGIN') or "http://{}".format(
+                        request.get_host() or Site.objects.get_current().domain),
+                    }
+        subject = render_to_string('permissions/permissions_email_subject.txt', ctx_dict)
+        message = render_to_string('permissions/permissions_email.txt', ctx_dict)
+        # message_html = render_to_string('permissions/permissions_email.html', ctx_dict)
+        recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )  # html_message=message_html,)
+        # recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL,)
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+
+    return HttpResponse(json.dumps({
+        "id": invitation.pk,
+        "invited": invitation.invited_id,
+        "email": invitation.email,
+        "sender": invitation.sender_id,
+        "channel": invitation.channel_id,
+        "first_name": invitation.first_name,
+        "last_name": invitation.last_name,
+        "share_mode": invitation.share_mode,
+    }))
 
 class UserRegistrationView(RegistrationView):
     form_class = RegistrationForm
