@@ -10,6 +10,7 @@ reload(sys)
 sys.setdefaultencoding('UTF8')
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from contentcuration.models import Channel
 from le_utils.constants import content_kinds, exercises
 from django.db.models import Sum
