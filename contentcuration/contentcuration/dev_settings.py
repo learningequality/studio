@@ -3,7 +3,7 @@ from .settings import *
 import logging
 
 DEBUG = True
-ALLOWED_HOSTS = ["studio.local", "192.168.31.9", "127.0.0.1"]
+ALLOWED_HOSTS = ["*", "192.168.99.102"]
 
 ACCOUNT_ACTIVATION_DAYS = 7
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
