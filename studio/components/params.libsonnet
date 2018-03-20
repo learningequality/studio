@@ -12,6 +12,7 @@
       name: "studio-app",
       nginxImage: "v4",
       replicas: 1,
+      settings: "contentcuration.settings",
       type: "NodePort",
     },
     "studio-redis": {

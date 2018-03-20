@@ -6,5 +6,8 @@ params + {
     //   name: "guestbook-dev",
     //   replicas: params.global.replicas,
     // },
+    "studio-app" +: {
+      "settings": "contentcuration.dev_settings"
+    }
   },
 }

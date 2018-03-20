@@ -3,15 +3,9 @@ environments:
   dev:
     destination:
       namespace: default
-      server: https://localhost:6443
+      server: https://192.168.99.102:8443
     k8sVersion: v1.7.0
     path: dev
-  test:
-    destination:
-      namespace: default
-      server: https://192.168.99.102:8443
-    k8sVersion: v1.8.0
-    path: test
 kind: ksonnet.io/app
 libraries:
   postgres:

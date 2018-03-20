@@ -46,6 +46,7 @@ local appDeployment = deployment
         container.envType.new("DATA_DB_NAME", postgres.database),
         container.envType.new("DATA_DB_PORT", "5432"),
         container.envType.new("DATA_DB_USER", postgres.user),
+        container.envType.new("DJANGO_SETTINGS_MODULE", params.settings),
         container.envType.new("STATICFILES_DIR", staticfilesVolumeMount.mountPath),
         container.envType.fromSecretRef("DATA_DB_PASS", postgres.name, "postgres-password"),
       ]),
