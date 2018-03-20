@@ -30,7 +30,7 @@ local staticfilesVolume = {
 
 local staticfilesVolumeMount = {
   name: "staticfiles",
-  mountPath: "/contentworkshop_static/",
+  mountPath: "/app/contentworkshop_static/",
 };
 
 local appDeployment = deployment
