@@ -12,7 +12,7 @@
       name: "studio-app",
       nginxImage: "v4",
       replicas: 1,
-      type: "ClusterIP",
+      type: "NodePort",
     },
     "studio-redis": {
       name: "studio-redis",
