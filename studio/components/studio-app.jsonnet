@@ -27,15 +27,15 @@ local appDeployment = deployment
     params.name,
     params.replicas,
     container
-      .new(params.name, params.image)
+      .new("app", params.image)
       .withPorts(containerPort.new(params.appPort))
       # add our secret variables
       .withEnvMixin([
-        container.envType.new("DB_CREDENTIALS_HOST", postgres.name),
-        container.envType.new("DB_CREDENTIALS_DB_NAME", postgres.database),
-        container.envType.new("DB_CREDENTIALS_PORT", "5432"),
-        container.envType.new("DB_CREDENTIALS_USER", postgres.user),
-        container.envType.fromSecretRef("DB_CREDENTIALS_PASSWORD", postgres.name, "postgres-password"),
+        container.envType.new("DATA_DB_HOST", postgres.name),
+        container.envType.new("DATA_DB_NAME", postgres.database),
+        container.envType.new("DATA_DB_PORT", "5432"),
+        container.envType.new("DATA_DB_USER", postgres.user),
+        container.envType.fromSecretRef("DATA_DB_PASS", postgres.name, "postgres-password"),
       ]),
       labels)
   # add our nginx proxy

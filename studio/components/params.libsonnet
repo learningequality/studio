@@ -7,7 +7,7 @@
     // Component-level parameters, defined initially from 'ks prototype use ...'
     // Each object below should correspond to a component in the components/ directory
     "studio-app": {
-      image: "gcr.io/github-learningequality-studio:abf66f65d4fb65ac235f0be2dfbd070e763ac977",
+      image: "gcr.io/github-learningequality-studio/app:417269950bf748aceab1945e80d625716611f8271",
       name: "studio-app",
       replicas: 1,
       appPort: 8080,
