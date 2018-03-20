@@ -7,10 +7,11 @@
     // Component-level parameters, defined initially from 'ks prototype use ...'
     // Each object below should correspond to a component in the components/ directory
     "studio-app": {
-      image: "gcr.io/github-learningequality-studio/app:417269950bf748aceab1945e80d625716611f8271",
+      appPort: 8081,
+      image: "d72e21049c7b480f5a74c745d8164d49a15b2dd7",
       name: "studio-app",
+      nginxImage: "v4",
       replicas: 1,
-      appPort: 8080,
       type: "ClusterIP",
     },
     "studio-redis": {

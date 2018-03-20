@@ -4,6 +4,7 @@ local postgres = std.extVar("__ksonnet/params").components["studio-postgres"];
 local k = import "k.libsonnet";
 local deployment = k.apps.v1beta1.deployment;
 local container = k.apps.v1beta1.deployment.mixin.spec.template.spec.containersType;
+local volume = k.apps.v1beta1.deployment.mixin.spec.template.spec.volumesType;
 local containerPort = container.portsType;
 local service = k.core.v1.service;
 local servicePort = k.core.v1.service.mixin.spec.portsType;
@@ -12,7 +13,7 @@ local targetPort = params.containerPort;
 local labels = {app: params.name};
 
 local serviceListeningPort = 80;
-local podListeningPort = 80;
+local podListeningPort = 8080;
 
 local appService = service
   .new(
@@ -22,12 +23,22 @@ local appService = service
   )
   .withType(params.type);
 
+local staticfilesVolume = {
+  name: "staticfiles",
+  emptyDir: {}
+};
+
+local staticfilesVolumeMount = {
+  name: "staticfiles",
+  mountPath: "/contentworkshop_static/",
+};
+
 local appDeployment = deployment
   .new(
     params.name,
     params.replicas,
     container
-      .new("app", params.image)
+      .new("app", "gcr.io/github-learningequality-studio/app:" + params.image)
       .withPorts(containerPort.new(params.appPort))
       # add our secret variables
       .withEnvMixin([
@@ -40,8 +51,12 @@ local appDeployment = deployment
       labels)
   # add our nginx proxy
   .withContainersMixin(
-      container.new("nginx-proxy", "learningequality/contentworkshop-app-nginx-proxy:v1")
+      container.new("nginx-proxy", "learningequality/contentworkshop-app-nginx-proxy:" + params.nginxImage)
       .withPorts(containerPort.new(podListeningPort))
-  );
+  )
+
+  # add our staticfiles volume mount
+  .withVolumes(staticfilesVolume)
+  + deployment.mapContainers(function(c) c.withVolumeMounts(staticfilesVolumeMount));
 
 k.core.v1.list.new([appService, appDeployment])
