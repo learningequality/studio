@@ -1186,7 +1186,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     if(!this.model.get("title")) {
       $("#input_title").addClass("invalid_field");
       this.error = this.get_translation("title_error");
-    } else if(this.isoriginal && !this.model.get("kind") === "topic" && !license) {
+    } else if(this.isoriginal && this.model.get("kind") !== "topic" && !license) {
       $("#license_select").addClass("invalid_field");
       this.error = this.get_translation("license_error");
     } else if (this.isoriginal && this.model.get("kind") !== "topic" && license.get("copyright_holder_required") && !this.model.get("copyright_holder")) {
