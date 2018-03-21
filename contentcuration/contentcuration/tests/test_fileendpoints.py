@@ -2,7 +2,6 @@ import pytest
 import tempfile
 from mixer.backend.django import mixer
 from django.conf import settings
-from contentcuration.api import get_file_diff
 
 pytestmark = pytest.mark.django_db
 
@@ -145,7 +144,3 @@ def file_diff(fileobj_id1, fileobj_id2, fileobj_id3, fileobj_id4):
         fileobj_id3,
         fileobj_id4,
     ]
-
-def test_file_diff(file_list, file_diff):
-    returned_list = get_file_diff(file_list)
-    assert set(returned_list) == set(file_diff)
