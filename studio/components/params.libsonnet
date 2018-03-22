@@ -8,7 +8,7 @@
     // Each object below should correspond to a component in the components/ directory
     "studio-app": {
       appPort: 8081,
-      image: "d72e21049c7b480f5a74c745d8164d49a15b2dd7",
+      image: "c248d769ac56d2aa8594b460286d1188e5a6dca0",
       name: "studio-app",
       nginxImage: "v4",
       replicas: 1,
@@ -25,6 +25,14 @@
       password: "notsecure",
       database: "content-curation",
       user: "www-data",
+    },
+    minio: {
+      containerPort: 9000,
+      image: "minio/minio",
+      name: "minio",
+      replicas: 1,
+      servicePort: 80,
+      type: "ClusterIP",
     },
   },
 }
