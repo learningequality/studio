@@ -1,4 +1,4 @@
-COMMIT := `git rev-parse HEAD`
+COMMIT := latest
 
 imagebuild:
-	docker build ../../../ -f $$PWD/Dockerfile -t gcr.io/github-learningequality-studio/app:$(COMMIT)
+	docker build ../../../ -f $$PWD/Dockerfile -t github-learningequality-studio/app:$(COMMIT)

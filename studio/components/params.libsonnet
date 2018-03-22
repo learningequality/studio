@@ -8,7 +8,7 @@
     // Each object below should correspond to a component in the components/ directory
     "studio-app": {
       appPort: 8081,
-      image: "c248d769ac56d2aa8594b460286d1188e5a6dca0",
+      image: "github-learningequality-studio/app:latest",
       name: "studio-app",
       nginxImage: "v4",
       replicas: 1,
