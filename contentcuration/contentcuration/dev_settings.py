@@ -1,6 +1,7 @@
-from .settings import *
-
 import logging
+import os
+
+from .settings import *
 
 DEBUG = True
 ALLOWED_HOSTS = ["*", "192.168.99.102"]
@@ -38,6 +39,29 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.logging.LoggingPanel',
     'debug_toolbar.panels.redirects.RedirectsPanel',
 ]
+
+# set loggers to log on both stderr and a django.log file
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.getenv('DJANGO_LOG_FILE') or 'django.log'
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': True,
+        }
+    }
+}
 
 AWS_ACCESS_KEY_ID = "development"
 AWS_SECRET_ACCESS_KEY = "development"

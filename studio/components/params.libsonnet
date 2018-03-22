@@ -13,6 +13,7 @@
       nginxImage: "v4",
       replicas: 1,
       settings: "contentcuration.settings",
+      log_file: "/var/log/django.log",
       type: "NodePort",
     },
     "studio-redis": {
