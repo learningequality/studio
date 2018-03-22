@@ -33,6 +33,7 @@
       replicas: 1,
       servicePort: 80,
       type: "ClusterIP",
+      size: "5Gi",
     },
   },
 }

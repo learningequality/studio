@@ -31,7 +31,7 @@ local volumeClaim =
   persistentVolumeClaim.new()
 + persistentVolumeClaim.mixin.metadata.withName(volumeClaimRef.name)
 + persistentVolumeClaim.mixin.spec.withAccessModes("ReadWriteOnce")
-+ persistentVolumeClaim.mixin.spec.resources.withRequests({storage: "5Gi"});
++ persistentVolumeClaim.mixin.spec.resources.withRequests({storage: params.size});
 
 local volumeClaimMount = {
   name: volumeClaimRef.name,
