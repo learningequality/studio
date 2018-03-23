@@ -1,0 +1,102 @@
+local env = std.extVar("__ksonnet/environments");
+local params = std.extVar("__ksonnet/params").components["studio-app"];
+local postgres = std.extVar("__ksonnet/params").components["studio-postgres"];
+local studioRedis = std.extVar("__ksonnet/params").components["studio-redis"];
+local k = import "k.libsonnet";
+local deployment = k.apps.v1beta1.deployment;
+local container = k.apps.v1beta1.deployment.mixin.spec.template.spec.containersType;
+local envVar = container.envType;
+local volume = k.apps.v1beta1.deployment.mixin.spec.template.spec.volumesType;
+local containerPort = container.portsType;
+local service = k.core.v1.service;
+local servicePort = k.core.v1.service.mixin.spec.portsType;
+
+local targetPort = params.containerPort;
+local labels = {app: params.name};
+local workerLabels = {app: params.workerName};
+
+local serviceListeningPort = 80;
+local podListeningPort = 8080;
+
+local appService = service
+  .new(
+    params.name,
+    labels,
+    servicePort.new(serviceListeningPort, podListeningPort)
+  )
+  .withType(params.type);
+
+local staticfilesVolume = {
+  name: "staticfiles",
+  emptyDir: {}
+};
+
+local staticfilesVolumeMount = {
+  name: "staticfiles",
+  mountPath: "/app/contentworkshop_static/",
+};
+
+
+## Variables shared across both workers and app
+
+# django config vars
+local django_config_vars = [
+  envVar.new("DJANGO_SETTINGS_MODULE", params.settings),
+  envVar.new("DJANGO_LOG_FILE", params.log_file),
+];
+
+# DB vars
+local db_vars = [
+  envVar.new("DATA_DB_HOST", postgres.name),
+  envVar.new("DATA_DB_NAME", postgres.database),
+  envVar.new("DATA_DB_PORT", "5432"),
+  envVar.new("DATA_DB_USER", postgres.user),
+  envVar.fromSecretRef("DATA_DB_PASS", postgres.name, "postgres-password"),
+];
+
+# celery vars
+local celery_vars = [
+  envVar.new("CELERY_TIMEZONE", "America/Los_Angeles"),
+  envVar.new("CELERY_REDIS_DB", "0"),
+  envVar.new("CELERY_BROKER_ENDPOINT", studioRedis.name),
+  envVar.new("CELERY_RESULT_BACKEND_ENDPOINT", studioRedis.name),
+  envVar.fromSecretRef("CELERY_REDIS_PASSWORD", studioRedis.name, "redis-password"),
+];
+
+local appDeployment = deployment
+  .new(
+    params.name,
+    params.replicas,
+    container
+      .new("app", params.image)
+      .withPorts(containerPort.new(params.appPort))
+      .withEnv(
+        # env vars unique to the app servers
+        envVar.new("STATICFILES_DIR", staticfilesVolumeMount.mountPath),
+      )
+      .withEnvMixin(django_config_vars)
+      .withEnvMixin(db_vars)
+      .withEnvMixin(celery_vars),
+      labels)
+  # add our nginx proxy
+  .withContainersMixin(
+      container.new("nginx-proxy", "learningequality/contentworkshop-app-nginx-proxy:" + params.nginxImage)
+      .withPorts(containerPort.new(podListeningPort))
+  )
+
+  # add our staticfiles volume mount
+  .withVolumes(staticfilesVolume)
+  + deployment.mapContainers(function(c) c.withVolumeMounts(staticfilesVolumeMount));
+
+local workersDeployment = deployment.new(
+    params.workerName,
+    params.workerReplicas,
+    container
+    .new(params.name, params.image)
+    .withEnvMixin(django_config_vars)
+    .withEnvMixin(db_vars)
+    .withEnvMixin(celery_vars)
+    .withCommand(["make", "prodceleryworkers"]),
+    workerLabels);
+
+k.core.v1.list.new([appService, appDeployment, workersDeployment])

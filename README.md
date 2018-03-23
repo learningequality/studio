@@ -1,148 +1,234 @@
-## LE Kolibri Studio
+# Kolibri Studio
+
+Kolibri Studio is a web application and content repository designed to deliver
+educational materials to [Kolibri](http://learningequality.org/kolibri/) apps.
+Kolibri Studio supports the following workflows:
+  - Create, edit, organize, and publish content channels in the format suitable
+    for import from Kolibri.
+  - Content curation and remixing of existing channels into custom channels 
+    aligned to various educational standards, country curricula, and special needs.
+  - New content can be upload through the web interface or using programatically
+    using `ricecooker`-powered chef scripts.
 
-Django app for the Content Curation project.
+Kolibri Studio uses Django for the backend and Backbone.js for the frontend.
 
-### Getting the codebase and configuring your git path
 
-* [Fork the repo](https://github.com/fle-internal/content-curation) to your own remote github repository first
+## Getting a local preview of Studio
 
-* Then, clone the repository into your local files
+One of Kolibri Studio's deployment methods use Kubernetes and Docker. If you want a 
+quick and easy way to get Studio up and running with minimal configuration,
+this is the method you want to use. This works best on a Linux or MacOS machine.
 
-	git clone https://github.com/fle-internal/content-curation.git
+## Prerequisites
 
-* Type in `git remote -v` to check what origin and upstream are tracking. Make sure origin refers to your remote repository, `yourusername/content-curation.git` and upstream refers to `fle-internal/content-curation.git`.
-If not, use these commands:
+Download the following applications on to your local machine, in order:
 
-	Tracking upstream:
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), the program 
+to control Kubernetes clusters.
 
-	`git remote add upstream git@github.com:fle-internal/content-curation.git`
-	`git remote set-url upstream git@github.com:fle-internal/content-curation.git`
+- [Docker](https://docs.docker.com/install/), the containerization platform LE uses.
 
-	Tracking origin:
+- [ksonnet](https://ksonnet.io/#get-started), an abstracting application on top
+  of kubectl to make deployments easier.
 
-	`git remote set-url origin git@github.com:yourusername/content-curation.git`
+- [Minikube](https://github.com/kubernetes/minikube#installation), an 
+application to get a local Kubernetes cluster up and running.
 
-### Running your server inside of vagrant
 
-We've set up a `vagrant` virtual machine to simplify the development process!
+### Deploying on Minikube
 
-* Make sure you've installed:
-	- vagrant
-	- virtualbox (or any other virtual machine software. You're on your own there.)
+Follow each of these steps in your terminal to get a local Studio deployment 
+in a cluster on your local machine:
 
+  1. Clone the Studio repo to your local machine:
 
-* set up your machine (this will take a while)
+  ```bash
+  $ git clone https://github.com/learningequality/studio
+  $ cd studio/
+  ```
+  
+  1. Go to the `k8s/` directory in the Kolibri studio repo:
 
-	`vagrant up`
+  ```bash
+  $ cd k8s/
+  ```
 
-* Run the server
+  1. Get your local Kubernetes cluster up and running using Minikube:
+  
+  ```bash
+  $ minikube start --kubernetes-version v1.8.0
+  ```
+  
+  This should start the Kubernetes cluster, and set up kubectl to 
+  refer to the minikube cluster.
+  
+  1. Point the docker command to the docker daemon running in Minikube:
 
-	`make vagrantdevserver`
+  ```bash
+  $ eval $(minikube docker-env)
+  ```
+  
+  1. Build the docker images:
 
-	Note: See the other `make` commands in `Makefile`.
+  ```bash
+  $ make build
+  ```
+  
+  1. Point ksonnet to the cluster by creating a new environment:
 
-* Access your server on `192.168.31.9:8000`
+  ```
+  $ ks env add test
+  ```
 
+  1. Use the images to deploy Kolibri Studio:
+  
+  ```
+  $ ks apply test
+  ```
+  
+  1. Once Studio is ready to use (it should take about a minute), run this command:
+  
+  ```
+  $ minikube service studio-app --url
+  ```
+  
+  and open the IP address displayed, in to your browser. You should now see the Studio login page!
+  
 
-* Turn off the machine when you're done:
 
-	`vagrant halt`
+## Developer instructions
 
-### Setting up your environment manually
+Follow the instructions below to setup your dev environment and get started.
 
-Note: If you're running ubuntu, you can use the `provision.sh` script that we use in the vagrantfile to do the entire process for you. You'll need sudo!
 
-* You're going to need the following packages to run the server:
-	- python (2.7)
-	- python-pip
-	- python-dev
-	- postgresql-server-dev-all
-	- postgresql-contrib
-	- postgresql-client
-	- postgresql
-	- ffmpeg
-	- nodejs
-	- python-tk
-	- libmagickwand-dev
+### Get the code
 
+  - Fork the [studio repo](https://github.com/learningequality/studio) to create
+    a copy of the studio repository under your own username on github.
+    Note: the code examples below assume your username is `yourusername`, please
+    modify and replace with your own user name before running the commands.
 
-* If you're on ubuntu, you can use `apt` to install the packages:
+  - Clone your fork of the repository to your local machine:
+         
+        cd MyCodingProjectsDir
+        git clone git@github.com:yourusername/studio.git
 
-`apt-get install -y python python-pip python-dev postgresql-server-dev-all postgresql-contrib postgresql-client postgresql ffmpeg nodejs python-tk libmagickwand-dev`
+  - The folder `MyCodingProjectsDir/studio` now contains the latest Studio code.
 
-* Set up your virtual environment
 
-	`pip install virtualenv` Installs your virtual environment
 
-	`virtualenv yourfoldername` Creates a folder for your virtual environment
+### Setting up your local development environment
 
-	`source yourfoldername/scripts/activate` Activates your virtual environment
+#### Install software prerequisites
 
-	IMPORTANT: Make sure you have done the above steps and are inside your virtual environment before continuing on.
+You need the following software installed on your machine to run Studio:
+  - python (2.7)
+  - python-pip
+  - nodejs
+  - Postgres DB
+  - redis
+  - ffmpeg
+  - python-tk
+  - libmagickwand-dev
 
-	`pip install -r requirements.txt` Installs python dependencies within your virtual environment
 
-	`pip install -r requirements_dev.txt` will also install dependencies that will be helpful for development and required if you're using the `--settings=contentcuration.dev_settings` flag to run your server (see below)
+On Ubuntu or Debian, you can install all the necessary packages using this command:
 
-*	Install the javascript dependencies listed in packages.json:
+    apt-get install -y  python python-pip python-dev python-tk \
+        postgresql-server-dev-all postgresql-contrib postgresql-client postgresql \
+        ffmpeg nodejs libmagickwand-dev
 
-	`npm install`
+On Windows, you'll need to download and install Postgres and Redis manually.
 
-* Set up the database
+On Mac OS X, you can install the corresponding packages using Homebrew:
 
-	1. [Install postgres](https://www.postgresql.org/download/) if you don't have it already. If you're using a package manager, this includes:
-		* postgresql
-		* postgresql-contrib
-		* postgresql-server-dev-all (to build psycopg2)
+    brew install  postgresql@9.6 redis node ffmpeg
+    brew link --force postgresql@9.6
 
-	2. Create a `postgres` user:
 
-	`$ sudo su postgres`
 
-	`$ psql`
+#### Set up python dependencies in a virtual environment
 
-	`# CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';`
+    virtualenv -p python2.7 venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    pip install -r requirements_dev.txt
 
-	3. Create a database
+The file `requirements_dev.txt` contains dependencies that will be helpful for
+development and required when using the `--settings=contentcuration.dev_settings`
+flag to run the server in development mode.
 
-	`# CREATE DATABASE "contentcuration" WITH TEMPLATE = template0 OWNER = "learningequality"; `
 
-	4. Make database migrations
+#### Install javascript dependencies
 
-	`$ cd contentcuration`
+All the javascript dependencies are listed in `package.json`. To install them run:
 
-	`$ python manage.py makemigrations`
+    npm install
 
-	5. Migrate and finish off the database
 
-	`$ python manage.py migrate --settings=contentcuration.dev_settings`
 
-	`$ python manage.py loadconstants --settings=contentcuration.dev_settings`
+#### Set up the database and start redis
 
-	`$ python manage.py calculateresources --settings=contentcuration.dev_settings --init`
+  1. Install [postgres](https://www.postgresql.org/download/) if you don't have
+     it already. If you're using a package manager, you need to make sure you install
+     the following packages: `postgresql`, `postgresql-contrib`, and `postgresql-server-dev-all`
+     which will be required to build `psycopg2` python driver.
 
-	`$ python manage.py collectstatic --settings=contentcuration.dev_settings`
+  2. Make sure postgres is running. 
+     
+         service postgresql start
+         # or pg_ctl -D /usr/local/var/postgresql@9.6 start
+     
+  3. Create a database user with username `learningequality` and password `kolibri`:
+     
+         sudo su postgres
+         psql
+           CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
 
-	`$ python manage.py collectstatic_js_reverse --settings=contentcuration.dev_settings`
+  4. Create a database called `contentcuration`
+     
+         CREATE DATABASE "contentcuration" WITH TEMPLATE = template0 OWNER = "learningequality";
 
+  5. Make sure the Redis server is running (used for job queue)
 
+         service redis-server start
+         # mac: redis-server /usr/local/etc/redis.conf
 
 
-* Run your server and start developing! Make sure you're in your virtual environment each time before you run the server.
 
-	`	python manage.py runserver --settings=contentcuration.dev_settings`
+#### Run all database migrations and load constants
 
-* Visit the localhost link that is presented on your console.
+You'll only need to run these commands once, to setup the necessary tables and
+constants in the database:
 
-### Adding files, committing, and pushing to your local repo:
+    cd contentcuration
+    python manage.py makemigrations
+    python manage.py migrate --settings=contentcuration.dev_settings
+    python manage.py loadconstants --settings=contentcuration.dev_settings
+    python manage.py calculateresources --settings=contentcuration.dev_settings --init
+    python manage.py collectstatic --noinput --settings=contentcuration.dev_settings
+    python manage.py collectstatic_js_reverse --settings=contentcuration.dev_settings
 
-When you're ready to submit your work, make sure you are not in your virtual environment.
-Type in `deactivate` to exit your virtual environment.
+For your convenience, we've prepared an admin user fixture with username 
+`content@learningequality.org` and password `admin123` for you. Load it using:
 
-Then:
+    python manage.py \
+      loaddata contentcuration/contentcuration/fixtures/admin_user.json \
+      --settings=contentcuration.dev_settings
 
-	git add .
-	git commit -m "message that says what your code accomplished"
-	git push origin yourbranch
+You can also load admin user token `26a51f88ae50f4562c075f8031316eff34c58eb8`:
 
-And visit the [pull request page](https://github.com/fle-internal/fle-home/pulls) to get your code in!
+    python manage.py \
+      loaddata contentcuration/contentcuration/fixtures/admin_user_token.json \
+      --settings=contentcuration.dev_settings
+
+This token is used to authenticate API calls, like when using `ricecooker` scripts.
+
+
+#### Start the dev server
+
+You're all setup now, and ready to start the Studio local development server:
+
+    python manage.py runserver --settings=contentcuration.dev_settings
+
+You should be able to login at http://127.0.0.1:8000 using `content@learningequality.org:admin123`.

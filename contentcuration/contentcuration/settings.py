@@ -14,6 +14,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import os
 import re
 import logging
+import pycountry
+
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,7 +23,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STORAGE_ROOT = "storage"
 DB_ROOT = "databases"
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
+DB_ROOT = os.path.join(BASE_DIR, "databases")
 
 PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
 
@@ -50,7 +53,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rest_framework',
     'django_js_reverse',
-    'kolibri.content',
+    'kolibri_content',
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
@@ -125,7 +128,7 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'gonano',                      # Or path to database file if using sqlite3.
+        'NAME': os.getenv("DATA_DB_NAME") or 'gonano',  #  Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
 
         # For dev purposes only
@@ -138,7 +141,7 @@ DATABASES = {
 
 
 DATABASE_ROUTERS = [
-    "kolibri.content.content_db_router.ContentDBRouter",
+    "kolibri_content.router.ContentDBRouter",
 ]
 
 # LOGGING = {
@@ -175,6 +178,7 @@ USE_TZ = True
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
+    pycountry.LOCALES_DIR,
 )
 
 ugettext = lambda s: s
@@ -214,6 +218,8 @@ SITE_ID = 1
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
 SPACE_REQUEST_EMAIL = 'content@learningequality.org'
+REGISTRATION_INFORMATION_EMAIL = 'content@learningequality.org'
+HELP_EMAIL = 'content@learningequality.org'
 DEFAULT_FROM_EMAIL = 'Kolibri Studio <noreply@learningequality.org>'
 DEFAULT_LICENSE = 1
 
@@ -233,6 +239,17 @@ IGNORABLE_404_URLS = [
 # CELERY CONFIGURATIONS
 BROKER_URL = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+BROKER_URL = "redis://:{password}@{endpoint}:/{db}".format(
+    password=os.getenv("CELERY_REDIS_PASSWORD") or "",
+    endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379",
+    db=os.getenv("CELERY_REDIS_DB") or "0"
+)
+CELERY_RESULT_BACKEND = "redis://:{password}@{endpoint}:/{db}".format(
+    password=os.getenv("CELERY_REDIS_PASSWORD") or "",
+    endpoint=os.getenv("CELERY_RESULT_BACKEND_ENDPOINT") or "localhost:6379",
+    db=os.getenv("CELERY_REDIS_DB") or "0"
+) or CELERY_RESULT_BACKEND
+CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or CELERY_TIMEZONE
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

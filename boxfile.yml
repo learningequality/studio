@@ -11,6 +11,7 @@ run.config:
     - gettext-tools-0.19.8.1nb1
     - oracle-jdk8-8.0.151
     - ffmpeg3-3.4
+    - libX11-1.6.5
     - nginx
 
   cache_dirs:

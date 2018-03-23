@@ -182,7 +182,7 @@ urlpatterns = [
     url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
     url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
     url(r'^staging_not_found/$', views.staging_not_found, name='staging_not_found'),
-    url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
+    url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
     url(r'^get_user_channels/$', views.get_user_channels, name='get_user_channels'),
     url(r'^get_user_bookmarked_channels/$', views.get_user_bookmarked_channels, name='get_user_bookmarked_channels'),
     url(r'^get_user_edit_channels/$', views.get_user_edit_channels, name='get_user_edit_channels'),
@@ -209,18 +209,18 @@ urlpatterns += [
 
 # Add node api enpoints
 urlpatterns += [
-    url(r'^api/get_nodes_by_ids$', node_views.get_nodes_by_ids, name='get_nodes_by_ids'),
-    url(r'^api/get_total_size$', node_views.get_total_size, name='get_total_size'),
+    url(r'^api/get_nodes_by_ids/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids, name='get_nodes_by_ids'),
+    url(r'^api/get_total_size/(?P<ids>[^/]*)$', node_views.get_total_size, name='get_total_size'),
     url(r'^api/duplicate_nodes/$', node_views.duplicate_nodes, name='duplicate_nodes'),
     url(r'^api/move_nodes/$', node_views.move_nodes, name='move_nodes'),
-    url(r'^api/get_nodes_by_ids_simplified$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
-    url(r'^api/get_nodes_by_ids_complete$', node_views.get_nodes_by_ids_complete, name='get_nodes_by_ids_complete'),
+    url(r'^api/get_nodes_by_ids_simplified/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
+    url(r'^api/get_nodes_by_ids_complete/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids_complete, name='get_nodes_by_ids_complete'),
     url(r'^api/create_new_node$', node_views.create_new_node, name='create_new_node'),
-    url(r'^api/get_node_diff$', node_views.get_node_diff, name='get_node_diff'),
+    url(r'^api/get_node_diff/(?P<channel_id>[^/]{32})$', node_views.get_node_diff, name='get_node_diff'),
     url(r'^api/internal/sync_nodes$', node_views.sync_nodes, name='sync_nodes'),
     url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
-    url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
-    url(r'^api/get_node_path$', node_views.get_node_path, name='get_node_path'),
+    url(r'^api/get_prerequisites/(?P<get_prerequisites>[^/]+)/(?P<ids>[^/]*)$', node_views.get_prerequisites, name='get_prerequisites'),
+    url(r'^api/get_node_path/(?P<topic_id>[^/]+)/(?P<tree_id>[^/]+)/(?P<node_id>[^/]*)$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
     url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
 ]
@@ -246,13 +246,11 @@ urlpatterns += [
         name='auth_password_reset'
     ),
     url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
+    url(r'^accounts/register-information/$', registration_views.InformationRegistrationView.as_view(), name='registration_information'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
-    url(r'^accept_invitation/(?P<invitation_link>[^/]+)$', registration_views.InvitationAcceptView.as_view(), name="accept_invitation"),
-    url(r'^new/accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)$', registration_views.InvitationRegisterView.as_view(), name="accept_invitation_and_registration"),
-    url(r'^decline_invitation/(?P<invitation_link>[^/]+)$', registration_views.decline_invitation, name="decline_invitation"),
-    url(r'^invitation_fail$', registration_views.fail_invitation, name="fail_invitation"),
-    url(r'^new/finish_registration/(?P<user_id>[^/]+)/$', registration_views.InvitationRegisterView.as_view(), name="reset_password_registration"),
+    url(r'^new/accept_invitation/(?P<user_id>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
+    url(r'^new/finish_registration/(?P<user_id>[^/]+)/$', registration_views.new_user_redirect, name="reset_password_registration"),
 ]
 
 # Add settings endpoints
@@ -319,7 +317,11 @@ if settings.DEBUG:
         url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.DB_ROOT})
     ]
 
-    import debug_toolbar
-    urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
-    ]
+    try:
+        import debug_toolbar
+    except ImportError:
+        pass
+    else:
+        urlpatterns += [
+            url(r'^__debug__/', include(debug_toolbar.urls)),
+        ]

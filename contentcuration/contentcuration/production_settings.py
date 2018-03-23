@@ -1,6 +1,12 @@
 import os
 from .settings import *
 
+STORAGE_ROOT = "/contentworkshop_content/storage/"
+DB_ROOT = "/contentworkshop_content/databases/"
+STATIC_ROOT = "/contentworkshop_static/"
+
+MEDIA_ROOT = STORAGE_ROOT
+
 SITE_ID = int(os.getenv("SITE_ID") or "1")
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
@@ -20,13 +26,6 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'export_staging.sqlite3')
     }
 }
-
-# celery settings
-BROKER_URL = os.getenv("CELERY_BROKER_URL") or BROKER_URL
-BROKER_URL = "redis://{ip}:6379".format(ip=os.getenv("DATA_REDIS_HOST"))
-CELERY_RESULT_BACKEND = ("redis://{ip}:6379".format(ip=os.getenv("DATA_REDIS_HOST"))
-                         or CELERY_RESULT_BACKEND)
-CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or CELERY_TIMEZONE
 
 # email settings
 EMAIL_BACKEND = "postmark.backends.PostmarkBackend"

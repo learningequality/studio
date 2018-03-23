@@ -731,7 +731,7 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active')
+        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active', 'information')
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):

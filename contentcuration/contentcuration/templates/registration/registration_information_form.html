@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+{% extends "registration/getting_started.html" %}
+
+{% load staticfiles %}
+{% load i18n %}
+{% load translation_tags %}
+
+{% block nav %}{% endblock nav %}
+
+{% block login %}
+<div id="registration-info">
+	<ul class="errors">
+		{% for field in form %}
+			{% for error in field.errors %}
+				<li>{{ error|escape }}</li>
+			{% endfor %}
+		{% endfor %}
+	</ul>
+	<h2 class="header text-center">{% trans 'Create an Account' %}</h2>
+	<div class="back-to-registration">
+		<a class="login-action-text" href="{% url 'registration_register' %}"><i class="glyphicon glyphicon-menu-left"></i> {% trans 'Back' %}</a>
+	</div>
+	<form action="{% url  'registration_information' %}" method="post" class="login-content-form text-center container-fluid">
+		<div id="form-wrapper">
+			{% csrf_token %}
+			<div class="form-group row" id="use">
+				<div class="login-label col-xs-12">
+					<div>{{form.use.label}} <i class="required_asterisk">*</i></div>
+					{% for option in form.use %}
+						<div class="use-option row">
+							<div class="col-xs-1 check-wrapper">
+								<input id="{{option.attrs.id}}" name="{{option.name}}" type="checkbox" value="{{option.choice_value}}" class="check_{{option.choice_value}}" {% if option.choice_value in option.value %}checked{% endif %}>
+							</div>
+							<div class="col-xs-11">
+								<label for="{{option.attrs.id}}">{{option.choice_label}}</label>
+								{% if option.choice_value == 'storage' %}
+								<div id="storage">
+									{{form.storage.label}}<i class="required_asterisk">*</i> &nbsp;{{form.storage}}
+								</div>
+								{% endif %}
+								{% if option.choice_value == 'other' %}
+									{{form.other_use}}
+								{% endif %}
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+			<div class="form-group row">
+				<div class="col-xs-12 login-label">
+					<div>{{form.location.label}} <i class="required_asterisk">*</i></div>
+					{{form.location}}
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-12 text-center" id="help_footer">
+				{% blocktrans %}Questions or concerns? Please email us at <a href="mailto:{{help_email}}" class="login-action-text">{{help_email}}</a>{% endblocktrans %}
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-12">
+				<input class="btn btn-login" type="submit" value="{% trans 'Sign Up' %}" />
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-12">
+				<a href="{% url 'django.contrib.auth.views.login' %}" class="action-text login-action-text" id="register_prompt">{% trans "Back to Log In" %}</a>
+			</div>
+		</div>
+	</form>
+</div>
+
+<script>
+	function handleStorage() {
+		($(".check_storage").prop("checked"))? $("#storage").slideDown(100) : $("#storage").slideUp(100);
+	}
+	$(".check_storage").on("change", handleStorage);
+	handleStorage();
+
+	function checkOther() {
+		$(".check_other").prop("checked", true);
+	}
+
+	$("#id_other_use").on("keypress", checkOther);
+	$("#id_other_use").on("paste", checkOther);
+</script>
+{% endblock %}
