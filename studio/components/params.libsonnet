@@ -8,10 +8,12 @@
     // Each object below should correspond to a component in the components/ directory
     "studio-app": {
       appPort: 8081,
-      image: "github-learningequality-studio/app:latest",
+      image: "gcr.io/github-learningequality-studio/app:nlatest",
       name: "studio-app",
+      workerName: "studio-workers",
       nginxImage: "v4",
       replicas: 1,
+      workerReplicas: 1,
       settings: "contentcuration.settings",
       log_file: "/var/log/django.log",
       type: "NodePort",
@@ -27,7 +29,7 @@
       database: "content-curation",
       user: "www-data",
     },
-    minio: {
+    "minio": {
       containerPort: 9000,
       image: "minio/minio",
       name: "minio",
