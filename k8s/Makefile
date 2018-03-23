@@ -1,4 +1,4 @@
-deploy:
+build:
 	make -C images/app/ imagebuild
 	make -C images/nginx/ imagebuild
 
