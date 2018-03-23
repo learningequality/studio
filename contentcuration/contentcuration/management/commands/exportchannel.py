@@ -109,7 +109,7 @@ class Command(BaseCommand):
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
 
 def send_emails(channel):
-    subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Content Workshop Channel Published')})
+    subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
 
     # Email all users about updates to channel
     for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
