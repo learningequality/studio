@@ -218,6 +218,7 @@ def get_or_create_language(language):
         lang_code=language.lang_code,
         lang_subcode=language.lang_subcode,
         lang_name= language.lang_name if hasattr(language, 'lang_name') else language.native_name,
+        lang_direction= language.lang_direction
     )
 
 def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
