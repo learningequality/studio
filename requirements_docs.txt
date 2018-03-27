@@ -1,0 +1,1 @@
+# Empty for now, just to avoid readthedocs using requirements.txt by default
