@@ -19,6 +19,7 @@ from contentcuration.utils.messages import get_messages
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from le_utils.constants import exercises, roles
 
 def base(request):
     if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
@@ -106,6 +107,8 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "fpreset_list": formatpresets,
                                                  "ckinds_list": contentkinds,
                                                  "langs_list": languages,
+                                                 "roles": json.dumps([r[0] for r in roles.choices]),
+                                                 "mastery": json.dumps([m[0] for m in exercises.MASTERY_MODELS if m[0] != exercises.SKILL_CHECK]),
                                                  "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
                                                  "preferences": channel.preferences,
                                                  "messages": get_messages(),
