@@ -45,7 +45,7 @@
             </button>
             <a href="/channels" id="logo-container">
               <img class="navbar-brand" src="{% static 'img/logo.png' %}">
-              <label id="kolibri_label">Kolibri</label>
+              <label id="kolibri_label">Kolibri Studio</label>
             </a>
           </div>
             <div class="collapse navbar-collapse">
@@ -57,6 +57,7 @@
                   <ul class="dropdown-menu">
                     {% if user.is_admin %}<li><a href="{% url 'administration' %}" >{% trans "Administration" %}</a></li>{% endif %}
                     <li><a href="{% url 'profile_settings' %}" >{% trans "Settings" %}</a></li>
+                    <li><a href="http://kolibri-studio.readthedocs.io/en/latest/index.html" target="_blank">{% trans "Help" %}</a></li>
                     <li><a href="{% url 'django.contrib.auth.views.logout' %}">{% trans "Log Out" %}</a></li>
                   </ul>
                 </li>

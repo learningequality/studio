@@ -23,7 +23,6 @@ var MESSAGES = {
               "to revisit key prior concepts, which may take the form of foundational skills or " +
               "immediately relevant background information. For learners on Kolibri, these items " +
               "will appear alongside the concept for recommended viewing.",
-    "published": "Channel Successfully Published!",
     "channel_publish_id": "Published Channel ID",
     "published_prompt": "Copy this channel ID into Kolibri version 0.6.0 and below:",
     "published_token_prompt": "Copy this channel token into Kolibri version 0.7.0 and above:",
@@ -31,8 +30,10 @@ var MESSAGES = {
     "newer_version": "Have a newer version of Kolibri?",
     "older_version": "Have an older version of Kolibri?",
     "get_token": "Get Channel Token",
-    "get_id": "Get Channel ID"
+    "get_id": "Get Channel ID",
+    "published_version": "Published Version:"
 }
+
 
 var BaseInfoModalView = BaseViews.BaseModalView.extend({
   template: require("./hbtemplates/license_modal.handlebars"),
@@ -89,7 +90,7 @@ var PublishedModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/published_modal.handlebars"),
   publish_template: require("./hbtemplates/published.handlebars"),
   modal_id: "#published_modal",
-  get_id: false,
+  get_id: true,
   render: function() {
       BaseInfoModalView.prototype.render.call(this);
       this.render_id();
@@ -97,8 +98,7 @@ var PublishedModalView = BaseInfoModalView.extend({
   get_render_data: function() {
     return {
       get_id: this.get_id,
-      channel: this.data.channel.toJSON(),
-      published: this.data.published
+      channel: this.data.channel.toJSON()
     };
   },
   events: {

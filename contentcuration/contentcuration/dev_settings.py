@@ -3,7 +3,7 @@ from .settings import *
 import logging
 
 DEBUG = True
-ALLOWED_HOSTS = ["192.168.31.9", "127.0.0.1"]
+ALLOWED_HOSTS = ["studio.local", "192.168.31.9", "127.0.0.1"]
 
 ACCOUNT_ACTIVATION_DAYS = 7
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -16,6 +16,13 @@ MIDDLEWARE_CLASSES += ('debug_panel.middleware.DebugPanelMiddleware',)
 
 DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK': lambda x: True,
+}
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': './db.sqlite3',                      # Or path to database file if using sqlite3.
+    },
 }
 
 DEBUG_TOOLBAR_PANELS = [
@@ -32,3 +39,7 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.logging.LoggingPanel',
     'debug_toolbar.panels.redirects.RedirectsPanel',
 ]
+
+AWS_ACCESS_KEY_ID = "deveelopment"
+AWS_SECRET_ACCESS_KEY = "development"
+AWS_S3_ENDPOINT_URL = "http://localhost:9000"

@@ -66,7 +66,10 @@ var MESSAGES = {
         "will no longer reference {data, plural,\n =1 {it}\n other {them}} as related content. Are you sure you want to continue?",
     "language": "Language",
     "select_language": "Select a Language",
-    "make_copy": "Make a Copy"
+    "make_copy": "Make a Copy",
+    "publish_title_prompt": "Make this channel available for download into Kolibri",
+    "publish_in_progress": "Your channel is currently publishing...",
+    "publishing_prompt": "You will get an email once the channel finishes publishing."
 }
 
 var BaseView = Backbone.View.extend({
@@ -203,16 +206,24 @@ var BaseView = Backbone.View.extend({
 	},
 	check_if_published:function(root){
 		var is_published = root.get("published");
+		var is_publishing = root.get("publishing");
 		$("#hide-if-unpublished").css("display", (is_published) ? "inline-block" : "none");
-		if(root.get("metadata").has_changed_descendant){
-			$("#channel-publish-button").prop("disabled", false);
-			$("#channel-publish-button").text(this.get_translation("publish"));
-			$("#channel-publish-button").removeClass("disabled");
-		}else{
-			$("#channel-publish-button").prop("disabled", true);
-			$("#channel-publish-button").text(this.get_translation("no_changes_detected"));
-			$("#channel-publish-button").addClass("disabled");
+		if(is_publishing) {
+			this.set_publishing();
+		} else if(root.get("metadata").has_changed_descendant ){
+			$("#channel-publish-button").removeAttr("disabled")
+										.attr("title", this.get_translation("publish_title_prompt"))
+										.removeClass("disabled");
+		} else {
+			$("#channel-publish-button").attr("disabled", "disabled")
+										.attr("title", this.get_translation("no_changes_detected"))
+										.addClass("disabled");
 		}
+	},
+	set_publishing:function() {
+		$("#channel-publish-button").attr("disabled", "disabled")
+										.attr("title", this.get_translation("publish_in_progress"))
+										.addClass("disabled");
 	},
 	cancel_actions:function(event){
 		event.preventDefault();
@@ -231,14 +242,11 @@ var BaseWorkspaceView = BaseView.extend({
 			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently', 'sync_content');
 	},
 	publish:function(){
-		if(!$("#channel-publish-button").hasClass("disabled")){
-			var Exporter = require("edit_channel/export/views");
-			var exporter = new Exporter.ExportModalView({
-				model: window.current_channel.get_root("main_tree"),
-				onpublish: this.handle_published
-			});
-
-		}
+		var Exporter = require("edit_channel/export/views");
+		var exporter = new Exporter.ExportModalView({
+			model: window.current_channel.get_root("main_tree"),
+			onpublish: this.handle_published
+		});
 	},
 	activate_channel: function(){
 		var dialog = require("edit_channel/utils/dialog");
@@ -265,15 +273,15 @@ var BaseWorkspaceView = BaseView.extend({
 
 	},
 	handle_published:function(collection){
-		this.reload_ancestors(collection);
+		var dialog = require("edit_channel/utils/dialog");
+		this.set_publishing();
 		var self = this;
 		window.current_channel.fetch({
 			success: function(channel){
 				var new_channel = new Models.ChannelCollection()
 				new_channel.reset(channel.toJSON());
 				$("#publish_id_text").val(window.current_channel.get('primary_token'));
-				var staticModal = require('edit_channel/information/views');
-				new staticModal.PublishedModalView({channel: window.current_channel, published: true});
+				dialog.alert(self.get_translation("publish_in_progress"), self.get_translation("publishing_prompt"));
 			}
 		});
 	},
@@ -364,7 +372,8 @@ var BaseWorkspaceView = BaseView.extend({
 		// Use for loop to break if needed
 		for(var i = 0; i < this.lists.length; ++i){
 			selected_list = $.merge(selected_list, this.lists[i].get_selected());
-			if(exclude_descendants && selected_list.length > 0){
+			var open_topic = this.lists[i].get_opened_topic();
+			if(exclude_descendants && (!open_topic || open_topic.checked) && selected_list.length > 0){
 				break;
 			}
 		}
@@ -413,16 +422,16 @@ var BaseWorkspaceView = BaseView.extend({
 	sync_content:function(){
 		var SyncView = require("edit_channel/sync/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
-		var sync = new SyncView.TempSyncModalView({
-			el: $("#dialog"),
-		    onsync: this.reload_ancestors,
-		    model: window.current_channel.get_root("main_tree")
-		});
-		// var sync = new SyncView.SyncModalView({
+		// var sync = new SyncView.TempSyncModalView({
 		// 	el: $("#dialog"),
 		//     onsync: this.reload_ancestors,
 		//     model: window.current_channel.get_root("main_tree")
 		// });
+		var sync = new SyncView.SyncModalView({
+			el: $("#dialog"),
+		    onsync: this.reload_ancestors,
+		    model: window.current_channel.get_root("main_tree")
+		});
 	},
 	delete_items_permanently:function(message, list, callback){
 		message = (message!=null)? message: this.get_translation("deleting");
@@ -528,6 +537,9 @@ var BaseListView = BaseView.extend({
 	},
 	update_views:function(){
 		this.retrieve_nodes(this.model.get("children"), true).then(this.load_content);
+	},
+	get_opened_topic:function() {
+		return null; // Overload in subclasses
 	},
 	load_content: function(collection, default_text){
 		collection = (collection)? collection : this.collection;

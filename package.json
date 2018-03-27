@@ -1,8 +1,8 @@
 {
-  "name": "content-curation",
+  "name": "studio",
   "version": "0.0.1",
-  "description": "Application for curating topic trees of arbitrary content for use in the Kolibri Learning Management System",
-  "main": "index.js",
+  "private": true,
+  "description": "Frontend build tools and development utilities for Kolibri Studio",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:py": "flake8 --exit-zero",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fle-internal/content-curation.git"
+    "url": "git+https://github.com/learningequality/studio.git"
   },
   "keywords": [
     "education",
@@ -21,9 +21,9 @@
   "author": "Learning Equality",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/fle-internal/content-curation/issues"
+    "url": "https://github.com/learningequality/studio/issues"
   },
-  "homepage": "https://github.com/fle-internal/content-curation#readme",
+  "homepage": "https://github.com/learningequality/studio#readme",
   "dependencies": {
     "backbone": "^1.2.1",
     "backbone-undo": "^0.2.5",
@@ -35,7 +35,7 @@
     "factor-bundle": "^2.4.1",
     "fastclick": "^1.0.6",
     "get-installed-path": "^2.0.3",
-    "handlebars": "^1.3.0",
+    "handlebars": "^4.0.11",
     "handlebars-intl": "^1.1.2",
     "hbsfy": "^2.2.1",
     "jquery": "^2.1.4",
@@ -64,6 +64,7 @@
     "babel-preset-es2015": "^6.24.1",
     "babelify": "^7.3.0",
     "commander": "^2.11.0",
+    "envify": "^4.1.0",
     "eslint": "^4.1.1",
     "eslint-plugin-require-path-exists": "^1.1.7",
     "eslint-plugin-vue": "^3.5.0",

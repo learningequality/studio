@@ -2,9 +2,8 @@
 <div class="modal-header">
   <button type="button" class="close tab_item" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
   <h4 class="modal-title">
-    {{#if published}}{{formatMessage (intlGet 'messages.published')}}
-    {{else}}{{#if get_id}}{{formatMessage (intlGet 'messages.channel_publish_id')}}
-    {{else}}{{formatMessage (intlGet 'messages.channel_publish_token')}}{{/if}}{{/if}}
+    {{#if get_id}}{{formatMessage (intlGet 'messages.channel_publish_id')}}
+    {{else}}{{formatMessage (intlGet 'messages.channel_publish_token')}}{{/if}}
   </h4>
 </div>
 <div class="modal-body">
@@ -20,6 +19,9 @@
     {{#if get_id}}{{formatMessage (intlGet 'messages.newer_version')}}{{else}}{{formatMessage (intlGet 'messages.older_version')}}{{/if}}
     <button class="btn action-text tab_item toggle_id">{{#if get_id}}{{formatMessage (intlGet 'messages.get_token')}}{{else}}{{formatMessage (intlGet 'messages.get_id')}}{{/if}}</button>
     </p>
+    <div class="container-fluid" id="published_footer">
+      <span>{{formatMessage (intlGet 'messages.published_version')}} {{channel.version}}{{#if channel.published_size}} ({{{format_file_size channel.published_size}}}){{/if}}</span>
+    </div>
   </div>
 </div>
 <div class="input-tab-control tab_item" data-next=".close"></div>

@@ -1,3 +1,5 @@
+import gettext
+import pycountry
 import json
 from contentcuration.models import User, Language
 from django import forms
@@ -7,31 +9,41 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core import signing
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext, ugettext_lazy as _
 from le_utils.constants import exercises, licenses
 
 REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 
-class RegistrationForm(UserCreationForm):
-    first_name = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
+class ExtraFormMixin(object):
+    def check_field(self, field, error):
+        if not self.cleaned_data.get(field):
+            self.errors[field] = self.error_class()
+            self.add_error(field, error)
+            return False
+        return True
+
+class RegistrationForm(forms.Form, ExtraFormMixin):
     first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
     last_name = forms.CharField(widget=forms.TextInput, label=_('Last Name'), required=True)
-    password1 = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)
-    password2 = forms.CharField(widget=forms.PasswordInput, label=_('Password (again)'), required=True)
-
-    class Meta:
-        model = User
-        fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
+    email = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
+    password1 = forms.CharField(widget=forms.PasswordInput(render_value = True), label=_('Password'), required=True,)
+    password2 = forms.CharField(widget=forms.PasswordInput(render_value = True), label=_('Password (again)'), required=True)
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
         if User.objects.filter(email__iexact=email, is_active=True).exists():
             self.add_error('email', _('Email already exists.'))
-        else:
-            return email
+        return email
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
 
     def clean(self):
         cleaned_data = super(RegistrationForm, self).clean()
+
+        # For some reason, email sometimes doesn't remain in cleaned data
+        self.cleaned_data['email'] = self.data.get('email')
 
         self.check_field('email', _('Email is required.'))
         self.check_field('first_name', _('First name is required.'))
@@ -46,81 +58,91 @@ class RegistrationForm(UserCreationForm):
 
         return self.cleaned_data
 
-    def check_field(self, field, error):
-        if field not in self.cleaned_data:
-            self.errors[field] = self.error_class()
-            self.add_error(field, error)
-            return False
-        return True
+USAGES = [
+    ('organization and alignment', _("Organizing or aligning existing materials")),
+    ('finding and adding content', _("Finding and adding additional content sources")),
+    ('sequencing', _("Sequencing materials using prerequisites")),
+    ('exercise creation', _("Creating exercises")),
+    ('sharing', _("Sharing materials publicly")),
+    ('storage', _("Storing materials for private or local use")),
+    ('tagging', _("Tagging content sources for discovery")),
+    ('other', _("Other")),
+]
 
 
-class InvitationForm(UserCreationForm):
-    first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
-    last_name = forms.CharField(widget=forms.TextInput, label=_('Last Name'), required=True)
-    password1 = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)
-    password2 = forms.CharField(widget=forms.PasswordInput, label=_('Password (again)'), required=True)
+class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
+    use = forms.ChoiceField(required=False, widget=forms.CheckboxSelectMultiple, label=_('How do you plan to use Kolibri Studio? (check all that apply)'), choices=USAGES)
+    other_use = forms.CharField(required=False, widget=forms.TextInput)
+    storage = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 500MB")}), label=_("How much storage do you need?"))
 
-    class Meta:
-        model = User
-        fields = ('first_name', 'last_name', 'password1', 'password2')
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super(RegistrationInformationForm, self).__init__(*args, **kwargs)
+
+        translator = gettext.translation(
+            domain='iso3166',
+            localedir=pycountry.LOCALES_DIR,
+            languages=[self.request.LANGUAGE_CODE],
+            codeset='utf-8',
+            fallback=True,
+        )
+
+        countries = [(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)]
+
+        self.fields['location'] = forms.ChoiceField(required=True, widget=forms.SelectMultiple, label=_('Where do you plan to use Kolibri? (select all that apply)'), choices=countries)
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
         return email
 
     def clean(self):
-        cleaned_data = super(InvitationForm, self).clean()
+        cleaned_data = super(RegistrationInformationForm, self).clean()
 
-        self.check_field('first_name', _('First name is required.'))
-        self.check_field('last_name', _('Last name is required.'))
+        # Lots of fields get incorrectly processed, so manually validate form
+        self.errors.clear()
 
-        if self.check_field('password1', _('Password is required.')):
-            if 'password2' not in self.cleaned_data or self.cleaned_data['password1'] != self.cleaned_data['password2']:
-                self.errors['password2'] = self.error_class()
-                self.add_error('password2', _('Passwords don\'t match.'))
-        else:
-            self.errors['password2'] = self.error_class()
+        # Get data from cache
+        for field in RegistrationForm.Meta.fields:
+            self.cleaned_data.update({field: self.request.session.get(field, None)})
+
+        # Check uses is set, making sure space needed is indicated if storage is selected
+        uses = self.request.POST.getlist('use')
+        if "other" in uses:
+            if self.check_field('other_use', _("Describe your 'other' use(s) for Kolibri Studio")):
+                uses.append(self.cleaned_data['other_use'])
+                uses.remove("other")
+
+        if "storage" in uses:
+            self.check_field('storage', _("Please indicate how much storage you intend to use"))
+
+        # Set cleaned_data as a string (will be blank if none are selected)
+        self.cleaned_data["use"] = ", ".join(uses)
+        self.cleaned_data["location"] = ", ".join(self.request.POST.getlist('location'))
+
+        self.check_field('use', _('Please indicate how you intend to use Kolibri Studio'))
+        self.check_field('location', _('Please select where you plan to use Kolibri'))
 
         return self.cleaned_data
 
-    def check_field(self, field, error):
-        if field not in self.cleaned_data:
-            self.errors[field] = self.error_class()
-            self.add_error(field, error)
-            return False
-        return True
-
-    def save(self, user):
+    def save(self, commit=True):
+        user, _new = User.objects.get_or_create(email=self.cleaned_data["email"])
         user.set_password(self.cleaned_data["password1"])
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
-        user.is_active = True
-        user.save()
+        user.information = {
+            "uses": self.cleaned_data['use'].split(','),
+            "locations": self.cleaned_data['location'].split(','),
+            "space_needed": self.cleaned_data['storage'],
+        }
+
+        if commit:
+            user.save()
+
         return user
-
-
-class InvitationAcceptForm(AuthenticationForm):
-    user = None
-    password = forms.CharField(widget=forms.PasswordInput, label=_('Password'), required=True)
 
     class Meta:
         model = User
-        fields = ('password',)
-
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user')
-        super(InvitationAcceptForm, self).__init__(*args, **kwargs)
-
-    def clean(self):
-        if 'password' not in self.cleaned_data:
-            self.errors['password'] = self.error_class()
-            self.add_error('password', _('Password is required.'))
-        elif not self.user.check_password(self.cleaned_data["password"]):
-            self.errors['password'] = self.error_class()
-            self.add_error('password', _('Password is incorrect.'))
-        else:
-            self.confirm_login_allowed(self.user)
-        return self.cleaned_data
+        fields = ('first_name', 'last_name', 'password1', 'password2')
 
 
 class ProfileSettingsForm(UserChangeForm):
@@ -251,18 +273,29 @@ class ForgotPasswordForm(PasswordResetForm):
         inactive_users = users.filter(is_active=False)
         if inactive_users.exists() and inactive_users.count() == users.count(): # all matches are inactive
             for user in inactive_users:
-                activation_key = self.get_activation_key(user)
-                context = {
-                    'activation_key': activation_key,
-                    'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
-                    'site': extra_email_context.get('site'),
-                    'user': user,
-                    'domain': extra_email_context.get('domain') or domain,
-                }
-                subject = render_to_string('registration/password_reset_subject.txt', context)
-                subject = ''.join(subject.splitlines())
-                message = render_to_string('registration/activation_needed_email.txt', context)
-                user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+                if not user.password:
+                    context = {
+                        'site': extra_email_context.get('site'),
+                        'user': user,
+                        'domain': extra_email_context.get('domain') or domain,
+                    }
+                    subject = render_to_string('registration/password_reset_subject.txt', context)
+                    subject = ''.join(subject.splitlines())
+                    message = render_to_string('registration/registration_needed_email.txt', context)
+                    user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+                else:
+                    activation_key = self.get_activation_key(user)
+                    context = {
+                        'activation_key': activation_key,
+                        'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+                        'site': extra_email_context.get('site'),
+                        'user': user,
+                        'domain': extra_email_context.get('domain') or domain,
+                    }
+                    subject = render_to_string('registration/password_reset_subject.txt', context)
+                    subject = ''.join(subject.splitlines())
+                    message = render_to_string('registration/activation_needed_email.txt', context)
+                    user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
         else:
             super(ForgotPasswordForm, self).save(request=request, extra_email_context=extra_email_context, **kwargs)
 

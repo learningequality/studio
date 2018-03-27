@@ -11,15 +11,22 @@
 		<hr/>
 		<br/>
 	{{/if}}
-	<div class="container-fluid">
-	<div class="pull-right">
-		<label id="language_label">{{formatMessage (intlGet 'messages.language')}}</label>
-		<select id="select_language" class="tab_item">
-			<option value="inherit" selected>{{language_default}}</option>
-			<option disabled value=0>---</option>
-			{{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
-		</select>
-	</div>
+	<div class="row">
+		<div class="col-xs-6">
+			{{# if node}}{{#equal node.original_channel.id channel_id}}{{ else }}
+				<div id="imported_from_field" class="truncate">{{formatMessage (intlGet 'messages.imported_from')}} <a href="/channels/{{node.original_channel.id}}/view/{{node.original_source_node_id}}" target="_blank" title="{{node.original_channel.name}}" class="original_channel_link">{{node.original_channel.name}}</a></div>
+			{{/equal}}{{/if}}
+		</div>
+		<div class="col-xs-6">
+			<div class="pull-right">
+				<label id="language_label">{{formatMessage (intlGet 'messages.language')}}</label>
+				<select id="select_language" class="tab_item">
+					<option value="inherit" selected>{{language_default}}</option>
+					<option disabled value=0>---</option>
+					{{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
+				</select>
+			</div>
+		</div>
 	</div>
 	{{#if node}}
 		<h4>{{formatMessage (intlGet 'messages.title')}}<label class="required">*<span id="title_error">{{formatMessage (intlGet 'messages.title_error')}}</span></label></h4>
@@ -40,12 +47,12 @@
 		<br/>
 		<br/>
 	{{/if}}
-	<hr/>
 	{{#if isoriginal}}
+		{{#if is_file}}
+		<hr/>
 		{{#unless node}}<div class="input-tab-control tab_item" data-next="#author_field"></div>{{/unless}}
 		<h4>{{formatMessage (intlGet 'messages.author')}}</h4>
 		<input type="text" id="author_field" class="upload_input input_listener tab_item" value="{{author}}" placeholder="{{formatMessage (intlGet 'messages.author_placeholder')}}"/>
-		{{#if is_file}}
 		<div class="row">
 			<div class="content_nodes_only col-sm-6">
 				<h4>{{formatMessage (intlGet 'messages.license')}} <label class="required">*</label></h4>
@@ -65,10 +72,12 @@
 				</div>
 			</div>
 		</div>
+		<hr/>
 		{{/if}}
 	{{else}}
+		<hr/>
 		{{#if node}}
-		<p class="uploader-copied-warning">{{formatMessage (intlGet 'messages.readonly')}} <b>{{node.original_channel.name}}</b></p>
+		<p class="uploader-copied-warning">{{formatMessage (intlGet 'messages.readonly_text')}}</p>
 		{{/if}}
 		<div class="row">
 			<div class="col-xs-3">
@@ -88,8 +97,8 @@
 				<p class="upload_input">{{copyright_owner}}</p>
 			</div>
 		</div>
+		<hr/>
 	{{/if}}
-	<hr/>
 	<br/>
 	{{#if is_file}}
 	<h4>{{formatMessage (intlGet 'messages.role_visibility')}}</h4>

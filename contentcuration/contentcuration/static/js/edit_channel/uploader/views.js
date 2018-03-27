@@ -22,8 +22,8 @@ var MESSAGES = {
     "tags": "Tags",
     "copyright_holder": "Copyright Holder",
     "prereqs": "Prerequisites",
-    "dont_save": "Don't Save",
-    "keep_open": "Keep Open",
+    "dont_save": "Discard Changes",
+    "keep_open": "Keep Editing",
     "mastery_criteria": "Mastery Criteria",
     "editing_header": "Editing Content Details",
     "remove_tag": "Remove Tag",
@@ -31,7 +31,7 @@ var MESSAGES = {
     "adding_exercise": "Adding Exercise to {title}",
     "editing_content": "Editing Content",
     "viewing_content": "Viewing Content",
-    "apply_changes": "APPLY CHANGES",
+    "save": "SAVE",
     "save_and_close": "SAVE & CLOSE",
     "select_prompt": "Please select an item to view.",
     "select_to_edit": "Please select an item to edit.",
@@ -44,6 +44,7 @@ var MESSAGES = {
     "title_placeholder": "Enter a title...",
     "source": "Source:",
     "readonly": "READ-ONLY Source:",
+    "readonly_text": "READ-ONLY: content has been imported with view-only permission",
     "permissions_vary": "Permissions Vary",
     "description": "Description",
     "chars_left": "{data, plural,\n =1 {# character}\n other {# characters}} left",
@@ -71,8 +72,7 @@ var MESSAGES = {
     "open_settings": "Open Settings",
     "ok": "OK",
     "role_visibility": "Visibile to",
-    "coach": "Coaches",
-    "learner": "Anyone"
+    "imported_from": "Imported from:"
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -129,7 +129,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
               window.channel_router.update_url(null, null, window.title);
           },
           [self.get_translation("keep_open")]:function(){},
-          [self.get_translation("save_and_close")]:function(){
+          [self.get_translation("save")]:function(){
             self.metadata_view.save_and_finish();
             window.channel_router.update_url(null, null, window.title);
           },
@@ -693,7 +693,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         languages: window.languages.toJSON(),
         roles: window.roles,
         mastery: window.mastery,
-        language_default: this.get_language(null, all_top_level)
+        language_default: this.get_language(null, all_top_level),
+        channel_id: window.current_channel.id
       }, {
         data: this.get_intl_data()
       }));
@@ -1205,13 +1206,13 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     if(!this.model.get("title")) {
       $("#input_title").addClass("invalid_field");
       this.error = this.get_translation("title_error");
-    } else if(this.isoriginal && !license) {
+    } else if(this.isoriginal && this.model.get("kind") !== "topic" && !license) {
       $("#license_select").addClass("invalid_field");
       this.error = this.get_translation("license_error");
     } else if (this.isoriginal && this.model.get("kind") !== "topic" && license.get("copyright_holder_required") && !this.model.get("copyright_holder")) {
       $("#input_license_owner").addClass("invalid_field");
       this.error = this.get_translation("copyright_holder_error");
-    } else if (this.isoriginal && license.get('is_custom') && !this.model.get('license_description')) {
+    } else if (this.isoriginal && license && license.get('is_custom') && !this.model.get('license_description')) {
       $("#custom_license_description").addClass("invalid_field");
       this.error = this.get_translation("special_permission_error");
     }

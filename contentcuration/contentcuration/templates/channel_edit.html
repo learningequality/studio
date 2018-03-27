@@ -70,7 +70,7 @@
 			<li id="channel-activate-button" class="text-center">{%trans "DEPLOY CHANNEL" %}</li>
 		{% else %}
 			<li id="hide-if-unpublished"><a id="get_published_id">{% trans "Show ID" %}</a></li>
-			{% if allow_edit %}<li id="channel-publish-button" class="text-center">{%trans "PUBLISH" %}</li>{% endif %}
+			{% if allow_edit %}<li><button id="channel-publish-button" class="text-center"> {%trans "PUBLISH" %}</button></li>{% endif %}
 		{% endif %}
 		</ul>
 	</nav>

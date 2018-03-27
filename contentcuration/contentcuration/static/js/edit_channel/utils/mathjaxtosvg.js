@@ -53,7 +53,7 @@ function init(){
   head.appendChild(script);
   script = document.createElement("script");
   script.type = "text/javascript";
-  script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js";
+  script.src  = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js";
   script.onload = function(){
     //  Cache a callback to the GenerateSVG action
     SvgGenerator.generate = MathJax.Callback(["GenerateSVG",SvgGenerator]);

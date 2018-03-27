@@ -7,7 +7,7 @@ STATIC_ROOT = "/contentworkshop_static/"
 
 MEDIA_ROOT = STORAGE_ROOT
 
-SITE_ID = int(os.getenv("SITE_ID"))
+SITE_ID = int(os.getenv("SITE_ID") or "1")
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
@@ -27,6 +27,19 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'export_staging.sqlite3')
     }
 }
+
+# celery settings
+BROKER_URL = "redis://:{password}@{endpoint}:/{db}".format(
+    password=os.getenv("CELERY_REDIS_PASSWORD"),
+    endpoint=os.getenv("CELERY_BROKER_ENDPOINT"),
+    db=os.getenv("CELERY_REDIS_DB")
+) or BROKER_URL
+CELERY_RESULT_BACKEND = "redis://:{password}@{endpoint}:/{db}".format(
+    password=os.getenv("CELERY_REDIS_PASSWORD"),
+    endpoint=os.getenv("CELERY_RESULT_BACKEND_ENDPOINT"),
+    db=os.getenv("CELERY_REDIS_DB")
+) or CELERY_RESULT_BACKEND
+CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or CELERY_TIMEZONE
 
 # email settings
 EMAIL_BACKEND = "postmark.backends.PostmarkBackend"

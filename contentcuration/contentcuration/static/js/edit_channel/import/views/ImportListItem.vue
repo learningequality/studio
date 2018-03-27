@@ -205,6 +205,11 @@ export default {
 
   @import '../../../../less/global-variables.less';
 
+  .ListItem {
+    width: -moz-max-content;
+    width: max-content;
+  }
+
   .ListItem__SubList {
     border-left: 2px solid #2196F3;
     margin-left: 30px !important;
@@ -217,19 +222,11 @@ export default {
   }
 
   .ListItem__Label {
-    max-width: 95%;
     padding: 0px 10px;
     font-size: 16px;
     & > * {
       vertical-align: middle;
     }
-  }
-
-  .ListItem__Label__Title {
-    width: 95%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .ListItem__Checkbox {

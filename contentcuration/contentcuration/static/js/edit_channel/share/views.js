@@ -89,7 +89,8 @@ var ShareView = BaseViews.BaseView.extend({
         this.current_user = options.current_user;
         this.originalData = this.model.toJSON();
         this.show_list = this.show_list();
-        this.can_edit = options.allow_leave && _.find(this.model.get("editors"), function(u){
+        this.allow_leave = options.allow_leave;
+        this.can_edit = this.allow_leave && _.find(this.model.get("editors"), function(u){
             return u === window.current_user.id || u.id === window.current_user.id;
         });
         this.onjoin = options.onjoin;
@@ -123,7 +124,7 @@ var ShareView = BaseViews.BaseView.extend({
     render_user:function(){
         if(this.$("#share_current_user_actions")){
             this.$("#share_current_user_actions").html(this.current_user_template({
-                user: this.current_user.toJSON(),
+                allow_leave: this.allow_leave && this.current_user.get("is_admin"),
                 can_edit: this.can_edit
             }, {
                 data: this.get_intl_data()

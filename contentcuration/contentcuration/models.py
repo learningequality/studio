@@ -1,3 +1,4 @@
+import collections
 import functools
 import hashlib
 import json
@@ -20,7 +21,8 @@ from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, roles
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages, roles
+from jsonfield import JSONField
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
 from pg_utils import DistinctSum
 from rest_framework import permissions
@@ -85,6 +87,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
 
+    information = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, null=True)
+
     objects = UserManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
@@ -126,7 +130,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         staged_size = float(channel_files.aggregate(used=Sum('file_size'))['used'] or 0)
 
         if self.get_available_space(active_files=active_files) < (active_size + staged_size):
-            raise PermissionDenied(_("Out of storage! Request more at info@learningequality.org"))
+            raise PermissionDenied(_('Out of storage! Request more at %(email)s') % {'email': settings.SPACE_REQUEST_EMAIL})
 
 
     def check_staged_space(self, size, checksum):
@@ -134,7 +138,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             return True
         space = self.get_available_staged_space()
         if space < size:
-            raise PermissionDenied(_("Out of storage! Request more at info@learningequality.org"))
+            raise PermissionDenied(_('Out of storage! Request more at %(email)s') % {'email': settings.SPACE_REQUEST_EMAIL})
 
     def get_available_staged_space(self):
         space_used = self.staged_files.aggregate(size=Sum("file_size"))['size'] or 0
@@ -421,9 +425,25 @@ class Channel(models.Model):
 
         super(Channel, self).save(*args, **kwargs)
 
+        if original_channel and not self.main_tree.changed:
+            fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'language', 'thumbnail_encoding', 'deleted']
+            self.main_tree.changed = any([f for f in fields_to_check if getattr(self, f) != getattr(original_channel, f)])
+
+            # Delete db if channel has been deleted and mark as unpublished
+            if not original_channel.deleted and self.deleted:
+                channel_db_url = os.path.join(settings.DB_ROOT, self.id) + ".sqlite3"
+                if os.path.isfile(channel_db_url):
+                    os.unlink(channel_db_url)
+                    self.main_tree.published = False
+            self.main_tree.save()
+
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
+
+        index_together = [
+            ["deleted", "public"]
+        ]
 
 
 class ContentTag(models.Model):
@@ -521,6 +541,7 @@ class ContentNode(MPTTModel, models.Model):
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
     published = models.BooleanField(default=False)
+    publishing = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True, db_index=True)
     extra_fields = models.TextField(blank=True, null=True)
@@ -558,20 +579,46 @@ class ContentNode(MPTTModel, models.Model):
             return {
                 "title": self.title,
                 "kind": self.kind_id,
-                "children": [c.get_tree_data() for c in self.children.all()]
+                "children": [c.get_tree_data() for c in self.children.all()],
+                "node_id": self.node_id,
             }
         elif self.kind_id == content_kinds.EXERCISE:
             return {
                 "title": self.title,
                 "kind": self.kind_id,
-                "count": self.assessment_items.count()
+                "count": self.assessment_items.count(),
+                "node_id": self.node_id,
             }
         else:
             return {
                 "title": self.title,
                 "kind": self.kind_id,
-                "file_size": self.files.values('file_size').aggregate(size=Sum('file_size'))['size']
+                "file_size": self.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
+                "node_id": self.node_id,
             }
+
+    def get_node_tree_data(self):
+        nodes = []
+        for child in self.children.all():
+            if child.kind_id == content_kinds.TOPIC:
+                nodes.append({
+                    "title": child.title,
+                    "kind": child.kind_id,
+                    "node_id": child.node_id,
+                })
+            elif child.kind_id == content_kinds.EXERCISE:
+                nodes.append({
+                    "title": child.title,
+                    "kind": child.kind_id,
+                    "count": child.assessment_items.count(),
+                })
+            else:
+                nodes.append({
+                "title": child.title,
+                "kind": child.kind_id,
+                "file_size": child.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
+            })
+        return nodes
 
     def get_original_node(self):
         original_node = self.original_node or self
@@ -651,9 +698,13 @@ class ContentNode(MPTTModel, models.Model):
 
         super(ContentNode, self).save(*args, **kwargs)
 
-        root = self.get_root()
-        if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
-            PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
+        try:
+            # During saving for fixtures, this fails to find the root node
+            root = self.get_root()
+            if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
+                PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
+        except ContentNode.DoesNotExist:
+            pass
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
@@ -697,11 +748,12 @@ class FormatPreset(models.Model):
 
 
 class Language(models.Model):
-    id = models.CharField(max_length=7, primary_key=True)
+    id = models.CharField(max_length=14, primary_key=True)
     lang_code = models.CharField(max_length=3, db_index=True)
-    lang_subcode = models.CharField(max_length=3, db_index=True, blank=True, null=True)
+    lang_subcode = models.CharField(max_length=10, db_index=True, blank=True, null=True)
     readable_name = models.CharField(max_length=100, blank=True)
     native_name = models.CharField(max_length=100, blank=True)
+    lang_direction = models.CharField(max_length=3, choices=languages.LANGUAGE_DIRECTIONS, default=languages.LANGUAGE_DIRECTIONS[0][0])
 
     def ietf_name(self):
         return "{code}-{subcode}".format(code=self.lang_code,
