@@ -218,7 +218,7 @@ def duplicate_nodes(request):
         with transaction.atomic():
             with ContentNode.objects.disable_mptt_updates():
                 for node_data in nodes:
-                    new_node = _duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id, user=request.user)
+                    new_node = duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id, user=request.user)
                     new_nodes.append(new_node.pk)
                     sort_order += 1
 
@@ -253,7 +253,7 @@ def duplicate_node_inline(request):
         with transaction.atomic():
             with ContentNode.objects.disable_mptt_updates():
                 sort_order = (node.sort_order + node.get_next_sibling().sort_order) / 2 if node.get_next_sibling() else node.sort_order + 1
-                new_node = _duplicate_node_bulk(node, sort_order=sort_order, parent=target_parent, channel_id=channel_id, user=request.user)
+                new_node = duplicate_node_bulk(node, sort_order=sort_order, parent=target_parent, channel_id=channel_id, user=request.user)
                 if not new_node.title.endswith(_(" (Copy)")):
                     new_node.title = new_node.title + _(" (Copy)")
                     new_node.save()
@@ -264,7 +264,7 @@ def duplicate_node_inline(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
-def _duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None):
+def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
