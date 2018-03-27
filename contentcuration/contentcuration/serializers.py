@@ -523,6 +523,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
                 "max_sort_order": node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
                 "resource_size": 0,  # Make separate request
                 "has_changed_descendant": descendants.filter(changed=True).exists(),
+                "coach_count": descendants.filter(role_visibility=roles.COACH).count(),
             }
         else:
             assessment_size = node.assessment_items.values('files__checksum', 'files__file_size').distinct()\

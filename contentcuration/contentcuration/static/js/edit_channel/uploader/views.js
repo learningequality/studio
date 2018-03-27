@@ -71,7 +71,7 @@ var MESSAGES = {
     "out_of_space_text": "You don't have enough space to save these files. Request more space under the Settings > Account page.",
     "open_settings": "Open Settings",
     "ok": "OK",
-    "role_visibility": "Visibile to",
+    "role_visibility": "Visible to",
     "imported_from": "Imported from:"
 }
 
@@ -841,6 +841,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     'change #m_value': 'set_mastery',
     'change #n_value': 'set_mastery',
     "click #mastery_about": "load_mastery",
+    "click #visibility_about": "load_roles",
     "focus .input-tab-control": "loop_focus",
     "change #select_language": "set_language",
     "change #role_select": "set_selected"
@@ -868,6 +869,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   load_mastery:function(){
     new Info.MasteryModalView();
+  },
+  load_roles: function() {
+    new Info.RolesModalView();
   },
   load_language: function(){
     var language = this.shared_data && this.shared_data.shared_language;

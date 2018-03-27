@@ -332,6 +332,7 @@
 							font-size: @item-title-font-size;
 						}
 					}
+
 					.metadata_to_hide, .description, .filler{
 						display:none;
 					}
@@ -347,12 +348,19 @@
 					.title{
 						width:73%;
 					}
+					.visibility .icon-blue {
+						font-size: @item-title-font-size;
+					}
 				}
 				.folder{
 					.title{
 						font-weight:bold;
 						margin-top: 15px;
 					}
+				}
+				.file .visibility {
+					color: black;
+					margin-left: 10px;
 				}
 			}
 			li:hover{
