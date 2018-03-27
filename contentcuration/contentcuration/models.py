@@ -20,7 +20,7 @@ from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, roles
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
 from pg_utils import DistinctSum
 from rest_framework import permissions
@@ -526,6 +526,8 @@ class ContentNode(MPTTModel, models.Model):
     extra_fields = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"),
                               null=True)
+
+    role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
 
     objects = TreeManager()
