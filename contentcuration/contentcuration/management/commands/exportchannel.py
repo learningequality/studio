@@ -19,7 +19,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q, Count, Sum
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, roles
 from pressurecooker.encodings import write_base64_to_file
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration import models as ccmodels
@@ -68,6 +68,7 @@ class Command(BaseCommand):
         send_email = options['email']
         user_id = options['user_id']
         force_exercises = options['force-exercises']
+        channel = ccmodels.Channel.objects.get(pk=channel_id)
 
         # license = ccmodels.License.objects.get(pk=license_id)
         try:
@@ -204,6 +205,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id):
             'lang': language,
             'license_name': kolibri_license.license_name if kolibri_license is not None else None,
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
+            'coach_content': ccnode.role_visibility == roles.COACH,
         }
     )
 

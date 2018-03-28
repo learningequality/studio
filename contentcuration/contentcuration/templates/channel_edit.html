@@ -16,6 +16,8 @@
 		var user = JSON.parse("{{ current_user|escapejs }}");
 		var preferences = JSON.parse("{{ preferences|escapejs }}");
 		var title = "{{ title }}";
+		var mastery = JSON.parse("{{ mastery |escapejs }}");
+		var roles = JSON.parse("{{ roles |escapejs }}");
 	</script>
 	<script type="text/javascript">
 		var bundle = require("channel_edit");

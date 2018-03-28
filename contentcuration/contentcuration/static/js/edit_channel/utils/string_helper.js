@@ -287,6 +287,8 @@ var messages = {
   "Flat": "Flat",
   "Natural": "Natural",
   "Sharp": "Sharp",
+  "coach": "Coaches",
+  "learner": "Anyone"
 };
 
 

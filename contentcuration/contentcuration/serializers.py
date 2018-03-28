@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError, Per
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
-from le_utils.constants import licenses
+from le_utils.constants import licenses, roles
 from django.utils.translation import ugettext as _
 from itertools import chain
 from rest_framework import serializers
@@ -336,6 +336,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
             return {
                 "total_count": node.get_descendant_count(),
                 "resource_count": node.get_descendants().exclude(kind=content_kinds.TOPIC).count(),
+                "coach_count": node.get_descendants().filter(role_visibility=roles.COACH).count(),
                 # "resource_size" : (aggregated.get('resource_size') or 0) + (aggregated.get('assessment_size') or 0),
             }
         else:
@@ -455,7 +456,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
     class Meta:
         model = ContentNode
         fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
-                  'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language')
+                  'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility')
 
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
@@ -478,7 +479,7 @@ class RootNodeSerializer(SimplifiedContentNodeSerializer):
     class Meta:
         model = ContentNode
         fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'publishing', 'node_id', 'channel_name',
-                  'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id')
+                  'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'role_visibility')
 
 
 class ContentNodeSerializer(SimplifiedContentNodeSerializer):
@@ -522,6 +523,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
                 "max_sort_order": node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
                 "resource_size": 0,  # Make separate request
                 "has_changed_descendant": descendants.filter(changed=True).exists(),
+                "coach_count": descendants.filter(role_visibility=roles.COACH).count(),
             }
         else:
             assessment_size = node.assessment_items.values('files__checksum', 'files__file_size').distinct()\
@@ -551,7 +553,9 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license','language',
                   'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
-                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data')
+                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
+                  'role_visibility')
+
 
 class ContentNodeEditSerializer(ContentNodeSerializer):
     files = FileSerializer(many=True, read_only=True)
@@ -565,7 +569,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
                   'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding',
-                  'freeze_authoring_data', 'publishing', 'original_source_node_id')
+                  'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility')
 
 
 class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
@@ -578,7 +582,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
             'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'publishing',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
-            'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data')
+            'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data', 'role_visibility')
 
 """ Shared methods across channel serializers """
 class ChannelFieldMixin(object):

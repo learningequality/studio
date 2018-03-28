@@ -29,9 +29,9 @@ class Command(RunserverCommand):
             browserify_thread.daemon = True
             browserify_thread.start()
 
-            minio_thread = Thread(target=self.start_minio)
-            minio_thread.daemon = True
-            minio_thread.start()
+            # minio_thread = Thread(target=self.start_minio)
+            # minio_thread.daemon = True
+            # minio_thread.start()
 
             atexit.register(self.kill_browserify_process)
 
@@ -44,7 +44,7 @@ class Command(RunserverCommand):
             ["run_minio.py"],
             stdin=subprocess.PIPE,
         )
-        
+
 
     def kill_browserify_process(self):
         if self.browserify_process.returncode is not None:
