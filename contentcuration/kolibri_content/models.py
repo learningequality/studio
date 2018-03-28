@@ -100,6 +100,7 @@ class ContentNode(MPTTModel):
     available = models.BooleanField(default=False)
     stemmed_metaphone = models.CharField(max_length=1800, blank=True)  # for fuzzy search in title and description
     lang = models.ForeignKey('Language', blank=True, null=True)
+    coach_content = models.BooleanField(default=False, db_index=True)
 
     # Added legacy fields
     license = models.ForeignKey('License', null=True, blank=True)
