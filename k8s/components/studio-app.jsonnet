@@ -2,6 +2,7 @@ local env = std.extVar("__ksonnet/environments");
 local params = std.extVar("__ksonnet/params").components["studio-app"];
 local postgres = std.extVar("__ksonnet/params").components["studio-postgres"];
 local studioRedis = std.extVar("__ksonnet/params").components["studio-redis"];
+local minioParams = std.extVar("__ksonnet/params").components["minio"];
 local k = import "k.libsonnet";
 local deployment = k.apps.v1beta1.deployment;
 local container = k.apps.v1beta1.deployment.mixin.spec.template.spec.containersType;
@@ -63,6 +64,13 @@ local celery_vars = [
   envVar.fromSecretRef("CELERY_REDIS_PASSWORD", studioRedis.name, "redis-password"),
 ];
 
+# object storage vars
+local object_storage_vars = [
+  envVar.fromSecretRef("AWS_ACCESS_KEY_ID", minioParams.name, "minio_access_key"),
+  envVar.fromSecretRef("AWS_SECRET_ACCESS_KEY", minioParams.name, "minio_secret_key"),
+  envVar.new("AWS_S3_ENDPOINT_URL", "http://" + minioParams.name)
+];
+
 local appDeployment = deployment
   .new(
     params.name,
@@ -76,7 +84,8 @@ local appDeployment = deployment
       )
       .withEnvMixin(django_config_vars)
       .withEnvMixin(db_vars)
-      .withEnvMixin(celery_vars),
+      .withEnvMixin(celery_vars)
+      .withEnvMixin(object_storage_vars),
       labels)
   # add our nginx proxy
   .withContainersMixin(
@@ -96,6 +105,7 @@ local workersDeployment = deployment.new(
     .withEnvMixin(django_config_vars)
     .withEnvMixin(db_vars)
     .withEnvMixin(celery_vars)
+    .withEnvMixin(object_storage_vars)
     .withCommand(["make", "prodceleryworkers"]),
     workerLabels);
 

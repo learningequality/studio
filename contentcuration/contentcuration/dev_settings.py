@@ -62,7 +62,3 @@ LOGGING = {
         }
     }
 }
-
-AWS_ACCESS_KEY_ID = "development"
-AWS_SECRET_ACCESS_KEY = "development"
-AWS_S3_ENDPOINT_URL = "http://localhost:9000"

@@ -19,7 +19,7 @@ local secretData = {
   minio_secret_key: std.base64("development"),
 };
 
-local appSecret = secret.new(name="minio-creds", data=secretData);
+local appSecret = secret.new(name=params.name, data=secretData);
 
 # create persistent volume
 

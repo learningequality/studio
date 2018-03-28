@@ -37,6 +37,8 @@
       servicePort: 80,
       type: "ClusterIP",
       size: "5Gi",
+      minio_access_key: "development",
+      minio_secret_key: "development",
     },
   },
 }
