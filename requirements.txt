@@ -5,7 +5,7 @@ django-pg-utils==0.1.5
 djangorestframework==3.3.3
 factory-boy==2.7.0
 pdfkit==0.6.1
-psycopg2==2.7.4
+psycopg2-binary==2.7.4
 Markdown==2.6.2
 Pillow==5.0.0
 psutil==3.1.1
