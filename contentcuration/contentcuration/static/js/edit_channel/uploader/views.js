@@ -730,6 +730,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         is_exercise: this.shared_data && this.shared_data.all_exercises,
         license_description: this.shared_data && this.shared_data.shared_license_description,
         language: this.shared_data && this.get_language(this.shared_data.shared_language, all_top_level),
+        role: this.shared_data && this.shared_data.shared_role
       }, {
         data: this.get_intl_data()
       }));
