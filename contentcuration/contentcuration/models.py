@@ -32,7 +32,7 @@ from jsonfield import JSONField
 from django.utils.deconstruct import deconstructible
 from django.utils.translation import ugettext as _
 from le_utils.constants import (content_kinds, exercises, file_formats,
-                                format_presets, licenses)
+                                format_presets, licenses, languages)
 from minio.error import NoSuchKey, ResponseError
 from mptt.models import (MPTTModel, TreeForeignKey, TreeManager,
                          raise_if_unsaved)
