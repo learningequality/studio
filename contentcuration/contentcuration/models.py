@@ -3,6 +3,8 @@ import functools
 import hashlib
 import json
 import logging
+import sys
+import socket
 import math
 import os
 import shutil
@@ -270,18 +272,55 @@ def generate_object_storage_name(checksum, filename):
     return os.path.join(directory, h + ext.lower())
 
 
-def generate_storage_url(filename, *args):
-    host = get_local_ip_address()
-    # assume the port is 9000, the default of minio
-    port = 9000
+def generate_storage_url(filename, request=None, *args):
+
     path = generate_object_storage_name(os.path.splitext(filename)[0], filename)
 
-    url = "http://{host}:{port}/{bucket}/{path}".format(
-        host=host,
-        port=port,
-        bucket=settings.AWS_STORAGE_BUCKET_NAME,
-        path=path,
-    )
+    # We have to handle these cases:
+    # 1. In normal kubernetes, nginx will proxy this for us. So just return a relative path.
+    # 2. When ran through Telepresence, the cluster's DNS host is available to the host. So we should then use whatever is
+    #    defined in AWS_S3_STORAGE_URL.
+    # 3. We go through nanobox, meaning it's the same IP address as the server, but a different port.
+
+    # host = get_local_ip_address()
+    # # assume the port is 9000, the default of minio
+    # port = 9000
+
+    # Detect our current state first
+    IS_RUNSERVER = "runserver" in sys.argv
+    HAS_MINIO_DNS_RECORD = False
+
+    try:
+        HAS_MINIO_DNS_RECORD = socket.gethostbyname("minio")
+    except socket.gaierror:
+        logging.debug("minio DNS record not detected. Assuming we're in a plain runserver command without Kubernetes.")
+
+    # We can detect if we're running in normal kubernetes mode, if we're not running runserver.
+    if not IS_RUNSERVER:
+        url = "/{bucket}/{path}".format(
+            bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            path=path,
+        )
+
+    # If we're running runserver, but the minio DNS is available, we're likely running on Telepresence+Kubernetes
+    elif IS_RUNSERVER and HAS_MINIO_DNS_RECORD:
+        # then return the URL but have the host as the minio endpoint URL
+        url = "{host}/{bucket}/{path}".format(
+            host=settings.AWS_S3_ENDPOINT_URL,
+            bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            path=path,
+        )
+    # likely running through plain bare metal runserver, or using nanobox
+    # then just serve the same IP and just change the port
+    else:
+        host = get_local_ip_address()
+        port = 9000 # hardcoded to the default minio IP address
+        url = "http://{host}:{port}/{bucket}/{path}".format(
+            host=host,
+            port=port,
+            bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            path=path,
+        )
 
     return url
 
