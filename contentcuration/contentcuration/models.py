@@ -21,8 +21,8 @@ from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages, roles
 from jsonfield import JSONField
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
 from pg_utils import DistinctSum
 from rest_framework import permissions
@@ -441,6 +441,10 @@ class Channel(models.Model):
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
 
+        index_together = [
+            ["deleted", "public"]
+        ]
+
 
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -543,6 +547,8 @@ class ContentNode(MPTTModel, models.Model):
     extra_fields = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"),
                               null=True)
+
+    role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
 
     objects = TreeManager()
@@ -692,9 +698,13 @@ class ContentNode(MPTTModel, models.Model):
 
         super(ContentNode, self).save(*args, **kwargs)
 
-        root = self.get_root()
-        if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
-            PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
+        try:
+            # During saving for fixtures, this fails to find the root node
+            root = self.get_root()
+            if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
+                PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
+        except ContentNode.DoesNotExist:
+            pass
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']

@@ -19,6 +19,14 @@
 		</div>
 		<h6 class="content_metadata_summary hide_on_drag {{#unless isfolder}}open_file{{/unless}}">
 			<span class="metadata_to_hide">
+				{{#if isfolder}}
+					{{#if node.metadata.coach_count}}
+						<span class="visibility" title="{{formatMessage (intlGet 'messages.coach_topic_title')}}">
+							<i class="icon-blue material-icons">local_library</i>
+							({{node.metadata.coach_count}})
+						</span>
+					{{/if}}
+				{{/if}}
 				{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
 				{{#if isfolder}}&nbsp;{{formatMessage (intlGet (concat 'messages.resource_count')) count=count}}&nbsp;{{/if}}
 				{{#unless isfolder}}
@@ -38,6 +46,14 @@
 				{{/if}}
 				{{#unless node.valid}}
 					<em class="invalid">{{formatMessage (intlGet 'messages.incomplete')}}</em>
+				{{/unless}}
+				{{#unless isfolder}}
+					{{#equal node.role_visibility 'coach'}}
+						<b class="visibility" title="{{formatMessage (intlGet 'messages.coach_title')}}">
+							<i class="icon-blue material-icons">local_library</i>
+							{{formatMessage (intlGet 'messages.coach')}}
+						</b>
+					{{/equal}}
 				{{/unless}}
 			</span>
 		</h6>
