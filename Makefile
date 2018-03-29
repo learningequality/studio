@@ -19,7 +19,7 @@ setupnanobox:
 
 
 devserver:
-	cd contentcuration; python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080
+	cd contentcuration; python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8081
 
 collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
