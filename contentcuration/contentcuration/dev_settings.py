@@ -52,6 +52,9 @@ LOGGING = {
         },
         'console': {
             'class': 'logging.StreamHandler',
+        },
+        'null': {
+            'class': 'logging.NullHandler'
         }
     },
     'loggers': {
@@ -59,6 +62,11 @@ LOGGING = {
             'handlers': ['file', 'console'],
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': True,
+        },
+        'django.db.backends': {
+            'handlers': ['null'],
+            'propagate': False,
+            'level': 'DEBUG'
         }
     }
 }
