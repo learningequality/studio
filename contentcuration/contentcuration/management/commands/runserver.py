@@ -34,7 +34,6 @@ class Command(RunserverCommand):
             browserify_thread.daemon = True
             browserify_thread.start()
 
-            start_minio()
             ensure_storage_bucket_public()
 
             atexit.register(self.kill_browserify_process)
