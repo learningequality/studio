@@ -6,6 +6,12 @@ environments:
       server: https://192.168.99.100:8443
     k8sVersion: v1.8.0
     path: dev
+  preview:
+    destination:
+      namespace: default
+      server: https://35.193.59.245
+    k8sVersion: v1.9.0
+    path: preview
 kind: ksonnet.io/app
 libraries:
   postgres:
