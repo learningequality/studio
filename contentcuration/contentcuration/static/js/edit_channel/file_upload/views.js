@@ -265,7 +265,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
                 previewsContainer: this.list_selector, // Define the container to display the previews
                 headers: {
                     "X-CSRFToken": get_cookie("csrftoken"),
-                    "Preferences": JSON.stringify(window.current_channel.get('preferences'))
+                    "Preferences": JSON.stringify(window.current_channel.get('content_defaults'))
                 },
                 dictInvalidFileType: this.get_translation("file_not_supported"),
                 dictFileTooBig: this.get_translation("max_size_exceeded"),
