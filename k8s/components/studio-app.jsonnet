@@ -44,6 +44,7 @@ local staticfilesVolumeMount = {
 local django_config_vars = [
   envVar.new("DJANGO_SETTINGS_MODULE", params.settings),
   envVar.new("DJANGO_LOG_FILE", params.log_file),
+  envVar.new("MPLBACKEND", "PS"),  # so that matplotlib will only run one consistent backend
 ];
 
 # DB vars

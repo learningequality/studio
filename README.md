@@ -41,6 +41,7 @@ Follow each of these steps in your terminal to get a local Studio deployment
 in a cluster on your local machine:
 
   1. Clone the Studio repo to your local machine:
+  
 
   ```bash
   $ git clone https://github.com/learningequality/studio
@@ -142,8 +143,9 @@ On Windows, you'll need to download and install Postgres and Redis manually.
 
 On Mac OS X, you can install the corresponding packages using Homebrew:
 
-    brew install  postgresql@9.6 redis node ffmpeg
+    brew install  postgresql@9.6 redis node ffmpeg imagemagick@6 gs
     brew link --force postgresql@9.6
+    brew link --force imagemagick@6
 
 
 
