@@ -86,7 +86,7 @@ class Command(BaseCommand):
             channel.main_tree.save()
 
             if send_email:
-                send_emails(channel)
+                send_emails(channel, user_id)
 
             # use SQLite backup API to put DB into archives folder.
             # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
@@ -96,13 +96,18 @@ class Command(BaseCommand):
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
 
-def send_emails(channel):
+def send_emails(channel, user_id):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
 
-    # Email all users about updates to channel
-    for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
+    if user_id:
+        user = ccmodels.User.objects.get(pk=user_id)
         message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+    else:
+        # Email all users about updates to channel
+        for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
+            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
+            user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
 
 def create_content_database(channel_id, force, user_id, force_exercises):
