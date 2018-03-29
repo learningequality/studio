@@ -33,7 +33,7 @@ from contentcuration.statistics import record_channel_stats
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
 
-DEFAULT_USER_PREFERENCES = json.dumps({
+DEFAULT_CONTENT_DEFAULTS = {
     'license': None,
     'language': None,
     'author': None,
@@ -48,7 +48,10 @@ DEFAULT_USER_PREFERENCES = json.dumps({
     'auto_derive_html5_thumbnail': True,
     'auto_derive_exercise_thumbnail': True,
     'auto_randomize_questions': True,
-}, ensure_ascii=False)
+}
+DEFAULT_USER_PREFERENCES = json.dumps(DEFAULT_CONTENT_DEFAULTS, ensure_ascii=False)
+
+
 
 
 class UserManager(BaseUserManager):
@@ -88,6 +91,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
 
     information = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, null=True)
+    content_defaults = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=DEFAULT_CONTENT_DEFAULTS)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -339,6 +343,7 @@ class Channel(models.Model):
     deleted = models.BooleanField(default=False, db_index=True)
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
+    content_defaults = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=DEFAULT_CONTENT_DEFAULTS)
     priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
     last_published = models.DateTimeField(blank=True, null=True)
     secret_tokens = models.ManyToManyField(

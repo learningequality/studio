@@ -422,16 +422,16 @@ var BaseWorkspaceView = BaseView.extend({
 	sync_content:function(){
 		var SyncView = require("edit_channel/sync/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
-		var sync = new SyncView.TempSyncModalView({
-			el: $("#dialog"),
-		    onsync: this.reload_ancestors,
-		    model: window.current_channel.get_root("main_tree")
-		});
-		// var sync = new SyncView.SyncModalView({
+		// var sync = new SyncView.TempSyncModalView({
 		// 	el: $("#dialog"),
 		//     onsync: this.reload_ancestors,
 		//     model: window.current_channel.get_root("main_tree")
 		// });
+		var sync = new SyncView.SyncModalView({
+			el: $("#dialog"),
+		    onsync: this.reload_ancestors,
+		    model: window.current_channel.get_root("main_tree")
+		});
 	},
 	delete_items_permanently:function(message, list, callback){
 		message = (message!=null)? message: this.get_translation("deleting");
@@ -483,7 +483,7 @@ var BaseWorkspaceView = BaseView.extend({
 	handle_changed_settings: function(data){
 		$("#channel_selection_dropdown").text(data.get('name'));
 		window.workspace_manager.get_main_view().model.set('title', data.get('name'));
-		window.preferences = data.get('preferences');
+		window.preferences = data.get('content_defaults');
 	}
 });
 

@@ -630,17 +630,11 @@ var ChannelModel = BaseModel.extend({
         return root_node;
     },
     initialize: function () {
-        if (this.get("preferences") && typeof this.get("preferences") !== "object"){
-            this.set("preferences", JSON.parse(this.get("preferences")))
-        }
         if (this.get("thumbnail_encoding") && typeof this.get("thumbnail_encoding") !== "object"){
             this.set("thumbnail_encoding", JSON.parse(this.get("thumbnail_encoding").replace(/u*'/g, "\"")))
         }
     },
     parse: function(response) {
-        if (response !== undefined && response.preferences) {
-            response.preferences = JSON.parse(response.preferences);
-        }
         if (response.thumbnail_encoding !== undefined && response.thumbnail_encoding) {
             response.thumbnail_encoding = JSON.parse(response.thumbnail_encoding.replace(/u*'/g, "\""));
         }
@@ -648,9 +642,6 @@ var ChannelModel = BaseModel.extend({
     },
     toJSON: function() {
         var attributes = _.clone(this.attributes);
-        if (typeof attributes.preferences !== "string") {
-            attributes.preferences = JSON.stringify(attributes.preferences);
-        }
         if (attributes.thumbnail_encoding && typeof attributes.thumbnail_encoding !== "string") {
             attributes.thumbnail_encoding = JSON.stringify(attributes.thumbnail_encoding);
         }
