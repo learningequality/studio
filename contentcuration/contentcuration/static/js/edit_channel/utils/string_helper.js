@@ -288,7 +288,8 @@ var messages = {
   "Natural": "Natural",
   "Sharp": "Sharp",
   "coach": "Coaches",
-  "learner": "Anyone"
+  "learner": "Anyone",
+  "role_visibility": "Visible to"
 };
 
 

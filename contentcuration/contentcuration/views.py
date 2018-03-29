@@ -112,7 +112,7 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "roles": json.dumps([r[0] for r in roles.choices]),
                                                  "mastery": json.dumps([m[0] for m in exercises.MASTERY_MODELS if m[0] != exercises.SKILL_CHECK]),
                                                  "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
-                                                 "preferences": channel.preferences,
+                                                 "preferences": json.dumps(channel.content_defaults),
                                                  "messages": get_messages(),
                                                  "primary_token": token or channel.pk,
                                                  "title": settings.DEFAULT_TITLE,
@@ -130,7 +130,7 @@ def channel_list(request):
 
     return render(request, 'channel_list.html', {"channel_name": False,
                                                  "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
-                                                 "user_preferences": request.user.preferences,
+                                                 "user_preferences": json.dumps(request.user.content_defaults),
                                                  "langs_list": languages,
                                                  "messages": get_messages(),
                                                 })
