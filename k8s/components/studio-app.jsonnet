@@ -90,7 +90,7 @@ local appDeployment = deployment
       labels)
   # add our nginx proxy
   .withContainersMixin(
-      container.new("nginx-proxy", "learningequality/contentworkshop-app-nginx-proxy:" + params.nginxImage)
+      container.new("nginx-proxy", params.nginxImage)
       .withPorts(containerPort.new(podListeningPort))
   )
 

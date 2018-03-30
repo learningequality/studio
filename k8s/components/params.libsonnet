@@ -11,7 +11,7 @@
       image: "gcr.io/github-learningequality-studio/app:nlatest",
       name: "studio-app",
       workerName: "studio-workers",
-      nginxImage: "v4",
+      nginxImage: "learningequality/contentworkshop-app-nginx-proxy:v4",
       replicas: 1,
       workerReplicas: 1,
       settings: "contentcuration.settings",
