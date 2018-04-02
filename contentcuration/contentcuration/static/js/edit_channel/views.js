@@ -400,7 +400,7 @@ var BaseWorkspaceView = BaseView.extend({
 			collection: move_collection,
 			el: $("#dialog"),
 		    onmove: this.handle_move,
-		    model: window.current_channel.get_root("main_tree")
+		    model: window.current_channel.get_root((window.staging)? "staging_tree" : "main_tree")
 		});
 	},
 	handle_move:function(target, moved, original_parents){
@@ -1097,7 +1097,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			collection: move_collection,
 			el: $("#dialog"),
 		    onmove: this.handle_move,
-		    model: window.current_channel.get_root("main_tree")
+		    model: window.current_channel.get_root((window.staging)? "staging_tree" : "main_tree")
 		});
 	},
 	handle_move:function(target, moved, original_parents){

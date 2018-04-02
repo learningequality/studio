@@ -39,7 +39,9 @@ function addSortable(element, selected_class, callback){
         start: function (e, ui) {
             var elements = $('.' + selectedClass + '.hidden').not('.current_topic').not('.sorting-placeholder');
             ui.item.data('items', elements);
-            window.workspace_manager.get_queue_view().close_queue();
+            if(window.workspace_manager.get_queue_view()) {
+            	window.workspace_manager.get_queue_view().close_queue();
+            }
             $("body").addClass("dragging");
         },
         receive: function (e, ui) {
