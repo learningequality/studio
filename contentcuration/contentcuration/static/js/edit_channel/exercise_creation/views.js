@@ -4,6 +4,7 @@ const MATHJAX_REGEX = /\$\$([^\$]+)\$\$/g;      // <-- this is not used
 const IMG_PLACEHOLDER = "${☣ CONTENTSTORAGE}/"
 const IMG_REGEX = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
 const NUM_REGEX = /[0-9\,\.\-\/\+e\s]+/g;
+const IMG_CHECK = /.*\/content\/storage\/[0-9a-z]\/[0-9a-z]\/([0-9a-z]{32}\..+)/;
 
 /* MODULES */
 var Backbone = require("backbone");
@@ -15,6 +16,7 @@ var UndoManager = require("backbone-undo");
 require("summernote");
 require("../../utils/mathquill.min.js");
 var dialog = require("edit_channel/utils/dialog");
+var get_cookie = require("utils/get_cookie");
 
 /* PARSERS */
 var Katex = require("katex");
@@ -176,7 +178,7 @@ var UploadImage = function (context) {
         tooltip: 'Image',
         click: function () {
             var view = new ImageUploader.ImageUploadView({
-                callback: context.options.callbacks.onImageUpload,
+                callback: context.options.callbacks.onCustomImageUpload,
                 preset_id: 'exercise_image'
             });
         }
@@ -273,7 +275,7 @@ var EditorView = BaseViews.BaseView.extend({
 
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
-        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key", "undo", "redo",
+        _.bindAll(this, "add_image", "add_formula", "upload_image", "deactivate_editor", "activate_editor", "save", "process_key", "undo", "redo",
                "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content", "check_key");
         this.edit_key = options.edit_key;
         this.editing = false;
@@ -372,7 +374,8 @@ var EditorView = BaseViews.BaseView.extend({
             callbacks: {
                 onChange: _.debounce(this.save, 1),
                 onPaste: this.paste_content,
-                onImageUpload: this.add_image,
+                onImageUpload: this.upload_image,
+                onCustomImageUpload: this.add_image,
                 onAddFormula: this.add_formula,
                 onKeydown: this.process_key,
                 onUndo: this.undo,
@@ -431,14 +434,15 @@ var EditorView = BaseViews.BaseView.extend({
         return !this.numbersOnly || NUM_REGEX.test(content) || _.contains(specialCharacterKeys, key);
     },
     paste_content: function(event){
-        var clipboard = (event.originalEvent || event).clipboardData || window.clipboardData;
+        var clipboard = event.clipboardData || window.clipboardData || event.originalEvent.clipboardData;
         event.preventDefault();
         var bufferText = clipboard.getData("Text");
         var clipboardHtml = clipboard.getData('text/html');
         if(clipboardHtml){
+            this.upload_image(clipboard.files);
             var div = document.createElement("DIV");
-            div.innerHTML = this.convert_html_to_markdown(clipboardHtml);
-            bufferText = div.textContent || tmp.innerText || bufferText;
+            div.innerHTML = this.convert_html_to_markdown(clipboardHtml, true);
+            bufferText = div.textContent || bufferText;
         }
         var self = this;
         setTimeout(function () { // Firefox fix
@@ -453,11 +457,37 @@ var EditorView = BaseViews.BaseView.extend({
             }
         }, 10);
     },
-    add_image: function(file_id, filename, alt_text) {
-        this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
-        alt_text = alt_text || "";
-        this.model.set(this.edit_key, this.model.get(this.edit_key) + "![" + alt_text + "](" + filename + ")");
-        this.render_editor();
+    add_image(file_id, filename, alt_text, norender) {
+        if (typeof file_id === "string") {
+            this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
+            alt_text = alt_text || "";
+            this.model.set(this.edit_key, this.model.get(this.edit_key) + "![" + alt_text + "](" + filename + ")");
+            if(!norender) {
+                this.render_editor();
+            }
+        }
+    },
+    upload_image: function(files, text) {
+        this.toggle_loading(true);
+        var self = this;
+        _.each(files, function(file) {
+            var formData = new FormData();
+            formData.append("file", file);
+            $.post({
+                url: window.Urls.exercise_image_upload(),
+                contentType:false,
+                cache: false,
+                processData:false,
+                data: formData,
+                async: false,
+                success: function(data) {
+                    data = JSON.parse(data);
+                    self.add_image(data.file_id, data.formatted_filename, "", true);
+                },
+                headers: {"X-CSRFToken": get_cookie("csrftoken")}
+            });
+        });
+        this.toggle_loading(false);
     },
     add_formula:function(formula){
         var self = this;
@@ -534,7 +564,7 @@ var EditorView = BaseViews.BaseView.extend({
         });
         callback(content);
     },
-    convert_html_to_markdown: function(contents) {
+    convert_html_to_markdown: function(contents, exclude_images) {
         // Replace svgs with latex strings
         var el = document.createElement( 'div' );
         el.innerHTML = contents;
@@ -543,19 +573,23 @@ var EditorView = BaseViews.BaseView.extend({
         });
 
         // Render content to markdown (use custom fiters for images and italics)
+        var self = this;
         contents = toMarkdown(contents,{
             converters: [
                 {
                     filter: 'img',
                     replacement: function (content, node) {
-                        var alt = node.alt || '';
+                        if (exclude_images && !IMG_CHECK.test(node.getAttribute('src'))) {
+                            return "";
+                        }
                         var src = node.getAttribute('src').split('/').slice(-1)[0] || '';
+                        var alt = node.alt || '';
                         var title = node.title || '';
                         var width = node.style.width || node.width || null;
                         var height = node.style.height || node.height || null;
                         var size = width ? " =" + width.toString().replace('px', '') + "x" : '';
                         size += height ? height.toString().replace('px', '') : '';
-                        return src ? '![' + alt + ']' + '(' + IMG_PLACEHOLDER + src + size + ')' : ''
+                        return src ? '![' + alt + ']' + '(' + IMG_PLACEHOLDER + src + size + ')' : '';
                     }
                 },
                 {
