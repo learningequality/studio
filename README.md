@@ -101,7 +101,7 @@ All the javascript dependencies are listed in `package.json`. To install them ru
      
          sudo su postgres
          psql
-         # mac: psl postgres
+         # mac: psql postgres
            CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
 
   4. Create a database called `gonano`
@@ -127,7 +127,7 @@ constants in the database:
     python manage.py calculateresources --settings=contentcuration.dev_settings --init
     python manage.py collectstatic --noinput --settings=contentcuration.dev_settings
     python manage.py collectstatic_js_reverse --settings=contentcuration.dev_settings
-
+    python manage.py setup --settings=contentcuration.dev_settings
 
 
 #### Start the dev server
@@ -136,4 +136,4 @@ You're all setup now, and ready to start the Studio local development server:
 
     python manage.py runserver --settings=contentcuration.dev_settings
 
-You should be able to open up http://127.0.0.1:8000 and see a login screen now, from which you can create an account and log in with it! (See the server logs for the text of the confirmation email that contains the account activation link.)
+You should be able to login at http://127.0.0.1:8000 using email `a@a.com`, password `a`.
