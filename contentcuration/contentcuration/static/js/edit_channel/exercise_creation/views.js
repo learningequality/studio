@@ -275,7 +275,7 @@ var EditorView = BaseViews.BaseView.extend({
 
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
-        _.bindAll(this, "add_image", "add_formula", "upload_image", "deactivate_editor", "activate_editor", "save", "process_key", "undo", "redo",
+        _.bindAll(this, "add_image", "add_formula", "paste_images", "deactivate_editor", "activate_editor", "save", "process_key", "undo", "redo",
                "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content", "check_key");
         this.edit_key = options.edit_key;
         this.editing = false;
@@ -374,7 +374,6 @@ var EditorView = BaseViews.BaseView.extend({
             callbacks: {
                 onChange: _.debounce(this.save, 1),
                 onPaste: this.paste_content,
-                onImageUpload: this.upload_image,
                 onCustomImageUpload: this.add_image,
                 onAddFormula: this.add_formula,
                 onKeydown: this.process_key,
@@ -439,10 +438,10 @@ var EditorView = BaseViews.BaseView.extend({
         var bufferText = clipboard.getData("Text");
         var clipboardHtml = clipboard.getData('text/html');
         if(clipboardHtml){
-            this.upload_image(clipboard.files);
-            var div = document.createElement("DIV");
-            div.innerHTML = this.convert_html_to_markdown(clipboardHtml, true);
-            bufferText = div.textContent || bufferText;
+            var div = this.paste_images(clipboard.files, clipboardHtml);
+            var text = this.convert_html_to_markdown(div.innerHTML);
+            bufferText = text || bufferText;
+            console.log(bufferText)
         }
         var self = this;
         setTimeout(function () { // Firefox fix
@@ -450,6 +449,7 @@ var EditorView = BaseViews.BaseView.extend({
                 document.execCommand('insertText', false, bufferText);
                 self.editor.togglePlaceholder(false);
                 if(clipboardHtml){
+                    console.log(self.editor.getContents());
                     self.save(self.editor.getContents());
                     self.editor.setHTML("");
                     self.render_editor();
@@ -457,37 +457,47 @@ var EditorView = BaseViews.BaseView.extend({
             }
         }, 10);
     },
-    add_image(file_id, filename, alt_text, norender) {
+    add_image(file_id, filename, alt_text) {
         if (typeof file_id === "string") {
             this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
             alt_text = alt_text || "";
-            this.model.set(this.edit_key, this.model.get(this.edit_key) + "![" + alt_text + "](" + filename + ")");
-            if(!norender) {
-                this.render_editor();
-            }
+            this.model.set(this.edit_key, this.model.get(this.edit_key) + " ![" + alt_text + "](" + filename + ")");
+            this.render_editor();
         }
     },
-    upload_image: function(files, text) {
-        this.toggle_loading(true);
+    paste_images: function(files, text) {
+        var div = document.createElement("DIV");
+        div.innerHTML = text;
         var self = this;
-        _.each(files, function(file) {
-            var formData = new FormData();
-            formData.append("file", file);
-            $.post({
-                url: window.Urls.exercise_image_upload(),
-                contentType:false,
-                cache: false,
-                processData:false,
-                data: formData,
-                async: false,
-                success: function(data) {
-                    data = JSON.parse(data);
-                    self.add_image(data.file_id, data.formatted_filename, "", true);
-                },
-                headers: {"X-CSRFToken": get_cookie("csrftoken")}
-            });
+        var index = 0;
+        _.each($(div).find('img'), function(img) {
+            if(!IMG_CHECK.test(img.getAttribute('src'))) {
+                if(index >= files.length) { // Some images aren't properly added to the clipboard, so remove them to avoid errors
+                    $(img).remove();
+                } else {
+                    var formData = new FormData();
+                    formData.append("file", files[index]);
+                    $.post({
+                        url: window.Urls.exercise_image_upload(),
+                        contentType:false,
+                        cache: false,
+                        processData:false,
+                        data: formData,
+                        async: false,
+                        success: function(data) {
+                            img.setAttribute('src', JSON.parse(data).formatted_filename)
+                            ++index;
+                        },
+                        error: function() {
+                            console.log("ERROR", files[index])
+                        },
+                        headers: {"X-CSRFToken": get_cookie("csrftoken")}
+                    });
+                }
+
+            }
         });
-        this.toggle_loading(false);
+        return div;
     },
     add_formula:function(formula){
         var self = this;
@@ -564,7 +574,7 @@ var EditorView = BaseViews.BaseView.extend({
         });
         callback(content);
     },
-    convert_html_to_markdown: function(contents, exclude_images) {
+    convert_html_to_markdown: function(contents) {
         // Replace svgs with latex strings
         var el = document.createElement( 'div' );
         el.innerHTML = contents;
@@ -579,9 +589,6 @@ var EditorView = BaseViews.BaseView.extend({
                 {
                     filter: 'img',
                     replacement: function (content, node) {
-                        if (exclude_images && !IMG_CHECK.test(node.getAttribute('src'))) {
-                            return "";
-                        }
                         var src = node.getAttribute('src').split('/').slice(-1)[0] || '';
                         var alt = node.alt || '';
                         var title = node.title || '';
