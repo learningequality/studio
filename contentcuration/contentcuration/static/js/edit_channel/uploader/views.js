@@ -484,6 +484,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     shared_exercise_data:{mastery_model: 0, m: null, n: null, randomize: null},
     shared_language:0,
     shared_role: 0,
+    shared_source: null,
   },
   list_selector: "#uploaded_list",
   default_item: "#uploaded_list .default-item",
@@ -603,6 +604,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.all_exercises = view.model.get("kind") === "exercise";
       this.shared_data.shared_language = view.model.get("language");
       this.shared_data.shared_role = view.model.get("role_visibility");
+      this.shared_data.shared_source = view.model.get("original_channel");
       if(view.model.get("extra_fields")){
         this.shared_data.shared_exercise_data = view.model.get("extra_fields");
       }
@@ -616,6 +618,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.all_files = this.shared_data.all_files && view.model.get("kind")  !== "topic";
       this.shared_data.all_exercises = this.shared_data.all_exercises && view.model.get("kind")  === "exercise";
       this.shared_data.shared_role = (this.shared_data.shared_role == view.model.get("role_visibility"))? this.shared_data.shared_role : 0;
+      this.shared_data.shared_source = (this.shared_data.shared_source && this.shared_data.shared_source.id == view.model.get("original_channel").id)? this.shared_data.shared_source : null;
 
       // NEW FIELD: see if the shared fields match, if not set to a default
 
@@ -672,6 +675,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
     var all_top_level = (this.new_content)? !this.model.get("parent") : _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
+    var shared_source = (this.shared_data && this.shared_data.shared_source && this.shared_data.shared_source.id !== window.current_channel.id)? this.shared_data.shared_source : null;
     if(this.allow_edit){
       !this.new_content && this.container.validate();
       this.$el.html(this.template({
@@ -694,7 +698,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         roles: window.roles,
         mastery: window.mastery,
         language_default: this.get_language(null, all_top_level),
-        channel_id: window.current_channel.id
+        channel_id: window.current_channel.id,
+        source_channel: shared_source
       }, {
         data: this.get_intl_data()
       }));
@@ -730,7 +735,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         is_exercise: this.shared_data && this.shared_data.all_exercises,
         license_description: this.shared_data && this.shared_data.shared_license_description,
         language: this.shared_data && this.get_language(this.shared_data.shared_language, all_top_level),
-        role: this.shared_data && this.shared_data.shared_role
+        role: this.shared_data && this.shared_data.shared_role,
+        source_channel: shared_source
       }, {
         data: this.get_intl_data()
       }));
