@@ -21,7 +21,7 @@
 	{{/if}}
 	{{#if is_file}}
 		<hr/>
-		{{#if source_channel}}<p class="uploader-copied-warning">{{formatMessage (intlGet 'messages.imported_from')}} <a href="/channels/{{source_channel.id}}/view{{#if node}}/{{node.original_source_node_id}}{{/if}}" target="_blank" title="{{source_channel.name}}" class="original_channel_link"><b>{{source_channel.name}}</b></a></p>{{/if}}
+		{{#if source_channel}}<p class="uploader-copied-warning">{{formatMessage (intlGet 'messages.source')}} <a href="/channels/{{source_channel.id}}/view{{#if node}}/{{node.original_source_node_id}}{{/if}}" target="_blank" title="{{source_channel.name}}" class="original_channel_link"><b>{{source_channel.name}}</b></a></p>{{/if}}
 		<div class="row">
 			<div class="col-xs-3  text-center">
 				<h4>{{formatMessage (intlGet 'messages.author')}}</h4>
