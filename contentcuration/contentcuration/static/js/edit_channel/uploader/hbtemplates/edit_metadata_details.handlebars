@@ -30,7 +30,7 @@
 			<div class="col-xs-5  text-center">
 				<h4>{{formatMessage (intlGet 'messages.license')}}</h4>
 				<p class="detail_field">
-					<span id="license_detail_field">{{#if license}}{{#translate license}}{{/translate}}{{else}}<span class="default_detail_field">---</span>{{/if}}</span>
+					<span id="license_detail_field">{{#if license}}{{{translate license}}}{{else}}<span class="default_detail_field">---</span>{{/if}}</span>
 					<span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="license_about"></span>
 				</p>
 				<p id="custom_license_description" class="license_description_text">{{license_description}}</p>
@@ -41,6 +41,13 @@
 			</div>
 		</div>
 		<hr/>
+		<br/>
+		<br/>
+		<h4>{{formatMessage (intlGet 'messages.role_visibility')}}</h4>
+		<span id="role_detail_field">{{#if role}}{{{translate role}}}{{else}}<span class="default_detail_field">---</span>{{/if}}</span>
+		<span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="visibility_about"></span>
+		<br/>
+		<br/>
 	{{/if}}
 	{{#if node}}
 		<h4>{{formatMessage (intlGet 'messages.description')}}</h4>

@@ -19,7 +19,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q, Count, Sum
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, roles
 from pressurecooker.encodings import write_base64_to_file
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration import models as ccmodels
@@ -68,6 +68,7 @@ class Command(BaseCommand):
         send_email = options['email']
         user_id = options['user_id']
         force_exercises = options['force-exercises']
+        channel = ccmodels.Channel.objects.get(pk=channel_id)
 
         # license = ccmodels.License.objects.get(pk=license_id)
         try:
@@ -85,7 +86,7 @@ class Command(BaseCommand):
             channel.main_tree.save()
 
             if send_email:
-                send_emails(channel)
+                send_emails(channel, user_id)
 
             # use SQLite backup API to put DB into archives folder.
             # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
@@ -95,13 +96,18 @@ class Command(BaseCommand):
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
 
-def send_emails(channel):
-    subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Content Workshop Channel Published')})
+def send_emails(channel, user_id):
+    subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
 
-    # Email all users about updates to channel
-    for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
+    if user_id:
+        user = ccmodels.User.objects.get(pk=user_id)
         message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+    else:
+        # Email all users about updates to channel
+        for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
+            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
+            user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
 
 def create_content_database(channel_id, force, user_id, force_exercises):
@@ -204,6 +210,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id):
             'lang': language,
             'license_name': kolibri_license.license_name if kolibri_license is not None else None,
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
+            'coach_content': ccnode.role_visibility == roles.COACH,
         }
     )
 

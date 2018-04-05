@@ -9,7 +9,7 @@ from django.core.files import File as DjFile
 from django.core.management import call_command
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseServerError, HttpResponseForbidden
-from le_utils.constants import content_kinds
+from le_utils.constants import content_kinds, roles
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.exceptions import ValidationError
@@ -599,6 +599,7 @@ def create_node_from_file(user, file_name, parent_node, sort_order):
         source_id=node_data['source_id'],
         source_domain=node_data['source_domain'],
         language_id=node_data.get('language'),
+        role_visibility=node_data.get('role') or roles.LEARNER,
     )
     # Create files associated with node
     map_files_to_node(user, cur_node, node_data['files'])
@@ -662,6 +663,7 @@ def create_node(node_data, parent_node, sort_order):
         source_domain=node_data.get('source_domain'),
         language_id=node_data.get('language'),
         freeze_authoring_data=True,
+        role_visibility=node_data.get('role') or roles.LEARNER,
     )
 
 

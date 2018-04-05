@@ -75,13 +75,13 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         this.$el.html(this.template({
             channel: this.model.toJSON(),
             licenses: window.licenses.toJSON(),
-            preferences: this.model.get("preferences"),
+            preferences: this.model.get("content_defaults"),
             languages: window.languages.toJSON()
         },  {
             data: this.get_intl_data()
         }));
-        $("#license_select").val(this.get_license_id(this.model.get("preferences").license));
-        $("#mastery_model_select").val(this.model.get("preferences").mastery_model);
+        $("#license_select").val(this.get_license_id(this.model.get("content_defaults").license));
+        $("#mastery_model_select").val(this.model.get("content_defaults").mastery_model);
         $("#custom_license_description").css("display", (this.check_custom_license())? "block" : "none");
         $("#mastery_custom_criterion").css("visibility", ($("#mastery_model_select").val()==="m_of_n")? "visible" : "hidden");
         $("#select_language").val(this.model.get("language") || 0);
@@ -121,19 +121,19 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         return el.val()!=0 && window.licenses.get(el.val()).get("is_custom");
     },
     submit_changes:function(){
-        var preferences = this.model.get("preferences");
-        preferences.license = this.get_license_name();
-        preferences.author = $("#author_field").val().trim();
-        preferences.copyright_holder = $("#input_copyright_holder").val().trim();
-        preferences.license_description = $("#custom_license_description").val().trim();
-        preferences.mastery_model = $("#mastery_model_select").val();
-        preferences.m_value = $("#m_value").val();
-        preferences.n_value = $("#n_value").val();
-        preferences.auto_randomize_questions = $("#auto_randomize_questions").is(":checked");
-        preferences.auto_derive_video_thumbnail = $("#auto_video_thumbnail").is(":checked");
-        preferences.auto_derive_audio_thumbnail = $("#auto_audio_thumbnail").is(":checked");
-        preferences.auto_derive_document_thumbnail = $("#auto_document_thumbnail").is(":checked");
-        preferences.auto_derive_html5_thumbnail = $("#auto_html5_thumbnail").is(":checked");
+        var content_defaults = this.model.get("content_defaults");
+        content_defaults.license = this.get_license_name();
+        content_defaults.author = $("#author_field").val().trim();
+        content_defaults.copyright_holder = $("#input_copyright_holder").val().trim();
+        content_defaults.license_description = $("#custom_license_description").val().trim();
+        content_defaults.mastery_model = $("#mastery_model_select").val();
+        content_defaults.m_value = $("#m_value").val();
+        content_defaults.n_value = $("#n_value").val();
+        content_defaults.auto_randomize_questions = $("#auto_randomize_questions").is(":checked");
+        content_defaults.auto_derive_video_thumbnail = $("#auto_video_thumbnail").is(":checked");
+        content_defaults.auto_derive_audio_thumbnail = $("#auto_audio_thumbnail").is(":checked");
+        content_defaults.auto_derive_document_thumbnail = $("#auto_document_thumbnail").is(":checked");
+        content_defaults.auto_derive_html5_thumbnail = $("#auto_html5_thumbnail").is(":checked");
         var language = $("#select_language").val();
         var self = this;
         $("#settings_submit").html(this.get_translation("saving"))
@@ -143,7 +143,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
             "name": $("#input_title").val().trim(),
             "description": $("#input_description").val(),
             "thumbnail": this.model.get("thumbnail"),
-            "preferences": JSON.stringify(preferences),
+            "content_defaults": content_defaults,
             "language": (language===0)? null : language
         }).then(function(data){
             self.onsave(data);

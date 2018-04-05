@@ -41,3 +41,4 @@ minio==3.0.3
 pathlib
 sqlalchemy==1.2.2
 xhtml2pdf==0.2.1
+progressbar2==3.36.0

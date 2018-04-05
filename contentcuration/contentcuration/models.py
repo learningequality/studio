@@ -30,6 +30,7 @@ from django.db.utils import ConnectionDoesNotExist
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages, roles
 from jsonfield import JSONField
 from django.utils.deconstruct import deconstructible
 from django.utils.translation import ugettext as _
@@ -45,7 +46,7 @@ from rest_framework.authtoken.models import Token
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
 
-DEFAULT_USER_PREFERENCES = json.dumps({
+DEFAULT_CONTENT_DEFAULTS = {
     'license': None,
     'language': None,
     'author': None,
@@ -60,7 +61,10 @@ DEFAULT_USER_PREFERENCES = json.dumps({
     'auto_derive_html5_thumbnail': True,
     'auto_derive_exercise_thumbnail': True,
     'auto_randomize_questions': True,
-}, ensure_ascii=False)
+}
+DEFAULT_USER_PREFERENCES = json.dumps(DEFAULT_CONTENT_DEFAULTS, ensure_ascii=False)
+
+
 
 
 class UserManager(BaseUserManager):
@@ -100,6 +104,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
 
     information = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, null=True)
+    content_defaults = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=DEFAULT_CONTENT_DEFAULTS)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -500,6 +505,7 @@ class Channel(models.Model):
     deleted = models.BooleanField(default=False, db_index=True)
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
+    content_defaults = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=DEFAULT_CONTENT_DEFAULTS)
     priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
     last_published = models.DateTimeField(blank=True, null=True)
     secret_tokens = models.ManyToManyField(
@@ -708,6 +714,8 @@ class ContentNode(MPTTModel, models.Model):
     extra_fields = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"),
                               null=True)
+
+    role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
 
     objects = TreeManager()

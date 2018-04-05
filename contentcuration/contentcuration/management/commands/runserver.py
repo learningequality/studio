@@ -47,7 +47,7 @@ class Command(RunserverCommand):
             ["run_minio.py"],
             stdin=subprocess.PIPE,
         )
-        
+
 
     def kill_browserify_process(self):
         if self.browserify_process.returncode is not None:
