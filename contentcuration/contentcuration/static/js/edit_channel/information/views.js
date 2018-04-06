@@ -31,7 +31,11 @@ var MESSAGES = {
     "older_version": "Have an older version of Kolibri?",
     "get_token": "Get Channel Token",
     "get_id": "Get Channel ID",
-    "published_version": "Published Version:"
+    "published_version": "Published Version:",
+    "coach_content": "What is content visibility?",
+    "coach_description": "This is support content and is visible only to coaches (teachers, facilitators, administrators)",
+    "anyone_description": "This content is visible to anyone",
+    "role_description": "Content visibility determines what type of Kolibri users can see this content."
 }
 
 
@@ -80,6 +84,12 @@ var MasteryModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/mastery_modal.handlebars"),
   modal_id: "#mastery_modal",
 });
+
+var RolesModalView = BaseInfoModalView.extend({
+  template: require("./hbtemplates/roles_modal.handlebars"),
+  modal_id: "#roles_modal",
+});
+
 
 var PrerequisiteModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/prereq_modal.handlebars"),
@@ -139,5 +149,6 @@ module.exports = {
     LicenseModalView: LicenseModalView,
     MasteryModalView:MasteryModalView,
     PrerequisiteModalView: PrerequisiteModalView,
-    PublishedModalView: PublishedModalView
+    PublishedModalView: PublishedModalView,
+    RolesModalView: RolesModalView
 }

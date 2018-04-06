@@ -209,7 +209,7 @@ class PreferencesSettingsForm(forms.Form):
         fields = ('author', 'copyright_holder', 'license', 'license_description', 'language', 'mastery_model', 'm_value', 'n_value', 'auto_derive_video_thumbnail', 'auto_randomize_questions')
 
     def save(self, user):
-        user.preferences = json.dumps({
+        user.content_defaults = {
             'author': self.cleaned_data["author"] or "",
             'copyright_holder': self.cleaned_data["copyright_holder"],
             'license': self.cleaned_data["license"],
@@ -223,7 +223,7 @@ class PreferencesSettingsForm(forms.Form):
             'm_value': self.cleaned_data["m_value"],
             'n_value': self.cleaned_data["n_value"],
             'language': self.cleaned_data['language'],
-        })
+        }
         user.save()
         return user
 

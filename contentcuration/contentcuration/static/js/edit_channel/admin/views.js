@@ -58,7 +58,8 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         "change .filter_input" : "apply_filter",
         "keyup .search_input" : "apply_search",
         "paste .search_input" : "apply_search",
-        "change .select_all" : "check_all"
+        "change .select_all" : "check_all",
+        "click .download_pdf": "download_pdf"
     },
     handle_removed: function(){
         this.update_count(this.count - 1);
@@ -116,7 +117,8 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     apply_filter: function() { },
     check_search: function(item) { return false; },
     handle_checked: function() { },
-    get_dynamic_filters: function() { return []; }
+    get_dynamic_filters: function() { return []; },
+    download_pdf: function() {},
 });
 
 var BaseAdminList = BaseViews.BaseListView.extend({
@@ -315,6 +317,23 @@ var ChannelTab = BaseAdminTab.extend({
     },
     check_search: function(item, text, re) {
         return item.get("name").match(re) || item.id.startsWith(text);
+    },
+    download_pdf: function() {
+        var self = this;
+        if(!this.$(".download_pdf").hasClass("disabled")) {
+            this.$(".download_pdf").text("Generating PDF...").addClass("disabled");
+            $.fileDownload(window.Urls.download_channel_pdf(), {
+                successCallback: function(url) {
+                    self.$(".download_pdf").text("Download PDF").removeClass("disabled");
+                },
+                failCallback: function(responseHtml, url) {
+                    self.$(".download_pdf").text("Download Failed");
+                    setTimeout(function() {
+                        self.$(".download_pdf").text("Download PDF").removeClass("disabled");
+                    }, 1500);
+                }
+            });
+        }
     }
 });
 

@@ -20,7 +20,7 @@ EXPONENT: [DECIMAL | INTEGER]e+{0,1}[INTEGER]
 import re
 from django.utils.translation import get_language
 
-LANGUAGE = get_language()
+LANGUAGE = get_language() or ""
 
 SEP = r','
 POINT = r'\.'

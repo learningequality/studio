@@ -71,6 +71,7 @@ var MESSAGES = {
     "out_of_space_text": "You don't have enough space to save these files. Request more space under the Settings > Account page.",
     "open_settings": "Open Settings",
     "ok": "OK",
+    "role_visibility": "Visible to",
     "imported_from": "Imported from:"
 }
 
@@ -471,6 +472,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
   name: NAMESPACE,
   $trs: MESSAGES,
   selected_items: [],
+  // NEW FIELD: add the field here to track shared values
   shared_data:{
     shared_tags:[],
     shared_copyright_owner:null,
@@ -480,7 +482,8 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     all_files:false,
     all_exercises: false,
     shared_exercise_data:{mastery_model: 0, m: null, n: null, randomize: null},
-    shared_language:0
+    shared_language:0,
+    shared_role: 0,
   },
   list_selector: "#uploaded_list",
   default_item: "#uploaded_list .default-item",
@@ -599,9 +602,11 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.all_files = view.model.get("kind") !== "topic";
       this.shared_data.all_exercises = view.model.get("kind") === "exercise";
       this.shared_data.shared_language = view.model.get("language");
+      this.shared_data.shared_role = view.model.get("role_visibility");
       if(view.model.get("extra_fields")){
         this.shared_data.shared_exercise_data = view.model.get("extra_fields");
       }
+      // NEW FIELD: set the shared data to the model's field
     }else{
       this.shared_data.shared_tags = _.intersection(this.shared_data.shared_tags, view.tags);
       this.shared_data.shared_copyright_owner = (this.shared_data.shared_copyright_owner === view.model.get("copyright_holder"))? this.shared_data.shared_copyright_owner : null;
@@ -610,6 +615,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.shared_license_description = (this.shared_data.shared_license_description === view.model.get("license_description"))? this.shared_data.shared_license_description : null;
       this.shared_data.all_files = this.shared_data.all_files && view.model.get("kind")  !== "topic";
       this.shared_data.all_exercises = this.shared_data.all_exercises && view.model.get("kind")  === "exercise";
+      this.shared_data.shared_role = (this.shared_data.shared_role == view.model.get("role_visibility"))? this.shared_data.shared_role : 0;
+
+      // NEW FIELD: see if the shared fields match, if not set to a default
 
       var language = view.model.get("language");
       this.shared_data.shared_language = (this.shared_data.shared_language === language || null)? this.shared_data.shared_language : 0;
@@ -683,6 +691,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         n_value: this.n_value,
         license_description: this.shared_data && this.shared_data.shared_license_description,
         languages: window.languages.toJSON(),
+        roles: window.roles,
+        mastery: window.mastery,
         language_default: this.get_language(null, all_top_level),
         channel_id: window.current_channel.id
       }, {
@@ -691,6 +701,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       this.update_count();
       this.load_language();
       if(this.shared_data){
+        // NEW FIELD: If new field is a dropdown, load here
+        $("#role_select").val(this.shared_data.shared_role);
         (!alloriginal)? $("#license_select").text(stringHelper.translate(original_source_license)) : $("#license_select").val(this.shared_data.shared_license);
         // Set exercise fields according to shared exercise data
         if(this.shared_data.all_exercises){
@@ -718,6 +730,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         is_exercise: this.shared_data && this.shared_data.all_exercises,
         license_description: this.shared_data && this.shared_data.shared_license_description,
         language: this.shared_data && this.get_language(this.shared_data.shared_language, all_top_level),
+        role: this.shared_data && this.shared_data.shared_role
       }, {
         data: this.get_intl_data()
       }));
@@ -829,8 +842,11 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     'change #m_value': 'set_mastery',
     'change #n_value': 'set_mastery',
     "click #mastery_about": "load_mastery",
+    "click #visibility_about": "load_roles",
     "focus .input-tab-control": "loop_focus",
-    "change #select_language": "set_language"
+    "change #select_language": "set_language",
+    "change #role_select": "set_selected"
+    // NEW FIELD: add listener to new field and set_selected to trigger change
   },
   load_tags:function(){
     this.$("#tag_area").html(this.tags_template({
@@ -854,6 +870,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   load_mastery:function(){
     new Info.MasteryModalView();
+  },
+  load_roles: function() {
+    new Info.RolesModalView();
   },
   load_language: function(){
     var language = this.shared_data && this.shared_data.shared_language;
@@ -932,6 +951,10 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     var copyright_holder = (this.$("#input_license_owner").is(":visible") && (individual_selected || this.$("#input_license_owner").val() !== ""))? self.$("#input_license_owner").val().trim() : false;
     var author = (this.$("#author_field").is(":visible") && (individual_selected || this.$("#author_field").val() !== ""))? this.$("#author_field").val().trim() : false;
     var license_description = (this.$("#custom_license_description").is(":visible") && (individual_selected || this.$("#custom_license_description").val() !== ""))? this.$("#custom_license_description").val() : false;
+    var role_visibility = (this.$("#role_select").is(":visible") && this.$("#role_select").val()!=0)? this.$("#role_select").val() : false;
+
+    // NEW FIELD: get the selected value, if it isn't set, skip
+
     this.selected_items.forEach(function(view){
       view.set_node({
         title: (title===false)? view.model.get('title') : title,
@@ -939,7 +962,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         license: (license===false)? view.model.get('license') : license,
         copyright_holder: (copyright_holder===false)? view.model.get('copyright_holder') : copyright_holder,
         author: (author===false)? view.model.get('author') : author,
-        license_description: (license_description===false)? view.model.get('license_description') : license_description
+        license_description: (license_description===false)? view.model.get('license_description') : license_description,
+        role_visibility: (!role_visibility)? view.model.get('role_visibility') : role_visibility
       });
     });
     this.container.validate();
@@ -1051,7 +1075,8 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.check_item();
   },
   set_edited:function(is_edited){
-      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields", "prerequisite");
+      // NEW FIELD: add listener to fields
+      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields", "prerequisite", "role_visibility");
       // Handle unsetting node
       if(!is_edited){
           this.originalData = $.extend(true, {}, edited_data);
@@ -1186,7 +1211,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     if(!this.model.get("title")) {
       $("#input_title").addClass("invalid_field");
       this.error = this.get_translation("title_error");
-    } else if(this.isoriginal && !this.model.get("kind") === "topic" && !license) {
+    } else if(this.isoriginal && this.model.get("kind") !== "topic" && !license) {
       $("#license_select").addClass("invalid_field");
       this.error = this.get_translation("license_error");
     } else if (this.isoriginal && this.model.get("kind") !== "topic" && license.get("copyright_holder_required") && !this.model.get("copyright_holder")) {

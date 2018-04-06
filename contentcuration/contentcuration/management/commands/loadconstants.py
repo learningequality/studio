@@ -559,6 +559,7 @@ LANGUAGES = [{
         "lang_subcode": l.subcode,
         "readable_name": l.name,
         "native_name": l.native_name,
+        "lang_direction": languages.getlang_direction(l.primary_code),
     },
 } for l in languages.LANGUAGELIST]
 

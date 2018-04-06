@@ -53,7 +53,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rest_framework',
     'django_js_reverse',
-    'kolibri.content',
+    'kolibri_content',
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
@@ -140,7 +140,7 @@ DATABASES = {
 
 
 DATABASE_ROUTERS = [
-    "kolibri.content.content_db_router.ContentDBRouter",
+    "kolibri_content.router.ContentDBRouter",
 ]
 
 # LOGGING = {
@@ -184,6 +184,7 @@ ugettext = lambda s: s
 LANGUAGES = (
     ('en', ugettext('English')),
     ('es', ugettext('Spanish')),
+    ('es-es', ugettext('Spanish - Spain')),
     ('es-mx', ugettext('Spanish - Mexico')),
     ('ar', ugettext('Arabic')),
     ('en-PT', ugettext('English - Pirate')),

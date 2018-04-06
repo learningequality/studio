@@ -49,7 +49,10 @@ var MESSAGES = {
     "related_content_alert": "Related content will not be included in the copy of this content.",
     "delete_item_warning": "Are you sure you want to delete {data}?",
     "select_content_prompt": "Must select content first",
-    "copy_to_clipboard": "Copy to Clipboard"
+    "copy_to_clipboard": "Copy to Clipboard",
+    "coach": "Coach",
+    "coach_title": "This resource is visible to coaches",
+    "coach_topic_title": "This topic contains coach-facing resources"
 }
 
 /**

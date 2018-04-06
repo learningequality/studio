@@ -32,6 +32,7 @@ def write_channel_csv_file(channel, force=False, site=None, show_progress=False)
 
             nodes = channel.main_tree.get_descendants()\
                             .exclude(kind_id=content_kinds.TOPIC)\
+                            .filter(kind_id=content_kinds.EXERCISE)\
                             .select_related('license', 'language', 'parent')\
                             .prefetch_related('files', 'assessment_items', 'tags')
 
@@ -45,7 +46,7 @@ def write_channel_csv_file(channel, force=False, site=None, show_progress=False)
                 if show_progress:
                     index += 1
                     bar.update(index)
-                    sleep(0.1)
+                    sleep(0.01)
 
             if show_progress:
                 bar.finish()
@@ -84,6 +85,7 @@ def _format_size(num, suffix='B'):
 
 def _format_question(question):
     if question.type == exercises.PERSEUS_QUESTION:
+        import pdb; pdb.set_trace()
         return "[PERSEUS]"
     text = re.sub(r"!\[[^\[]*\]\([^\)]*\)", "{Image}", question.question)
     return "[{}] {}".format(question.type.replace("_", " ").upper(), text.replace("\n", " ").replace("\\_", "_"))

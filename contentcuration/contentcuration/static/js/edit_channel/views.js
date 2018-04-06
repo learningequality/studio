@@ -483,7 +483,7 @@ var BaseWorkspaceView = BaseView.extend({
 	handle_changed_settings: function(data){
 		$("#channel_selection_dropdown").text(data.get('name'));
 		window.workspace_manager.get_main_view().model.set('title', data.get('name'));
-		window.preferences = data.get('preferences');
+		window.preferences = data.get('content_defaults');
 	}
 });
 

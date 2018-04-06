@@ -21,8 +21,8 @@ from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages, roles
 from jsonfield import JSONField
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
 from pg_utils import DistinctSum
 from rest_framework import permissions
@@ -33,7 +33,7 @@ from contentcuration.statistics import record_channel_stats
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
 
-DEFAULT_USER_PREFERENCES = json.dumps({
+DEFAULT_CONTENT_DEFAULTS = {
     'license': None,
     'language': None,
     'author': None,
@@ -48,7 +48,10 @@ DEFAULT_USER_PREFERENCES = json.dumps({
     'auto_derive_html5_thumbnail': True,
     'auto_derive_exercise_thumbnail': True,
     'auto_randomize_questions': True,
-}, ensure_ascii=False)
+}
+DEFAULT_USER_PREFERENCES = json.dumps(DEFAULT_CONTENT_DEFAULTS, ensure_ascii=False)
+
+
 
 
 class UserManager(BaseUserManager):
@@ -88,6 +91,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
 
     information = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, null=True)
+    content_defaults = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=DEFAULT_CONTENT_DEFAULTS)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -339,6 +343,7 @@ class Channel(models.Model):
     deleted = models.BooleanField(default=False, db_index=True)
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
+    content_defaults = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=DEFAULT_CONTENT_DEFAULTS)
     priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
     last_published = models.DateTimeField(blank=True, null=True)
     secret_tokens = models.ManyToManyField(
@@ -440,6 +445,10 @@ class Channel(models.Model):
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
+
+        index_together = [
+            ["deleted", "public"]
+        ]
 
 
 class ContentTag(models.Model):
@@ -543,6 +552,8 @@ class ContentNode(MPTTModel, models.Model):
     extra_fields = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"),
                               null=True)
+
+    role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
 
     objects = TreeManager()
@@ -692,9 +703,13 @@ class ContentNode(MPTTModel, models.Model):
 
         super(ContentNode, self).save(*args, **kwargs)
 
-        root = self.get_root()
-        if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
-            PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
+        try:
+            # During saving for fixtures, this fails to find the root node
+            root = self.get_root()
+            if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
+                PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
+        except ContentNode.DoesNotExist:
+            pass
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
@@ -738,11 +753,12 @@ class FormatPreset(models.Model):
 
 
 class Language(models.Model):
-    id = models.CharField(max_length=7, primary_key=True)
+    id = models.CharField(max_length=14, primary_key=True)
     lang_code = models.CharField(max_length=3, db_index=True)
-    lang_subcode = models.CharField(max_length=3, db_index=True, blank=True, null=True)
+    lang_subcode = models.CharField(max_length=10, db_index=True, blank=True, null=True)
     readable_name = models.CharField(max_length=100, blank=True)
     native_name = models.CharField(max_length=100, blank=True)
+    lang_direction = models.CharField(max_length=3, choices=languages.LANGUAGE_DIRECTIONS, default=languages.LANGUAGE_DIRECTIONS[0][0])
 
     def ietf_name(self):
         return "{code}-{subcode}".format(code=self.lang_code,

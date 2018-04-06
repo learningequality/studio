@@ -77,6 +77,7 @@
                 width:200px;
                 height:200px;
                 object-fit: cover;
+                background-color: white;
             }
             .channel_id {
                 color: gray;
@@ -124,17 +125,17 @@
         <br>
         <table width="100%">
             <tbody>
-            {% for c in channels %}
+                {% for c in channels %}
                 <tr class="channel">
                     <td  width="15%">
-                        <img class="channel_thumbnail" src="{% if c.thumbnail_encoding %}{{c.thumbnail_encoding}}{% else %}{% if c.thumbnail %}{{ c.thumbnail | encode_base64}}{% else %}{{ 'kolibri_placeholder.png' | encode_static_base64}}{% endif %}{% endif %}">
+                        <img class="channel_thumbnail" src="{{c.generated_thumbnail}}">
                     </td>
                     <td  width="5%"></td>
                     <td width="80%">
                         <a href="{{c.url}}" class="channel_title" target="_blank">{{c.name}}</a><br/>
                         <span class="channel_id">ID: {{c.id}}{% if c.tokens %} | Token{{ c.tokens.length|pluralize }}: {{c.tokens}}{% endif %}</span><br/>
                         {% if c.description %}{{c.description}}<br/><br/>{% endif %}
-                        This channel is available in <b>{{c.language}}</b> {% if c.languages %}(also includes content in {{c.languages}}){% endif %}
+                        This channel is available in <b>{{c.language}}</b> {% if c.languages %}(also includes content in {{c.languages}}) {% endif %}
                         and has a total size of <b>{{c.total_size}}</b><br/><br/>
                         <b>Composition:</b> {{c.kind_counts}}<br/>
                         {% if c.tags %}<b>Tags:</b> {{c.tags}}<br/>{% endif %}
@@ -142,7 +143,7 @@
                         <span class="channel_id">Editors: {{c.editors}}</span>
                     </td>
                 </tr>
-            {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
         <div id="footerContent">
