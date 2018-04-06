@@ -3,7 +3,7 @@ var _ = require('underscore');
 var config = {
     showProcessingMessages: false,
     jax: ["input/TeX","input/MathML","output/SVG"],
-    extensions: ["tex2jax.js","mml2jax.js","MathMenu.js","MathZoom.js", "fast-preview.js", "AssistiveMML.js", "[Contrib]/a11y/accessibility-menu.js"],
+    extensions: ["tex2jax.js","mml2jax.js","MathMenu.js","MathZoom.js", "AssistiveMML.js", "[Contrib]/a11y/accessibility-menu.js"],
     TeX: {extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"]}
 }
 
@@ -17,6 +17,9 @@ var SvgGenerator = {
   Init: function () {
     this.svg_container = document.createElement("div");
     this.svg_container.id = "mathjax_container";
+    MathJax.Hub.Register.MessageHook("Math Processing Error",function (message) {
+      console.error(message);
+    });
   },
 
   //  Creates the SVG container and runs MathJax on it.

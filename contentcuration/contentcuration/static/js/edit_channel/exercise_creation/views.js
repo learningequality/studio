@@ -90,7 +90,12 @@ var MESSAGES = {
     "Image": "Image",
     "Formula": "Formula",
     "Undo": "Undo",
-    "Redo": "Redo"
+    "Redo": "Redo",
+    "formula_error_title": "Unable to add formula",
+    "formula_error": "There was an error processing the formula",
+    "image_error_title": "Unable to add image",
+    "image_error": "There was an error processing the image.",
+    "invalid_characters": "Invalid characters"
 }
 
 /*********** FORMULA ADD-IN FOR EXERCISE EDITOR ***********/
@@ -163,11 +168,30 @@ var AddFormulaView = BaseViews.BaseView.extend({
         this.close_dropdown();
     },
     add_formula:function(){
-        if(this.mathField.latex().trim()){
-            this.callback("\$\$" + this.mathField.latex().trim() + "\$\$");
+        this.mathField.keystroke('Enter'); // Submit last move to use built-in validation
+        if(this.mathField.latex().trim() && this.validate()) {
+            this.callback("\$\$" + this.mathField.latex().trim().replace('−', '-') + "\$\$");
             this.mathField.latex("");
             $(".dropdown").dropdown('toggle');
         }
+    },
+    validate() {
+        var isValid = true;
+        var self = this;
+        var block = this.$(".mq-root-block[mathquill-block-id=" + this.mathField.id + "]");
+        this.$(".mq-error").css("display", "none");
+        block.find("span, var").removeClass("mq-invalid");
+        block.find("span[mathquill-command-id], var[mathquill-command-id]").each(function(index, el) {
+            if($(el).hasClass("mq-non-leaf")) {
+                return;
+            }
+            if(!/^[\x00-\x7F]*$/.test($(el).text()) && $(el).text() !== '−') { // Mathquill automatically uses non-ascii minus sign
+                isValid = false;
+                $(el).addClass("mq-invalid");
+                self.$(".mq-error").css("display", "block");
+            }
+        });
+        return isValid;
     }
 });
 
@@ -344,6 +368,7 @@ var EditorView = BaseViews.BaseView.extend({
         if(this.editor && this.editing){
             (isLoading) ? this.editor.disable() : this.editor.enable();
             this.$('.loading-overlay').css('display', (isLoading) ? 'block' : 'none');
+            (isLoading)? this.$(".editor-wrapper").addClass("disabled") : this.$(".editor-wrapper").removeClass("disabled");
         }
     },
 
@@ -368,9 +393,9 @@ var EditorView = BaseViews.BaseView.extend({
             },
             placeholder: this.get_translation(this.edit_key + "_placeholder"),
             disableResizeEditor: true,
-            disableDragAndDrop: true,
             shortcuts: false,
             selector: this.cid,
+            disableDragAndDrop: true,
             callbacks: {
                 onChange: _.debounce(this.save, 1),
                 onPaste: this.paste_content,
@@ -441,7 +466,6 @@ var EditorView = BaseViews.BaseView.extend({
             var div = this.paste_images(clipboard.files, clipboardHtml);
             var text = this.convert_html_to_markdown(div.innerHTML);
             bufferText = text || bufferText;
-            console.log(bufferText)
         }
         var self = this;
         setTimeout(function () { // Firefox fix
@@ -449,7 +473,6 @@ var EditorView = BaseViews.BaseView.extend({
                 document.execCommand('insertText', false, bufferText);
                 self.editor.togglePlaceholder(false);
                 if(clipboardHtml){
-                    console.log(self.editor.getContents());
                     self.save(self.editor.getContents());
                     self.editor.setHTML("");
                     self.render_editor();
@@ -470,7 +493,7 @@ var EditorView = BaseViews.BaseView.extend({
         div.innerHTML = text;
         var self = this;
         var index = 0;
-        _.each($(div).find('img'), function(img) {
+        $(div).find('img').each(function(i, img) {
             if(!IMG_CHECK.test(img.getAttribute('src'))) {
                 if(index >= files.length) { // Some images aren't properly added to the clipboard, so remove them to avoid errors
                     $(img).remove();
@@ -489,32 +512,40 @@ var EditorView = BaseViews.BaseView.extend({
                             ++index;
                         },
                         error: function() {
-                            console.log("ERROR", files[index])
+                            $(img).remove();
+                            dialog.alert(self.get_translation("image_error_title"), self.get_translation("image_error"));
                         },
                         headers: {"X-CSRFToken": get_cookie("csrftoken")}
                     });
                 }
-
             }
         });
         return div;
     },
     add_formula:function(formula){
         var self = this;
+        formula
+        formula = formula.normalize("NFKD").replace(/[\u0300-\u036F]/g, ''); // Normalize any non-ascii characters
+        this.toggle_loading(true);
         jax2svg.toSVG(formula).then(function(svg){
-            var updatedHtml = svg.outerHTML;
+            if(svg){
+                var updatedHtml = svg.outerHTML;
 
-            // Check if there is any content. If there is, append to the end of the last line
-            var div = document.createElement('div');
-            div.innerHTML = self.editor.getContents();
-            var paragraphs = div.getElementsByTagName('p');
-            if(paragraphs.length){
-                paragraphs[paragraphs.length - 1].appendChild(svg);
-                paragraphs[paragraphs.length - 1].innerHTML += '&nbsp;';
-                updatedHtml = div.innerHTML;
+                // Check if there is any content. If there is, append to the end of the last line
+                var div = document.createElement('div');
+                div.innerHTML = self.editor.getContents();
+                var paragraphs = div.getElementsByTagName('p');
+                if(paragraphs.length){
+                    paragraphs[paragraphs.length - 1].appendChild(svg);
+                    paragraphs[paragraphs.length - 1].innerHTML += '&nbsp;';
+                    updatedHtml = div.innerHTML;
+                }
+                self.editor.setHTML(updatedHtml)
+                self.model.set(self.edit_key, self.model.get(self.edit_key) + formula);
+            } else {
+                dialog.alert(self.get_translation("formula_error_title"), self.get_translation("formula_error"));
             }
-            self.editor.setHTML(updatedHtml)
-            self.model.set(self.edit_key, self.model.get(self.edit_key) + formula);
+            self.toggle_loading(false);
             self.editor.focus();
         });
     },
@@ -522,12 +553,28 @@ var EditorView = BaseViews.BaseView.extend({
     /*********** PARSING METHODS ***********/
     parse_content: function(content){
         var self = this;
+        content = this.parse_functions(content);
         return new Promise(function(resolve, reject){
             content = self.replace_image_paths(content);
             content = stringHelper.escape_str(content.replace(/\\(?![^\\\s])/g, '\\\\'));
             // If the editor is open, convert to svgs. Otherwise use katex to make loading faster
             (self.editing)? self.replace_mathjax_with_svgs(content, resolve) : self.replace_mathjax_with_katex(content, resolve);
         });
+    },
+    parse_functions: function(markdown) {
+        var matches = this.get_mathjax_strings(markdown);
+        if(matches) {
+            var MQ = MathQuill.getInterface(2);
+            matches.forEach(function(match){
+                var original_formula = match.match(/\$\$(.+?)\$\$/)[1]
+                var formula = original_formula.replace('−', '-').replace(/\\\s+/, '').replace(/\\{2,}\s*/, '\\');
+                formula = (formula.slice(-1) === "\\")? formula.slice(0, -1) : formula;
+                var mathFieldSpan = $('<span>' + formula + '</span>');
+                var mathField = MQ.MathField(mathFieldSpan[0]);
+                markdown = markdown.replace(original_formula, mathField.latex())
+            });
+        }
+        return markdown;
     },
     replace_image_paths: function(content){
         var matches = content.match(IMG_REGEX);
@@ -554,6 +601,7 @@ var EditorView = BaseViews.BaseView.extend({
         return mathjax_list;
     },
     replace_mathjax_with_svgs: function(content, callback){
+        var self = this;
         var matches = this.get_mathjax_strings(content);
         var promises = [];
         matches.forEach(function(match){
