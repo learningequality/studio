@@ -211,8 +211,16 @@
         }
     }
     .editor-wrapper{
+        &.disabled {
+            opacity: 1;
+            pointer-events: none;
+            img {
+                opacity: 0.5;
+            }
+        }
         .loading-overlay{
             position: absolute;
+            display: none;
             z-index: 99;
             text-align: center;
             font-weight: bold;
@@ -280,6 +288,12 @@
                 }
             }
         }
+        .mq-error {
+            font-weight: bold;
+            margin-left: 10px;
+            color: @red-error-color;
+            display: none;
+        }
         .mq-overlay{
             display:none;
             height:100%;
@@ -309,6 +323,10 @@
                 min-width:150px;
                 padding: 5px;
                 color: black;
+                .mq-invalid {
+                    color: @red-error-color;
+                    background-color: @incorrect-bg-color;
+                }
             }
         }
     }

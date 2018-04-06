@@ -4,6 +4,7 @@ const MATHJAX_REGEX = /\$\$([^\$]+)\$\$/g;      // <-- this is not used
 const IMG_PLACEHOLDER = "${☣ CONTENTSTORAGE}/"
 const IMG_REGEX = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
 const NUM_REGEX = /[0-9\,\.\-\/\+e\s]+/g;
+const IMG_CHECK = /.*\/content\/storage\/[0-9a-z]\/[0-9a-z]\/([0-9a-z]{32}\..+)/;
 
 /* MODULES */
 var Backbone = require("backbone");
@@ -15,6 +16,7 @@ var UndoManager = require("backbone-undo");
 require("summernote");
 require("../../utils/mathquill.min.js");
 var dialog = require("edit_channel/utils/dialog");
+var get_cookie = require("utils/get_cookie");
 
 /* PARSERS */
 var Katex = require("katex");
@@ -88,7 +90,12 @@ var MESSAGES = {
     "Image": "Image",
     "Formula": "Formula",
     "Undo": "Undo",
-    "Redo": "Redo"
+    "Redo": "Redo",
+    "formula_error_title": "Unable to add formula",
+    "formula_error": "There was an error processing the formula",
+    "image_error_title": "Unable to add image",
+    "image_error": "There was an error processing the image.",
+    "invalid_characters": "Invalid characters"
 }
 
 /*********** FORMULA ADD-IN FOR EXERCISE EDITOR ***********/
@@ -161,11 +168,30 @@ var AddFormulaView = BaseViews.BaseView.extend({
         this.close_dropdown();
     },
     add_formula:function(){
-        if(this.mathField.latex().trim()){
-            this.callback("\$\$" + this.mathField.latex().trim() + "\$\$");
+        this.mathField.keystroke('Enter'); // Submit last move to use built-in validation
+        if(this.mathField.latex().trim() && this.validate()) {
+            this.callback("\$\$" + this.mathField.latex().trim().replace('−', '-') + "\$\$");
             this.mathField.latex("");
             $(".dropdown").dropdown('toggle');
         }
+    },
+    validate() {
+        var isValid = true;
+        var self = this;
+        var block = this.$(".mq-root-block[mathquill-block-id=" + this.mathField.id + "]");
+        this.$(".mq-error").css("display", "none");
+        block.find("span, var").removeClass("mq-invalid");
+        block.find("span[mathquill-command-id], var[mathquill-command-id]").each(function(index, el) {
+            if($(el).hasClass("mq-non-leaf")) {
+                return;
+            }
+            if(!/^[\x00-\x7F]*$/.test($(el).text()) && $(el).text() !== '−') { // Mathquill automatically uses non-ascii minus sign
+                isValid = false;
+                $(el).addClass("mq-invalid");
+                self.$(".mq-error").css("display", "block");
+            }
+        });
+        return isValid;
     }
 });
 
@@ -176,7 +202,7 @@ var UploadImage = function (context) {
         tooltip: 'Image',
         click: function () {
             var view = new ImageUploader.ImageUploadView({
-                callback: context.options.callbacks.onImageUpload,
+                callback: context.options.callbacks.onCustomImageUpload,
                 preset_id: 'exercise_image'
             });
         }
@@ -273,7 +299,7 @@ var EditorView = BaseViews.BaseView.extend({
 
     id: function() { return "editor_view_" + this.cid; },
     initialize: function(options) {
-        _.bindAll(this, "add_image", "add_formula", "deactivate_editor", "activate_editor", "save", "process_key", "undo", "redo",
+        _.bindAll(this, "add_image", "add_formula", "paste_images", "deactivate_editor", "activate_editor", "save", "process_key", "undo", "redo",
                "render", "render_content", "parse_content", "replace_mathjax_with_svgs", "paste_content", "check_key");
         this.edit_key = options.edit_key;
         this.editing = false;
@@ -342,6 +368,7 @@ var EditorView = BaseViews.BaseView.extend({
         if(this.editor && this.editing){
             (isLoading) ? this.editor.disable() : this.editor.enable();
             this.$('.loading-overlay').css('display', (isLoading) ? 'block' : 'none');
+            (isLoading)? this.$(".editor-wrapper").addClass("disabled") : this.$(".editor-wrapper").removeClass("disabled");
         }
     },
 
@@ -366,13 +393,13 @@ var EditorView = BaseViews.BaseView.extend({
             },
             placeholder: this.get_translation(this.edit_key + "_placeholder"),
             disableResizeEditor: true,
-            disableDragAndDrop: true,
             shortcuts: false,
             selector: this.cid,
+            disableDragAndDrop: true,
             callbacks: {
                 onChange: _.debounce(this.save, 1),
                 onPaste: this.paste_content,
-                onImageUpload: this.add_image,
+                onCustomImageUpload: this.add_image,
                 onAddFormula: this.add_formula,
                 onKeydown: this.process_key,
                 onUndo: this.undo,
@@ -431,14 +458,14 @@ var EditorView = BaseViews.BaseView.extend({
         return !this.numbersOnly || NUM_REGEX.test(content) || _.contains(specialCharacterKeys, key);
     },
     paste_content: function(event){
-        var clipboard = (event.originalEvent || event).clipboardData || window.clipboardData;
+        var clipboard = event.clipboardData || window.clipboardData || event.originalEvent.clipboardData;
         event.preventDefault();
         var bufferText = clipboard.getData("Text");
         var clipboardHtml = clipboard.getData('text/html');
         if(clipboardHtml){
-            var div = document.createElement("DIV");
-            div.innerHTML = this.convert_html_to_markdown(clipboardHtml);
-            bufferText = div.textContent || tmp.innerText || bufferText;
+            var div = this.paste_images(clipboard.files, clipboardHtml);
+            var text = this.convert_html_to_markdown(div.innerHTML);
+            bufferText = text || bufferText;
         }
         var self = this;
         setTimeout(function () { // Firefox fix
@@ -453,28 +480,72 @@ var EditorView = BaseViews.BaseView.extend({
             }
         }, 10);
     },
-    add_image: function(file_id, filename, alt_text) {
-        this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
-        alt_text = alt_text || "";
-        this.model.set(this.edit_key, this.model.get(this.edit_key) + "![" + alt_text + "](" + filename + ")");
-        this.render_editor();
+    add_image(file_id, filename, alt_text) {
+        if (typeof file_id === "string") {
+            this.model.set('files', this.model.get('files')? this.model.get('files').concat(file_id) : [file_id]);
+            alt_text = alt_text || "";
+            this.model.set(this.edit_key, this.model.get(this.edit_key) + " ![" + alt_text + "](" + filename + ")");
+            this.render_editor();
+        }
+    },
+    paste_images: function(files, text) {
+        var div = document.createElement("DIV");
+        div.innerHTML = text;
+        var self = this;
+        var index = 0;
+        $(div).find('img').each(function(i, img) {
+            if(!IMG_CHECK.test(img.getAttribute('src'))) {
+                if(index >= files.length) { // Some images aren't properly added to the clipboard, so remove them to avoid errors
+                    $(img).remove();
+                } else {
+                    var formData = new FormData();
+                    formData.append("file", files[index]);
+                    $.post({
+                        url: window.Urls.exercise_image_upload(),
+                        contentType:false,
+                        cache: false,
+                        processData:false,
+                        data: formData,
+                        async: false,
+                        success: function(data) {
+                            img.setAttribute('src', JSON.parse(data).formatted_filename)
+                            ++index;
+                        },
+                        error: function() {
+                            $(img).remove();
+                            dialog.alert(self.get_translation("image_error_title"), self.get_translation("image_error"));
+                        },
+                        headers: {"X-CSRFToken": get_cookie("csrftoken")}
+                    });
+                }
+            }
+        });
+        return div;
     },
     add_formula:function(formula){
         var self = this;
+        formula
+        formula = formula.normalize("NFKD").replace(/[\u0300-\u036F]/g, ''); // Normalize any non-ascii characters
+        this.toggle_loading(true);
         jax2svg.toSVG(formula).then(function(svg){
-            var updatedHtml = svg.outerHTML;
+            if(svg){
+                var updatedHtml = svg.outerHTML;
 
-            // Check if there is any content. If there is, append to the end of the last line
-            var div = document.createElement('div');
-            div.innerHTML = self.editor.getContents();
-            var paragraphs = div.getElementsByTagName('p');
-            if(paragraphs.length){
-                paragraphs[paragraphs.length - 1].appendChild(svg);
-                paragraphs[paragraphs.length - 1].innerHTML += '&nbsp;';
-                updatedHtml = div.innerHTML;
+                // Check if there is any content. If there is, append to the end of the last line
+                var div = document.createElement('div');
+                div.innerHTML = self.editor.getContents();
+                var paragraphs = div.getElementsByTagName('p');
+                if(paragraphs.length){
+                    paragraphs[paragraphs.length - 1].appendChild(svg);
+                    paragraphs[paragraphs.length - 1].innerHTML += '&nbsp;';
+                    updatedHtml = div.innerHTML;
+                }
+                self.editor.setHTML(updatedHtml)
+                self.model.set(self.edit_key, self.model.get(self.edit_key) + formula);
+            } else {
+                dialog.alert(self.get_translation("formula_error_title"), self.get_translation("formula_error"));
             }
-            self.editor.setHTML(updatedHtml)
-            self.model.set(self.edit_key, self.model.get(self.edit_key) + formula);
+            self.toggle_loading(false);
             self.editor.focus();
         });
     },
@@ -482,12 +553,28 @@ var EditorView = BaseViews.BaseView.extend({
     /*********** PARSING METHODS ***********/
     parse_content: function(content){
         var self = this;
+        content = this.parse_functions(content);
         return new Promise(function(resolve, reject){
             content = self.replace_image_paths(content);
             content = stringHelper.escape_str(content.replace(/\\(?![^\\\s])/g, '\\\\'));
             // If the editor is open, convert to svgs. Otherwise use katex to make loading faster
             (self.editing)? self.replace_mathjax_with_svgs(content, resolve) : self.replace_mathjax_with_katex(content, resolve);
         });
+    },
+    parse_functions: function(markdown) {
+        var matches = this.get_mathjax_strings(markdown);
+        if(matches) {
+            var MQ = MathQuill.getInterface(2);
+            matches.forEach(function(match){
+                var original_formula = match.match(/\$\$(.+?)\$\$/)[1]
+                var formula = original_formula.replace('−', '-').replace(/\\\s+/, '').replace(/\\{2,}\s*/, '\\');
+                formula = (formula.slice(-1) === "\\")? formula.slice(0, -1) : formula;
+                var mathFieldSpan = $('<span>' + formula + '</span>');
+                var mathField = MQ.MathField(mathFieldSpan[0]);
+                markdown = markdown.replace(original_formula, mathField.latex())
+            });
+        }
+        return markdown;
     },
     replace_image_paths: function(content){
         var matches = content.match(IMG_REGEX);
@@ -514,6 +601,7 @@ var EditorView = BaseViews.BaseView.extend({
         return mathjax_list;
     },
     replace_mathjax_with_svgs: function(content, callback){
+        var self = this;
         var matches = this.get_mathjax_strings(content);
         var promises = [];
         matches.forEach(function(match){
@@ -543,19 +631,20 @@ var EditorView = BaseViews.BaseView.extend({
         });
 
         // Render content to markdown (use custom fiters for images and italics)
+        var self = this;
         contents = toMarkdown(contents,{
             converters: [
                 {
                     filter: 'img',
                     replacement: function (content, node) {
-                        var alt = node.alt || '';
                         var src = node.getAttribute('src').split('/').slice(-1)[0] || '';
+                        var alt = node.alt || '';
                         var title = node.title || '';
                         var width = node.style.width || node.width || null;
                         var height = node.style.height || node.height || null;
                         var size = width ? " =" + width.toString().replace('px', '') + "x" : '';
                         size += height ? height.toString().replace('px', '') : '';
-                        return src ? '![' + alt + ']' + '(' + IMG_PLACEHOLDER + src + size + ')' : ''
+                        return src ? '![' + alt + ']' + '(' + IMG_PLACEHOLDER + src + size + ')' : '';
                     }
                 },
                 {
