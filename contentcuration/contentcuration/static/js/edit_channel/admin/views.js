@@ -381,7 +381,7 @@ var ChannelItem = BaseAdminItem.extend({
             this.$(".download_csv").attr("title", "Generating CSV...").addClass("disabled");
             $.get({
                 url: window.Urls.download_channel_content_csv(this.model.id),
-                success: function(url) {
+                success: function() {
                     dialog.alert("Generating Channel CSV", "Channel csv generation started. You'll receive an email with the csv when it's done.");
                     self.$(".download_csv").attr("title", "Download CSV").removeClass("disabled");
                 },

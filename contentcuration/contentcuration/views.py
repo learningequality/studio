@@ -382,9 +382,7 @@ def set_channel_priority(request):
 @permission_classes((IsAuthenticated,))
 def download_channel_content_csv(request, channel_id):
     """ Writes list of channels to csv, which is then returned """
-    channel = Channel.objects.get(pk=channel_id)
     site = get_current_site(request)
-
-    generatechannelcsv_task.delay(channel, site, request.user)
+    generatechannelcsv_task.delay(channel_id, site.domain, request.user.id)
 
     return HttpResponse({"success": True})
