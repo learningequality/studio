@@ -12,7 +12,7 @@ reload(sys)
 sys.setdefaultencoding('UTF8')
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseNotFound, FileResponse HttpResponseBadRequest, StreamingHttpResponse,
+from django.http import HttpResponse, HttpResponseNotFound, FileResponse, HttpResponseBadRequest, StreamingHttpResponse
 from django.views.decorators.http import condition
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
@@ -35,8 +35,6 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from le_utils.constants import content_kinds
-
-from contentcuration.utils.channel_csv import write_channel_csv_file
 
 from xhtml2pdf import pisa
 import cStringIO as StringIO
@@ -190,29 +188,6 @@ def remove_editor(request):
         return HttpResponse(json.dumps({"success": True}))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
-
-
-@login_required
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAdminUser,))
-def download_channel_content_csv(request, channel_id):
-    """ Writes list of channels to csv, which is then returned """
-    if not request.user.is_admin:
-        raise SuspiciousOperation("You are not authorized to access this endpoint")
-
-    channel = Channel.objects.get(pk=channel_id)
-    site = get_current_site(request)
-
-    csv_path = write_channel_csv_file(channel, site=site.domain)
-
-    filename = os.path.basename(csv_path)
-    response = FileResponse(open(csv_path, 'rb'))
-    response['Content-Type'] = 'text/csv'
-    response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
-    response['Set-Cookie'] = "fileDownload=true; path=/";
-
-    return response
-
 
 
 def sizeof_fmt(num, suffix='B'):

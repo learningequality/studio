@@ -379,11 +379,13 @@ var ChannelItem = BaseAdminItem.extend({
         var self = this;
         if(!this.$(".download_csv").hasClass("disabled")) {
             this.$(".download_csv").attr("title", "Generating CSV...").addClass("disabled");
-            $.fileDownload(window.Urls.download_channel_content_csv(this.model.id), {
-                successCallback: function(url) {
+            $.get({
+                url: window.Urls.download_channel_content_csv(this.model.id),
+                success: function(url) {
+                    dialog.alert("Generating Channel CSV", "Channel csv generation started. You'll receive an email with the csv when it's done.");
                     self.$(".download_csv").attr("title", "Download CSV").removeClass("disabled");
                 },
-                failCallback: function(responseHtml, url) {
+                error: function(error) {
                     self.$(".download_csv").attr("title", "Download Failed");
                     setTimeout(function() {
                         self.$(".download_csv").attr("title", "Download CSV").removeClass("disabled");

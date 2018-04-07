@@ -198,6 +198,7 @@ urlpatterns = [
     url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
     url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
+    url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
 ]
 
 # Add public api endpoints
@@ -295,7 +296,6 @@ urlpatterns += [
     url(r'^api/get_all_users/$', admin_views.get_all_users, name='get_all_users'),
     url(r'^api/download_channel_csv/$', admin_views.download_channel_csv, name='download_channel_csv'),
     url(r'^api/download_channel_pdf/$', admin_views.download_channel_pdf, name='download_channel_pdf'),
-    url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', admin_views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/get_channel_kind_count/(?P<channel_id>[^/]+)$', admin_views.get_channel_kind_count, name='get_channel_kind_count'),
 ]
 

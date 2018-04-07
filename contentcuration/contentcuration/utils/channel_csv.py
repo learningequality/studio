@@ -1,5 +1,6 @@
 import csv
 import datetime
+import json
 import os
 import platform
 import progressbar
@@ -32,15 +33,13 @@ def write_channel_csv_file(channel, force=False, site=None, show_progress=False)
 
             nodes = channel.main_tree.get_descendants()\
                             .exclude(kind_id=content_kinds.TOPIC)\
-                            .filter(kind_id=content_kinds.EXERCISE)\
                             .select_related('license', 'language', 'parent')\
                             .prefetch_related('files', 'assessment_items', 'tags')
 
             if show_progress:
-                bar = progressbar.ProgressBar(maxval=nodes.count(), widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
-                bar.start()
-                index = 0
+                bar = progressbar.ProgressBar(max_value=nodes.count())
 
+            index = 0
             for node in nodes:
                 _write_content_csv(writer, node, site)
                 if show_progress:
@@ -48,8 +47,6 @@ def write_channel_csv_file(channel, force=False, site=None, show_progress=False)
                     bar.update(index)
                     sleep(0.01)
 
-            if show_progress:
-                bar.finish()
     return csv_path
 
 def _csv_file_exists(csv_path, channel):
@@ -85,9 +82,10 @@ def _format_size(num, suffix='B'):
 
 def _format_question(question):
     if question.type == exercises.PERSEUS_QUESTION:
-        import pdb; pdb.set_trace()
-        return "[PERSEUS]"
-    text = re.sub(r"!\[[^\[]*\]\([^\)]*\)", "{Image}", question.question)
+        text = re.sub(r"\[\[.*\]\]", "", json.loads(question.raw_data)['question']['content'])
+    else:
+        text = question.question
+    text = re.sub(r"!\[[^\[]*\]\([^\)]*\)", "{Image}", text)
     return "[{}] {}".format(question.type.replace("_", " ").upper(), text.replace("\n", " ").replace("\\_", "_"))
 
 
