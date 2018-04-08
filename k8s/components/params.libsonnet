@@ -18,6 +18,10 @@
       log_file: "/var/log/django.log",
       type: "NodePort",
     },
+    "ingress": {
+      host: "studio.learningequality.org",
+      name: "studio-ingress",
+    },
     "studio-redis": {
       name: "studio-redis",
       redisPassword: "adsiofjeklnarladsf",
