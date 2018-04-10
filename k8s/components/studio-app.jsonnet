@@ -72,6 +72,28 @@ local object_storage_vars = [
   envVar.new("AWS_S3_ENDPOINT_URL", "http://" + minioParams.name)
 ];
 
+local livenessProbe = {
+  livenessProbe: {
+    httpGet: {
+      path: "/healthz",
+      port: params.appPort,
+    },
+    initialDelaySeconds: 300, # 5 minutes before the first health check
+    periodSeconds: 10,
+  },
+};
+
+local readinessProbe = {
+  readinessProbe: {
+    httpGet: {
+      path: "/",
+      port: 8080,
+    },
+    initialDelaySeconds: 60,
+    periodSeconds: 10,
+  }
+};
+
 local appDeployment = deployment
   .new(
     params.name,
@@ -86,7 +108,9 @@ local appDeployment = deployment
       .withEnvMixin(django_config_vars)
       .withEnvMixin(db_vars)
       .withEnvMixin(celery_vars)
-      .withEnvMixin(object_storage_vars),
+      .withEnvMixin(object_storage_vars)
+      + livenessProbe
+      + readinessProbe,
       labels)
   # add our nginx proxy
   .withContainersMixin(
