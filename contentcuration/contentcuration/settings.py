@@ -89,6 +89,11 @@ SUPPORTED_BROWSERS = [
     'Safari',
 ]
 
+HEALTH_CHECK_BROWSERS = [
+    'kube-probe',
+    'GoogleHC',
+]
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',

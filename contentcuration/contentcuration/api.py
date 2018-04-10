@@ -23,6 +23,16 @@ def check_supported_browsers(user_agent_string):
     return False
 
 
+def check_health_check_browser(user_agent_string):
+    """
+    Check if the user agent string matches either the Kubernetes or
+    the Google Health Check agents.
+    """
+    for expected_agent in settings.HEALTH_CHECK_BROWSERS:
+        if expected_agent in user_agent_string:
+            return True
+
+
 def write_file_to_storage(fobj, check_valid=False, name=None):
     fobj.seek(0) # Make sure reading file from beginning
     # Check that hash is valid
