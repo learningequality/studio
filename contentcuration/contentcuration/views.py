@@ -37,7 +37,11 @@ def base(request):
 
 
 def health(request):
-    return HttpResponse(Channel.objects.first().name)
+    c = Channel.objects.first()
+    if c:
+        return HttpResponse(c.name)
+    else:
+        return HttpResponse("No channels created yet!")
 
 def stealth(request):
     return HttpResponse("<3")
