@@ -61,7 +61,7 @@ var PreviewView = BaseViews.BaseView.extend({
     initialize(options) {
         // binding functions defined below.
         // QUESTION Why bother with the ones that are used in events anyway?
-        _.bindAll(this, 'select_preview', 'toggle_fullscreen','exit_fullscreen');
+        _.bindAll(this, 'select_preview', 'toggle_fullscreen','exit_fullscreen', 'check_fullscreen');
 
         // init values used across the methods
         this.current_preview = null;
