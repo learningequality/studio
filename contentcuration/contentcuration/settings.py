@@ -265,11 +265,10 @@ CELERY_RESULT_BACKEND = "redis://:{password}@{endpoint}:/{db}".format(
     endpoint=os.getenv("CELERY_RESULT_BACKEND_ENDPOINT") or "localhost:6379",
     db=os.getenv("CELERY_REDIS_DB") or "0"
 ) or CELERY_RESULT_BACKEND
-CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or CELERY_TIMEZONE
+CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Africa/Nairobi'
 
 # CLOUD STORAGE SETTINGS
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
