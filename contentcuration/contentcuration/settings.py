@@ -32,7 +32,7 @@ PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates"
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2'  # TODO(aron): generate secret key, secretly!
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
