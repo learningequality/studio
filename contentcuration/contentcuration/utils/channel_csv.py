@@ -35,7 +35,6 @@ def write_channel_csv_file(channel, force=False, site=None, show_progress=False)
                             .exclude(kind_id=content_kinds.TOPIC)\
                             .select_related('license', 'language', 'parent')\
                             .prefetch_related('files', 'assessment_items', 'tags')
-
             if show_progress:
                 bar = progressbar.ProgressBar(max_value=nodes.count())
 
@@ -82,7 +81,10 @@ def _format_size(num, suffix='B'):
 
 def _format_question(question):
     if question.type == exercises.PERSEUS_QUESTION:
-        text = re.sub(r"\[\[.*\]\]", "", json.loads(question.raw_data)['question']['content'])
+        try:
+            text = re.sub(r"\[\[.*\]\]", "", json.loads(question.raw_data)['question']['content']).encode('utf-8')
+        except Exception: # Some perseus json is malformed
+            text = ""
     else:
         text = question.question
     text = re.sub(r"!\[[^\[]*\]\([^\)]*\)", "{Image}", text)
