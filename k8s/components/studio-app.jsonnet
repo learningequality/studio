@@ -9,6 +9,7 @@ local container = k.apps.v1beta1.deployment.mixin.spec.template.spec.containersT
 local envVar = container.envType;
 local volume = k.apps.v1beta1.deployment.mixin.spec.template.spec.volumesType;
 local containerPort = container.portsType;
+local secret = k.core.v1.secret;
 local service = k.core.v1.service;
 local servicePort = k.core.v1.service.mixin.spec.portsType;
 
@@ -37,6 +38,14 @@ local staticfilesVolumeMount = {
   mountPath: "/app/contentworkshop_static/",
 };
 
+local djangoSecretDataName = "django-secret-key";
+
+local djangoSecretData = {
+  secret_key: std.base64(params.djangoSecretKey)
+};
+
+local djangoSecretKey = secret.new(name=djangoSecretDataName, data=djangoSecretData);
+
 
 ## Variables shared across both workers and app
 
@@ -45,6 +54,7 @@ local django_config_vars = [
   envVar.new("DJANGO_SETTINGS_MODULE", params.settings),
   envVar.new("DJANGO_LOG_FILE", params.log_file),
   envVar.new("MPLBACKEND", "PS"),  # so that matplotlib will only run one consistent backend
+  envVar.fromSecretRef("DJANGO_SECRET_KEY", djangoSecretDataName, "secret_key"),
 ];
 
 # DB vars
@@ -134,4 +144,6 @@ local workersDeployment = deployment.new(
     .withCommand(["make", "prodceleryworkers"]),
     workerLabels);
 
-k.core.v1.list.new([appService, appDeployment, workersDeployment])
+k.core.v1.list.new([appService, appDeployment, workersDeployment]
+    # Create secret key secret if we fill it out
+    + if params.djangoSecretKey != "" then [djangoSecretKey] else [])
