@@ -61,11 +61,78 @@ var PreviewView = BaseViews.BaseView.extend({
     initialize: function (options) {
         // binding functions defined below.
         // QUESTION Why bother with the ones that are used in events anyway?
-        _.bindAll(this, 'select_preview', 'toggle_fullscreen', 'load_preview', 'exit_fullscreen', 'render_preview');
+        _.bindAll(this, 'select_preview', 'toggle_fullscreen','exit_fullscreen');
 
         // init values used across the methods
         this.current_preview = null;
         this.previewView = null;
+
+        // this.load_preview();
+        if (this.model) {
+          // this.load_default_value();
+
+          // Init current_preview
+          this.current_preview = null;
+          // defines preview_files with files that contain `preset.display`
+          var preview_files = _.filter(this.model.get("files"), function (f) { return f.preset.display; });
+          if (preview_files.length) {
+              // Set current preview based off of files defined above.
+              this.current_preview = _.min(preview_files, function (file) { return file.preset.order });
+          }
+
+
+          // this.load_preset_dropdown();
+
+          // replace an element in template with tabse_template, defined as a property of this view
+          // QUESTION does it have to be a property? Can we define it outside of this context?
+          this.$("#preview_tabs_dropdown").html(this.tabs_template({
+              // define presets based on another method
+              presets: this.load_presets().toJSON()
+          }));
+
+
+        }
+
+
+        // this.render_preview();
+        if (this.current_preview) {
+            // QUESTION would it be better to bind this to a property in the model?
+            this.$(".preview_format_switch").text(stringHelper.translate(this.current_preview.preset.id));
+
+
+            // this.generate_preview(true);
+            var force_load = true;
+
+            // define data used to create an entirely new view
+            var data = {
+                content_model: this.model,
+                file_model: this.current_preview,
+                subtitles: (() => {
+                    var subtitles = [];
+                    this.model.get("files").forEach(function (file) {
+                        var file_json = (file.attributes) ? file.attributes : file;
+                        var preset_id = (file_json.preset && file_json.preset.name) ? file_json.preset.name : file_json.preset;
+                        var current_preset = window.formatpresets.get({ id: preset_id });
+                        if (current_preset && current_preset.get("subtitle")) {
+                            subtitles.push(file_json);
+                        }
+                    });
+                    return subtitles;
+                }),
+                force_load: force_load && this.model.get('kind') === "video",
+                encoding: this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64,
+                intl_data: this.get_intl_data()
+            };
+            // create an entirely new previewView if necessary
+            if (!this.previewView) {
+                data.el = this.$("#preview_window");
+                this.previewView = new ItemPreviewView(data);
+            } else {
+                this.previewView.setData(data);
+            }
+            this.previewView.render();
+        }
+
 
         // call render function
         // QUESTION necessary? Seems like it's usually used to attach a model.
@@ -98,49 +165,17 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     // do we really need to define a render function?
     render: function () {
-        this.load_preview();
-
         // pass data to the template. Why 2 objects rather than 1?
-        this.$el.html(this.template({
+        this.$el.html(
+          this.template({
             file: this.current_preview
-        }, {
-                data: this.get_intl_data()
-            }));
-
-        this.load_preset_dropdown();
-        this.render_preview();
+          }, {
+            data: this.get_intl_data()
+          })
+        );
 
         // A good convention is to return `this` at the end of render to enable chained calls.
-    },
-    // when there's a current preview defined
-    // 1) Set text in the format switch.
-    // 2) Call generate_preview
-    // referenced 4 times. Here, 'render', bindall, select_preview
-    render_preview: function () {
-        if (this.current_preview) {
-            // QUESTION would it be better to bind this to a property in the model?
-            this.$(".preview_format_switch").text(stringHelper.translate(this.current_preview.preset.id));
-
-            //
-            this.generate_preview(true);
-        }
-    },
-    // QUESTION: are methods ever called outside of the view?
-    load_preview: function () {
-        if (this.model) {
-            this.load_default_value();
-            this.load_preset_dropdown();
-        }
-    },
-    load_default_value: function () {
-        // Init current_preview
-        this.current_preview = null;
-        // defines preview_files with files that contain `preset.display`
-        var preview_files = _.filter(this.model.get("files"), function (f) { return f.preset.display; });
-        if (preview_files.length) {
-            // Set current preview based off of files defined above.
-            this.current_preview = _.min(preview_files, function (file) { return file.preset.order });
-        }
+        return this;
     },
     load_presets: function () {
         return new Models.FormatPresetCollection(
@@ -152,61 +187,22 @@ var PreviewView = BaseViews.BaseView.extend({
             )
         );
     },
-    load_preset_dropdown: function () {
-        // replace an element in template with tabse_template, defined as a property of this view
-        // QUESTION does it have to be a property? Can we define it outside of this context?
-        this.$("#preview_tabs_dropdown").html(this.tabs_template({
-            // define presets based on another method
-            presets: this.load_presets().toJSON()
-        }));
-    },
     select_preview: function (event) {
         // called internally
         var selected_preview = _.find(this.model.get('files'), function (file) { return file.preset.id === event.target.getAttribute('value'); });
         this.current_preview = selected_preview;
-        this.render_preview();
+        // TODO bind this change to an event instead
+        this.render();
         var self = this;
         _.defer(function () {
             self.$("iframe").prop("src", function () { return $(this).data("src"); });
         });
     },
+    // TODO make reactive to an event
     switch_preview: function (model) {
         // called from outside sources
         this.model = model;
         this.render();
-    },
-    generate_preview: function (force_load) {
-        if (this.current_preview) {
-            // define data used to create an entirely new view
-            var data = {
-                content_model: this.model,
-                file_model: this.current_preview,
-                subtitles: this.get_subtitles(),
-                force_load: force_load && this.model.get('kind') === "video",
-                encoding: this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64,
-                intl_data: this.get_intl_data()
-            };
-            // create an entirely new previewView if necessary
-            if (!this.previewView) {
-                data.el = this.$("#preview_window");
-                this.previewView = new ItemPreviewView(data);
-            } else {
-                this.previewView.setData(data);
-            }
-            this.previewView.render();
-        }
-    },
-    get_subtitles: function () {
-        var subtitles = [];
-        this.model.get("files").forEach(function (file) {
-            var file_json = (file.attributes) ? file.attributes : file;
-            var preset_id = (file_json.preset && file_json.preset.name) ? file_json.preset.name : file_json.preset;
-            var current_preset = window.formatpresets.get({ id: preset_id });
-            if (current_preset && current_preset.get("subtitle")) {
-                subtitles.push(file_json);
-            }
-        });
-        return subtitles;
     },
     toggle_fullscreen: function () {
         var elem = document.getElementById("preview_content_main");
