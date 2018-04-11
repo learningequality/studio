@@ -2,6 +2,9 @@
 import os
 import sys
 
+os.environ.setdefault(
+    "KOLIBRI_HOME", os.path.join(os.path.expanduser("~"), ".kolibri")
+)
 
 # Attach Python Cloud Debugger
 if __name__ == "__main__":

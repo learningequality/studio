@@ -40,6 +40,7 @@ var PreviewView = BaseViews.BaseView.extend({
     initialize: function(options) {
         _.bindAll(this, 'select_preview','toggle_fullscreen', 'load_preview', 'exit_fullscreen', 'render_preview');
         this.current_preview = null;
+        this.previewView = null;
         this.render();
     },
     events: {
@@ -100,14 +101,21 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     generate_preview:function(force_load){
         if(this.current_preview){
-            _.defer(render_preview,
-                this.$("#preview_window"),
-                this.current_preview,
-                this.get_subtitles(),
-                force_load && this.model.get('kind') === "video",
-                this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64,
-                this.get_intl_data()
-            );
+            var data = {
+                content_model: this.model,
+                file_model: this.current_preview,
+                subtitles: this.get_subtitles(),
+                force_load: force_load && this.model.get('kind') === "video",
+                encoding: this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64,
+                intl_data: this.get_intl_data()
+            };
+            if (!this.previewView) {
+                data.el = this.$("#preview_window");
+                this.previewView = new ItemPreviewView(data);
+            } else {
+                this.previewView.setData(data);
+            }
+            this.previewView.render();
         }
     },
     get_subtitles:function(){
@@ -172,52 +180,99 @@ var PreviewView = BaseViews.BaseView.extend({
     }
 });
 
-function render_preview(el, file_model, subtitles, force_load, encoding, intl_data){
-    var preview_template;
-    var source = file_model.storage_url;
-    switch (file_model.file_format){
-        case "png":
-        case "jpg":
-        case "jpeg":
-            source = encoding || source;
-            preview_template = require("./hbtemplates/preview_templates/image.handlebars");
-            break;
-        case "pdf":
-        case "PDF":
-        case "vtt":
-        case "srt":
-            preview_template = require("./hbtemplates/preview_templates/document.handlebars");
-            break;
-        case "mp3":
-            preview_template = require("./hbtemplates/preview_templates/audio.handlebars");
-            break;
-        case "mp4":
-            preview_template = require("./hbtemplates/preview_templates/video.handlebars");
-            break;
-        case "perseus":
-            preview_template = require("./hbtemplates/preview_templates/exercise.handlebars");
-            break;
-        case "zip":
-            preview_template = require("./hbtemplates/preview_templates/html5.handlebars");
-            break;
-        default:
-            preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+var ItemPreviewView = BaseViews.BaseView.extend({
+    initialize: function(options) {
+        _.bindAll(this, 'render', 'cleanUpVuePreview');
+        this.vuePreview = null;
+        this.setData(options);
+        this.render();
+    },
+    setData: function (options) {
+        this.content_model = options.content_model;
+        this.file_model = options.file_model;
+        this.subtitles = options.subtitles;
+        this.force_load = options.force_load;
+        this.encoding = options.encoding;
+        this.intl_data = options.intl_data;
+    },
+    render: function () {
+        var preview_template;
+        var source = this.file_model.storage_url;
+        switch (this.file_model.file_format){
+            case "png":
+            case "jpg":
+            case "jpeg":
+                source = this.encoding || source;
+                preview_template = require("./hbtemplates/preview_templates/image.handlebars");
+                break;
+            case "vtt":
+            case "srt":
+                preview_template = require("./hbtemplates/preview_templates/document.handlebars");
+                break;
+            case "pdf":
+            case "PDF":
+            case "mp3":
+            case "mp4":
+            case "perseus":
+            case "zip":
+                break;
+            default:
+                preview_template = require("./hbtemplates/preview_templates/default.handlebars");
+        }
+        if (preview_template) {
+                this.cleanUpVuePreview();
+                this.$el.html(preview_template({
+                    source: source,
+                    extension: this.file_model.mimetype,
+                    checksum: this.file_model.checksum,
+                    subtitles : this.subtitles
+                },  {
+                    data: this.intl_data
+                }));
+                if(this.force_load){
+                    this.$el.find("video").load();
+                }
+          } else {
+            var kind = this.content_model.get('kind');
+            var propsData = {
+                kind: kind,
+                files: [{
+                    storage_url: source,
+                    extension: this.file_model.file_format,
+                    available: true,
+                }],
+                available: true,
+                assessment: kind === 'exercise',
+                interactive: false,
+                itemId: kind === 'exercise' ? this.content_model.get('assessment_item_ids')[0] : null
+            };
+            if (!this.vuePreview) {
+                var ContentRendererComponent = Object.assign({}, window.kolibriGlobal.coreVue.components.contentRenderer);
+                var Vue = window.kolibriGlobal.lib.vue;
+                var ContentRenderer = Vue.extend(ContentRendererComponent);
+                if (!window.kolibriGlobal.coreVue.vuex.store.default.__initialized) {
+                    window.kolibriGlobal.coreVue.vuex.store.default.registerModule();
+                }
+                this.vuePreview = new ContentRenderer({
+                    propsData: propsData,
+                    el: this.$el[0],
+                    store: window.kolibriGlobal.coreVue.vuex.store.default,
+                });
+            } else {
+                Object.assign(this.vuePreview, propsData);
+            }
+        }
+    },
+    cleanUpVuePreview: function() {
+        if (this.vuePreview) {
+            this.vuePreview.destroy();
+            this.vuePreview = null;
+        }
     }
-    el.html(preview_template({
-        source: source,
-        extension:file_model.mimetype,
-        checksum:file_model.checksum,
-        subtitles : subtitles
-    },  {
-        data: intl_data
-    }));
-    if(force_load){
-        el.find("video").load();
-    }
-};
+});
 
 module.exports = {
     PreviewModalView:PreviewModalView,
     PreviewView:PreviewView,
-    render_preview: render_preview
+    ItemPreviewView: ItemPreviewView
 }

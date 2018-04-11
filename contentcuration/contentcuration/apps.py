@@ -1,6 +1,7 @@
 import os
 from django.apps import AppConfig
 from django.conf import settings
+from kolibri.plugins.registry import initialize
 
 
 class ContentConfig(AppConfig):
@@ -11,3 +12,4 @@ class ContentConfig(AppConfig):
             os.makedirs(settings.STORAGE_ROOT)
         except os.error:
             pass
+        initialize()
