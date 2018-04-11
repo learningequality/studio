@@ -24,6 +24,7 @@ STORAGE_ROOT = os.path.join(BASE_DIR, "storage")
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 DB_ROOT = os.path.join(BASE_DIR, "databases")
+CSV_ROOT = os.path.join(BASE_DIR, "csvs")
 
 PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
 

@@ -13,7 +13,7 @@ SITES = [
         "fields": {
             "id": 1,
             "name": "Kolibri Studio",
-            "domain": "contentworkshop.learningequality.org",
+            "domain": "studio.learningequality.org",
         },
     },
     {
