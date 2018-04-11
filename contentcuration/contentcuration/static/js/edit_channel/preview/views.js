@@ -24,7 +24,7 @@ var PreviewModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/preview_modal.handlebars"),
 
     // probably loops into some sort of lifecycle
-    initialize: function (options) {
+    initialize(options) {
         // need to bind because this is running in the context of the baseModal view
         _.bindAll(this, "close_preview");
         this.modal = true; // ?
@@ -42,7 +42,7 @@ var PreviewModalView = BaseViews.BaseModalView.extend({
         // QUESTION what does this do? Probably activate the modal?
         this.preview_view.switch_preview(this.model);
     },
-    close_preview: function () {
+    close_preview() {
         this.remove();
     },
 });
@@ -58,7 +58,7 @@ var PreviewView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/preview_dialog.handlebars"),
     // binds methods so that Backbone can call them later?
     // QUESTION: why are we binding them here again?
-    initialize: function (options) {
+    initialize(options) {
         // binding functions defined below.
         // QUESTION Why bother with the ones that are used in events anyway?
         _.bindAll(this, 'select_preview', 'toggle_fullscreen','exit_fullscreen');
@@ -164,7 +164,7 @@ var PreviewView = BaseViews.BaseView.extend({
         'click .view_fullscreen': 'toggle_fullscreen'
     },
     // do we really need to define a render function?
-    render: function () {
+    render() {
         // pass data to the template. Why 2 objects rather than 1?
         this.$el.html(
           this.template({
@@ -177,7 +177,7 @@ var PreviewView = BaseViews.BaseView.extend({
         // A good convention is to return `this` at the end of render to enable chained calls.
         return this;
     },
-    load_presets: function () {
+    load_presets() {
         return new Models.FormatPresetCollection(
             _.where(
                 _.pluck(
@@ -187,7 +187,7 @@ var PreviewView = BaseViews.BaseView.extend({
             )
         );
     },
-    select_preview: function (event) {
+    select_preview(event) {
         // called internally
         var selected_preview = _.find(this.model.get('files'), function (file) { return file.preset.id === event.target.getAttribute('value'); });
         this.current_preview = selected_preview;
@@ -199,12 +199,12 @@ var PreviewView = BaseViews.BaseView.extend({
         });
     },
     // TODO make reactive to an event
-    switch_preview: function (model) {
+    switch_preview(model) {
         // called from outside sources
         this.model = model;
         this.render();
     },
-    toggle_fullscreen: function () {
+    toggle_fullscreen() {
         var elem = document.getElementById("preview_content_main");
 
         if (!this.check_fullscreen()) {
@@ -235,7 +235,7 @@ var PreviewView = BaseViews.BaseView.extend({
             }
         }
     },
-    exit_fullscreen: function () {
+    exit_fullscreen() {
         if (!this.check_fullscreen()) {
             this.$("#preview_content_main").removeClass('preview_on');
             this.$(".view_fullscreen").html(this.get_translation("show_fullscreen"))
@@ -246,7 +246,7 @@ var PreviewView = BaseViews.BaseView.extend({
             $(document).off('MSFullscreenChange');
         }
     },
-    check_fullscreen: function () {
+    check_fullscreen() {
         return !((document.fullScreenElement !== undefined && document.fullScreenElement === null) ||
             (document.msFullscreenElement !== undefined && document.msFullscreenElement === null) ||
             (document.mozFullScreen !== undefined && !document.mozFullScreen) ||
@@ -255,7 +255,7 @@ var PreviewView = BaseViews.BaseView.extend({
 });
 
 var ItemPreviewView = BaseViews.BaseView.extend({
-    initialize: function (options) {
+    initialize(options) {
         _.bindAll(this, 'render', 'cleanUpVuePreview');
 
         // init. Can we just set them to null?
@@ -264,7 +264,7 @@ var ItemPreviewView = BaseViews.BaseView.extend({
         this.setData(options);
         this.render();
     },
-    setData: function (options) {
+    setData(options) {
         // to bind all of these manually instead of using `model` directly
 
         // contains parent's model
@@ -275,7 +275,7 @@ var ItemPreviewView = BaseViews.BaseView.extend({
         this.encoding = options.encoding;
         this.intl_data = options.intl_data;
     },
-    render: function () {
+    render() {
         // init
         var preview_template;
         var source = this.file_model.storage_url;
@@ -373,7 +373,7 @@ var ItemPreviewView = BaseViews.BaseView.extend({
             }
         }
     },
-    cleanUpVuePreview: function () {
+    cleanUpVuePreview() {
         if (this.vuePreview) {
             this.vuePreview.destroy();
             this.vuePreview = null;
