@@ -43,10 +43,7 @@ CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or CELERY_TIMEZONE
 
 # email settings
 # EMAIL_BACKEND = "postmark.backends.PostmarkBackend"
-EMAIL_BACKEND = "anymail.backends.postmark.EmailBackend"
+EMAIL_BACKEND = 'postmark.django_backend.EmailBackend'
 POSTMARK_API_KEY = os.getenv("EMAIL_CREDENTIALS_POSTMARK_API_KEY")
-ANYMAIL = {
-    "POSTMARK_SERVER_TOKEN": POSTMARK_API_KEY,
-}
 
 LANGUAGE_CODE = os.getenv("LANGUAGE_CODE") or "en"
