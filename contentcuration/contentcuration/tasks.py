@@ -1,5 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
+import os
+
 from celery.decorators import task
 from celery.utils.log import get_task_logger
 from django.conf import settings
