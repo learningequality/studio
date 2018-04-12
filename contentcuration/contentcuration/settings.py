@@ -200,6 +200,8 @@ STORAGE_URL = '/content/storage/'
 
 CONTENT_DATABASE_URL = '/content/databases/'
 
+CSV_URL = '/content/csvs/'
+
 LOGIN_REDIRECT_URL = '/channels/'
 
 AUTH_USER_MODEL = 'contentcuration.User'
