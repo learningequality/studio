@@ -44,6 +44,7 @@ ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this 
 
 INSTALLED_APPS = (
     'contentcuration',
+    'anymail',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -57,7 +58,8 @@ INSTALLED_APPS = (
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
-    'search'
+    'search',
+
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
