@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 
 from celery.decorators import task
 from celery.utils.log import get_task_logger
+from django.conf import settings
 from django.core.management import call_command
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
