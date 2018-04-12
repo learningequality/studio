@@ -26,7 +26,7 @@ try:
             enable_service_account_auth=True,
             service_account_json_file=os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
         )
-except ImportError:
+except ImportError, RuntimeError:
     pass
 
 # runs the management command 'exportchannel' async through celery
