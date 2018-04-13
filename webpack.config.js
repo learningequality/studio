@@ -1,30 +1,95 @@
 /* eslint-env node */
-var path = require('path');
-var staticContentDir = path.resolve('contentcuration', 'contentcuration', 'static');
+// const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
+const webpack = require('webpack');
+const path = require('path');
+
+const staticFilesDir = path.resolve('contentcuration', 'contentcuration', 'static');
+const staticJsDir = path.resolve(staticFilesDir, 'js');
+const staticLessDir = path.resolve(staticFilesDir, 'less');
+
+const bundleEntryDir = path.resolve(staticJsDir, 'bundle_modules');
+const bundleOutputDir = path.resolve(staticJsDir,'bundles');
+
+const jsLoaders = [
+  { loader: 'babel-loader' }
+];
 
 module.exports = {
+  context: bundleEntryDir,
   entry: {
-    base: path.resolve(staticContentDir, 'bundle_modules', 'base.js'),
-    channel_edit: path.resolve(staticContentDir, 'bundle_modules', 'channel_edit.js'),
+    base: './base.js',
+    channel_edit: './channel_edit.js',
   },
   output: {
     filename: '[name].js',
-    path: path.resolve(staticContentDir, 'js','bundles'),
+    path: bundleOutputDir,
+  },
+  // add source maps for use in chrome for debugging
+  devtool: 'inline-source-map',
+  // builds a bundle that holds common code between the 2 entry points
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+          commons: {
+              name: "commons",
+              chunks: "initial",
+              minChunks: 2
+          }
+      }
+    }
   },
   module: {
     rules: [
       {
         test: /\.js?$/,
-        include: [
-          path.resolve(staticContentDir, 'js', 'bundle_modules')
+        use:jsLoaders,
+      },
+      {
+        test: /\.handlebars?$/,
+        use:[
+          'handlebars-loader',
         ],
       },
       {
         test: /\.less?$/,
-        include: [
-          path.resolve(staticContentDir, 'less', 'bundle_modules')
+        use: [
+          `style-loader`,
+          `css-loader`,
+          'less-loader',
         ],
+      },
+      {
+        test: /\.css?$/,
+        use: [
+          `style-loader`,
+          `css-loader`,
+        ],
+      },
+      {
+        test: /\.vue$/,
+        loader:'vue-loader',
+        options: {
+          loaders: {
+            js: jsLoaders,
+          }
+        },
       },
     ],
   },
+  resolve: {
+    // carried over from build.js
+    modules: ['node_modules', '../', '../../less'],
+  },
+  plugins: [
+    // cleans out build dirs prior to rebuilding
+    new CleanWebpackPlugin([bundleOutputDir]),
+    new webpack.ProvidePlugin({
+      _: 'underscore',
+      $: 'jquery',
+      jQuery: 'jquery',
+    }),
+    // uglify the code, used in prod. More limited source maps
+    // new UglifyJsPlugin(),
+  ],
 };
