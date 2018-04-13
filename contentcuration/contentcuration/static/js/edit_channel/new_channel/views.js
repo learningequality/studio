@@ -443,7 +443,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			var title = this.$el.find("#new_channel_name").val().trim();
 			var description = this.$el.find("#new_channel_description").val();
 			var language = window.languages.findWhere({id: this.$el.find("#select_language").val()});
-			var preferences = this.model.get('content_defaults') || (typeof window.user_preferences === "string")? JSON.parse(window.user_preferences) : window.user_preferences;
+			var preferences = this.model.get('content_defaults') || (typeof window.user_preferences === "object")? window.user_preferences : JSON.parse(window.user_preferences);
+
 			var data = {
 				name: title,
 				description: description,
