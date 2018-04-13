@@ -13,19 +13,21 @@ var debug = (process.argv.indexOf('--debug') > -1) || (process.argv.indexOf('-d'
 var prod = (process.argv.indexOf('--prod') > -1);
 var staticfiles = (process.argv.indexOf('--staticfiles') > -1) || (process.argv.indexOf('-s') > -1);
 
-var infoLog = function(msg) {
+function infoLog(msg) {
   console.info('Watchify: ' + msg);
-};
-var errLog = function(msg) {
-  console.error('Watchify: ' + msg);
-};
+}
 
-var createBundles = function (b, bundles) {
+function errLog(msg) {
+  console.error('Watchify: ' + msg);
+}
+
+function createBundles(b, bundles) {
   b.plugin('factor-bundle', { outputs: _.map(bundles, function(item) {return item.target_file;}) });
     // Don't use minifyify except in production.
   if (!debug) {
     b.plugin('minifyify', {map: false});
   }
+
   try {
     b.bundle(
       function(err, buf){
@@ -55,6 +57,7 @@ var jsModules = staticContentDir + 'js';
 if (fs.existsSync(jsModules)) {
   modulePaths.push(jsModules);
 }
+
 var lessModules = staticContentDir + 'less';
 if (fs.existsSync(lessModules)) {
   modulePaths.push(lessModules);
@@ -82,7 +85,7 @@ if (!fs.existsSync(__dirname + '/contentcuration' + (staticfiles ? '' : '/conten
 }
 
 // now that we've collected the bundle modules we need, set up browserify
-var b = browserify({
+var browserify = browserify({
   paths: modulePaths,
   cache: {},
   packageCache: {},
@@ -92,24 +95,24 @@ var b = browserify({
 // all the files are being included inplicitly by watching the modules we hand-write
 _.each(bundles,
   function(item) {
-    b.add(item.bundle, {expose: item.alias});
+    browserify.add(item.bundle, {expose: item.alias});
   }
 );
 
-b.transform(vueify);
+browserify.transform(vueify);
 // handlebars translation
-b.transform(hbsfy);
+browserify.transform(hbsfy);
 
-b.transform(babelify);
+browserify.transform(babelify);
 
 // less translation
-b.transform(lessify,
+browserify.transform(lessify,
   { // less options
     global: true,
   }
 );
 
-b.transform(
+browserify.transform(
   envify({
     NODE_ENV: prod ? 'production' : 'development',
   }),
@@ -118,7 +121,7 @@ b.transform(
 
 if (watch) {
   var watchify = require('watchify');
-  b.plugin(watchify,
+  browserify.plugin(watchify,
     { // watchify options
       verbose: true,
       poll: 1000,
@@ -128,18 +131,18 @@ if (watch) {
 
   infoLog('Starting watcher');
 
-  b.on('update', function (ids) {
+  browserify.on('update', function (ids) {
     infoLog('files changed, bundle updated');
     _.each(ids, function(id) {infoLog(id + ' changed');});
-    createBundles(b, bundles);
+    createBundles(browserify, bundles);
   });
 
-  b.on('log', infoLog);
+  browserify.on('log', infoLog);
 
-  b.on('error', function(error) {
+  browserify.on('error', function(error) {
     errLog(error);
     this.emit('end');
   });
 }
 
-createBundles(b, bundles);
+createBundles(browserify, bundles);
