@@ -378,33 +378,11 @@ def set_channel_priority(request):
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
-
-from django.template.loader import render_to_string
-from django.core.mail import EmailMessage
-from contentcuration.utils.channel_csv import write_channel_csv_file
-
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def download_channel_content_csv(request, channel_id):
-    """ Writes list of channels to csv, which is then returned """
+    """ Writes list of channels to csv, which is then emailed """
     site = get_current_site(request)
-    # generatechannelcsv_task.delay(channel_id, site.domain, request.user.id)
+    generatechannelcsv_task.delay(channel_id, site.domain, request.user.id)
 
-
-    # TEMPORARY
-    domain = site.domain
-    user_id = request.user.id
-
-
-    channel = Channel.objects.get(pk=channel_id)
-    user = User.objects.get(pk=user_id)
-
-    csv_path = write_channel_csv_file(channel, site=domain)
-    subject = render_to_string('export/csv_email_subject.txt', {'channel': channel})
-    message = render_to_string('export/csv_email.txt', {'channel': channel, 'user': user})
-
-    email = EmailMessage(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
-    email.attach_file(csv_path)
-    email.send()
     return HttpResponse({"success": True})
-

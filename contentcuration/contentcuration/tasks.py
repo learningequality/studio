@@ -14,7 +14,8 @@ from contentcuration.utils.channel_csv import write_channel_csv_file
 
 logger = get_task_logger(__name__)
 
-# # Attach Python Cloud Debugger
+# TODO: Try to get debugger working for celery workers
+# Attach Python Cloud Debugger
 # try:
 #     import googleclouddebugger
 
