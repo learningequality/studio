@@ -1,6 +1,7 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
+var PreviewDialogModel = require('./models/preview_dialog');
 var Models = require("edit_channel/models");
 var stringHelper = require("edit_channel/utils/string_helper");
 require("modal-styles.less");
@@ -39,7 +40,6 @@ var PreviewModalView = BaseViews.BaseModalView.extend({
             el: this.$(".modal-body"),
         });
 
-        // QUESTION what does this do? Probably activate the modal?
         this.preview_view.switch_preview(this.model);
     },
     close_preview() {
@@ -52,10 +52,9 @@ var PreviewView = BaseViews.BaseView.extend({
     // probably for translations. Defined at the top of this file
     name: NAMESPACE,
     $trs: MESSAGES,
-    // Uses a tabs template somewhere in the logic?
-    tabs_template: require("./hbtemplates/preview_templates/tabs.handlebars"),
     // Template to be injected in modal, defined above.
     template: require("./hbtemplates/preview_dialog.handlebars"),
+    tabs_template: require("./hbtemplates/preview_templates/tabs.handlebars"),
     // binds methods so that Backbone can call them later?
     // QUESTION: why are we binding them here again?
     initialize(options) {
@@ -63,101 +62,46 @@ var PreviewView = BaseViews.BaseView.extend({
         // QUESTION Why bother with the ones that are used in events anyway?
         _.bindAll(this, 'select_preview', 'toggle_fullscreen','exit_fullscreen', 'check_fullscreen');
 
-        // init values used across the methods
-        this.current_preview = null;
-        this.previewView = null;
+        // figure out the current_preview
+        const defaultPreviewFile = files => _.min(
+          files.filter(file => file.preset.display),
+          file => file.preset.order
+        );
 
-        // this.load_preview();
-        if (this.model) {
-          // this.load_default_value();
+        const formatPresets = files => new Models.FormatPresetCollection(
+            _.where(
+                _.pluck(files, "preset"),
+                { 'display': true, 'subtitle': false }
+            )
+        ).toJSON();
 
-          // Init current_preview
-          this.current_preview = null;
-          // defines preview_files with files that contain `preset.display`
-          var preview_files = _.filter(this.model.get("files"), function (f) { return f.preset.display; });
-          if (preview_files.length) {
-              // Set current preview based off of files defined above.
-              this.current_preview = _.min(preview_files, function (file) { return file.preset.order });
-          }
+        // duping the current model, adding some props that it need not worry about
+        this.model = new PreviewDialogModel(Object.assign({
+          current_preview: defaultPreviewFile(this.model.get('files')),
+          format_presets: formatPresets(this.model.get('files')),
+          previewViewData: {
+              content_model: this.model,
+              file_model: defaultPreviewFile(this.model.get('files')),
+              subtitles: (() => {
+                  var subtitles = [];
+                  this.model.get("files").forEach(function (file) {
+                      var file_json = (file.attributes) ? file.attributes : file;
+                      var preset_id = (file_json.preset && file_json.preset.name) ? file_json.preset.name : file_json.preset;
+                      var current_preset = window.formatpresets.get({ id: preset_id });
+                      if (current_preset && current_preset.get("subtitle")) {
+                          subtitles.push(file_json);
+                      }
+                  });
+                  return subtitles;
+              })(),
+              force_load: this.model.get('kind') === "video",
+              encoding: this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64,
+              intl_data: this.get_intl_data()
+          },
+        }, this.model.toJSON()));
 
-
-          // this.load_preset_dropdown();
-
-          // replace an element in template with tabse_template, defined as a property of this view
-          // QUESTION does it have to be a property? Can we define it outside of this context?
-          this.$("#preview_tabs_dropdown").html(this.tabs_template({
-              // define presets based on another method
-              presets: this.load_presets().toJSON()
-          }));
-
-
-        }
-
-
-        // this.render_preview();
-        if (this.current_preview) {
-            // QUESTION would it be better to bind this to a property in the model?
-            this.$(".preview_format_switch").text(stringHelper.translate(this.current_preview.preset.id));
-
-
-            // this.generate_preview(true);
-            var force_load = true;
-
-            // define data used to create an entirely new view
-            var data = {
-                content_model: this.model,
-                file_model: this.current_preview,
-                subtitles: (() => {
-                    var subtitles = [];
-                    this.model.get("files").forEach(function (file) {
-                        var file_json = (file.attributes) ? file.attributes : file;
-                        var preset_id = (file_json.preset && file_json.preset.name) ? file_json.preset.name : file_json.preset;
-                        var current_preset = window.formatpresets.get({ id: preset_id });
-                        if (current_preset && current_preset.get("subtitle")) {
-                            subtitles.push(file_json);
-                        }
-                    });
-                    return subtitles;
-                }),
-                force_load: force_load && this.model.get('kind') === "video",
-                encoding: this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64,
-                intl_data: this.get_intl_data()
-            };
-            // create an entirely new previewView if necessary
-            if (!this.previewView) {
-                data.el = this.$("#preview_window");
-                this.previewView = new ItemPreviewView(data);
-            } else {
-                this.previewView.setData(data);
-            }
-            this.previewView.render();
-        }
-
-
-        // call render function
-        // QUESTION necessary? Seems like it's usually used to attach a model.
+        this.listenTo(this.model, 'change', this.render);
         this.render();
-        //   load_preview()
-        //      if has a model
-        //          load_default_value()
-        //              define preview_files
-        //              define current_preview
-        //          load_preset_dropdown()
-        //              set preview_tabs_dropdown with tabs_template
-        //                load_presets()
-        //                  Models.FormatPresetCollection()
-        //                      returns a new model in a presets-specific shape
-        //   load_preset_dropdown()
-        //     redundant? ^
-        //   render_preview()
-        //      if has a current preview
-        //          Set template switch string
-        //          generate_preview()
-        //              if has current_preview
-        //                  if does not have previewView
-        //                      create new ItemPreviewView, place in child of template
-        //                  else call previewView.setData()
-        //                  previewView.render()
     },
     events: {
         'click .preview_btn_tab': 'select_preview',
@@ -165,27 +109,28 @@ var PreviewView = BaseViews.BaseView.extend({
     },
     // do we really need to define a render function?
     render() {
-        // pass data to the template. Why 2 objects rather than 1?
-        this.$el.html(
-          this.template({
-            file: this.current_preview
-          }, {
-            data: this.get_intl_data()
+        this.$el.html(this.template({
+          file: true
+        }, {
+          data: this.get_intl_data()
+        }));
+
+        // set up preview tabs + dd child elements
+        this.$("#preview_tabs_dropdown").html(
+          this.tabs_template({ presets: this.model.get('format_presets') })
+        );
+
+        this.$(".preview_format_switch").text(
+          stringHelper.translate(this.model.get('current_preview').preset.id)
+        );
+
+        new ItemPreviewView(
+          Object.assign(this.model.get('previewViewData'), {
+            el: this.$('#preview_window')[0]
           })
         );
 
-        // A good convention is to return `this` at the end of render to enable chained calls.
         return this;
-    },
-    load_presets() {
-        return new Models.FormatPresetCollection(
-            _.where(
-                _.pluck(
-                    this.model.get("files"), "preset"
-                ),
-                { 'display': true, 'subtitle': false }
-            )
-        );
     },
     select_preview(event) {
         // called internally
@@ -365,13 +310,14 @@ var ItemPreviewView = BaseViews.BaseView.extend({
                 // if this works purely with core store, should be fine
                 this.vuePreview = new ContentRenderer({
                     propsData: propsData,
-                    el: this.$el[0],
+                    el: this.el,
                     store: window.kolibriGlobal.coreVue.vuex.store.default,
                 });
             } else {
                 Object.assign(this.vuePreview, propsData);
             }
         }
+        return this;
     },
     cleanUpVuePreview() {
         if (this.vuePreview) {
