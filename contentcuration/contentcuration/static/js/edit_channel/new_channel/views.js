@@ -46,7 +46,8 @@ var MESSAGES = {
 	"last_updated": "Updated {updated}",
 	"starred_channel": "Star Added!",
 	"unstarred_channel": "Star Removed",
-	"create": "Create"
+	"create": "Create",
+	"channel_title_prompt": "('CTRL' or 'CMD' + click to open in new tab)"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
