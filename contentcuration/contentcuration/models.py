@@ -436,6 +436,7 @@ class Channel(models.Model):
 
             # Delete db if channel has been deleted and mark as unpublished
             if not original_channel.deleted and self.deleted:
+                self.pending_editors.all().delete()
                 channel_db_url = os.path.join(settings.DB_ROOT, self.id) + ".sqlite3"
                 if os.path.isfile(channel_db_url):
                     os.unlink(channel_db_url)

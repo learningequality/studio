@@ -42,7 +42,6 @@ CELERY_RESULT_BACKEND = "redis://:{password}@{endpoint}:/{db}".format(
 CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or CELERY_TIMEZONE
 
 # email settings
-# EMAIL_BACKEND = "postmark.backends.PostmarkBackend"
 EMAIL_BACKEND = 'postmark.django_backend.EmailBackend'
 POSTMARK_API_KEY = os.getenv("EMAIL_CREDENTIALS_POSTMARK_API_KEY")
 
