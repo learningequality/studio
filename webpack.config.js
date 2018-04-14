@@ -1,5 +1,4 @@
 /* eslint-env node */
-// const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const webpack = require('webpack');
 const path = require('path');
@@ -25,10 +24,11 @@ module.exports = {
     filename: '[name].js',
     path: bundleOutputDir,
   },
-  // add source maps for use in chrome for debugging
+  // add source maps for use in chrome for debugging. default for 'development' mode is 'eval'
+  // Remove this line if speed becomes an issue
   devtool: 'inline-source-map',
-  // builds a bundle that holds common code between the 2 entry points
   optimization: {
+    // builds a bundle that holds common code between the 2 entry points
     splitChunks: {
       cacheGroups: {
           commons: {
@@ -37,7 +37,7 @@ module.exports = {
               minChunks: 2
           }
       }
-    }
+    },
   },
   module: {
     rules: [
@@ -96,7 +96,7 @@ module.exports = {
       $: 'jquery',
       jQuery: 'jquery',
     }),
-    // uglify the code, used in prod. More limited source maps
-    // new UglifyJsPlugin(),
   ],
+  // new in webpack 4. Specifies the default bundle type
+  mode: 'development',
 };
