@@ -11,8 +11,17 @@ const bundleEntryDir = path.resolve(staticJsDir, 'bundle_modules');
 const bundleOutputDir = path.resolve(staticJsDir,'bundles');
 
 const jsLoaders = [
-  { loader: 'babel-loader' }
+  {
+    loader: 'babel-loader',
+    options: {
+      // might be able to limit browsers for smaller bundles
+      presets: ['env'],
+    },
+  }
 ];
+
+// NOTE: Lots of things are handled by webpack4. NODE_ENV, uglify, source-maps
+// see: https://medium.com/webpack/webpack-4-mode-and-optimization-5423a6bc597a
 
 module.exports = {
   context: bundleEntryDir,
@@ -32,7 +41,7 @@ module.exports = {
     splitChunks: {
       cacheGroups: {
           commons: {
-              name: "commons",
+              name: "common",
               chunks: "initial",
               minChunks: 2
           }
@@ -43,6 +52,7 @@ module.exports = {
     rules: [
       {
         test: /\.js?$/,
+        exclude: /node_modules?/,
         use:jsLoaders,
       },
       {
@@ -67,7 +77,7 @@ module.exports = {
         ],
       },
       {
-        test: /\.vue$/,
+        test: /\.vue?$/,
         loader:'vue-loader',
         options: {
           loaders: {
@@ -91,11 +101,6 @@ module.exports = {
     new CleanWebpackPlugin([bundleOutputDir]),
     // ignore codemirror, error caused by summernote
     new webpack.IgnorePlugin(/^codemirror$/),
-    new webpack.ProvidePlugin({
-      _: 'underscore',
-      $: 'jquery',
-      jQuery: 'jquery',
-    }),
   ],
   // new in webpack 4. Specifies the default bundle type
   mode: 'development',
