@@ -32,7 +32,7 @@ WORKDIR /contentcuration
 
 # generate the node bundles
 RUN mkdir -p contentcuration/static/js/bundles #
-RUN node build.js --prod --prefix=/
+RUN yarn run build -p
 
 # Download the crowdin-cli.jar file
 # RUN curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar

@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:py": "flake8 --exit-zero",
     "makemessages": "node ./extract_frontend_messages.js ./contentcuration/contentcuration/static/js/edit_channel/**{/*,}.{js,vue}",
-    "start": "webpack --config webpack.config.js"
+    "build": "webpack --config webpack.config.js"
   },
   "repository": {
     "type": "git",

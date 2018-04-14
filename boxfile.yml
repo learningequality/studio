@@ -4,7 +4,7 @@ run.config:
   engine.config:
     runtime: python-2.7
 
-  extra_packages: 
+  extra_packages:
     - py27-Tk
     - nodejs
     - ImageMagick6-6.9.9.20
@@ -46,7 +46,7 @@ web.main:
     django: gunicorn -c /app/deploy/gunicorn.py contentcuration.wsgi:application
     minio: run_minio.py
 
-  cwd: 
+  cwd:
     django: contentcuration
 
   writable_dirs:
@@ -60,7 +60,7 @@ worker.publishing:
   start:
     main: celery -A contentcuration worker -l info
 
-  cwd: 
+  cwd:
     main: contentcuration
 
 

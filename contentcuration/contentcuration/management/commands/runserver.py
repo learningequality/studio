@@ -14,12 +14,12 @@ from django.core.management.base import CommandError
 
 class Command(RunserverCommand):
     """
-    Subclass the RunserverCommand from Staticfiles to run browserify.
+    Subclass the RunserverCommand from Staticfiles to run webpack.
     """
 
     def __init__(self, *args, **kwargs):
         self.cleanup_closing = False
-        self.browserify_process = None
+        self.webpack_process = None
 
         super(Command, self).__init__(*args, **kwargs)
 
@@ -27,16 +27,16 @@ class Command(RunserverCommand):
 
         # We're subclassing runserver, which spawns threads for its
         # autoreloader with RUN_MAIN set to true, we have to check for
-        # this to avoid running browserify twice.
-        if not os.getenv('RUN_MAIN', False) and not getattr(self, "browserify_process"):
+        # this to avoid running webpack twice.
+        if not os.getenv('RUN_MAIN', False) and not getattr(self, "webpack_process"):
 
-            browserify_thread = Thread(target=self.start_browserify)
-            browserify_thread.daemon = True
-            browserify_thread.start()
+            webpack_thread = Thread(target=self.start_webpack)
+            webpack_thread.daemon = True
+            webpack_thread.start()
 
             ensure_storage_bucket_public()
 
-            atexit.register(self.kill_browserify_process)
+            atexit.register(self.kill_webpack_process)
 
         return super(Command, self).handle(*args, **options)
 
@@ -49,37 +49,38 @@ class Command(RunserverCommand):
         )
 
 
-    def kill_browserify_process(self):
-        if self.browserify_process.returncode is not None:
+
+    def kill_webpack_process(self):
+        if self.webpack_process.returncode is not None:
             return
 
         self.cleanup_closing = True
-        self.stdout.write('Closing browserify process')
+        self.stdout.write('Closing webpack process')
 
-        self.browserify_process.terminate()
+        self.webpack_process.terminate()
 
-    def start_browserify(self):
-        self.stdout.write('Starting browserify')
+    def start_webpack(self):
+        self.stdout.write('Starting webpack')
 
-        self.browserify_process = subprocess.Popen(
-            'node ../build.js --watch --debug',
+        self.webpack_process = subprocess.Popen(
+            'yarn run build --watch --progress',
             shell=True,
             stdin=subprocess.PIPE,
             stdout=self.stdout,
             stderr=self.stderr)
 
-        if self.browserify_process.poll() is not None:
-            raise CommandError('Browserify failed to start')
+        if self.webpack_process.poll() is not None:
+            raise CommandError('Webpack failed to start')
 
-        self.stdout.write('Browserify process on pid {0}'
-                          .format(self.browserify_process.pid))
+        self.stdout.write('Webpack process on pid {0}'
+                          .format(self.webpack_process.pid))
 
-        self.browserify_process.wait()
+        self.webpack_process.wait()
 
-        if self.browserify_process.returncode != 0 and not self.cleanup_closing:
+        if self.webpack_process.returncode != 0 and not self.cleanup_closing:
             self.stdout.write(
                 """
                 ****************************************************************************
-                Browserify exited unexpectedly - Javascript code will not be properly built.
+                Webpack exited unexpectedly - Javascript code will not be properly built.
                 ****************************************************************************
                 """)
