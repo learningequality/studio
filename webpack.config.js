@@ -83,8 +83,8 @@ module.exports = {
       edit_channel: path.resolve(staticJsDir, 'edit_channel'),
       utils: path.resolve(staticJsDir, 'utils'),
     },
-    // carried over from build.js
-    modules: ['node_modules', '../../less'],
+    // carryover of path resolution from build.js
+    modules: ['node_modules', staticLessDir],
   },
   plugins: [
     // cleans out build dirs prior to rebuilding
