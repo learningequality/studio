@@ -4,7 +4,7 @@ var $ = require('jquery');
 var get_cookie = require('utils/get_cookie');
 global.$ = $;
 global.jQuery = $;
-require('handlebars/helpers');
+require('../handlebars/helpers');
 
 require('../../less/styles.less');
 require('bootstrap/dist/js/npm.js');

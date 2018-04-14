@@ -78,12 +78,19 @@ module.exports = {
     ],
   },
   resolve: {
+    alias: {
+      // explicit alias definitions (rather than modules) for speed
+      edit_channel: path.resolve(staticJsDir, 'edit_channel'),
+      utils: path.resolve(staticJsDir, 'utils'),
+    },
     // carried over from build.js
-    modules: ['node_modules', '../', '../../less'],
+    modules: ['node_modules', '../../less'],
   },
   plugins: [
     // cleans out build dirs prior to rebuilding
     new CleanWebpackPlugin([bundleOutputDir]),
+    // ignore codemirror, error caused by summernote
+    new webpack.IgnorePlugin(/^codemirror$/),
     new webpack.ProvidePlugin({
       _: 'underscore',
       $: 'jquery',
