@@ -101,11 +101,12 @@ All the javascript dependencies are listed in `package.json`. To install them ru
      
          sudo su postgres
          psql
+         # mac: psql postgres
            CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
 
-  4. Create a database called `contentcuration`
+  4. Create a database called `gonano`
      
-         CREATE DATABASE "contentcuration" WITH TEMPLATE = template0 OWNER = "learningequality";
+         CREATE DATABASE "gonano" WITH TEMPLATE = template0 OWNER = "learningequality";
 
   5. Make sure the Redis server is running (used for job queue)
 
@@ -126,21 +127,7 @@ constants in the database:
     python manage.py calculateresources --settings=contentcuration.dev_settings --init
     python manage.py collectstatic --noinput --settings=contentcuration.dev_settings
     python manage.py collectstatic_js_reverse --settings=contentcuration.dev_settings
-
-For your convenience, we've prepared an admin user fixture with username 
-`content@learningequality.org` and password `admin123` for you. Load it using:
-
-    python manage.py \
-      loaddata contentcuration/contentcuration/fixtures/admin_user.json \
-      --settings=contentcuration.dev_settings
-
-You can also load admin user token `26a51f88ae50f4562c075f8031316eff34c58eb8`:
-
-    python manage.py \
-      loaddata contentcuration/contentcuration/fixtures/admin_user_token.json \
-      --settings=contentcuration.dev_settings
-
-This token is used to authenticate API calls, like when using `ricecooker` scripts.
+    python manage.py setup --settings=contentcuration.dev_settings
 
 
 #### Start the dev server
@@ -149,4 +136,4 @@ You're all setup now, and ready to start the Studio local development server:
 
     python manage.py runserver --settings=contentcuration.dev_settings
 
-You should be able to login at http://127.0.0.1:8000 using `content@learningequality.org:admin123`.
+You should be able to login at http://127.0.0.1:8000 using email `a@a.com`, password `a`.
