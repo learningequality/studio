@@ -1,20 +1,28 @@
 FROM contentcuration/base:2017-08-01
 
+RUN apt-get update && apt-get install -y libjpeg-dev wkhtmltopdf # Note(aron): consolidate into base docker image once we need to change that
+
+RUN npm install -g yarn
+
+COPY ./package.json .
+COPY ./yarn.lock .
+RUN yarn install
+
+COPY ./requirements.txt .
+COPY ./requirements_prod.txt .
+RUN pip install -r requirements.txt
+RUN pip install -r requirements_prod.txt
+
 COPY  . /contentcuration/
 WORKDIR /contentcuration
 
 # Generate the gcloud debugger context file
 # RUN gcloud debug source gen-repo-info-file --output-directory=/contentcuration/contentcuration/
 
-RUN apt-get update && apt-get install -y libjpeg-dev wkhtmltopdf # Note(aron): consolidate into base docker image once we need to change that
-
-RUN pip install -r requirements.txt
-RUN pip install -r requirements_prod.txt
-RUN npm install -g yarn
+RUN mv /node_modules /contentcuration/node_modules
 
 # generate the node bundles
 RUN mkdir -p contentcuration/static/js/bundles #
-RUN yarn install
 RUN node build.js --prod
 
 # Download the crowdin-cli.jar file
