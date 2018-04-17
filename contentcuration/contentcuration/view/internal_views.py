@@ -6,6 +6,7 @@ from distutils.version import LooseVersion
 import os
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation, PermissionDenied
 from django.core.files import File as DjFile
+from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseServerError, HttpResponseForbidden
@@ -686,8 +687,8 @@ def map_files_to_node(user, node, data):
             kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
         file_path = generate_object_storage_name(file_name_parts[0], file_data['filename'])
-        # TODO(aron): change to be compatible with object storage
-        if not os.path.isfile(file_path):
+        storage = default_storage
+        if not storage.exists(file_path):
             return IOError('{} not found'.format(file_path))
 
         try:
@@ -706,7 +707,7 @@ def map_files_to_node(user, node, data):
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size=file_data['size'],
-            file_on_disk=DjFile(open(file_path, 'rb')),
+            file_on_disk=DjFile(storage.open(file_path, 'rb')),
             preset=kind_preset,
             language_id=file_data.get('language'),
             uploaded_by=user,
