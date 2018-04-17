@@ -36,14 +36,14 @@ def get_file_diff(files):
     storage, and return.
 
     """
+    storage = default_storage
 
     # Try to be storage system agnostic, in case we're using either the Object Storage,
     # or FileSystemStorage
-    storage = default_storage
     ret = []
     for f in files:
         filepath = generate_object_storage_name(os.path.splitext(f)[0], f)
-        if storage.exists(filepath) or storage.size(filepath) == 0:
+        if not storage.exists(filepath) or storage.size(filepath) == 0:
             ret.append(f)
 
     return ret
