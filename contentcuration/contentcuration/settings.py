@@ -18,6 +18,8 @@ import pycountry
 
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
+logging.getLogger("botocore").setLevel(logging.WARNING)
+logging.getLogger("boto3").setLevel(logging.WARNING)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STORAGE_ROOT = "storage"
