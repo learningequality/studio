@@ -16,14 +16,9 @@ RUN pip install -r requirements_prod.txt
 COPY  . /contentcuration/
 WORKDIR /contentcuration
 
-# Generate the gcloud debugger context file
-# RUN gcloud debug source gen-repo-info-file --output-directory=/contentcuration/contentcuration/
-
-RUN mv /node_modules /contentcuration/node_modules
-
 # generate the node bundles
 RUN mkdir -p contentcuration/static/js/bundles #
-RUN node build.js --prod
+RUN node build.js --prod --prefix=/
 
 # Download the crowdin-cli.jar file
 # RUN curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
