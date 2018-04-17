@@ -17,7 +17,7 @@
       settings: "contentcuration.settings",
       log_file: "/var/log/django.log",
       type: "NodePort",
-      djangoSecretKey: "[C6%e=z>:A-Ukrc*iw<pX mEQx}W/GP1\\u\raV\nlZybf&n+#RFD",
+      djangoSecretKey: "",
     },
     "ingress": {
       host: "studio.learningequality.org",
