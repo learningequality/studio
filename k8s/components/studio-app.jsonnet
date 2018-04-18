@@ -99,7 +99,7 @@ local readinessProbe = {
       path: "/",
       port: 8080,
     },
-    initialDelaySeconds: 60,
+    initialDelaySeconds: 10,
     periodSeconds: 10,
   }
 };
