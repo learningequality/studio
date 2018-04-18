@@ -77,7 +77,7 @@
     "eslint-plugin-vue": "^3.5.0",
     "esprima": "^4.0.0",
     "glob": "^7.1.2",
-    "handlebars-loader": "^1.7.0",
+    "handlebars-template-loader": "^1.0.0",
     "less": "^3.0.1",
     "less-loader": "^4.1.0",
     "mkdirp": "^0.5.1",

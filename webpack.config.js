@@ -58,7 +58,7 @@ module.exports = {
       {
         test: /\.handlebars?$/,
         use:[
-          'handlebars-loader',
+          'handlebars-template-loader',
         ],
       },
       {
@@ -101,6 +101,11 @@ module.exports = {
     new CleanWebpackPlugin([bundleOutputDir]),
     // ignore codemirror, error caused by summernote
     new webpack.IgnorePlugin(/^codemirror$/),
+    new webpack.ProvidePlugin({
+      _: 'underscore',
+      $: 'jquery',
+      jQuery: 'jquery',
+    }),
   ],
   // new in webpack 4. Specifies the default bundle type
   mode: 'development',
