@@ -2,6 +2,7 @@ var Views = require("edit_channel/new_channel/views");
 var Models = require("edit_channel/models");
 var Backbone = require("backbone");
 var ChannelEditRouter = require("edit_channel/router");
+require('../handlebars/helpers.js');
 
 $(function() {
     $("#channel-publish-button").on("click", publish_nodes);
@@ -35,7 +36,7 @@ function get_published_id(){
     window.workspace_manager.get_main_view().get_channel_id();
 }
 
-module.exports = {
+window.bundle = module.exports = {
     $: $,
     ChannelEditRouter: ChannelEditRouter,
     Backbone: Backbone

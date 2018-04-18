@@ -12,7 +12,6 @@
 		var langs = JSON.parse("{{ langs_list|escapejs }}");
 	</script>
 	<script type="text/javascript">
-		var bundle = require("channel_edit");
 		bundle.$(function() {
             window.channel_router = new bundle.ChannelEditRouter();
 			bundle.Backbone.history.start({pushState: true, root: "{% url 'channels' %}"});
