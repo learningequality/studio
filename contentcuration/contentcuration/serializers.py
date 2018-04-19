@@ -125,13 +125,6 @@ class FileListSerializer(serializers.ListSerializer):
             to_delete.delete()
 
         if update_files:
-            client = minio.Minio(
-                "localhost:9000",
-                access_key="development",
-                secret_key="development",
-                secure=False,
-            )
-            bucket = settings.AWS_STORAGE_BUCKET_NAME
             with transaction.atomic():
                 for file_id, data in update_files.items():
                     file_obj, _new = File.objects.get_or_create(pk=file_id)
