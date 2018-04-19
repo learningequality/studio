@@ -401,11 +401,12 @@ def get_channel_status_bulk(request):
     """ Create the channel node """
     data = json.loads(request.body)
     try:
-        statuses = {}
-        for channel_id in data['channel_ids']:
-            statuses[channel_id] = get_status(channel_id)
+        statuses = {cid: get_status(cid) for cid in data['channel_ids']}
 
-        return HttpResponse(json.dumps({"success": True, 'statuses': statuses}))
+        return HttpResponse(json.dumps({
+            "success": True,
+            'statuses': statuses,
+        }))
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -413,8 +414,10 @@ def get_channel_status_bulk(request):
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 def get_status(channel_id):
-    obj = Channel.objects.get(pk=channel_id)
-    if obj.deleted:
+    obj = Channel.objects.filter(pk=channel_id).first()
+    if not obj:
+        return "active"
+    elif obj.deleted:
         return "deleted"
     elif obj.staging_tree:
         return "staged"
