@@ -48,7 +48,7 @@ data.minio_storage:
 web.main:
   start:
     nginx: nginx -c /app/deploy/nginx.conf
-    django: gunicorn -c etc/gunicorn.py contentcuration.wsgi:application
+    django: gunicorn -c /app/deploy/gunicorn.py contentcuration.wsgi:application
     minio: run_minio.py
 
   cwd: 
