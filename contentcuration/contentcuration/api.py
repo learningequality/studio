@@ -63,8 +63,8 @@ def write_raw_content_to_storage(contents, ext=None):
     # Check that hash is valid
     checksum = hashlib.md5()
     checksum.update(contents)
-    filename = checksum.hexdigest()
-    full_filename = "{}.{}".format(filename, ext.lower())
+    hashed_filename = checksum.hexdigest()
+    full_filename = "{}.{}".format(hashed_filename, ext.lower())
 
     # Get location of file
     file_path = models.generate_object_storage_name(hashed_filename, full_filename)
@@ -73,7 +73,7 @@ def write_raw_content_to_storage(contents, ext=None):
     storage = default_storage
     storage.save(file_path, contents)
 
-    return filename, full_filename, file_path
+    return hashed_filename, full_filename, file_path
 
 def get_hash(fobj):
     md5 = hashlib.md5()
