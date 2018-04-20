@@ -120,7 +120,17 @@ Follow the instructions below to setup your dev environment and get started.
 
 ### Setting up your local development environment
 
-#### Install software prerequisites
+#### Setting up your environment through Nanobox
+
+1. Install [Nanobox](https://docs.nanobox.io/install/)
+1. Run `make setupnanobox`
+1. Run `nanobox run`
+1. Inside Nanobox's shell, run Minio by running `run_minio.py &`
+1. Run `make devserver` to start the development server
+
+#### Setting up your environment manually
+
+##### Install software prerequisites
 
 You need the following software installed on your machine to run Studio:
   - python (2.7)
@@ -149,7 +159,7 @@ On Mac OS X, you can install the corresponding packages using Homebrew:
 
 
 
-#### Set up python dependencies in a virtual environment
+##### Set up python dependencies in a virtual environment
 
     virtualenv -p python2.7 venv
     source venv/bin/activate
@@ -161,7 +171,7 @@ development and required when using the `--settings=contentcuration.dev_settings
 flag to run the server in development mode.
 
 
-#### Install javascript dependencies
+##### Install javascript dependencies
 
 All the javascript dependencies are listed in `package.json`. To install them run:
 
@@ -169,7 +179,7 @@ All the javascript dependencies are listed in `package.json`. To install them ru
 
 
 
-#### Set up the database and start redis
+##### Set up the database and start redis
 
   1. Install [postgres](https://www.postgresql.org/download/) if you don't have
      it already. If you're using a package manager, you need to make sure you install
@@ -198,7 +208,7 @@ All the javascript dependencies are listed in `package.json`. To install them ru
 
 
 
-#### Run all database migrations and load constants
+##### Run all database migrations and load constants
 
 You'll only need to run these commands once, to setup the necessary tables and
 constants in the database:
@@ -227,7 +237,7 @@ You can also load admin user token `26a51f88ae50f4562c075f8031316eff34c58eb8`:
 This token is used to authenticate API calls, like when using `ricecooker` scripts.
 
 
-#### Start the dev server
+##### Start the dev server
 
 You're all setup now, and ready to start the Studio local development server:
 
