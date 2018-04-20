@@ -1,8 +1,4 @@
-FROM contentcuration/base:2017-08-01
-
-RUN apt-get update && apt-get install -y libjpeg-dev wkhtmltopdf # Note(aron): consolidate into base docker image once we need to change that
-
-RUN npm install -g yarn
+FROM contentcuration/base:2018-04-20
 
 COPY ./package.json .
 COPY ./yarn.lock .
