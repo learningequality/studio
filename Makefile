@@ -19,11 +19,12 @@ setupnanobox:
 	nanobox evar add local MINIO_SECRET_KEY=development
 	nanobox evar add dry-run MINIO_ACCESS_KEY=development
 	nanobox evar add dry-run MINIO_SECRET_KEY=development
-	nanobox run setup_minio_bucket.sh
+	nanobox evar add local MINIO_RUN_TYPE=LOCAL
+	nanobox evar add dry-run MINIO_RUN_TYPE=LOCAL
 
 
 devserver:
-	cd contentcuration; python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8081
+	cd contentcuration; python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080
 
 collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
