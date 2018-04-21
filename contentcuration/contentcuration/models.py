@@ -286,6 +286,7 @@ def generate_storage_url(filename, request=None, *args):
     # 2. When ran through Telepresence, the cluster's DNS host is available to the host. So we should then use whatever is
     #    defined in AWS_S3_STORAGE_URL.
     # 3. We go through nanobox, meaning it's the same IP address as the server, but a different port.
+    # New! 4. We go through a production object storage server. In that case, just return the object storage URL
 
     # host = get_local_ip_address()
     # # assume the port is 9000, the default of minio
@@ -294,14 +295,20 @@ def generate_storage_url(filename, request=None, *args):
     # Detect our current state first
     IS_RUNSERVER = "runserver" in sys.argv
     HAS_MINIO_DNS_RECORD = False
+    IS_PRODUCTION_OBJECT_STORAGE_SERVER = "https://" in settings.AWS_S3_ENDPOINT_URL
+
+    # if we're using production, just return the real path to the prod server
 
     try:
         HAS_MINIO_DNS_RECORD = socket.gethostbyname("minio")
     except socket.gaierror:
         logging.debug("minio DNS record not detected. Assuming we're in a plain runserver command without Kubernetes.")
 
+    if IS_PRODUCTION_OBJECT_STORAGE_SERVER:
+        url = default_storage.url(path)
+
     # We can detect if we're running in normal kubernetes mode, if we're not running runserver.
-    if not IS_RUNSERVER:
+    elif not IS_RUNSERVER:
         url = "/{bucket}/{path}".format(
             bucket=settings.AWS_STORAGE_BUCKET_NAME,
             path=path,
