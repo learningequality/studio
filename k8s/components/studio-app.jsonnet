@@ -54,8 +54,7 @@ local django_config_vars = [
   envVar.new("DJANGO_SETTINGS_MODULE", params.settings),
   envVar.new("DJANGO_LOG_FILE", params.log_file),
   envVar.new("MPLBACKEND", "PS"),  # so that matplotlib will only run one consistent backend
-  envVar.fromSecretRef("DJANGO_SECRET_KEY", djangoSecretDataName, "secret_key"),
-];
+] + if params.djangoSecretKey != "" then [envVar.fromSecretRef("DJANGO_SECRET_KEY", djangoSecretDataName, "secret_key")] else [];
 
 # DB vars
 local db_vars = [
@@ -76,10 +75,18 @@ local celery_vars = [
 ];
 
 # object storage vars
-local object_storage_vars = [
+local object_storage_vars = if minioParams.external == false then
+[
   envVar.fromSecretRef("AWS_ACCESS_KEY_ID", minioParams.name, "minio_access_key"),
   envVar.fromSecretRef("AWS_SECRET_ACCESS_KEY", minioParams.name, "minio_secret_key"),
   envVar.new("AWS_S3_ENDPOINT_URL", "http://" + minioParams.name)
+]
+else
+[
+  envVar.fromSecretRef("AWS_ACCESS_KEY_ID", minioParams.name, "minio_access_key"),
+  envVar.fromSecretRef("AWS_SECRET_ACCESS_KEY", minioParams.name, "minio_secret_key"),
+  envVar.new("AWS_S3_ENDPOINT_URL", minioParams.external.url),
+  envVar.new("AWS_BUCKET_NAME", minioParams.external.bucket),
 ];
 
 local livenessProbe = {

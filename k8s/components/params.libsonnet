@@ -35,6 +35,15 @@
       user: "www-data",
     },
     "objectstorage": {
+      external: false,
+      access_key: "development",
+      secret_key: "development",
+      # to define an external S3 server, set external to the following:
+      # external: {
+      #   url: "<the server URL>",
+      #   bucket: "<the bucket name>",
+      # },
+      # then define access_key and secret_key appropriately
       containerPort: 9000,
       image: "minio/minio",
       name: "minio",
@@ -42,8 +51,6 @@
       servicePort: 80,
       type: "ClusterIP",
       size: "5Gi",
-      minio_access_key: "development",
-      minio_secret_key: "development",
     },
   },
 }

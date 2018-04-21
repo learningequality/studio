@@ -15,8 +15,8 @@ local labels = {app: params.name};
 # create secret for access keys
 
 local secretData = {
-  minio_access_key: std.base64("development"),
-  minio_secret_key: std.base64("development"),
+  minio_access_key: std.base64(params.access_key),
+  minio_secret_key: std.base64(params.secret_key),
 };
 
 local appSecret = secret.new(name=params.name, data=secretData);
@@ -73,4 +73,13 @@ local appDeployment = deployment
   })
   + deployment.mapContainers(function(c) c.withVolumeMounts(volumeClaimMount));
 
-k.core.v1.list.new([appSecret, appService, appDeployment, volumeClaim])
+local result = if params.external == false then
+[
+  appSecret, appService, appDeployment, volumeClaim
+]
+else
+[
+  appSecret,
+];
+
+k.core.v1.list.new(result)
