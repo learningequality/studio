@@ -34,7 +34,7 @@
       database: "content-curation",
       user: "www-data",
     },
-    "minio": {
+    "objectstorage": {
       containerPort: 9000,
       image: "minio/minio",
       name: "minio",

@@ -1,5 +1,5 @@
 local env = std.extVar("__ksonnet/environments");
-local params = std.extVar("__ksonnet/params").components.minio;
+local params = std.extVar("__ksonnet/params").components.objectstorage;
 local k = import "k.libsonnet";
 local deployment = k.apps.v1beta1.deployment;
 local secret = k.core.v1.secret;
