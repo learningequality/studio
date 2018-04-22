@@ -13,10 +13,14 @@ local pgConfig = {
   initDbArgs:: ""
 };
 
-k.core.v1.list.new([
+local manifest = if params.external == false then
+[
   psg.parts.deployment.nonPersistent(namespace, appName, pgConfig=pgConfig),
   # aron: commented out, because it tries to create a storage class name that's invalid.
   # psg.parts.pvc(namespace, appName),
   psg.parts.secrets(namespace, appName, password),
   psg.parts.service(namespace, appName)
-])
+]
+else [];
+
+k.core.v1.list.new(manifest)
