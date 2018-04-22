@@ -123,6 +123,29 @@ local readinessProbe = {
   }
 };
 
+# the cloud sql sidecar proxy we'll add if we're running in production mode,
+local cloudsqlProxySidecar = if postgres.external != false then
+deployment.mixin.spec.template.spec.withContainersMixin(
+    container.new("cloudsql-proxy", "gcr.io/cloudsql-docker/gce-proxy:1.11")
+    .withCommand([
+      "/cloud_sql_proxy",
+      "-instances=" + postgres.external.gcloudConnectionName + "=tcp:5432",
+      "-credential_file=/secrets/cloudsql/credentials"
+    ])
+    .withVolumeMountsMixin({
+      name: "cloudsql-instance-credentials",
+      mountPath: "/secrets/cloudsql",
+      readOnly: true
+    })
+)
+.withVolumesMixin({
+  name: "cloudsql-instance-credentials",
+  secret: {
+    secretName: postgres.external.ServiceAccountCredentialsSecret
+  }
+});
+
+
 local appDeployment = deployment
   .new(
     params.name,
@@ -149,7 +172,9 @@ local appDeployment = deployment
 
   # add our staticfiles volume mount
   .withVolumes(staticfilesVolume)
-  + deployment.mapContainers(function(c) c.withVolumeMounts(staticfilesVolumeMount));
+  + deployment.mapContainers(function(c) c.withVolumeMounts(staticfilesVolumeMount))
+# Add the cloud sql proxy sidecar if we want to be external
++ if postgres.external != false then cloudsqlProxySidecar else {};
 
 local workersDeployment = deployment.new(
     params.workerName,
@@ -161,7 +186,8 @@ local workersDeployment = deployment.new(
     .withEnvMixin(celery_vars)
     .withEnvMixin(object_storage_vars)
     .withCommand(["make", "prodceleryworkers"]),
-    workerLabels);
+    workerLabels)
+  + if postgres.external != false then cloudsqlProxySidecar else {};
 
 k.core.v1.list.new([appService, appDeployment, workersDeployment]
     # Create secret key secret if we fill it out
