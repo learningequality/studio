@@ -57,13 +57,25 @@ local django_config_vars = [
 ] + if params.djangoSecretKey != "" then [envVar.fromSecretRef("DJANGO_SECRET_KEY", djangoSecretDataName, "secret_key")] else [];
 
 # DB vars
-local db_vars = [
+local db_vars = if postgres.external == false then
+[
   envVar.new("DATA_DB_HOST", postgres.name),
   envVar.new("DATA_DB_NAME", postgres.database),
   envVar.new("DATA_DB_PORT", "5432"),
   envVar.new("DATA_DB_USER", postgres.user),
   envVar.fromSecretRef("DATA_DB_PASS", postgres.name, "postgres-password"),
-];
+]
+else
+# we load data through a sql proxy container, so host is localhost:5432,
+# credentials will come from a defined secret
+[
+  envVar.new("DATA_DB_HOST", "localhost"),
+  envVar.new("DATA_DB_PORT", "5432"),
+  envVar.fromSecretRef("DATA_DB_NAME", postgres.external.DBCredentialsSecret, "name"),
+  envVar.fromSecretRef("DATA_DB_USER", postgres.external.DBCredentialsSecret, "user"),
+  envVar.fromSecretRef("DATA_DB_PASS", postgres.external.DBCredentialsSecret, "password"),
+]
+;
 
 # celery vars
 local celery_vars = [
