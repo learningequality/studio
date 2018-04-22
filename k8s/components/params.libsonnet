@@ -29,6 +29,23 @@
     },
     "studio-postgres": {
       name: "studio-postgres",
+      external: false,
+      # to define the external DB, override external with the following attributes:
+      # external: {
+      #   gcloudConnectionName: "<the DB connection name in Cloud SQL>",
+      #   ServiceAccountCredentialsSecret: "<the k8s secret name containing the service account."
+      #   DBCredentialsSecret: "<the k8s secret name containing the production DB credentials>"
+      # }
+      # Before running this, you need to create an IAM service account on GCP that has
+      # the "Cloud SQL Client" role. That would generate a json file for you and
+      # download it to your local machine. Create a K8s secret using this json file
+      # with a data entry named "credentials" whose value is the contents of the
+      # service account json file.
+      # You'll then need to create another secret, whose data has the user, password and database
+      # values, and pass in the secret name into DBCredentialsSecret.
+
+      # if external is false, a local instance of postgres is defined, with ephemeral data, and the
+      # following credentials (with the studio app automatically set up to connect to it):
       namespace: "default",
       password: "notsecure",
       database: "content-curation",
