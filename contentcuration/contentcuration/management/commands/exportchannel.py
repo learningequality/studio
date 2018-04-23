@@ -13,6 +13,7 @@ import uuid
 import base64
 from django.conf import settings
 from django.core.files import File
+from django.core.files.storage import default_storage as storage
 from django.core.mail import send_mass_mail
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
@@ -361,14 +362,14 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                     for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE).order_by('checksum'):
                         image_name = "images/{}.{}".format(image.checksum, image.file_format_id)
                         if image_name not in zf.namelist():
-                            with open(ccmodels.generate_file_on_disk_name(image.checksum, str(image)), 'rb') as content:
+                            with storage.open(ccmodels.generate_object_storage_name(image.checksum, str(image)), 'rb') as content:
                                 write_to_zipfile(image_name, content.read(), zf)
 
                     for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE).order_by('checksum'):
                         svg_name = "images/{0}.svg".format(image.original_filename)
                         json_name = "images/{0}-data.json".format(image.original_filename)
                         if svg_name not in zf.namelist() or json_name not in zf.namelist():
-                            with open(ccmodels.generate_file_on_disk_name(image.checksum, str(image)), 'rb') as content:
+                            with storage.open(ccmodels.generate_object_storage_name(image.checksum, str(image)), 'rb') as content:
                                 content = content.read()
                                 content = content.split(exercises.GRAPHIE_DELIMITER)
                                 write_to_zipfile(svg_name, content[0], zf)
@@ -453,7 +454,7 @@ def process_image_strings(content, zf):
             checksum, ext = os.path.splitext(filename)
             image_name = "images/{}.{}".format(checksum, ext[1:])
             if image_name not in zf.namelist():
-                with open(ccmodels.generate_file_on_disk_name(checksum, filename), 'rb') as imgfile:
+                with storage.open(ccmodels.generate_object_storage_name(checksum, filename), 'rb') as imgfile:
                     write_to_zipfile(image_name, imgfile.read(), zf)
 
             # Add resizing data
@@ -506,7 +507,7 @@ def convert_channel_thumbnail(channel):
             return thumbnail_data["base64"]
 
     checksum, ext = os.path.splitext(channel.thumbnail)
-    with open(ccmodels.generate_file_on_disk_name(checksum, channel.thumbnail), 'rb') as file_obj:
+    with storage.open(ccmodels.generate_object_storage_name(checksum, channel.thumbnail), 'rb') as file_obj:
         with Image.open(file_obj) as image, tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tempf:
             cover = resizeimage.resize_cover(image, [THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION])
             cover.save(tempf.name, image.format)

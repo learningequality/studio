@@ -1,9 +1,14 @@
 from __future__ import print_function
+
 import atexit
 import os
 import subprocess
 from threading import Thread
-from django.contrib.staticfiles.management.commands.runserver import Command as RunserverCommand
+
+from contentcuration.utils.minio_utils import (ensure_storage_bucket_public,
+                                               start_minio)
+from django.contrib.staticfiles.management.commands.runserver import \
+    Command as RunserverCommand
 from django.core.management.base import CommandError
 
 
@@ -29,9 +34,7 @@ class Command(RunserverCommand):
             browserify_thread.daemon = True
             browserify_thread.start()
 
-            # minio_thread = Thread(target=self.start_minio)
-            # minio_thread.daemon = True
-            # minio_thread.start()
+            ensure_storage_bucket_public()
 
             atexit.register(self.kill_browserify_process)
 

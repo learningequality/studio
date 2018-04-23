@@ -7,6 +7,7 @@ import os
 import hashlib
 import shutil
 from django.db.models import Q, Count, Sum
+from django.core.files.storage import default_storage
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponse
@@ -21,6 +22,16 @@ def check_supported_browsers(user_agent_string):
         if browser in user_agent_string:
             return True
     return False
+
+
+def check_health_check_browser(user_agent_string):
+    """
+    Check if the user agent string matches either the Kubernetes or
+    the Google Health Check agents.
+    """
+    for expected_agent in settings.HEALTH_CHECK_BROWSERS:
+        if expected_agent in user_agent_string:
+            return True
 
 
 def write_file_to_storage(fobj, check_valid=False, name=None):
@@ -39,10 +50,11 @@ def write_file_to_storage(fobj, check_valid=False, name=None):
         raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(name))
 
     # Get location of file
-    file_path = models.generate_file_on_disk_name(hashed_filename, full_filename)
+    file_path = models.generate_object_storage_name(hashed_filename, full_filename)
 
     # Write file
-    with open(file_path, 'wb') as destf:
+    storage = default_storage
+    with storage.open(file_path, 'wb') as destf:
         shutil.copyfileobj(fobj, destf)
     return full_filename
 
@@ -51,17 +63,17 @@ def write_raw_content_to_storage(contents, ext=None):
     # Check that hash is valid
     checksum = hashlib.md5()
     checksum.update(contents)
-    filename = checksum.hexdigest()
-    full_filename = "{}.{}".format(filename, ext.lower())
+    hashed_filename = checksum.hexdigest()
+    full_filename = "{}.{}".format(hashed_filename, ext.lower())
 
     # Get location of file
-    file_path = models.generate_file_on_disk_name(filename, full_filename)
+    file_path = models.generate_object_storage_name(hashed_filename, full_filename)
 
     # Write file
-    with open(file_path, 'wb') as destf:
-        destf.write(contents)
+    storage = default_storage
+    storage.save(file_path, contents)
 
-    return filename, full_filename, file_path
+    return hashed_filename, full_filename, file_path
 
 def get_hash(fobj):
     md5 = hashlib.md5()

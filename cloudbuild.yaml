@@ -1,0 +1,8 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'k8s/images/app/Dockerfile', '-t', 'gcr.io/$PROJECT_ID/github-learningequality-studio-preview:$BUILD_ID', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'k8s/images/nginx/Dockerfile', '-t', 'gcr.io/$PROJECT_ID/github-learningequality-studio-nginx:$BUILD_ID', '.']
+images: 
+  - 'gcr.io/$PROJECT_ID/github-learningequality-studio-nginx:$BUILD_ID'
+  - 'gcr.io/$PROJECT_ID/github-learningequality-studio-preview:$BUILD_ID'

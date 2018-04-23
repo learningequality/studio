@@ -6,6 +6,7 @@ from distutils.version import LooseVersion
 import os
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation, PermissionDenied
 from django.core.files import File as DjFile
+from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseServerError, HttpResponseForbidden
@@ -17,8 +18,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
-from contentcuration.models import AssessmentItem, Channel, License, File, FormatPreset, ContentNode, Language, StagedFile, generate_file_on_disk_name
-from contentcuration.utils.logging import trace
+from contentcuration.models import AssessmentItem, Channel, License, File, FormatPreset, ContentNode, Language, StagedFile, generate_object_storage_name
+from contentcuration.utils.tracing import trace
+from contentcuration.utils.files import get_file_diff
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
 VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
@@ -75,18 +77,12 @@ def file_diff(request):
     try:
         logging.debug("Entering the file_diff endpoint")
         data = json.loads(request.body)
-        to_return = []
 
         # Might want to use this once assumption that file exists is true (save on performance)
         # in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
         # for f in list(set(data) - set(in_db_list)):
 
-        # Add files that don't exist in storage
-        for f in data:
-            file_path = generate_file_on_disk_name(os.path.splitext(f)[0], f)
-            # Add file if it doesn't already exist
-            if not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
-                to_return.append(f)
+        to_return = get_file_diff(data)
 
         return HttpResponse(json.dumps(to_return))
     except Exception as e:
@@ -616,7 +612,7 @@ def create_node_from_file(user, file_name, parent_node, sort_order):
 
 # TODO: Use one file to upload a map from node filename to node metadata, instead of a file for each Node
 def get_node_data_from_file(file_name):
-    file_path = generate_file_on_disk_name(file_name.split('.')[0], file_name)
+    file_path = generate_object_storage_name(file_name.split('.')[0], file_name)
     if not os.path.isfile(file_path):
         raise IOError('{} not found.'.format(file_path))
 
@@ -690,8 +686,9 @@ def map_files_to_node(user, node, data):
         else:
             kind_preset = FormatPreset.objects.get(id=file_data['preset'])
 
-        file_path = generate_file_on_disk_name(file_name_parts[0], file_data['filename'])
-        if not os.path.isfile(file_path):
+        file_path = generate_object_storage_name(file_name_parts[0], file_data['filename'])
+        storage = default_storage
+        if not storage.exists(file_path):
             return IOError('{} not found'.format(file_path))
 
         try:
@@ -710,7 +707,7 @@ def map_files_to_node(user, node, data):
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size=file_data['size'],
-            file_on_disk=DjFile(open(file_path, 'rb')),
+            file_on_disk=DjFile(storage.open(file_path, 'rb')),
             preset=kind_preset,
             language_id=file_data.get('language'),
             uploaded_by=user,
@@ -723,7 +720,7 @@ def map_files_to_assessment_item(user, question, data):
     """ Generate files that reference the content node's assessment items """
     for file_data in data:
         file_name_parts = file_data['filename'].split(".")
-        file_path = generate_file_on_disk_name(file_name_parts[0], file_data['filename'])
+        file_path = generate_object_storage_name(file_name_parts[0], file_data['filename'])
         if not os.path.isfile(file_path):
             return IOError('{} not found'.format(file_path))
 
