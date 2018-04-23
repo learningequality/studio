@@ -309,7 +309,7 @@ def generate_storage_url(filename, request=None, *args):
 
     # We can detect if we're running in normal kubernetes mode, if we're not running runserver.
     elif not IS_RUNSERVER:
-        url = "/{bucket}/{path}".format(
+        url = "/content/{path}".format(
             bucket=settings.AWS_STORAGE_BUCKET_NAME,
             path=path,
         )

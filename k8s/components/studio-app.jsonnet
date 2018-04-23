@@ -86,19 +86,27 @@ local celery_vars = [
   envVar.fromSecretRef("CELERY_REDIS_PASSWORD", studioRedis.name, "redis-password"),
 ];
 
+local aws_url_var = if minioParams.external == false then
+[
+  envVar.new("AWS_S3_ENDPOINT_URL", "http://" + minioParams.name),
+  envVar.new("AWS_BUCKET_NAME", "kolibri-studio-storage"),
+]
+else
+[
+  envVar.new("AWS_S3_ENDPOINT_URL", minioParams.external.url),
+  envVar.new("AWS_BUCKET_NAME", minioParams.external.bucket),
+];
+
 # object storage vars
-local object_storage_vars = if minioParams.external == false then
+local object_storage_vars = aws_url_var + if minioParams.external == false then
 [
   envVar.fromSecretRef("AWS_ACCESS_KEY_ID", minioParams.name, "minio_access_key"),
   envVar.fromSecretRef("AWS_SECRET_ACCESS_KEY", minioParams.name, "minio_secret_key"),
-  envVar.new("AWS_S3_ENDPOINT_URL", "http://" + minioParams.name)
 ]
 else
 [
   envVar.fromSecretRef("AWS_ACCESS_KEY_ID", minioParams.name, "minio_access_key"),
   envVar.fromSecretRef("AWS_SECRET_ACCESS_KEY", minioParams.name, "minio_secret_key"),
-  envVar.new("AWS_S3_ENDPOINT_URL", minioParams.external.url),
-  envVar.new("AWS_BUCKET_NAME", minioParams.external.bucket),
 ];
 
 local livenessProbe = {
@@ -166,7 +174,9 @@ local appDeployment = deployment
       labels)
   # add our nginx proxy
   .withContainersMixin(
-      container.new("nginx-proxy", params.nginxImage)
+      container
+      .new("nginx-proxy", params.nginxImage)
+      .withEnvMixin(aws_url_var)
       .withPorts(containerPort.new(podListeningPort))
   )
 

@@ -22,9 +22,6 @@ http {
         server 127.0.0.1:8081;
     }
 
-    upstream minio {
-        server minio;
-    }
     # Configuration for Nginx
     server {
         # Listen on port 8080
@@ -46,8 +43,9 @@ http {
             proxy_set_header   Host $host;
         }
 
-        location /kolibri-studio-storage/ {
-            proxy_pass         http://minio/kolibri-studio-storage/;
+        location /content/ {
+            proxy_pass         {{ $aws_s3_endpoint_url }}/{{ $aws_s3_bucket_name }}/;
+            proxy_set_header   Host $proxy_host;
             proxy_redirect     off;
         }
     }
