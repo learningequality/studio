@@ -28,7 +28,7 @@ DATABASES = {
 }
 
 # email settings
-EMAIL_BACKEND = "postmark.backends.PostmarkBackend"
+EMAIL_BACKEND = 'postmark.django_backend.EmailBackend'
 POSTMARK_API_KEY = os.getenv("EMAIL_CREDENTIALS_POSTMARK_API_KEY")
 
 LANGUAGE_CODE = os.getenv("LANGUAGE_CODE") or "en"

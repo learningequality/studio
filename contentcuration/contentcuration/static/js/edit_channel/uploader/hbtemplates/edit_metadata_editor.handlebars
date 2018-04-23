@@ -13,9 +13,7 @@
 	{{/if}}
 	<div class="row">
 		<div class="col-xs-6">
-			{{# if node}}{{#equal node.original_channel.id channel_id}}{{ else }}
-				<div id="imported_from_field" class="truncate">{{formatMessage (intlGet 'messages.imported_from')}} <a href="/channels/{{node.original_channel.id}}/view/{{node.original_source_node_id}}" target="_blank" title="{{node.original_channel.name}}" class="original_channel_link">{{node.original_channel.name}}</a></div>
-			{{/equal}}{{/if}}
+			{{#if source_channel}}<div id="imported_from_field" class="truncate">{{formatMessage (intlGet 'messages.imported_from')}} <a href="/channels/{{source_channel.id}}/view{{#if node}}/{{node.original_source_node_id}}{{/if}}" target="_blank" title="{{source_channel.name}}" class="original_channel_link"><b>{{source_channel.name}}</b></a></div>{{/if}}
 		</div>
 		<div class="col-xs-6">
 			<div class="pull-right">
@@ -87,7 +85,7 @@
 			<div class="col-xs-5">
 				<h4>{{formatMessage (intlGet 'messages.license')}}</h4>
 				<p class="upload_input">
-					<span id="license_select">{{#translate license}}{{/translate}}</span>
+					<span id="license_select">{{{translate license}}}</span>
 					<span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="license_about" max-length=400></span>
 				</p>
 				<p id="custom_license_description" class="license_description_text">{{license_description}}</p>

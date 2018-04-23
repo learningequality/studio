@@ -198,6 +198,7 @@ urlpatterns = [
     url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
     url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
+    url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
 ]
 
 # Add public api endpoints
@@ -314,7 +315,8 @@ if settings.DEBUG:
     # static files (images, css, javascript, etc.)
     urlpatterns += [
         url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.STORAGE_ROOT}),
-        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.DB_ROOT})
+        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.DB_ROOT}),
+        url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.CSV_ROOT})
     ]
 
     try:

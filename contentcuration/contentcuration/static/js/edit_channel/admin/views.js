@@ -5,7 +5,7 @@ require("admin.less");
 var BaseViews = require("edit_channel/views");
 var dialog = require("edit_channel/utils/dialog");
 var stringHelper = require("edit_channel/utils/string_helper");
-var fileDownload = require("edit_channel/utils/jquery.fileDownload");
+var fileDownload = require("jquery-file-download");
 
 var AdminView = BaseViews.BaseView.extend({
     lists: [],
@@ -372,7 +372,27 @@ var ChannelItem = BaseAdminItem.extend({
         "click .delete_button": "delete_channel",
         "click .count_link": "load_counts",
         "change .channel_priority": "set_priority",
-        "click .invite_button": "open_sharing"
+        "click .invite_button": "open_sharing",
+        "click .download_csv": "download_csv"
+    },
+    download_csv: function() {
+        var self = this;
+        if(!this.$(".download_csv").hasClass("disabled")) {
+            this.$(".download_csv").attr("title", "Generating CSV...").addClass("disabled");
+            $.get({
+                url: window.Urls.download_channel_content_csv(this.model.id),
+                success: function() {
+                    dialog.alert("Generating Channel CSV", "Channel csv generation started. You'll receive an email with the csv when it's done.");
+                    self.$(".download_csv").attr("title", "Download CSV").removeClass("disabled");
+                },
+                error: function(error) {
+                    self.$(".download_csv").attr("title", "Download Failed");
+                    setTimeout(function() {
+                        self.$(".download_csv").attr("title", "Download CSV").removeClass("disabled");
+                    }, 2000);
+                }
+            });
+        }
     },
     set_priority: function() {
         var priority = this.$(".channel_priority").val();

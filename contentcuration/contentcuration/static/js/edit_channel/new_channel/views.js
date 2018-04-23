@@ -46,7 +46,8 @@ var MESSAGES = {
 	"last_updated": "Updated {updated}",
 	"starred_channel": "Star Added!",
 	"unstarred_channel": "Star Removed",
-	"create": "Create"
+	"create": "Create",
+	"channel_title_prompt": "('CTRL' or 'CMD' + click to open in new tab)"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -329,7 +330,12 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	open_channel:function(event){
 		if(this.$('.channel-container-wrapper').hasClass('highlight')){
-			window.location.href = '/channels/' + this.model.get("id") + ((this.can_edit)? '/edit' : '/view');
+			var open_url = '/channels/' + this.model.get("id") + ((this.can_edit)? '/edit' : '/view');
+			if (event.metaKey || event.ctrlKey) {
+				window.open(open_url, '_blank');
+			} else {
+				window.location.href = open_url;
+			}
 		}
 	},
 	copy_id:function(event){
@@ -438,13 +444,15 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			var title = this.$el.find("#new_channel_name").val().trim();
 			var description = this.$el.find("#new_channel_description").val();
 			var language = window.languages.findWhere({id: this.$el.find("#select_language").val()});
+			var preferences = this.model.get('content_defaults') || (typeof window.user_preferences === "object")? window.user_preferences : JSON.parse(window.user_preferences);
+
 			var data = {
 				name: title,
 				description: description,
 				thumbnail : this.thumbnail,
 				thumbnail_encoding: this.thumbnail_encoding,
 				editors: this.model.get('editors'),
-				content_defaults: JSON.stringify(this.model.get('content_defaults') || window.user_preferences),
+				content_defaults: preferences,
 				language: this.$el.find("#select_language").val(),
 				pending_editors: this.model.get('pending_editors') || [],
 			};

@@ -27,6 +27,7 @@ DB_ROOT = "databases"
 
 STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
 DB_ROOT = os.path.join(BASE_DIR, "databases")
+CSV_ROOT = os.path.join(BASE_DIR, "csvs")
 
 PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
 
@@ -204,6 +205,7 @@ ugettext = lambda s: s
 LANGUAGES = (
     ('en', ugettext('English')),
     ('es', ugettext('Spanish')),
+    ('es-es', ugettext('Spanish - Spain')),
     ('es-mx', ugettext('Spanish - Mexico')),
     ('ar', ugettext('Arabic')),
     ('en-PT', ugettext('English - Pirate')),
@@ -218,6 +220,8 @@ STATIC_URL = '/static/'
 STORAGE_URL = '/content/storage/'
 
 CONTENT_DATABASE_URL = '/content/databases/'
+
+CSV_URL = '/content/csvs/'
 
 LOGIN_REDIRECT_URL = '/channels/'
 

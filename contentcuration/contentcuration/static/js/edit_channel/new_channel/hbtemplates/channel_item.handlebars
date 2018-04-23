@@ -1,5 +1,5 @@
 <div class="input-tab-control tab_item" data-next=".save_channel"></div>
-<div class="channel-container-wrapper {{#unless edit}}open_channel{{/unless}}">
+<div class="channel-container-wrapper {{#unless edit}}open_channel{{/unless}}"  title="{{channel.name}} {{formatMessage (intlGet 'messages.channel_title_prompt')}}">
 	<div class="profile pull-left text-center">
 		{{#if edit}}
 			<div class="new_channel_pic"></div>
@@ -45,10 +45,10 @@
 			{{#if can_edit}}
 				<span data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.edit_channel')}}" class="edit_channel disable-on-edit glyphicon glyphicon-pencil pull-right channel_option_icon"></span>
 			{{/if}}
-			<p class="truncate channel_name" title="{{channel.name}}">{{channel.name}}</p>
+			<p class="truncate channel_name">{{channel.name}}</p>
 		</h4>
 		<div class="description">
-			<p id="channel_description" class="wordwrap" title="{{channel.description}}">{{channel.description}}</p>
+			<p id="channel_description" class="wordwrap">{{channel.description}}</p>
 		</div>
 		<div class="container-fluid updated_time">
 			{{formatMessage (intlGet 'messages.last_updated') updated=(formatRelative modified)}}

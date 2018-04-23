@@ -3,6 +3,8 @@ import csv
 import json
 import logging
 import os
+import platform
+
 import time
 import locale
 import sys
@@ -10,7 +12,7 @@ reload(sys)
 sys.setdefaultencoding('UTF8')
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest, StreamingHttpResponse, FileResponse
+from django.http import HttpResponse, HttpResponseNotFound, FileResponse, HttpResponseBadRequest, StreamingHttpResponse
 from django.views.decorators.http import condition
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
@@ -186,6 +188,7 @@ def remove_editor(request):
         return HttpResponse(json.dumps({"success": True}))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+
 
 def sizeof_fmt(num, suffix='B'):
     """ Format sizes """

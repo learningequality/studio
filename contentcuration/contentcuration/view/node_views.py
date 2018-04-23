@@ -91,7 +91,7 @@ def create_new_node(request):
 
 @api_view(['GET'])
 def get_prerequisites(request, get_prerequisites, ids):
-    nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=ids.split("/"))
+    nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=ids.split(","))
 
     prerequisite_mapping = {}
     postrequisite_mapping = {}
