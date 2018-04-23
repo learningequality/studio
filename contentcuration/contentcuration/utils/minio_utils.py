@@ -56,6 +56,7 @@ def ensure_storage_bucket_public(bucket=None, will_sleep=True):
     # public-read access for you
     if "storage.googleapis.com" in host:
         logging.info("Skipping storage creation on googleapis")
+        return
 
     c = minio.Minio(
         host,
