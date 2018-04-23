@@ -34,6 +34,10 @@ to control Kubernetes clusters.
 - [Minikube](https://github.com/kubernetes/minikube#installation), an
 application to get a local Kubernetes cluster up and running.
 
+- [Virtualbox](https://www.virtualbox.org), the Virtual Machine runner that Minikube
+will use to run Kubernetes.
+
+
 
 ### Deploying on Minikube
 
