@@ -10,13 +10,7 @@
 		var user = JSON.parse("{{ current_user|escapejs }}");
 		var user_preferences = JSON.parse("{{ user_preferences|escapejs }}");
 		var langs = JSON.parse("{{ langs_list|escapejs }}");
+		var url = '{% url 'channels' %}';
 	</script>
-	<script type="text/javascript">
-		bundle.$(function() {
-            window.channel_router = new bundle.ChannelEditRouter();
-			bundle.Backbone.history.start({pushState: true, root: "{% url 'channels' %}"});
-        });
-
-    </script>
 	<div id="channel-container"></div>
 {% endblock content %}

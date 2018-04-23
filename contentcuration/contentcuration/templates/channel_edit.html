@@ -18,13 +18,7 @@
 		var title = "{{ title }}";
 		var mastery = JSON.parse("{{ mastery |escapejs }}");
 		var roles = JSON.parse("{{ roles |escapejs }}");
-	</script>
-	<script type="text/javascript">
-		bundle.$(function() {
-			window.channel_router = new bundle.ChannelEditRouter();
-			bundle.Backbone.history.start({pushState: true, root: "{% url 'channels' %}"});
-		});
-
+		var url = '{% url 'channels' %}';
 	</script>
 
 	<div id="channel-edit-sortable-boundary">

@@ -2,6 +2,7 @@ var Views = require("edit_channel/new_channel/views");
 var Models = require("edit_channel/models");
 var Backbone = require("backbone");
 var ChannelEditRouter = require("edit_channel/router");
+require('../utils/jquery-ui');
 require('../handlebars/helpers.js');
 
 $(function() {
@@ -14,6 +15,13 @@ $(function() {
         window.current_channel.fetch({async:false});
     }
     $("#channel-edit-content-wrapper").on("click", close_popups);
+
+    window.channel_router = new ChannelEditRouter();
+    Backbone.history.start({
+      pushState: true,
+      // set in Django template
+      root: window.url,
+    });
 });
 
 function open_channel_settings(){
@@ -35,9 +43,3 @@ function approve_channel(){
 function get_published_id(){
     window.workspace_manager.get_main_view().get_channel_id();
 }
-
-window.bundle = module.exports = {
-    $: $,
-    ChannelEditRouter: ChannelEditRouter,
-    Backbone: Backbone
-};

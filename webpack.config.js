@@ -103,8 +103,10 @@ module.exports = {
     new webpack.IgnorePlugin(/^codemirror$/),
     new webpack.ProvidePlugin({
       _: 'underscore',
-      $: 'jquery',
-      jQuery: 'jquery',
+      // `require`ing at the top of this file runs the code in node env
+      $: path.resolve(staticJsDir, 'utils', 'studioJquery'),
+      jQuery: path.resolve(staticJsDir, 'utils', 'studioJquery'),
+      'window.jQuery': path.resolve(staticJsDir, 'utils', 'studioJquery'),
     }),
   ],
   // new in webpack 4. Specifies the default bundle type
