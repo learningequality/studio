@@ -5,8 +5,7 @@ import subprocess
 import time
 from urlparse import urlparse
 
-import boto3
-import botocore
+import minio
 from django.conf import settings
 from minio import policy
 from minio.error import BucketAlreadyOwnedByYou, ResponseError
@@ -47,20 +46,32 @@ def ensure_storage_bucket_public(bucket=None, will_sleep=True):
 
     if not bucket:
         bucketname = settings.AWS_STORAGE_BUCKET_NAME
+    else:
+        bucketname = bucket
 
-    c = boto3.session.Session().client(
-        service_name="s3",
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+    host = urlparse(settings.AWS_S3_ENDPOINT_URL).netloc
+
+    # GCS' S3 compatibility is broken, especially in bucket operations;
+    # skip bucket creation there and just bug Aron to create buckets with
+    # public-read access for you
+    if "storage.googleapis.com" in host:
+        logging.info("Skipping storage creation on googleapis")
+
+    c = minio.Minio(
+        host,
+        access_key=settings.AWS_ACCESS_KEY_ID,
+        secret_key=settings.AWS_SECRET_ACCESS_KEY,
+        secure=False
     )
 
-    try:
-        c.head_bucket(Bucket=bucketname)
-    except botocore.exceptions.ClientError as e:
-        error_code = int(e.response["Error"]["Code"])
-        if error_code == 404:
-            c.create_bucket(Bucket=bucketname)
+    if not c.bucket_exists(bucketname):
+        try:
+            c.make_bucket(bucketname)
+        except BucketAlreadyOwnedByYou:
+            pass
 
-    c.put_bucket_acl(Bucket=bucketname, ACL="public-read")
-    logger.debug("Successfully set the bucket policy to read only!")
+    try:
+        c.set_bucket_policy(bucketname, "", policy.Policy.READ_ONLY)
+        logger.debug("Successfully set the bucket policy to read only!")
+    except ResponseError as e:
+        logger.warning("Error setting bucket {} to readonly: {}".format(bucket, e))
