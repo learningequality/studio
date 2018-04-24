@@ -22,7 +22,7 @@
 			"title": "BASIC",
 			"symbols": [
 				{"key": "+","symbol": "+","title": "Addition"},
-				{"key": "-","symbol": "-","title": "Subtraction"},
+				{"key": "-","symbol": "−","title": "Subtraction"},
 				{"key": "\\times","symbol": "×","title": "Multiplication"},
 				{"key": "\\div","symbol": "÷","title": "Division"},
 				{"key": "\\cdot","symbol": "·","title": "Dot"},

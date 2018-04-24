@@ -103,12 +103,14 @@ var AddFormulaView = BaseViews.BaseView.extend({
     template: require("./hbtemplates/add_formula.handlebars"),
     name: NAMESPACE,
     $trs: MESSAGES,
+    accepted_chars: [],
 
     initialize: function(options) {
         _.bindAll(this, 'add_formula', 'add_character', 'add_format', 'activate_mq');
         this.callback = options.callback;
         this.selector = "mathquill_" + this.cid;
         this.render();
+        this.set_accepted_chars();
     },
     events: {
         "click #add_formula": "add_formula",
@@ -124,6 +126,11 @@ var AddFormulaView = BaseViews.BaseView.extend({
             data: this.get_intl_data()
         }));
         this.$('[data-toggle="popover"]').popover({html: true, content: this.$("#characters_" + this.selector)});
+    },
+    set_accepted_chars: function() {
+        this.accepted_chars = _.chain(CHARACTERS.symbols).map(function(item){
+            return _.pluck(item.symbols, "symbol");
+        }).flatten().value();
     },
     activate_mq: function(){
         // Load mathjax symbols and formats
@@ -185,7 +192,7 @@ var AddFormulaView = BaseViews.BaseView.extend({
             if($(el).hasClass("mq-non-leaf")) {
                 return;
             }
-            if(!/^[\x00-\x7F]*$/.test($(el).text()) && $(el).text() !== '−') { // Mathquill automatically uses non-ascii minus sign
+            if(!/^[\x00-\x7F]*$/.test($(el).text()) && !_.contains(self.accepted_chars, $(el).text())) { // Valid Mathjax symbols only
                 isValid = false;
                 $(el).addClass("mq-invalid");
                 self.$(".mq-error").css("display", "block");
