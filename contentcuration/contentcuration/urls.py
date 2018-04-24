@@ -26,15 +26,15 @@ from rest_framework import routers, viewsets
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, AssessmentItem, ContentKind, Language, User, Invitation
 import contentcuration.serializers as serializers
-import contentcuration.views as views
-import contentcuration.view.registration_views as registration_views
-import contentcuration.view.settings_views as settings_views
-import contentcuration.view.internal_views as internal_views
-import contentcuration.view.zip_views as zip_views
-import contentcuration.view.file_views as file_views
-import contentcuration.view.node_views as node_views
-import contentcuration.view.admin_views as admin_views
-import contentcuration.view.public_views as public_views
+import contentcuration.views.base as views
+import contentcuration.views.users as registration_views
+import contentcuration.views.settings as settings_views
+import contentcuration.views.internal as internal_views
+import contentcuration.views.zip as zip_views
+import contentcuration.views.files as file_views
+import contentcuration.views.nodes as node_views
+import contentcuration.views.admin as admin_views
+import contentcuration.views.public as public_views
 import django_js_reverse.views as django_js_reverse_views
 import django.views as django_views
 
