@@ -401,7 +401,11 @@ def get_channel_status_bulk(request):
     """ Create the channel node """
     data = json.loads(request.body)
     try:
-        statuses = {cid: get_status(cid) for cid in data['channel_ids']}
+        statuses = {}
+        for cid in data['channel_ids']:
+            status = get_status(cid)
+            if status:
+                statuses.update({cid: status})
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -416,7 +420,7 @@ def get_channel_status_bulk(request):
 def get_status(channel_id):
     obj = Channel.objects.filter(pk=channel_id).first()
     if not obj:
-        return "active"
+        return None
     elif obj.deleted:
         return "deleted"
     elif obj.staging_tree:
