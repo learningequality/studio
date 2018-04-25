@@ -3,7 +3,7 @@ import math
 from django.shortcuts import render, redirect
 from django.conf import settings as ccsettings
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import views
+from django.contrib.auth import update_session_auth_hash
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import FormView
 from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, PreferencesSettingsForm
@@ -97,29 +97,18 @@ class PreferencesView(FormView):
     def user(self):
         return self.request.user
 
-
 @login_required
 def account_settings(request):
-    if not request.user.is_authenticated():
-        return redirect('/accounts/login')
-    return views.password_change(
-        request,
-        template_name='settings/account.html',
-        post_change_redirect=reverse_lazy('account_settings_success'),
-        password_change_form=AccountSettingsForm,
-        extra_context={"current_user": request.user, "page": "account"}
-    )
-
-
-@login_required
-def account_settings_success(request):
-    return views.password_change(
-        request,
-        template_name='settings/account_success.html',
-        post_change_redirect=reverse_lazy('account_settings_success'),
-        password_change_form=AccountSettingsForm,
-        extra_context={"current_user": request.user, "page": "account"}
-    )
+    if request.method == 'POST':
+        form = AccountSettingsForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+    else:
+        form = AccountSettingsForm(request.user)
+    return render(request, 'settings/account.html', {
+        'form': form
+    })
 
 
 @login_required
