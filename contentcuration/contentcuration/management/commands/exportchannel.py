@@ -568,12 +568,9 @@ def save_export_database(channel_id):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
     target_export_db_location = os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
-    try:
-        os.mkdir(settings.DB_ROOT)
-    except OSError:
-        logging.debug("{} directory already exists".format(settings.DB_ROOT))
 
-    shutil.copyfile(current_export_db_location, target_export_db_location)
+    with open(current_export_db_location) as currentf:
+        storage.save(target_export_db_location, currentf)
     logging.info("Successfully copied to {}".format(target_export_db_location))
 
 
