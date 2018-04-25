@@ -51,7 +51,7 @@ def send_invitation_email(request):
         }
 
         # Need to break into two steps to avoid MultipleObjectsReturned error
-        invitation = Invitation.objects.filter(**fields).first()
+        invitation = Invitation.objects.filter(channel_id=channel_id, email=user_email).first()
 
         if not invitation:
             invitation = Invitation.objects.create(**fields)

@@ -79,7 +79,7 @@ var FileModalView = BaseViews.BaseModalView.extend({
     },
     close_file_uploader:function(event){
         var self = this;
-        if(this.file_upload_view.collection.length === 0 || this.file_upload_view.current_view.uploads_in_progress){
+        if(this.file_upload_view.collection.length === 0 && this.file_upload_view.current_view.uploads_in_progress > 0){
             this.close();
         }else{
             dialog.dialog(this.get_translation("unsaved_changes"), this.get_translation("unsaved_changes_text"), {
@@ -487,10 +487,9 @@ var FormatFormatItem = FormatEditorItem.extend({
     template: require("./hbtemplates/file_upload_format_item.handlebars"),
 
     initialize: function(options) {
-        _.bindAll(this, 'update_name', 'remove_item', 'set_focus', 'set_thumbnail', 'disable_next', 'enable_next', 'remove_thumbnail');
+        _.bindAll(this, 'update_name', 'remove_item', 'set_thumbnail', 'disable_next', 'enable_next', 'remove_thumbnail');
         this.bind_node_functions();
         this.originalData = this.model.toJSON();
-        this.tab_index = options.tab_index;
         this.containing_list_view = options.containing_list_view;
         this.init_collections();
         this.render();
@@ -498,6 +497,7 @@ var FormatFormatItem = FormatEditorItem.extend({
         this.listenTo(this.files, "change", this.sync_file_changes);
         this.listenTo(this.files, "remove", this.sync_file_changes);
         this.listenTo(this.model, "change:files", this.update_metadata);
+        _.defer(this.containing_list_view.container.set_indices)
     },
     events: {
         'click .remove_from_dz ' : 'remove_item',
@@ -516,12 +516,6 @@ var FormatFormatItem = FormatEditorItem.extend({
         this.update_metadata();
         this.load_subfiles();
         this.create_thumbnail_view(this.disable_next, this.enable_next, this.enable_next);
-        _.defer(this.set_focus);
-    },
-    set_focus:function(){
-        this.containing_list_view.set_initial_focus();
-        this.$(".name_content_input").focus();
-        this.$(".name_content_input").select();
     },
     update_name:function(event){
         this.model.set("title", event.target.value);
