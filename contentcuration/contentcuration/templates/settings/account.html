@@ -9,7 +9,6 @@
 <p>{% trans "Change your password or recover your current one." %}</p>
 <hr/>
 <div class="container-fluid">
-	{% block accountmessage %}
 	{% if form.errors %}
 		<div class="alert alert-danger" role="alert">
 			<ul class="list-unstyled">
@@ -20,8 +19,9 @@
 			{% endfor %}
 			</ul>
 		</div>
+	{% elif request.method == 'POST' %}
+		<div class="alert alert-success" role="alert">{% trans "Your password has been successfully changed." %}</div>
 	{% endif %}
-	{% endblock accountmessage %}
 	<form method="post" action="{% url 'account_settings' %}">
 		<div id="form-wrapper">
 			{% csrf_token %}
