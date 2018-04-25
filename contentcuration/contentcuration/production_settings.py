@@ -13,13 +13,12 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
 DATABASES = {
     'default': {
-        'ENGINE':
-        'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv("DB_CREDENTIALS_DBNAME"),
-        'USER': os.getenv("DB_CREDENTIALS_USER"),
-        'PASSWORD': os.getenv("DB_CREDENTIALS_PASSWORD"),
-        'HOST': os.getenv("DB_CREDENTIALS_HOST"),
-        'PORT': int(os.getenv("DB_CREDENTIALS_PORT")),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('DATA_EXTERNAL_NAME') or os.environ.get('DATA_DB_NAME') or 'gonano',
+        'USER': os.environ.get('DATA_EXTERNAL_USER') or os.environ.get('DATA_DB_USER') or 'learningequality',
+        'PASSWORD': os.environ.get('DATA_EXTERNAL_PASS') or os.environ.get('DATA_DB_PASS') or '',
+        'HOST': os.environ.get('DATA_EXTERNAL_HOST') or os.environ.get('DATA_DB_HOST') or '127.0.0.1',
+        'PORT': os.environ.get('DATA_EXTERNAL_PORT') or os.environ.get('DATA_DB_PORT') or '5432',
         'CONN_MAX_AGE': 600,
     },
     'export_staging': {
@@ -27,19 +26,6 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'export_staging.sqlite3')
     }
 }
-
-# celery settings
-BROKER_URL = "redis://:{password}@{endpoint}:/{db}".format(
-    password=os.getenv("CELERY_REDIS_PASSWORD"),
-    endpoint=os.getenv("CELERY_BROKER_ENDPOINT"),
-    db=os.getenv("CELERY_REDIS_DB")
-) or BROKER_URL
-CELERY_RESULT_BACKEND = "redis://:{password}@{endpoint}:/{db}".format(
-    password=os.getenv("CELERY_REDIS_PASSWORD"),
-    endpoint=os.getenv("CELERY_RESULT_BACKEND_ENDPOINT"),
-    db=os.getenv("CELERY_REDIS_DB")
-) or CELERY_RESULT_BACKEND
-CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or CELERY_TIMEZONE
 
 # email settings
 EMAIL_BACKEND = 'postmark.django_backend.EmailBackend'
