@@ -34,7 +34,7 @@ var MESSAGES = {
     "already_invited": "This person has already been invited.",
     "sending_invitation": "Sending invitation...",
     "invite_failed": "Failed to send invitation",
-    "invite_sent": "Invitation Sent!",
+    "sent": "Sent!",
     "uninviting_editor": "Uninviting Editor",
     "send_invite_prompt": "Send invitation to {data} again?",
     "invite_sent_to": "Invitation sent to {data}",
@@ -444,7 +444,7 @@ var SharePendingItem = ShareItem.extend({
     },
     show_invitation_sent:function(){
         this.$el.addClass("adding_to_list");
-        this.$el.find(".pending_indicator").text(this.get_translation("invite_sent"));
+        this.$el.find(".pending_indicator").text(this.get_translation("sent"));
         var self = this;
         setTimeout(function(){
             self.$el.removeClass("adding_to_list").addClass("added_to_list");
