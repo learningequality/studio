@@ -567,7 +567,7 @@ def generate_lang_list():
                 values['ka_name'] = None
             langlist.append(languages.Language(**values))
         return langlist
-    except:
+    except Exception:
         return languages.LANGUAGELIST
 
 LANGUAGES = [{
