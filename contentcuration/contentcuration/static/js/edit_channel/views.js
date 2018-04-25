@@ -69,7 +69,8 @@ var MESSAGES = {
     "make_copy": "Make a Copy",
     "publish_title_prompt": "Make this channel available for download into Kolibri",
     "publish_in_progress": "Your channel is currently publishing...",
-    "publishing_prompt": "You will get an email once the channel finishes publishing."
+    "publishing_prompt": "You will get an email once the channel finishes publishing.",
+    "topic_title": "Topic"
 }
 
 var BaseView = Backbone.View.extend({
