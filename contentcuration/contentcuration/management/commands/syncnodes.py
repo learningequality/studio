@@ -1,7 +1,7 @@
 import copy
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from contentcuration.view.node_views import sync_channel
+from contentcuration.views.nodes import sync_channel
 from contentcuration.models import Channel
 from le_utils.constants import content_kinds
 
