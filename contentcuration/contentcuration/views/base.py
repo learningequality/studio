@@ -30,7 +30,6 @@ def base(request):
         return health(request)
     elif not check_supported_browsers(user_agent):
         return redirect(reverse_lazy('unsupported_browser'))
-
     if request.user.is_authenticated():
         return redirect('channels')
     else:
