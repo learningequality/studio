@@ -324,6 +324,7 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     new_node.id = None
     new_node.tree_id = parent.tree_id
     new_node.parent = parent
+    new_node.published = False
     new_node.sort_order = sort_order or node.sort_order
     new_node.changed = True
     new_node.cloned_source = node
