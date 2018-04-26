@@ -302,10 +302,42 @@ function format_count(text, count){
   return count + " " + text + "s";
 }
 
+function get_translation(messages, message_id, data, data2, data3, data4){
+    // Get dynamically generated messages
+    if (data !== undefined){
+      var template = require("edit_channel/utils/hbtemplates/intl.handlebars");
+      var div = document.createElement("DIV");
+      div.id = "intl_wrapper";
+      var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+      var intl_data = {
+        intl: {
+          locales: [(language && language.id) || "en-US"],
+          messages: messages
+        }
+      };
+
+      $(div).html(template({
+        data: data,
+        data2: data2,
+        data3: data3,
+        data4: data4,
+        message_id: message_id
+      }, {
+        data: intl_data
+      }));
+      var contents = div.innerHTML;
+      div.remove();
+      return contents;
+    } else {
+      return messages[message_id];
+    }
+}
+
 module.exports = {
   format_size : format_size,
   escape_str:escape_str,
   format_count: format_count,
   translate: translate,
-  unescape: unescape
+  unescape: unescape,
+  get_translation: get_translation
 }
