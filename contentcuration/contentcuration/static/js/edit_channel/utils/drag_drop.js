@@ -170,8 +170,7 @@ function addButtonDragDrop(element, dropCallback, messages){
 			        	});
 	                },
 	            }, null);
-			}
-			else {
+			} else {
 				dropCallback(selected_items).then(function(){
 	        		$(ui.draggable.context).remove();
 	        		$(".content-list").sortable( "enable" );
