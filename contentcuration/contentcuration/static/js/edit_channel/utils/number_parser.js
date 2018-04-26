@@ -122,7 +122,7 @@ function test_exponent(text){
 }
 
 function to_en(text){
-  return text.replace(SEP, '').replace(POINT, '.');
+  return text.toString().replace(SEP, '').replace(POINT, '.');
 }
 
 module.exports = {
