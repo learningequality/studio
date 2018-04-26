@@ -29,7 +29,7 @@ from rest_framework.renderers import JSONRenderer
 from contentcuration.api import check_supported_browsers
 from contentcuration.models import Channel, User, Invitation, ContentNode, generate_file_on_disk_name, File, Language
 from contentcuration.utils.messages import get_messages
-from contentcuration.serializers import AdminChannelListSerializer, AdminUserListSerializer, CurrentUserSerializer
+from contentcuration.serializers import AdminChannelListSerializer, AdminUserListSerializer, CurrentUserSerializer, UserChannelListSerializer
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -188,6 +188,24 @@ def remove_editor(request):
         return HttpResponse(json.dumps({"success": True}))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+
+from itertools import chain
+@login_required
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_editors(request, channel_id, include_viewers):
+    channel = Channel.objects.get(pk=channel_id)
+    user_list = list(channel.editors.all().order_by("first_name"))
+
+    # if include_viewers == "true":
+    #     channel.viewers.all().order_by("first_name")
+    #     user_list = list(chain(page_list, article_list, post_list))
+
+    # user_serializer = UserChannelListSerializer(user_list, many=True)
+
+    return Response(user_serializer.data)
+
 
 
 def sizeof_fmt(num, suffix='B'):
