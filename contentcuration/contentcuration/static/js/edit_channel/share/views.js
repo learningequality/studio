@@ -51,7 +51,8 @@ var MESSAGES = {
     "leaving_channel": "Leaving Channel",
     "leave_prompt": "Leaving this channel will remove it from your channel list. Continue?",
     "failed_leave": "Failed to leave editors",
-    "leave": "Leave Channel"
+    "leave": "Leave Channel",
+    "failed_leave_description": "Cannot leave a channel if you are the only editor. Please delete the channel to remove it from your list."
 }
 
 var ShareModalView = BaseViews.BaseModalView.extend({
@@ -301,6 +302,10 @@ var ShareView = BaseViews.BaseView.extend({
         }, null);
     },
     leave_editors: function(){
+        if(this.model.get("editors").length === 1) {
+            dialog.alert(this.get_translation("failed_leave"), this.get_translation("failed_leave_description"));
+            return;
+        }
         var self = this;
         dialog.dialog(this.get_translation("leaving_channel"), this.get_translation("leave_prompt"), {
           [this.get_translation("cancel")]:function(){},
