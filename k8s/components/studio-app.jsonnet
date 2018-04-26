@@ -116,7 +116,7 @@ local livenessProbe = {
       port: params.appPort,
     },
     initialDelaySeconds: 300, # 5 minutes before the first health check
-    periodSeconds: 10,
+    periodSeconds: 5,
   },
 };
 
@@ -127,7 +127,7 @@ local readinessProbe = {
       port: 8080,
     },
     initialDelaySeconds: 10,
-    periodSeconds: 10,
+    periodSeconds: 5,
   }
 };
 
@@ -152,7 +152,6 @@ deployment.mixin.spec.template.spec.withContainersMixin(
     secretName: postgres.external.ServiceAccountCredentialsSecret
   }
 });
-
 
 local appDeployment = deployment
   .new(
@@ -190,7 +189,7 @@ local workersDeployment = deployment.new(
     params.workerName,
     params.workerReplicas,
     container
-    .new(params.name, params.image)
+    .new("worker", params.image)
     .withEnvMixin(django_config_vars)
     .withEnvMixin(db_vars)
     .withEnvMixin(celery_vars)

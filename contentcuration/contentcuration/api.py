@@ -1,19 +1,22 @@
 """
 This module acts as the only interface point between other apps and the database backend for the content.
 """
+import hashlib
 import json
 import logging
 import os
-import hashlib
 import shutil
-from django.db.models import Q, Count, Sum
-from django.core.files.storage import default_storage
+from cStringIO import StringIO
+
+import contentcuration.models as models
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
+from django.core.files.storage import default_storage
+from django.db.models import Count, Q, Sum
 from django.http import HttpResponse
 from django.utils.translation import ugettext as _
-from le_utils.constants import format_presets, content_kinds, file_formats
-import contentcuration.models as models
+from le_utils.constants import content_kinds, file_formats, format_presets
+
 
 def check_supported_browsers(user_agent_string):
     if not user_agent_string:
@@ -71,7 +74,7 @@ def write_raw_content_to_storage(contents, ext=None):
 
     # Write file
     storage = default_storage
-    storage.save(file_path, contents)
+    storage.save(file_path, StringIO(contents))
 
     return hashed_filename, full_filename, file_path
 
