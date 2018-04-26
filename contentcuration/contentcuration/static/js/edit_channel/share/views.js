@@ -96,9 +96,11 @@ var ShareView = BaseViews.BaseView.extend({
         this.onjoin = options.onjoin;
         this.onleave = options.onleave;
         this.render();
+        this.$("#share_email_address").attr("disabled", true);
         var self = this;
         Promise.all([this.fetch_model(this.model), this.fetch_model(this.current_user)]).then(function(data){
             self.load_lists();
+            self.$("#share_email_address").removeAttr("disabled");
         });
     },
     events:{
