@@ -359,7 +359,7 @@ var ChannelItem = BaseAdminItem.extend({
     className: "data_row row",
     tagName:"div",
     set_attributes: function() {
-        _.bindAll(this, 'add_editor', 'remove_editor');
+        _.bindAll(this, 'fetch_editors');
         this.model.set("can_edit", _.find(this.model.get("editors"), function(editor) { return editor.id === window.current_user.id; }));
         this.model.set("editors", _.sortBy(this.model.get("editors"), "first_name"));
         this.model.set("viewers", _.sortBy(this.model.get("viewers"), "first_name"));
@@ -416,17 +416,16 @@ var ChannelItem = BaseAdminItem.extend({
             model:this.model,
             current_user: window.current_user,
             allow_leave: true,
-            onjoin: this.add_editor,
-            onleave: this.remove_editor
+            onjoin: this.fetch_editors,
+            onleave: this.fetch_editors
         });
     },
-    add_editor: function(editor){
-        this.model.set("editors", this.model.get("editors").concat(editor.toJSON()));
-        this.render();
-    },
-    remove_editor: function(editor){
-        this.model.set("editors", _.reject(this.model.get("editors"), function(user) { return user.id === editor.id }));
-        this.render();
+    fetch_editors: function(editor){
+        // Fetch editors again
+        var self = this;
+        this.model.fetch_editors().then(function() {
+            self.render();
+        });
     },
     copy_id: function(){
         this.$(".channel_id").focus();

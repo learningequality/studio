@@ -52,7 +52,7 @@ var MESSAGES = {
     "leave_prompt": "Leaving this channel will remove it from your channel list. Continue?",
     "failed_leave": "Failed to leave editors",
     "leave": "Leave Channel",
-    "failed_leave_description": "Cannot leave a channel if you are the only editor. Please delete the channel to remove it from your list."
+    "failed_leave_description": "You are not allowed to leave this channel if you are its only editor. Please delete the channel to remove it from your list."
 }
 
 var ShareModalView = BaseViews.BaseModalView.extend({
@@ -100,8 +100,9 @@ var ShareView = BaseViews.BaseView.extend({
         this.$("#share_email_address").attr("disabled", true);
         var self = this;
         Promise.all([this.fetch_model(this.model), this.fetch_model(this.current_user)]).then(function(data){
-            self.load_lists();
-            self.$("#share_email_address").removeAttr("disabled");
+            self.load_lists(function() {
+                self.$("#share_email_address").removeAttr("disabled");
+            });
         });
     },
     events:{
@@ -150,14 +151,16 @@ var ShareView = BaseViews.BaseView.extend({
         }
         return this.share_modes;
     },
-    load_lists:function(){
+    load_lists:function(callback){
+        var self = this;
         this.editor_list = this.model.get("editors").concat(this.model.get("viewers"));
-        this.editor_list.splice(this.editor_list.indexOf(this.current_user.id), 1);
+        this.editor_list = _.reject(this.editor_list, function(user) { return user === self.current_user.id} );
+
         this.collection = new Models.UserCollection();
         this.pending_collection = new Models.InvitationCollection();
         var current_promise = this.collection.get_all_fetch(this.editor_list);
         var pending_promise = this.pending_collection.get_all_fetch(this.model.get("pending_editors"));
-        var self = this;
+
         Promise.all([current_promise, pending_promise]).then(function(collections){
             self.current_view = new ShareCurrentList({
                 collection: collections[0],
@@ -171,6 +174,7 @@ var ShareView = BaseViews.BaseView.extend({
                 el: self.$("#pending_list_wrapper"),
                 model: self.model
             });
+            callback && callback();
         });
     },
     send_invite:function(event){
