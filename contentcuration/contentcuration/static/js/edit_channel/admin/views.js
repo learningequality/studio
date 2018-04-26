@@ -259,7 +259,7 @@ var ChannelTab = BaseAdminTab.extend({
             label: "# of Items",
             filter: function(item1, asc, item2){
                 var count1 = item1.get("count");
-                var count2 = item1.get("count");
+                var count2 = item2.get("count");
                 return (asc)? count1 - count2 : count2 - count1;
             }
         }, {
