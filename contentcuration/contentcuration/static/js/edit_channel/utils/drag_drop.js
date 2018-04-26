@@ -1,4 +1,8 @@
 var Models = require("edit_channel/models");
+var _ = require("underscore");
+var stringHelper = require("edit_channel/utils/string_helper");
+var dialog = require("edit_channel/utils/dialog");
+
 
 /* handleDrop: adds dropping ability to a certain container
 *	Parameters:
@@ -119,7 +123,7 @@ function addSortable(element, selected_class, callback){
 }
 
 
-function addButtonDragDrop(element, dropCallback){
+function addButtonDragDrop(element, dropCallback, messages){
 	element.$(".button_drop").droppable({
 		items : 'li',
 		revert: false,
@@ -149,11 +153,31 @@ function addButtonDragDrop(element, dropCallback){
         		selected_items.push(current_node);
         	}
         	selected_items.add(appended_items.models, {at: selected_items.length});
-        	dropCallback(selected_items).then(function(){
-        		$(ui.draggable.context).remove();
-        		$(".content-list").sortable( "enable" );
-        		$(".content-list").sortable( "refresh" );
-        	});
+
+        	// Check for related content and display warning if found
+        	if(selected_items.has_related_content()) {
+        		dialog.dialog(stringHelper.get_translation(messages, "related_content"), stringHelper.get_translation(messages, "related_content_warning", selected_items.length), {
+	                [stringHelper.get_translation(messages, "cancel")]:function(){
+	                	$(".content-list").sortable("cancel" );
+		        		$(".content-list").sortable( "enable" );
+		        		$(".content-list").sortable( "refresh" );
+	                },
+	                [stringHelper.get_translation(messages, "continue")]: function() {
+	                	dropCallback(selected_items).then(function(){
+			        		$(ui.draggable.context).remove();
+			        		$(".content-list").sortable( "enable" );
+			        		$(".content-list").sortable( "refresh" );
+			        	});
+	                },
+	            }, null);
+			}
+			else {
+				dropCallback(selected_items).then(function(){
+	        		$(ui.draggable.context).remove();
+	        		$(".content-list").sortable( "enable" );
+	        		$(".content-list").sortable( "refresh" );
+	        	});
+			}
 		},
 		out: function(event, ui){
 			$(".sorting-placeholder").css("display", "block");
