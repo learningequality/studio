@@ -532,7 +532,6 @@ var EditorView = BaseViews.BaseView.extend({
     },
     add_formula:function(formula){
         var self = this;
-        formula
         formula = formula.normalize("NFKD").replace(/[\u0300-\u036F]/g, ''); // Normalize any non-ascii characters
         this.toggle_loading(true);
         jax2svg.toSVG(formula).then(function(svg){
@@ -548,8 +547,12 @@ var EditorView = BaseViews.BaseView.extend({
                     paragraphs[paragraphs.length - 1].innerHTML += '&nbsp;';
                     updatedHtml = div.innerHTML;
                 }
-                self.editor.setHTML(updatedHtml)
+                self.editor.setHTML(updatedHtml);
+                var isBlank = !self.model.get(self.edit_key);
                 self.model.set(self.edit_key, self.model.get(self.edit_key) + formula);
+                if(isBlank) { // Formulas added to blank content disable text selection (needs to be wrapped in spaces)
+                    self.render_editor();
+                }
             } else {
                 dialog.alert(self.get_translation("formula_error_title"), self.get_translation("formula_error"));
             }
