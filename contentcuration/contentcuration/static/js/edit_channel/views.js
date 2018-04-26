@@ -189,6 +189,10 @@ var BaseView = Backbone.View.extend({
 				if(model.id === window.current_user.get('clipboard_tree').id){
 					window.current_user.set('clipboard_tree', model.toJSON());
 				}
+
+				if(model.id === window.current_channel.get("trash_tree").id) {
+					window.current_channel.set("trash_tree", model.toJSON());
+				}
 			});
 			callback && callback();
 		});
@@ -382,14 +386,9 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	open_archive:function(){
 		var ArchiveView = require("edit_channel/archive/views");
-		window.current_channel.get_root("trash_tree").fetch({
-			success:function(fetched){
-				window.current_channel.set("trash_tree", fetched.attributes);
-				var archive = new ArchiveView.ArchiveModalView({
-					model : fetched
-			 	});
-			}
-		});
+		var archive = new ArchiveView.ArchiveModalView({
+			model : new Models.ContentNodeModel(window.current_channel.get("trash_tree"))
+	 	});
 	},
 	move_content:function(move_collection){
 		var MoveView = require("edit_channel/move/views");
