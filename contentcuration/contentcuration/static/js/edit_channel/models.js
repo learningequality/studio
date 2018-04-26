@@ -832,13 +832,12 @@ var ChannelModel = BaseModel.extend({
             });
         });
     },
-    fetch_editors: function(include_viewers) {
+    fetch_editors: function() {
         var self = this;
-        include_viewers = include_viewers || false;
         return new Promise(function(resolve, reject){
             $.ajax({
                 method:"GET",
-                url: window.Urls.get_editors(self.id, include_viewers),
+                url: window.Urls.get_editors(self.id),
                 success: function(editors) {
                     self.set("editors", editors);
                     resolve(self);

@@ -189,20 +189,14 @@ def remove_editor(request):
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
-from itertools import chain
 @login_required
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
-def get_editors(request, channel_id, include_viewers):
+def get_editors(request, channel_id):
     channel = Channel.objects.get(pk=channel_id)
     user_list = list(channel.editors.all().order_by("first_name"))
-
-    # if include_viewers == "true":
-    #     channel.viewers.all().order_by("first_name")
-    #     user_list = list(chain(page_list, article_list, post_list))
-
-    # user_serializer = UserChannelListSerializer(user_list, many=True)
+    user_serializer = UserChannelListSerializer(user_list, many=True)
 
     return Response(user_serializer.data)
 
