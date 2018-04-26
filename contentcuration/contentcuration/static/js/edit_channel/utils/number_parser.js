@@ -46,6 +46,9 @@ function parse(text) {
 }
 
 function extract_value(text){
+  if(!text) {
+    return 0;
+  }
   return parse_valid_number(text)
 }
 
