@@ -546,7 +546,11 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	make_inline_copy: function(event) {
 		this.cancel_actions(event);
-		this.make_copy();
+		if(this.model.has_related_content()){
+			dialog.alert(this.get_translation("warning"), this.get_translation("related_content_alert"), this.make_copy);
+		} else {
+			this.make_copy();
+		}
 	},
 	move_node:function(event){
 		this.cancel_actions(event);
