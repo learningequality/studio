@@ -190,7 +190,7 @@ local workersDeployment = deployment.new(
     params.workerName,
     params.workerReplicas,
     container
-    .new(params.name, params.image)
+    .new("worker", params.image)
     .withEnvMixin(django_config_vars)
     .withEnvMixin(db_vars)
     .withEnvMixin(celery_vars)
