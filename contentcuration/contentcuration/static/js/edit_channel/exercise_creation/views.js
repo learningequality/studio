@@ -41,6 +41,7 @@ var MESSAGES = {
     "question_placeholder": "Enter Question...",
     "answer_placeholder": "Enter Answer...",
     "hint_placeholder": "Enter Hint...",
+    "hint_closing_error": "Error Closing Hints",
     "blank_item_detected": "Blank item detected. Resolve to continue",
     "add_question_prompt": "Click '+ QUESTION' to begin...",
     "no_questions_found": "No questions associated with this exercise",
@@ -715,7 +716,6 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
         }
     },
     propagate_changes:function(){
-        this.validate();
         this.container.propagate_changes();
     },
 
@@ -1422,7 +1422,14 @@ var HintModalView = BaseViews.BaseModalView.extend({
     show: function(){
         this.$(".hint_modal").modal({show: true});
     },
-    closing_hints:function(){
+    closing_hints:function(event){
+        if(!this.hint_editor.validate()) {
+            dialog.alert(this.get_translation("hint_closing_error"), this.get_translation("blank_item_detected"));
+            event.stopImmediatePropagation();
+            event.preventDefault();
+            return false;
+        }
+        this.$(".close_hint_modal").prop('title', this.get_translation("close"));
         this.$(".hint-errors").css('display', 'none');
         this.hint_editor.close_all_editors();
         if(!this.isdisplay) this.onupdate(this.model);
@@ -1479,6 +1486,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
         var invalid = this.collection.findWhere({hint: ""});
         this.modal_view.$(".hint_prompt, .error-list").css("display", (invalid)? "block" : "none");
         this.set_invalid(invalid);
+        return !invalid;
     }
 });
 
