@@ -88,14 +88,13 @@ module.exports = {
           }
         },
       },
-      // Granular shims
+      // Granular shim for JQuery (used inside of studioJquery)
       {
         test: /(jquery-ui)|(bootstrap.*\.js$)/,
         // NOTE: aliases don't work in dirs outside of this config's context (like boostrap)
         // define="false" bypasses the buggy AMD implementation
         use: `imports-loader?define=>false,$=${jqueryDir},jQuery=${jqueryDir}`,
       },
-
     ],
   },
   resolve: {
