@@ -1,3 +1,4 @@
+var $ = require('jquery');
 require("offline-js");
 require("../../css/offline-theme-slide.css");
 require("utils/snake");

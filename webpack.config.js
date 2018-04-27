@@ -10,6 +10,9 @@ const staticLessDir = path.resolve(staticFilesDir, 'less');
 const bundleEntryDir = path.resolve(staticJsDir, 'bundle_modules');
 const bundleOutputDir = path.resolve(staticJsDir,'bundles');
 
+const jqueryDir = path.resolve('node_modules', 'jquery');
+const studioJqueryDir = path.resolve(staticJsDir, 'utils', 'studioJquery');
+
 const jsLoaders = [
   {
     loader: 'babel-loader',
@@ -53,11 +56,11 @@ module.exports = {
       {
         test: /\.js?$/,
         exclude: /node_modules?/,
-        use:jsLoaders,
+        use: jsLoaders,
       },
       {
         test: /\.handlebars?$/,
-        use:[
+        use: [
           'handlebars-template-loader',
         ],
       },
@@ -85,6 +88,14 @@ module.exports = {
           }
         },
       },
+      // Granular shims
+      {
+        test: /(jquery-ui)|(bootstrap.*\.js$)/,
+        // NOTE: aliases don't work in dirs outside of this config's context (like boostrap)
+        // define="false" bypasses the buggy AMD implementation
+        use: `imports-loader?define=>false,$=${jqueryDir},jQuery=${jqueryDir}`,
+      },
+
     ],
   },
   resolve: {
@@ -92,6 +103,9 @@ module.exports = {
       // explicit alias definitions (rather than modules) for speed
       edit_channel: path.resolve(staticJsDir, 'edit_channel'),
       utils: path.resolve(staticJsDir, 'utils'),
+      jquery: studioJqueryDir,
+      // TODO just use modules alias
+      rawJquery: jqueryDir,
     },
     // carryover of path resolution from build.js
     modules: ['node_modules', staticLessDir],
@@ -103,10 +117,12 @@ module.exports = {
     new webpack.IgnorePlugin(/^codemirror$/),
     new webpack.ProvidePlugin({
       _: 'underscore',
-      // `require`ing at the top of this file runs the code in node env
-      $: path.resolve(staticJsDir, 'utils', 'studioJquery'),
-      jQuery: path.resolve(staticJsDir, 'utils', 'studioJquery'),
-      'window.jQuery': path.resolve(staticJsDir, 'utils', 'studioJquery'),
+      // used in most of the code we wrote
+      $: 'jquery',
+      // used in backbone
+      jquery: 'jquery',
+      // used in jquery-ui + bootstrap
+      jQuery: 'jquery',
     }),
   ],
   // new in webpack 4. Specifies the default bundle type

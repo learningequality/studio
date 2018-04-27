@@ -6,7 +6,6 @@ require('../handlebars/helpers.js');
 require('../../less/styles.less');
 
 require('../utils/offline_helper');
-require('bootstrap/dist/js/npm.js');
 
 // Promise polyfill
 if(!global.Promise) {

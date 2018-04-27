@@ -1,4 +1,4 @@
-var jQuery = require("jquery");
+var jQuery = require("rawJquery");
 
 // using jQuery
 module.exports = function get_cookie(name) {

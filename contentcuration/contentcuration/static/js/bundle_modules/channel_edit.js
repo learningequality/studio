@@ -2,7 +2,7 @@ var Views = require("edit_channel/new_channel/views");
 var Models = require("edit_channel/models");
 var Backbone = require("backbone");
 var ChannelEditRouter = require("edit_channel/router");
-require('../utils/jquery-ui');
+
 require('../handlebars/helpers.js');
 
 $(function() {

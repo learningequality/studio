@@ -1,9 +1,13 @@
-var $ = require('jquery');
+var $ = require('rawJquery');
 var get_cookie = require('./get_cookie');
 var csrftoken = get_cookie('csrftoken') || '';
 
-// side effect: adds jquery-ui to the shared jQuery object
-require('./jquery-ui');
+
+// side effect: bind jquery-ui functionality to jquery object
+require('./jquery-ui.js');
+
+// side effect: bind all of bootstrap's opt-in features to jquery object
+require('bootstrap/dist/js/npm.js');
 
 function csrfSafeMethod(method) {
     // these HTTP methods do not require CSRF protection
