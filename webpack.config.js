@@ -1,5 +1,6 @@
 /* eslint-env node */
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const BundleTracker = require('webpack-bundle-tracker');
 const webpack = require('webpack');
 const path = require('path');
 
@@ -33,7 +34,7 @@ module.exports = {
     channel_edit: './channel_edit.js',
   },
   output: {
-    filename: '[name].js',
+    filename: '[name]-[hash].js',
     path: bundleOutputDir,
   },
   // add source maps for use in chrome for debugging. default for 'development' mode is 'eval'
@@ -112,6 +113,10 @@ module.exports = {
   plugins: [
     // cleans out build dirs prior to rebuilding
     new CleanWebpackPlugin([bundleOutputDir]),
+    new BundleTracker({
+      path: staticFilesDir,
+      filename: 'webpack-stats.json',
+    }),
     // ignore codemirror, error caused by summernote
     new webpack.IgnorePlugin(/^codemirror$/),
     new webpack.ProvidePlugin({
