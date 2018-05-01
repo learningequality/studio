@@ -573,12 +573,14 @@ var EditorView = BaseViews.BaseView.extend({
         if(matches) {
             var MQ = MathQuill.getInterface(2);
             matches.forEach(function(match){
-                var original_formula = match.match(/\$\$(.+?)\$\$/)[1]
-                var formula = original_formula.replace('−', '-').replace(/\\\s+/, '').replace(/\\{2,}\s*/, '\\');
-                formula = (formula.slice(-1) === "\\")? formula.slice(0, -1) : formula;
-                var mathFieldSpan = $('<span>' + formula + '</span>');
-                var mathField = MQ.MathField(mathFieldSpan[0]);
-                markdown = markdown.replace(original_formula, mathField.latex())
+                var original_formula = match.match(/\$\$(.+?)\$\$/) && match.match(/\$\$(.+?)\$\$/)[1];
+                if(original_formula) {
+                    var formula = original_formula.replace('−', '-').replace(/\\\s+/, '').replace(/\\{2,}\s*/, '\\');
+                    formula = (formula.slice(-1) === "\\")? formula.slice(0, -1) : formula;
+                    var mathFieldSpan = $('<span>' + formula + '</span>');
+                    var mathField = MQ.MathField(mathFieldSpan[0]);
+                    markdown = markdown.replace(original_formula, mathField.latex())
+                }
             });
         }
         return markdown;

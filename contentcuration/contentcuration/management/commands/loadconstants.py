@@ -1,3 +1,5 @@
+import urllib
+import json
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from le_utils.constants import content_kinds, file_formats, format_presets, licenses, languages
@@ -550,6 +552,24 @@ PRESETS = [
     },
 ]
 
+
+def generate_lang_list():
+    try:
+        response = urllib.urlopen("https://raw.githubusercontent.com/learningequality/le-utils/master/le_utils/resources/languagelookup.json")
+        data = json.loads(response.read())
+        langlist = []
+        for code, lang in langlist.items():
+            values = languages._parse_out_iso_639_code(code)
+            values.update(lang)
+
+            # add a default value to ka_name
+            if 'ka_name' not in values:
+                values['ka_name'] = None
+            langlist.append(languages.Language(**values))
+        return langlist
+    except Exception:
+        return languages.LANGUAGELIST
+
 LANGUAGES = [{
     "model": models.Language,
     "pk": "id",
@@ -561,7 +581,8 @@ LANGUAGES = [{
         "native_name": l.native_name,
         "lang_direction": languages.getlang_direction(l.primary_code),
     },
-} for l in languages.LANGUAGELIST]
+} for l in generate_lang_list()]
+
 
 CONSTANTS = [SITES, LICENSES, FILE_FORMATS, KINDS, PRESETS, LANGUAGES]
 
