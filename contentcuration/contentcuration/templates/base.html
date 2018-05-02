@@ -25,8 +25,11 @@
         } catch (error) { /* Page does not require front-end translations */ }
       </script>
 			<script src="{% url 'js_reverse' %}" type="text/javascript"></script>
+
 			{% render_bundle 'common' %}
-			{% render_bundle 'base' %}
+			<!-- prevent more than 1 bundle per page -->
+			{% block bundle %} {% render_bundle 'base' %} {% endblock bundle %}
+
 			<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 			{% endblock head %}
 

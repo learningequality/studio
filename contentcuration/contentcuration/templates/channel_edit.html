@@ -4,9 +4,7 @@
 {% load i18n %}
 {% load render_bundle from webpack_loader %}
 
-{% block content %}
-	{% render_bundle 'channel_edit' %}
-
+{% block bundle %}
 	<script>
 		var channel = JSON.parse("{{ channel|escapejs}}");
 		var license_list = JSON.parse("{{ license_list|escapejs}}");
@@ -22,6 +20,10 @@
 		var url = '{% url 'channels' %}';
 	</script>
 
+	{% render_bundle 'channel_edit' %}
+{% endblock bundle %}
+
+{% block content %}
 	<div id="channel-edit-sortable-boundary">
 
 	<nav class="navbar" id="secondary-nav">

@@ -1,9 +1,10 @@
+// include all logic in "base" entrypoint
+require('./base');
+
 var Views = require("edit_channel/new_channel/views");
 var Models = require("edit_channel/models");
 var Backbone = require("backbone");
 var ChannelEditRouter = require("edit_channel/router");
-
-require('../handlebars/helpers.js');
 
 $(function() {
     $("#channel-publish-button").on("click", publish_nodes);

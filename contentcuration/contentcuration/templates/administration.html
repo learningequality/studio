@@ -4,8 +4,11 @@
 {% load i18n %}
 {% load render_bundle from webpack_loader %}
 
-{% block content %}
+{% block bundle %}
 	{% render_bundle 'channel_edit' %}
+{% endblock bundle %}
+
+{% block content %}
 
 	<script>
 		var user = JSON.parse("{{ current_user|escapejs }}");
