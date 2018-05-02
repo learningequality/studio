@@ -20,7 +20,7 @@ class ExtraFormMixin(object):
             self.errors[field] = self.error_class()
             self.add_error(field, error)
             return False
-        return True
+        return self.cleaned_data.get(field)
 
 class RegistrationForm(forms.Form, ExtraFormMixin):
     first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
@@ -69,11 +69,29 @@ USAGES = [
     ('other', _("Other")),
 ]
 
+SOURCES = [
+    ('organization', _("Organization")),
+    ('website', _("Learning Equality Website")),
+    ('newsletter', _("Learning Equality Newsletter")),
+    ('community forum', _("Learning Equality Community Forum")),
+    ('github', _("Learning Equality GitHub")),
+    ('social media', _("Social Media")),
+    ('conference', _("Conference")),
+    ('conversation', _("Conversation with Learning Equality")),
+    ('demo', _("Personal Demo")),
+    ('other', _("Other")),
+]
+
 
 class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
     use = forms.ChoiceField(required=False, widget=forms.CheckboxSelectMultiple, label=_('How do you plan to use Kolibri Studio? (check all that apply)'), choices=USAGES)
     other_use = forms.CharField(required=False, widget=forms.TextInput)
     storage = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 500MB")}), label=_("How much storage do you need?"))
+
+    source = forms.ChoiceField(required=False, widget=forms.Select, label=_('How did you hear about us?'), choices=SOURCES)
+    organization = forms.CharField(required=False, widget=forms.TextInput, label=_("Name of Organization"))
+    conference = forms.CharField(required=False, widget=forms.TextInput, label=_("Name of Conference"))
+    other_source = forms.CharField(required=False, widget=forms.TextInput, label=_("Please describe"))
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
@@ -115,12 +133,23 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         if "storage" in uses:
             self.check_field('storage', _("Please indicate how much storage you intend to use"))
 
+
         # Set cleaned_data as a string (will be blank if none are selected)
         self.cleaned_data["use"] = ", ".join(uses)
         self.cleaned_data["location"] = ", ".join(self.request.POST.getlist('location'))
 
         self.check_field('use', _('Please indicate how you intend to use Kolibri Studio'))
         self.check_field('location', _('Please select where you plan to use Kolibri'))
+
+        # Check "How did you hear about us?" has extra information if certain options are selected
+        source = self.check_field('source', _('Please indicate where you heard about us'))
+        if source:
+            if source == 'organization' and self.check_field('organization', _('Please indicate organization')):
+                self.cleaned_data['source'] = "{} (organization)".format(self.cleaned_data['organization'])
+            elif source == 'conference' and self.check_field('conference', _('Please indicate conference')):
+                self.cleaned_data['source'] = "{} (conference)".format(self.cleaned_data['conference'])
+            elif source == 'other' and self.check_field('other_source', _('Please indicate where you heard about us')):
+                self.cleaned_data['source'] = self.cleaned_data['other_source']
 
         return self.cleaned_data
 
@@ -133,6 +162,7 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
             "uses": self.cleaned_data['use'].split(','),
             "locations": self.cleaned_data['location'].split(','),
             "space_needed": self.cleaned_data['storage'],
+            "heard_from": self.cleaned_data['source'],
         }
 
         if commit:

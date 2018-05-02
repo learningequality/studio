@@ -9,5 +9,6 @@ Email: {{email}}
 Intended Use(s): {{use}}{% if storage %}
 Storage Needed: {{storage}}{% endif %}
 Location(s): {{location}}
+Heard about us from: {{source}}
 
 {% endautoescape %}
