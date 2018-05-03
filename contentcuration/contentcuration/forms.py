@@ -142,13 +142,13 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         self.check_field('location', _('Please select where you plan to use Kolibri'))
 
         # Check "How did you hear about us?" has extra information if certain options are selected
-        source = self.check_field('source', _('Please indicate where you heard about us'))
+        source = self.check_field('source', _('Please indicate how you heard about us'))
         if source:
             if source == 'organization' and self.check_field('organization', _('Please indicate organization')):
                 self.cleaned_data['source'] = "{} (organization)".format(self.cleaned_data['organization'])
             elif source == 'conference' and self.check_field('conference', _('Please indicate conference')):
                 self.cleaned_data['source'] = "{} (conference)".format(self.cleaned_data['conference'])
-            elif source == 'other' and self.check_field('other_source', _('Please indicate where you heard about us')):
+            elif source == 'other' and self.check_field('other_source', _('Please indicate how you heard about us')):
                 self.cleaned_data['source'] = self.cleaned_data['other_source']
 
         return self.cleaned_data
