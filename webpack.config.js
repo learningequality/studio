@@ -123,10 +123,8 @@ module.exports = {
       _: 'underscore',
       // used in most of the code we wrote
       $: 'jquery',
-      // used in backbone
-      jquery: 'jquery',
-      // used in jquery-ui + bootstrap
-      jQuery: 'jquery',
+      // used in Mathquill, set in jquery
+      'window.jQuery': 'jquery',
     }),
   ],
   // new in webpack 4. Specifies the default bundle type
