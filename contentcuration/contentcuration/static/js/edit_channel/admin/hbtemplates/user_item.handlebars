@@ -2,7 +2,7 @@
 	<input type="checkbox" class="user_select_checkbox" id="admin_user_check_{{id}}"/>
 	<label for="admin_user_check_{{id}}" class="full_name">
 		{{#if is_active}}
-			{{#if is_admin}}<span class="glyphicon glyphicon-star admin_icon" title="Admin"></span>&nbsp;{{/if}}
+			{{#if is_admin}}<i class="material-icons icon admin_icon" title="Admin">star</i>&nbsp;{{/if}}
 			<span title="{{first_name}} {{last_name}} (Joined {{#format_date date_joined}}{{/format_date}})">{{first_name}} {{last_name}}</span>
 		{{else}}
 			{{#if first_name}}<span title="User has not activated account">{{first_name}} {{last_name}}</span>
@@ -21,13 +21,13 @@
 </div>
 <div class="col-xs-2 text-center">
 	{{#if editable_channels}}
-		<a tabindex="0" class="popover_link action-text" data-id="#admin_edit_channels_{{id}}">{{#format_count "Channel" editable_channels.length}}{{/format_count}}</a>
+		<a tabindex="0" class="popover_link action-text" data-id="#admin_edit_channels_{{id}}">{{{format_count "Channel" editable_channels.length}}}</a>
 	{{else}}None
 	{{/if}}
 </div>
 <div class="col-xs-2 text-center">
 	{{#if view_only_channels}}
-		<a tabindex="0" class="popover_link action-text" data-id="#admin_view_channels_{{id}}">{{#format_count "Channel" view_only_channels.length}}{{/format_count}}</a>
+		<a tabindex="0" class="popover_link action-text" data-id="#admin_view_channels_{{id}}">{{{format_count "Channel" view_only_channels.length}}}</a>
 	{{else}}None
 	{{/if}}
 </div>
@@ -35,23 +35,23 @@
 	<div class="btn-group btn-group-justified" role="group">
 		{{#if is_active}}
 			<div class="btn-group" role="group">
-				<button class="btn option btn-blue email_button" title="Send Email"><span class="glyphicon glyphicon-envelope" aria-hidden="true"></span></button>
+				<button class="btn option btn-blue email_button" title="Send Email"><i class="material-icons">email</i></button>
 			</div>
 			{{#unless is_admin}}
 			<div class="btn-group" role="group">
-				<button class="btn option btn-red deactivate_button" title="Deactivate"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span></button>
+				<button class="btn option btn-red deactivate_button" title="Deactivate"><i class="material-icons">not_interested</i></button>
 			</div>
 			{{/unless}}
 		{{else}}
 			<div class="btn-group" role="group">
 			{{#if first_name}}
-				<button class="btn option btn-green activate_button" title="Activate Account"><span class="glyphicon glyphicon-asterisk" aria-hidden="true"></span></button>
-			{{else}}<button class="btn option btn-green disabled" title="User must set up account before activating (invitation pending)" disabled><span class="glyphicon glyphicon-asterisk" aria-hidden="true"></span></button>
+				<button class="btn option btn-green activate_button" title="Activate Account"><i class="material-icons">new_releases</i></button>
+			{{else}}<button class="btn option btn-green disabled" title="User must set up account before activating (invitation pending)" disabled><i class="material-icons">new_releases</i></button>
 			{{/if}}
 			</div>
 
 			<div class="btn-group" role="group">
-				<button class="btn option btn-red delete_button" title="Remove User"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+				<button class="btn option btn-red delete_button" title="Remove User"><i class="material-icons">clear</i></button>
 			</div>
 		{{/if}}
 	</div>
@@ -61,7 +61,7 @@
 	<div class="arrow"></div>
 	<div class="popover-content">
 		<ul class="list-unstyled">
-			{{#each editable_channels}}<li class="truncate" title="{{name}}"><span class="glyphicon glyphicon-{{#if public}}globe{{else}}lock{{/if}} content_icon"></span> {{name}}</li>{{/each}}
+			{{#each editable_channels}}<li class="truncate" title="{{name}}"><i class="material-icons content_icon">{{#if public}}public{{else}}lock{{/if}}</i> {{name}}</li>{{/each}}
 		</ul>
 	</div>
 </div>
@@ -70,7 +70,7 @@
 	<div class="arrow"></div>
 	<div class="popover-content">
 		<ul class="list-unstyled">
-			{{#each view_only_channels}}<li class="truncate" title="{{name}}"><span class="glyphicon glyphicon-{{#if public}}globe{{else}}lock{{/if}} content_icon"></span> {{name}}</li>{{/each}}
+			{{#each view_only_channels}}<li class="truncate" title="{{name}}"><i class="material-icons content_icon">{{#if public}}public{{else}}lock{{/if}}</i> {{name}}</li>{{/each}}
 		</ul>
 	</div>
 </div>
