@@ -245,7 +245,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             dialog.alert(this.get_translation("image_error"), this.image_error);
             if(this.onerror){ this.onerror(); }
             this.render();
-        }else{
+        } else{
             this.thumbnail_encoding = null;
             this.render();
             this.submit_image();
