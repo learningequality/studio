@@ -10,7 +10,9 @@ var NAMESPACE = "archive";
 var MESSAGES = {
     "header": "Managing deleted content",
     "restore_selected": "Restore Selected",
-    "delete_selected": "Delete Selected"
+    "delete_selected": "Delete Selected",
+    "restore": "Restore",
+    "delete": "Delete"
 }
 
 var ArchiveModalView = BaseViews.BaseModalView.extend({
@@ -203,8 +205,8 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     tagName: "li",
     className: "archive_list_item modal-list-item-default",
     selectedClass: "archive-selected",
-    collapsedClass: "glyphicon-triangle-top",
-    expandedClass: "glyphicon-triangle-bottom",
+    collapsedIcon: "arrow_drop_up",
+    expandedIcon: "arrow_drop_down",
     list_selector: ">.archive-list",
     item_to_archive: false,
     name: NAMESPACE,
