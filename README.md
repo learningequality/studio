@@ -124,14 +124,6 @@ Follow the instructions below to setup your dev environment and get started.
 
 ### Setting up your local development environment
 
-#### Setting up your environment through Nanobox
-
-1. Install [Nanobox](https://docs.nanobox.io/install/)
-1. Run `make setupnanobox`
-1. Run `nanobox run`
-1. Inside Nanobox's shell, run Minio by running `run_minio.py &`
-1. Run `make devserver` to start the development server
-
 #### Setting up your environment manually
 
 ##### Install software prerequisites
