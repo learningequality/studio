@@ -77,7 +77,7 @@ var MESSAGES = {
     "move_down": "Move Down",
     "hint": "Hint",
     "hints": "Hints",
-    "randomize_answers": "Randomize answer order for learners",
+    "randomize_answer_order": "Randomize Answer Order",
     "submit": "Submit Changes",
     "cancel_changes": "Cancel Changes",
     "hint_error_prompt": "Please fix the items below before closing",
@@ -96,7 +96,9 @@ var MESSAGES = {
     "formula_error": "There was an error processing the formula",
     "image_error_title": "Unable to add image",
     "image_error": "There was an error processing the image.",
-    "invalid_characters": "Invalid characters"
+    "invalid_characters": "Invalid characters",
+    "insert_symbols": "Formatting and Special Characters",
+    "add_formula": "Insert Formula"
 }
 
 /*********** FORMULA ADD-IN FOR EXERCISE EDITOR ***********/
