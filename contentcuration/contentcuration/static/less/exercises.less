@@ -20,21 +20,27 @@
 @hint-color:#FDFADF;
 @incorrect-bg-color:#F7DCDC;
 @incorrect-highlight-color: #FFA9A9;
+@incorrect-border-color: #F18080;
 @correct-bg-color: #CEEFCE;
 @correct-highlight-color: #8FE48F;
+@correct-border-color: #588C58;
 
 .note-image-popover{ display: none !important; }
 .tooltip { z-index: 99999999999999; }
 
 #exercisecreation{
-    .show_question_toggle, .toggle_question_order{
-        font-size:11pt;
-        *{ margin: 0; cursor:pointer; }
-        input[type='checkbox']{
-            width:18px;
-            height:18px;
-            display:inline-block;
-            vertical-align: middle;
+    padding: 0;
+    .exercise_header_bar {
+        margin: 15px;
+        .show_question_toggle, .toggle_question_order{
+            font-size:11pt;
+            *{ margin: 0; cursor:pointer; }
+            input[type='checkbox']{
+                width:18px;
+                height:18px;
+                display:inline-block;
+                vertical-align: middle;
+            }
         }
     }
     #exercise_list {
@@ -52,7 +58,7 @@
             .assessment_order_area{
                 font-weight: bold;
                 color:@gray-400;
-                margin-right: 15px;
+                margin-left: 15px;
                 font-size:13pt;
             }
             .assessment_item.active .main_edit_area{
@@ -96,16 +102,15 @@
         vertical-align: top;
         padding:0px;
     }
-    .remove_area .option{ font-size:12pt; }
+    .remove_area .option{ font-size:16pt; }
     .main_edit_area{
-        width:88%;
+        width:100%;
         margin-right: 5px;
         .question_area{
             padding:7px;
             cursor:pointer;
             background-color:@gray-200;
             .question_controls{
-                margin-bottom:5px;
                 .question_type{
                     color:@gray-700;
                     font-size:9pt;
@@ -113,13 +118,21 @@
                 .question_type_select{
                     font-size:11pt;
                     font-weight: normal;
+                    margin-bottom: 15px !important;
                 }
-                .hint_link{
-                    color: @gray-700;
-                    padding: 3px;
-                    font-weight:bold;
-                    font-size:10pt;
-                    &:hover{ color: @blue-500; }
+                .hint_link_cell {
+                    padding: 0px;
+                    .hint_link{
+                        color: @gray-700;
+                        padding: 3px;
+                        font-weight:bold;
+                        font-size:10pt;
+                        &:hover{ color: @blue-500; }
+                        i {
+                            font-size: 13pt;
+                            vertical-align: sub;
+                        }
+                    }
                 }
                 .random_answers_order{
                     right:0em;
@@ -130,7 +143,7 @@
                         label{
                             font-weight:normal;
                             vertical-align: middle;
-                            font-size: 8pt;
+                            font-size: 10pt;
                             line-height: 15px;
                         }
                     }
@@ -336,20 +349,21 @@
         li{
             .row{margin:0;}
             width:100%;
+
             .hint_options, .answer_options{padding:0;}
             .answer-toolbar, .hint-toolbar{
                 text-align:right;
                 font-size: 12pt;
-                margin-right:10px;
                 .option:hover{color: @blue-500;}
             }
             .hide_remove .delete{ display: none !important; }
-            .closed_toolbar{.option{margin-left:5px;} .delete{margin-left: 10px;}}
+            .closed_toolbar{.delete{margin-left: 10px;}}
             .open_toolbar{.option{margin-bottom:10px;}.delete{margin-bottom: 20px;}}
             .move_option{ display:none; }
-            &:hover{.move_option{display:inline-block;}}
+            &:hover .move_option{display:inline-block;}
         }
         .answer_li, .hint_li{ &:first-of-type .item_move_up, &:last-of-type .item_move_down { .disabled; }}
+        .answer_li:first-of-type { margin-top: -5px; }
         .addanswer, .addhint{
             cursor: pointer;
             font-size:12pt;
@@ -358,12 +372,21 @@
             &:hover{font-weight: bold;}
         }
     }
-    .answer_item{ background-color: transparent !important; &:hover{ background-color: @gray-200  !important; }}
+    .answer_item{
+        background-color: transparent !important;
+        border-left: 4px solid @incorrect-border-color;
+        &.is_correct{
+            background-color: @correct-bg-color !important;
+            border-left: 4px solid @correct-border-color;
+            &:hover { background-color: @correct-highlight-color !important; }
+        }
+        &:hover{ background-color: @gray-200  !important; }
+    }
     .answers .answer_header{
         width: 100%;
         font-size: 12pt;
         padding:5px 15px;
-        background-color: @blue-700;
+        background-color: @gray-800;
         color:white;
         font-weight: bold;
         .correct_header{
@@ -378,6 +401,16 @@
             border: 1px solid @blue-100;
             margin-bottom: 5px;
             cursor:pointer;
+        }
+        .hint_li {
+            counter-increment: hint-counter;
+            .order::before{ content: counter(hint-counter); }
+            .hint_order_area{
+                font-weight: bold;
+                color:@gray-400;
+                margin-left: -10px;
+                font-size:13pt;
+            }
         }
         .hint_item{
             padding: 5px;
