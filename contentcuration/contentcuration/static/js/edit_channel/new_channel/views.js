@@ -346,12 +346,12 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.$(".copy-id-text").select();
 		try {
 			document.execCommand("copy");
-			self.$(".copy-id-btn").removeClass("glyphicon-copy").addClass("glyphicon-ok");
+			self.$(".copy-id-btn").text("check");
 		} catch(e) {
-			self.$(".copy-id-btn").removeClass("glyphicon-copy").addClass("glyphicon-remove");
+			self.$(".copy-id-btn").text("clear");
 		}
 		setTimeout(function(){
-			self.$(".copy-id-btn").removeClass("glyphicon-ok").removeClass("glyphicon-remove").addClass("glyphicon-copy");
+			self.$(".copy-id-btn").text("content_paste");
 		}, 2500);
 	},
 	update_title:function(){
