@@ -391,12 +391,19 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     },
     get_metadata:function(){
         return _.reduce(this.model.get("files"), function(dict, file){
-            if(!file.preset.display || _.contains(dict.checksums, file.checksum)){
+            if(!file.preset.display){
                 return dict;
             }
+
+            // Don't count duplicate files to total file size
+            var file_size = dict.size;
+            if (!_.contains(dict.checksums, file.checksum)) {
+                file_size += file.file_size;
+            }
+
             return {
                     'count': dict.count + 1,
-                    'size': dict.size + file.file_size,
+                    'size': file_size,
                     'main_file_count': dict.main_file_count + !file.preset.supplementary,
                     'checksums': dict.checksums.concat(file.checksum)
                 };
