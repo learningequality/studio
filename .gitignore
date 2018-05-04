@@ -89,3 +89,5 @@ TAGS
 
 # ignore locale files
 contentcuration/locale/
+
+webpack-stats\.json

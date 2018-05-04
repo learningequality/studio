@@ -37,9 +37,6 @@ module.exports = {
     filename: '[name]-[hash].js',
     path: bundleOutputDir,
   },
-  // add source maps for use in chrome for debugging. default for 'development' mode is 'eval'
-  // Remove this line if speed becomes an issue
-  devtool: 'inline-source-map',
   optimization: {
     // builds a bundle that holds common code between the 2 entry points
     splitChunks: {
@@ -111,7 +108,7 @@ module.exports = {
     modules: ['node_modules', staticLessDir],
   },
   plugins: [
-    // cleans out build dirs prior to rebuilding
+    // cleans out build dirs prior to rebuilding. Might not be necessary?
     new CleanWebpackPlugin([bundleOutputDir]),
     new BundleTracker({
       path: staticFilesDir,
