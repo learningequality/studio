@@ -16,7 +16,11 @@
 		{{invitation.sender.first_name}} {{invitation.sender.last_name}} {{formatMessage (intlGet 'messages.accept_prompt')}} {{formatMessage (intlGet (concat 'messages.' invitation.share_mode))}}
 		<b title="{{invitation.channel_name}}">{{invitation.channel_name}}</b>
 	</div>
-	<div class="col-xs-2"><div class="btn btn-pending accept_invite"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> &nbsp;{{formatMessage (intlGet 'messages.accept')}}</div></div>
-	<div class="col-xs-2"><div class="btn btn-pending decline_invite"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> &nbsp;{{formatMessage (intlGet 'messages.decline')}}</div></div>
+	<div class="col-xs-2"><div class="btn btn-pending accept_invite">
+		<i class="material-icons">check</i> &nbsp;{{formatMessage (intlGet 'messages.accept')}}
+	</div></div>
+	<div class="col-xs-2"><div class="btn btn-pending decline_invite">
+		<i class="material-icons">clear</i> &nbsp;{{formatMessage (intlGet 'messages.decline')}}
+	</div></div>
 </div>
 {{/if}}
