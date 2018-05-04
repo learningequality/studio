@@ -1025,8 +1025,8 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 	model: null,
 	tagName: "li",
 	selectedClass: null,
-	expandedClass: null,
-	collapsedClass: null,
+	expandedIcon: null,
+	collapsedIcon: null,
 
 	getToggler: null,
 	getSubdirectory: null,
@@ -1038,7 +1038,7 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 	},
 	toggle:function(event){
 		this.cancel_actions(event);
-		(this.getToggler().hasClass(this.collapsedClass)) ? this.open_folder() : this.close_folder();
+		(this.getToggler().text() === this.collapsedIcon) ? this.open_folder() : this.close_folder();
 	},
 	open_folder:function(open_speed){
 		open_speed = (open_speed)? open_speed: 200;
@@ -1046,12 +1046,12 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 		if(!this.subcontent_view){
 			this.load_subfiles();
 		}
-		this.getToggler().removeClass(this.collapsedClass).addClass(this.expandedClass);
+		this.getToggler().text(this.expandedIcon);
 	},
 	close_folder:function(close_speed){
 		close_speed = (close_speed)? close_speed: 200;
 		this.getSubdirectory().slideUp(close_speed);
-		this.getToggler().removeClass(this.expandedClass).addClass(this.collapsedClass);
+		this.getToggler().text(this.collapsedIcon);
 	}
 });
 
