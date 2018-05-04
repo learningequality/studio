@@ -110,6 +110,7 @@
             padding:7px;
             cursor:pointer;
             background-color:@gray-200;
+            padding-left: 20px;
             .question_controls{
                 .question_type{
                     color:@gray-700;
@@ -153,17 +154,20 @@
         }
         .input_question_prompt{
             background-color: lemonchiffon;
-            padding: 3px 10px;
+            padding: 4px 10px;
             font-size: 10pt;
             font-style: italic;
             cursor: default;
         }
         .answer_item{
-            background-color: @incorrect-bg-color;
-            &:hover{background-color: @incorrect-highlight-color;}
+            background-color: white;
+            &:hover{background-color: @incorrect-bg-color;}
+            /*&:hover{ background-color: @gray-200  !important; }*/
+            border-left: 4px solid @incorrect-border-color;
             &.is_correct{
-                background-color: @correct-bg-color;
-                &:hover{background-color: @correct-highlight-color;}
+                background-color: @correct-bg-color !important;
+                border-color: @correct-border-color;
+                &:hover{background-color: @correct-highlight-color !important;}
             }
             cursor:pointer;
             padding:3px 10px;
@@ -211,6 +215,9 @@
 }
 
 .hint_modal, .assessment_item.active{
+    .question_area {
+        padding-left: 7px;
+    }
     .error-list, .hint-errors, .character_wrapper{display:none;}
     .main_edit_area{
         .show_on_focus{ display:inline-block; }
@@ -371,16 +378,6 @@
             padding:5px 15px;
             &:hover{font-weight: bold;}
         }
-    }
-    .answer_item{
-        background-color: transparent !important;
-        border-left: 4px solid @incorrect-border-color;
-        &.is_correct{
-            background-color: @correct-bg-color !important;
-            border-left: 4px solid @correct-border-color;
-            &:hover { background-color: @correct-highlight-color !important; }
-        }
-        &:hover{ background-color: @gray-200  !important; }
     }
     .answers .answer_header{
         width: 100%;
