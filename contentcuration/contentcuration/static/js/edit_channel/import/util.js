@@ -67,20 +67,20 @@ exports.fetchSearchResults = function(searchTerm, currentChannelId) {
 exports.getIconClassForKind = function(kind) {
   switch (kind){
     case "topic":
-      return "glyphicon-folder-close";
+      return "folder";
     case "video":
-      return "glyphicon-film";
+      return "theaters";
     case "audio":
-      return "glyphicon-headphones";
+      return "headset";
     case "image":
-      return "glyphicon-picture";
+      return "image";
     case "exercise":
-      return "glyphicon-star";
+      return "star";
     case "document":
-      return "glyphicon-file";
+      return "description";
     case "html5":
-      return "glyphicon-certificate";
+      return "widgets";
     default:
-      return "glyphicon-exclamation-sign";
+      return "error";
   }
 }
