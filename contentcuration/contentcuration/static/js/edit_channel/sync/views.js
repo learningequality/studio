@@ -613,8 +613,7 @@ var SyncItem = BaseViews.BaseListNodeItemView.extend({
     },
     render: function() {
         this.$el.html(this.template({
-            node: this.model && this.model.toJSON(),
-            isfolder: this.model && this.model.get("kind") === "topic"
+            node: this.model && this.model.toJSON()
         }, {
             data: this.get_intl_data()
         }));
