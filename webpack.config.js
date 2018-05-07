@@ -4,7 +4,8 @@ const BundleTracker = require('webpack-bundle-tracker');
 const webpack = require('webpack');
 const path = require('path');
 
-const staticFilesDir = path.resolve('contentcuration', 'contentcuration', 'static');
+const djangoProjectDir = path.resolve('contentcuration');
+const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
 const staticJsDir = path.resolve(staticFilesDir, 'js');
 const staticLessDir = path.resolve(staticFilesDir, 'less');
 
@@ -111,7 +112,7 @@ module.exports = {
     // cleans out build dirs prior to rebuilding. Might not be necessary?
     new CleanWebpackPlugin([bundleOutputDir]),
     new BundleTracker({
-      path: staticFilesDir,
+      path: path.resolve(djangoProjectDir, 'build'),
       filename: 'webpack-stats.json',
     }),
     // ignore codemirror, error caused by summernote

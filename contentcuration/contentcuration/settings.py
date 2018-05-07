@@ -25,20 +25,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STORAGE_ROOT = "storage"
 DB_ROOT = "databases"
 
-static_files = os.path.join(BASE_DIR, 'contentcuration', 'static')
 STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
 CSV_ROOT = "csvs"
-
-STATICFILES_DIRS = (
-    static_files,
-)
 
 # hardcoding all this info for now. Potential for shared reference with webpack?
 WEBPACK_LOADER = {
     'DEFAULT': {
         # trailing empty string to include trailing /
         'BUNDLE_DIR_NAME': os.path.join('js', 'bundles', ''),
-        'STATS_FILE': os.path.join(static_files, 'webpack-stats.json'),
+        'STATS_FILE': os.path.join(BASE_DIR, 'build', 'webpack-stats.json'),
     }
 }
 
