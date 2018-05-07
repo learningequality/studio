@@ -1,5 +1,25 @@
 version: '3'
 services:
+  studio-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: learningequality/studio-app-dev
+    depends_on:
+      - minio
+      - studio-postgres
+      - studio-redis
+    ports:
+      - "8080:8080"
+    entrypoint:
+      - make
+      - devserver
+    environment:
+      MPLBACKEND: ps
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      DATA_DB_HOST: studio-postgres
+    volumes:
+      - .:/src
   minio:
     image: minio/minio
     entrypoint: minio server /data
