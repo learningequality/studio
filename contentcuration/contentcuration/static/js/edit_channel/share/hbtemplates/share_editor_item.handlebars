@@ -11,8 +11,8 @@
 	<div class="field col-xs-3 text-right">
 		{{#if editor.sender}}
 			<span class="pending_indicator">{{formatMessage (intlGet 'messages.pending')}}</span>
-			<span class="reinvite_editor glyphicon glyphicon-envelope" title="{{formatMessage (intlGet 'messages.resend')}}"></span>
-			<span class="remove_editor glyphicon glyphicon-remove" title="{{formatMessage (intlGet 'messages.cancel_invite')}}"></span>
+			<i class="material-icons reinvite_editor align-bottom" title="{{formatMessage (intlGet 'messages.resend')}}">email</i>
+		<i class="material-icons remove_editor align-bottom" title="{{formatMessage (intlGet 'messages.cancel_invite')}}">clear</i>
 		{{/if}}
 	</div>
 </div>
