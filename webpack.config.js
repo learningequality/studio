@@ -1,8 +1,11 @@
 /* eslint-env node */
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-const BundleTracker = require('webpack-bundle-tracker');
 const webpack = require('webpack');
 const path = require('path');
+
+const CleanWebpackPlugin = require('clean-webpack-plugin');
+const BundleTracker = require('webpack-bundle-tracker');
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
+
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
@@ -81,11 +84,6 @@ module.exports = {
       {
         test: /\.vue?$/,
         loader:'vue-loader',
-        options: {
-          loaders: {
-            js: jsLoaders,
-          }
-        },
       },
       // Granular shim for JQuery (used inside of studioJquery)
       {
@@ -111,6 +109,7 @@ module.exports = {
   plugins: [
     // cleans out build dirs prior to rebuilding. Might not be necessary?
     new CleanWebpackPlugin([bundleOutputDir]),
+    new VueLoaderPlugin(),
     new BundleTracker({
       path: path.resolve(djangoProjectDir, 'build'),
       filename: 'webpack-stats.json',
