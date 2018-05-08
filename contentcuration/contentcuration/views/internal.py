@@ -81,7 +81,6 @@ def file_diff(request):
         # Might want to use this once assumption that file exists is true (save on performance)
         # in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
         # for f in list(set(data) - set(in_db_list)):
-
         to_return = get_file_diff(data)
 
         return HttpResponse(json.dumps(to_return))
