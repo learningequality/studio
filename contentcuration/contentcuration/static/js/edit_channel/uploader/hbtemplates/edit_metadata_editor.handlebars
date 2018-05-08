@@ -36,7 +36,7 @@
 			<option disabled value=0>---</option>
 			{{#each mastery}}<option value="{{this}}" {{#equal this "num_correct_in_a_row_2"}}selected{{/equal}}>{{{translate this}}}</option>{{/each}}
 		</select>
-		<span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="mastery_about"></span>
+		<i class="material-icons tab_item" id="mastery_about">info</i>
 		<span id="mastery_custom_criterion">
 			<input type="number" id="m_value" min="1" max="20" value="{{m_value}}" maxlength="2" size="2" class="tab_item"/>
 			&nbsp;{{formatMessage (intlGet 'messages.of')}}&nbsp;
@@ -60,7 +60,7 @@
 		                <option value={{id}}>{{{translate license_name}}}</option>
 		            {{/each}}
 		        </select>
-		        <span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="license_about"></span>
+		        <i class="material-icons tab_item" id="license_about">info</i>
 		        <textarea id="custom_license_description" class="input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.license_description_placeholder')}}"></textarea>
 			</div>
 			<div class="content_nodes_only col-sm-6">
@@ -86,7 +86,7 @@
 				<h4>{{formatMessage (intlGet 'messages.license')}}</h4>
 				<p class="upload_input">
 					<span id="license_select">{{{translate license}}}</span>
-					<span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="license_about" max-length=400></span>
+					<i class="material-icons tab_item" id="license_about">info</i>
 				</p>
 				<p id="custom_license_description" class="license_description_text">{{license_description}}</p>
 			</div>
@@ -104,7 +104,7 @@
 		<option disabled value=0>---</option>
 		{{#each roles}}<option value="{{this}}" selected>{{{translate this}}}</option>{{/each}}
 	</select>&nbsp;
-	<span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="visibility_about"></span>
+	<i class="material-icons tab_item" id="visibility_about">info</i>
 	<br/>
 	{{/if}}
 	{{#if node}}

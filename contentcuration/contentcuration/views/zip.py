@@ -4,12 +4,13 @@ import mimetypes
 import os
 import re
 import zipfile
+from django.core.files.storage import default_storage
 from django.http import Http404, HttpResponse, HttpResponseNotFound
 from django.http.response import FileResponse, HttpResponseNotModified
 from django.utils.http import http_date
 from django.views.generic.base import View
 from le_utils.constants import exercises
-from contentcuration.models import generate_file_on_disk_name
+from contentcuration.models import generate_object_storage_name
 
 try:
     from urlparse import urljoin
@@ -34,22 +35,26 @@ class ZipContentView(View):
         """
         assert VALID_STORAGE_FILENAME.match(zipped_filename), "'{}' is not a valid content storage filename".format(zipped_filename)
 
+        storage = default_storage
+
         # calculate the local file path to the zip file
         filename, ext = os.path.splitext(zipped_filename)
-        zipped_path = generate_file_on_disk_name(filename, zipped_filename)
+        zipped_path = generate_object_storage_name(filename, zipped_filename)
 
         # file size
         file_size = 0
 
         # if the zipfile does not exist on disk, return a 404
-        if not os.path.exists(zipped_path):
-            return HttpResponseNotFound('"%(filename)s" does not exist locally' % {'filename': zipped_path})
+        if not storage.exists(zipped_path):
+            return HttpResponseNotFound('"%(filename)s" does not exist in storage' % {'filename': zipped_path})
 
         # if client has a cached version, use that (we can safely assume nothing has changed, due to MD5)
         if request.META.get('HTTP_IF_MODIFIED_SINCE'):
             return HttpResponseNotModified()
 
-        with zipfile.ZipFile(zipped_path) as zf:
+        zf_obj = storage.open(zipped_path)
+
+        with zipfile.ZipFile(zf_obj) as zf:
 
             # if no path, or a directory, is being referenced, look for an index.html file
             if not embedded_filepath or embedded_filepath.endswith("/"):

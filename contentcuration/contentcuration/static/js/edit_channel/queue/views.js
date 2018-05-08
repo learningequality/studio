@@ -47,7 +47,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 			content_node_view:null
 		});
 		this.handle_checked();
-		DragHelper.addButtonDragDrop(this, this.add_to_clipboard);
+		DragHelper.addButtonDragDrop(this, this.add_to_clipboard, this.get_translation_library());
 	},
 	events: {
 		'click .queue-button' : 'toggle_queue',
@@ -210,8 +210,8 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	list_selector: "#clipboard_list",
 	template: require("./hbtemplates/queue_item.handlebars"),
 	selectedClass: "queue-selected",
-	expandedClass: "glyphicon-menu-down",
-	collapsedClass: "glyphicon-menu-up",
+	expandedIcon: "expand_more",
+	collapsedIcon: "expand_less",
 	className: "queue-item",
 	name: NAMESPACE,
     $trs: MESSAGES,

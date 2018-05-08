@@ -41,6 +41,7 @@ var MESSAGES = {
     "question_placeholder": "Enter Question...",
     "answer_placeholder": "Enter Answer...",
     "hint_placeholder": "Enter Hint...",
+    "hint_closing_error": "Error Closing Hints",
     "blank_item_detected": "Blank item detected. Resolve to continue",
     "add_question_prompt": "Click '+ QUESTION' to begin...",
     "no_questions_found": "No questions associated with this exercise",
@@ -76,7 +77,7 @@ var MESSAGES = {
     "move_down": "Move Down",
     "hint": "Hint",
     "hints": "Hints",
-    "randomize_answers": "Randomize answer order for learners",
+    "randomize_answer_order": "Randomize Answer Order",
     "submit": "Submit Changes",
     "cancel_changes": "Cancel Changes",
     "hint_error_prompt": "Please fix the items below before closing",
@@ -95,7 +96,9 @@ var MESSAGES = {
     "formula_error": "There was an error processing the formula",
     "image_error_title": "Unable to add image",
     "image_error": "There was an error processing the image.",
-    "invalid_characters": "Invalid characters"
+    "invalid_characters": "Invalid characters",
+    "insert_symbols": "Formatting and Special Characters",
+    "add_formula": "Insert Formula"
 }
 
 /*********** FORMULA ADD-IN FOR EXERCISE EDITOR ***********/
@@ -531,7 +534,6 @@ var EditorView = BaseViews.BaseView.extend({
     },
     add_formula:function(formula){
         var self = this;
-        formula
         formula = formula.normalize("NFKD").replace(/[\u0300-\u036F]/g, ''); // Normalize any non-ascii characters
         this.toggle_loading(true);
         jax2svg.toSVG(formula).then(function(svg){
@@ -547,8 +549,12 @@ var EditorView = BaseViews.BaseView.extend({
                     paragraphs[paragraphs.length - 1].innerHTML += '&nbsp;';
                     updatedHtml = div.innerHTML;
                 }
-                self.editor.setHTML(updatedHtml)
+                self.editor.setHTML(updatedHtml);
+                var isBlank = !self.model.get(self.edit_key);
                 self.model.set(self.edit_key, self.model.get(self.edit_key) + formula);
+                if(isBlank) { // Formulas added to blank content disable text selection (needs to be wrapped in spaces)
+                    self.render_editor();
+                }
             } else {
                 dialog.alert(self.get_translation("formula_error_title"), self.get_translation("formula_error"));
             }
@@ -717,7 +723,6 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
         }
     },
     propagate_changes:function(){
-        this.validate();
         this.container.propagate_changes();
     },
 
@@ -1424,7 +1429,14 @@ var HintModalView = BaseViews.BaseModalView.extend({
     show: function(){
         this.$(".hint_modal").modal({show: true});
     },
-    closing_hints:function(){
+    closing_hints:function(event){
+        if(!this.hint_editor.validate()) {
+            dialog.alert(this.get_translation("hint_closing_error"), this.get_translation("blank_item_detected"));
+            event.stopImmediatePropagation();
+            event.preventDefault();
+            return false;
+        }
+        this.$(".close_hint_modal").prop('title', this.get_translation("close"));
         this.$(".hint-errors").css('display', 'none');
         this.hint_editor.close_all_editors();
         if(!this.isdisplay) this.onupdate(this.model);
@@ -1481,6 +1493,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
         var invalid = this.collection.findWhere({hint: ""});
         this.modal_view.$(".hint_prompt, .error-list").css("display", (invalid)? "block" : "none");
         this.set_invalid(invalid);
+        return !invalid;
     }
 });
 

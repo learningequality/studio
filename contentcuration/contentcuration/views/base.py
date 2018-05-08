@@ -12,7 +12,7 @@ from django.db.models import Q, Case, When, Value, IntegerField, F, TextField
 from django.core.urlresolvers import reverse_lazy
 from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff
+from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff, check_health_check_browser
 from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User, SecretToken, StagedFile
 from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, PublicChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
 from contentcuration.tasks import exportchannel_task, generatechannelcsv_task
@@ -25,7 +25,10 @@ from le_utils.constants import exercises, roles
 from rest_framework.response import Response
 
 def base(request):
-    if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
+    user_agent = request.META.get('HTTP_USER_AGENT')
+    if check_health_check_browser(user_agent):
+        return health(request)
+    elif not check_supported_browsers(user_agent):
         return redirect(reverse_lazy('unsupported_browser'))
     if request.user.is_authenticated():
         return redirect('channels')
@@ -34,7 +37,11 @@ def base(request):
 
 
 def health(request):
-    return HttpResponse(Channel.objects.first().name)
+    c = Channel.objects.first()
+    if c:
+        return HttpResponse(c.name)
+    else:
+        return HttpResponse("No channels created yet!")
 
 def stealth(request):
     return HttpResponse("<3")

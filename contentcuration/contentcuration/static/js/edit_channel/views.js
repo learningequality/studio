@@ -69,7 +69,8 @@ var MESSAGES = {
     "make_copy": "Make a Copy",
     "publish_title_prompt": "Make this channel available for download into Kolibri",
     "publish_in_progress": "Your channel is currently publishing...",
-    "publishing_prompt": "You will get an email once the channel finishes publishing."
+    "publishing_prompt": "You will get an email once the channel finishes publishing.",
+    "topic_title": "Topic"
 }
 
 var BaseView = Backbone.View.extend({
@@ -187,6 +188,10 @@ var BaseView = Backbone.View.extend({
 				}
 				if(model.id === window.current_user.get('clipboard_tree').id){
 					window.current_user.set('clipboard_tree', model.toJSON());
+				}
+
+				if(model.id === window.current_channel.get("trash_tree").id) {
+					window.current_channel.set("trash_tree", model.toJSON());
 				}
 			});
 			callback && callback();
@@ -381,14 +386,9 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	open_archive:function(){
 		var ArchiveView = require("edit_channel/archive/views");
-		window.current_channel.get_root("trash_tree").fetch({
-			success:function(fetched){
-				window.current_channel.set("trash_tree", fetched.attributes);
-				var archive = new ArchiveView.ArchiveModalView({
-					model : fetched
-			 	});
-			}
-		});
+		var archive = new ArchiveView.ArchiveModalView({
+			model : new Models.ContentNodeModel(window.current_channel.get("trash_tree"))
+	 	});
 	},
 	move_content:function(move_collection){
 		var MoveView = require("edit_channel/move/views");
@@ -1025,8 +1025,8 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 	model: null,
 	tagName: "li",
 	selectedClass: null,
-	expandedClass: null,
-	collapsedClass: null,
+	expandedIcon: null,
+	collapsedIcon: null,
 
 	getToggler: null,
 	getSubdirectory: null,
@@ -1038,7 +1038,7 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 	},
 	toggle:function(event){
 		this.cancel_actions(event);
-		(this.getToggler().hasClass(this.collapsedClass)) ? this.open_folder() : this.close_folder();
+		(this.getToggler().text() === this.collapsedIcon) ? this.open_folder() : this.close_folder();
 	},
 	open_folder:function(open_speed){
 		open_speed = (open_speed)? open_speed: 200;
@@ -1046,12 +1046,12 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 		if(!this.subcontent_view){
 			this.load_subfiles();
 		}
-		this.getToggler().removeClass(this.collapsedClass).addClass(this.expandedClass);
+		this.getToggler().text(this.expandedIcon);
 	},
 	close_folder:function(close_speed){
 		close_speed = (close_speed)? close_speed: 200;
 		this.getSubdirectory().slideUp(close_speed);
-		this.getToggler().removeClass(this.expandedClass).addClass(this.collapsedClass);
+		this.getToggler().text(this.collapsedIcon);
 	}
 });
 

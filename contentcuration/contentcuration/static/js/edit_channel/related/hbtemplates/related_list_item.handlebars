@@ -11,7 +11,7 @@
 	{{#if is_prerequisite}}{{formatMessage (intlGet 'messages.already_selected')}}
 	{{else}}
 		{{#if isfolder}}
-			<span class="glyphicon glyphicon-menu-right pull-right" aria-hidden="true"></span>
+			<i class="material-icons pull-right">chevron_right</i>
 		{{else}}
 			<a class="action-text select_prereq uppercase">{{formatMessage (intlGet 'messages.select')}}</a>
 		{{/if}}

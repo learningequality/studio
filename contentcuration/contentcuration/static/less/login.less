@@ -112,7 +112,7 @@ html, body, .login, .login-branding, .login-content{
 				margin-top: 45px;
 			}
 
-			&#use {
+			&#use, &#source {
 				margin-bottom: 30px;
 				.use-option{
 					width: 100%;
@@ -125,30 +125,36 @@ html, body, .login, .login-branding, .login-content{
 							cursor: pointer;
 						}
 					}
+					#storage {
+						margin-top: -5px;
+						input {
+							width: 80px;
+							text-align: right;
+						}
+					}
 					label {
 						font-weight: normal;
 						cursor: pointer;
 					}
-					#storage {
-						margin-top: -5px;
-						padding-left: 15px;
-						font-size: 9pt;
-						input {
-							width: 80px;
-							text-align: right;
-							color: black;
-							padding: 2px;
-						}
-					}
-
 					#id_other_use {
 						width: 60%;
 						margin-left: 5px;
 					}
 				}
+				.optional_field {
+					margin-top: 5px;
+					padding-left: 15px;
+					font-size: 9pt;
+					input {
+						width: 100px;
+						color: black;
+						padding: 2px;
+					}
+				}
 			}
 
 			#id_location {
+				margin-bottom: 30px;
 				width: 100%;
 				min-height: 200px;
 				option {

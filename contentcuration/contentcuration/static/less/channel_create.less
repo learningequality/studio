@@ -78,6 +78,10 @@
 		        	border: 2px solid white;
 		        	&.accept_invite { color: @blue-500; &:hover{ border-color: @blue-500; }}
 		        	&.decline_invite { color: #D14C4C;  &:hover{ border-color: #D14C4C; }}
+		        	i {
+		        		font-size: 14pt;
+    					font-weight: bold;
+    				}
 		        }
 		        .alert{
 		        	margin-bottom: 15px;
@@ -133,9 +137,9 @@
 					}
 					.copy-id-btn{
 						padding:3px;
-					}
-					.copy-id-btn:hover{
-						color:@blue-500;
+						font-size: 16pt;
+    					vertical-align: sub;
+						&:hover { color:@blue-500; }
 					}
 					.copy-id-text{
 						display: inline-block;
@@ -175,8 +179,8 @@
 					.channel_option_icon {
 						cursor:pointer;
 						display:inline-block;
-						font-size: @channel-font-size * .9;
-						padding:15px;
+						font-size: 20pt;
+						padding:10px;
 						color: @gray-700;
 						position: relative;
 						top: -45px;

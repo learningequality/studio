@@ -3,13 +3,16 @@
 <label for="queue_file_{{node.id}}" class="queue_item tog_folder">
 	<div class="queue-options pull-right">
 		<a class="btn content-options-dropdown" role="button" rel="popover">
-			<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
+			<i class="material-icons">more_horiz</i>
 		</a>
 	</div>
-	<div class="queue_item_title title truncate" title="{{node.title}}">{{#unless isfolder}}<span class="content-item-icon {{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>&nbsp;{{/unless}}{{node.title}}</div>
+	<div class="queue_item_title title truncate {{#unless isfolder}}file_item{{/unless}}" title="{{node.title}}">
+		{{#unless isfolder}}<i class="content-item-icon material-icons">{{{get_icon node.kind}}}</i>&nbsp;{{/unless}}
+		{{node.title}}
+	</div>
 	{{#if isfolder}}
 		<div class="badge clipboard-topic-count">{{node.metadata.resource_count}}</div>
-		<span id="menu_toggle_{{node.id}}" class="glyphicon glyphicon-menu-up toggle-icon"></span>
+		<span id="menu_toggle_{{node.id}}" class="material-icons toggle-icon">expand_less</span>
 	{{/if}}
 </label>
 

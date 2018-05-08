@@ -46,6 +46,9 @@ function parse(text) {
 }
 
 function extract_value(text){
+  if(!text) {
+    return 0;
+  }
   return parse_valid_number(text)
 }
 
@@ -119,7 +122,7 @@ function test_exponent(text){
 }
 
 function to_en(text){
-  return text.replace(SEP, '').replace(POINT, '.');
+  return text.toString().replace(SEP, '').replace(POINT, '.');
 }
 
 module.exports = {

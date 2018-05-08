@@ -51,7 +51,7 @@ def send_invitation_email(request):
         }
 
         # Need to break into two steps to avoid MultipleObjectsReturned error
-        invitation = Invitation.objects.filter(**fields).first()
+        invitation = Invitation.objects.filter(channel_id=channel_id, email=user_email).first()
 
         if not invitation:
             invitation = Invitation.objects.create(**fields)
@@ -182,7 +182,8 @@ def new_user_redirect(request, user_id):
     user = User.objects.get(pk=user_id)
     if user.is_active:
         return redirect(reverse_lazy("channels"))
+    logout(request)
     request.session["email"] = user.email
     request.session["freeze_email"] = True
-    logout(request)
+
     return redirect(reverse_lazy("registration_register"))

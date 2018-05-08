@@ -2,33 +2,46 @@ import collections
 import functools
 import hashlib
 import json
-import math
 import logging
+import sys
+import socket
+import math
+import os
+import shutil
 import uuid
 
-import os
+import minio
+from contentcuration.statistics import record_channel_stats
+from contentcuration.utils.networking import get_local_ip_address
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, MultipleObjectsReturned
-from django.core.files.storage import FileSystemStorage
-from django.core.mail import send_mail, EmailMultiAlternatives
-from django.db import IntegrityError, connections, models, connection
-from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField, F, FloatField
+from django.core.exceptions import (MultipleObjectsReturned,
+                                    ObjectDoesNotExist, PermissionDenied)
+from django.core.files import File as DjangoFile
+from django.core.files.storage import (FileSystemStorage, Storage,
+                                       default_storage)
+from django.core.mail import EmailMultiAlternatives, send_mail
+from django.db import IntegrityError, connection, connections, models
+from django.db.models import (Case, Count, F, FloatField, IntegerField, Max, Q,
+                              Sum, When)
 from django.db.utils import ConnectionDoesNotExist
-from django.utils.translation import ugettext as _
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages, roles
 from jsonfield import JSONField
-from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
+from django.utils.deconstruct import deconstructible
+from django.utils.translation import ugettext as _
+from le_utils.constants import (content_kinds, exercises, file_formats,
+                                format_presets, licenses, languages)
+from minio.error import NoSuchKey, ResponseError
+from mptt.models import (MPTTModel, TreeForeignKey, TreeManager,
+                         raise_if_unsaved)
 from pg_utils import DistinctSum
 from rest_framework import permissions
 from rest_framework.authtoken.models import Token
-from contentcuration.statistics import record_channel_stats
-
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -223,12 +236,10 @@ class UUIDField(models.CharField):
             result = result.hex
         return result
 
-
 def file_on_disk_name(instance, filename):
     """
     Create a name spaced file path from the File obejct's checksum property.
     This path will be used to store the content copy
-
     :param instance: File (content File model)
     :param filename: str
     :return: str
@@ -246,10 +257,84 @@ def generate_file_on_disk_name(checksum, filename):
     return os.path.join(directory, h + ext.lower())
 
 
-def generate_storage_url(filename):
-    """ Returns place where file is stored """
-    h, ext = os.path.splitext(filename)
-    return "{}/{}/{}/{}".format(settings.STORAGE_URL.rstrip('/'), h[0], h[1], h + ext.lower())
+def object_storage_name(instance, filename):
+    """
+    Create a name spaced file path from the File obejct's checksum property.
+    This path will be used to store the content copy
+
+    :param instance: File (content File model)
+    :param filename: str
+    :return: str
+    """
+    return generate_object_storage_name(instance.checksum, filename)
+
+
+def generate_object_storage_name(checksum, filename):
+    """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
+    h = checksum
+    basename, ext = os.path.splitext(filename)
+    directory = os.path.join(settings.STORAGE_ROOT, h[0], h[1])
+    return os.path.join(directory, h + ext.lower())
+
+
+def generate_storage_url(filename, request=None, *args):
+
+    path = generate_object_storage_name(os.path.splitext(filename)[0], filename)
+
+    # We have to handle these cases:
+    # 1. In normal kubernetes, nginx will proxy this for us. So just return a relative path.
+    # 2. When ran through Telepresence, the cluster's DNS host is available to the host. So we should then use whatever is
+    #    defined in AWS_S3_STORAGE_URL.
+    # 3. We go through nanobox, meaning it's the same IP address as the server, but a different port.
+    # New! 4. We go through a production object storage server. In that case, just return the object storage URL
+
+    # host = get_local_ip_address()
+    # # assume the port is 9000, the default of minio
+    # port = 9000
+
+    # Detect our current state first
+    IS_RUNSERVER = "runserver" in sys.argv
+    HAS_MINIO_DNS_RECORD = False
+    IS_PRODUCTION_OBJECT_STORAGE_SERVER = "https://" in settings.AWS_S3_ENDPOINT_URL
+
+    # if we're using production, just return the real path to the prod server
+
+    try:
+        HAS_MINIO_DNS_RECORD = socket.gethostbyname("minio")
+    except socket.gaierror:
+        logging.debug("minio DNS record not detected. Assuming we're in a plain runserver command without Kubernetes.")
+
+    if IS_PRODUCTION_OBJECT_STORAGE_SERVER:
+        url = default_storage.url(path)
+
+    # We can detect if we're running in normal kubernetes mode, if we're not running runserver.
+    elif not IS_RUNSERVER:
+        url = "/content/{path}".format(
+            bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            path=path,
+        )
+
+    # If we're running runserver, but the minio DNS is available, we're likely running on Telepresence+Kubernetes
+    elif IS_RUNSERVER and HAS_MINIO_DNS_RECORD:
+        # then return the URL but have the host as the minio endpoint URL
+        url = "{host}/{bucket}/{path}".format(
+            host=settings.AWS_S3_ENDPOINT_URL,
+            bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            path=path,
+        )
+    # likely running through plain bare metal runserver, or using nanobox
+    # then just serve the same IP and just change the port
+    else:
+        host = get_local_ip_address()
+        port = 9000 # hardcoded to the default minio IP address
+        url = "http://{host}:{port}/{bucket}/{path}".format(
+            host=host,
+            port=port,
+            bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            path=path,
+        )
+
+    return url
 
 
 class FileOnDiskStorage(FileSystemStorage):
@@ -266,6 +351,7 @@ class FileOnDiskStorage(FileSystemStorage):
             logging.warn('Content copy "%s" already exists!' % name)
             return name
         return super(FileOnDiskStorage, self)._save(name, content)
+
 
 
 class ChannelResourceSize(models.Model):
@@ -800,7 +886,7 @@ class File(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     checksum = models.CharField(max_length=400, blank=True, db_index=True)
     file_size = models.IntegerField(blank=True, null=True)
-    file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500,
+    file_on_disk = models.FileField(upload_to=object_storage_name, storage=default_storage, max_length=500,
                                     blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True, db_index=True)
     assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True, db_index=True)
