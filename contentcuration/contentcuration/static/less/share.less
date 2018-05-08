@@ -104,16 +104,21 @@
 				font-size:12pt;
 				padding: 2px 10px;
 				cursor:default;
+				.row{ margin: 0; }
+				.field {
+					padding: 0;
+					.visibility_icon {
+						color: @gray-300;
+						font-size: 12pt;
+						vertical-align: middle;
+						padding-right: 5px;
+					}
+				}
 
 				.editor_email, .pending_indicator{
 					color:gray;
 					font-size:10pt;
 					font-style:italic;
-				}
-				.share_item_email{
-					display:table-cell;
-					max-width:275px;
-					padding-right: 5px;
 				}
 
 				i{

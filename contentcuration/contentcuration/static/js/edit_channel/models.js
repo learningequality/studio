@@ -831,6 +831,20 @@ var ChannelModel = BaseModel.extend({
                 error:function(error){reject(error.responseText);}
             });
         });
+    },
+    fetch_editors: function() {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_editors(self.id),
+                success: function(editors) {
+                    self.set("editors", editors);
+                    resolve(self);
+                },
+                error:function(error){reject(error.responseText);}
+            });
+        });
     }
 });
 

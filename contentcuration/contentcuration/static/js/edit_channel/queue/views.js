@@ -47,7 +47,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 			content_node_view:null
 		});
 		this.handle_checked();
-		DragHelper.addButtonDragDrop(this, this.add_to_clipboard);
+		DragHelper.addButtonDragDrop(this, this.add_to_clipboard, this.get_translation_library());
 	},
 	events: {
 		'click .queue-button' : 'toggle_queue',

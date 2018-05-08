@@ -1,6 +1,9 @@
-import zlib
 import math
+import zlib
 from collections import OrderedDict
+from itertools import chain
+
+import minio
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
@@ -9,7 +12,7 @@ from django.db import transaction
 from django.db.models import Q, Max
 from le_utils.constants import licenses, roles
 from django.utils.translation import ugettext as _
-from itertools import chain
+from minio.error import ResponseError
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -19,6 +22,8 @@ from rest_framework_bulk import BulkSerializerMixin
 
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
+from le_utils.constants import licenses
+
 
 class JSONSerializerField(serializers.Field):
     """ Serializer for JSONField -- required to make field writable"""
@@ -128,11 +133,14 @@ class FileListSerializer(serializers.ListSerializer):
                     for attr, value in data.items():
                         if attr != "preset" and attr != "language":
                             setattr(file_obj, attr, value)
-                    file_path = generate_file_on_disk_name(file_obj.checksum, str(file_obj))
-                    if os.path.isfile(file_path):
-                        file_obj.file_on_disk = DjFile(open(file_path, 'rb'))
-                    else:
+                    file_path = generate_object_storage_name(file_obj.checksum, str(file_obj))
+
+                    if not default_storage.exists(file_path):
                         raise OSError("Error: file {} was not found".format(str(file_obj)))
+
+                    file = default_storage.open(file_path)
+                    file_obj.file_on_disk = file
+
                     file_obj.uploaded_by = file_obj.uploaded_by or user
                     file_obj.save()
                     ret.append(file_obj)
@@ -787,7 +795,6 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     editable_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
     view_only_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
     mb_space = serializers.SerializerMethodField('calculate_space')
-    used_space = serializers.SerializerMethodField('calculate_used_space')
     is_chef = serializers.SerializerMethodField('check_if_chef')
 
     def calculate_space(self, user):
@@ -802,7 +809,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels',
-                'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'used_space', 'is_chef')
+                'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'is_chef')
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')

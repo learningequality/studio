@@ -1,0 +1,23 @@
+[
+{
+  "model": "contentcuration.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$24000$mst3QQzzUZdc$W2p+jovz/vp1I1oP4tP8x3H4Cp05Rrxm9ZVcrYFphKM=",
+    "last_login": "2018-02-18T19:19:59.197Z",
+    "is_superuser": true,
+    "email": "content@learningequality.org",
+    "first_name": "Admin",
+    "last_name": "Adminoff",
+    "is_admin": true,
+    "is_active": true,
+    "is_staff": true,
+    "date_joined": "2018-01-23T20:24:07.642Z",
+    "clipboard_tree": null,
+    "preferences": "{\"auto_derive_video_thumbnail\": true, \"auto_randomize_questions\": true, \"copyright_holder\": null, \"auto_derive_document_thumbnail\": true, \"license_description\": null, \"mastery_model\": \"num_correct_in_a_row_5\", \"m_value\": 5, \"license\": null, \"language\": null, \"author\": null, \"auto_derive_exercise_thumbnail\": true, \"auto_derive_html5_thumbnail\": true, \"auto_derive_audio_thumbnail\": true, \"n_value\": 5}",
+    "disk_space": 50024288000.0,
+    "groups": [],
+    "user_permissions": []
+  }
+}
+]

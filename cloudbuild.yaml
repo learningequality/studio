@@ -1,0 +1,19 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-f', 'k8s/images/app/Dockerfile',
+      # '--cache-from', 'gcr.io/$PROJECT_ID/github-learningequality-studio-preview:5a953e6a-9369-4a4a-bb08-119abe00119a',
+      '-t', 'gcr.io/$PROJECT_ID/github-learningequality-studio-app:$COMMIT_SHA',
+      '.'
+      ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+     '-f', 'k8s/images/nginx/Dockerfile',
+     '-t', 'gcr.io/$PROJECT_ID/github-learningequality-studio-nginx:$COMMIT_SHA',
+     '.'
+     ]
+images:
+  - 'gcr.io/$PROJECT_ID/github-learningequality-studio-nginx:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/github-learningequality-studio-app:$COMMIT_SHA'

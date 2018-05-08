@@ -5,7 +5,7 @@ django-pg-utils==0.1.5
 djangorestframework==3.3.3
 factory-boy==2.7.0
 pdfkit==0.6.1
-psycopg2==2.7.4
+psycopg2-binary==2.7.4
 Markdown==2.6.2
 Pillow==5.0.0
 psutil==3.1.1
@@ -36,6 +36,8 @@ sphinx-autobuild==0.7.1
 sphinx_rtd_theme
 sphinx-intl
 django-storages
+boto3==1.6.5
+minio==3.0.3
 pathlib
 sqlalchemy==1.2.2
 xhtml2pdf==0.2.1

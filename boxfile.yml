@@ -9,12 +9,14 @@ run.config:
     - nodejs
     - ImageMagick6-6.9.9.20
     - gettext-tools-0.19.8.1nb1
-    - oracle-jdk8-8.0.151
+    # - oracle-jdk8-8.0.151
+    - ffmpeg3-3.4
     - libX11-1.6.5
     - nginx
 
   cache_dirs:
     - node_modules
+    - contentworkshop_content
 
   extra_path_dirs:
     - /app/node_modules/.bin
@@ -22,9 +24,10 @@ run.config:
 
   extra_steps:
     - mkdir -p contentcuration/static/js/bundles
-    - yarn install
-    - node build.js --prod
-    - mkdir -p bin && curl https://dl.minio.io/server/minio/release/linux-amd64/minio > bin/minio && chmod +x bin/minio
+    - mkdir -p bin
+    - curl https://dl.minio.io/server/minio/release/linux-amd64/minio > bin/minio
+    - curl https://dl.minio.io/client/mc/release/linux-amd64/mc > bin/mc
+    - chmod +x bin/*
 
 
 data.db:
@@ -37,14 +40,10 @@ data.storage:
 data.redis:
   image: nanobox/redis:4.0
 
-data.minio_storage:
-  image: nanobox/unfs:0.9
-
-
 web.main:
   start:
-    nginx: nginx -c /app/contentcuration/etc/nginx.conf
-    django: gunicorn -c etc/gunicorn.py contentcuration.wsgi:application
+    nginx: nginx -c /app/deploy/nginx.conf
+    django: gunicorn -c /app/deploy/gunicorn.py contentcuration.wsgi:application
     minio: run_minio.py
 
   cwd: 
@@ -56,8 +55,6 @@ web.main:
   network_dirs:
     data.storage:
       - contentworkshop_content/
-    data.minio_storage:
-      - minio_storage/
 
 worker.publishing:
   start:
