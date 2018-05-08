@@ -60,7 +60,7 @@
 		<div class="{{#unless isfolder}}open_file{{/unless}} title_wrapper">
 			<div class = "title truncate">
 				<div class="content-item-icon">
-					<i class="material-icons">{{{get_icon node.kind}}}</i>
+					<i class="material-icons align-text-top">{{{get_icon node.kind}}}</i>
 				</div>
 				{{#if node}}{{node.title}}{{else}}<em>{{formatMessage (intlGet (concat 'messages.untitled'))}}</em>{{/if}}
 			</div>

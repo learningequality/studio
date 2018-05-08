@@ -16,8 +16,8 @@
 		<p class="wordwrap">{{language}}</p>
 		<br/>
 	{{#if is_exercise}}
-		<h4>{{formatMessage (intlGet 'messages.mastery_criteria')}} <span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="mastery_about"></span></h4>
-		<p class="detail_field" id="mastery_detail_field">{{#if mastery}}{{#translate mastery}}{{/translate}}{{else}}<span class="default_detail_field">---</span>{{/if}}</p>
+		<h4>{{formatMessage (intlGet 'messages.mastery_criteria')}} <i class="material-icons tab_item" id="mastery_about">info</i></h4>
+		<p class="detail_field" id="mastery_detail_field">{{#if mastery}}{{{translate mastery}}}{{else}}<span class="default_detail_field">---</span>{{/if}}</p>
 	{{/if}}
 	{{#if is_file}}
 		<hr/>
@@ -31,7 +31,7 @@
 				<h4>{{formatMessage (intlGet 'messages.license')}}</h4>
 				<p class="detail_field">
 					<span id="license_detail_field">{{#if license}}{{{translate license}}}{{else}}<span class="default_detail_field">---</span>{{/if}}</span>
-					<span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="license_about"></span>
+					<i class="material-icons tab_item" id="license_about">info</i>
 				</p>
 				<p id="custom_license_description" class="license_description_text">{{license_description}}</p>
 			</div>
@@ -45,7 +45,7 @@
 		<br/>
 		<h4>{{formatMessage (intlGet 'messages.role_visibility')}}</h4>
 		<span id="role_detail_field">{{#if role}}{{{translate role}}}{{else}}<span class="default_detail_field">---</span>{{/if}}</span>
-		<span class="glyphicon glyphicon glyphicon-info-sign tab_item" aria-hidden="true" id="visibility_about"></span>
+		<i class="material-icons tab_item" id="visibility_about">info</i>
 		<br/>
 		<br/>
 	{{/if}}
