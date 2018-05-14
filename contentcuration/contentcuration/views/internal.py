@@ -18,7 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
-from contentcuration.models import AssessmentItem, Channel, License, File, FormatPreset, ContentNode, Language, StagedFile, generate_object_storage_name
+from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name
 from contentcuration.utils.tracing import trace
 from contentcuration.utils.files import get_file_diff
 
@@ -652,7 +652,7 @@ def create_node(node_data, parent_node, sort_order):
         except ObjectDoesNotExist:
             raise ObjectDoesNotExist("Invalid license found")
 
-    return ContentNode.objects.create(
+    node = ContentNode.objects.create(
         title=node_data['title'],
         tree_id=parent_node.tree_id,
         kind_id=node_data['kind'],
@@ -672,6 +672,18 @@ def create_node(node_data, parent_node, sort_order):
         freeze_authoring_data=True,
         role_visibility=node_data.get('role') or roles.LEARNER,
     )
+    tags = []
+    channel = node.get_channel()
+    if 'tags' in node_data:
+        tag_data = node_data['tags']
+        if tag_data is not None:
+            for tag in tag_data:
+                tags.append(ContentTag.objects.get_or_create(tag_name=tag, channel=channel)[0])
+
+    if len(tags) > 0:
+        node.tags = tags
+        node.save()
+    return node
 
 
 def map_files_to_node(user, node, data):
