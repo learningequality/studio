@@ -51,10 +51,16 @@ sphinx_rtd_theme = "*"
 SQLAlchemy = "==1.2.2"
 
 [dev-packages]
+python-language-server = "*"
 django-debug-panel = "*"
 django-debug-toolbar = "*"
 "flake8" = "*"
 Pympler = "*"
+importmagic = "*"
+yapf = "*"
+isort = "*"
+pyls-isort = "*"
+autoflake = "*"
 
 [requires]
 python_version = "2.7"
