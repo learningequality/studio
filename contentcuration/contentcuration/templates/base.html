@@ -33,6 +33,19 @@
 			<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 			{% endblock head %}
 
+      {% block analytics %}
+        {% if not debug %}
+          <!-- Global site tag (gtag.js) - Google Analytics -->
+          <script async src="https://www.googletagmanager.com/gtag/js?id=UA-36937407-7"></script>
+          <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-36937407-7');
+          </script>
+        {% endif %}
+      {% endblock %}
 	</head>
   <body>
       {% block nav %}
