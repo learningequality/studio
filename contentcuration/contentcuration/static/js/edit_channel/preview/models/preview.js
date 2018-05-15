@@ -1,7 +1,6 @@
-const Backbone = require('backbone');
-const _ = require('underscore');
+import Backbone from 'backbone';
 
-module.exports = Backbone.Model.extend({
+export default Backbone.Model.extend({
     // probably not needed, but mark down what we got.
     // TODO validate?
     defaults: {
