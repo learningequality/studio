@@ -8,9 +8,10 @@
     "lint:py": "flake8 --exit-zero",
     "makemessages": "node ./extract_frontend_messages.js ./contentcuration/contentcuration/static/js/edit_channel/**{/*,}.{js,vue}",
     "build": "webpack --config webpack.config.js",
+    "build:dev": "webpack --config webpack.config.js --watch --progress",
     "minio": "minio server ~/.minio_data/",
     "runserver": "(cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080)",
-    "devserver": "npm-run-all --parallel minio build runserver"
+    "devserver": "npm-run-all --parallel minio build:dev runserver"
   },
   "repository": {
     "type": "git",
