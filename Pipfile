@@ -61,6 +61,7 @@ yapf = "*"
 isort = "*"
 pyls-isort = "*"
 autoflake = "*"
+pylint = "*"
 
 [requires]
 python_version = "2.7"
