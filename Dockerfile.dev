@@ -7,7 +7,10 @@ RUN apt-get -y install curl
 # install node
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 
-RUN apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext libjpeg-dev wkhtmltopdf
+RUN apt-get -y install nodejs python python-dev \
+    python-pip gcc libpq-dev ffmpeg imagemagick \
+    ghostscript python-tk make libjpeg-dev \
+    wkhtmltopdf
 
 RUN npm install -g yarn
 
@@ -22,4 +25,5 @@ RUN pipenv install --system
 RUN mkdir /src
 WORKDIR /src
 
-ENTRYPOINT ["make", "devserver"]
+ENTRYPOINT ["python", "deploy/entrypoint.py"]
+CMD ["make", "devserver"]
