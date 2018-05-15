@@ -1,11 +1,11 @@
-import Backbone from 'backbone';
+import { Model } from 'backbone';
 
-export default Backbone.Model.extend({
-    // probably not needed, but mark down what we got.
-    // TODO validate?
+export default Model.extend({
     defaults: {
-      current_preview: null,
-      previewView: null,
-      format_presets: [],
+      file_model: null,
+      subtitles: [],
+      force_load: false,
+      encoding: '',
+      intl_data: null,
     },
   });

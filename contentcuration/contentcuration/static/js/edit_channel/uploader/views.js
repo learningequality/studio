@@ -1203,7 +1203,8 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   handle_change:function(){
     this.set_edited(true);
     $("#metadata_preview_btn").css("display", "inline-block");
-    this.preview_view.switch_preview(this.model);
+    // doesn't need to swap out the entire model. Just needs to react to the same changes.
+    // this.preview_view.switch_preview(this.model);
   },
   add_tag:function(tagname){
       if(this.tags.indexOf(tagname) < 0){

@@ -1,4 +1,4 @@
-import PreviewView from './preview_view';
+import PreviewManager from './preview_manager';
 import BaseViews from 'edit_channel/views';
 
 import { bindAll } from 'underscore';
@@ -12,7 +12,7 @@ export default BaseViews.BaseModalView.extend({
     template: require("../hbtemplates/preview_modal.handlebars"),
 
     // probably loops into some sort of lifecycle
-    initialize(options) {
+    initialize() {
         // need to bind because this is running in the context of the baseModal view
         bindAll(this, "close_preview");
         this.modal = true; // ?
@@ -22,12 +22,10 @@ export default BaseViews.BaseModalView.extend({
 
         // QUESTION does the "base" modal view have a custom check for this? Or is this just to bind the data?
         // initialize a new Preview view, defined below. Tell it to populate a specific el
-        this.preview_view = new PreviewView({
+        this.preview_view = new PreviewManager({
             model: this.model,
             el: this.$(".modal-body"),
         });
-
-        this.preview_view.switch_preview(this.model);
     },
     close_preview() {
         this.remove();
