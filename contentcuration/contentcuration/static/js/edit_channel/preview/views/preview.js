@@ -16,12 +16,12 @@ export default BaseViews.BaseView.extend({
         // to bind all of these manually instead of using `model` directly
 
         // contains parent's model
-        this.content_model = options.content_model;
-        this.file_model = options.file_model;
-        this.subtitles = options.subtitles;
-        this.force_load = options.force_load;
-        this.encoding = options.encoding;
-        this.intl_data = options.intl_data;
+        this.content_model = this.model.get('content_model');
+        this.file_model = this.model.get('file_model');
+        this.subtitles = this.model.get('subtitles');
+        this.force_load = this.model.get('force_load');
+        this.encoding = this.model.get('encoding');
+        this.intl_data = this.model.get('intl_data');
     },
     render() {
         // init

@@ -28,9 +28,11 @@ export default BaseView.extend({
     tabs_template: require("../hbtemplates/preview_templates/tabs.handlebars"),
     initialize() {
         this.formatPresetCollection = new FormatPresetCollection();
-
         this.previewModel = new PreviewModel();
+
+        // might be able to scope this function here
         this.prepChildModels();
+
         this.listenTo(this.model, 'change', this.prepChildModels);
         this.render();
     },
@@ -46,22 +48,17 @@ export default BaseView.extend({
       // set up model used in the preview View
       this.previewModel.set({
         // rename this
+        content_model: this.model,
         file_model: min(
           this.model.get('files').filter(file => file.preset.display),
           file => file.preset.order
         ),
-        subtitles: (() => {
-            var subtitles = [];
-            this.model.get("files").forEach(function (file) {
-                var file_json = (file.attributes) ? file.attributes : file;
-                var preset_id = (file_json.preset && file_json.preset.name) ? file_json.preset.name : file_json.preset;
-                var current_preset = window.formatpresets.get({ id: preset_id });
-                if (current_preset && current_preset.get("subtitle")) {
-                    subtitles.push(file_json);
-                }
-            });
-            return subtitles;
-        })(),
+        subtitles: this.model.get('files').filter(file => {
+          var file_json = file.attribute || file;
+          var preset_id = (file_json.preset && file_json.preset.name) ? file_json.preset.name : file_json.preset;
+          var current_preset = window.formatpresets.get({ id: preset_id });
+          return current_preset && current_preset.get("subtitle");
+        }),
         force_load: this.model.get('kind') === 'video',
         encoding: this.model.get('thumbnail_encoding') && this.model.get('thumbnail_encoding').base64,
         intl_data: this.get_intl_data()
@@ -81,23 +78,22 @@ export default BaseView.extend({
 
         // set up preview tabs + dd child elements
         this.$("#preview_tabs_dropdown").html(
-          this.tabs_template({ presets: this.formatPresetCollection })
+          this.tabs_template({ presets: this.formatPresetCollection.toJSON() })
         );
 
         this.$(".preview_format_switch").text(
           translate(this.previewModel.get('file_model').preset.id)
         );
 
-        this.$('#preview_window').html(
-          new PreviewView(this.previewViewModel.toJSON)
-        );
-
+        new PreviewView({
+            model: this.previewModel,
+            // relies on parts of the template to be there? OR assumes it's a jquery DOM element
+            el: this.$('#preview_window'),
+        });
         return this;
     },
     selectContentPreview(event) {
         // can refine the "find" process.
-        console.log(this.formatPresetCollection.toJSON);
-
         var selected_preview = find(
           this.model.get('files'),
           file => file.preset.id === event.target.getAttribute('value')
@@ -118,12 +114,22 @@ export default BaseView.extend({
     toggle_fullscreen() {
         var elem = document.getElementById("preview_content_main");
 
-        function check_fullscreen() {
+        const check_fullscreen = () => {
             return !((document.fullScreenElement !== undefined && document.fullScreenElement === null) ||
                 (document.msFullscreenElement !== undefined && document.msFullscreenElement === null) ||
                 (document.mozFullScreen !== undefined && !document.mozFullScreen) ||
                 (document.webkitIsFullScreen !== undefined && !document.webkitIsFullScreen));
         }
+
+        const exit_fullscreen = () => {
+          this.$("#preview_content_main").removeClass('preview_on');
+          this.$(".view_fullscreen").html(this.get_translation("show_fullscreen"))
+              .attr("title", this.get_translation("show_fullscreen"));
+          $(document).off('webkitfullscreenchange');
+          $(document).off('mozfullscreenchange');
+          $(document).off('fullscreenchange');
+          $(document).off('MSFullscreenChange');
+        };
 
         if (!check_fullscreen()) {
             this.$("#preview_content_main").addClass('preview_on');
@@ -138,9 +144,9 @@ export default BaseView.extend({
             } else if (elem.webkitRequestFullscreen) {
                 elem.webkitRequestFullscreen();
             }
-            $(document).on('webkitfullscreenchange', this.exit_fullscreen);
-            $(document).on('mozfullscreenchange', this.exit_fullscreen);
-            $(document).on('fullscreenchange', this.exit_fullscreen);
+            $(document).on('webkitfullscreenchange', exit_fullscreen);
+            $(document).on('mozfullscreenchange', exit_fullscreen);
+            $(document).on('fullscreenchange', exit_fullscreen);
         } else {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
@@ -152,14 +158,5 @@ export default BaseView.extend({
                 document.msExitFullscreen();
             }
         }
-    },
-    exit_fullscreen() {
-      this.$("#preview_content_main").removeClass('preview_on');
-      this.$(".view_fullscreen").html(this.get_translation("show_fullscreen"))
-          .attr("title", this.get_translation("show_fullscreen"));
-      $(document).off('webkitfullscreenchange');
-      $(document).off('mozfullscreenchange');
-      $(document).off('fullscreenchange');
-      $(document).off('MSFullscreenChange');
     },
 });
