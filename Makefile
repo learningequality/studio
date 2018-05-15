@@ -13,7 +13,7 @@ prodceleryworkers:
 	cd contentcuration/ && celery -A contentcuration worker -l info
 
 devserver:
-	yarn run devserver
+	MPLBACKEND=ps yarn run devserver
 
 test:
 	cd contentcuration; pytest
