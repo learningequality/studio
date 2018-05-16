@@ -15,7 +15,7 @@ RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 
 RUN apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext openjdk-9-jre-headless curl libjpeg-dev wkhtmltopdf google-cloud-sdk
 
-RUN npm install -g yarn
+RUN npm install -g yarn webpack
 
 
 COPY ./package.json .
