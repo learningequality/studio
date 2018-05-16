@@ -188,8 +188,6 @@ flag to run the server in development mode.
 
 Pytest and other test related dependencies are stored in `requirements_test.txt`.
 
-##### Running tests
-
 ##### Install javascript dependencies
 
 All the javascript dependencies are listed in `package.json`. To install them run:
@@ -247,13 +245,18 @@ constants in the database:
 The minio server emulates an S3 object storage server on your local machine. Content you upload
 will be stored here:
 
-  minio server ~/.minio_data/
+    minio server ~/.minio_data/
 
 
 ##### Start the dev server
 
 You're all setup now, and ready to start the Studio local development server:
 
-  make devserver
+    make devserver
 
 You should be able to login at http://127.0.0.1:8081 using email `a@a.com`, password `a`.
+
+##### Running tests
+Make sure you've installed the test requirements and setup a virtual environment. Then, to run python tests:
+
+    pytest contentcuration
