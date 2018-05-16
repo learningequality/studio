@@ -180,11 +180,15 @@ On Mac OS X, you can install the corresponding packages using Homebrew:
     source venv/bin/activate
     pip install -r requirements.txt
     pip install -r requirements_dev.txt
+    pip install -r requirements_test.txt
 
 The file `requirements_dev.txt` contains dependencies that will be helpful for
 development and required when using the `--settings=contentcuration.dev_settings`
 flag to run the server in development mode.
 
+Pytest and other test related dependencies are stored in `requirements_test.txt`.
+
+##### Running tests
 
 ##### Install javascript dependencies
 
