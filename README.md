@@ -124,13 +124,17 @@ Follow the instructions below to setup your dev environment and get started.
 
 ### Setting up your local development environment
 
-#### Setting up your environment through Nanobox
+#### Using docker-compose to set up your environment
 
-1. Install [Nanobox](https://docs.nanobox.io/install/)
-1. Run `make setupnanobox`
-1. Run `nanobox run`
-1. Inside Nanobox's shell, run Minio by running `run_minio.py &`
-1. Run `make devserver` to start the development server
+##### Prerequisites
+
+You need to install the latest [Docker edition](https://www.docker.com/community-edition).
+Make sure it comes with the `docker-compose` executable.
+
+To set up your environment, run `docker-compose up`. It will download all service images needed,
+and build the dev environment for Studio under another image. Once all images are pulled, built and
+containers started from them, visit `localhost:8080` in your browser, and you should see the Studio
+interface!
 
 #### Setting up your environment manually
 

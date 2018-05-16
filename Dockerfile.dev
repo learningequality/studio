@@ -1,0 +1,29 @@
+FROM ubuntu:xenial
+
+RUN apt-get update
+
+RUN apt-get -y install curl
+
+# install node
+RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
+
+RUN apt-get -y install nodejs python python-dev \
+    python-pip gcc libpq-dev ffmpeg imagemagick \
+    ghostscript python-tk make libjpeg-dev \
+    wkhtmltopdf
+
+RUN npm install -g yarn
+
+EXPOSE 8080
+
+RUN pip install pipenv
+COPY Pipfile .
+COPY Pipfile.lock .
+RUN pipenv install --system
+
+# Where the host source code will be mounted when run under docker cmopose
+RUN mkdir /src
+WORKDIR /src
+
+ENTRYPOINT ["python", "deploy/entrypoint.py"]
+CMD ["make", "devserver"]
