@@ -11,9 +11,6 @@ services:
       - studio-redis
     ports:
       - "8080:8080"
-    entrypoint:
-      - make
-      - devserver
     environment:
       MPLBACKEND: ps
       AWS_S3_ENDPOINT_URL: http://minio:9000
