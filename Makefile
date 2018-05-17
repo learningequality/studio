@@ -12,17 +12,6 @@ dummyusers:
 prodceleryworkers:
 	cd contentcuration/ && celery -A contentcuration worker -l info
 
-setupnanobox:
-	nanobox evar add dry-run DJANGO_SETTINGS_MODULE=contentcuration.dry_run_settings
-	nanobox evar add dry-run DJANGO_SETTINGS_MODULE=contentcuration.dev_settings
-	nanobox evar add local MINIO_ACCESS_KEY=development
-	nanobox evar add local MINIO_SECRET_KEY=development
-	nanobox evar add dry-run MINIO_ACCESS_KEY=development
-	nanobox evar add dry-run MINIO_SECRET_KEY=development
-	nanobox evar add local MINIO_RUN_TYPE=LOCAL
-	nanobox evar add dry-run MINIO_RUN_TYPE=LOCAL
-
-
 devserver:
 	yarn run devserver
 
