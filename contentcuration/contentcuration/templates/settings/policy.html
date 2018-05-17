@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+{% extends "settings/settings.html" %}
+{% load staticfiles %}
+{% load translation_tags %}
+{% load i18n %}
+
+{% block settingscontent %}
+<h4>{% trans "Policies" %}</h4>
+<hr/>
+{% with policies=policies template_name="policies/policy_list.html" %}
+  {% include template_name %}
+{% endwith %}
+{% endblock settingscontent %}

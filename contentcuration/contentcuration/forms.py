@@ -1,7 +1,9 @@
+import datetime
 import gettext
 import pycountry
 import json
 from contentcuration.models import User, Language
+from contentcuration.utils.policies import get_latest_policies
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm, PasswordResetForm
@@ -93,6 +95,8 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
     conference = forms.CharField(required=False, widget=forms.TextInput, label=_("Name of Conference"))
     other_source = forms.CharField(required=False, widget=forms.TextInput, label=_("Please describe"))
 
+    accepted_policy = forms.BooleanField(widget=forms.CheckboxInput())
+
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
         super(RegistrationInformationForm, self).__init__(*args, **kwargs)
@@ -151,6 +155,8 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
             elif source == 'other' and self.check_field('other_source', _('Please indicate how you heard about us')):
                 self.cleaned_data['source'] = self.cleaned_data['other_source']
 
+        self.check_field('accepted_policy', _('Please accept our Terms and Conditions'))
+
         return self.cleaned_data
 
     def save(self, commit=True):
@@ -165,6 +171,9 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
             "heard_from": self.cleaned_data['source'],
         }
 
+        latest_policies = get_latest_policies()
+        user.policies = {k: datetime.datetime.now() for k, v in latest_policies.items()}
+
         if commit:
             user.save()
 
@@ -173,6 +182,23 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'password1', 'password2')
+
+class PolicyAcceptForm(forms.Form):
+    accepted = forms.BooleanField(widget=forms.CheckboxInput())
+    policy_names = forms.CharField(widget=forms.HiddenInput())
+
+    class Meta:
+        model = User
+        fields = ('accepted', 'policy_names')
+
+    def save(self, user):
+        user.policies = user.policies or {}
+        policies = self.cleaned_data['policy_names'].rstrip(",").split(",")
+        for policy in policies:
+            user.policies.update({policy: datetime.datetime.now()})
+        user.save()
+        return user
+
 
 
 class ProfileSettingsForm(UserChangeForm):

@@ -6,16 +6,16 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import FormView
-from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, PreferencesSettingsForm
+from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, PreferencesSettingsForm, PolicyAcceptForm
 from rest_framework.authtoken.models import Token
 from django.core.urlresolvers import reverse_lazy
-from contentcuration.api import check_supported_browsers
-
+from contentcuration.decorators import browser_is_supported, has_accepted_policies
+from contentcuration.utils.policies import get_latest_policies
 
 @login_required
+@browser_is_supported
+@has_accepted_policies
 def settings(request):
-    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
-        return redirect(reverse_lazy('unsupported_browser'))
     if not request.user.is_authenticated():
         return redirect('accounts/login')
     return redirect('settings/profile')
@@ -98,6 +98,23 @@ class PreferencesView(FormView):
         return self.request.user
 
 
+class PolicyAcceptView(FormView):
+    success_url = reverse_lazy('channels')
+    form_class = PolicyAcceptForm
+    template_name = 'policies/policy_accept.html'
+
+    def get_context_data(self, **kwargs):
+        kwargs = super(PolicyAcceptView, self).get_context_data(**kwargs)
+        policies = json.loads(self.request.session.get('policies', "[]"))
+        kwargs.update({"policies": policies})
+        return kwargs
+
+    def form_valid(self, form):
+        form.save(self.request.user)
+        self.request.session["policies"] = None
+        return redirect(self.success_url)
+
+
 @login_required
 def account_settings(request):
     if not request.user.is_authenticated():
@@ -124,12 +141,16 @@ def account_settings_success(request):
 
 @login_required
 def tokens_settings(request):
-    if not request.user.is_authenticated():
-        return redirect('/accounts/login')
     user_token, isNew = Token.objects.get_or_create(user=request.user)
     return render(request, 'settings/tokens.html', {"current_user": request.user,
                                                     "page": "tokens",
                                                     "tokens": [str(user_token)]})
+
+@login_required
+def policies_settings(request):
+    return render(request, 'settings/policy.html', {"current_user": request.user,
+                                                    "page": "policies",
+                                                    "policies": get_latest_policies()})
 
 @login_required
 def storage_settings(request):
