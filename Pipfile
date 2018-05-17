@@ -49,6 +49,7 @@ Metaphone = "==0.6"
 Sphinx = "==1.6.4"
 sphinx_rtd_theme = "*"
 SQLAlchemy = "==1.2.2"
+django-webpack-loader = "==0.6.0"
 
 [dev-packages]
 python-language-server = "*"
