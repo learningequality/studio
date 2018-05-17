@@ -17,6 +17,8 @@ services:
       DATA_DB_HOST: studio-postgres
     volumes:
       - .:/src
+      - studio_virtualenv:/root/.local/share/virtualenvs/
+      - pip_cache:/root/.cache/pip
   minio:
     image: minio/minio
     entrypoint: minio server /data
@@ -46,3 +48,5 @@ services:
 volumes:
   minio_data:
   pgdata:
+  studio_virtualenv:
+  pip_cache:
