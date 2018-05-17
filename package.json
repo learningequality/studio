@@ -9,7 +9,7 @@
     "makemessages": "node ./extract_frontend_messages.js ./contentcuration/contentcuration/static/js/edit_channel/**{/*,}.{js,vue}",
     "build": "webpack --config webpack.config.js",
     "build:dev": "webpack --config webpack.config.js --watch --progress",
-    "minio": "minio server ~/.minio_data/",
+    "minio": "minio server ~/.minio_data/ || true",
     "runserver": "(cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080)",
     "devserver": "npm-run-all --parallel minio build:dev runserver"
   },
