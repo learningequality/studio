@@ -1,16 +1,19 @@
 import os
-import pytest
 import tempfile
-from mixer.backend.django import mixer
-from contentcuration import models as cc
-from contentcuration.management.commands.exportchannel import create_content_database, MIN_SCHEMA_VERSION
+
+import pytest
 from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 from django.test.utils import override_settings
+from mixer.backend.django import mixer
 from mock import patch
-from kolibri_content.router import using_content_database
+
+from contentcuration import models as cc
+from contentcuration.management.commands.exportchannel import (MIN_SCHEMA_VERSION,
+                                                               create_content_database)
 from kolibri_content import models
+from kolibri_content.router import using_content_database
 
 pytestmark = pytest.mark.django_db
 
