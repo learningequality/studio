@@ -21,6 +21,7 @@ from contentcuration.api import add_editor_to_channel
 from contentcuration.forms import RegistrationForm, RegistrationInformationForm, USAGES
 from contentcuration.models import Channel, User, Invitation
 from contentcuration.statistics import record_user_registration_stats
+from contentcuration.utils.policies import get_latest_policies
 
 """ REGISTRATION/INVITATION ENDPOINTS """
 
@@ -131,7 +132,7 @@ class InformationRegistrationView(RegistrationView):
 
     def get_context_data(self, **kwargs):
         kwargs = super(InformationRegistrationView, self).get_context_data(**kwargs)
-        kwargs.update({"help_email": settings.HELP_EMAIL})
+        kwargs.update({"help_email": settings.HELP_EMAIL, "policies": get_latest_policies()})
         return kwargs
 
     def get_initial(self):

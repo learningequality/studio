@@ -74,6 +74,11 @@
 			</div>
 		</div>
 		<div class="row">
+			<div class="login-label col-xs-12"  id="policy_accept">
+				{% blocktrans %}I have read and agreed to the <a id="policy_link" data-toggle="modal" data-target="#policyModal">Terms and Conditions</a>{% endblocktrans %}<i class="required_asterisk">*</i>&nbsp; {{form.accepted_policy}}
+			</div>
+		</div>
+		<div class="row">
 			<div class="col-xs-12 text-center" id="help_footer">
 				{% blocktrans %}Questions or concerns? Please email us at <a href="mailto:{{help_email}}" class="login-action-text">{{help_email}}</a>{% endblocktrans %}
 			</div>
@@ -89,6 +94,26 @@
 			</div>
 		</div>
 	</form>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="policyModal" tabindex="-1" role="dialog" aria-labelledby="policyModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+      	<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        {% trans 'Terms and Conditions' %}
+      </div>
+      <div class="modal-body">
+      	{% with policies=policies template_name="policies/policy_list.html" %}
+	      {% include template_name %}
+	    {% endwith %}
+	    <div class="container-fluid">
+	    	<button class="action-button pull-right" data-dismiss="modal">{% trans 'CLOSE' %}</button>
+	    </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
