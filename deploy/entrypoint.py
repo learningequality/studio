@@ -13,8 +13,6 @@ import subprocess
 import sys
 import time
 
-import psycopg2
-import requests
 
 logging.basicConfig()
 
@@ -25,8 +23,14 @@ DEFAULT_CMD = [
     "devserver",
 ]
 
+def update_pipenv_env():
+    """
+    Update our environment based on the latest pipfile.
+    """
+    subprocess.call(["pipenv", "sync", "--dev"])
 
 def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
+    import psycopg2
     """
     Check that postgres is ready to accept connections.
     """
@@ -52,6 +56,7 @@ def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
 
 
 def check_minio_ready(minio_checks=CONNECT_TRIES):
+    import requests
     """
     Check that minio is accepting requests.
     """
@@ -77,6 +82,7 @@ def run_cmd():
 
 
 if __name__ == "__main__":
-    # check_postgresql_ready()
-    # check_minio_ready()
+    update_pipenv_env()
+    check_postgresql_ready()
+    check_minio_ready()
     run_cmd()

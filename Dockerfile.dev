@@ -17,13 +17,10 @@ RUN npm install -g yarn
 EXPOSE 8080
 
 RUN pip install pipenv
-COPY Pipfile .
-COPY Pipfile.lock .
-RUN pipenv install --system
 
 # Where the host source code will be mounted when run under docker cmopose
 RUN mkdir /src
 WORKDIR /src
 
-ENTRYPOINT ["python", "deploy/entrypoint.py"]
+ENTRYPOINT ["pipenv", "run", "python", "deploy/entrypoint.py"]
 CMD ["make", "devserver"]
