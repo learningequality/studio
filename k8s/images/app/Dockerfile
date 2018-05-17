@@ -17,10 +17,10 @@ RUN apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg 
 
 RUN npm install -g yarn
 
-
 COPY ./package.json .
 COPY ./yarn.lock .
 RUN yarn install
+ENV PATH="/node_modules/.bin:$PATH"
 
 COPY ./requirements.txt .
 COPY ./requirements_prod.txt .
@@ -32,7 +32,8 @@ WORKDIR /contentcuration
 
 # generate the node bundles
 RUN mkdir -p contentcuration/static/js/bundles #
-RUN node build.js --prod --prefix=/
+RUN ln -s /node_modules /contentcuration/node_modules
+RUN yarn run build -p
 
 # Download the crowdin-cli.jar file
 # RUN curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar

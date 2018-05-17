@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 {% load staticfiles %}
 {% load i18n %}
+{% load render_bundle from webpack_loader %}
 {% get_current_language as LANGUAGE_CODE %}
 
 <html>
@@ -24,8 +25,11 @@
         } catch (error) { /* Page does not require front-end translations */ }
       </script>
 			<script src="{% url 'js_reverse' %}" type="text/javascript"></script>
-			<script type="text/javascript" src="{% static 'js/bundles/common.js' %}"></script>
-			<script type="text/javascript" src="{% static 'js/bundles/base.js' %}"></script>
+
+			{% render_bundle 'common' %}
+			<!-- prevent more than 1 bundle per page -->
+			{% block bundle %} {% render_bundle 'base' %} {% endblock bundle %}
+
 			<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 			{% endblock head %}
 

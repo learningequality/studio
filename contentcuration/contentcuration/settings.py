@@ -28,6 +28,15 @@ DB_ROOT = "databases"
 STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
 CSV_ROOT = "csvs"
 
+# hardcoding all this info for now. Potential for shared reference with webpack?
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        # trailing empty string to include trailing /
+        'BUNDLE_DIR_NAME': os.path.join('js', 'bundles', ''),
+        'STATS_FILE': os.path.join(BASE_DIR, 'build', 'webpack-stats.json'),
+    }
+}
+
 PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
 
 # Quick-start development settings - unsuitable for production
@@ -60,7 +69,8 @@ INSTALLED_APPS = (
     'le_utils',
     'rest_framework.authtoken',
     'search',
-    'storages'
+    'storages',
+    'webpack_loader',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"

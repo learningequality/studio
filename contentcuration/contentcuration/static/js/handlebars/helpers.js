@@ -1,10 +1,11 @@
-var Handlebars = require("hbsfy/runtime");
-global.HandlebarsIntl = require('handlebars-intl');
-HandlebarsIntl.registerWith(Handlebars);
+var Handlebars = require("handlebars-template-loader/runtime");
+var HandlebarsIntl = global.HandlebarsIntl = require('handlebars-intl');
 require("./locales/es.js");
 var _ = require("underscore");
 var marked = require("marked");
 var stringHelper = require("edit_channel/utils/string_helper");
+
+HandlebarsIntl.registerWith(Handlebars);
 
 marked.setOptions({
   renderer: new marked.Renderer(),

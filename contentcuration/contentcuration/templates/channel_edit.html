@@ -2,10 +2,9 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 {% load i18n %}
+{% load render_bundle from webpack_loader %}
 
-{% block content %}
-	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
-
+{% block bundle %}
 	<script>
 		var channel = JSON.parse("{{ channel|escapejs}}");
 		var license_list = JSON.parse("{{ license_list|escapejs}}");
@@ -18,16 +17,13 @@
 		var title = "{{ title }}";
 		var mastery = JSON.parse("{{ mastery |escapejs }}");
 		var roles = JSON.parse("{{ roles |escapejs }}");
-	</script>
-	<script type="text/javascript">
-		var bundle = require("channel_edit");
-		bundle.$(function() {
-			window.channel_router = new bundle.ChannelEditRouter();
-			bundle.Backbone.history.start({pushState: true, root: "{% url 'channels' %}"});
-		});
-
+		var url = '{% url 'channels' %}';
 	</script>
 
+	{% render_bundle 'channel_edit' %}
+{% endblock bundle %}
+
+{% block content %}
 	<div id="channel-edit-sortable-boundary">
 
 	<nav class="navbar" id="secondary-nav">

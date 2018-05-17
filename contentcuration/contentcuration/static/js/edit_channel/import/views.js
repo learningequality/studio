@@ -1,15 +1,16 @@
-var Vue = require('vue');
+import Vue from 'vue';
+import ImportModalComponent from './views/ImportModal.vue';
+
 var Backbone = require('backbone');
 var BaseViews = require("../views");
 require("import.less"); // eslint-disable-line
 var dialog = require("../utils/dialog");
-var ImportModalComponent = require('./views/ImportModal.vue')
-var ImportModal = Vue.extend(ImportModalComponent);
 var store = require('./vuex/store');
 var vueIntl = require("vue-intl");
 var translations = require("utils/translations");
 var { PageTypes } = require('./constants');
 
+var ImportModal = Vue.extend(ImportModalComponent);
 
 // Flatten translation dictionary
 var unnested_translations = {};
@@ -102,7 +103,9 @@ var ImportModalView = BaseViews.BaseView.extend({
 
     _mountVueComponent: function() {
         this._resetPageState();
+        console.log('constructor', ImportModal);
         this.ImportModal = new ImportModal({ store: store });
+        console.log('component', ImportModalComponent);
         this.ImportModal.$on('modalclosed', this._destroy.bind(this))
         this.ImportModal.$mount();
     },
