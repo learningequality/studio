@@ -77,7 +77,7 @@ var MESSAGES = {
     "move_down": "Move Down",
     "hint": "Hint",
     "hints": "Hints",
-    "randomize_answers": "Randomize answer order for learners",
+    "randomize_answer_order": "Randomize Answer Order",
     "submit": "Submit Changes",
     "cancel_changes": "Cancel Changes",
     "hint_error_prompt": "Please fix the items below before closing",
@@ -96,7 +96,9 @@ var MESSAGES = {
     "formula_error": "There was an error processing the formula",
     "image_error_title": "Unable to add image",
     "image_error": "There was an error processing the image.",
-    "invalid_characters": "Invalid characters"
+    "invalid_characters": "Invalid characters",
+    "insert_symbols": "Formatting and Special Characters",
+    "add_formula": "Insert Formula"
 }
 
 /*********** FORMULA ADD-IN FOR EXERCISE EDITOR ***********/
@@ -577,12 +579,14 @@ var EditorView = BaseViews.BaseView.extend({
         if(matches) {
             var MQ = MathQuill.getInterface(2);
             matches.forEach(function(match){
-                var original_formula = match.match(/\$\$(.+?)\$\$/)[1]
-                var formula = original_formula.replace('−', '-').replace(/\\\s+/, '').replace(/\\{2,}\s*/, '\\');
-                formula = (formula.slice(-1) === "\\")? formula.slice(0, -1) : formula;
-                var mathFieldSpan = $('<span>' + formula + '</span>');
-                var mathField = MQ.MathField(mathFieldSpan[0]);
-                markdown = markdown.replace(original_formula, mathField.latex())
+                var original_formula = match.match(/\$\$(.+?)\$\$/) && match.match(/\$\$(.+?)\$\$/)[1];
+                if(original_formula) {
+                    var formula = original_formula.replace('−', '-').replace(/\\\s+/, '').replace(/\\{2,}\s*/, '\\');
+                    formula = (formula.slice(-1) === "\\")? formula.slice(0, -1) : formula;
+                    var mathFieldSpan = $('<span>' + formula + '</span>');
+                    var mathField = MQ.MathField(mathFieldSpan[0]);
+                    markdown = markdown.replace(original_formula, mathField.latex())
+                }
             });
         }
         return markdown;

@@ -28,7 +28,7 @@
 
 	<nav class="navbar" id="secondary-nav">
 		<ul class="nav navbar-nav navbar-left">
-			<li><a href="/channels" id="back_to_home"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
+			<li><a href="/channels" id="back_to_home"><i class="material-icons">home</i></a></li>
 			{% if not allow_edit %}<li class="channel_edit_label">{% if is_public %}{%trans "Public Channel" %}{% else %}{%trans "Viewing" %}{% endif %}</li>{% endif %}
 			{% if allow_edit %}
 				{% if staging %}<li class="channel_edit_label">{%trans "Reviewing" %}</li>
@@ -57,7 +57,9 @@
 				</ul>
 			</li>
 			{% if not staging and allow_edit %}
-				<li id="channel_settings" title="{%trans 'Open channel settings' %}"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></li>
+				<li id="channel_settings" title="{%trans 'Open channel settings' %}">
+					<i class="material-icons">settings</i>
+				</li>
 			{% endif %}
 			<li id="queue-area" class="container-fluid"></li>
 		</ul>

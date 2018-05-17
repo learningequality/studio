@@ -343,8 +343,8 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     className: "format_item_wrapper files",
     files: null,
     presets:null,
-    expandedClass: "glyphicon-triangle-bottom",
-    collapsedClass: "glyphicon-triangle-top",
+    expandedIcon: "arrow_drop_down",
+    collapsedIcon: "arrow_drop_up",
     thumbnail_template: require("./hbtemplates/file_upload_thumbnail.handlebars"),
     name: NAMESPACE,
     $trs: MESSAGES,
@@ -391,12 +391,19 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     },
     get_metadata:function(){
         return _.reduce(this.model.get("files"), function(dict, file){
-            if(!file.preset.display || _.contains(dict.checksums, file.checksum)){
+            if(!file.preset.display){
                 return dict;
             }
+
+            // Don't count duplicate files to total file size
+            var file_size = dict.size;
+            if (!_.contains(dict.checksums, file.checksum)) {
+                file_size += file.file_size;
+            }
+
             return {
                     'count': dict.count + 1,
-                    'size': dict.size + file.file_size,
+                    'size': file_size,
                     'main_file_count': dict.main_file_count + !file.preset.supplementary,
                     'checksums': dict.checksums.concat(file.checksum)
                 };
@@ -589,8 +596,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     template: require("./hbtemplates/format_item.handlebars"),
     dropzone_template : require("./hbtemplates/format_dropzone_item.handlebars"),
     upload_in_progress:false,
-    collapsedClass: "glyphicon-menu-up",
-    expandedClass: "glyphicon-menu-down",
+    collapsedIcon: "expand_less",
+    expandedIcon: "expand_more",
     name: NAMESPACE,
     $trs: MESSAGES,
 

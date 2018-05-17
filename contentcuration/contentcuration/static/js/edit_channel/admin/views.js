@@ -432,12 +432,12 @@ var ChannelItem = BaseAdminItem.extend({
         this.$(".channel_id").select();
         try {
             document.execCommand("copy");
-            this.$(".copy_id .glyphicon").removeClass("glyphicon-copy").addClass("glyphicon-ok");
+            this.$(".copy_id i").text("check");
           } catch(e) {
-              this.$(".copy_id .glyphicon").removeClass("glyphicon-copy").addClass("glyphicon-remove");
+                this.$(".copy_id i").text("clear");
           }
           setTimeout(function(){
-            this.$(".copy_id .glyphicon").removeClass("glyphicon-ok").removeClass("glyphicon-remove").addClass("glyphicon-copy");
+            this.$(".copy_id i").text("content_paste");
         }, 2000);
     },
     submit_change: function(data, message){

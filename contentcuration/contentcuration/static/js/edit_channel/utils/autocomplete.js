@@ -9,7 +9,11 @@ function addAutocomplete(element, values, callback, appendTo){
         callback(ui.item);
         return false;
       },
-      appendTo: appendTo
+      appendTo: appendTo,
+      messages: {
+          noResults: '',
+          results: function() {}
+      }
     });
 }
 

@@ -94,21 +94,21 @@ Handlebars.registerHelper('format_count', function(text, count, capitalize){
 Handlebars.registerHelper('get_icon', function(kind){
   switch (kind){
       case "topic":
-          return "glyphicon glyphicon-folder-close";
+          return "folder";
       case "video":
-          return "glyphicon glyphicon-film";
+          return "theaters";
       case "audio":
-          return "glyphicon glyphicon-headphones";
+          return "headset";
       case "image":
-          return "glyphicon glyphicon-picture";
+          return "image";
       case "exercise":
-          return "glyphicon glyphicon-star";
+          return "star";
       case "document":
-          return "glyphicon glyphicon-file";
+          return "description";
       case "html5":
-          return "glyphicon glyphicon-certificate";
+          return "widgets";
       default:
-          return "glyphicon glyphicon-exclamation-sign";
+          return "error";
   }
 });
 
