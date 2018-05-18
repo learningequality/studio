@@ -23,8 +23,6 @@ services:
   minio:
     image: minio/minio
     entrypoint: minio server /data
-    ports:
-      - "9000:9000"
     environment:
       MINIO_ACCESS_KEY: development
       MINIO_SECRET_KEY: development
@@ -32,8 +30,6 @@ services:
       - minio_data:/data
   studio-postgres:
     image: postgres:9.6
-    ports:
-      - "5432:5432"
     environment:
       PGDATA: /postgres_data/pgdata
       POSTGRES_USER: learningequality
@@ -43,8 +39,6 @@ services:
       - pgdata:/postgres_data/
   studio-redis:
     image: redis:4.0.9
-    ports:
-      - "6379:6379"
 
 volumes:
   minio_data:
