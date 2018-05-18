@@ -13,6 +13,7 @@ services:
       - "8080:8080"
     environment:
       MPLBACKEND: ps
+      SHELL: /bin/bash
       AWS_S3_ENDPOINT_URL: http://minio:9000
       DATA_DB_HOST: studio-postgres
     volumes:
