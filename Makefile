@@ -25,10 +25,10 @@ endtoendtest:
 collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
 	python contentcuration/manage.py collectstatic_js_reverse
-	python contentcuration/manage.py loadconstants
 
 migrate:
 	python contentcuration/manage.py migrate || true
+	python contentcuration/manage.py loadconstants
 
 ensurecrowdinclient:
   ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
