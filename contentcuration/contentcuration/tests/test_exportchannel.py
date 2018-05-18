@@ -24,34 +24,58 @@ pytestmark = pytest.mark.django_db
 
 
 def video():
+    """
+    Create a video content kind entry.
+    """
     return mixer.blend(cc.ContentKind, kind='video')
 
 
 def preset_video():
+    """
+    Create a video format preset.
+    """
     return mixer.blend(cc.FormatPreset, id='mp4', kind=video())
 
 
 def topic():
+    """
+    Create a topic content kind.
+    """
     return mixer.blend(cc.ContentKind, kind='topic')
 
 
 def exercise():
+    """
+    Create a topic content kind.
+    """
     return mixer.blend(cc.ContentKind, kind='exercise')
 
 
 def preset_exercise():
+    """
+    Create an exercise format preset.
+    """
     return mixer.blend(cc.FormatPreset, id='exercise', kind=exercise())
 
 
 def fileformat_perseus():
+    """
+    Create a perseus FileFormat entry.
+    """
     return mixer.blend(cc.FileFormat, extension='perseus', mimetype='application/exercise')
 
 
 def fileformat_mp4():
+    """
+    Create an mp4 FileFormat entry.
+    """
     return mixer.blend(cc.FileFormat, extension='mp4', mimetype='application/video')
 
 
 def license_wtfpl():
+    """
+    Create a license object called WTF License.
+    """
     return mixer.blend(cc.License, license_name="WTF License")
 
 
@@ -65,7 +89,7 @@ def fileobj_video(contents=None):
     if contents:
         filecontents = contents
     else:
-    filecontents = "".join(random.sample(string.printable, 20))
+        filecontents = "".join(random.sample(string.printable, 20))
 
     fileobj = StringIO(filecontents)
     digest = md5.new(filecontents).hexdigest()
