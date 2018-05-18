@@ -18,6 +18,10 @@ devserver:
 test:
 	cd contentcuration; pytest
 
+endtoendtest:
+	# launch all studio's dependent services using docker-compose, and then run the tests
+	docker-compose run studio-app make test
+
 collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
 	python contentcuration/manage.py collectstatic_js_reverse
