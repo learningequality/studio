@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2e37d8319cbb68bd317114e1d49b2134257626a93b5a76f04d7ee2ef9124a2f9"
+            "sha256": "5f14ced6b6f5a1131ccb878879a04564dab41972bc17dda2bc0eb87507337d46"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -229,21 +229,6 @@
                 "sha256:7a4bd47eaf6596e1295ecb11361139febe29b084a87bf005bf899f9a42edc3c6"
             ],
             "version": "==0.14"
-        },
-        "factory-boy": {
-            "hashes": [
-                "sha256:36c949d5c7adefb02d25323b7a5a97dc698e58ef84c4654845ecb2e34bee9a23",
-                "sha256:a65ff40d2f478d926539e4687e8033c1eff0f8ec9ea9031a8f7e0d385014a6aa"
-            ],
-            "index": "pypi",
-            "version": "==2.7.0"
-        },
-        "fake-factory": {
-            "hashes": [
-                "sha256:60c64a953c03e29fbee6b59fcb700c86a313778d68dc5816fc560ef515019d77",
-                "sha256:f5bd18deb22ad8cb4402513c025877bc6b50de58902d686b6b21ba8981dce260"
-            ],
-            "version": "==9999.9.9"
         },
         "ffmpy": {
             "hashes": [
@@ -932,6 +917,7 @@
             "hashes": [
                 "sha256:5308b47021bc2340965c371f0f058cc6971a04502638d4244225c49d80db273a"
             ],
+            "markers": "python_version == '2.7'",
             "version": "==3.5.0"
         },
         "django": {
@@ -972,6 +958,7 @@
                 "sha256:ad46c741aa5002835b06fc110b6674e36c2c047e1cb1a0808009b30384a3c976",
                 "sha256:ae668144379c56f3f1cb4d4abb2369a7e2d4028890f882b0445686745ccb4a84"
             ],
+            "index": "pypi",
             "version": "==0.7.3"
         },
         "flake8": {
@@ -987,7 +974,7 @@
                 "sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca",
                 "sha256:a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50"
             ],
-            "markers": "python_version < '3.3'",
+            "markers": "python_version < '3.0'",
             "version": "==1.0.2"
         },
         "future": {
