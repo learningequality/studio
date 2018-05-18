@@ -260,3 +260,7 @@ You should be able to login at http://127.0.0.1:8081 using email `a@a.com`, pass
 Make sure you've installed the test requirements and setup a virtual environment. Then, to run python tests:
 
     pytest contentcuration
+
+To emulate the Travis CI environment locally:
+
+    docker-compose run studio-app make test
