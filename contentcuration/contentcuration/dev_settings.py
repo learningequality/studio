@@ -11,6 +11,15 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 2
 logging.basicConfig(level='DEBUG')
 
+# Allow the debug() context processor to add variables to template context.
+# Include here the IPs from which a local dev server might be accessed. See
+# https://docs.djangoproject.com/en/2.0/ref/settings/#internal-ips
+INTERNAL_IPS = (
+    '127.0.0.1',
+    'studio.local',
+    '192.168.31.9',
+)
+
 try:
     import debug_panel
 except ImportError:
@@ -39,4 +48,3 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.logging.LoggingPanel',
     'debug_toolbar.panels.redirects.RedirectsPanel',
 ]
-
