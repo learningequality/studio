@@ -15,6 +15,9 @@ prodceleryworkers:
 devserver:
 	yarn run devserver
 
+test:
+	cd contentcuration; pytest
+
 collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
 	python contentcuration/manage.py collectstatic_js_reverse
