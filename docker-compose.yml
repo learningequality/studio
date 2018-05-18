@@ -1,7 +1,49 @@
+version: '3'
+services:
+  studio-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: learningequality/studio-app-dev
+    depends_on:
+      - minio
+      - studio-postgres
+      - studio-redis
+    ports:
+      - "8080:8080"
+    environment:
+      MPLBACKEND: ps
+      SHELL: /bin/bash
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      DATA_DB_HOST: studio-postgres
+    volumes:
+      - .:/src
+      - studio_virtualenv:/root/.local/share/virtualenvs/
+      - pip_cache:/root/.cache/pip
+  minio:
+    image: minio/minio
+    entrypoint: minio server /data
+    logging:
+      driver: none
+    environment:
+      MINIO_ACCESS_KEY: development
+      MINIO_SECRET_KEY: development
+    volumes:
+      - minio_data:/data
+  studio-postgres:
+    image: postgres:9.6
+    environment:
+      PGDATA: /postgres_data/pgdata
+      POSTGRES_USER: learningequality
+      POSTGRES_PASSWORD: kolibri
+      POSTGRES_DB: gonano
+    volumes:
+      - pgdata:/postgres_data/
+  studio-redis:
+    image: redis:4.0.9
 
-  pgdata:
-  studio_virtualenv:
-  pip_cache:
+volumes:
+  minio_data:
   pgdata:
   studio_virtualenv:
   pip_cache:
