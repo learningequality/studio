@@ -19,9 +19,4 @@ class Migration(migrations.Migration):
             name='policies',
             field=jsonfield.fields.JSONField(default=dict),
         ),
-        migrations.AlterField(
-            model_name='file',
-            name='file_on_disk',
-            field=models.FileField(blank=True, max_length=500, upload_to=contentcuration.models.object_storage_name),
-        ),
     ]
