@@ -1,8 +1,13 @@
+import md5
 import os
+import random
+import string
 import tempfile
+from cStringIO import StringIO
 
 import pytest
 from django.conf import settings
+from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -51,15 +56,19 @@ def license_wtfpl():
 
 
 def fileobj_video():
-    randomfilebytes = "4"
+    filecontents = "".join(random.sample(string.printable, 20))
+    fileobj = StringIO(filecontents)
+    digest = md5.new(filecontents).hexdigest()
+    filename = "{}.mp4".format(digest)
+    storage_file_path = cc.generate_object_storage_name(digest, filename)
 
-    with tempfile.NamedTemporaryFile(dir=settings.STORAGE_ROOT, delete=False) as f:
-        filename = f.name
-        f.write(randomfilebytes)
-        f.flush()
-        db_file_obj = mixer.blend(cc.File, file_format=fileformat_mp4(), preset=preset_video(), file_on_disk=filename)
+    # Write out the file bytes on to object storage, with a filename specified with randomfilename
+    default_storage.save(storage_file_path, fileobj)
 
-        yield db_file_obj
+    # then create a File object with that
+    db_file_obj = mixer.blend(cc.File, file_format=fileformat_mp4(), preset=preset_video(), file_on_disk=storage_file_path)
+
+    yield db_file_obj
 
 
 def assessment_item():
