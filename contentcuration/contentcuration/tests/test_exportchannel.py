@@ -55,8 +55,18 @@ def license_wtfpl():
     return mixer.blend(cc.License, license_name="WTF License")
 
 
-def fileobj_video():
+def fileobj_video(contents=None):
+    """
+    Create an "mp4" video file on storage, and then create a File model pointing to it.
+
+    if contents is given and is a string, then write said contents to the file. If not given,
+    a random string is generated and set as the contents of the file.
+    """
+    if contents:
+        filecontents = contents
+    else:
     filecontents = "".join(random.sample(string.printable, 20))
+
     fileobj = StringIO(filecontents)
     digest = md5.new(filecontents).hexdigest()
     filename = "{}.mp4".format(digest)
