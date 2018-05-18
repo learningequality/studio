@@ -68,6 +68,7 @@ pytest = "*"
 pytest-django = "*"
 pytest-logging = "*"
 faker = "==0.7.3"
+rope = "*"
 
 [requires]
 python_version = "2.7"
