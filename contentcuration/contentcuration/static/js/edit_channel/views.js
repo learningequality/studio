@@ -1,6 +1,8 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 var Models = require("./models");
+var analytics = require("utils/analytics");
+
 //var UndoManager = require("backbone-undo");
 function get_author(){
 	return window.preferences.author || "";
@@ -237,6 +239,17 @@ var BaseView = Backbone.View.extend({
 			window.workspace_manager.get_main_view().close_all_popups();
 		}
 	},
+
+  /**
+   * Track an event to analytics providers (e.g. Google Analytics, Mixpanel).
+   * event_category - Typically the object interacted with, e.g. 'Clipboard'
+   * event_action - The type of interaction, e.g. 'Add item'
+   * event_data - (Optional) An object with a set of properties to include about
+   *              the event, e.g. {'name': 'Sparks Fly'}.
+   */
+  track_analytics_event: function(event_category, event_action, event_data) {
+    analytics.track(event_category, event_action, event_data);
+  },
 });
 
 var BaseWorkspaceView = BaseView.extend({
@@ -320,6 +333,7 @@ var BaseWorkspaceView = BaseView.extend({
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
 
+		var self = this;
 		var metadata_view = new UploaderViews.MetadataModalView({
 			collection: collection,
 			el: $("#dialog"),
@@ -328,7 +342,9 @@ var BaseWorkspaceView = BaseView.extend({
 		    onsave: this.reload_ancestors,
 		    allow_edit: allow_edit,
 		    isclipboard: is_clipboard,
-		    onnew: this.add_to_clipboard
+		    onnew: function(collection, message) {
+          return self.add_to_clipboard(collection, message, 'MetadataModalView');
+        }
 		});
 	},
 	add_to_trash:function(collection, message){
@@ -352,7 +368,8 @@ var BaseWorkspaceView = BaseView.extend({
 		});
 		return promise;
 	},
-	add_to_clipboard:function(collection, message){
+	add_to_clipboard:function(collection, message, source){
+		this.track_analytics_event('Clipboard', `Add item from ${source}`);
 		message = (message!=null)? message: this.get_translation("moving_to_clipboard");
 		return this.move_to_queue_list(collection, window.workspace_manager.get_queue_view().clipboard_queue, message);
 	},
@@ -391,6 +408,7 @@ var BaseWorkspaceView = BaseView.extend({
 	 	});
 	},
 	move_content:function(move_collection){
+    // TODO(davidhu): Track moves
 		var MoveView = require("edit_channel/move/views");
 		var list = this.get_selected(true);
 		var move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
@@ -858,10 +876,10 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	  isclipboard: this.isclipboard
   	});
   },
-  add_to_clipboard:function(collection, message){
+  add_to_clipboard:function(collection, message, source){
   	message = (message!=null)? message: this.get_translation("moving_to_clipboard");
   	var self = this;
-		this.container.add_to_clipboard(collection, message).then(function(){
+		this.container.add_to_clipboard(collection, message, source).then(function(){
 			self.handle_if_empty();
 		});
 	},
@@ -1117,6 +1135,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		var UploaderViews = require("edit_channel/uploader/views");
 		$("#main-content-area").append("<div id='dialog'></div>");
 		var editCollection =  new Models.ContentNodeCollection([this.model]);
+		var self = this;
 		var metadata_view = new UploaderViews.MetadataModalView({
 			collection: editCollection,
 			el: $("#dialog"),
@@ -1125,7 +1144,10 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		  	onsave: this.reload_ancestors,
 		  	allow_edit: allow_edit,
 		  	isclipboard: this.isclipboard,
-		  	onnew: (!this.allow_edit)? this.containing_list_view.add_to_clipboard : null
+		  	onnew: (!this.allow_edit)?
+          function(collection, message) {
+            return self.containing_list_view.add_to_clipboard(collection, message, 'preview modal');
+          } : null
 		});
 	},
 	handle_drop:function(models){
@@ -1156,18 +1178,18 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		this.containing_list_view.add_to_trash(new Models.ContentNodeCollection([this.model]), message);
 		this.remove();
 	},
-	add_to_clipboard:function(message){
+	add_to_clipboard:function(message, source){
 		message=(message!=null)? message: this.get_translation("moving_to_clipboard");
-		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([this.model]),message);
+		this.containing_list_view.add_to_clipboard(new Models.ContentNodeCollection([this.model]), message, source);
 	},
-	copy_item:function(message){
+	copy_item:function(message, source){
 		message=(message!=null)? message: this.get_translation("copying_to_clipboard");
 		var copyCollection = new Models.ContentNodeCollection();
 		copyCollection.add(this.model);
 		var self = this;
 		this.display_load(message, function(resolve, reject){
 			self.containing_list_view.copy_collection(copyCollection).then(function(collection){
-				self.containing_list_view.add_to_clipboard(collection, message);
+				self.containing_list_view.add_to_clipboard(collection, message, source);
 				resolve(collection);
 			}).catch(function(error){reject(error);});
 		});

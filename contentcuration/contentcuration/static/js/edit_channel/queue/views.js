@@ -27,7 +27,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
     $trs: MESSAGES,
 
 	initialize: function(options) {
-		_.bindAll(this, 'toggle_queue', 'open_queue', 'close_queue', 'add_to_clipboard');
+		_.bindAll(this, 'toggle_queue', 'open_queue', 'close_queue', 'drop_in_clipboard');
 		this.clipboard_root = options.clipboard_root;
 		this.trash_root = options.trash_root;
 		this.collection = options.collection;
@@ -47,7 +47,10 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 			content_node_view:null
 		});
 		this.handle_checked();
-		DragHelper.addButtonDragDrop(this, this.add_to_clipboard, this.get_translation_library());
+		DragHelper.addButtonDragDrop(this, this.drop_in_clipboard, this.get_translation_library());
+	},
+	drop_in_clipboard: function(collection, message) {
+		return this.add_to_clipboard(collection, message, 'dragging in tree view');
 	},
 	events: {
 		'click .queue-button' : 'toggle_queue',
@@ -128,8 +131,13 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 			self.refresh_droppable();
 		});
 	},
+	drop_in_container: function(moved_item, selected_items, orders) {
+		this.track_analytics_event('Clipboard', 'Drag item out');
+		return BaseViews.BaseWorkspaceListView.prototype.drop_in_container.call(
+				this, moved_item, selected_items, orders);
+	},
 	events: {
-		'change .select_all' : 'check_all',
+		'change .select_all' : 'check_all_items',
 		'click .delete_items' : 'delete_items',
 		'click .edit_items' : 'edit_items',
 		'click .move_items' : 'move_items',
@@ -137,6 +145,10 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		'click .upload_files_button': 'add_files',
 		'click .import_content' : 'import_content',
 		'click .create_exercise_button' : 'add_exercise'
+	},
+	check_all_items: function(event) {
+		this.track_analytics_event('Clipboard', 'Select all');
+		this.check_all(event);
 	},
 	update_badge_count:function(){
 	  	var self = this;
@@ -167,25 +179,31 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		return item_view;
 	},
 	delete_items:function(){
+		this.track_analytics_event('Clipboard', 'Delete items intent');
 		var self = this;
         dialog.dialog(this.get_translation("warning"), this.get_translation("delete_message"), {
             [this.get_translation("cancel")]:function(){},
             [this.get_translation("delete")]: function(){
 				self.delete_items_permanently(self.get_translation("deleting_content"));
 				self.$(".select_all").attr("checked", false);
+				self.track_analytics_event('Clipboard', 'Delete items');
             },
         }, null);
 	},
 	edit_items:function(){
+		this.track_analytics_event('Clipboard', 'Edit items');
 		this.container.edit_selected(true);
 	},
 	move_items:function(){
+		this.track_analytics_event('Clipboard', 'Move items intent');
 		this.container.move_items();
 	},
 	handle_drop:function(collection){
+		console.log('queue handle drop');
 		var self = this;
 		this.$(this.default_item).css("display", "none");
 		return new Promise(function(resolve, reject){
+			console.log('queue handle drop promise');
 			if(collection.has_related_content()){
 				dialog.dialog(self.get_translation("related_content"), self.get_translation("related_content_warning", collection.length), {
 		            [self.get_translation("cancel")]:function(){},
@@ -287,7 +305,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	events: {
 		'click .delete_content' : 'delete_content',
-		'click .tog_folder' : 'toggle',
+		'click .tog_folder' : 'toggle_item',
 		'click .edit_content' : 'edit_item',
 		'change input[type=checkbox]': 'handle_checked',
 		'contextmenu .queue_item' : 'open_context_menu',
@@ -295,7 +313,12 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'click .move_content': 'move_content',
 		'click .queue_item_title': 'edit_item'
 	},
+	toggle_item: function(event) {
+		this.track_analytics_event('Clipboard', 'Toggle folder');
+		this.toggle(event);
+	},
 	edit_item:function(event){
+		this.track_analytics_event('Clipboard', 'Edit item');
 		event.stopPropagation();
 		event.preventDefault();
 		this.open_edit(true);
@@ -323,14 +346,17 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
             	self.destroy(null, function(){
             		self.reload_ancestors(new Models.ContentNodeCollection([self.model]), false);
             	});
+            	self.track_analytics_event('Clipboard', 'Delete content');
             }
         }, null);
 	},
 	copy_content:function(event){
+		this.track_analytics_event('Clipboard', 'Copy content');
 		this.cancel_actions(event);
 		this.make_copy();
 	},
 	move_content:function(event){
+		this.track_analytics_event('Clipboard', 'Move content intent');
 		this.cancel_actions(event);
 		this.open_move();
 	},

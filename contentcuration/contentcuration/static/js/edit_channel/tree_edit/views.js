@@ -541,7 +541,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		if(this.model.has_related_content()){
 			dialog.alert(this.get_translation("warning"), this.get_translation("related_content_alert"), this.copy_item);
 		} else {
-			this.copy_item();
+			this.copy_item(null, "button in tree view");
 		}
 	},
 	make_inline_copy: function(event) {
