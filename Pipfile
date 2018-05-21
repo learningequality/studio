@@ -67,6 +67,7 @@ mixer = "==5.6.6"
 pytest = "*"
 pytest-django = "*"
 pytest-logging = "*"
+pytest-watch = "*"
 faker = "==0.7.3"
 rope = "*"
 
