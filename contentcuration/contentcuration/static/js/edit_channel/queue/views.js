@@ -77,7 +77,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 			model.view = list[i];
 			move_collection.add(model);
 		}
-		this.move_content(move_collection);
+		this.move_content(move_collection, "clipboard");
 	},
 	close_all_popups: function() {
 		window.workspace_manager.get_main_view().close_all_popups();
@@ -132,7 +132,10 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		});
 	},
 	drop_in_container: function(moved_item, selected_items, orders) {
-		this.track_analytics_event('Clipboard', 'Drag item out');
+		this.track_analytics_event('Clipboard', 'Drag item out', {
+		  title: moved_item.get('title'),
+		  original_channel: moved_item.get('original_channel'),
+		});
 		return BaseViews.BaseWorkspaceListView.prototype.drop_in_container.call(
 				this, moved_item, selected_items, orders);
 	},
@@ -314,7 +317,9 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'click .queue_item_title': 'edit_item'
 	},
 	toggle_item: function(event) {
-		this.track_analytics_event('Clipboard', 'Toggle folder');
+	  if ($(event.target).hasClass('tog_folder')) {
+      this.track_analytics_event('Clipboard', 'Toggle folder');
+	  }
 		this.toggle(event);
 	},
 	edit_item:function(event){
@@ -338,6 +343,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		}
 	},
 	delete_content:function(){
+    this.track_analytics_event('Clipboard', 'Delete item intent');
 		var self = this;
         dialog.dialog(this.get_translation("warning"), this.get_translation("delete_item_warning", this.model.get("title")), {
             [self.get_translation("cancel")]:function(){},
@@ -346,19 +352,19 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
             	self.destroy(null, function(){
             		self.reload_ancestors(new Models.ContentNodeCollection([self.model]), false);
             	});
-            	self.track_analytics_event('Clipboard', 'Delete content');
+            	self.track_analytics_event('Clipboard', 'Delete item');
             }
         }, null);
 	},
 	copy_content:function(event){
-		this.track_analytics_event('Clipboard', 'Copy content');
+		this.track_analytics_event('Clipboard', 'Copy item');
 		this.cancel_actions(event);
 		this.make_copy();
 	},
 	move_content:function(event){
-		this.track_analytics_event('Clipboard', 'Move content intent');
+		this.track_analytics_event('Clipboard', 'Move item intent');
 		this.cancel_actions(event);
-		this.open_move();
+		this.open_move('clipboard');
 	},
 });
 

@@ -407,17 +407,22 @@ var BaseWorkspaceView = BaseView.extend({
 			model : new Models.ContentNodeModel(window.current_channel.get("trash_tree"))
 	 	});
 	},
-	move_content:function(move_collection){
-    // TODO(davidhu): Track moves
+	move_content:function(move_collection, source){
 		var MoveView = require("edit_channel/move/views");
 		var list = this.get_selected(true);
 		var move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
 		$("#main-content-area").append("<div id='dialog'></div>");
 
+		var self = this;
 		var move = new MoveView.MoveModalView({
 			collection: move_collection,
 			el: $("#dialog"),
-		    onmove: this.handle_move,
+        onmove: function(target, moved, original_parents) {
+          if (source === "clipboard") {
+            self.track_analytics_event('Clipboard', 'Move items');
+          }
+          self.handle_move(target, moved, original_parents);
+        },
 		    model: window.current_channel.get_root("main_tree")
 		});
 	},
@@ -1106,15 +1111,21 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		}
 		new Previewer.PreviewModalView(data);
 	},
-	open_move:function(){
+	open_move:function(source){
 		var MoveView = require("edit_channel/move/views");
 		var move_collection = new Models.ContentNodeCollection();
 		move_collection.add(this.model);
 		$("#main-content-area").append("<div id='dialog'></div>");
+		var self = this;
 		new MoveView.MoveModalView({
 			collection: move_collection,
 			el: $("#dialog"),
-		    onmove: this.handle_move,
+        onmove: function(target, moved, original_parents) {
+          if (source === "clipboard") {
+            self.track_analytics_event('Clipboard', 'Move item');
+          }
+          self.handle_move(target, moved, original_parents);
+        },
 		    model: window.current_channel.get_root("main_tree")
 		});
 	},
