@@ -261,10 +261,32 @@ You're all setup now, and ready to start the Studio local development server:
 You should be able to login at http://127.0.0.1:8081 using email `a@a.com`, password `a`.
 
 ##### Running tests
-Make sure you've installed the test requirements and setup a virtual environment. Then, to run python tests:
+Make sure you've installed the test requirements, setup a virtual environment, and started the minio server. Then, to run python tests:
 
     pytest contentcuration
 
+By default, pytest is configured to recreate a fresh database every time.  This can be painfully slow!  To speed things up, you can ask pytest to recycle table structures between runs:
+
+    pytest contentcuration --reuse-db
+
+If you do end up changing the schema (e.g. by updating a model), remember to run pytest without the `--reuse-db`.  Or, if you want to be more explicit you can use `--create-db` to ensure that the test database's table structure is up to date:
+
+    pytest contentcuration --create-db
+
+Sometimes it's nice to use print statements in your tests to see what's going on.  Pytest disables print statements by default, but you can show them by passing `-s`, e.g.:
+
+    pytest contentcuration -s --reuse-db
+
+##### Automatically running tests during development
+For running tests continuously during development, pytest-watch is included.  This works well with the `--reuse-db` option:
+
+    ptw contentcuration -- --reuse-db
+
+The extra `--` is required for passing pytest options through pytest-watch.  Sometimes you might want to quickly rerun an isolated set of tests while developing a new feature.  You could do something like this:
+
+    ptw contentcuration/contentcuration/tests/test_megaboard.py -- -s --reuse-db
+
+##### Emulating the Travis CI environment
 To emulate the Travis CI environment locally:
 
     docker-compose run studio-app make test
