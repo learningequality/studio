@@ -9,11 +9,9 @@ from cStringIO import StringIO
 from django.test import Client
 from mixer.backend.django import mixer
 from contentcuration import models
-from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.urlresolvers import reverse_lazy
 
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from contentcuration import models as cc
