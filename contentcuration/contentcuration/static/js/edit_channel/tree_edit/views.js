@@ -250,6 +250,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 					nodeCollection.add(list.models);
 				});
 				window.workspace_manager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
+        self.track_event_for_nodes('Clipboard', 'Add items from toolbar in tree view',
+                                   nodeCollection);
 				load_resolve(true);
 			}).catch(function(error){
 				console.log(error);

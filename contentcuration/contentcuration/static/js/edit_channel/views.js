@@ -242,13 +242,29 @@ var BaseView = Backbone.View.extend({
 
   /**
    * Track an event to analytics providers (e.g. Google Analytics, Mixpanel).
-   * event_category - Typically the object interacted with, e.g. 'Clipboard'
-   * event_action - The type of interaction, e.g. 'Add item'
-   * event_data - (Optional) An object with a set of properties to include about
-   *              the event, e.g. {'name': 'Sparks Fly'}.
+   * @param {string} event_category Typically the object interacted with, e.g. 'Clipboard'
+   * @param {string} event_action The type of interaction, e.g. 'Add item'
+   * @param {object} event_data (Optional) Properties to include about the
+   *     event, e.g. {title: 'Sparks Fly'}
    */
   track_analytics_event: function(event_category, event_action, event_data) {
     analytics.track(event_category, event_action, event_data);
+  },
+
+  track_event_for_nodes: function(event_category, event_action, nodes) {
+    if (nodes instanceof Backbone.Model) {
+      nodes = [nodes];
+    }
+    if (_.isArray(nodes)) {
+      nodes = new Backbone.Collection(nodes);
+    }
+    var nodes_json = nodes.map(function(node) {
+      return {
+        title: node.get('title'),
+        original_channel: node.get('original_channel'),
+      };
+    });
+    analytics.track(event_category, event_action, {items: nodes_json});
   },
 });
 
@@ -369,7 +385,7 @@ var BaseWorkspaceView = BaseView.extend({
 		return promise;
 	},
 	add_to_clipboard:function(collection, message, source){
-		this.track_analytics_event('Clipboard', `Add item from ${source}`);
+		this.track_event_for_nodes('Clipboard', `Add item from ${source}`, collection);
 		message = (message!=null)? message: this.get_translation("moving_to_clipboard");
 		return this.move_to_queue_list(collection, window.workspace_manager.get_queue_view().clipboard_queue, message);
 	},
@@ -419,7 +435,7 @@ var BaseWorkspaceView = BaseView.extend({
 			el: $("#dialog"),
         onmove: function(target, moved, original_parents) {
           if (source === "clipboard") {
-            self.track_analytics_event('Clipboard', 'Move items');
+            self.track_event_for_nodes('Clipboard', 'Move items', moved);
           }
           self.handle_move(target, moved, original_parents);
         },
@@ -1122,7 +1138,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			el: $("#dialog"),
         onmove: function(target, moved, original_parents) {
           if (source === "clipboard") {
-            self.track_analytics_event('Clipboard', 'Move item');
+            self.track_event_for_nodes('Clipboard', 'Move item', moved);
           }
           self.handle_move(target, moved, original_parents);
         },
