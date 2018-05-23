@@ -18,6 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
 from contentcuration.models import AssessmentItem, Channel, License, File, FormatPreset, ContentNode, Language, StagedFile, generate_file_on_disk_name
+from contentcuration.tasks import deletetree_task
 from contentcuration.utils.logging import trace
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
@@ -195,7 +196,7 @@ def api_commit_channel(request):
 
         # Delete staging tree if it already exists
         if old_staging and old_staging != obj.main_tree:
-            old_staging.delete()
+            deletetree_task.delay(old_staging.tree_id)
 
         if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
             try:
