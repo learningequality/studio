@@ -3,23 +3,13 @@ from django.utils.translation import ugettext as _
 
 POLICIES = {
 	"privacy_policy": {
-		"latest": "july_25_2018",
+		"latest": "may_25_2018",
 		"policies": {
 			"may_25_2018": {
 				"name": _("GDPR Privacy Policy"),
 				"date": datetime.datetime(2018, 5, 25).strftime('%m/%d/%Y'),
-				"template": "policies/text/boilerplate.html",
-			},
-			"june_25_2018": {
-				"name": _("Updates to Privacy Policy"),
-				"date": datetime.datetime(2018, 6, 25).strftime('%m/%d/%Y'),
-				"template": "policies/text/boilerplate.html",
-			},
-			"july_25_2018": {
-				"name": _("Updates to Privacy Policy"),
-				"date": datetime.datetime(2018, 6, 25).strftime('%m/%d/%Y'),
-				"template": "policies/text/boilerplate.html",
-			},
+				"template": "policies/text/privacy_policy_2018_5_25.html",
+			}
 		}
 	}
 }
