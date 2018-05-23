@@ -3,10 +3,10 @@ var _ = require('underscore');
 /**
  * Track an event to analytics providers (e.g. Google Analytics, Mixpanel).
  *
- * event_category - Typically the object interacted with, e.g. 'Clipboard'
- * event_action - The type of interaction, e.g. 'Add item'
- * event_data - (Optional) An object with a set of properties to include about
- *              the event, e.g. {'name': 'Sparks Fly'}.
+ * @param {string} event_category Typically the object interacted with, e.g. 'Clipboard'
+ * @param {string} event_action The type of interaction, e.g. 'Add item'
+ * @param {object} event_data (Optional) Properties to include about the
+ *     event, e.g. {title: 'Sparks Fly'}
  */
 function track(event_category, event_action, event_data) {
   var event_data_string = "";
