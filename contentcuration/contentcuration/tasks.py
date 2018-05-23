@@ -9,7 +9,7 @@ from django.core.management import call_command
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 
-from contentcuration.models import Channel, User
+from contentcuration.models import Channel, User, ContentNode
 from contentcuration.utils.channel_csv import write_channel_csv_file
 
 logger = get_task_logger(__name__)
@@ -46,3 +46,7 @@ def generatechannelcsv_task(channel_id, domain, user_id):
     email = EmailMessage(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
     email.attach_file(csv_path)
     email.send()
+
+@task(name='deletetree_task')
+def deletetree_task(tree_id):
+    ContentNode.objects.filter(tree_id=tree_id).delete()
